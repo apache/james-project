@@ -318,7 +318,7 @@ public class CassandraReIndexerImplTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("SELECT * FROM messageV2 WHERE messageId=:messageId;"));
+                    .whenQueryStartsWith("SELECT * FROM messageV3 WHERE messageId=:messageId;"));
 
             Task task = reIndexer.reIndex(ReIndexer.RunningOptions.DEFAULT);
             task.run();

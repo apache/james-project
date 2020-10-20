@@ -72,6 +72,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     private final CassandraMessageIdToImapUidDAO imapUidDAO;
     private final CassandraMessageIdDAO messageIdDAO;
     private final CassandraMessageDAO messageDAO;
+    private final CassandraMessageDAOV3 messageDAOV3;
     private final CassandraIndexTableHandler indexTableHandler;
     private final ModSeqProvider modSeqProvider;
     private final AttachmentLoader attachmentLoader;
@@ -79,7 +80,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     public CassandraMessageIdMapper(MailboxMapper mailboxMapper, CassandraMailboxDAO mailboxDAO, CassandraAttachmentMapper attachmentMapper,
                                     CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO,
-                                    CassandraMessageDAO messageDAO, CassandraIndexTableHandler indexTableHandler,
+                                    CassandraMessageDAO messageDAO, CassandraMessageDAOV3 messageDAOV3, CassandraIndexTableHandler indexTableHandler,
                                     ModSeqProvider modSeqProvider, CassandraConfiguration cassandraConfiguration) {
 
         this.mailboxMapper = mailboxMapper;
@@ -87,6 +88,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         this.imapUidDAO = imapUidDAO;
         this.messageIdDAO = messageIdDAO;
         this.messageDAO = messageDAO;
+        this.messageDAOV3 = messageDAOV3;
         this.indexTableHandler = indexTableHandler;
         this.modSeqProvider = modSeqProvider;
         this.attachmentLoader = new AttachmentLoader(attachmentMapper);
@@ -104,7 +106,8 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     public Flux<MailboxMessage> findReactive(Collection<MessageId> messageIds, FetchType fetchType) {
         return Flux.fromIterable(messageIds)
             .flatMap(messageId -> imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.empty()), cassandraConfiguration.getMessageReadChunkSize())
-            .flatMap(composedMessageId -> messageDAO.retrieveMessage(composedMessageId, fetchType)
+            .flatMap(composedMessageId -> messageDAOV3.retrieveMessage(composedMessageId, fetchType)
+                .switchIfEmpty(messageDAO.retrieveMessage(composedMessageId, fetchType))
                 .map(messageRepresentation -> Pair.of(composedMessageId, messageRepresentation)), cassandraConfiguration.getMessageReadChunkSize())
             .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, fetchType), cassandraConfiguration.getMessageReadChunkSize())
             .groupBy(MailboxMessage::getMailboxId)
@@ -142,7 +145,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         CassandraId mailboxId = (CassandraId) mailboxMessage.getMailboxId();
         MailboxReactorUtils.block(mailboxMapper.findMailboxById(mailboxId)
             .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(mailboxId)))
-            .then(messageDAO.save(mailboxMessage))
+            .then(messageDAOV3.save(mailboxMessage))
             .thenEmpty(saveMessageMetadata(mailboxMessage, mailboxId)));
     }
 

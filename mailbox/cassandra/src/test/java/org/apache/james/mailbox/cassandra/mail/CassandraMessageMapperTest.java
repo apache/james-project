@@ -198,7 +198,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
 
             assertThat(statementRecorder.listExecutedStatements(Selector.preparedStatement(
-                "SELECT * FROM messageV2 WHERE messageId=:messageId;")))
+                "SELECT * FROM messageV3 WHERE messageId=:messageId;")))
                 .hasSize(limit);
         }
 
@@ -228,7 +228,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("INSERT INTO messageV2 (messageId,internalDate,bodyStartOctet,fullContentOctets,bodyOctets,bodyContent,headerContent,properties,textualLineCount,attachments)"));
+                    .whenQueryStartsWith("INSERT INTO messageV3"));
 
             try {
                 messageMapper.add(benwaInboxMailbox, message1);

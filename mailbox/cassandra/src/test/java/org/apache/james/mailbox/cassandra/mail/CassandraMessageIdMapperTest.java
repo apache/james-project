@@ -122,7 +122,7 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("INSERT INTO messageV2 (messageId,internalDate,bodyStartOctet,fullContentOctets,bodyOctets,bodyContent,headerContent,properties,textualLineCount,attachments)"));
+                    .whenQueryStartsWith("INSERT INTO messageV3"));
 
             try {
                 message1.setUid(mapperProvider.generateMessageUid());

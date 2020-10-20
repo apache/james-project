@@ -70,6 +70,7 @@ import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.impl.Properties;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 
 import com.datastax.driver.core.BoundStatement;
@@ -174,7 +175,6 @@ public class CassandraMessageDAOV3 {
 
     private BoundStatement boundWriteStatement(MailboxMessage message, Tuple2<BlobId, BlobId> pair) {
         CassandraMessageId messageId = (CassandraMessageId) message.getMessageId();
-        PropertyBuilder propertyBuilder = new PropertyBuilder(message.getProperties());
         return insert.bind()
             .setUUID(MESSAGE_ID, messageId.get())
             .setTimestamp(INTERNAL_DATE, message.getInternalDate())
@@ -184,17 +184,17 @@ public class CassandraMessageDAOV3 {
             .setString(BODY_CONTENT, pair.getT2().asString())
             .setString(HEADER_CONTENT, pair.getT1().asString())
             .setLong(TEXTUAL_LINE_COUNT, Optional.ofNullable(message.getTextualLineCount()).orElse(DEFAULT_LONG_VALUE))
-            .setString(CONTENT_DESCRIPTION, propertyBuilder.getContentDescription())
-            .setString(CONTENT_DISPOSITION_TYPE, propertyBuilder.getContentDispositionType())
-            .setString(MEDIA_TYPE, propertyBuilder.getMediaType())
-            .setString(SUB_TYPE, propertyBuilder.getSubType())
-            .setString(CONTENT_ID, propertyBuilder.getContentID())
-            .setString(CONTENT_MD5, propertyBuilder.getContentMD5())
-            .setString(CONTENT_TRANSFER_ENCODING, propertyBuilder.getContentTransferEncoding())
-            .setString(CONTENT_LOCATION, propertyBuilder.getContentLocation())
-            .setList(CONTENT_LANGUAGE, propertyBuilder.getContentLanguage())
-            .setMap(CONTENT_DISPOSITION_PARAMETERS, propertyBuilder.getContentDispositionParameters())
-            .setMap(CONTENT_TYPE_PARAMETERS, propertyBuilder.getContentTypeParameters())
+            .setString(CONTENT_DESCRIPTION, message.getProperties().getContentDescription())
+            .setString(CONTENT_DISPOSITION_TYPE, message.getProperties().getContentDispositionType())
+            .setString(MEDIA_TYPE, message.getProperties().getMediaType())
+            .setString(SUB_TYPE, message.getProperties().getSubType())
+            .setString(CONTENT_ID, message.getProperties().getContentID())
+            .setString(CONTENT_MD5, message.getProperties().getContentMD5())
+            .setString(CONTENT_TRANSFER_ENCODING, message.getProperties().getContentTransferEncoding())
+            .setString(CONTENT_LOCATION, message.getProperties().getContentLocation())
+            .setList(CONTENT_LANGUAGE, message.getProperties().getContentLanguage())
+            .setMap(CONTENT_DISPOSITION_PARAMETERS, message.getProperties().getContentDispositionParameters())
+            .setMap(CONTENT_TYPE_PARAMETERS, message.getProperties().getContentTypeParameters())
             .setList(ATTACHMENTS, buildAttachmentUdt(message));
     }
 
@@ -251,13 +251,13 @@ public class CassandraMessageDAOV3 {
                 row.getLong(FULL_CONTENT_OCTETS),
                 row.getInt(BODY_START_OCTET),
                 new SharedByteArrayInputStream(content),
-                getPropertyBuilder(row),
+                getProperties(row),
                 getAttachments(row).collect(Guavate.toImmutableList()),
                 headerId,
                 bodyId));
     }
 
-    private PropertyBuilder getPropertyBuilder(Row row) {
+    private Properties getProperties(Row row) {
         PropertyBuilder property = new PropertyBuilder();
         property.setContentDescription(row.getString(CONTENT_DESCRIPTION));
         property.setContentDispositionType(row.getString(CONTENT_DISPOSITION_TYPE));
@@ -271,7 +271,7 @@ public class CassandraMessageDAOV3 {
         property.setContentDispositionParameters(row.getMap(CONTENT_DISPOSITION_PARAMETERS, String.class, String.class));
         property.setContentTypeParameters(row.getMap(CONTENT_TYPE_PARAMETERS, String.class, String.class));
         property.setTextualLineCount(row.getLong(TEXTUAL_LINE_COUNT));
-        return property;
+        return property.build();
     }
 
     private Stream<MessageAttachmentRepresentation> getAttachments(Row row) {

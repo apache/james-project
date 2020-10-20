@@ -40,6 +40,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAOV3;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
@@ -79,6 +80,7 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
     private final CassandraMessageIdToImapUidDAO imapUidDAO;
     private final CassandraMessageIdDAO messageIdDAO;
     private final CassandraMessageDAO messageDAO;
+    private final CassandraMessageDAOV3 messageDAOV3;
     private final CassandraAttachmentDAOV2 attachmentDAO;
     private final CassandraAttachmentOwnerDAO ownerDAO;
     private final CassandraAttachmentMessageIdDAO attachmentMessageIdDAO;
@@ -93,13 +95,14 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
 
     @Inject
     public DeleteMessageListener(CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageDAO messageDAO,
-                                 CassandraAttachmentDAOV2 attachmentDAO, CassandraAttachmentOwnerDAO ownerDAO,
+                                 CassandraMessageDAOV3 messageDAOV3, CassandraAttachmentDAOV2 attachmentDAO, CassandraAttachmentOwnerDAO ownerDAO,
                                  CassandraAttachmentMessageIdDAO attachmentMessageIdDAO, CassandraACLMapper aclMapper,
                                  CassandraUserMailboxRightsDAO rightsDAO, CassandraApplicableFlagDAO applicableFlagDAO,
                                  CassandraFirstUnseenDAO firstUnseenDAO, CassandraDeletedMessageDAO deletedMessageDAO, CassandraMailboxCounterDAO counterDAO, CassandraMailboxRecentsDAO recentsDAO, BlobStore blobStore) {
         this.imapUidDAO = imapUidDAO;
         this.messageIdDAO = messageIdDAO;
         this.messageDAO = messageDAO;
+        this.messageDAOV3 = messageDAOV3;
         this.attachmentDAO = attachmentDAO;
         this.ownerDAO = ownerDAO;
         this.attachmentMessageIdDAO = attachmentMessageIdDAO;
@@ -180,7 +183,8 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
                 .flatMap(message -> deleteUnreferencedAttachments(message).thenReturn(message))
                 .flatMap(this::deleteMessageBlobs)
                 .flatMap(this::deleteAttachmentMessageIds)
-                .then(messageDAO.delete(messageId)));
+                .then(messageDAO.delete(messageId))
+                .then(messageDAOV3.delete(messageId)));
     }
 
     private Mono<Void> handleMessageDeletionAsPartOfMailboxDeletion(CassandraMessageId messageId, CassandraId excludedId) {
@@ -190,7 +194,8 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
                 .flatMap(message -> deleteUnreferencedAttachments(message).thenReturn(message))
                 .flatMap(this::deleteMessageBlobs)
                 .flatMap(this::deleteAttachmentMessageIds)
-                .then(messageDAO.delete(messageId)));
+                .then(messageDAO.delete(messageId))
+                .then(messageDAOV3.delete(messageId)));
     }
 
     private Mono<MessageRepresentation> deleteMessageBlobs(MessageRepresentation message) {
@@ -202,7 +207,8 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
     }
 
     private Mono<MessageRepresentation> readMessage(CassandraMessageId id) {
-        return messageDAO.retrieveMessage(id, MessageMapper.FetchType.Metadata);
+        return messageDAOV3.retrieveMessage(id, MessageMapper.FetchType.Metadata)
+            .switchIfEmpty(messageDAO.retrieveMessage(id, MessageMapper.FetchType.Metadata));
     }
 
     private Mono<Void> deleteUnreferencedAttachments(MessageRepresentation message) {

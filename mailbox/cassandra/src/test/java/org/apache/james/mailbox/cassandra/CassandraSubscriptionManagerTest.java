@@ -40,6 +40,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV2DAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV3DAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAOV3;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
@@ -70,6 +71,7 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
     void setUp() {
         CassandraMessageIdToImapUidDAO imapUidDAO = null;
         CassandraMessageDAO messageDAO = null;
+        CassandraMessageDAOV3 messageDAOV3 = null;
         CassandraMessageIdDAO messageIdDAO = null;
         CassandraMailboxCounterDAO mailboxCounterDAO = null;
         CassandraMailboxRecentsDAO mailboxRecentsDAO = null;
@@ -97,6 +99,7 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
                 modSeqProvider,
                 cassandraCluster.getCassandraCluster().getConf(),
                 messageDAO,
+                messageDAOV3,
                 messageIdDAO,
                 imapUidDAO,
                 mailboxCounterDAO,

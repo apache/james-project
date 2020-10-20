@@ -53,7 +53,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAOV3;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
@@ -820,8 +820,8 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 new CassandraMessageId.Factory());
         }
 
-        private CassandraMessageDAO messageDAO(CassandraCluster cassandraCluster) {
-            return new CassandraMessageDAO(
+        private CassandraMessageDAOV3 messageDAO(CassandraCluster cassandraCluster) {
+            return new CassandraMessageDAOV3(
                 cassandraCluster.getConf(),
                 cassandraCluster.getTypesProvider(),
                 mock(BlobStore.class),
