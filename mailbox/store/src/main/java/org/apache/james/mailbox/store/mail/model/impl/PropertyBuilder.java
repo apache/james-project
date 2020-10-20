@@ -33,7 +33,6 @@ import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_CONTE
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_CONTENT_MD5_SPACE;
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_CONTENT_TRANSFER_ENCODING_NAME;
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_CONTENT_TRANSFER_ENCODING_SPACE;
-import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_CONTENT_TYPE_PARAMETER_BOUNDARY_NAME;
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_CONTENT_TYPE_PARAMETER_CHARSET_NAME;
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_CONTENT_TYPE_PARAMETER_SPACE;
 import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_MEDIA_TYPE_NAME;
@@ -237,16 +236,6 @@ public class PropertyBuilder {
      */
     public void setCharset(String value) {
         setProperty(MIME_CONTENT_TYPE_PARAMETER_SPACE, MIME_CONTENT_TYPE_PARAMETER_CHARSET_NAME, value);
-    }
-    
-    /**
-     * Sets RFC2045 Content-Type "boundary" parameter.
-     * 
-     * @param value the RFC2045 Content-Type "boundary" parameter
-     * or null to remove
-     */
-    public void setBoundary(String value) {
-        setProperty(MIME_CONTENT_TYPE_PARAMETER_SPACE, MIME_CONTENT_TYPE_PARAMETER_BOUNDARY_NAME, value);
     }
     
     /**

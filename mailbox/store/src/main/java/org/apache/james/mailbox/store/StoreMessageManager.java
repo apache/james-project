@@ -478,10 +478,6 @@ public class StoreMessageManager implements MessageManager {
         } else {
             propertyBuilder.setCharset(codeset);
         }
-        final String boundary = descriptor.getBoundary();
-        if (boundary != null) {
-            propertyBuilder.setBoundary(boundary);
-        }
         return propertyBuilder;
     }
 

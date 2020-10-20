@@ -118,10 +118,6 @@ public class MaildirMessage implements Message {
                 propertyBuilder.setCharset(codeset);
             }
 
-            final String boundary = descriptor.getBoundary();
-            if (boundary != null) {
-                propertyBuilder.setBoundary(boundary);
-            }
             if ("text".equalsIgnoreCase(mediaType)) {
                 long lines = -1;
                 try (CountingInputStream bodyStream = new CountingInputStream(parser.getInputStream())) {

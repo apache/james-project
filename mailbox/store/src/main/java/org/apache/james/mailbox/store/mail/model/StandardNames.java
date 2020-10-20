@@ -94,12 +94,6 @@ public class StandardNames {
     public static final String MIME_CONTENT_TYPE_PARAMETER_CHARSET_NAME = "charset";
     
     /**
-     * Namespace for <a href='http://www.faqs.org/rfcs/rfc2045.html'>MIME</a> Content-Type
-     * "boundary" parameter.
-     */
-    public static final String MIME_CONTENT_TYPE_PARAMETER_BOUNDARY_NAME = "boundary";
-    
-    /**
      * Namespace for <a href='http://www.faqs.org/rfcs/rfc2045.html'>MIME</a> mime type properties.
      * A distinct namespace is required to distinguish these properties from the Content-Type
      * parameters.
