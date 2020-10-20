@@ -601,6 +601,75 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def emailSetShouldPartiallyUpdateKeywords(server: GuiceJamesServer): Unit = {
+    val message: Message = Fixture.createTestMessage
+
+    val flags: Flags = FlagsBuilder.builder()
+      .add(Flags.Flag.ANSWERED)
+      .add(Flags.Flag.SEEN)
+      .build()
+
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags)
+      .build(message))
+      .getMessageId
+
+    val request = String.format(
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "update": {
+         |        "${messageId.serialize}":{
+         |          "keywords/music": true,
+         |          "keywords/%s": null
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |     {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "ids": ["${messageId.serialize}"],
+         |       "properties": ["keywords"]
+         |     },
+         |     "c2"]]
+         |}""".stripMargin, "$Seen")
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].updated")
+      .isEqualTo(s"""{
+          |  "${messageId.serialize}": null
+          |}
+      """.stripMargin)
+    assertThatJson(response)
+      .inPath("methodResponses[1][1].list[0]")
+      .isEqualTo(String.format(
+        """{
+          |   "id":"%s",
+          |   "keywords": {
+          |       "$Answered": true,
+          |       "music": true
+          |    }
+          |}
+      """.stripMargin, messageId.serialize))
+  }
+
+  @Test
   def emailSetShouldDestroyEmail(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(MailboxPath.inbox(BOB))

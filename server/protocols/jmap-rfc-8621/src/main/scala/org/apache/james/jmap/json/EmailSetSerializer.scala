@@ -19,10 +19,12 @@
 
 package org.apache.james.jmap.json
 
+import cats.implicits._
 import eu.timepit.refined.refineV
 import javax.inject.Inject
 import org.apache.james.jmap.mail.EmailSet.{UnparsedMessageId, UnparsedMessageIdConstraint}
 import org.apache.james.jmap.mail.{DestroyIds, EmailSetRequest, EmailSetResponse, EmailSetUpdate, MailboxIds}
+import org.apache.james.jmap.model.KeywordsFactory.STRICT_KEYWORDS_FACTORY
 import org.apache.james.jmap.model.{Keyword, Keywords, SetError}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json.{JsBoolean, JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
@@ -68,14 +70,40 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
             .filter(_.nonEmpty)
             .map(MailboxIds)
 
-          JsSuccess(EmailSetUpdate(keywords = keywordsReset,
-            mailboxIds = mailboxReset,
-            mailboxIdsToAdd = mailboxesToAdd,
-            mailboxIdsToRemove = mailboxesToRemove))
+          val keywordsToAdd: Try[Option[Keywords]] = Some(entries
+            .flatMap {
+              case update: KeywordAddition => Some(update)
+              case _ => None
+            }.map(_.keyword).toSet)
+            .filter(_.nonEmpty)
+            .map(STRICT_KEYWORDS_FACTORY.fromSet)
+            .sequence
+
+          val keywordsToRemove: Try[Option[Keywords]] = Some(entries
+            .flatMap {
+              case update: KeywordRemoval => Some(update)
+              case _ => None
+            }.map(_.keyword).toSet)
+            .filter(_.nonEmpty)
+            .map(STRICT_KEYWORDS_FACTORY.fromSet)
+            .sequence
+
+          keywordsToAdd.flatMap(maybeKeywordsToAdd => keywordsToRemove
+            .map(maybeKeywordsToRemove => (maybeKeywordsToAdd, maybeKeywordsToRemove)))
+            .fold(e => JsError(e.getMessage),
+              {
+                case (maybeKeywordsToAdd, maybeKeywordsToRemove) => JsSuccess(EmailSetUpdate(keywords = keywordsReset,
+                  keywordsToAdd = maybeKeywordsToAdd,
+                  keywordsToRemove = maybeKeywordsToRemove,
+                  mailboxIds = mailboxReset,
+                  mailboxIdsToAdd = mailboxesToAdd,
+                  mailboxIdsToRemove = mailboxesToRemove))
+              })
         })
 
     object EntryValidation {
       private val mailboxIdPrefix: String = "mailboxIds/"
+      private val keywordsPrefix: String = "keywords/"
 
       def from(property: String, value: JsValue): EntryValidation = property match {
         case "mailboxIds" => mailboxIdsReads.reads(value)
@@ -92,6 +120,13 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
               case JsBoolean(true) => MailboxAddition(id)
               case JsNull => MailboxRemoval(id)
               case _ => InvalidPatchEntryValue(property, "MailboxId partial updates requires a JsBoolean(true) (set) or a JsNull (unset)")
+            })
+        case name if name.startsWith(keywordsPrefix) => Keyword.parse(name.substring(keywordsPrefix.length))
+          .fold(e => InvalidPatchEntryNameWithDetails(property, e),
+            keyword => value match {
+              case JsBoolean(true) => KeywordAddition(keyword)
+              case JsNull => KeywordRemoval(keyword)
+              case _ => InvalidPatchEntryValue(property, "Keywords partial updates requires a JsBoolean(true) (set) or a JsNull (unset)")
             })
         case _ => InvalidPatchEntryName(property)
       }
@@ -120,6 +155,10 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
     private case class MailboxReset(ids: MailboxIds) extends EntryValidation
 
     private case class KeywordsReset(keywords: Keywords) extends EntryValidation
+
+    private case class KeywordAddition(keyword: Keyword) extends EntryValidation
+
+    private case class KeywordRemoval(keyword: Keyword) extends EntryValidation
 
   }
 

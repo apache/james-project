@@ -93,6 +93,10 @@ final case class Keywords(keywords: Set[Keyword]) {
 
   def getKeywords: Set[Keyword] = keywords
 
+  def ++(other: Keywords): Keywords = Keywords(keywords ++ other.keywords)
+
+  def --(other: Keywords): Keywords = Keywords(keywords -- other.keywords)
+
   def contains(keyword: Keyword): Boolean = keywords.contains(keyword)
 }
 

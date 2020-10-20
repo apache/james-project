@@ -29,6 +29,7 @@ import org.apache.james.jmap.mail.{DestroyIds, EmailSet, EmailSetRequest, EmailS
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
+import org.apache.james.jmap.model.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
 import org.apache.james.jmap.model.SetError.SetErrorDescription
 import org.apache.james.jmap.model.{Capabilities, Invocation, SetError, State}
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode
@@ -224,7 +225,7 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
         .fold(
           e => SMono.just(UpdateFailure(EmailSet.asUnparsed(messageId), e)),
           validatedUpdate =>
-            resetFlags(messageId, validatedUpdate, mailboxIds, originFlags, session)
+            updateFlags(messageId, validatedUpdate, mailboxIds, originFlags, session)
               .flatMap {
                 case failure: UpdateFailure => SMono.just[UpdateResult](failure)
                 case _: UpdateSuccess => updateMailboxIds(messageId, validatedUpdate, mailboxIds, session)
@@ -247,14 +248,20 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
     }
   }
 
-  private def resetFlags(messageId: MessageId, update: ValidatedEmailSetUpdate, mailboxIds: MailboxIds, originalFlags: Flags, session: MailboxSession): SMono[UpdateResult] =
-    update.keywords
-      .map(keywords => keywords.asFlagsWithRecentAndDeletedFrom(originalFlags))
-      .map(flags => SMono.fromCallable(() =>
-        messageIdManager.setFlags(flags, FlagsUpdateMode.REPLACE, messageId, ImmutableList.copyOf(mailboxIds.value.asJavaCollection), session))
+  private def updateFlags(messageId: MessageId, update: ValidatedEmailSetUpdate, mailboxIds: MailboxIds, originalFlags: Flags, session: MailboxSession): SMono[UpdateResult] = {
+    val newFlags = update.keywords
+      .apply(LENIENT_KEYWORDS_FACTORY.fromFlags(originalFlags).get)
+      .asFlagsWithRecentAndDeletedFrom(originalFlags)
+
+    if (newFlags.equals(originalFlags)) {
+      SMono.just[UpdateResult](UpdateSuccess(messageId))
+    } else {
+    SMono.fromCallable(() =>
+        messageIdManager.setFlags(newFlags, FlagsUpdateMode.REPLACE, messageId, ImmutableList.copyOf(mailboxIds.value.asJavaCollection), session))
         .subscribeOn(Schedulers.elastic())
-        .`then`(SMono.just[UpdateResult](UpdateSuccess(messageId))))
-      .getOrElse(SMono.just[UpdateResult](UpdateSuccess(messageId)))
+        .`then`(SMono.just[UpdateResult](UpdateSuccess(messageId)))
+    }
+  }
 
   private def deleteMessage(destroyId: UnparsedMessageId, mailboxSession: MailboxSession): SMono[DestroyResult] =
     EmailSet.parse(messageIdFactory)(destroyId)

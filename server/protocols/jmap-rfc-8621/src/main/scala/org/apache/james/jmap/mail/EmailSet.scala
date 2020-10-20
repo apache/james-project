@@ -58,42 +58,51 @@ case class EmailSetResponse(accountId: AccountId,
                             notDestroyed: Option[Map[UnparsedMessageId, SetError]])
 
 case class EmailSetUpdate(keywords: Option[Keywords],
+                          keywordsToAdd: Option[Keywords],
+                          keywordsToRemove: Option[Keywords],
                           mailboxIds: Option[MailboxIds],
                           mailboxIdsToAdd: Option[MailboxIds],
                           mailboxIdsToRemove: Option[MailboxIds]) {
-  def validate: Either[IllegalArgumentException, ValidatedEmailSetUpdate] = if (mailboxIds.isDefined && (mailboxIdsToAdd.isDefined || mailboxIdsToRemove.isDefined)) {
-    Left(new IllegalArgumentException("Partial update and reset specified"))
-  } else {
-    val identity: Function[MailboxIds, MailboxIds] = ids => ids
-    val mailboxIdsAddition: Function[MailboxIds, MailboxIds] = mailboxIdsToAdd
-      .map(toBeAdded => (ids: MailboxIds) => ids ++ toBeAdded)
-      .getOrElse(identity)
-    val mailboxIdsRemoval: Function[MailboxIds, MailboxIds] = mailboxIdsToRemove
-      .map(toBeRemoved => (ids: MailboxIds) => ids -- toBeRemoved)
-      .getOrElse(identity)
-    val mailboxIdsReset: Function[MailboxIds, MailboxIds] = mailboxIds
-      .map(toReset => (_: MailboxIds) => toReset)
-      .getOrElse(identity)
-    val mailboxIdsTransformation: Function[MailboxIds, MailboxIds] = mailboxIdsAddition
-      .compose(mailboxIdsRemoval)
-      .compose(mailboxIdsReset)
-    Right(mailboxIdsTransformation)
-      .flatMap(mailboxIdsTransformation => validateKeywords
-        .map(validatedKeywords => ValidatedEmailSetUpdate(validatedKeywords, mailboxIdsTransformation)))
-  }
+  def validate: Either[IllegalArgumentException, ValidatedEmailSetUpdate] = {
+    if (mailboxIds.isDefined && (mailboxIdsToAdd.isDefined || mailboxIdsToRemove.isDefined)) {
+      Left(new IllegalArgumentException("Partial update and reset specified for mailboxIds"))
+    } else if (keywords.isDefined && (keywordsToAdd.isDefined || keywordsToRemove.isDefined)) {
+      Left(new IllegalArgumentException("Partial update and reset specified for keywords"))
+    } else  {
+      val mailboxIdsIdentity: Function[MailboxIds, MailboxIds] = ids => ids
+      val mailboxIdsAddition: Function[MailboxIds, MailboxIds] = mailboxIdsToAdd
+        .map(toBeAdded => (ids: MailboxIds) => ids ++ toBeAdded)
+        .getOrElse(mailboxIdsIdentity)
+      val mailboxIdsRemoval: Function[MailboxIds, MailboxIds] = mailboxIdsToRemove
+        .map(toBeRemoved => (ids: MailboxIds) => ids -- toBeRemoved)
+        .getOrElse(mailboxIdsIdentity)
+      val mailboxIdsReset: Function[MailboxIds, MailboxIds] = mailboxIds
+        .map(toReset => (_: MailboxIds) => toReset)
+        .getOrElse(mailboxIdsIdentity)
+      val mailboxIdsTransformation: Function[MailboxIds, MailboxIds] = mailboxIdsAddition
+        .compose(mailboxIdsRemoval)
+        .compose(mailboxIdsReset)
 
-  private def validateKeywords: Either[IllegalArgumentException, Option[Keywords]] = {
-    keywords.map(_.getKeywords)
-      .map(STRICT_KEYWORDS_FACTORY.fromSet)
-      .map {
-        case Success(validatedKeywords: Keywords) => Right(Some(validatedKeywords))
-        case Failure(throwable: IllegalArgumentException) => Left(throwable)
-      }
-      .getOrElse(Right(None))
+      val keywordsIdentity: Function[Keywords, Keywords] = keywords => keywords
+      val keywordsAddition: Function[Keywords, Keywords] = keywordsToAdd
+        .map(toBeAdded => (keywords: Keywords) => keywords ++ toBeAdded)
+        .getOrElse(keywordsIdentity)
+      val keywordsRemoval: Function[Keywords, Keywords] = keywordsToRemove
+        .map(toBeRemoved => (keywords: Keywords) => keywords -- toBeRemoved)
+        .getOrElse(keywordsIdentity)
+      val keywordsReset: Function[Keywords, Keywords] = keywords
+        .map(toReset => (_: Keywords) => toReset)
+        .getOrElse(keywordsIdentity)
+      val keywordsTransformation: Function[Keywords, Keywords] = keywordsAddition
+        .compose(keywordsRemoval)
+        .compose(keywordsReset)
+
+      Right(ValidatedEmailSetUpdate(keywordsTransformation, mailboxIdsTransformation))
+    }
   }
 }
 
-case class ValidatedEmailSetUpdate private (keywords: Option[Keywords],
+case class ValidatedEmailSetUpdate private (keywords: Function[Keywords, Keywords],
                                             mailboxIdsTransformation: Function[MailboxIds, MailboxIds])
 
 class EmailUpdateValidationException() extends IllegalArgumentException
