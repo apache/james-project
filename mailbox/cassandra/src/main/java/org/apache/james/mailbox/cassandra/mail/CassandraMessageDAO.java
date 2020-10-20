@@ -48,7 +48,6 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
-import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
@@ -76,7 +75,6 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.github.steveash.guavate.Guavate;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
 
@@ -91,52 +89,34 @@ public class CassandraMessageDAO {
     private final CassandraTypesProvider typesProvider;
     private final BlobStore blobStore;
     private final BlobId.Factory blobIdFactory;
-    private final CassandraConfiguration configuration;
-    private final CassandraMessageId.Factory messageIdFactory;
     private final PreparedStatement insert;
     private final PreparedStatement delete;
     private final PreparedStatement select;
-    private final PreparedStatement selectAllMessagesWithAttachment;
     private final Cid.CidParser cidParser;
     private final ConsistencyLevel consistencyLevel;
 
     @Inject
-    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, BlobStore blobStore,
-                               BlobId.Factory blobIdFactory, CassandraConfiguration cassandraConfiguration,
-                               CassandraConsistenciesConfiguration consistenciesConfiguration,
-                               CassandraMessageId.Factory messageIdFactory) {
+    public CassandraMessageDAO(Session session,
+                               CassandraTypesProvider typesProvider,
+                               BlobStore blobStore,
+                               BlobId.Factory blobIdFactory,
+                               CassandraConsistenciesConfiguration consistenciesConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.consistencyLevel = consistenciesConfiguration.getRegular();
         this.typesProvider = typesProvider;
         this.blobStore = blobStore;
         this.blobIdFactory = blobIdFactory;
-        this.configuration = cassandraConfiguration;
-        this.messageIdFactory = messageIdFactory;
 
         this.insert = prepareInsert(session);
         this.delete = prepareDelete(session);
         this.select = prepareSelect(session);
-        this.selectAllMessagesWithAttachment = prepareSelectAllMessagesWithAttachment(session);
         this.cidParser = Cid.parser().relaxed();
-    }
-
-    @VisibleForTesting
-    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, BlobStore blobStore,
-                               BlobId.Factory blobIdFactory, CassandraMessageId.Factory messageIdFactory,
-                               CassandraConsistenciesConfiguration consistenciesConfiguration) {
-        this(session, typesProvider, blobStore,  blobIdFactory, CassandraConfiguration.DEFAULT_CONFIGURATION,
-            consistenciesConfiguration, messageIdFactory);
     }
 
     private PreparedStatement prepareSelect(Session session) {
         return session.prepare(select()
             .from(TABLE_NAME)
             .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
-    }
-
-    private PreparedStatement prepareSelectAllMessagesWithAttachment(Session session) {
-        return session.prepare(select(MESSAGE_ID, ATTACHMENTS)
-            .from(TABLE_NAME));
     }
 
     private PreparedStatement prepareInsert(Session session) {
@@ -227,11 +207,11 @@ public class CassandraMessageDAO {
     }
 
     public Mono<MessageRepresentation> retrieveMessage(CassandraMessageId cassandraMessageId, FetchType fetchType) {
-        return retrieveRow(cassandraMessageId, fetchType)
+        return retrieveRow(cassandraMessageId)
                 .flatMap(resultSet -> message(resultSet, cassandraMessageId, fetchType));
     }
 
-    private Mono<ResultSet> retrieveRow(CassandraMessageId messageId, FetchType fetchType) {
+    private Mono<ResultSet> retrieveRow(CassandraMessageId messageId) {
         return cassandraAsyncExecutor.execute(select
             .bind()
             .setUUID(MESSAGE_ID, messageId.get())

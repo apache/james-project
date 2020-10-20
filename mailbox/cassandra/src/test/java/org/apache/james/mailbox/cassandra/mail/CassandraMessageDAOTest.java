@@ -94,7 +94,6 @@ class CassandraMessageDAOTest {
             cassandra.getTypesProvider(),
             blobStore,
             blobIdFactory,
-            new CassandraMessageId.Factory(),
             cassandraCluster.getCassandraConsistenciesConfiguration());
 
         messageIdWithMetadata = ComposedMessageIdWithMetaData.builder()

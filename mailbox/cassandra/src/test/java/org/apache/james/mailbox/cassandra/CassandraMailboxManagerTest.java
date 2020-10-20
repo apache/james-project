@@ -826,7 +826,6 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 cassandraCluster.getTypesProvider(),
                 mock(BlobStore.class),
                 new HashBlobId.Factory(),
-                new CassandraMessageId.Factory(),
                 cassandra.getCassandraConsistenciesConfiguration());
         }
     }
