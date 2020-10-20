@@ -257,6 +257,18 @@
 
     </subsection>
 
+    <subsection name="From V7 to V8">
+
+      <p>Add UID_VALIDITY to mailboxPath table in order not to mandate mailbox table reads.</p>
+
+    </subsection>
+
+    <subsection name="From V8 to V9">
+
+      <p>Adopt a more compact representation for message properties.</p>
+
+    </subsection>
+
   </section>
 
 </body>

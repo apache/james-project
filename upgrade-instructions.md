@@ -20,6 +20,32 @@ Change list:
  - [mailqueue.size.metricsEnabled now defaults to false](#mailqueuesizemetricsenabled-now-defaults-to-false)
  - [LDAP users repository connection pool now defaults to false](#ldap-users-repository-connection-pool-now-defaults-to-false)
  - [Swift support has been dropped](#swift-support-has-been-dropped)
+ - [Cassandra Schema update to V8](#cassandra-schema-update-to-v8)
+ - [Cassandra Schema update to V9](#cassandra-schema-update-to-v9)
+
+### Cassandra Schema update to V9
+
+Date 20/10/2020
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3430
+
+Concerned product: Distributed James
+
+Adopt a more compact representation for message properties. This improves performance of the Cassandra mailbox.
+
+In order to benefit from this work, you need to [upgrade to the latest schema version](https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-webadmin.md#upgrading-to-the-latest-version).
+
+### Cassandra Schema update to V8
+
+Date 13/10/2020
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3409
+
+Concerned product: Distributed James
+
+Add UID_VALIDITY to mailboxPath table in order not to mandate mailbox table reads. This improves performance of the Cassandra mailbox.
+
+In order to benefit from this work, you need to [upgrade to the latest schema version](https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-webadmin.md#upgrading-to-the-latest-version).
 
 ### Swift support has been dropped
 

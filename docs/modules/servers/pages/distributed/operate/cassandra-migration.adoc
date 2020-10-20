@@ -23,5 +23,7 @@ to mailboxPathV2 table relying on a composite primary key.
 handy for things like mail aliases (I want to list aliases rewritting things to bob). Without this projection table being available,
 (ie we rely on schema version 6 or less) such information is obtained through a full table scan, unoptimized. From schema version 7,
 the optimized projection can safely be used.
+* *From V7 to V8* : Add UID_VALIDITY to mailboxPath table in order not to mandate mailbox table reads.
+* *From V8 to V9* : Adopt a more compact representation for message properties.
 
 The xref:distributed/operate/guide.adoc#_updating_cassandra_schema_version[Operator guide] further details the migration process.
