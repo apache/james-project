@@ -178,8 +178,10 @@ public class SetMessagesUpdateProcessorTest {
         referenceUpdater = new ReferenceUpdater(mockMessageIdManager, mockedMailboxManager);
 
         UpdateMessagePatchConverter updateMessagePatchConverter = null;
+        MailboxManager mailboxManager = null;
         sut = new SetMessagesUpdateProcessor(updateMessagePatchConverter,
             messageIdManager,
+            mailboxManager,
             fakeSystemMailboxesProvider,
             mockedMailboxIdFactory,
             messageSender,
@@ -234,8 +236,10 @@ public class SetMessagesUpdateProcessorTest {
                 .thenReturn(mockInvalidPatch);
 
 
+        MailboxManager mailboxManager = null;
         SetMessagesUpdateProcessor sut = new SetMessagesUpdateProcessor(mockConverter,
             mockMessageIdManager,
+            mailboxManager,
             fakeSystemMailboxesProvider,
             mockedMailboxIdFactory,
             messageSender,

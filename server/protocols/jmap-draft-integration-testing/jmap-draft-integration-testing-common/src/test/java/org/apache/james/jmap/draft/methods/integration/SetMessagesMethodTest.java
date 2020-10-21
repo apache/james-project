@@ -119,6 +119,7 @@ import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
+import org.assertj.core.api.SoftAssertions;
 import org.awaitility.Duration;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -144,12 +145,12 @@ import net.javacrumbs.jsonunit.core.internal.Options;
 public abstract class SetMessagesMethodTest {
     private static final String FORWARDED = "$Forwarded";
     private static final int _1MB = 1024 * 1024;
-    private static final Username USERNAME = Username.of("username@" + DOMAIN);
+    protected static final Username USERNAME = Username.of("username@" + DOMAIN);
     private static final String ALIAS_OF_USERNAME_MAIL = "alias@" + DOMAIN;
     private static final String GROUP_MAIL = "group@" + DOMAIN;
     private static final Username ALIAS_OF_USERNAME = Username.of(ALIAS_OF_USERNAME_MAIL);
     private static final String PASSWORD = "password";
-    private static final MailboxPath USER_MAILBOX = MailboxPath.forUser(USERNAME, "mailbox");
+    protected static final MailboxPath USER_MAILBOX = MailboxPath.forUser(USERNAME, "mailbox");
     private static final String NOT_UPDATED = ARGUMENTS + ".notUpdated";
     private static final int BIG_MESSAGE_SIZE = 20 * 1024 * 1024;
     public static final String OCTET_CONTENT_TYPE = "application/octet-stream";
@@ -161,11 +162,11 @@ public abstract class SetMessagesMethodTest {
 
     protected abstract MessageId randomMessageId();
 
-    private AccessToken accessToken;
-    private GuiceJamesServer jmapServer;
-    private MailboxProbe mailboxProbe;
+    protected AccessToken accessToken;
+    protected GuiceJamesServer jmapServer;
+    protected MailboxProbe mailboxProbe;
     private DataProbe dataProbe;
-    private MessageIdProbe messageProbe;
+    protected MessageIdProbe messageProbe;
     private ACLProbe aclProbe;
 
     @Before
@@ -421,6 +422,65 @@ public abstract class SetMessagesMethodTest {
         .then()
             .log().ifValidationFails()
             .spec(getSetMessagesUpdateOKResponseAssertions(serializedMessageId));
+    }
+
+    @Test
+    public void massiveFlagUpdateShouldBeApplied() throws MailboxException {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME.asString(), "mailbox");
+
+        ComposedMessageId message1 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
+        ComposedMessageId message2 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
+        ComposedMessageId message3 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags(Flag.SEEN));
+        ComposedMessageId message4 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
+        ComposedMessageId message5 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags(Flag.ANSWERED));
+        ComposedMessageId message6 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
+
+        String serializedMessageId1 = message1.getMessageId().serialize();
+        String serializedMessageId2 = message2.getMessageId().serialize();
+        String serializedMessageId3 = message3.getMessageId().serialize();
+        String serializedMessageId4 = message4.getMessageId().serialize();
+        String serializedMessageId5 = message5.getMessageId().serialize();
+        String serializedMessageId6 = message6.getMessageId().serialize();
+
+        // When
+        given()
+            .header("Authorization", accessToken.asString())
+            .body(String.format("[[\"setMessages\", {\"update\": {" +
+                "  \"%s\" : { \"isUnread\" : false }, " +
+                "  \"%s\" : { \"isUnread\" : false }, " +
+                "  \"%s\" : { \"isUnread\" : false }, " +
+                "  \"%s\" : { \"isUnread\" : false }, " +
+                "  \"%s\" : { \"isUnread\" : false }, " +
+                "  \"%s\" : { \"isUnread\" : false } " +
+                "} }, \"#0\"]]", serializedMessageId1, serializedMessageId2, serializedMessageId3,
+                serializedMessageId4, serializedMessageId5, serializedMessageId6))
+        .when()
+            .post("/jmap")
+        // Then
+        .then()
+            .log().ifValidationFails().body(ARGUMENTS + ".updated", hasSize(6));
+
+        Flags flags1 = messageProbe.getMessages(message1.getMessageId(), USERNAME).iterator().next().getFlags();
+        Flags flags2 = messageProbe.getMessages(message1.getMessageId(), USERNAME).iterator().next().getFlags();
+        Flags flags3 = messageProbe.getMessages(message1.getMessageId(), USERNAME).iterator().next().getFlags();
+        Flags flags4 = messageProbe.getMessages(message1.getMessageId(), USERNAME).iterator().next().getFlags();
+        Flags flags5 = messageProbe.getMessages(message1.getMessageId(), USERNAME).iterator().next().getFlags();
+        Flags flags6 = messageProbe.getMessages(message1.getMessageId(), USERNAME).iterator().next().getFlags();
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(flags1).isEqualTo(new Flags(Flag.SEEN));
+            softly.assertThat(flags2).isEqualTo(new Flags(Flag.SEEN));
+            softly.assertThat(flags3).isEqualTo(new Flags(Flag.SEEN));
+            softly.assertThat(flags4).isEqualTo(new Flags(Flag.SEEN));
+            softly.assertThat(flags5).isEqualTo(new Flags(Flag.SEEN));
+            softly.assertThat(flags6).isEqualTo(new Flags(Flag.SEEN));
+        });
     }
 
     @Test

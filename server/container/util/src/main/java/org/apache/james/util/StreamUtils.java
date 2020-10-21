@@ -59,6 +59,12 @@ public class StreamUtils {
         return streams.flatMap(Function.identity());
     }
 
+    public static <T> boolean isSingleValued(Stream<T> stream) {
+        return stream.distinct()
+            .limit(2)
+            .count() == 1;
+    }
+
     @SafeVarargs
     public static <T> Stream<T> flatten(Stream<T>... streams) {
         return flatten(Arrays.stream(streams));

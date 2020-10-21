@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.mail.Flags;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
@@ -47,6 +48,7 @@ import org.apache.james.jmap.draft.model.SetMessagesRequest;
 import org.apache.james.jmap.draft.model.SetMessagesResponse;
 import org.apache.james.jmap.draft.model.UpdateMessagePatch;
 import org.apache.james.jmap.draft.utils.KeywordsCombiner;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
@@ -61,11 +63,13 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxId.Factory;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMoves;
+import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.server.core.MailImpl;
+import org.apache.james.util.StreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,6 +89,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
 
     private final UpdateMessagePatchConverter updatePatchConverter;
     private final MessageIdManager messageIdManager;
+    private final MailboxManager mailboxManager;
     private final SystemMailboxesProvider systemMailboxesProvider;
     private final Factory mailboxIdFactory;
     private final MetricFactory metricFactory;
@@ -97,6 +102,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     @VisibleForTesting SetMessagesUpdateProcessor(
             UpdateMessagePatchConverter updatePatchConverter,
             MessageIdManager messageIdManager,
+            MailboxManager mailboxManager,
             SystemMailboxesProvider systemMailboxesProvider,
             Factory mailboxIdFactory,
             MessageSender messageSender,
@@ -105,6 +111,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
             CanSendFrom canSendFrom) {
         this.updatePatchConverter = updatePatchConverter;
         this.messageIdManager = messageIdManager;
+        this.mailboxManager = mailboxManager;
         this.systemMailboxesProvider = systemMailboxesProvider;
         this.mailboxIdFactory = mailboxIdFactory;
         this.metricFactory = metricFactory;
@@ -144,14 +151,59 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
             .collect(Guavate.toImmutableListMultimap(metaData -> metaData.getComposedMessageId().getMessageId()))
             .block();
 
-        patches.forEach((id, patch) -> {
+        if (isAMassiveFlagUpdate(patches, messages)) {
+            applyRangedFlagUpdate(patches, messages, responseBuilder, mailboxSession);
+        } else {
+            patches.forEach((id, patch) -> {
                 if (patch.isValid()) {
                     update(outboxes, id, patch, mailboxSession, responseBuilder, messages);
                 } else {
                     handleInvalidRequest(responseBuilder, id, patch.getValidationErrors(), patch);
                 }
-            }
-        );
+            });
+        }
+    }
+
+    private boolean isAMassiveFlagUpdate(Map<MessageId, UpdateMessagePatch> patches, Multimap<MessageId, ComposedMessageIdWithMetaData> messages) {
+        // The same patch, that only represents a flag update, is applied to messages within a single mailbox
+        return StreamUtils.isSingleValued(patches.values().stream())
+            && StreamUtils.isSingleValued(messages.values().stream().map(metaData -> metaData.getComposedMessageId().getMailboxId()))
+            && patches.values().iterator().next().isOnlyAFlagUpdate()
+            && messages.size() > 3;
+    }
+
+    private void applyRangedFlagUpdate(Map<MessageId, UpdateMessagePatch> patches, Multimap<MessageId, ComposedMessageIdWithMetaData> messages, SetMessagesResponse.Builder responseBuilder, MailboxSession mailboxSession) {
+        MailboxId mailboxId = messages.values()
+            .iterator()
+            .next()
+            .getComposedMessageId()
+            .getMailboxId();
+        UpdateMessagePatch patch = patches.values().iterator().next();
+        List<MessageRange> uidRanges = MessageRange.toRanges(messages.values().stream().map(metaData -> metaData.getComposedMessageId().getUid())
+            .distinct()
+            .collect(Guavate.toImmutableList()));
+
+        if (patch.isValid()) {
+            uidRanges.forEach(range -> {
+                ImmutableList<MessageId> messageIds = messages.entries()
+                    .stream()
+                    .filter(entry -> range.includes(entry.getValue().getComposedMessageId().getUid()))
+                    .map(Map.Entry::getKey)
+                    .distinct()
+                    .collect(Guavate.toImmutableList());
+                try {
+                    mailboxManager.getMailbox(mailboxId, mailboxSession)
+                        .setFlags(patch.applyToState(new Flags()), FlagsUpdateMode.REPLACE, range, mailboxSession);
+                    responseBuilder.updated(messageIds);
+                } catch (MailboxException e) {
+                    messageIds
+                        .forEach(messageId -> handleMessageUpdateException(messageId, responseBuilder, e));
+                }
+            });
+        } else {
+            messages.keySet()
+                .forEach(messageId -> handleInvalidRequest(responseBuilder, messageId, patch.getValidationErrors(), patch));
+        }
     }
 
     private void update(Set<MailboxId> outboxes, MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession,

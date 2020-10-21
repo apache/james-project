@@ -21,6 +21,7 @@ package org.apache.james.jmap.draft.model;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -139,6 +140,10 @@ public class UpdateMessagePatch {
         return !oldKeywords.isPresent() && !keywords.isPresent();
     }
 
+    public boolean isOnlyAFlagUpdate() {
+        return !mailboxIds.isPresent() && (oldKeywords.isPresent() || keywords.isPresent());
+    }
+
     public ImmutableList<ValidationResult> getValidationErrors() {
         return validationErrors;
     }
@@ -153,6 +158,24 @@ public class UpdateMessagePatch {
             .orElse(keywords
                 .map(keyword -> keyword.asFlagsWithRecentAndDeletedFrom(currentFlags))
                 .orElse(currentFlags));
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof UpdateMessagePatch) {
+            UpdateMessagePatch that = (UpdateMessagePatch) o;
+
+            return Objects.equals(this.mailboxIds, that.mailboxIds)
+                && Objects.equals(this.keywords, that.keywords)
+                && Objects.equals(this.oldKeywords, that.oldKeywords)
+                && Objects.equals(this.validationErrors, that.validationErrors);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(mailboxIds, keywords, oldKeywords, validationErrors);
     }
 
     @Override
