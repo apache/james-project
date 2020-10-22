@@ -144,6 +144,12 @@ public class UpdateMessagePatch {
         return !mailboxIds.isPresent() && (oldKeywords.isPresent() || keywords.isPresent());
     }
 
+    public boolean isOnlyAMove() {
+        return mailboxIds.map(list -> list.size() == 1).orElse(false)
+            && oldKeywords.isEmpty()
+            && keywords.isEmpty();
+    }
+
     public ImmutableList<ValidationResult> getValidationErrors() {
         return validationErrors;
     }

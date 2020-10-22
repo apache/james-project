@@ -289,6 +289,8 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      */
     List<MessageRange> moveMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException;
 
+    List<MessageRange> moveMessages(MessageRange set, MailboxId from, MailboxId to, MailboxSession session) throws MailboxException;
+
     enum MailboxSearchFetchType {
         Minimal,
         Counters

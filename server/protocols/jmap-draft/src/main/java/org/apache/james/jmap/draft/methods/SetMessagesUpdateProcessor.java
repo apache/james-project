@@ -153,6 +153,8 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
 
         if (isAMassiveFlagUpdate(patches, messages)) {
             applyRangedFlagUpdate(patches, messages, responseBuilder, mailboxSession);
+        } else if (isAMassiveMove(patches, messages)) {
+            applyMove(patches, messages, responseBuilder, mailboxSession);
         } else {
             patches.forEach((id, patch) -> {
                 if (patch.isValid()) {
@@ -169,6 +171,14 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         return StreamUtils.isSingleValued(patches.values().stream())
             && StreamUtils.isSingleValued(messages.values().stream().map(metaData -> metaData.getComposedMessageId().getMailboxId()))
             && patches.values().iterator().next().isOnlyAFlagUpdate()
+            && messages.size() > 3;
+    }
+
+    private boolean isAMassiveMove(Map<MessageId, UpdateMessagePatch> patches, Multimap<MessageId, ComposedMessageIdWithMetaData> messages) {
+        // The same patch, that only represents a flag update, is applied to messages within a single mailbox
+        return StreamUtils.isSingleValued(patches.values().stream())
+            && StreamUtils.isSingleValued(messages.values().stream().map(metaData -> metaData.getComposedMessageId().getMailboxId()))
+            && patches.values().iterator().next().isOnlyAMove()
             && messages.size() > 3;
     }
 
@@ -198,6 +208,56 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                 } catch (MailboxException e) {
                     messageIds
                         .forEach(messageId -> handleMessageUpdateException(messageId, responseBuilder, e));
+                } catch (IllegalArgumentException e) {
+                    ValidationResult invalidPropertyKeywords = ValidationResult.builder()
+                        .property(MessageProperties.MessageProperty.keywords.asFieldName())
+                        .message(e.getMessage())
+                        .build();
+
+                    messageIds
+                        .forEach(messageId -> handleInvalidRequest(responseBuilder, messageId, ImmutableList.of(invalidPropertyKeywords), patch));
+                }
+            });
+        } else {
+            messages.keySet()
+                .forEach(messageId -> handleInvalidRequest(responseBuilder, messageId, patch.getValidationErrors(), patch));
+        }
+    }
+
+    private void applyMove(Map<MessageId, UpdateMessagePatch> patches, Multimap<MessageId, ComposedMessageIdWithMetaData> messages, SetMessagesResponse.Builder responseBuilder, MailboxSession mailboxSession) {
+        MailboxId mailboxId = messages.values()
+            .iterator()
+            .next()
+            .getComposedMessageId()
+            .getMailboxId();
+        UpdateMessagePatch patch = patches.values().iterator().next();
+        List<MessageRange> uidRanges = MessageRange.toRanges(messages.values().stream().map(metaData -> metaData.getComposedMessageId().getUid())
+            .distinct()
+            .collect(Guavate.toImmutableList()));
+
+        if (patch.isValid()) {
+            uidRanges.forEach(range -> {
+                ImmutableList<MessageId> messageIds = messages.entries()
+                    .stream()
+                    .filter(entry -> range.includes(entry.getValue().getComposedMessageId().getUid()))
+                    .map(Map.Entry::getKey)
+                    .distinct()
+                    .collect(Guavate.toImmutableList());
+                try {
+                    MailboxId targetId = mailboxIdFactory.fromString(patch.getMailboxIds().get().iterator().next());
+                    mailboxManager.moveMessages(range, mailboxId, targetId, mailboxSession);
+                    responseBuilder.updated(messageIds);
+                } catch (MailboxException e) {
+                    messageIds
+                        .forEach(messageId -> handleMessageUpdateException(messageId, responseBuilder, e));
+                } catch (IllegalArgumentException e) {
+                    ValidationResult invalidPropertyKeywords = ValidationResult.builder()
+                        .property(MessageProperties.MessageProperty.keywords.asFieldName())
+                        .message(e.getMessage())
+                        .build();
+
+                    messageIds
+                        .forEach(messageId -> handleInvalidRequest(responseBuilder, messageId, ImmutableList.of(invalidPropertyKeywords), patch));
                 }
             });
         } else {

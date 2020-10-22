@@ -1130,6 +1130,80 @@ public abstract class SetMessagesMethodTest {
             .body(FIRST_MAILBOX + ".unreadMessages", equalTo(0));
     }
 
+    @Test
+    public void massiveMessageMoveShouldBeApplied() throws MailboxException {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME.asString(), "mailbox");
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME.asString(), DefaultMailboxes.DRAFTS);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME.asString(), DefaultMailboxes.OUTBOX);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME.asString(), DefaultMailboxes.SENT);
+        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME.asString(), DefaultMailboxes.TRASH);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME.asString(), DefaultMailboxes.SPAM);
+
+        ComposedMessageId message1 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
+        ComposedMessageId message2 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
+        ComposedMessageId message3 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.SEEN));
+        ComposedMessageId message4 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
+        ComposedMessageId message5 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.ANSWERED));
+        ComposedMessageId message6 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
+        ComposedMessageId message7 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
+        ComposedMessageId message8 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
+        ComposedMessageId message9 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.SEEN));
+        ComposedMessageId message10 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
+        ComposedMessageId message11 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags(Flags.Flag.ANSWERED));
+        ComposedMessageId message12 = mailboxProbe.appendMessage(USERNAME.asString(), USER_MAILBOX,
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
+
+        String serializedMessageId1 = message1.getMessageId().serialize();
+        String serializedMessageId2 = message2.getMessageId().serialize();
+        String serializedMessageId3 = message3.getMessageId().serialize();
+        String serializedMessageId4 = message4.getMessageId().serialize();
+        String serializedMessageId5 = message5.getMessageId().serialize();
+        String serializedMessageId6 = message6.getMessageId().serialize();
+        String serializedMessageId7 = message7.getMessageId().serialize();
+        String serializedMessageId8 = message8.getMessageId().serialize();
+        String serializedMessageId9 = message9.getMessageId().serialize();
+        String serializedMessageId10 = message10.getMessageId().serialize();
+        String serializedMessageId11 = message11.getMessageId().serialize();
+        String serializedMessageId12 = message12.getMessageId().serialize();
+
+        // When
+        given()
+            .header("Authorization", accessToken.asString())
+            .body(String.format("[[\"setMessages\", {\"update\": {" +
+                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]} " +
+                    "} }, \"#0\"]]", serializedMessageId1, serializedMessageId2, serializedMessageId3,
+                serializedMessageId4, serializedMessageId5, serializedMessageId6,
+                serializedMessageId7, serializedMessageId8, serializedMessageId9,
+                serializedMessageId10, serializedMessageId11, serializedMessageId12))
+            .when()
+            .post("/jmap")
+            // Then
+            .then()
+            .log().ifValidationFails().body(ARGUMENTS + ".updated", hasSize(12));
+    }
+
     @Category(BasicFeature.class)
     @Test
     public void sendingAMailShouldLeadToAppropriateMailboxCountersOnSent() {

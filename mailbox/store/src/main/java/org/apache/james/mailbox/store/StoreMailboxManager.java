@@ -623,6 +623,14 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
+    public List<MessageRange> moveMessages(MessageRange set, MailboxId from, MailboxId to, MailboxSession session) throws MailboxException {
+        StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
+        StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
+
+        return configuration.getMoveBatcher().batchMessages(set, messageRange -> fromMailbox.moveTo(messageRange, toMailbox, session));
+    }
+
+    @Override
     public Flux<MailboxMetaData> search(MailboxQuery expression, MailboxSearchFetchType fetchType, MailboxSession session) {
         Mono<List<Mailbox>> mailboxesMono = searchMailboxes(expression, session, Right.Lookup).collectList();
 
