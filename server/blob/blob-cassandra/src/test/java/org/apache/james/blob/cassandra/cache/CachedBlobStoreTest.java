@@ -34,8 +34,12 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
+import javax.mail.internet.MimeMessage;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.StatementRecorder;
+import org.apache.james.backends.cassandra.StatementRecorder.Selector;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
@@ -43,9 +47,13 @@ import org.apache.james.blob.api.BlobStoreContract;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectNotFoundException;
+import org.apache.james.blob.api.Store;
 import org.apache.james.blob.api.TestBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
+import org.apache.james.blob.mail.MimeMessagePartsId;
+import org.apache.james.blob.mail.MimeMessageStore;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -296,6 +304,33 @@ public class CachedBlobStoreTest implements BlobStoreContract {
 
         assertThat(testee().read(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE))
             .hasSameContentAs(new ByteArrayInputStream(APPROXIMATELY_FIVE_KILOBYTES));
+    }
+
+    @Test
+    public void cachedBlobStoreShouldOnlyBeQueriedForHeaders(CassandraCluster cassandra) throws Exception {
+        MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
+            .addHeader("Date", "Thu, 6 Sep 2018 13:29:13 +0700 (ICT)")
+            .addHeader("Message-ID", "<84739718.0.1536215353507@localhost.localdomain>")
+            .addFrom("any@any.com")
+            .addToRecipient("toddy@any.com")
+            .setSubject("Important Mail")
+            .setText("Important mail content")
+            .build();
+
+        Store<MimeMessage, MimeMessagePartsId> mimeMessageStore = new MimeMessageStore.Factory(testee())
+            .mimeMessageStore();
+        MimeMessagePartsId partsId = mimeMessageStore
+            .save(message)
+            .block();
+
+        StatementRecorder statementRecorder = new StatementRecorder();
+        cassandra.getConf().recordStatements(statementRecorder);
+        cassandra.getConf().printStatements();
+
+        mimeMessageStore.read(partsId).block();
+
+        assertThat(statementRecorder.listExecutedStatements(Selector.preparedStatementStartingWith("SELECT * FROM blob_cache")))
+            .hasSize(1);
     }
 
     @Nested
