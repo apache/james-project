@@ -670,6 +670,318 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def rangeFlagsAdditionShouldUpdateStoredFlags(server: GuiceJamesServer): Unit = {
+    val message: Message = Fixture.createTestMessage
+
+    val flags: Flags = FlagsBuilder.builder()
+      .add(Flags.Flag.ANSWERED)
+      .build()
+
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags).build(message)).getMessageId
+    val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags).build(message)).getMessageId
+    val messageId3: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags).build(message)).getMessageId
+    val messageId4: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags).build(message)).getMessageId
+
+    val request = String.format(
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "update": {
+         |        "${messageId1.serialize}":{
+         |          "keywords/music": true
+         |        },
+         |        "${messageId2.serialize}":{
+         |          "keywords/music": true
+         |        },
+         |        "${messageId3.serialize}":{
+         |          "keywords/music": true
+         |        },
+         |        "${messageId4.serialize}":{
+         |          "keywords/music": true
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |     {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "ids": ["${messageId1.serialize}", "${messageId2.serialize}", "${messageId3.serialize}", "${messageId4.serialize}"],
+         |       "properties": ["keywords"]
+         |     },
+         |     "c2"]]
+         |}""".stripMargin, "$Seen")
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].updated")
+      .isEqualTo(s"""{
+          |  "${messageId1.serialize}": null,
+          |  "${messageId2.serialize}": null,
+          |  "${messageId3.serialize}": null,
+          |  "${messageId4.serialize}": null
+          |}
+      """.stripMargin)
+    assertThatJson(response)
+      .inPath("methodResponses[1][1].list")
+      .isEqualTo(String.format(
+        """[
+          |{
+          |   "id":"%s",
+          |   "keywords": {
+          |       "$Answered": true,
+          |       "music": true
+          |    }
+          |},
+          |{
+          |   "id":"%s",
+          |   "keywords": {
+          |       "$Answered": true,
+          |       "music": true
+          |    }
+          |},
+          |{
+          |   "id":"%s",
+          |   "keywords": {
+          |       "$Answered": true,
+          |       "music": true
+          |    }
+          |},
+          |{
+          |   "id":"%s",
+          |   "keywords": {
+          |       "$Answered": true,
+          |       "music": true
+          |    }
+          |}
+          |]
+      """.stripMargin, messageId1.serialize, messageId2.serialize, messageId3.serialize, messageId4.serialize))
+  }
+
+  @Test
+  def rangeFlagsRemovalShouldUpdateStoredFlags(server: GuiceJamesServer): Unit = {
+    val message: Message = Fixture.createTestMessage
+
+    val flags: Flags = FlagsBuilder.builder()
+      .add(Flags.Flag.ANSWERED)
+      .add("music")
+      .build()
+
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags).build(message)).getMessageId
+    val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags).build(message)).getMessageId
+    val messageId3: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags).build(message)).getMessageId
+    val messageId4: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags).build(message)).getMessageId
+
+    val request = String.format(
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "update": {
+         |        "${messageId1.serialize}":{
+         |          "keywords/music": null
+         |        },
+         |        "${messageId2.serialize}":{
+         |          "keywords/music": null
+         |        },
+         |        "${messageId3.serialize}":{
+         |          "keywords/music": null
+         |        },
+         |        "${messageId4.serialize}":{
+         |          "keywords/music": null
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |     {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "ids": ["${messageId1.serialize}", "${messageId2.serialize}", "${messageId3.serialize}", "${messageId4.serialize}"],
+         |       "properties": ["keywords"]
+         |     },
+         |     "c2"]]
+         |}""".stripMargin, "$Seen")
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].updated")
+      .isEqualTo(s"""{
+          |  "${messageId1.serialize}": null,
+          |  "${messageId2.serialize}": null,
+          |  "${messageId3.serialize}": null,
+          |  "${messageId4.serialize}": null
+          |}
+      """.stripMargin)
+    assertThatJson(response)
+      .inPath("methodResponses[1][1].list")
+      .isEqualTo(String.format(
+        """[
+          |{
+          |   "id":"%s",
+          |   "keywords": {
+          |       "$Answered": true
+          |    }
+          |},
+          |{
+          |   "id":"%s",
+          |   "keywords": {
+          |       "$Answered": true
+          |    }
+          |},
+          |{
+          |   "id":"%s",
+          |   "keywords": {
+          |       "$Answered": true
+          |    }
+          |},
+          |{
+          |   "id":"%s",
+          |   "keywords": {
+          |       "$Answered": true
+          |    }
+          |}
+          |]
+      """.stripMargin, messageId1.serialize, messageId2.serialize, messageId3.serialize, messageId4.serialize))
+  }
+
+  @Test
+  def rangeMoveShouldUpdateMailboxId(server: GuiceJamesServer): Unit = {
+    val message: Message = Fixture.createTestMessage
+
+    val flags: Flags = FlagsBuilder.builder()
+      .add(Flags.Flag.ANSWERED)
+      .add("music")
+      .build()
+
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val newId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "other"))
+    val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags).build(message)).getMessageId
+    val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags).build(message)).getMessageId
+    val messageId3: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags).build(message)).getMessageId
+    val messageId4: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath, AppendCommand.builder()
+      .withFlags(flags).build(message)).getMessageId
+
+    val request = String.format(
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "update": {
+         |        "${messageId1.serialize}":{
+         |          "mailboxIds": { "${newId.serialize()}" : true}
+         |        },
+         |        "${messageId2.serialize}":{
+         |          "mailboxIds": { "${newId.serialize()}" : true}
+         |        },
+         |        "${messageId3.serialize}":{
+         |          "mailboxIds": { "${newId.serialize()}" : true}
+         |        },
+         |        "${messageId4.serialize}":{
+         |          "mailboxIds": { "${newId.serialize()}" : true}
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |     {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "ids": ["${messageId1.serialize}", "${messageId2.serialize}", "${messageId3.serialize}", "${messageId4.serialize}"],
+         |       "properties": ["mailboxIds"]
+         |     },
+         |     "c2"]]
+         |}""".stripMargin, "$Seen")
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].updated")
+      .isEqualTo(s"""{
+          |  "${messageId1.serialize}": null,
+          |  "${messageId2.serialize}": null,
+          |  "${messageId3.serialize}": null,
+          |  "${messageId4.serialize}": null
+          |}
+      """.stripMargin)
+    assertThatJson(response)
+      .inPath("methodResponses[1][1].list")
+      .isEqualTo(s"""[
+          |{
+          |   "id":"${messageId1.serialize}",
+          |   "mailboxIds": {
+          |       "${newId.serialize}": true
+          |    }
+          |},
+          |{
+          |   "id":"${messageId2.serialize}",
+          |   "mailboxIds": {
+          |       "${newId.serialize}": true
+          |    }
+          |},
+          |{
+          |   "id":"${messageId3.serialize}",
+          |   "mailboxIds": {
+          |       "${newId.serialize}": true
+          |    }
+          |},
+          |{
+          |   "id":"${messageId4.serialize}",
+          |   "mailboxIds": {
+          |       "${newId.serialize}": true
+          |    }
+          |}
+          |]
+      """.stripMargin)
+  }
+
+  @Test
   def emailSetShouldRejectPartiallyUpdateAndResetKeywordsAtTheSameTime(server: GuiceJamesServer): Unit = {
     val message: Message = Fixture.createTestMessage
 

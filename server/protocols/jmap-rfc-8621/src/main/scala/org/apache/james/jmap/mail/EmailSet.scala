@@ -23,13 +23,12 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
 import org.apache.james.jmap.mail.EmailSet.UnparsedMessageId
 import org.apache.james.jmap.method.WithAccountId
-import org.apache.james.jmap.model.KeywordsFactory.STRICT_KEYWORDS_FACTORY
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.{AccountId, Keywords, SetError}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json.JsObject
 
-import scala.util.{Failure, Right, Success, Try}
+import scala.util.{Right, Try}
 
 object EmailSet {
   type UnparsedMessageIdConstraint = NonEmpty
@@ -97,13 +96,23 @@ case class EmailSetUpdate(keywords: Option[Keywords],
         .compose(keywordsRemoval)
         .compose(keywordsReset)
 
-      Right(ValidatedEmailSetUpdate(keywordsTransformation, mailboxIdsTransformation))
+      Right(ValidatedEmailSetUpdate(keywordsTransformation, mailboxIdsTransformation, this))
     }
   }
+
+  def isOnlyMove: Boolean = mailboxIds.isDefined && mailboxIds.get.value.size == 1 &&
+    keywords.isEmpty && keywordsToAdd.isEmpty && keywordsToRemove.isEmpty
+
+  def isOnlyFlagAddition: Boolean = keywordsToAdd.isDefined && keywordsToRemove.isEmpty && mailboxIds.isEmpty &&
+    mailboxIdsToAdd.isEmpty && mailboxIdsToRemove.isEmpty
+
+  def isOnlyFlagRemoval: Boolean = keywordsToRemove.isDefined && keywordsToAdd.isEmpty && mailboxIds.isEmpty &&
+    mailboxIdsToAdd.isEmpty && mailboxIdsToRemove.isEmpty
 }
 
-case class ValidatedEmailSetUpdate private (keywords: Function[Keywords, Keywords],
-                                            mailboxIdsTransformation: Function[MailboxIds, MailboxIds])
+case class ValidatedEmailSetUpdate private (keywordsTransformation: Function[Keywords, Keywords],
+                                            mailboxIdsTransformation: Function[MailboxIds, MailboxIds],
+                                            update: EmailSetUpdate)
 
 class EmailUpdateValidationException() extends IllegalArgumentException
 case class InvalidEmailPropertyException(property: String, cause: String) extends EmailUpdateValidationException

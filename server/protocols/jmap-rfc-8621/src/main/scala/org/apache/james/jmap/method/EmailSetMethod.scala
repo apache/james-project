@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.jmap.method
 
+import java.util.function.Consumer
+
 import com.google.common.collect.ImmutableList
 import eu.timepit.refined.auto._
 import javax.inject.Inject
@@ -34,8 +36,8 @@ import org.apache.james.jmap.model.SetError.SetErrorDescription
 import org.apache.james.jmap.model.{Capabilities, Invocation, SetError, State}
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode
 import org.apache.james.mailbox.exception.MailboxNotFoundException
-import org.apache.james.mailbox.model.{ComposedMessageIdWithMetaData, DeleteResult, MessageId}
-import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
+import org.apache.james.mailbox.model.{ComposedMessageIdWithMetaData, DeleteResult, MailboxId, MessageId, MessageRange}
+import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageIdManager, MessageManager}
 import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
@@ -47,6 +49,7 @@ case class MessageNotFoundExeception(messageId: MessageId) extends Exception
 
 class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
                                messageIdManager: MessageIdManager,
+                               mailboxManager: MailboxManager,
                                messageIdFactory: MessageId.Factory,
                                val metricFactory: MetricFactory,
                                val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[EmailSetRequest] {
@@ -137,7 +140,7 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailSetRequest): SMono[InvocationWithContext] = {
     for {
       destroyResults <- destroy(request, mailboxSession)
-      updateResults <- update(request, mailboxSession)
+      updateResults <- update(request, mailboxSession).doOnError(e => e.printStackTrace())
     } yield InvocationWithContext(
       invocation = Invocation(
         methodName = invocation.invocation.methodName,
@@ -199,19 +202,98 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
       updates <- SFlux.fromPublisher(messageIdManager.messagesMetadata(validUpdates.map(_._1).asJavaCollection, session))
         .collectMultimap(metaData => metaData.getComposedMessageId.getMessageId)
         .flatMap(metaData => {
-          SFlux.fromIterable(validUpdates)
-            .concatMap[UpdateResult]({
-              case (messageId, updatePatch) =>
-                doUpdate(messageId, updatePatch, metaData.get(messageId).toList.flatten, session)
-            })
-            .collectSeq()
+          doUpdate(validUpdates, metaData, session)
         })
     } yield {
       UpdateResults(updates ++ failures)
     }
   }
 
-  private def doUpdate(messageId: MessageId, update: ValidatedEmailSetUpdate, storedMetaData: List[ComposedMessageIdWithMetaData], session: MailboxSession): SMono[UpdateResult] = {
+  private def doUpdate(validUpdates: List[(MessageId, ValidatedEmailSetUpdate)],
+                       metaData: Map[MessageId, Traversable[ComposedMessageIdWithMetaData]],
+                       session: MailboxSession): SMono[Seq[UpdateResult]] = {
+    val sameUpdate: Boolean = validUpdates.map(_._2).distinctBy(_.update).size == 1
+    val singleMailbox: Boolean = metaData.values.flatten.map(_.getComposedMessageId.getMailboxId).toSet.size == 1
+
+    if (sameUpdate && singleMailbox && validUpdates.size > 3) {
+      val update: ValidatedEmailSetUpdate = validUpdates.map(_._2).headOption.get
+      val ranges: List[MessageRange] = asRanges(metaData)
+      val mailboxId: MailboxId = metaData.values.flatten.map(_.getComposedMessageId.getMailboxId).headOption.get
+
+      if (update.update.isOnlyFlagAddition) {
+        updateFlagsByRange(mailboxId, update.update.keywordsToAdd.get.asFlags, ranges, metaData, FlagsUpdateMode.ADD, session)
+      } else if (update.update.isOnlyFlagRemoval) {
+        updateFlagsByRange(mailboxId, update.update.keywordsToRemove.get.asFlags, ranges, metaData, FlagsUpdateMode.REMOVE, session)
+      } else if (update.update.isOnlyMove) {
+        moveByRange(mailboxId, update, ranges, metaData, session)
+      } else {
+        updateEachMessage(validUpdates, metaData, session)
+      }
+    } else {
+      updateEachMessage(validUpdates, metaData, session)
+    }
+  }
+
+  private def asRanges(metaData: Map[MessageId, Traversable[ComposedMessageIdWithMetaData]]) =
+    MessageRange.toRanges(metaData.values
+      .flatten.map(_.getComposedMessageId.getUid)
+      .toList.asJava)
+      .asScala.toList
+
+  private def updateFlagsByRange(mailboxId: MailboxId,
+                                 flags: Flags,
+                                 ranges: List[MessageRange],
+                                 metaData: Map[MessageId, Traversable[ComposedMessageIdWithMetaData]],
+                                 updateMode: FlagsUpdateMode,
+                                 session: MailboxSession): SMono[Seq[UpdateResult]] = {
+    val mailboxMono: SMono[MessageManager] = SMono.fromCallable(() => mailboxManager.getMailbox(mailboxId, session))
+
+    mailboxMono.flatMap(mailbox => updateByRange(ranges, metaData,
+      range => mailbox.setFlags(flags, updateMode, range, session)))
+      .subscribeOn(Schedulers.elastic())
+  }
+
+  private def moveByRange(mailboxId: MailboxId,
+                          update: ValidatedEmailSetUpdate,
+                          ranges: List[MessageRange],
+                          metaData: Map[MessageId, Traversable[ComposedMessageIdWithMetaData]],
+                          session: MailboxSession): SMono[Seq[UpdateResult]] = {
+    val targetId: MailboxId = update.update.mailboxIds.get.value.headOption.get
+
+    updateByRange(ranges, metaData,
+      range => mailboxManager.moveMessages(range, mailboxId, targetId, session))
+  }
+
+  private def updateByRange(ranges: List[MessageRange],
+                            metaData: Map[MessageId, Traversable[ComposedMessageIdWithMetaData]],
+                            operation: Consumer[MessageRange]): SMono[Seq[UpdateResult]] = {
+
+    SFlux.fromIterable(ranges)
+      .concatMap(range => {
+        val messageIds = metaData.filter(entry => entry._2.exists(composedId => range.includes(composedId.getComposedMessageId.getUid)))
+          .keys
+          .toSeq
+        SMono.fromCallable[Seq[UpdateResult]](() => {
+          operation.accept(range)
+          messageIds.map(UpdateSuccess)
+        })
+          .onErrorResume(e => SMono.just(messageIds.map(id => UpdateFailure(EmailSet.asUnparsed(id), e))))
+          .subscribeOn(Schedulers.elastic())
+      })
+      .reduce(Seq(), _ ++ _)
+  }
+
+  private def updateEachMessage(validUpdates: List[(MessageId, ValidatedEmailSetUpdate)],
+                                metaData: Map[MessageId, Traversable[ComposedMessageIdWithMetaData]],
+                                session: MailboxSession): SMono[Seq[UpdateResult]] =
+    SFlux.fromIterable(validUpdates)
+      .concatMap[UpdateResult]({
+        case (messageId, updatePatch) =>
+          updateSingleMessage(messageId, updatePatch, metaData.get(messageId).toList.flatten, session)
+      })
+      .collectSeq()
+
+  private def updateSingleMessage(messageId: MessageId, update: ValidatedEmailSetUpdate, storedMetaData: List[ComposedMessageIdWithMetaData], session: MailboxSession): SMono[UpdateResult] = {
     val mailboxIds: MailboxIds = MailboxIds(storedMetaData.map(metaData => metaData.getComposedMessageId.getMailboxId))
     val originFlags: Flags = storedMetaData
       .foldLeft[Flags](new Flags())((flags: Flags, m: ComposedMessageIdWithMetaData) => {
@@ -246,7 +328,7 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
   }
 
   private def updateFlags(messageId: MessageId, update: ValidatedEmailSetUpdate, mailboxIds: MailboxIds, originalFlags: Flags, session: MailboxSession): SMono[UpdateResult] = {
-    val newFlags = update.keywords
+    val newFlags = update.keywordsTransformation
       .apply(LENIENT_KEYWORDS_FACTORY.fromFlags(originalFlags).get)
       .asFlagsWithRecentAndDeletedFrom(originalFlags)
 
