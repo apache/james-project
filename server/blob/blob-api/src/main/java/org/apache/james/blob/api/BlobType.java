@@ -23,13 +23,19 @@ import java.util.Objects;
 
 public class BlobType {
     private final String name;
+    private final BlobStore.StoragePolicy storagePolicy;
 
-    public BlobType(String name) {
+    public BlobType(String name, BlobStore.StoragePolicy storagePolicy) {
         this.name = name;
+        this.storagePolicy = storagePolicy;
     }
 
     public String getName() {
         return name;
+    }
+
+    public BlobStore.StoragePolicy getStoragePolicy() {
+        return storagePolicy;
     }
 
     @Override
@@ -37,13 +43,14 @@ public class BlobType {
         if (o instanceof BlobType) {
             BlobType blobType = (BlobType) o;
 
-            return Objects.equals(this.name, blobType.name);
+            return Objects.equals(this.name, blobType.name)
+                && Objects.equals(this.storagePolicy, blobType.storagePolicy);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(name);
+        return Objects.hash(name, storagePolicy);
     }
 }

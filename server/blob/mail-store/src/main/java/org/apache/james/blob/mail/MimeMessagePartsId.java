@@ -19,6 +19,9 @@
 
 package org.apache.james.blob.mail;
 
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
+
 import java.util.Map;
 import java.util.Objects;
 
@@ -75,8 +78,8 @@ public class MimeMessagePartsId implements BlobPartsId {
         }
     }
 
-    static final BlobType HEADER_BLOB_TYPE = new BlobType("mailHeader");
-    static final BlobType BODY_BLOB_TYPE = new BlobType("mailBody");
+    static final BlobType HEADER_BLOB_TYPE = new BlobType("mailHeader", SIZE_BASED);
+    static final BlobType BODY_BLOB_TYPE = new BlobType("mailBody", LOW_COST);
 
     private final BlobId headerBlobId;
     private final BlobId bodyBlobId;

@@ -216,7 +216,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
 
         SoftAssertions.assertSoftly(soflty -> {
             soflty.assertThat(Mono.from(cache.read(blobId)).blockOptional()).isEmpty();
-            soflty.assertThat(new ByteArrayInputStream(Mono.from(testee().readBytes(DEFAULT_BUCKETNAME, blobId)).block()))
+            soflty.assertThat(new ByteArrayInputStream(Mono.from(testee().readBytes(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE)).block()))
                 .hasSameContentAs(new ByteArrayInputStream(APPROXIMATELY_FIVE_KILOBYTES));
             soflty.assertThat(new ByteArrayInputStream(Mono.from(cache.read(blobId)).block()))
                 .hasSameContentAs(new ByteArrayInputStream(APPROXIMATELY_FIVE_KILOBYTES));
@@ -229,7 +229,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
 
         SoftAssertions.assertSoftly(soflty -> {
             soflty.assertThat(Mono.from(cache.read(blobId)).blockOptional()).isEmpty();
-            soflty.assertThat(testee().read(DEFAULT_BUCKETNAME, blobId))
+            soflty.assertThat(testee().read(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE))
                 .hasSameContentAs(new ByteArrayInputStream(APPROXIMATELY_FIVE_KILOBYTES));
             soflty.assertThat(new ByteArrayInputStream(Mono.from(cache.read(blobId)).block()))
                 .hasSameContentAs(new ByteArrayInputStream(APPROXIMATELY_FIVE_KILOBYTES));
@@ -242,7 +242,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
 
         SoftAssertions.assertSoftly(soflty -> {
             soflty.assertThat(Mono.from(cache.read(blobId)).blockOptional()).isEmpty();
-            soflty.assertThat(new ByteArrayInputStream(Mono.from(testee().readBytes(TEST_BUCKETNAME, blobId)).block()))
+            soflty.assertThat(new ByteArrayInputStream(Mono.from(testee().readBytes(TEST_BUCKETNAME, blobId, HIGH_PERFORMANCE)).block()))
                 .hasSameContentAs(new ByteArrayInputStream(APPROXIMATELY_FIVE_KILOBYTES));
             soflty.assertThat(Mono.from(cache.read(blobId)).blockOptional()).isEmpty();
         });
@@ -254,7 +254,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
 
         SoftAssertions.assertSoftly(soflty -> {
             soflty.assertThat(Mono.from(cache.read(blobId)).blockOptional()).isEmpty();
-            soflty.assertThat(testee().read(TEST_BUCKETNAME, blobId))
+            soflty.assertThat(testee().read(TEST_BUCKETNAME, blobId, HIGH_PERFORMANCE))
                 .hasSameContentAs(new ByteArrayInputStream(APPROXIMATELY_FIVE_KILOBYTES));
             soflty.assertThat(Mono.from(cache.read(blobId)).blockOptional()).isEmpty();
         });
@@ -266,7 +266,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
 
         SoftAssertions.assertSoftly(soflty -> {
             soflty.assertThat(Mono.from(cache.read(blobId)).blockOptional()).isEmpty();
-            soflty.assertThat(new ByteArrayInputStream(Mono.from(testee().readBytes(DEFAULT_BUCKETNAME, blobId)).block()))
+            soflty.assertThat(new ByteArrayInputStream(Mono.from(testee().readBytes(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE)).block()))
                 .hasSameContentAs(new ByteArrayInputStream(TWELVE_MEGABYTES));
             soflty.assertThat(Mono.from(cache.read(blobId)).blockOptional()).isEmpty();
         });
@@ -278,7 +278,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
 
         SoftAssertions.assertSoftly(soflty -> {
             soflty.assertThat(Mono.from(cache.read(blobId)).blockOptional()).isEmpty();
-            soflty.assertThat(testee().read(DEFAULT_BUCKETNAME, blobId))
+            soflty.assertThat(testee().read(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE))
                 .hasSameContentAs(new ByteArrayInputStream(TWELVE_MEGABYTES));
             soflty.assertThat(Mono.from(cache.read(blobId)).blockOptional()).isEmpty();
         });
@@ -294,7 +294,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
 
         Mono.from(cache.read(blobId)).block();
 
-        assertThat(testee().read(DEFAULT_BUCKETNAME, blobId))
+        assertThat(testee().read(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE))
             .hasSameContentAs(new ByteArrayInputStream(APPROXIMATELY_FIVE_KILOBYTES));
     }
 
@@ -304,8 +304,8 @@ public class CachedBlobStoreTest implements BlobStoreContract {
         void readBlobStoreCacheWithNoneDefaultBucketNameShouldNotImpact() {
             BlobId blobId = Mono.from(testee.save(TEST_BUCKETNAME, APPROXIMATELY_FIVE_KILOBYTES, SIZE_BASED)).block();
 
-            testee.read(TEST_BUCKETNAME, blobId);
-            testee.read(TEST_BUCKETNAME, blobId);
+            testee.read(TEST_BUCKETNAME, blobId, HIGH_PERFORMANCE);
+            testee.read(TEST_BUCKETNAME, blobId, HIGH_PERFORMANCE);
 
             SoftAssertions.assertSoftly(soflty -> {
                 soflty.assertThat(metricFactory.countFor(BLOBSTORE_CACHED_MISS_COUNT_METRIC_NAME))
@@ -324,8 +324,8 @@ public class CachedBlobStoreTest implements BlobStoreContract {
         void readBlobStoreWithNoneDefaultBucketNameShouldRecordByBackendLatency() {
             BlobId blobId = Mono.from(testee.save(TEST_BUCKETNAME, APPROXIMATELY_FIVE_KILOBYTES, SIZE_BASED)).block();
 
-            testee.read(TEST_BUCKETNAME, blobId);
-            testee.read(TEST_BUCKETNAME, blobId);
+            testee.read(TEST_BUCKETNAME, blobId, HIGH_PERFORMANCE);
+            testee.read(TEST_BUCKETNAME, blobId, HIGH_PERFORMANCE);
 
             SoftAssertions.assertSoftly(soflty ->
                 soflty.assertThat(metricFactory.executionTimesFor(BLOBSTORE_BACKEND_LATENCY_METRIC_NAME))
@@ -337,9 +337,8 @@ public class CachedBlobStoreTest implements BlobStoreContract {
         void readBytesWithNoneDefaultBucketNameShouldNotImpact() {
             BlobId blobId = Mono.from(testee.save(TEST_BUCKETNAME, APPROXIMATELY_FIVE_KILOBYTES, SIZE_BASED)).block();
 
-            Mono.from(testee.readBytes(TEST_BUCKETNAME, blobId)).block();
-            Mono.from(testee.readBytes(TEST_BUCKETNAME, blobId)).block();
-
+            Mono.from(testee.readBytes(TEST_BUCKETNAME, blobId, HIGH_PERFORMANCE)).block();
+            Mono.from(testee.readBytes(TEST_BUCKETNAME, blobId, HIGH_PERFORMANCE)).block();
 
             SoftAssertions.assertSoftly(soflty -> {
                 assertThat(metricFactory.countFor(BLOBSTORE_CACHED_MISS_COUNT_METRIC_NAME))
@@ -361,8 +360,8 @@ public class CachedBlobStoreTest implements BlobStoreContract {
         void readBytesWithNoneDefaultBucketNameShouldPublishBackendTimerMetrics() {
             BlobId blobId = Mono.from(testee.save(TEST_BUCKETNAME, APPROXIMATELY_FIVE_KILOBYTES, SIZE_BASED)).block();
 
-            Mono.from(testee.readBytes(TEST_BUCKETNAME, blobId)).block();
-            Mono.from(testee.readBytes(TEST_BUCKETNAME, blobId)).block();
+            Mono.from(testee.readBytes(TEST_BUCKETNAME, blobId, HIGH_PERFORMANCE)).block();
+            Mono.from(testee.readBytes(TEST_BUCKETNAME, blobId, HIGH_PERFORMANCE)).block();
 
             SoftAssertions.assertSoftly(soflty ->
                 soflty.assertThat(metricFactory.executionTimesFor(BLOBSTORE_BACKEND_LATENCY_METRIC_NAME))
@@ -374,8 +373,8 @@ public class CachedBlobStoreTest implements BlobStoreContract {
         void readBlobStoreCacheShouldPublishTimerMetrics() {
             BlobId blobId = Mono.from(testee.save(DEFAULT_BUCKETNAME, APPROXIMATELY_FIVE_KILOBYTES, SIZE_BASED)).block();
 
-            testee.read(DEFAULT_BUCKETNAME, blobId);
-            testee.read(DEFAULT_BUCKETNAME, blobId);
+            testee.read(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE);
+            testee.read(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE);
 
             SoftAssertions.assertSoftly(soflty -> {
                 soflty.assertThat(metricFactory.executionTimesFor(BLOBSTORE_CACHED_LATENCY_METRIC_NAME))
@@ -388,8 +387,8 @@ public class CachedBlobStoreTest implements BlobStoreContract {
         void readBytesCacheShouldPublishTimerMetrics() {
             BlobId blobId = Mono.from(testee.save(DEFAULT_BUCKETNAME, APPROXIMATELY_FIVE_KILOBYTES, SIZE_BASED)).block();
 
-            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId)).block();
-            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId)).block();
+            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE)).block();
+            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE)).block();
 
             SoftAssertions.assertSoftly(soflty -> {
                 soflty.assertThat(metricFactory.executionTimesFor(BLOBSTORE_CACHED_LATENCY_METRIC_NAME))
@@ -405,8 +404,8 @@ public class CachedBlobStoreTest implements BlobStoreContract {
         void readBytesShouldPublishBackendTimerMetricsForBigBlobs() {
             BlobId blobId = Mono.from(backend.save(DEFAULT_BUCKETNAME, ELEVEN_KILOBYTES, SIZE_BASED)).block();
 
-            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId)).block();
-            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId)).block();
+            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE)).block();
+            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE)).block();
 
             SoftAssertions.assertSoftly(soflty ->
                 soflty.assertThat(metricFactory.executionTimesFor(BLOBSTORE_BACKEND_LATENCY_METRIC_NAME))
@@ -418,8 +417,8 @@ public class CachedBlobStoreTest implements BlobStoreContract {
         void readInputStreamShouldPublishBackendTimerForBigBlobs() {
             BlobId blobId = Mono.from(backend.save(DEFAULT_BUCKETNAME, ELEVEN_KILOBYTES, SIZE_BASED)).block();
 
-            testee.read(DEFAULT_BUCKETNAME, blobId);
-            testee.read(DEFAULT_BUCKETNAME, blobId);
+            testee.read(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE);
+            testee.read(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE);
 
             SoftAssertions.assertSoftly(soflty ->
                 soflty.assertThat(metricFactory.executionTimesFor(BLOBSTORE_BACKEND_LATENCY_METRIC_NAME))
@@ -431,8 +430,8 @@ public class CachedBlobStoreTest implements BlobStoreContract {
         void readBytesShouldNotIncreaseCacheCounterForBigBlobs() {
             BlobId blobId = Mono.from(backend.save(DEFAULT_BUCKETNAME, ELEVEN_KILOBYTES, SIZE_BASED)).block();
 
-            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId)).block();
-            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId)).block();
+            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE)).block();
+            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE)).block();
 
             SoftAssertions.assertSoftly(soflty -> {
                 soflty.assertThat(metricFactory.countFor(BLOBSTORE_CACHED_MISS_COUNT_METRIC_NAME))
@@ -466,7 +465,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
             BlobId blobId = Mono.from(testee.save(DEFAULT_BUCKETNAME, ELEVEN_KILOBYTES, SIZE_BASED)).block();
 
             Duration delay = Duration.ofMillis(500);
-            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId))
+            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE))
                 .then(Mono.delay(delay))
                 .repeat(2)
                 .blockLast();
@@ -481,7 +480,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
             BlobId blobId = Mono.from(testee.save(DEFAULT_BUCKETNAME, APPROXIMATELY_FIVE_KILOBYTES, SIZE_BASED)).block();
 
             Duration delay = Duration.ofMillis(500);
-            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId))
+            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE))
                 .then(Mono.delay(delay))
                 .repeat(2)
                 .blockLast();
@@ -495,8 +494,8 @@ public class CachedBlobStoreTest implements BlobStoreContract {
         void readBlobStoreCacheShouldCountWhenHit() {
             BlobId blobId = Mono.from(testee.save(DEFAULT_BUCKETNAME, APPROXIMATELY_FIVE_KILOBYTES, SIZE_BASED)).block();
 
-            testee.read(DEFAULT_BUCKETNAME, blobId);
-            testee.read(DEFAULT_BUCKETNAME, blobId);
+            testee.read(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE);
+            testee.read(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE);
 
             assertThat(metricFactory.countFor(BLOBSTORE_CACHED_HIT_COUNT_METRIC_NAME)).isEqualTo(2);
         }
@@ -505,8 +504,8 @@ public class CachedBlobStoreTest implements BlobStoreContract {
         void readBytesCacheShouldCountWhenHit() {
             BlobId blobId = Mono.from(testee.save(DEFAULT_BUCKETNAME, APPROXIMATELY_FIVE_KILOBYTES, SIZE_BASED)).block();
 
-            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId)).block();
-            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId)).block();
+            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE)).block();
+            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE)).block();
 
             assertThat(metricFactory.countFor(BLOBSTORE_CACHED_HIT_COUNT_METRIC_NAME)).isEqualTo(2);
         }
@@ -517,7 +516,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
             BlobId blobId = Mono.from(backend.save(DEFAULT_BUCKETNAME, APPROXIMATELY_FIVE_KILOBYTES, SIZE_BASED)).block();
 
             Mono.from(cache.remove(blobId)).block();
-            testee.read(DEFAULT_BUCKETNAME, blobId);
+            testee.read(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE);
 
             assertThat(metricFactory.countFor(BLOBSTORE_CACHED_MISS_COUNT_METRIC_NAME)).isEqualTo(1);
         }
@@ -527,7 +526,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
             BlobId blobId = Mono.from(testee.save(DEFAULT_BUCKETNAME, APPROXIMATELY_FIVE_KILOBYTES, SIZE_BASED)).block();
 
             Mono.from(cache.remove(blobId)).block();
-            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId)).block();
+            Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE)).block();
 
             assertThat(metricFactory.countFor(BLOBSTORE_CACHED_MISS_COUNT_METRIC_NAME)).isEqualTo(1);
         }
@@ -535,7 +534,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
         @Test
         void metricsShouldNotWorkExceptLatencyWhenReadNonExistingBlob() {
             SoftAssertions.assertSoftly(soflty -> {
-                soflty.assertThatThrownBy(() -> testee.read(DEFAULT_BUCKETNAME, new TestBlobId.Factory().randomId()))
+                soflty.assertThatThrownBy(() -> testee.read(DEFAULT_BUCKETNAME, new TestBlobId.Factory().randomId(), HIGH_PERFORMANCE))
                     .isInstanceOf(ObjectNotFoundException.class);
 
                 soflty.assertThat(metricFactory.countFor(BLOBSTORE_CACHED_MISS_COUNT_METRIC_NAME))
@@ -556,7 +555,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
         @Test
         void metricsShouldNotWorkExceptLatencyWhenReadNonExistingBlobAsBytes() {
             SoftAssertions.assertSoftly(soflty -> {
-                soflty.assertThatThrownBy(() -> Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, new TestBlobId.Factory().randomId())).blockOptional())
+                soflty.assertThatThrownBy(() -> Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, new TestBlobId.Factory().randomId(), HIGH_PERFORMANCE)).blockOptional())
                     .isInstanceOf(ObjectNotFoundException.class);
 
                 soflty.assertThat(metricFactory.countFor(BLOBSTORE_CACHED_MISS_COUNT_METRIC_NAME))

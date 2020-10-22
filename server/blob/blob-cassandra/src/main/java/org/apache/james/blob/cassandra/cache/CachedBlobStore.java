@@ -132,7 +132,10 @@ public class CachedBlobStore implements BlobStore {
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
+    public InputStream read(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) throws ObjectStoreIOException, ObjectNotFoundException {
+        if (storagePolicy == LOW_COST) {
+            return backend.read(bucketName, blobId);
+        }
         return Mono.just(bucketName)
             .filter(getDefaultBucketName()::equals)
             .flatMap(defaultBucket -> readInDefaultBucket(bucketName, blobId))
@@ -152,11 +155,24 @@ public class CachedBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
+    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
+        if (storagePolicy == LOW_COST) {
+            return readBytesFromBackend(bucketName, blobId);
+        }
         if (getDefaultBucketName().equals(bucketName)) {
             return readBytesInDefaultBucket(bucketName, blobId);
         }
         return readBytesFromBackend(bucketName, blobId);
+    }
+
+    @Override
+    public Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
+        return readBytes(bucketName, blobId, LOW_COST);
+    }
+
+    @Override
+    public InputStream read(BucketName bucketName, BlobId blobId) {
+        return read(bucketName, blobId, LOW_COST);
     }
 
     private Mono<byte[]> readBytesInDefaultBucket(BucketName bucketName, BlobId blobId) {

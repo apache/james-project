@@ -97,7 +97,7 @@ public interface Store<T, I> {
             return Flux.fromIterable(blobIds.asMap().entrySet())
                 .publishOn(Schedulers.elastic())
                 .flatMapSequential(
-                    entry -> Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), entry.getValue()))
+                    entry -> Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), entry.getValue(), entry.getKey().getStoragePolicy()))
                         .zipWith(Mono.just(entry.getKey())))
                 .map(entry -> Pair.of(entry.getT2(), entry.getT1()))
                 .collectList()

@@ -96,7 +96,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     @Override
     public InputStream loadAttachmentContent(AttachmentId attachmentId) throws AttachmentNotFoundException, IOException {
         return attachmentDAOV2.getAttachment(attachmentId)
-            .map(daoAttachment -> blobStore.read(blobStore.getDefaultBucketName(), daoAttachment.getBlobId()))
+            .map(daoAttachment -> blobStore.read(blobStore.getDefaultBucketName(), daoAttachment.getBlobId(), LOW_COST))
             .blockOptional()
             .orElseThrow(() -> new AttachmentNotFoundException(attachmentId.toString()));
     }

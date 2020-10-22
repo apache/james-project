@@ -19,6 +19,8 @@
 
 package org.apache.james.linshare;
 
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
@@ -67,7 +69,7 @@ public class LinshareBlobExportMechanism implements BlobExportMechanism {
         String fileName = ExportedFileNamesGenerator.generateFileName(fileCustomPrefix, blobId, fileExtension);
         File tempFile = new File(tempDir, fileName);
         try {
-            FileUtils.copyInputStreamToFile(blobStore.read(blobStore.getDefaultBucketName(), blobId), tempFile);
+            FileUtils.copyInputStreamToFile(blobStore.read(blobStore.getDefaultBucketName(), blobId, LOW_COST), tempFile);
             uploadDocumentToTargetMail(mailAddress, tempFile);
         } finally {
             FileUtils.forceDelete(tempFile);

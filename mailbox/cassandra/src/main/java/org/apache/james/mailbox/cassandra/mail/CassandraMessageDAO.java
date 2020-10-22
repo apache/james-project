@@ -319,9 +319,9 @@ public class CassandraMessageDAO {
             case Full:
                 return getFullContent(headerId, bodyId);
             case Headers:
-                return getContent(headerId);
+                return getContent(headerId, SIZE_BASED);
             case Body:
-                return getContent(bodyId)
+                return getContent(bodyId, LOW_COST)
                     .map(data -> Bytes.concat(new byte[bodyStartOctet], data));
             case Metadata:
                 return Mono.just(EMPTY_BYTE_ARRAY);
@@ -331,12 +331,12 @@ public class CassandraMessageDAO {
     }
 
     private Mono<byte[]> getFullContent(BlobId headerId, BlobId bodyId) {
-        return getContent(headerId)
-            .zipWith(getContent(bodyId), Bytes::concat);
+        return getContent(headerId, SIZE_BASED)
+            .zipWith(getContent(bodyId, LOW_COST), Bytes::concat);
     }
 
-    private Mono<byte[]> getContent(BlobId blobId) {
-        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobId));
+    private Mono<byte[]> getContent(BlobId blobId, BlobStore.StoragePolicy storagePolicy) {
+        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobId, storagePolicy));
     }
 
     private BlobId retrieveBlobId(String field, Row row) {
