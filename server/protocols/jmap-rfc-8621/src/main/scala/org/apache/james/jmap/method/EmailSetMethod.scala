@@ -25,7 +25,7 @@ import javax.mail.Flags
 import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{EmailSetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.EmailSet.UnparsedMessageId
-import org.apache.james.jmap.mail.{DestroyIds, EmailSet, EmailSetRequest, EmailSetResponse, EmailSetUpdate, MailboxIds, ValidatedEmailSetUpdate}
+import org.apache.james.jmap.mail.{DestroyIds, EmailSet, EmailSetRequest, EmailSetResponse, MailboxIds, ValidatedEmailSetUpdate}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
@@ -174,22 +174,23 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
   }
 
   private def update(updates: Map[UnparsedMessageId, JsObject], session: MailboxSession): SMono[UpdateResults] = {
-    val validatedUpdates: List[Either[UpdateFailure, (MessageId, EmailSetUpdate)]] = updates
+    val validatedUpdates: List[Either[UpdateFailure, (MessageId, ValidatedEmailSetUpdate)]] = updates
       .map({
         case (unparsedMessageId, json) => EmailSet.parse(messageIdFactory)(unparsedMessageId)
           .toEither
           .left.map(e => UpdateFailure(unparsedMessageId, e))
           .flatMap(id => serializer.deserializeEmailSetUpdate(json)
-            .asEither
-            .fold(e => Left(UpdateFailure(unparsedMessageId, new IllegalArgumentException(e.toString()))),
-              (emailSetUpdate: EmailSetUpdate) => Right((id, emailSetUpdate))))
+            .asEither.left.map(e => new IllegalArgumentException(e.toString))
+            .flatMap(_.validate)
+            .fold(e => Left(UpdateFailure(unparsedMessageId, e)),
+              emailSetUpdate => Right((id, emailSetUpdate))))
       })
       .toList
     val failures: List[UpdateFailure] = validatedUpdates.flatMap({
       case Left(e) => Some(e)
       case _ => None
     })
-    val validUpdates: List[(MessageId, EmailSetUpdate)] = validatedUpdates.flatMap({
+    val validUpdates: List[(MessageId, ValidatedEmailSetUpdate)] = validatedUpdates.flatMap({
       case Right(pair) => Some(pair)
       case _ => None
     })
@@ -210,7 +211,7 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
     }
   }
 
-  private def doUpdate(messageId: MessageId, update: EmailSetUpdate, storedMetaData: List[ComposedMessageIdWithMetaData], session: MailboxSession): SMono[UpdateResult] = {
+  private def doUpdate(messageId: MessageId, update: ValidatedEmailSetUpdate, storedMetaData: List[ComposedMessageIdWithMetaData], session: MailboxSession): SMono[UpdateResult] = {
     val mailboxIds: MailboxIds = MailboxIds(storedMetaData.map(metaData => metaData.getComposedMessageId.getMailboxId))
     val originFlags: Flags = storedMetaData
       .foldLeft[Flags](new Flags())((flags: Flags, m: ComposedMessageIdWithMetaData) => {
@@ -221,17 +222,13 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
     if (mailboxIds.value.isEmpty) {
       SMono.just[UpdateResult](UpdateFailure(EmailSet.asUnparsed(messageId), MessageNotFoundExeception(messageId)))
     } else {
-      update.validate
-        .fold(
-          e => SMono.just(UpdateFailure(EmailSet.asUnparsed(messageId), e)),
-          validatedUpdate =>
-            updateFlags(messageId, validatedUpdate, mailboxIds, originFlags, session)
-              .flatMap {
-                case failure: UpdateFailure => SMono.just[UpdateResult](failure)
-                case _: UpdateSuccess => updateMailboxIds(messageId, validatedUpdate, mailboxIds, session)
-              }
-              .onErrorResume(e => SMono.just[UpdateResult](UpdateFailure(EmailSet.asUnparsed(messageId), e)))
-              .switchIfEmpty(SMono.just[UpdateResult](UpdateSuccess(messageId))))
+      updateFlags(messageId, update, mailboxIds, originFlags, session)
+        .flatMap {
+          case failure: UpdateFailure => SMono.just[UpdateResult](failure)
+          case _: UpdateSuccess => updateMailboxIds(messageId, update, mailboxIds, session)
+        }
+        .onErrorResume(e => SMono.just[UpdateResult](UpdateFailure(EmailSet.asUnparsed(messageId), e)))
+        .switchIfEmpty(SMono.just[UpdateResult](UpdateSuccess(messageId)))
     }
   }
 
