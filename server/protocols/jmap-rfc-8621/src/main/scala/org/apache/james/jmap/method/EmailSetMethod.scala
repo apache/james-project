@@ -81,13 +81,13 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
   }
 
   object DestroyResult {
-    def from(deleteResult: DeleteResult): DestroyResult = {
-      val notFound = deleteResult.getNotFound.asScala
-
-      deleteResult.getDestroyed.asScala
-        .headOption
+    def from(deleteResult: DeleteResult): Seq[DestroyResult] = {
+      val success: Seq[DestroySuccess] = deleteResult.getDestroyed.asScala.toSeq
         .map(DestroySuccess)
-        .getOrElse(DestroyFailure(EmailSet.asUnparsed(notFound.head), MessageNotFoundExeception(notFound.head)))
+      val notFound: Seq[DestroyResult] = deleteResult.getNotFound.asScala.toSeq
+          .map(id => DestroyFailure(EmailSet.asUnparsed(id), MessageNotFoundExeception(id)))
+
+      success ++ notFound
     }
   }
 
@@ -163,11 +163,30 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
       case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
     }
 
-  private def destroy(emailSetRequest: EmailSetRequest, mailboxSession: MailboxSession): SMono[DestroyResults] =
-    SFlux.fromIterable(emailSetRequest.destroy.getOrElse(DestroyIds(Seq())).value)
-      .flatMap(id => deleteMessage(id, mailboxSession))
-      .collectSeq()
-      .map(DestroyResults)
+  private def destroy(emailSetRequest: EmailSetRequest, mailboxSession: MailboxSession): SMono[DestroyResults] = {
+    if (emailSetRequest.destroy.isDefined) {
+      val messageIdsValidation: Seq[Either[DestroyFailure, MessageId]] = emailSetRequest.destroy.get.value
+        .map(unparsedId => EmailSet.parse(messageIdFactory)(unparsedId).toEither
+          .left.map(e => DestroyFailure(unparsedId, e)))
+      val messageIds: Seq[MessageId] = messageIdsValidation.flatMap {
+        case Right(messageId) => Some(messageId)
+        case _ => None
+      }
+      val parsingErrors: Seq[DestroyFailure] = messageIdsValidation.flatMap {
+        case Left(e) => Some(e)
+        case _ => None
+      }
+
+      SMono.fromCallable(() => messageIdManager.delete(messageIds.toList.asJava, mailboxSession))
+        .map(DestroyResult.from)
+        .subscribeOn(Schedulers.elastic())
+        .onErrorResume(e => SMono.just(messageIds.map(id => DestroyFailure(EmailSet.asUnparsed(id), e))))
+        .map(_ ++ parsingErrors)
+        .map(DestroyResults)
+    } else {
+      SMono.just(DestroyResults(Seq()))
+    }
+  }
 
   private def update(emailSetRequest: EmailSetRequest, mailboxSession: MailboxSession): SMono[UpdateResults] = {
     emailSetRequest.update
@@ -341,11 +360,4 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
         .`then`(SMono.just[UpdateResult](UpdateSuccess(messageId)))
     }
   }
-
-  private def deleteMessage(destroyId: UnparsedMessageId, mailboxSession: MailboxSession): SMono[DestroyResult] =
-    EmailSet.parse(messageIdFactory)(destroyId)
-      .fold(e => SMono.just(DestroyFailure(destroyId, e)),
-        parsedId => SMono.fromCallable(() => DestroyResult.from(messageIdManager.delete(parsedId, mailboxSession)))
-          .subscribeOn(Schedulers.elastic)
-          .onErrorRecover(e => DestroyFailure(EmailSet.asUnparsed(parsedId), e)))
 }
