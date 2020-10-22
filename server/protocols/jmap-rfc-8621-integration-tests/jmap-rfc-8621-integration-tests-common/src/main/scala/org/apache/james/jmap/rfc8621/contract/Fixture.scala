@@ -38,6 +38,7 @@ import org.apache.james.mime4j.dom.Message
 
 object Fixture {
   val ACCOUNT_ID: String = "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+  val ALICE_ACCOUNT_ID: String = "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90"
 
   def createTestMessage: Message = Message.Builder
       .of
@@ -140,6 +141,7 @@ object Fixture {
       |}""".stripMargin
 
   val ACCEPT_RFC8621_VERSION_HEADER: String = "application/json; jmapVersion=rfc-8621"
+  val RFC8621_VERSION_HEADER: String = "jmapVersion=rfc-8621"
 
   val USER: Username = Username.fromLocalPartWithDomain("user", DOMAIN)
   val USER_PASSWORD: String = "user"

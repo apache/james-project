@@ -1,4 +1,4 @@
-/** **************************************************************
+/****************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
  * distributed with this work for additional information        *
@@ -6,16 +6,16 @@
  * to you under the Apache License, Version 2.0 (the            *
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
- * *
- * http://www.apache.org/licenses/LICENSE-2.0                 *
- * *
+ *                                                              *
+ *  http://www.apache.org/licenses/LICENSE-2.0                  *
+ *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- * ***************************************************************/
+ ****************************************************************/
 package org.apache.james.jmap.routes
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream}
@@ -38,8 +38,8 @@ import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.{BlobId, EmailBodyPart, PartId}
 import org.apache.james.jmap.routes.DownloadRoutes.{BUFFER_SIZE, LOGGER}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
-import org.apache.james.mailbox.model.{ContentType, FetchGroup, MessageId, MessageResult}
-import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
+import org.apache.james.mailbox.model.{AttachmentId, AttachmentMetadata, ContentType, FetchGroup, MessageId, MessageResult}
+import org.apache.james.mailbox.{AttachmentManager, MailboxSession, MessageIdManager}
 import org.apache.james.mime4j.codec.EncoderUtil
 import org.apache.james.mime4j.codec.EncoderUtil.Usage
 import org.apache.james.mime4j.message.DefaultMessageWriter
@@ -94,6 +94,16 @@ case class MessageBlob(blobId: BlobId, message: MessageResult) extends Blob {
   override def content: InputStream = message.getFullContent.getInputStream
 }
 
+case class AttachmentBlob(attachmentMetadata: AttachmentMetadata, fileContent: InputStream) extends Blob {
+  override def size: Try[Size] = Success(UploadRoutes.sanitizeSize(attachmentMetadata.getSize))
+
+  override def contentType: ContentType = attachmentMetadata.getType
+
+  override def content: InputStream = fileContent
+
+  override def blobId: BlobId = BlobId.of(attachmentMetadata.getAttachmentId.getId).get
+}
+
 case class EmailBodyPartBlob(blobId: BlobId, part: EmailBodyPart) extends Blob {
   override def size: Try[Size] = Success(part.size)
 
@@ -118,6 +128,17 @@ class MessageBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
         .switchIfEmpty(SMono.raiseError(BlobNotFoundException(blobId))))
     }
   }
+}
+
+class AttachmentBlobResolver @Inject()(val attachmentManager: AttachmentManager) extends BlobResolver {
+  override def resolve(blobId: BlobId, mailboxSession: MailboxSession): BlobResolutionResult =
+    AttachmentId.from(org.apache.james.mailbox.model.BlobId.fromString(blobId.value.value)) match {
+      case attachmentId: AttachmentId => Applicable(
+        SMono.fromCallable(() => attachmentManager.getAttachment(attachmentId, mailboxSession))
+          .map((attachmentMetadata: AttachmentMetadata) => AttachmentBlob(attachmentMetadata, attachmentManager.load(attachmentMetadata, mailboxSession)))
+      )
+      case _ => NonApplicable()
+    }
 }
 
 class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
@@ -153,11 +174,13 @@ class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
 }
 
 class BlobResolvers @Inject()(val messageBlobResolver: MessageBlobResolver,
-                    val messagePartBlobResolver: MessagePartBlobResolver) {
+                              val messagePartBlobResolver: MessagePartBlobResolver,
+                              val attachmentBlobResolver: AttachmentBlobResolver) {
   def resolve(blobId: BlobId, mailboxSession: MailboxSession): SMono[Blob] =
     messageBlobResolver
       .resolve(blobId, mailboxSession).asOption
       .orElse(messagePartBlobResolver.resolve(blobId, mailboxSession).asOption)
+      .orElse(attachmentBlobResolver.resolve(blobId, mailboxSession).asOption)
       .getOrElse(SMono.raiseError(BlobNotFoundException(blobId)))
 }
 
