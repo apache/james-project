@@ -25,6 +25,7 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.james.queue.activemq.ActiveMQMailQueueFactory;
 import org.apache.james.queue.activemq.EmbeddedActiveMQ;
+import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 
@@ -40,6 +41,7 @@ public class ActiveMQQueueModule extends AbstractModule {
         bind(PersistenceAdapter.class).to(KahaDBPersistenceAdapter.class);
         bind(KahaDBPersistenceAdapter.class).in(Scopes.SINGLETON);
         bind(EmbeddedActiveMQ.class).in(Scopes.SINGLETON);
+        bind(ActiveMQMailQueueFactory.class).in(Scopes.SINGLETON);
     }
     
     @Provides
@@ -60,5 +62,11 @@ public class ActiveMQQueueModule extends AbstractModule {
     @Singleton
     public MailQueueFactory<?> provideActiveMQMailQueueFactory(MailQueueFactory<? extends ManageableMailQueue> mailQueueFactory) {
         return mailQueueFactory;
+    }
+
+    @Provides
+    @Singleton
+    public MailQueueFactory<? extends MailQueue> provideMailQueueFactoryGenerics(ActiveMQMailQueueFactory queueFactory) {
+        return queueFactory;
     }
 }

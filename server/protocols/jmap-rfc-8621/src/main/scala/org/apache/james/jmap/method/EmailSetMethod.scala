@@ -32,7 +32,7 @@ import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.{JsError, JsSuccess}
 import reactor.core.scala.publisher.SMono
 
-case class MessageNotFoundExeception(messageId: MessageId) extends Exception
+case class MessageNotFoundException(messageId: MessageId) extends Exception
 
 class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
                                val metricFactory: MetricFactory,

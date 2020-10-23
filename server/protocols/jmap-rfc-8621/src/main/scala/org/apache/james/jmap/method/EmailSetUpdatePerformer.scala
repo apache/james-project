@@ -48,7 +48,7 @@ object EmailSetUpdatePerformer {
     def asMessageSetError: SetError = e match {
       case e: IllegalArgumentException => SetError.invalidPatch(SetErrorDescription(s"Message $unparsedMessageId update is invalid: ${e.getMessage}"))
       case _: MailboxNotFoundException => SetError.notFound(SetErrorDescription(s"Mailbox not found"))
-      case e: MessageNotFoundExeception => SetError.notFound(SetErrorDescription(s"Cannot find message with messageId: ${e.messageId.serialize()}"))
+      case e: MessageNotFoundException => SetError.notFound(SetErrorDescription(s"Cannot find message with messageId: ${e.messageId.serialize()}"))
       case _ => SetError.serverFail(SetErrorDescription(e.getMessage))
     }
   }
@@ -207,7 +207,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
       })
 
     if (mailboxIds.value.isEmpty) {
-      SMono.just[EmailUpdateResult](EmailUpdateFailure(EmailSet.asUnparsed(messageId), MessageNotFoundExeception(messageId)))
+      SMono.just[EmailUpdateResult](EmailUpdateFailure(EmailSet.asUnparsed(messageId), MessageNotFoundException(messageId)))
     } else {
       updateFlags(messageId, update, mailboxIds, originFlags, session)
         .flatMap {

@@ -17,40 +17,31 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.server;
+package org.apache.james.jmap.rfc8621.memory;
 
-import org.apache.james.queue.api.MailQueue;
-import org.apache.james.queue.api.MailQueueFactory;
-import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.james.queue.memory.MemoryMailQueueFactory;
+import static org.apache.james.MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Scopes;
-import com.google.inject.Singleton;
+import java.util.concurrent.ThreadLocalRandom;
 
-public class MemoryMailQueueModule extends AbstractModule {
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.jmap.rfc8621.contract.EmailSubmissionSetMethodContract;
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+class MemoryEmailSubmissionSetMethodTest implements EmailSubmissionSetMethodContract {
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE)
+            .overrideWith(new TestJMAPServerModule()))
+        .build();
 
     @Override
-    protected void configure() {
-        bind(MemoryMailQueueFactory.class).in(Scopes.SINGLETON);
-    }
-
-    @Provides
-    @Singleton
-    public MailQueueFactory<? extends ManageableMailQueue> provideManageableMailQueueFactory(MemoryMailQueueFactory memoryMailQueueFactory) {
-        return memoryMailQueueFactory;
-    }
-
-    @Provides
-    @Singleton
-    public MailQueueFactory<?> provideMailQueueFactory(MemoryMailQueueFactory memoryMailQueueFactory) {
-        return memoryMailQueueFactory;
-    }
-
-    @Provides
-    @Singleton
-    public MailQueueFactory<? extends MailQueue> provideMailQueueFactoryGenerics(MemoryMailQueueFactory memoryMailQueueFactory) {
-        return memoryMailQueueFactory;
+    public MessageId randomMessageId() {
+        return InMemoryMessageId.of(ThreadLocalRandom.current().nextInt(100000) + 100);
     }
 }

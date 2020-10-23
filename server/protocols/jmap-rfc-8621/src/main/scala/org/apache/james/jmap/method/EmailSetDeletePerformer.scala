@@ -54,7 +54,7 @@ object EmailSetDeletePerformer {
       val success: Seq[DestroySuccess] = deleteResult.getDestroyed.asScala.toSeq
         .map(DestroySuccess)
       val notFound: Seq[DestroyResult] = deleteResult.getNotFound.asScala.toSeq
-        .map(id => DestroyFailure(EmailSet.asUnparsed(id), MessageNotFoundExeception(id)))
+        .map(id => DestroyFailure(EmailSet.asUnparsed(id), MessageNotFoundException(id)))
 
       success ++ notFound
     }
@@ -64,7 +64,7 @@ object EmailSetDeletePerformer {
   case class DestroyFailure(unparsedMessageId: UnparsedMessageId, e: Throwable) extends DestroyResult {
     def asMessageSetError: SetError = e match {
       case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(s"$unparsedMessageId is not a messageId: ${e.getMessage}"))
-      case e: MessageNotFoundExeception => SetError.notFound(SetErrorDescription(s"Cannot find message with messageId: ${e.messageId.serialize()}"))
+      case e: MessageNotFoundException => SetError.notFound(SetErrorDescription(s"Cannot find message with messageId: ${e.messageId.serialize()}"))
       case _ => SetError.serverFail(SetErrorDescription(e.getMessage))
     }
   }
