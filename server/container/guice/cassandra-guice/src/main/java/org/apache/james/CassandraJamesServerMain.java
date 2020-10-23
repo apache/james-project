@@ -67,6 +67,7 @@ import org.apache.james.modules.server.MessagesRoutesModule;
 import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.TaskManagerModule;
+import org.apache.james.modules.server.WebAdminMailOverWebModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
@@ -98,7 +99,8 @@ public class CassandraJamesServerMain implements JamesServerMain {
         new SwaggerRoutesModule(),
         new WebAdminServerModule(),
         new WebAdminReIndexingTaskSerializationModule(),
-        new MessagesRoutesModule());
+        new MessagesRoutesModule(),
+        new WebAdminMailOverWebModule());
 
     public static final Module PROTOCOLS = Modules.combine(
         new CassandraJmapModule(),

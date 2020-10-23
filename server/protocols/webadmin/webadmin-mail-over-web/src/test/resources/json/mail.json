@@ -1,0 +1,13 @@
+{
+  "from": "john@james",
+  "to": ["shelly@james"],
+  "subject": "Subject",
+  "ccs": ["yoko@james"],
+  "bccs": ["thomas@james"],
+  "bodyParts": [
+    {
+      "content": "Some text",
+      "type": "text/plain"
+    }
+  ]
+}
