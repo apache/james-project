@@ -233,6 +233,102 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def createShouldFailIfForbidden(server: GuiceJamesServer): Unit = {
+    val andrePath = MailboxPath.inbox(ANDRE)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa":{
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "subject": "Boredome comes from a boring mind!"
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated.aaaaaa")
+      .isEqualTo(
+        s"""{
+          |  "description": "Mailbox ${mailboxId.serialize} can not be found",
+          |  "type": "notFound"
+          |}""".stripMargin)
+  }
+
+  @Test
+  def createShouldSucceedIfDelegated(server: GuiceJamesServer): Unit = {
+    val andrePath = MailboxPath.inbox(ANDRE)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andrePath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Insert, Right.Lookup, Right.Read))
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa":{
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"], ["Email/get",
+         |     {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "ids": ["#aaaaaa"],
+         |       "properties": ["mailboxIds"]
+         |     },
+         |     "c2"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[1][1].list[0].id")
+      .inPath(s"methodResponses[1][1].list")
+      .isEqualTo(
+        s"""[{
+           |  "mailboxIds": {
+           |    "${mailboxId.serialize}": true
+           |  }
+           |}]""".stripMargin)
+  }
+
+  @Test
   def shouldNotResetKeywordWhenInvalidKeyword(server: GuiceJamesServer): Unit = {
     val message: Message = Fixture.createTestMessage
 
