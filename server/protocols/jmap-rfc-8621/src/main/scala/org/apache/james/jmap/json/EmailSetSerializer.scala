@@ -22,8 +22,9 @@ package org.apache.james.jmap.json
 import cats.implicits._
 import eu.timepit.refined.refineV
 import javax.inject.Inject
-import org.apache.james.jmap.mail.EmailSet.{UnparsedMessageId, UnparsedMessageIdConstraint}
-import org.apache.james.jmap.mail.{DestroyIds, EmailSetRequest, EmailSetResponse, EmailSetUpdate, MailboxIds}
+import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId, UnparsedMessageIdConstraint}
+import org.apache.james.jmap.mail.{DestroyIds, EmailCreationRequest, EmailCreationResponse, EmailSetRequest, EmailSetResponse, EmailSetUpdate, MailboxIds, Subject}
+import org.apache.james.jmap.model.Id.IdConstraint
 import org.apache.james.jmap.model.KeywordsFactory.STRICT_KEYWORDS_FACTORY
 import org.apache.james.jmap.model.{Keyword, Keywords, SetError}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
@@ -192,6 +193,13 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
         case _ => JsError("Expecting a JsObject as an update entry")
       })
 
+  private implicit val createsMapReads: Reads[Map[EmailCreationId, JsObject]] =
+    readMapEntry[EmailCreationId, JsObject](s => refineV[IdConstraint](s),
+      {
+        case o: JsObject => JsSuccess(o)
+        case _ => JsError("Expecting a JsObject as an update entry")
+      })
+
   private implicit val keywordReads: Reads[Keyword] = {
     case jsString: JsString => Keyword.parse(jsString.value)
       .fold(JsError(_),
@@ -218,9 +226,15 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   }
   private implicit val destroyIdsWrites: Writes[DestroyIds] = Json.valueWrites[DestroyIds]
   private implicit val emailRequestSetReads: Reads[EmailSetRequest] = Json.reads[EmailSetRequest]
+  private implicit val emailCreationResponseWrites: Writes[EmailCreationResponse] = Json.writes[EmailCreationResponse]
   private implicit val emailResponseSetWrites: OWrites[EmailSetResponse] = Json.writes[EmailSetResponse]
 
+  private implicit val subjectReads: Reads[Subject] = Json.valueReads[Subject]
+  private implicit val emailCreationRequestReads: Reads[EmailCreationRequest] = Json.reads[EmailCreationRequest]
+
   def deserialize(input: JsValue): JsResult[EmailSetRequest] = Json.fromJson[EmailSetRequest](input)
+
+  def deserializeCreationRequest(input: JsValue): JsResult[EmailCreationRequest] = Json.fromJson[EmailCreationRequest](input)
 
   def deserializeEmailSetUpdate(input: JsValue): JsResult[EmailSetUpdate] = Json.fromJson[EmailSetUpdate](input)
 

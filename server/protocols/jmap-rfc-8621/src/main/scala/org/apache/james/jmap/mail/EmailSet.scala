@@ -18,19 +18,24 @@
  ****************************************************************/
 package org.apache.james.jmap.mail
 
+import java.nio.charset.StandardCharsets
+
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
-import org.apache.james.jmap.mail.EmailSet.UnparsedMessageId
+import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId}
 import org.apache.james.jmap.method.WithAccountId
+import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.{AccountId, Keywords, SetError}
 import org.apache.james.mailbox.model.MessageId
+import org.apache.james.mime4j.dom.Message
 import play.api.libs.json.JsObject
 
 import scala.util.{Right, Try}
 
 object EmailSet {
+  type EmailCreationId = Id
   type UnparsedMessageIdConstraint = NonEmpty
   type UnparsedMessageId = String Refined UnparsedMessageIdConstraint
 
@@ -43,14 +48,27 @@ object EmailSet {
     Try(messageIdFactory.fromString(unparsed.value))
 }
 
+case class EmailCreationRequest(mailboxIds: MailboxIds,
+                                subject: Option[Subject]) {
+  def toMime4JMessage: Message = {
+    val builder = Message.Builder.of
+    subject.foreach(value => builder.setSubject(value.value))
+    builder.setBody("", StandardCharsets.UTF_8)
+    builder.build()
+  }
+}
+
 case class DestroyIds(value: Seq[UnparsedMessageId])
 
 case class EmailSetRequest(accountId: AccountId,
+                           create: Option[Map[EmailCreationId, JsObject]],
                            update: Option[Map[UnparsedMessageId, JsObject]],
                            destroy: Option[DestroyIds]) extends WithAccountId
 
 case class EmailSetResponse(accountId: AccountId,
                             newState: State,
+                            created: Option[Map[EmailCreationId, EmailCreationResponse]],
+                            notCreated: Option[Map[EmailCreationId, SetError]],
                             updated: Option[Map[MessageId, Unit]],
                             notUpdated: Option[Map[UnparsedMessageId, SetError]],
                             destroyed: Option[DestroyIds],
@@ -117,4 +135,6 @@ case class ValidatedEmailSetUpdate private (keywordsTransformation: Function[Key
 class EmailUpdateValidationException() extends IllegalArgumentException
 case class InvalidEmailPropertyException(property: String, cause: String) extends EmailUpdateValidationException
 case class InvalidEmailUpdateException(property: String, cause: String) extends EmailUpdateValidationException
+
+case class EmailCreationResponse(id: MessageId)
 
