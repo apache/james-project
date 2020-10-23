@@ -276,6 +276,173 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def createShouldRejectEmptyMailboxIds(server: GuiceJamesServer): Unit = {
+    val andrePath = MailboxPath.inbox(ANDRE)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa":{
+         |          "mailboxIds": {},
+         |          "subject": "Boredome comes from a boring mind!"
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated.aaaaaa")
+      .isEqualTo(
+        s"""{
+          |  "description": "mailboxIds need to have size 1",
+          |  "type": "invalidArguments"
+          |}""".stripMargin)
+  }
+
+  @Test
+  def createShouldRejectInvalidMailboxIds(server: GuiceJamesServer): Unit = {
+    val andrePath = MailboxPath.inbox(ANDRE)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa":{
+         |          "mailboxIds": {
+         |            "invalid": true
+         |          },
+         |          "subject": "Boredome comes from a boring mind!"
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated.aaaaaa")
+      .isEqualTo(
+        s"""{
+          |  "description": "List((/mailboxIds,List(JsonValidationError(List(For input string: \\"invalid\\"),ArraySeq()))))",
+          |  "type": "invalidArguments"
+          |}""".stripMargin)
+  }
+
+  @Test
+  def createShouldRejectNoMailboxIds(server: GuiceJamesServer): Unit = {
+    val andrePath = MailboxPath.inbox(ANDRE)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa":{
+         |          "subject": "Boredome comes from a boring mind!"
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated.aaaaaa")
+      .isEqualTo(
+        s"""{
+          |  "description": "List((/mailboxIds,List(JsonValidationError(List(error.path.missing),ArraySeq()))))",
+          |  "type": "invalidArguments"
+          |}""".stripMargin)
+  }
+
+  @Test
+  def createShouldRejectInvalidJson(server: GuiceJamesServer): Unit = {
+    val andrePath = MailboxPath.inbox(ANDRE)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa":{
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "subject": ["Boredome comes from a boring mind!"]
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated.aaaaaa")
+      .isEqualTo(
+        s"""{
+          |  "description": "List((/subject,List(JsonValidationError(List(error.expected.jsstring),ArraySeq()))))",
+          |  "type": "invalidArguments"
+          |}""".stripMargin)
+  }
+
+  @Test
   def createShouldSucceedIfDelegated(server: GuiceJamesServer): Unit = {
     val andrePath = MailboxPath.inbox(ANDRE)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)

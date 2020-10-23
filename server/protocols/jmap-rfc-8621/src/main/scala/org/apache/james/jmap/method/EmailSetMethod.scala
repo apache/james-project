@@ -118,6 +118,7 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
   case class CreationSuccess(clientId: EmailCreationId, response: EmailCreationResponse) extends CreationResult
   case class CreationFailure(clientId: EmailCreationId, e: Throwable) extends CreationResult {
     def asMessageSetError: SetError = e match {
+      case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
       case e: MailboxNotFoundException => SetError.notFound(SetErrorDescription("Mailbox " + e.getMessage))
       case _ => SetError.serverFail(SetErrorDescription(e.getMessage))
     }
