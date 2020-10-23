@@ -18,6 +18,8 @@
  * **************************************************************/
 package org.apache.james.jmap.model
 
+import java.util.Locale
+
 import com.ibm.icu.text.UnicodeSet
 import javax.mail.Flags
 import org.apache.commons.lang3.StringUtils
@@ -32,13 +34,13 @@ object Keyword {
       " or {'(' ')' '{' ']' '%' '*' '\"' '\\'} "
 
   private val FLAG_NAME_PATTERN = new UnicodeSet("[[a-z][A-Z][0-9]$_-]").freeze
-  val DRAFT = Keyword.of("$Draft").get
-  val SEEN = Keyword.of("$Seen").get
-  val FLAGGED = Keyword.of("$Flagged").get
-  val ANSWERED = Keyword.of("$Answered").get
-  val DELETED = Keyword.of("$Deleted").get
-  val RECENT = Keyword.of("$Recent").get
-  val FORWARDED = Keyword.of("$Forwarded").get
+  val DRAFT = Keyword.of("$draft").get
+  val SEEN = Keyword.of("$seen").get
+  val FLAGGED = Keyword.of("$flagged").get
+  val ANSWERED = Keyword.of("$answered").get
+  val DELETED = Keyword.of("$deleted").get
+  val RECENT = Keyword.of("$recent").get
+  val FORWARDED = Keyword.of("$forwarded").get
   val FLAG_VALUE: Boolean = true
   private val NON_EXPOSED_IMAP_KEYWORDS = List(Keyword.RECENT, Keyword.DELETED)
   private val IMAP_SYSTEM_FLAGS: Map[Flags.Flag, Keyword] =
@@ -50,7 +52,7 @@ object Keyword {
       Flags.Flag.RECENT -> RECENT,
       Flags.Flag.DELETED -> DELETED)
 
-  def parse(flagName: String): Either[String, Keyword] = Either.cond(isValid(flagName), Keyword(flagName), VALIDATION_MESSAGE)
+  def parse(flagName: String): Either[String, Keyword] = Either.cond(isValid(flagName), Keyword(flagName.toLowerCase(Locale.US)), VALIDATION_MESSAGE)
 
   def of(flagName: String): Try[Keyword] = parse(flagName) match {
     case Left(errorMessage: String) => Failure(new IllegalArgumentException(errorMessage))

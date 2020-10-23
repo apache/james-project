@@ -662,7 +662,7 @@ trait EmailSetMethodContract {
         """{
           |   "id":"%s",
           |   "keywords": {
-          |       "$Answered": true,
+          |       "$answered": true,
           |       "music": true
           |    }
           |}
@@ -746,28 +746,28 @@ trait EmailSetMethodContract {
           |{
           |   "id":"%s",
           |   "keywords": {
-          |       "$Answered": true,
+          |       "$answered": true,
           |       "music": true
           |    }
           |},
           |{
           |   "id":"%s",
           |   "keywords": {
-          |       "$Answered": true,
+          |       "$answered": true,
           |       "music": true
           |    }
           |},
           |{
           |   "id":"%s",
           |   "keywords": {
-          |       "$Answered": true,
+          |       "$answered": true,
           |       "music": true
           |    }
           |},
           |{
           |   "id":"%s",
           |   "keywords": {
-          |       "$Answered": true,
+          |       "$answered": true,
           |       "music": true
           |    }
           |}
@@ -853,25 +853,25 @@ trait EmailSetMethodContract {
           |{
           |   "id":"%s",
           |   "keywords": {
-          |       "$Answered": true
+          |       "$answered": true
           |    }
           |},
           |{
           |   "id":"%s",
           |   "keywords": {
-          |       "$Answered": true
+          |       "$answered": true
           |    }
           |},
           |{
           |   "id":"%s",
           |   "keywords": {
-          |       "$Answered": true
+          |       "$answered": true
           |    }
           |},
           |{
           |   "id":"%s",
           |   "keywords": {
-          |       "$Answered": true
+          |       "$answered": true
           |    }
           |}
           |]

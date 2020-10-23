@@ -5475,7 +5475,7 @@ trait EmailGetMethodContract {
           |  {
           |     "id":"%s",
           |    "keywords": {
-          |      "$Answered": true
+          |      "$answered": true
           |    }
           |  }
       """.stripMargin, messageId.serialize)
@@ -5530,10 +5530,10 @@ trait EmailGetMethodContract {
           |  {
           |     "id":"%s",
           |    "keywords": {
-          |      "$Answered": true,
-          |      "$Seen":  true,
-          |      "$Draft":  true,
-          |      "$Flagged": true
+          |      "$answered": true,
+          |      "$seen":  true,
+          |      "$draft":  true,
+          |      "$flagged": true
           |    }
           |  }
       """.stripMargin, messageId.serialize)
@@ -5588,10 +5588,10 @@ trait EmailGetMethodContract {
           |  {
           |     "id":"%s",
           |    "keywords": {
-          |      "$Answered": true,
+          |      "$answered": true,
           |      "custom_flag":  true,
-          |      "$Draft":  true,
-          |      "$Flagged": true
+          |      "$draft":  true,
+          |      "$flagged": true
           |    }
           |  }
       """.stripMargin, messageId.serialize)
