@@ -19,7 +19,6 @@
 package org.apache.james.domainlist.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Fail.fail;
 
 import java.net.UnknownHostException;
@@ -33,8 +32,8 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public interface DomainListContract {
-    Logger LOGGER = LoggerFactory.getLogger(DomainListContract.class);
+public interface DomainListIdempotentContract {
+    Logger LOGGER = LoggerFactory.getLogger(DomainListIdempotentContract.class);
 
     Domain DOMAIN_1 = Domain.of("domain1.tld");
     Domain DOMAIN_2 = Domain.of("domain2.tld");
@@ -84,14 +83,16 @@ public interface DomainListContract {
     }
 
     @Test
-    default void addShouldBeCaseSensitive() {
+    default void addShouldBeCaseSensitive() throws DomainListException {
         try {
             domainList().addDomain(DOMAIN_5);
+            domainList().addDomain(DOMAIN_UPPER_5);
         } catch (Exception e) {
             fail(e.getMessage());
         }
-        assertThatThrownBy(() -> domainList().addDomain(DOMAIN_UPPER_5))
-            .isInstanceOf(DomainListException.class);
+
+        assertThat(domainList().getDomains().stream().filter(domain -> domain.equals(DOMAIN_5) || domain.equals(DOMAIN_UPPER_5)))
+            .hasSize(1);
     }
 
     @Test
@@ -131,22 +132,6 @@ public interface DomainListContract {
         assertThat(domainList().containsDomain(DOMAIN_UPPER_5)).isFalse();
     }
 
-    @Test
-    default void addDomainShouldThrowIfWeAddTwoTimesTheSameDomain() {
-        try {
-            domainList().addDomain(DOMAIN_1);
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
-        assertThatThrownBy(() -> domainList().addDomain(DOMAIN_1))
-            .isInstanceOf(DomainListException.class);
-    }
-
-    @Test
-    default void removeDomainShouldThrowIfTheDomainIsAbsent() {
-        assertThatThrownBy(() -> domainList().removeDomain(DOMAIN_1))
-            .isInstanceOf(DomainListException.class);
-    }
 
     /**
      * Return a fake DNSServer.

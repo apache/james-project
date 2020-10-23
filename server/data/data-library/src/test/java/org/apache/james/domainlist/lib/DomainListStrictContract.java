@@ -16,25 +16,29 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.domainlist.lib;
 
-package org.apache.james.domainlist.memory;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Fail.fail;
 
-import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.lib.DomainListStrictContract;
-import org.junit.jupiter.api.BeforeEach;
+import org.apache.james.domainlist.api.DomainListException;
+import org.junit.jupiter.api.Test;
 
-class MemoryDomainListTest implements DomainListStrictContract {
-    MemoryDomainList domainList;
-
-    @BeforeEach
-    void setUp() throws Exception {
-        domainList = new MemoryDomainList(getDNSServer("localhost"));
-        domainList.setAutoDetect(false);
-        domainList.setAutoDetectIP(false);
+public interface DomainListStrictContract extends DomainListIdempotentContract {
+    @Test
+    default void addDomainShouldThrowIfWeAddTwoTimesTheSameDomain() {
+        try {
+            domainList().addDomain(DOMAIN_1);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+        assertThatThrownBy(() -> domainList().addDomain(DOMAIN_1))
+            .isInstanceOf(DomainListException.class);
     }
 
-    @Override
-    public DomainList domainList() {
-        return domainList;
+    @Test
+    default void removeDomainShouldThrowIfTheDomainIsAbsent() {
+        assertThatThrownBy(() -> domainList().removeDomain(DOMAIN_1))
+            .isInstanceOf(DomainListException.class);
     }
 }

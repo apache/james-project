@@ -208,7 +208,7 @@ public interface UsersRepositoryContract {
         }
     }
 
-    interface ReadWriteContract extends UsersRepositoryContract {
+    interface ReadWriteIdempotentContract extends UsersRepositoryContract {
 
         @Test
         default void countUsersShouldReturnNumberOfUsersWhenNotEmptyRepository(TestSystem testSystem) throws UsersRepositoryException {
@@ -449,7 +449,6 @@ public interface UsersRepositoryContract {
             assertThat(actual).isTrue();
         }
 
-
         @Test
         default void testShouldReturnFalseWhenAUserIsRemovedFromRepository(TestSystem testSystem) throws UsersRepositoryException {
             //Given
@@ -496,24 +495,6 @@ public interface UsersRepositoryContract {
         }
 
         @Test
-        default void updateUserShouldThrowWhenAUserIsNoMoreInRepository(TestSystem testSystem) throws UsersRepositoryException {
-            //Given
-            testee().addUser(testSystem.user1, "password");
-            User user = testee().getUserByName(testSystem.user1);
-            testee().removeUser(testSystem.user1);
-            //When
-            assertThatThrownBy(() -> testee().updateUser(user))
-                .isInstanceOf(UsersRepositoryException.class);
-        }
-
-        @Test
-        default void removeUserShouldThrowWhenUserNotInRepository(TestSystem testSystem) {
-            //When
-            assertThatThrownBy(() -> testee().removeUser(testSystem.user1))
-                .isInstanceOf(UsersRepositoryException.class);
-        }
-
-        @Test
         default void isAdministratorShouldReturnFalseWhenNotConfigured(TestSystem testSystem) throws Exception {
             testee().setAdministratorId(Optional.empty());
 
@@ -535,7 +516,28 @@ public interface UsersRepositoryContract {
         }
     }
 
-    interface WithVirtualHostingReadWriteContract extends ReadWriteContract {
+    interface ReadWriteStrictContract extends ReadWriteIdempotentContract {
+
+        @Test
+        default void updateUserShouldThrowWhenAUserIsNoMoreInRepository(TestSystem testSystem) throws UsersRepositoryException {
+            //Given
+            testee().addUser(testSystem.user1, "password");
+            User user = testee().getUserByName(testSystem.user1);
+            testee().removeUser(testSystem.user1);
+            //When
+            assertThatThrownBy(() -> testee().updateUser(user))
+                .isInstanceOf(UsersRepositoryException.class);
+        }
+
+        @Test
+        default void removeUserShouldThrowWhenUserNotInRepository(TestSystem testSystem) {
+            //When
+            assertThatThrownBy(() -> testee().removeUser(testSystem.user1))
+                .isInstanceOf(UsersRepositoryException.class);
+        }
+    }
+
+    interface WithVirtualHostingReadWriteIdempotentContract extends ReadWriteIdempotentContract {
 
         @Test
         default void testShouldReturnTrueWhenAUserHasACorrectPasswordAndOtherCaseInDomain(TestSystem testSystem) throws Exception {
@@ -562,7 +564,9 @@ public interface UsersRepositoryContract {
                 .isInstanceOf(InvalidUsernameException.class)
                 .hasMessageContaining("should not contain any of those characters");
         }
+    }
 
+    interface WithVirtualHostingReadWriteStrictContract extends WithVirtualHostingReadWriteIdempotentContract {
         @Test
         default void updateUserShouldThrowWhenUserDoesNotBelongToDomainList(TestSystem testSystem) {
             assertThatThrownBy(() -> testee().updateUser(new DefaultUser(testSystem.userWithUnknowDomain, "hasAlg")))
@@ -713,9 +717,15 @@ public interface UsersRepositoryContract {
         }
     }
 
-    interface WithVirtualHostingContract extends WithVirtualHostingReadOnlyContract, WithVirtualHostingReadWriteContract {
+    interface WithVirtualHostingContract extends WithVirtualHostingReadOnlyContract, WithVirtualHostingReadWriteStrictContract {
     }
 
-    interface WithOutVirtualHostingContract extends WithOutVirtualHostingReadOnlyContract, ReadWriteContract {
+    interface WithOutVirtualHostingContract extends WithOutVirtualHostingReadOnlyContract, ReadWriteStrictContract {
+    }
+
+    interface WithVirtualHostingIdempotentContract extends WithVirtualHostingReadOnlyContract, WithVirtualHostingReadWriteIdempotentContract {
+    }
+
+    interface WithOutVirtualHostingIdempotentContract extends WithOutVirtualHostingReadOnlyContract, ReadWriteIdempotentContract {
     }
 }

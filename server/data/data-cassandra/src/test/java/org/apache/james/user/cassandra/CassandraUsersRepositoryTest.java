@@ -34,7 +34,7 @@ class CassandraUsersRepositoryTest {
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraUsersRepositoryModule.MODULE);
 
     @Nested
-    class WhenEnableVirtualHosting implements UsersRepositoryContract.WithVirtualHostingContract {
+    class WhenEnableVirtualHosting implements UsersRepositoryContract.WithVirtualHostingIdempotentContract {
         @RegisterExtension
         UserRepositoryExtension extension = UserRepositoryExtension.withVirtualHost();
 
@@ -52,7 +52,7 @@ class CassandraUsersRepositoryTest {
     }
 
     @Nested
-    class WhenDisableVirtualHosting implements UsersRepositoryContract.WithOutVirtualHostingContract {
+    class WhenDisableVirtualHosting implements UsersRepositoryContract.WithOutVirtualHostingIdempotentContract {
         @RegisterExtension
         UserRepositoryExtension extension = UserRepositoryExtension.withoutVirtualHosting();
 

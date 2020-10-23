@@ -60,13 +60,11 @@ public class CassandraDomainList extends AbstractDomainList {
     private PreparedStatement prepareRemoveStatement(Session session) {
         return session.prepare(delete()
             .from(TABLE_NAME)
-            .ifExists()
             .where(eq(DOMAIN, bindMarker(DOMAIN))));
     }
 
     private PreparedStatement prepareInsertStatement(Session session) {
         return session.prepare(insertInto(TABLE_NAME)
-            .ifNotExists()
             .value(DOMAIN, bindMarker(DOMAIN)));
     }
 
@@ -99,22 +97,16 @@ public class CassandraDomainList extends AbstractDomainList {
 
     @Override
     public void addDomain(Domain domain) throws DomainListException {
-        boolean executed = executor.executeReturnApplied(insertStatement.bind()
+        executor.executeVoid(insertStatement.bind()
             .setString(DOMAIN, domain.asString()))
             .block();
-        if (!executed) {
-            throw new DomainListException(domain.name() + " already exists.");
-        }
     }
 
     @Override
     public void doRemoveDomain(Domain domain) throws DomainListException {
-        boolean executed = executor.executeReturnApplied(removeStatement.bind()
+        executor.executeVoid(removeStatement.bind()
             .setString(DOMAIN, domain.asString()))
             .block();
-        if (!executed) {
-            throw new DomainListException(domain.name() + " was not found");
-        }
     }
 
 }

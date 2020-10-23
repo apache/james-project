@@ -24,8 +24,6 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.ALGORITHM;
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.NAME;
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.PASSWORD;
@@ -39,8 +37,6 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.Username;
-import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
-import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.UsersDAO;
 import org.apache.james.user.lib.model.DefaultUser;
@@ -55,7 +51,6 @@ public class CassandraUsersDAO implements UsersDAO {
 
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement getUserStatement;
-    private final PreparedStatement updateUserStatement;
     private final PreparedStatement removeUserStatement;
     private final PreparedStatement countUserStatement;
     private final PreparedStatement listStatement;
@@ -65,7 +60,6 @@ public class CassandraUsersDAO implements UsersDAO {
     public CassandraUsersDAO(Session session) {
         this.executor = new CassandraAsyncExecutor(session);
         this.getUserStatement = prepareGetUserStatement(session);
-        this.updateUserStatement = prepareUpdateUserStatement(session);
         this.removeUserStatement = prepareRemoveUserStatement(session);
         this.countUserStatement = prepareCountStatement(session);
         this.listStatement = prepareListStatement(session);
@@ -73,8 +67,7 @@ public class CassandraUsersDAO implements UsersDAO {
             .value(NAME, bindMarker(NAME))
             .value(REALNAME, bindMarker(REALNAME))
             .value(PASSWORD, bindMarker(PASSWORD))
-            .value(ALGORITHM, bindMarker(ALGORITHM))
-            .ifNotExists());
+            .value(ALGORITHM, bindMarker(ALGORITHM)));
     }
 
     private PreparedStatement prepareListStatement(Session session) {
@@ -89,17 +82,7 @@ public class CassandraUsersDAO implements UsersDAO {
     private PreparedStatement prepareRemoveUserStatement(Session session) {
         return session.prepare(delete()
             .from(TABLE_NAME)
-            .where(eq(NAME, bindMarker(NAME)))
-            .ifExists());
-    }
-
-    private PreparedStatement prepareUpdateUserStatement(Session session) {
-        return session.prepare(update(TABLE_NAME)
-            .with(set(REALNAME, bindMarker(REALNAME)))
-            .and(set(PASSWORD, bindMarker(PASSWORD)))
-            .and(set(ALGORITHM, bindMarker(ALGORITHM)))
-            .where(eq(NAME, bindMarker(NAME)))
-            .ifExists());
+            .where(eq(NAME, bindMarker(NAME))));
     }
 
     private PreparedStatement prepareGetUserStatement(Session session) {
@@ -118,32 +101,24 @@ public class CassandraUsersDAO implements UsersDAO {
     }
 
     @Override
-    public void updateUser(User user) throws UsersRepositoryException {
+    public void updateUser(User user) {
         Preconditions.checkArgument(user instanceof DefaultUser);
         DefaultUser defaultUser = (DefaultUser) user;
-        boolean executed = executor.executeReturnApplied(
-                updateUserStatement.bind()
+        executor.executeVoid(
+                insertStatement.bind()
                     .setString(REALNAME, defaultUser.getUserName().asString())
                     .setString(PASSWORD, defaultUser.getHashedPassword())
                     .setString(ALGORITHM, defaultUser.getHashAlgorithm())
                     .setString(NAME, defaultUser.getUserName().asString()))
             .block();
-
-        if (!executed) {
-            throw new UsersRepositoryException("Unable to update user");
-        }
     }
 
     @Override
-    public void removeUser(Username name) throws UsersRepositoryException {
-        boolean executed = executor.executeReturnApplied(
+    public void removeUser(Username name) {
+        executor.executeVoid(
             removeUserStatement.bind()
                 .setString(NAME, name.asString()))
             .block();
-
-        if (!executed) {
-            throw new UsersRepositoryException("unable to remove unknown user " + name.asString());
-        }
     }
 
     @Override
@@ -168,20 +143,16 @@ public class CassandraUsersDAO implements UsersDAO {
     }
 
     @Override
-    public void addUser(Username username, String password) throws UsersRepositoryException {
+    public void addUser(Username username, String password) {
         DefaultUser user = new DefaultUser(username, DEFAULT_ALGO_VALUE);
         user.setPassword(password);
-        boolean executed = executor.executeReturnApplied(
+        executor.executeReturnApplied(
             insertStatement.bind()
                 .setString(NAME, user.getUserName().asString())
                 .setString(REALNAME, user.getUserName().asString())
                 .setString(PASSWORD, user.getHashedPassword())
                 .setString(ALGORITHM, user.getHashAlgorithm()))
             .block();
-
-        if (!executed) {
-            throw new AlreadyExistInUsersRepositoryException("User with username " + username + " already exist!");
-        }
     }
 
     @Override

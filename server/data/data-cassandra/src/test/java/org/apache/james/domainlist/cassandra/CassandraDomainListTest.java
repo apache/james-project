@@ -22,11 +22,11 @@ package org.apache.james.domainlist.cassandra;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.lib.DomainListContract;
+import org.apache.james.domainlist.lib.DomainListIdempotentContract;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraDomainListTest implements DomainListContract {
+class CassandraDomainListTest implements DomainListIdempotentContract {
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDomainListModule.MODULE);
 

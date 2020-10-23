@@ -22,14 +22,14 @@ import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.jpa.model.JPADomain;
-import org.apache.james.domainlist.lib.DomainListContract;
+import org.apache.james.domainlist.lib.DomainListStrictContract;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
 /**
  * Test the JPA implementation of the DomainList.
  */
-class JPADomainListTest implements DomainListContract {
+class JPADomainListTest implements DomainListStrictContract {
 
     static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPADomain.class);
 
