@@ -36,8 +36,11 @@ import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.{BlobId, EmailBodyPart, PartId}
+import org.apache.james.jmap.model.Id.Id
+import org.apache.james.jmap.model.{AccountId, Id}
 import org.apache.james.jmap.routes.DownloadRoutes.{BUFFER_SIZE, LOGGER}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
+import org.apache.james.mailbox.exception.AttachmentNotFoundException
 import org.apache.james.mailbox.model.{AttachmentId, AttachmentMetadata, ContentType, FetchGroup, MessageId, MessageResult}
 import org.apache.james.mailbox.{AttachmentManager, MailboxSession, MessageIdManager}
 import org.apache.james.mime4j.codec.EncoderUtil
@@ -133,10 +136,13 @@ class MessageBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
 class AttachmentBlobResolver @Inject()(val attachmentManager: AttachmentManager) extends BlobResolver {
   override def resolve(blobId: BlobId, mailboxSession: MailboxSession): BlobResolutionResult =
     AttachmentId.from(org.apache.james.mailbox.model.BlobId.fromString(blobId.value.value)) match {
-      case attachmentId: AttachmentId => Applicable(
-        SMono.fromCallable(() => attachmentManager.getAttachment(attachmentId, mailboxSession))
-          .map((attachmentMetadata: AttachmentMetadata) => AttachmentBlob(attachmentMetadata, attachmentManager.load(attachmentMetadata, mailboxSession)))
-      )
+      case attachmentId: AttachmentId =>
+        Try(attachmentManager.getAttachment(attachmentId, mailboxSession)) match {
+          case Success(attachmentMetadata) => Applicable(
+            SMono.fromCallable(() => AttachmentBlob(attachmentMetadata, attachmentManager.load(attachmentMetadata, mailboxSession))))
+          case Failure(_) => Applicable(SMono.raiseError(BlobNotFoundException(blobId)))
+        }
+
       case _ => NonApplicable()
     }
 }
@@ -205,17 +211,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
 
   private def get(request: HttpServerRequest, response: HttpServerResponse): Mono[Void] =
     SMono(authenticator.authenticate(request))
-      .flatMap((mailboxSession: MailboxSession) =>
-        SMono.fromTry(BlobId.of(request.param(blobIdParam)))
-          .flatMap(blobResolvers.resolve(_, mailboxSession))
-          .flatMap(blob => downloadBlob(
-            optionalName = queryParam(request, nameParam),
-            response = response,
-            blobContentType = queryParam(request, contentTypeParam)
-              .map(ContentType.of)
-              .getOrElse(blob.contentType),
-            blob = blob))
-          .`then`)
+      .flatMap(mailboxSession => getIfOwner(request, response, mailboxSession))
       .onErrorResume {
         case e: UnauthorizedException => SMono.fromPublisher(handleAuthenticationFailure(response, LOGGER, e)).`then`
         case _: BlobNotFoundException => SMono.fromPublisher(response.status(SC_NOT_FOUND).send).`then`
@@ -226,6 +222,37 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
       .subscribeOn(Schedulers.elastic)
       .asJava()
       .`then`
+
+  private def get(request: HttpServerRequest, response: HttpServerResponse, mailboxSession: MailboxSession): SMono[Unit] = {
+    SMono.fromTry(BlobId.of(request.param(blobIdParam)))
+      .flatMap(blobResolvers.resolve(_, mailboxSession))
+      .flatMap(blob => downloadBlob(
+        optionalName = queryParam(request, nameParam),
+        response = response,
+        blobContentType = queryParam(request, contentTypeParam)
+          .map(ContentType.of)
+          .getOrElse(blob.contentType),
+        blob = blob)
+        .`then`())
+  }
+
+  private def getIfOwner(request: HttpServerRequest, response: HttpServerResponse, mailboxSession: MailboxSession): SMono[Unit] = {
+    Id.validate(request.param(accountIdParam)) match {
+      case Right(id: Id) => {
+        val targetAccountId: AccountId = AccountId(id)
+        AccountId.from(mailboxSession.getUser).map(accountId => accountId.equals(targetAccountId))
+          .fold[SMono[Unit]](
+            e => SMono.raiseError(e),
+            value => if (value) {
+              get(request, response, mailboxSession)
+            } else {
+              SMono.raiseError(new UnauthorizedException("You cannot upload to others"))
+            })
+      }
+
+      case Left(throwable: Throwable) => SMono.raiseError(throwable)
+    }
+  }
 
   private def downloadBlob(optionalName: Option[String],
                            response: HttpServerResponse,

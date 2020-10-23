@@ -1,7 +1,26 @@
+/****************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ *                                                              *
+ *  http://www.apache.org/licenses/LICENSE-2.0                  *
+ *                                                              *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+ ****************************************************************/
 package org.apache.james.jmap.rfc8621.contract
 
 import java.io.{ByteArrayInputStream, InputStream}
 import java.nio.charset.StandardCharsets
+
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType
@@ -10,11 +29,11 @@ import org.apache.commons.io.IOUtils
 import org.apache.http.HttpStatus.{SC_CREATED, SC_NOT_FOUND, SC_OK, SC_UNAUTHORIZED}
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, BOB, BOB_PASSWORD, DOMAIN, RFC8621_VERSION_HEADER, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ALICE, ALICE_ACCOUNT_ID, ALICE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, RFC8621_VERSION_HEADER, _2_DOT_DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.UploadContract.{BIG_INPUT_STREAM, VALID_INPUT_STREAM}
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.{BeforeEach, Test}
+import org.junit.jupiter.api.{BeforeEach, Disabled, Test}
 import play.api.libs.json.{JsString, Json}
 
 object UploadContract {
@@ -29,6 +48,8 @@ trait UploadContract {
       .fluent
       .addDomain(DOMAIN.asString)
       .addUser(BOB.asString, BOB_PASSWORD)
+      .addDomain(_2_DOT_DOMAIN.asString())
+      .addUser(ALICE.asString(), ALICE_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
       .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
@@ -36,7 +57,7 @@ trait UploadContract {
   }
 
   @Test
-  def shouldUploadFileAndOnlyOwnerCanAccess(): Unit = {
+  def shouldUploadFileAndAllowToDownloadIt(): Unit = {
     val uploadResponse: String = `given`
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -69,6 +90,45 @@ trait UploadContract {
   }
 
   @Test
+  def bobShouldNotBeAllowedToUploadInAliceAccount(): Unit = {
+    `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(VALID_INPUT_STREAM)
+    .when
+      .post(s"/upload/$ALICE_ACCOUNT_ID/")
+    .`then`
+      .statusCode(SC_UNAUTHORIZED)
+  }
+
+  @Test
+  def aliceShouldNotAccessOrDownloadFileUploadedByBob(): Unit = {
+    val uploadResponse: String = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(VALID_INPUT_STREAM)
+    .when
+      .post(s"/upload/$ACCOUNT_ID/")
+    .`then`
+      .statusCode(SC_CREATED)
+      .extract
+      .body
+      .asString
+
+    val blobId: String = Json.parse(uploadResponse).\("blobId").get.asInstanceOf[JsString].value
+
+    `given`
+      .auth().basic(ALICE.asString(), ALICE_PASSWORD)
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+    .when
+      .get(s"/download/$ALICE_ACCOUNT_ID/$blobId")
+    .`then`
+      .statusCode(SC_UNAUTHORIZED)
+  }
+
+  @Test
+  @Disabled("JAMES-1788 Upload size limitation needs to be contributed")
   def shouldRejectWhenUploadFileTooBig(): Unit = {
     val response: String = `given`
       .basePath("")
@@ -83,7 +143,6 @@ trait UploadContract {
       .body
       .asString
 
-    // fixme: dont know we limit size or not?
     assertThatJson(response)
       .isEqualTo("Should be error")
   }
@@ -101,31 +160,5 @@ trait UploadContract {
       .post(s"/upload/$ACCOUNT_ID/")
     .`then`
       .statusCode(SC_UNAUTHORIZED)
-  }
-
-  @Test
-  def uploadShouldSucceedButExpiredWhenDownload(): Unit = {
-    val uploadResponse: String = `given`
-      .basePath("")
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(VALID_INPUT_STREAM)
-    .when
-      .post(s"/upload/$ACCOUNT_ID/")
-    .`then`
-      .statusCode(SC_CREATED)
-      .extract
-      .body
-      .asString
-
-    val blobId: String = Json.parse(uploadResponse).\("blobId").get.asInstanceOf[JsString].value
-
-    // fixme: dont know how to delete file with existing attachment api
-    `given`
-      .basePath("")
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-    .when
-      .get(s"/download/$ACCOUNT_ID/$blobId")
-    .`then`
-      .statusCode(SC_NOT_FOUND)
   }
 }

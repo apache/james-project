@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- *  http://www.apache.org/licenses/LICENSE-2.0                  *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -16,18 +16,23 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.json
 
-import org.apache.james.jmap.mail.BlobId
-import org.apache.james.jmap.routes.UploadResponse
-import org.apache.james.mailbox.model.ContentType
-import play.api.libs.json.{JsString, JsValue, Json, Writes}
+package org.apache.james.jmap.rfc8621.memory;
 
-class UploadSerializer {
+import static org.apache.james.MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE;
 
-  private implicit val blobIdWrites: Writes[BlobId] = Json.valueWrites[BlobId]
-  private implicit val contentTypeWrites: Writes[ContentType] = contentType => JsString(contentType.asString())
-  private implicit val uploadResponseWrites: Writes[UploadResponse] = Json.writes[UploadResponse]
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.jmap.rfc8621.contract.UploadContract;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-  def serialize(uploadResponse: UploadResponse): JsValue = Json.toJson(uploadResponse)(uploadResponseWrites)
+public class MemoryUploadContract implements UploadContract {
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE)
+            .overrideWith(new TestJMAPServerModule()))
+        .build();
 }

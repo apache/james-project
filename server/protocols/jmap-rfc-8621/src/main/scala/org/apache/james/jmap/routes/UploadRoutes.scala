@@ -33,7 +33,7 @@ import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.mail.Email.Size
-import org.apache.james.jmap.routes.UploadRoutes.{LOGGER, fromAttachment}
+import org.apache.james.jmap.routes.UploadRoutes.{LOGGER, sanitizeSize}
 import org.apache.james.mailbox.{AttachmentManager, MailboxSession}
 import org.apache.james.mailbox.model.{AttachmentMetadata, ContentType}
 import org.apache.james.util.ReactorUtils
@@ -48,6 +48,8 @@ import eu.timepit.refined.refineV
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.json.UploadSerializer
 import org.apache.james.jmap.mail.BlobId
+import org.apache.james.jmap.model.{AccountId, Id}
+import org.apache.james.jmap.model.Id.Id
 
 object UploadRoutes {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[DownloadRoutes])
@@ -63,27 +65,18 @@ object UploadRoutes {
     },
       refinedValue => refinedValue)
   }
-
-  def fromAttachment(attachmentMetadata: AttachmentMetadata): UploadResponse =
-    UploadResponse(
-        blobId = BlobId.of(attachmentMetadata.getAttachmentId.getId).get,
-        `type` = ContentType.of(attachmentMetadata.getType.asString),
-        size = sanitizeSize(attachmentMetadata.getSize),
-        expires = None)
 }
 
-case class UploadResponse(blobId: BlobId,
+case class UploadResponse(accountId: AccountId,
+                          blobId: BlobId,
                           `type`: ContentType,
-                          size: Size,
-                          expires: Option[ZonedDateTime])
+                          size: Size)
 
 class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
                              val attachmentManager: AttachmentManager,
                              val serializer: UploadSerializer) extends JMAPRoutes {
 
-  class CancelledUploadException extends RuntimeException {
-
-  }
+  class CancelledUploadException extends RuntimeException
 
   private val accountIdParam: String = "accountId"
   private val uploadURI = s"/upload/{$accountIdParam}/"
@@ -113,21 +106,41 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
   }
 
   def post(request: HttpServerRequest, response: HttpServerResponse, contentType: ContentType, session: MailboxSession): SMono[Void] = {
-    SMono.fromCallable(() => ReactorUtils.toInputStream(request.receive.asByteBuffer))
-      .flatMap(content => handle(contentType, content, session, response))
-      .subscribeOn(Schedulers.elastic())
+    Id.validate(request.param(accountIdParam)) match {
+      case Right(id: Id) => {
+        val targetAccountId: AccountId = AccountId(id)
+        AccountId.from(session.getUser).map(accountId => accountId.equals(targetAccountId))
+          .fold[SMono[Void]](
+            e => SMono.raiseError(e),
+            value => if (value) {
+              SMono.fromCallable(() => ReactorUtils.toInputStream(request.receive.asByteBuffer))
+              .flatMap(content => handle(targetAccountId, contentType, content, session, response))
+              .subscribeOn(Schedulers.elastic())
+            } else {
+              SMono.raiseError(new UnauthorizedException("Attempt to upload in another account"))
+            })
+      }
+
+      case Left(throwable: Throwable) => SMono.raiseError(throwable)
+    }
   }
 
-  def handle(contentType: ContentType, content: InputStream, mailboxSession: MailboxSession, response: HttpServerResponse): SMono[Void] =
-    uploadContent(contentType, content, mailboxSession)
+  def handle(accountId: AccountId, contentType: ContentType, content: InputStream, mailboxSession: MailboxSession, response: HttpServerResponse): SMono[Void] =
+    uploadContent(accountId, contentType, content, mailboxSession)
       .flatMap(uploadResponse => SMono.fromPublisher(response
             .header(CONTENT_TYPE, uploadResponse.`type`.asString())
             .status(CREATED)
             .sendString(SMono.just(serializer.serialize(uploadResponse).toString()))))
 
-  def uploadContent(contentType: ContentType, inputStream: InputStream, session: MailboxSession): SMono[UploadResponse] =
+  def uploadContent(accountId: AccountId, contentType: ContentType, inputStream: InputStream, session: MailboxSession): SMono[UploadResponse] =
     SMono
       .fromPublisher(attachmentManager.storeAttachment(contentType, inputStream, session))
-      .map(fromAttachment)
+      .map(fromAttachment(_, accountId))
 
+  private def fromAttachment(attachmentMetadata: AttachmentMetadata, accountId: AccountId): UploadResponse =
+    UploadResponse(
+        blobId = BlobId.of(attachmentMetadata.getAttachmentId.getId).get,
+        `type` = ContentType.of(attachmentMetadata.getType.asString),
+        size = sanitizeSize(attachmentMetadata.getSize),
+        accountId = accountId)
 }
