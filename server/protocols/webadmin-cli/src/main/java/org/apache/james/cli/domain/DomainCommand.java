@@ -30,7 +30,8 @@ import picocli.CommandLine;
         name = "domain",
         description = "Manage Domains",
         subcommands = {
-                DomainListCommand.class
+            DomainListCommand.class,
+            DomainCreateCommand.class
         })
 public class DomainCommand implements Callable<Integer> {
 
