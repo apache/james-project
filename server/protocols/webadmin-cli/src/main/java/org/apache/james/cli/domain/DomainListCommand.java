@@ -17,51 +17,36 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.cli;
+package org.apache.james.cli.domain;
 
-import java.io.PrintStream;
 import java.util.concurrent.Callable;
 
-import org.apache.james.cli.domain.DomainCommand;
+import org.apache.james.cli.WebAdminCli;
+import org.apache.james.httpclient.DomainClient;
 
+import feign.Feign;
+import feign.jackson.JacksonDecoder;
 import picocli.CommandLine;
 
 @CommandLine.Command(
-    name = "james-cli",
-    description = "James Webadmin CLI")
-public class WebAdminCli implements Callable<Integer> {
+        name = "list",
+        description = "Show all domains on the domains list")
+public class DomainListCommand implements Callable<Integer> {
 
-    public static final int CLI_FINISHED_SUCCEED = 0;
-    public static final int CLI_FINISHED_FAILED = 1;
-
-    public @CommandLine.Option(
-        names = "--url",
-        description = "James server URL",
-        defaultValue = "http://127.0.0.1:8000")
-    String jamesUrl;
+    @CommandLine.ParentCommand DomainCommand domainCommand;
 
     @Override
     public Integer call() {
-        return CLI_FINISHED_SUCCEED;
-    }
-
-    public static void main(String[] args) {
-        PrintStream out = System.out;
-        PrintStream err = System.err;
-        int exitCode = execute(out, err, args);
-        System.exit(exitCode);
-    }
-
-    public static int execute(PrintStream out, PrintStream err, String[] args) {
-        WebAdminCli parent = new WebAdminCli();
-        return new CommandLine(parent)
-            .addSubcommand(new CommandLine.HelpCommand())
-            .addSubcommand(new DomainCommand(out, parent, err))
-            .execute(args);
-    }
-
-    public static int executeFluent(PrintStream out, PrintStream err, String... args) {
-        return execute(out, err, args);
+        try {
+            DomainClient domainClient = Feign.builder()
+                    .decoder(new JacksonDecoder())
+                    .target(DomainClient.class, domainCommand.webAdminCli.jamesUrl + "/domains");
+            domainClient.getDomainList().forEach(domainCommand.out::println);
+            return WebAdminCli.CLI_FINISHED_SUCCEED;
+        } catch (Exception e) {
+            e.printStackTrace(domainCommand.err);
+            return WebAdminCli.CLI_FINISHED_FAILED;
+        }
     }
 
 }

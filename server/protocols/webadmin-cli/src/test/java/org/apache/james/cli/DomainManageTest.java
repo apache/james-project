@@ -19,37 +19,43 @@
 
 package org.apache.james.cli;
 
+import static org.apache.james.MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.util.Port;
+import org.apache.james.utils.WebAdminGuiceProbe;
+import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class HelpVersionCommandTest {
+public class DomainManageTest {
 
-    private final PrintStream standardOut = System.out;
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+                    .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE)
+                    .overrideWith(new WebadminIntegrationTestModule())
+                    .overrideWith(new TestJMAPServerModule()))
+            .build();
+
     private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
     private final ByteArrayOutputStream errorStreamCaptor = new ByteArrayOutputStream();
 
-    @BeforeEach
-    void setup() {
-        System.setOut(new PrintStream(outputStreamCaptor));
-    }
-
-    @AfterEach
-    void tearDown() {
-        System.setOut(standardOut);
-    }
-
     @Test
-    void helpCommandShouldShowHelpMessage() {
-        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor), "help");
+    void domainListCommandShouldWShowOnlyDefaultDomain(GuiceJamesServer server) {
+        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
+
+        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
+                "--url", "http://127.0.0.1:" + port.getValue(), "domain", "list");
         assertThat(exitCode).isEqualTo(0);
-        assertThat(outputStreamCaptor.toString()).contains("help");
-        assertThat(outputStreamCaptor.toString()).contains("Displays help information about the specified command");
+        assertThat(outputStreamCaptor.toString().trim().toCharArray()).containsOnly("localhost".toCharArray());
     }
 
 }

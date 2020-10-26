@@ -11,7 +11,7 @@ Webadmin command-line interface is an upcoming replacement for the outdated, sec
 General syntax to run the command line
 
 ```   
-$ java -jar james-cli.jar [OPTION] ENTITY ACTION {ARGUMENT}
+$ ./james-cli [OPTION] ENTITY ACTION {ARGUMENT}
 ```
 
 where
@@ -26,11 +26,11 @@ where
 
 Example: 
 ```
-$ java -jar james-cli.jar --url http://127.0.0.1 --port 9999 domain list
+$ ./james-cli --url http://127.0.0.1:9999 domain list
 ```
 
 The above command lists all domain names available on domain route at address http://127.0.0.1:9999. 
-It does not require any argument to execute. Options --url and --port are optional. Without them, the default value is http://127.0.0.0:8000.
+It does not require any argument to execute. Options --url are optional. Without it, the default value is http://127.0.0.1:8000.
 As for other commands, arguments might be required after the sub-command (ACTION such as list, add and remove).
 
 Note: the command line before ENTITY will be documented as {cli}.
@@ -43,11 +43,11 @@ Note: the command line before ENTITY will be documented as {cli}.
    - [Check if a domain exists](#check-if-a-domain-exists)
    - [Get the list of domains](#get-the-list-of-domains)
 - [Manage Users](#manage-users) 
-   - [Create an user](#create-a-user)
-   - [Test an user existence](#test-a-user-existence)
-   - [Delete an user](#delete-a-user)
+   - [Create a user](#create-a-user)
+   - [Test a user existence](#test-a-user-existence)
+   - [Delete a user](#delete-a-user)
    - [Get users list](#get-users-list)
-   - [Update an user password](#update-a-user-password)
+   - [Update a user password](#update-a-user-password)
 
 ## Manage Domains
 
@@ -58,10 +58,10 @@ Add a domain to the domain list.
 ```
 Resource name **domainToBeCreated**:
 
-- can not be null or empty
-- can not contain ‘@’
-- can not be more than 255 characters
-- can not contain ‘/’
+- cannot be null or empty
+- cannot contain ‘@’
+- cannot be more than 255 characters
+- cannot contain ‘/’
 
 ### Delete a domain
 
@@ -87,9 +87,9 @@ Show all domains' name on the list.
 
 ## Manage Users
 
-### Create an user
+### Create a user
 
-Add an user to the user list.
+Add a user to the user list.
 ```
 {cli} user create <username> <password>
 ```
@@ -97,17 +97,17 @@ Resource name <username> representing valid users, hence it should match the cri
 
 Note: if the user exists already, its password will be updated.
 
-### Test an user existence
+### Test a user existence
 
-Check whether an user exists on the user list or not.
+Check whether a user exists on the user list or not.
 ```
 {cli} user exist <username>
 ```
 Resource name <username> representing valid users, hence it should match the criteria at [User Repositories documentation](https://james.apache.org/server/config-users.html)
 
-### Delete an user
+### Delete a user
 
-Remove an user from the user list.
+Remove a user from the user list.
 ```
 {cli} user delete <username>
 ```
@@ -120,8 +120,7 @@ Show all users' name on the list.
 {cli} user list
 ```
 
-### Update an user password
-Same as Create, but an user need to exist.
+### Update a user password
+Same as Create, but a user need to exist.
 
 If the user do not exist, then it will be created.
-

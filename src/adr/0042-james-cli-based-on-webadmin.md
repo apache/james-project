@@ -41,7 +41,7 @@ We decided to write a new CLI client, running on top of the JVM, communicating w
 * We decided to adopt a more modern, modular CLI syntax:
 
 ```   
-$ java -jar james-cli.jar [OPTION] ENTITY ACTION {ARGUMENT}
+$ ./james-cli [OPTION] ENTITY ACTION {ARGUMENT}
 ```
 where
 
@@ -57,12 +57,12 @@ where
 
 Add a domain to the domain list.
 ```
-$ java -jar james-cli.jar --url http://127.0.0.1 --port 9999 domain create domainNameToBeCreated
+$ ./james-cli --url http://127.0.0.1:9999 domain create domainNameToBeCreated
 ```
 
 In above command-line 
 
-    OPTION: --url http://127.0.0.1 --port 9999
+    OPTION: --url http://127.0.0.1:9999
   
     ENTITY: domain
   

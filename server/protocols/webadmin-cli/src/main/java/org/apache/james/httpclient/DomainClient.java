@@ -17,39 +17,15 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.cli;
+package org.apache.james.httpclient;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.List;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import feign.RequestLine;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+public interface DomainClient {
 
-public class HelpVersionCommandTest {
-
-    private final PrintStream standardOut = System.out;
-    private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
-    private final ByteArrayOutputStream errorStreamCaptor = new ByteArrayOutputStream();
-
-    @BeforeEach
-    void setup() {
-        System.setOut(new PrintStream(outputStreamCaptor));
-    }
-
-    @AfterEach
-    void tearDown() {
-        System.setOut(standardOut);
-    }
-
-    @Test
-    void helpCommandShouldShowHelpMessage() {
-        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor), "help");
-        assertThat(exitCode).isEqualTo(0);
-        assertThat(outputStreamCaptor.toString()).contains("help");
-        assertThat(outputStreamCaptor.toString()).contains("Displays help information about the specified command");
-    }
+    @RequestLine("GET")
+    List<String> getDomainList();
 
 }
