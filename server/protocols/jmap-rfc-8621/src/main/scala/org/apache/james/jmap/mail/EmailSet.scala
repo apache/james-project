@@ -27,7 +27,7 @@ import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId}
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.State.State
-import org.apache.james.jmap.model.{AccountId, Keywords, SetError}
+import org.apache.james.jmap.model.{AccountId, Keywords, SetError, UTCDate}
 import org.apache.james.mailbox.model.MessageId
 import org.apache.james.mime4j.dom.Message
 import play.api.libs.json.JsObject
@@ -50,7 +50,8 @@ object EmailSet {
 
 case class EmailCreationRequest(mailboxIds: MailboxIds,
                                 subject: Option[Subject],
-                                keywords: Option[Keywords]) {
+                                keywords: Option[Keywords],
+                                receivedAt: Option[UTCDate]) {
   def toMime4JMessage: Message = {
     val builder = Message.Builder.of
     subject.foreach(value => builder.setSubject(value.value))

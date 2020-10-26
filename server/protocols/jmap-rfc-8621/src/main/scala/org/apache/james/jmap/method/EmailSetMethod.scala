@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.jmap.method
 
+import java.time.ZonedDateTime
+import java.util.Date
 import java.util.function.Consumer
 
 import com.google.common.collect.ImmutableList
@@ -26,22 +28,18 @@ import javax.inject.Inject
 import javax.mail.Flags
 import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{EmailSetSerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.EmailSet.UnparsedMessageId
-import org.apache.james.jmap.mail.{DestroyIds, EmailSet, EmailSetRequest, EmailSetResponse, MailboxIds, ValidatedEmailSetUpdate}
 import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId}
-import org.apache.james.jmap.mail.{DestroyIds, EmailCreationRequest, EmailCreationResponse, EmailSet, EmailSetRequest, EmailSetResponse, EmailSetUpdate, MailboxIds, ValidatedEmailSetUpdate}
+import org.apache.james.jmap.mail.{DestroyIds, EmailCreationRequest, EmailCreationResponse, EmailSet, EmailSetRequest, EmailSetResponse, MailboxIds, ValidatedEmailSetUpdate}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
 import org.apache.james.jmap.model.SetError.SetErrorDescription
-import org.apache.james.jmap.model.{Capabilities, ClientId, Id, Invocation, ServerId, SetError, State}
+import org.apache.james.jmap.model.{Capabilities, ClientId, Id, Invocation, ServerId, SetError, State, UTCDate}
 import org.apache.james.mailbox.MessageManager.{AppendCommand, FlagsUpdateMode}
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.{ComposedMessageIdWithMetaData, DeleteResult, MailboxId, MessageId, MessageRange}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageIdManager, MessageManager}
-import org.apache.james.mailbox.model.{ComposedMessageIdWithMetaData, DeleteResult, MailboxId, MessageId}
-import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageIdManager}
 import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
@@ -232,6 +230,7 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
           .appendMessage(AppendCommand.builder()
             .recent()
             .withFlags(request.keywords.map(_.asFlags).getOrElse(new Flags()))
+              .withInternalDate(Date.from(request.receivedAt.getOrElse(UTCDate(ZonedDateTime.now())).asUTC.toInstant))
             .build(request.toMime4JMessage),
             mailboxSession)
         CreationSuccess(clientId, EmailCreationResponse(appendResult.getId.getMessageId))
