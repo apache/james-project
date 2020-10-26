@@ -23,6 +23,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 import eu.timepit.refined.api.{RefType, Validate}
+import org.apache.james.core.MailAddress
 import org.apache.james.jmap.model.Id.Id
 import org.apache.james.jmap.model.SetError.SetErrorDescription
 import org.apache.james.jmap.model.{AccountId, Properties, SetError, UTCDate}
@@ -101,6 +102,13 @@ package object json {
   private[json] implicit val propertiesFormat: Format[Properties] = Json.valueFormat[Properties]
   private[json] implicit val setErrorDescriptionWrites: Writes[SetErrorDescription] = Json.valueWrites[SetErrorDescription]
   private[json] implicit val setErrorWrites: Writes[SetError] = Json.writes[SetError]
+  private[json] implicit val mailAddressWrites: Writes[MailAddress] = mailAddress => JsString(mailAddress.asString)
+  private[json] implicit val mailAddressReads: Reads[MailAddress] = {
+    case JsString(value) => Try(new MailAddress(value))
+      .fold(e => JsError(e.getMessage),
+        mailAddress => JsSuccess(mailAddress))
+    case _ => JsError("mail address needs to be represented with a JsString")
+  }
   private[json] implicit val utcDateWrites: Writes[UTCDate] =
     utcDate => JsString(utcDate.asUTC.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")))
 }

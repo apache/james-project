@@ -286,7 +286,7 @@ object EmailHeaders {
       .flatMap {
         case f: AddressListField => Some(AddressesHeaderValue(EmailAddress.from(f.getAddressList)))
         case f: MailboxListField => Some(AddressesHeaderValue(EmailAddress.from(f.getMailboxList)))
-        case f: MailboxField => Some(AddressesHeaderValue(List(EmailAddress.from(f.getMailbox))))
+        case f: MailboxField => Some(AddressesHeaderValue(List(EmailAddress.from(f.getMailbox).toOption).flatten))
         case _ => None
       }
       .filter(_.value.nonEmpty)

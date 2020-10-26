@@ -71,7 +71,7 @@ object GroupedAddressesHeaderValue extends EmailHeaderValue {
           case mailbox: Mime4jMailbox => Some(mailbox)
           case _ => None
         })
-        .map(EmailAddress.from(_))
+        .flatMap(EmailAddress.from(_).toOption)
 
       GroupedAddressesHeaderValue(List(EmailAddressGroup(None, addressesWithoutGroup)) ++ groups)
     }
@@ -124,7 +124,9 @@ case class EmailHeaderName(value: String) extends AnyVal
 sealed trait EmailHeaderValue
 case class RawHeaderValue(value: String) extends EmailHeaderValue
 case class TextHeaderValue(value: String) extends EmailHeaderValue
-case class AddressesHeaderValue(value: List[EmailAddress]) extends EmailHeaderValue
+case class AddressesHeaderValue(value: List[EmailAddress]) extends EmailHeaderValue {
+  def asMime4JMailboxList: Option[List[Mime4jMailbox]] = Some(value.map(_.asMime4JMailbox)).filter(_.nonEmpty)
+}
 case class GroupedAddressesHeaderValue(value: List[EmailAddressGroup]) extends EmailHeaderValue
 case class MessageIdsHeaderValue(value: Option[List[HeaderMessageId]]) extends EmailHeaderValue
 case class DateHeaderValue(value: Option[UTCDate]) extends EmailHeaderValue

@@ -30,8 +30,11 @@ import org.apache.james.jmap.model.State.State
 import org.apache.james.jmap.model.{AccountId, Keywords, SetError, UTCDate}
 import org.apache.james.mailbox.model.MessageId
 import org.apache.james.mime4j.dom.Message
+import org.apache.james.mime4j.dom.field.FieldName
+import org.apache.james.mime4j.field.Fields
 import play.api.libs.json.JsObject
 
+import scala.jdk.CollectionConverters._
 import scala.util.{Right, Try}
 
 object EmailSet {
@@ -49,12 +52,24 @@ object EmailSet {
 }
 
 case class EmailCreationRequest(mailboxIds: MailboxIds,
+                                from: Option[AddressesHeaderValue],
+                                to: Option[AddressesHeaderValue],
+                                cc: Option[AddressesHeaderValue],
+                                bcc: Option[AddressesHeaderValue],
+                                sender: Option[AddressesHeaderValue],
+                                replyTo: Option[AddressesHeaderValue],
                                 subject: Option[Subject],
                                 keywords: Option[Keywords],
                                 receivedAt: Option[UTCDate]) {
   def toMime4JMessage: Message = {
     val builder = Message.Builder.of
     subject.foreach(value => builder.setSubject(value.value))
+    from.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setFrom)
+    to.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setTo)
+    cc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setCc)
+    bcc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setBcc)
+    sender.flatMap(_.asMime4JMailboxList).map(_.asJava).map(Fields.addressList(FieldName.SENDER, _)).foreach(builder.setField)
+    replyTo.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setReplyTo)
     builder.setBody("", StandardCharsets.UTF_8)
     builder.build()
   }

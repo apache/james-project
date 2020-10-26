@@ -237,6 +237,68 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def createShouldHandleAddressHeaders(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa":{
+         |          "mailboxIds": {"${mailboxId.serialize}": true},
+         |          "cc": [{"name": "MODALİF", "email": "modalif@domain.tld"}],
+         |          "bcc": [{"email": "benwa@apache.org"}],
+         |          "to": [{"email": "rcpt1@apache.org"}, {"email": "rcpt2@apache.org"}],
+         |          "from": [{"email": "rcpt2@apache.org"}, {"email": "rcpt3@apache.org"}],
+         |          "sender": [{"email": "rcpt4@apache.org"}],
+         |          "replyTo": [{"email": "rcpt6@apache.org"}, {"email": "rcpt7@apache.org"}]
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |     {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "ids": ["#aaaaaa"],
+         |       "properties": ["cc", "bcc", "sender", "from", "to", "replyTo"]
+         |     },
+         |     "c2"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
+      .inPath("methodResponses[0][1].created.aaaaaa")
+      .isEqualTo("{}".stripMargin)
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[1][1].list[0].id")
+      .inPath(s"methodResponses[1][1].list")
+      .isEqualTo(s"""[{
+          |          "cc": [{"name": "MODALİF", "email": "modalif@domain.tld"}],
+          |          "bcc": [{"email": "benwa@apache.org"}],
+          |          "to": [{"email": "rcpt1@apache.org"}, {"email": "rcpt2@apache.org"}],
+          |          "from": [{"email": "rcpt2@apache.org"}, {"email": "rcpt3@apache.org"}],
+          |          "sender": [{"email": "rcpt4@apache.org"}],
+          |          "replyTo": [{"email": "rcpt6@apache.org"}, {"email": "rcpt7@apache.org"}]
+          |}]""".stripMargin)
+  }
+
+  @Test
   def createShouldSupportKeywords(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(BOB)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
