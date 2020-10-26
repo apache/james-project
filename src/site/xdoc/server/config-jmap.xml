@@ -56,6 +56,14 @@
 
                     <dt><strong>jwt.publickeypem.url</strong></dt>
                     <dd>Optional. JWT tokens allows request to bypass authentication</dd>
+
+                    <dt><strong>url.prefix</strong></dt>
+                    <dd>Optional. Configuration urlPrefix for JMAP routes.</dd>
+                    <dd>Default value: http://localhost.</dd>
+
+                    <dt><strong>upload.max.size</strong></dt>
+                    <dd>Optional. Configuration max size Upload in new JMAP-RFC-8621.</dd>
+                    <dd>Default value: 30M. Supported units are B (bytes) K (KB) M (MB) G (GB).</dd>
                 </dl>
 
             </subsection>

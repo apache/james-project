@@ -22,18 +22,24 @@ package org.apache.james.jmap.model
 import java.net.URL
 
 import org.apache.commons.configuration2.Configuration
+import org.apache.james.jmap.model.JmapRfc8621Configuration.UPLOAD_LIMIT_30_MB
+import org.apache.james.util.Size
 
 object JmapRfc8621Configuration {
   val LOCALHOST_URL_PREFIX: String = "http://localhost"
-  private def from(urlPrefixString: String): JmapRfc8621Configuration = JmapRfc8621Configuration(urlPrefixString)
-  var LOCALHOST_CONFIGURATION: JmapRfc8621Configuration = from(LOCALHOST_URL_PREFIX)
+  val UPLOAD_LIMIT_30_MB: Size = Size.of(30, Size.Unit.M)
+  val LOCALHOST_CONFIGURATION: JmapRfc8621Configuration = JmapRfc8621Configuration(LOCALHOST_URL_PREFIX, UPLOAD_LIMIT_30_MB)
   val URL_PREFIX_PROPERTIES: String = "url.prefix"
+  val UPLOAD_LIMIT_PROPERTIES: String = "upload.max.size"
 
-  def from(configuration: Configuration): JmapRfc8621Configuration =
-    JmapRfc8621Configuration(Option(configuration.getString(URL_PREFIX_PROPERTIES)).getOrElse(LOCALHOST_URL_PREFIX))
+  def from(configuration: Configuration): JmapRfc8621Configuration = {
+    JmapRfc8621Configuration(
+      urlPrefixString = Option(configuration.getString(URL_PREFIX_PROPERTIES)).getOrElse(LOCALHOST_URL_PREFIX),
+      maxUploadSize = Option(configuration.getString(UPLOAD_LIMIT_PROPERTIES, null)).map(Size.parse).getOrElse(UPLOAD_LIMIT_30_MB))
+  }
 }
 
-case class JmapRfc8621Configuration(urlPrefixString: String) {
+case class JmapRfc8621Configuration(urlPrefixString: String, maxUploadSize: Size = UPLOAD_LIMIT_30_MB) {
   val urlPrefix: URL = new URL(urlPrefixString)
   val apiUrl: URL = new URL(s"$urlPrefixString/jmap")
   val downloadUrl: URL = new URL(urlPrefixString + "/download/$accountId/$blobId/?type=$type&name=$name")

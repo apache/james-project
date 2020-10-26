@@ -19,8 +19,7 @@
 
 package org.apache.james.jmap.routes
 
-import java.io.InputStream
-import java.time.ZonedDateTime
+import java.io.{IOException, InputStream, UncheckedIOException}
 import java.util.stream
 import java.util.stream.Stream
 
@@ -45,10 +44,11 @@ import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
+import org.apache.commons.fileupload.util.LimitedInputStream
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.json.UploadSerializer
 import org.apache.james.jmap.mail.BlobId
-import org.apache.james.jmap.model.{AccountId, Id}
+import org.apache.james.jmap.model.{AccountId, Id, JmapRfc8621Configuration}
 import org.apache.james.jmap.model.Id.Id
 
 object UploadRoutes {
@@ -60,7 +60,7 @@ object UploadRoutes {
   def sanitizeSize(value: Long): Size = {
     val size: Either[String, Size] = refineV[NonNegative](value)
     size.fold(e => {
-      LOGGER.error(s"Encountered an invalid Email size: $e")
+      LOGGER.error(s"Encountered an invalid upload files size: $e")
       Zero
     },
       refinedValue => refinedValue)
@@ -73,10 +73,12 @@ case class UploadResponse(accountId: AccountId,
                           size: Size)
 
 class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
+                             val configuration: JmapRfc8621Configuration,
                              val attachmentManager: AttachmentManager,
                              val serializer: UploadSerializer) extends JMAPRoutes {
 
   class CancelledUploadException extends RuntimeException
+  class MaxFileSizeUploadException extends RuntimeException
 
   private val accountIdParam: String = "accountId"
   private val uploadURI = s"/upload/{$accountIdParam}/"
@@ -105,6 +107,9 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
     }
   }
 
+  private def handleUncheckedIOException(response: HttpServerResponse, e: UncheckedIOException) =
+    response.status(BAD_REQUEST).sendString(SMono.just(e.getMessage))
+
   def post(request: HttpServerRequest, response: HttpServerResponse, contentType: ContentType, session: MailboxSession): SMono[Void] = {
     Id.validate(request.param(accountIdParam)) match {
       case Right(id: Id) => {
@@ -125,12 +130,23 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
     }
   }
 
-  def handle(accountId: AccountId, contentType: ContentType, content: InputStream, mailboxSession: MailboxSession, response: HttpServerResponse): SMono[Void] =
-    uploadContent(accountId, contentType, content, mailboxSession)
+  def handle(accountId: AccountId, contentType: ContentType, content: InputStream, mailboxSession: MailboxSession, response: HttpServerResponse): SMono[Void] = {
+    val maxSize: Long = configuration.maxUploadSize.asBytes()
+
+    SMono.fromCallable(() => new LimitedInputStream(content, maxSize) {
+      override def raiseError(max: Long, count: Long): Unit = if (count > max) {
+        throw new IOException("Attempt to upload exceed max size")
+      }})
+      .flatMap(uploadContent(accountId, contentType, _, mailboxSession))
       .flatMap(uploadResponse => SMono.fromPublisher(response
-            .header(CONTENT_TYPE, uploadResponse.`type`.asString())
-            .status(CREATED)
-            .sendString(SMono.just(serializer.serialize(uploadResponse).toString()))))
+              .header(CONTENT_TYPE, uploadResponse.`type`.asString())
+              .status(CREATED)
+              .sendString(SMono.just(serializer.serialize(uploadResponse).toString()))))
+      .onErrorResume {
+        case e: UncheckedIOException => SMono.fromPublisher(handleUncheckedIOException(response, e))
+      }
+  }
+
 
   def uploadContent(accountId: AccountId, contentType: ContentType, inputStream: InputStream, session: MailboxSession): SMono[UploadResponse] =
     SMono

@@ -24,21 +24,20 @@ import java.nio.charset.StandardCharsets
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType
-import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.commons.io.IOUtils
-import org.apache.http.HttpStatus.{SC_CREATED, SC_NOT_FOUND, SC_OK, SC_UNAUTHORIZED}
+import org.apache.http.HttpStatus.{SC_BAD_REQUEST, SC_CREATED, SC_OK, SC_UNAUTHORIZED}
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ALICE, ALICE_ACCOUNT_ID, ALICE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, RFC8621_VERSION_HEADER, _2_DOT_DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.UploadContract.{BIG_INPUT_STREAM, VALID_INPUT_STREAM}
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.{BeforeEach, Disabled, Test}
+import org.junit.jupiter.api.{BeforeEach, Test}
 import play.api.libs.json.{JsString, Json}
 
 object UploadContract {
-  private val BIG_INPUT_STREAM: InputStream = new ByteArrayInputStream("123456789\r\n".repeat(10025).getBytes)
-  private val VALID_INPUT_STREAM: InputStream = new ByteArrayInputStream("123456789\r\n".repeat(1).getBytes)
+  private val BIG_INPUT_STREAM: InputStream = new ByteArrayInputStream("123456789\r\n".repeat(1024 * 1024 * 4).getBytes)
+  private val VALID_INPUT_STREAM: InputStream = new ByteArrayInputStream("123456789\r\n".repeat(1024 * 1024 * 3).getBytes)
 }
 
 trait UploadContract {
@@ -128,7 +127,6 @@ trait UploadContract {
   }
 
   @Test
-  @Disabled("JAMES-1788 Upload size limitation needs to be contributed")
   def shouldRejectWhenUploadFileTooBig(): Unit = {
     val response: String = `given`
       .basePath("")
@@ -138,13 +136,13 @@ trait UploadContract {
     .when
       .post(s"/upload/$ACCOUNT_ID/")
     .`then`
-      .statusCode(SC_OK)
+      .statusCode(SC_BAD_REQUEST)
       .extract
       .body
       .asString
 
-    assertThatJson(response)
-      .isEqualTo("Should be error")
+    assertThat(response)
+      .contains("Attempt to upload exceed max size")
   }
 
   @Test
