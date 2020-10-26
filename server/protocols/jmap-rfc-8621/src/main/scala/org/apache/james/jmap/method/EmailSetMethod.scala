@@ -231,6 +231,7 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
         val appendResult = mailboxManager.getMailbox(mailboxId, mailboxSession)
           .appendMessage(AppendCommand.builder()
             .recent()
+            .withFlags(request.keywords.map(_.asFlags).getOrElse(new Flags()))
             .build(request.toMime4JMessage),
             mailboxSession)
         CreationSuccess(clientId, EmailCreationResponse(appendResult.getId.getMessageId))

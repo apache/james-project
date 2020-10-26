@@ -49,7 +49,8 @@ object EmailSet {
 }
 
 case class EmailCreationRequest(mailboxIds: MailboxIds,
-                                subject: Option[Subject]) {
+                                subject: Option[Subject],
+                                keywords: Option[Keywords]) {
   def toMime4JMessage: Message = {
     val builder = Message.Builder.of
     subject.foreach(value => builder.setSubject(value.value))
