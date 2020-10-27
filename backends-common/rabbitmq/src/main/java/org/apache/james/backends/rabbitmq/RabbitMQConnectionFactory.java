@@ -50,6 +50,10 @@ public class RabbitMQConnectionFactory {
             connectionFactory.setChannelRpcTimeout(rabbitMQConfiguration.getChannelRpcTimeoutInMs());
             connectionFactory.setConnectionTimeout(rabbitMQConfiguration.getConnectionTimeoutInMs());
             connectionFactory.setNetworkRecoveryInterval(rabbitMQConfiguration.getNetworkRecoveryIntervalInMs());
+
+            connectionFactory.setUsername(rabbitMQConfiguration.getManagementCredentials().getUser());
+            connectionFactory.setPassword(String.valueOf(rabbitMQConfiguration.getManagementCredentials().getPassword()));
+
             return connectionFactory;
         } catch (Exception e) {
             throw new RuntimeException(e);
