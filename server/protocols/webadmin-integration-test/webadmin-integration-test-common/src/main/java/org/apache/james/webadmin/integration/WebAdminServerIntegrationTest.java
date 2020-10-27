@@ -100,7 +100,8 @@ public abstract class WebAdminServerIntegrationTest {
         when()
             .get(MailQueueRoutes.BASE_URL)
         .then()
-            .statusCode(HttpStatus.OK_200);
+            .statusCode(HttpStatus.OK_200)
+            .body("", containsInAnyOrder("spool", "outgoing"));
     }
 
     @Test
