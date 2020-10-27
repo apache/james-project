@@ -45,8 +45,9 @@ import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
 import org.apache.james.mime4j.codec.DecodeMonitor
 import org.apache.james.mime4j.dom.field.{AddressListField, DateTimeField, MailboxField, MailboxListField}
 import org.apache.james.mime4j.dom.{Header, Message}
+import org.apache.james.mime4j.field.AddressListFieldLenientImpl
 import org.apache.james.mime4j.message.DefaultMessageBuilder
-import org.apache.james.mime4j.stream.{Field, MimeConfig}
+import org.apache.james.mime4j.stream.{Field, MimeConfig, RawFieldParser}
 import org.apache.james.mime4j.util.MimeUtil
 import org.slf4j.{Logger, LoggerFactory}
 import reactor.core.scala.publisher.{SFlux, SMono}
@@ -286,7 +287,9 @@ object EmailHeaders {
       .flatMap {
         case f: AddressListField => Some(AddressesHeaderValue(EmailAddress.from(f.getAddressList)))
         case f: MailboxListField => Some(AddressesHeaderValue(EmailAddress.from(f.getMailboxList)))
-        case f: MailboxField => Some(AddressesHeaderValue(List(EmailAddress.from(f.getMailbox).toOption).flatten))
+        case f: MailboxField =>
+          val asMailboxListField = AddressListFieldLenientImpl.PARSER.parse(RawFieldParser.DEFAULT.parseField(f.getRaw), DecodeMonitor.SILENT)
+          Some(AddressesHeaderValue(EmailAddress.from(asMailboxListField.getAddressList)))
         case _ => None
       }
       .filter(_.value.nonEmpty)
