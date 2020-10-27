@@ -33,6 +33,7 @@ import org.apache.james.mailbox.model.MessageId
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.mime4j.dom.field.FieldName
 import org.apache.james.mime4j.field.Fields
+import org.apache.james.mime4j.stream.RawField
 import play.api.libs.json.JsObject
 
 import scala.jdk.CollectionConverters._
@@ -53,6 +54,9 @@ object EmailSet {
 }
 
 case class EmailCreationRequest(mailboxIds: MailboxIds,
+                                messageId: Option[MessageIdsHeaderValue],
+                                references: Option[MessageIdsHeaderValue],
+                                inReplyTo: Option[MessageIdsHeaderValue],
                                 from: Option[AddressesHeaderValue],
                                 to: Option[AddressesHeaderValue],
                                 cc: Option[AddressesHeaderValue],
@@ -65,6 +69,9 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
                                 receivedAt: Option[UTCDate]) {
   def toMime4JMessage: Message = {
     val builder = Message.Builder.of
+    references.flatMap(_.asString).map(new RawField("References", _)).foreach(builder.setField)
+    inReplyTo.flatMap(_.asString).map(new RawField("In-Reply-To", _)).foreach(builder.setField)
+    messageId.flatMap(_.asString).map(new RawField(FieldName.MESSAGE_ID, _)).foreach(builder.setField)
     subject.foreach(value => builder.setSubject(value.value))
     from.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setFrom)
     to.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setTo)

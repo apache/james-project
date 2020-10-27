@@ -276,10 +276,10 @@ object EmailHeaders {
   private def extractMessageId(mime4JMessage: Message, fieldName: String): MessageIdsHeaderValue =
     MessageIdsHeaderValue(
       Option(mime4JMessage.getHeader.getFields(fieldName))
-        .map(_.asScala
-          .map(_.getBody)
-          .map(HeaderMessageId.from)
-          .toList)
+        .map(_.asScala.toList)
+        .flatMap(fields => fields.map(field => MessageIdsHeaderValue.from(field).value)
+          .sequence
+          .map(_.flatten))
         .filter(_.nonEmpty))
 
   private def extractAddresses(mime4JMessage: Message, fieldName: String): Option[AddressesHeaderValue] =

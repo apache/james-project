@@ -530,6 +530,64 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def createShouldSupportMessageIdHeaders(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    val request = s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa":{
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "references": ["aa@bb", "cc@dd"],
+         |          "inReplyTo": ["ee@ff", "gg@hh"],
+         |          "messageId": ["ii@jj", "kk@ll"]
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |     {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "ids": ["#aaaaaa"],
+         |       "properties": ["references", "inReplyTo", "messageId"]
+         |     },
+         |     "c2"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
+      .inPath("methodResponses[0][1].created.aaaaaa")
+      .isEqualTo("{}".stripMargin)
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[1][1].list[0].id")
+      .inPath(s"methodResponses[1][1].list")
+      .isEqualTo(
+        s"""[{
+           |  "references": ["aa@bb", "cc@dd"],
+           |  "inReplyTo": ["ee@ff", "gg@hh"],
+           |  "messageId": ["ii@jj", "kk@ll"]
+           |}]""".stripMargin)
+  }
+
+  @Test
   def createShouldFailIfForbidden(server: GuiceJamesServer): Unit = {
     val andrePath = MailboxPath.inbox(ANDRE)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)

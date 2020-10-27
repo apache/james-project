@@ -128,7 +128,12 @@ case class AddressesHeaderValue(value: List[EmailAddress]) extends EmailHeaderVa
   def asMime4JMailboxList: Option[List[Mime4jMailbox]] = Some(value.map(_.asMime4JMailbox)).filter(_.nonEmpty)
 }
 case class GroupedAddressesHeaderValue(value: List[EmailAddressGroup]) extends EmailHeaderValue
-case class MessageIdsHeaderValue(value: Option[List[HeaderMessageId]]) extends EmailHeaderValue
+case class MessageIdsHeaderValue(value: Option[List[HeaderMessageId]]) extends EmailHeaderValue {
+  def asString: Option[String] = value.map(messageIds => messageIds
+    .map(_.value)
+    .map(messageId => s"<${messageId}>")
+    .mkString(" "))
+}
 case class DateHeaderValue(value: Option[UTCDate]) extends EmailHeaderValue
 case class URLsHeaderValue(value: Option[List[HeaderURL]]) extends EmailHeaderValue
 
