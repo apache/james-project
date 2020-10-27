@@ -650,11 +650,13 @@ public class StoreMailboxManager implements MailboxManager {
 
     private Function<Flux<Mailbox>, Flux<MailboxMetaData>> withCounters(MailboxSession session, List<Mailbox> mailboxes) {
         MessageMapper messageMapper = mailboxSessionMapperFactory.getMessageMapper(session);
+        int concurrency = 4;
         return mailboxFlux -> mailboxFlux
             .flatMap(mailbox -> retrieveCounters(messageMapper, mailbox, session)
                 .map(Throwing.<MailboxCounters, MailboxMetaData>function(
                     counters -> toMailboxMetadata(session, mailboxes, mailbox, counters))
-                    .sneakyThrow()));
+                    .sneakyThrow()),
+                concurrency);
     }
 
     private Function<Flux<Mailbox>, Flux<MailboxMetaData>> withoutCounters(MailboxSession session, List<Mailbox> mailboxes) {
