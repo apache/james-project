@@ -19,6 +19,7 @@
 package org.apache.james.jmap.mail
 
 import java.nio.charset.StandardCharsets
+import java.util.Date
 
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
@@ -59,6 +60,7 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
                                 sender: Option[AddressesHeaderValue],
                                 replyTo: Option[AddressesHeaderValue],
                                 subject: Option[Subject],
+                                sentAt: Option[UTCDate],
                                 keywords: Option[Keywords],
                                 receivedAt: Option[UTCDate]) {
   def toMime4JMessage: Message = {
@@ -70,6 +72,7 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
     bcc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setBcc)
     sender.flatMap(_.asMime4JMailboxList).map(_.asJava).map(Fields.addressList(FieldName.SENDER, _)).foreach(builder.setField)
     replyTo.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setReplyTo)
+    sentAt.map(_.asUTC).map(_.toInstant).map(Date.from).foreach(builder.setDate)
     builder.setBody("", StandardCharsets.UTF_8)
     builder.build()
   }
