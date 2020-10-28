@@ -51,6 +51,7 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.stream.RawField;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -291,5 +292,101 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
         assertThat(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "bob@other.tld")), session))
             .containsOnly(messageId2.getUid());
+    }
+
+    @Disabled("MAILBOX-401 '-' causes address matching to fail")
+    @Test
+    void localPartShouldBeMatchedWhenHyphen() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        Message.Builder messageBuilder = Message.Builder
+            .of()
+            .setSubject("test")
+            .setBody("testmail", StandardCharsets.UTF_8);
+
+        ComposedMessageId messageId1 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                messageBuilder
+                    .addField(new RawField("To", "alice-test@domain.tld"))
+                    .build()),
+            session).getId();
+
+        ComposedMessageId messageId2 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                messageBuilder
+                    .addField(new RawField("To", "bob@other.tld"))
+                    .build()),
+            session).getId();
+
+        elasticSearch.awaitForElasticSearch();
+
+        assertThat(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "alice-test")), session))
+            .containsOnly(messageId2.getUid());
+    }
+
+    @Disabled("MAILBOX-401 '-' causes address matching to fail")
+    @Test
+    void addressShouldBeMatchedWhenHyphen() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        Message.Builder messageBuilder = Message.Builder
+            .of()
+            .setSubject("test")
+            .setBody("testmail", StandardCharsets.UTF_8);
+
+        ComposedMessageId messageId1 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                messageBuilder
+                    .addField(new RawField("To", "alice-test@domain.tld"))
+                    .build()),
+            session).getId();
+
+        ComposedMessageId messageId2 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                messageBuilder
+                    .addField(new RawField("To", "bob@other.tld"))
+                    .build()),
+            session).getId();
+
+        elasticSearch.awaitForElasticSearch();
+
+        assertThat(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "alice-test@domain.tld")), session))
+            .containsOnly(messageId1.getUid());
+    }
+
+    @Disabled("MAILBOX-401 '-' causes address matching to fail")
+    @Test
+    void domainPartShouldBeMatchedWhenHyphen() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        Message.Builder messageBuilder = Message.Builder
+            .of()
+            .setSubject("test")
+            .setBody("testmail", StandardCharsets.UTF_8);
+
+        ComposedMessageId messageId1 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                messageBuilder
+                    .addField(new RawField("To", "alice@domain-test.tld"))
+                    .build()),
+            session).getId();
+
+        ComposedMessageId messageId2 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                messageBuilder
+                    .addField(new RawField("To", "bob@other.tld"))
+                    .build()),
+            session).getId();
+
+        elasticSearch.awaitForElasticSearch();
+
+        assertThat(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "domain-test.tld")), session))
+            .containsOnly(messageId1.getUid());
     }
 }
