@@ -117,6 +117,11 @@ pipeline {
                 }
             }
             stages {
+                stage('Gatling warmup') {
+                    steps {
+                        build job: 'Gatling-job', parameters: [[$class: 'StringParameterValue', name: 'SBT_ACTION', value: "gatling:testOnly ${params.SIMULATION}"], [$class: 'StringParameterValue', name: 'GITHUB', value: params.GITHUB_SIMULATIONS], [$class: 'StringParameterValue', name: 'DURATION', value: params.WARMUP_DURATION]], propagate: false
+                    }
+                }
                 stage('Run Gatling test') {
                     steps {
                         build job: 'Gatling-job', parameters: [[$class: 'StringParameterValue', name: 'SBT_ACTION', value: "gatling:testOnly ${params.SIMULATION}"], [$class: 'StringParameterValue', name: 'GITHUB', value: params.GITHUB_SIMULATIONS]]
