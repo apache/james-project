@@ -114,7 +114,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
       .thenReturn
         .getBody
         .asString()
-    val downloadPath: String = "download/$accountId/$blobId/?type=$type&name=$name"
+    val downloadPath: String = "download/{accountId}/{blobId}/?type={type}&name={name}"
     val expectedJson = s"""{
                          |  "capabilities" : {
                          |    "urn:ietf:params:jmap:core" : {
