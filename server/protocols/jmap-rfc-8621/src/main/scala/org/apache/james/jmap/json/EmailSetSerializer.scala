@@ -23,10 +23,10 @@ import cats.implicits._
 import eu.timepit.refined.refineV
 import javax.inject.Inject
 import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId, UnparsedMessageIdConstraint}
-import org.apache.james.jmap.mail.{AddressesHeaderValue, DestroyIds, EmailAddress, EmailCreationRequest, EmailCreationResponse, EmailSetRequest, EmailSetResponse, EmailSetUpdate, EmailerName, HeaderMessageId, MailboxIds, MessageIdsHeaderValue, Subject}
+import org.apache.james.jmap.mail.{AddressesHeaderValue, ClientEmailBodyValue, ClientHtmlBody, ClientPartId, DestroyIds, EmailAddress, EmailCreationRequest, EmailCreationResponse, EmailSetRequest, EmailSetResponse, EmailSetUpdate, EmailerName, HeaderMessageId, IsEncodingProblem, IsTruncated, MailboxIds, MessageIdsHeaderValue, Subject, Type}
 import org.apache.james.jmap.model.Id.IdConstraint
 import org.apache.james.jmap.model.KeywordsFactory.STRICT_KEYWORDS_FACTORY
-import org.apache.james.jmap.model.{Keyword, Keywords, SetError}
+import org.apache.james.jmap.model.{Id, Keyword, Keywords, SetError}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json.{JsArray, JsBoolean, JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
 
@@ -242,6 +242,17 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
       .fold(e => JsError(e),
         ids => JsSuccess(MessageIdsHeaderValue(Some(ids).filter(_.nonEmpty))))
   }
+
+  private implicit val isTruncatedReads: Reads[IsTruncated] = Json.valueReads[IsTruncated]
+  private implicit val isEncodingProblemReads: Reads[IsEncodingProblem] = Json.valueReads[IsEncodingProblem]
+  private implicit val clientEmailBodyValueReads: Reads[ClientEmailBodyValue] = Json.reads[ClientEmailBodyValue]
+  private implicit val typeReads: Reads[Type] = Json.valueReads[Type]
+  private implicit val clientPartIdReads: Reads[ClientPartId] = Json.valueReads[ClientPartId]
+  private implicit val clientHtmlBodyReads: Reads[ClientHtmlBody] = Json.reads[ClientHtmlBody]
+  private implicit val bodyValuesReads: Reads[Map[ClientPartId, ClientEmailBodyValue]] =
+    readMapEntry[ClientPartId, ClientEmailBodyValue](s => Id.validate(s).fold(e => Left(e.getMessage), partId => Right(ClientPartId(partId))),
+      clientEmailBodyValueReads)
+
   private implicit val emailCreationRequestReads: Reads[EmailCreationRequest] = Json.reads[EmailCreationRequest]
 
   def deserialize(input: JsValue): JsResult[EmailSetRequest] = Json.fromJson[EmailSetRequest](input)

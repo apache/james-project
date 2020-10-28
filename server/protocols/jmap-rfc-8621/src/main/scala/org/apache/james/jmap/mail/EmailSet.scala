@@ -53,6 +53,14 @@ object EmailSet {
     Try(messageIdFactory.fromString(unparsed.value))
 }
 
+case class ClientPartId(id: Id)
+
+case class ClientHtmlBody(partId: ClientPartId, `type`: Type)
+
+case class ClientEmailBodyValue(value: String,
+                                isEncodingProblem: Option[IsEncodingProblem],
+                                isTruncated: Option[IsTruncated])
+
 case class EmailCreationRequest(mailboxIds: MailboxIds,
                                 messageId: Option[MessageIdsHeaderValue],
                                 references: Option[MessageIdsHeaderValue],
@@ -66,22 +74,32 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
                                 subject: Option[Subject],
                                 sentAt: Option[UTCDate],
                                 keywords: Option[Keywords],
-                                receivedAt: Option[UTCDate]) {
-  def toMime4JMessage: Message = {
-    val builder = Message.Builder.of
-    references.flatMap(_.asString).map(new RawField("References", _)).foreach(builder.setField)
-    inReplyTo.flatMap(_.asString).map(new RawField("In-Reply-To", _)).foreach(builder.setField)
-    messageId.flatMap(_.asString).map(new RawField(FieldName.MESSAGE_ID, _)).foreach(builder.setField)
-    subject.foreach(value => builder.setSubject(value.value))
-    from.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setFrom)
-    to.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setTo)
-    cc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setCc)
-    bcc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setBcc)
-    sender.flatMap(_.asMime4JMailboxList).map(_.asJava).map(Fields.addressList(FieldName.SENDER, _)).foreach(builder.setField)
-    replyTo.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setReplyTo)
-    sentAt.map(_.asUTC).map(_.toInstant).map(Date.from).foreach(builder.setDate)
-    builder.setBody("", StandardCharsets.UTF_8)
-    builder.build()
+                                receivedAt: Option[UTCDate],
+                                htmlBody: Option[List[ClientHtmlBody]],
+                                bodyValues: Option[Map[ClientPartId, ClientEmailBodyValue]]) {
+  def toMime4JMessage: Either[IllegalArgumentException, Message] =
+    validateHtmlBody.map(maybeHtmlBody => {
+      val builder = Message.Builder.of
+      references.flatMap(_.asString).map(new RawField("References", _)).foreach(builder.setField)
+      inReplyTo.flatMap(_.asString).map(new RawField("In-Reply-To", _)).foreach(builder.setField)
+      messageId.flatMap(_.asString).map(new RawField(FieldName.MESSAGE_ID, _)).foreach(builder.setField)
+      subject.foreach(value => builder.setSubject(value.value))
+      from.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setFrom)
+      to.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setTo)
+      cc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setCc)
+      bcc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setBcc)
+      sender.flatMap(_.asMime4JMailboxList).map(_.asJava).map(Fields.addressList(FieldName.SENDER, _)).foreach(builder.setField)
+      replyTo.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setReplyTo)
+      sentAt.map(_.asUTC).map(_.toInstant).map(Date.from).foreach(builder.setDate)
+      builder.setBody(maybeHtmlBody.getOrElse(""), "html", StandardCharsets.UTF_8)
+      builder.build()
+    })
+
+  def validateHtmlBody: Either[IllegalArgumentException, Option[String]] = htmlBody match {
+    case None => Right(None)
+    case Some(html :: Nil) => bodyValues.getOrElse(Map()).get(html.partId)
+      .map(part => Right(Some(part.value)))
+      .getOrElse(Left(new IllegalArgumentException("todo")))
   }
 }
 

@@ -851,6 +851,84 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def createShouldSupportHtmlBody(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa":{
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "subject": "World domination",
+         |          "htmlBody": [
+         |            {
+         |              "partId": "a49d",
+         |              "type": "text/html"
+         |            }
+         |          ],
+         |          "bodyValues": {
+         |            "a49d": {
+         |              "value": "$htmlBody",
+         |              "isTruncated": false
+         |            }
+         |          }
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |     {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "ids": ["#aaaaaa"],
+         |       "properties": ["mailboxIds", "subject", "bodyValues"]
+         |     },
+         |     "c2"]
+         |    ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post.prettyPeek()
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
+      .inPath("methodResponses[0][1].created.aaaaaa")
+      .isEqualTo("{}".stripMargin)
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[1][1].list[0].id")
+      .inPath(s"methodResponses[1][1].list")
+      .isEqualTo(
+        s"""[{
+           |  "mailboxIds": {
+           |    "${mailboxId.serialize}": true
+           |  },
+           |  "subject": "World domination",
+           |  "bodyValues": {
+           |    "1": {
+           |      "value": "$htmlBody"
+           |    }
+           |  }
+           |}]""".stripMargin)
+  }
+
+  @Test
   def shouldNotResetKeywordWhenInvalidKeyword(server: GuiceJamesServer): Unit = {
     val message: Message = Fixture.createTestMessage
 

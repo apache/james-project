@@ -59,17 +59,17 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
   case class DestroyResults(results: Seq[DestroyResult]) {
     def destroyed: Option[DestroyIds] =
       Option(results.flatMap{
-          case result: DestroySuccess => Some(result.messageId)
-          case _ => None
-        }.map(EmailSet.asUnparsed))
+        case result: DestroySuccess => Some(result.messageId)
+        case _ => None
+      }.map(EmailSet.asUnparsed))
         .filter(_.nonEmpty)
         .map(DestroyIds)
 
     def notDestroyed: Option[Map[UnparsedMessageId, SetError]] =
       Option(results.flatMap{
-          case failure: DestroyFailure => Some((failure.unparsedMessageId, failure.asMessageSetError))
-          case _ => None
-        }.toMap)
+        case failure: DestroyFailure => Some((failure.unparsedMessageId, failure.asMessageSetError))
+        case _ => None
+      }.toMap)
         .filter(_.nonEmpty)
   }
 
@@ -78,7 +78,7 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
       val success: Seq[DestroySuccess] = deleteResult.getDestroyed.asScala.toSeq
         .map(DestroySuccess)
       val notFound: Seq[DestroyResult] = deleteResult.getNotFound.asScala.toSeq
-          .map(id => DestroyFailure(EmailSet.asUnparsed(id), MessageNotFoundExeception(id)))
+        .map(id => DestroyFailure(EmailSet.asUnparsed(id), MessageNotFoundExeception(id)))
 
       success ++ notFound
     }
@@ -97,16 +97,16 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
   case class CreationResults(results: Seq[CreationResult]) {
     def created: Option[Map[EmailCreationId, EmailCreationResponse]] =
       Option(results.flatMap{
-          case result: CreationSuccess => Some((result.clientId, result.response))
-          case _ => None
-        }.toMap)
+        case result: CreationSuccess => Some((result.clientId, result.response))
+        case _ => None
+      }.toMap)
         .filter(_.nonEmpty)
 
     def notCreated: Option[Map[EmailCreationId, SetError]] = {
       Option(results.flatMap{
-          case failure: CreationFailure => Some((failure.clientId, failure.asMessageSetError))
-          case _ => None
-        }
+        case failure: CreationFailure => Some((failure.clientId, failure.asMessageSetError))
+        case _ => None
+      }
         .toMap)
         .filter(_.nonEmpty)
     }
@@ -134,16 +134,16 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
   case class UpdateResults(results: Seq[UpdateResult]) {
     def updated: Option[Map[MessageId, Unit]] =
       Option(results.flatMap{
-          case result: UpdateSuccess => Some(result.messageId, ())
-          case _ => None
-        }.toMap)
+        case result: UpdateSuccess => Some(result.messageId, ())
+        case _ => None
+      }.toMap)
         .filter(_.nonEmpty)
 
     def notUpdated: Option[Map[UnparsedMessageId, SetError]] =
       Option(results.flatMap{
-          case failure: UpdateFailure => Some((failure.unparsedMessageId, failure.asMessageSetError))
-          case _ => None
-        }.toMap)
+        case failure: UpdateFailure => Some((failure.unparsedMessageId, failure.asMessageSetError))
+        case _ => None
+      }.toMap)
         .filter(_.nonEmpty)
   }
 
@@ -169,12 +169,12 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
           notDestroyed = destroyResults.notDestroyed))),
         methodCallId = invocation.invocation.methodCallId),
       processingContext = created.created.getOrElse(Map())
-          .foldLeft(invocation.processingContext)({
-            case (processingContext, (clientId, response)) =>
-              Id.validate(response.id.serialize)
-                  .fold(_ => processingContext,
-                    serverId => processingContext.recordCreatedId(ClientId(clientId), ServerId(serverId)))
-          }))
+        .foldLeft(invocation.processingContext)({
+          case (processingContext, (clientId, response)) =>
+            Id.validate(response.id.serialize)
+              .fold(_ => processingContext,
+                serverId => processingContext.recordCreatedId(ClientId(clientId), ServerId(serverId)))
+        }))
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[EmailSetRequest] = asEmailSetRequest(invocation.arguments)
@@ -212,27 +212,32 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
 
   private def create(request: EmailSetRequest, mailboxSession: MailboxSession): SMono[CreationResults] =
     SFlux.fromIterable(request.create.getOrElse(Map()))
-        .concatMap {
-          case (clientId, json) => serializer.deserializeCreationRequest(json)
-            .fold(e => SMono.just[CreationResult](CreationFailure(clientId, new IllegalArgumentException(e.toString))),
-              creationRequest => create(clientId, creationRequest, mailboxSession))
-        }.collectSeq()
-        .map(CreationResults)
+      .concatMap {
+        case (clientId, json) => serializer.deserializeCreationRequest(json)
+          .fold(e => SMono.just[CreationResult](CreationFailure(clientId, new IllegalArgumentException(e.toString))),
+            creationRequest => create(clientId, creationRequest, mailboxSession))
+      }.collectSeq()
+      .map(CreationResults)
 
   private def create(clientId: EmailCreationId, request: EmailCreationRequest, mailboxSession: MailboxSession): SMono[CreationResult] = {
     if (request.mailboxIds.value.size != 1) {
       SMono.just(CreationFailure(clientId, new IllegalArgumentException("mailboxIds need to have size 1")))
     } else {
       SMono.fromCallable[CreationResult](() => {
-        val mailboxId: MailboxId = request.mailboxIds.value.headOption.get
-        val appendResult = mailboxManager.getMailbox(mailboxId, mailboxSession)
-          .appendMessage(AppendCommand.builder()
-            .recent()
-            .withFlags(request.keywords.map(_.asFlags).getOrElse(new Flags()))
-              .withInternalDate(Date.from(request.receivedAt.getOrElse(UTCDate(ZonedDateTime.now())).asUTC.toInstant))
-            .build(request.toMime4JMessage),
-            mailboxSession)
-        CreationSuccess(clientId, EmailCreationResponse(appendResult.getId.getMessageId))
+        request.toMime4JMessage
+          .fold(e => CreationFailure(clientId, e),
+            message => {
+              val mailboxId: MailboxId = request.mailboxIds.value.headOption.get
+              val appendResult = mailboxManager.getMailbox(mailboxId, mailboxSession)
+                .appendMessage(AppendCommand.builder()
+                  .recent()
+                  .withFlags(request.keywords.map(_.asFlags).getOrElse(new Flags()))
+                  .withInternalDate(Date.from(request.receivedAt.getOrElse(UTCDate(ZonedDateTime.now())).asUTC.toInstant))
+                  .build(message),
+                  mailboxSession)
+              CreationSuccess(clientId, EmailCreationResponse(appendResult.getId.getMessageId))
+            }
+          )
       })
         .subscribeOn(Schedulers.elastic())
         .onErrorResume(e => SMono.just[CreationResult](CreationFailure(clientId, e)))
@@ -405,7 +410,7 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
     if (newFlags.equals(originalFlags)) {
       SMono.just[UpdateResult](UpdateSuccess(messageId))
     } else {
-    SMono.fromCallable(() =>
+      SMono.fromCallable(() =>
         messageIdManager.setFlags(newFlags, FlagsUpdateMode.REPLACE, messageId, ImmutableList.copyOf(mailboxIds.value.asJavaCollection), session))
         .subscribeOn(Schedulers.elastic())
         .`then`(SMono.just[UpdateResult](UpdateSuccess(messageId)))
