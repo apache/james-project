@@ -42,7 +42,7 @@ class JmapRfc8621ConfigurationTest extends AnyWordSpec with Matchers {
       val jmapRfc8621Configuration: JmapRfc8621Configuration = JmapRfc8621Configuration.from(providedConfiguration())
 
       jmapRfc8621Configuration.apiUrl must be(new URL("http://random-domain.com/jmap"))
-      jmapRfc8621Configuration.downloadUrl must be(new URL("http://random-domain.com/download/$accountId/$blobId/?type=$type&name=$name "))
+      jmapRfc8621Configuration.downloadUrl must be(new URL("http://random-domain.com/download/{accountId}/{blobId}/?type={type}&name={name}"))
       jmapRfc8621Configuration.uploadUrl must be(new URL("http://random-domain.com/upload"))
       jmapRfc8621Configuration.eventSourceUrl must be(new URL("http://random-domain.com/eventSource"))
     }
@@ -51,7 +51,7 @@ class JmapRfc8621ConfigurationTest extends AnyWordSpec with Matchers {
       val jmapRfc8621Configuration: JmapRfc8621Configuration = JmapRfc8621Configuration.from(emptyConfiguration)
 
       jmapRfc8621Configuration.apiUrl must be(new URL("http://localhost/jmap"))
-      jmapRfc8621Configuration.downloadUrl must be(new URL("http://localhost/download/$accountId/$blobId/?type=$type&name=$name"))
+      jmapRfc8621Configuration.downloadUrl must be(new URL("http://localhost/download/{accountId}/{blobId}/?type={type}&name={name}"))
       jmapRfc8621Configuration.uploadUrl must be(new URL("http://localhost/upload"))
       jmapRfc8621Configuration.eventSourceUrl must be(new URL("http://localhost/eventSource"))
     }
