@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.data;
+package org.apache.james.modules.mailrepository;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -33,7 +33,6 @@ import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryUrlModul
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryUrlStore;
 import org.apache.james.mailrepository.cassandra.MergingCassandraMailRepositoryMailDao;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
-import org.apache.james.modules.server.MailStoreRepositoryModule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
@@ -41,10 +40,6 @@ import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 
 public class CassandraMailRepositoryModule extends AbstractModule {
-    private static final MailRepositoryStoreConfiguration.Item CASSANDRA_MAILREPOSITORY_DEFAULT_DECLARATION = new MailRepositoryStoreConfiguration.Item(
-        ImmutableList.of(new Protocol("cassandra")),
-        CassandraMailRepository.class.getName(),
-        new BaseHierarchicalConfiguration());
 
     @Override
     protected void configure() {
@@ -58,10 +53,16 @@ public class CassandraMailRepositoryModule extends AbstractModule {
         bind(CassandraMailRepositoryMailDaoAPI.class).to(MergingCassandraMailRepositoryMailDao.class);
         bind(MailRepositoryUrlStore.class).to(CassandraMailRepositoryUrlStore.class);
 
-        bind(MailStoreRepositoryModule.DefaultItemSupplier.class).toInstance(() -> CASSANDRA_MAILREPOSITORY_DEFAULT_DECLARATION);
+        bind(MailRepositoryStoreConfiguration.Item.class)
+            .toProvider(() ->
+                new MailRepositoryStoreConfiguration.Item(
+                    ImmutableList.of(new Protocol("cassandra")),
+                    CassandraMailRepository.class.getName(),
+                    new BaseHierarchicalConfiguration()));
 
         Multibinder<CassandraModule> cassandraModuleBinder = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraModuleBinder.addBinding().toInstance(org.apache.james.mailrepository.cassandra.CassandraMailRepositoryModule.MODULE);
         cassandraModuleBinder.addBinding().toInstance(CassandraMailRepositoryUrlModule.MODULE);
     }
+
 }

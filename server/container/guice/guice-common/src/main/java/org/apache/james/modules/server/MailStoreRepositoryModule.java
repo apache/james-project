@@ -19,7 +19,7 @@
 
 package org.apache.james.modules.server;
 
-import java.util.function.Supplier;
+import javax.inject.Provider;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -46,8 +46,6 @@ import com.google.inject.multibindings.ProvidesIntoSet;
 public class MailStoreRepositoryModule extends AbstractModule {
     public static final Logger LOGGER = LoggerFactory.getLogger(MailStoreRepositoryModule.class);
 
-    public interface DefaultItemSupplier extends Supplier<MailRepositoryStoreConfiguration.Item> {}
-
     @Override
     protected void configure() {
         bind(MemoryMailRepositoryStore.class).in(Scopes.SINGLETON);
@@ -61,14 +59,17 @@ public class MailStoreRepositoryModule extends AbstractModule {
 
     @Provides
     @Singleton
-    MailRepositoryStoreConfiguration provideConfiguration(ConfigurationProvider configurationProvider, DefaultItemSupplier defaultItemSupplier) throws ConfigurationException {
+    MailRepositoryStoreConfiguration provideConfiguration(ConfigurationProvider configurationProvider,
+                                                          Provider<MailRepositoryStoreConfiguration.Item> defaultConfigurationItem)
+        throws ConfigurationException {
+
         HierarchicalConfiguration<ImmutableNode> configuration = configurationProvider.getConfiguration("mailrepositorystore");
         MailRepositoryStoreConfiguration userConfiguration = MailRepositoryStoreConfiguration.parse(configuration);
         if (!userConfiguration.getItems().isEmpty()) {
             return userConfiguration;
         }
         LOGGER.warn("Empty MailRepository store configuration supplied. Defaulting to default configuration for this product");
-        return MailRepositoryStoreConfiguration.forItems(defaultItemSupplier.get());
+        return MailRepositoryStoreConfiguration.forItems(defaultConfigurationItem.get());
     }
 
     @ProvidesIntoSet
