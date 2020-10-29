@@ -23,16 +23,14 @@ import java.time.ZoneId
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import javax.inject.Inject
-import org.apache.james.jmap.api.model.Preview
 import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{EmailGetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.Email.UnparsedEmailId
 import org.apache.james.jmap.mail.{Email, EmailBodyPart, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound, EmailView, EmailViewReaderFactory, SpecificHeaderRequest}
-import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
+import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
-import org.apache.james.jmap.model.{AccountId, Capabilities, ErrorCode, Invocation, Properties}
+import org.apache.james.jmap.model.{AccountId, ErrorCode, Invocation, Properties}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MessageId
 import org.apache.james.metrics.api.MetricFactory
@@ -79,12 +77,10 @@ class SystemZoneIdProvider extends ZoneIdProvider {
 
 class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
                                 messageIdFactory: MessageId.Factory,
-                                zoneIdProvider: ZoneIdProvider,
-                                previewFactory: Preview.Factory,
                                 val metricFactory: MetricFactory,
                                 val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[EmailGetRequest] {
-  override val methodName = MethodName("Email/get")
-  override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
+  override val methodName: MethodName = MethodName("Email/get")
+  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailGetRequest): SMono[InvocationWithContext] = {
     computeResponseInvocation(request, invocation.invocation, mailboxSession).onErrorResume({
@@ -100,7 +96,7 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
       .flatMap(properties => validateBodyProperties(request).map((properties, _)))
       .fold(
         e => SMono.raiseError(e), {
-          case (properties, bodyProperties) => getEmails(request, properties, mailboxSession)
+          case (properties, bodyProperties) => getEmails(request, mailboxSession)
             .map(response => Invocation(
               methodName = methodName,
               arguments = Arguments(EmailGetSerializer.serialize(response, properties, bodyProperties).as[JsObject]),
@@ -143,7 +139,7 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
       case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
     }
 
-  private def getEmails(request: EmailGetRequest, properties: Properties, mailboxSession: MailboxSession): SMono[EmailGetResponse] =
+  private def getEmails(request: EmailGetRequest, mailboxSession: MailboxSession): SMono[EmailGetResponse] =
     request.ids match {
       case None => SMono.raiseError(new IllegalArgumentException("ids can not be ommited for email/get"))
       case Some(ids) => getEmails(ids, mailboxSession, request)

@@ -24,12 +24,11 @@ import javax.inject.Inject
 import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{EmailQuerySerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{Comparator, EmailQueryRequest, EmailQueryResponse, UnsupportedRequestParameterException}
-import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
+import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.Limit.Limit
 import org.apache.james.jmap.model.Position.Position
-import org.apache.james.jmap.model.{CanCalculateChanges, Capabilities, Invocation, Limit, Position, QueryState}
+import org.apache.james.jmap.model.{CanCalculateChanges, Invocation, Limit, Position, QueryState}
 import org.apache.james.jmap.utils.search.MailboxFilter
 import org.apache.james.jmap.utils.search.MailboxFilter.QueryFilter
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery
@@ -45,7 +44,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
                                   val metricFactory: MetricFactory,
                                   val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[EmailQueryRequest] {
   override val methodName: MethodName = MethodName("Email/query")
-  override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
+  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailQueryRequest): SMono[InvocationWithContext] = {
     processRequest(mailboxSession, invocation.invocation, request, capabilities)

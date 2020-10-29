@@ -24,32 +24,32 @@ import java.util.stream
 import java.util.stream.Stream
 
 import eu.timepit.refined.api.Refined
+import eu.timepit.refined.auto._
+import eu.timepit.refined.numeric.NonNegative
+import eu.timepit.refined.refineV
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
-import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, CREATED}
 import io.netty.handler.codec.http.HttpMethod
+import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, CREATED}
 import javax.inject.{Inject, Named}
-import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
+import org.apache.commons.fileupload.util.LimitedInputStream
+import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
+import org.apache.james.jmap.json.UploadSerializer
+import org.apache.james.jmap.mail.BlobId
 import org.apache.james.jmap.mail.Email.Size
+import org.apache.james.jmap.model.Id.Id
+import org.apache.james.jmap.model.{AccountId, Id, JmapRfc8621Configuration}
 import org.apache.james.jmap.routes.UploadRoutes.{LOGGER, sanitizeSize}
-import org.apache.james.mailbox.{AttachmentManager, MailboxSession}
+import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.mailbox.model.{AttachmentMetadata, ContentType}
+import org.apache.james.mailbox.{AttachmentManager, MailboxSession}
 import org.apache.james.util.ReactorUtils
 import org.slf4j.{Logger, LoggerFactory}
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
-import eu.timepit.refined.auto._
-import eu.timepit.refined.numeric.NonNegative
-import eu.timepit.refined.refineV
-import org.apache.commons.fileupload.util.LimitedInputStream
-import org.apache.james.jmap.exceptions.UnauthorizedException
-import org.apache.james.jmap.json.UploadSerializer
-import org.apache.james.jmap.mail.BlobId
-import org.apache.james.jmap.model.{AccountId, Id, JmapRfc8621Configuration}
-import org.apache.james.jmap.model.Id.Id
 
 object UploadRoutes {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[DownloadRoutes])
@@ -131,7 +131,7 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
   }
 
   def handle(accountId: AccountId, contentType: ContentType, content: InputStream, mailboxSession: MailboxSession, response: HttpServerResponse): SMono[Void] = {
-    val maxSize: Long = configuration.maxUploadSize.asBytes()
+    val maxSize: Long = configuration.maxUploadSize.value.value
 
     SMono.fromCallable(() => new LimitedInputStream(content, maxSize) {
       override def raiseError(max: Long, count: Long): Unit = if (count > max) {

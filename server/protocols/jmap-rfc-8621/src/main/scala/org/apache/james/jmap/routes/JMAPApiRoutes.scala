@@ -113,7 +113,7 @@ class JMAPApiRoutes (val authenticator: Authenticator,
                       httpServerResponse: HttpServerResponse,
                       mailboxSession: MailboxSession): SMono[Void] = {
     val processingContext: ProcessingContext = ProcessingContext(Map.empty, Map.empty)
-    val unsupportedCapabilities = requestObject.using.toSet -- DefaultCapabilities.SUPPORTED.ids
+    val unsupportedCapabilities = requestObject.using.toSet -- DefaultCapabilities.SUPPORTED_CAPABILITY_IDENTIFIERS
     val capabilities: Set[CapabilityIdentifier] = requestObject.using.toSet
 
     if (unsupportedCapabilities.nonEmpty) {
@@ -168,8 +168,8 @@ class JMAPApiRoutes (val authenticator: Authenticator,
       .onErrorResume(throwable => SMono.just(InvocationWithContext(Invocation.error(ErrorCode.ServerFail, throwable.getMessage, invocation.invocation.methodCallId), invocation.processingContext)))
       .switchIfEmpty(SMono.just(InvocationWithContext(Invocation.error(ErrorCode.UnknownMethod, invocation.invocation.methodCallId), invocation.processingContext)))
 
-  private def validateCapabilities(capabilities: Set[CapabilityIdentifier], requiredCapabilities: Capabilities): Either[MissingCapabilityException, Unit] = {
-    val missingCapabilities = requiredCapabilities.ids -- capabilities
+  private def validateCapabilities(capabilities: Set[CapabilityIdentifier], requiredCapabilities: Set[CapabilityIdentifier]): Either[MissingCapabilityException, Unit] = {
+    val missingCapabilities = requiredCapabilities -- capabilities
     if (missingCapabilities.nonEmpty) {
       Left(MissingCapabilityException(s"Missing capability(ies): ${missingCapabilities.mkString(", ")}"))
     } else {

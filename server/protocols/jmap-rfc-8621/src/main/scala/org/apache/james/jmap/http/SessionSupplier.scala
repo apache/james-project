@@ -26,10 +26,12 @@ import org.apache.james.jmap.model._
 import reactor.core.scala.publisher.SMono
 
 class SessionSupplier @Inject() (val configuration: JmapRfc8621Configuration){
+  private val maxSizeUpload = configuration.maxUploadSize
+
   def generate(username: Username): SMono[Session] = {
     accounts(username)
       .map(account => Session(
-        DefaultCapabilities.SUPPORTED,
+        DefaultCapabilities.supported(maxSizeUpload),
         List(account),
         primaryAccounts(account.accountId),
         username,
@@ -40,13 +42,13 @@ class SessionSupplier @Inject() (val configuration: JmapRfc8621Configuration){
   }
 
   private def accounts(username: Username): SMono[Account] = SMono.defer(() =>
-    Account.from(username, IsPersonal(true), IsReadOnly(false), DefaultCapabilities.SUPPORTED.toSet) match {
+    Account.from(username, IsPersonal(true), IsReadOnly(false), DefaultCapabilities.supported(maxSizeUpload).toSet) match {
       case Left(ex: IllegalArgumentException) => SMono.raiseError(ex)
       case Right(account: Account) => SMono.just(account)
     })
 
   private def primaryAccounts(accountId: AccountId): Map[CapabilityIdentifier, AccountId] =
-    DefaultCapabilities.SUPPORTED.toSet
+    DefaultCapabilities.supported(maxSizeUpload).toSet
       .map(capability => (capability.identifier(), accountId))
       .toMap
 }

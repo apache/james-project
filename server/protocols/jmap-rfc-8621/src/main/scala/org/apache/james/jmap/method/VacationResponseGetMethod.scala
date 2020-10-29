@@ -26,11 +26,10 @@ import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{ResponseSerializer, VacationSerializer}
 import org.apache.james.jmap.mail.VacationResponse.{UNPARSED_SINGLETON, UnparsedVacationResponseId}
 import org.apache.james.jmap.mail.{VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseNotFound}
-import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY, VACATION_RESPONSE_CAPABILITY}
+import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
-import org.apache.james.jmap.model.{AccountId, Capabilities, ErrorCode, Invocation, MissingCapabilityException, Properties}
+import org.apache.james.jmap.model.{AccountId, ErrorCode, Invocation, MissingCapabilityException, Properties}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
@@ -60,7 +59,7 @@ class VacationResponseGetMethod @Inject()(vacationRepository: VacationRepository
                                           val metricFactory: MetricFactory,
                                           val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[VacationResponseGetRequest] {
   override val methodName: MethodName = MethodName("VacationResponse/get")
-  override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY, VACATION_RESPONSE_CAPABILITY)
+  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: VacationResponseGetRequest): SMono[InvocationWithContext] = {
     {

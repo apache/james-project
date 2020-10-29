@@ -30,12 +30,11 @@ import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{EmailSetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId}
 import org.apache.james.jmap.mail.{DestroyIds, EmailCreationRequest, EmailCreationResponse, EmailSet, EmailSetRequest, EmailSetResponse, MailboxIds, ValidatedEmailSetUpdate}
-import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.DefaultCapabilities.{CORE_CAPABILITY, MAIL_CAPABILITY}
+import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
 import org.apache.james.jmap.model.SetError.SetErrorDescription
-import org.apache.james.jmap.model.{Capabilities, ClientId, Id, Invocation, ServerId, SetError, State, UTCDate}
+import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId, SetError, State, UTCDate}
 import org.apache.james.mailbox.MessageManager.{AppendCommand, FlagsUpdateMode}
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.{ComposedMessageIdWithMetaData, DeleteResult, MailboxId, MessageId, MessageRange}
@@ -149,7 +148,7 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
   }
 
   override val methodName: MethodName = MethodName("Email/set")
-  override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY, MAIL_CAPABILITY)
+  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailSetRequest): SMono[InvocationWithContext] = {
     for {

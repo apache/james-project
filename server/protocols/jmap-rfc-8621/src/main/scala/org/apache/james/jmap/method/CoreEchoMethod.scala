@@ -20,10 +20,8 @@ package org.apache.james.jmap.method
 
 
 import eu.timepit.refined.auto._
-import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.DefaultCapabilities.CORE_CAPABILITY
+import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.model.Invocation.MethodName
-import org.apache.james.jmap.model.{Capabilities}
 import org.apache.james.mailbox.MailboxSession
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
@@ -33,5 +31,5 @@ class CoreEchoMethod extends Method {
 
   override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): Publisher[InvocationWithContext] = SMono.just(invocation)
 
-  override val requiredCapabilities: Capabilities = Capabilities(CORE_CAPABILITY)
+  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE)
 }

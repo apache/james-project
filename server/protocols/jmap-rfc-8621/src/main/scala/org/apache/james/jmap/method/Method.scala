@@ -23,7 +23,7 @@ import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.mail.{UnsupportedFilterException, UnsupportedNestingException, UnsupportedRequestParameterException, UnsupportedSortException}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.model.Invocation.MethodName
-import org.apache.james.jmap.model.{AccountId, Capabilities, ErrorCode, Invocation, Session}
+import org.apache.james.jmap.model.{AccountId, ErrorCode, Invocation, Session}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.exception.MailboxNotFoundException
@@ -38,7 +38,7 @@ trait Method {
 
   val methodName: MethodName
 
-  val requiredCapabilities: Capabilities
+  val requiredCapabilities: Set[CapabilityIdentifier]
 
   def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): Publisher[InvocationWithContext]
 }

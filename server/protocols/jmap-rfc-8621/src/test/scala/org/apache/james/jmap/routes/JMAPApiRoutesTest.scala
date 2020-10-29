@@ -38,10 +38,9 @@ import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap._
 import org.apache.james.jmap.http.{Authenticator, BasicAuthenticationStrategy, MailboxesProvisioner, SessionSupplier, UserProvisioning}
 import org.apache.james.jmap.method.{CoreEchoMethod, Method}
-import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.DefaultCapabilities.CORE_CAPABILITY
+import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.model.Invocation.MethodName
-import org.apache.james.jmap.model.{Capabilities, JmapRfc8621Configuration, RequestLevelErrorType}
+import org.apache.james.jmap.model.{JmapRfc8621Configuration, RequestLevelErrorType}
 import org.apache.james.jmap.routes.JMAPApiRoutesTest._
 import org.apache.james.mailbox.extension.PreDeletionHook
 import org.apache.james.mailbox.inmemory.{InMemoryMailboxManager, MemoryMailboxManagerProvider}
@@ -440,7 +439,7 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
       .process(any[Set[CapabilityIdentifier]], any(), any())
 
     when(mockCoreEchoMethod.methodName).thenReturn(MethodName("Core/echo"))
-    when(mockCoreEchoMethod.requiredCapabilities).thenReturn(Capabilities(CORE_CAPABILITY))
+    when(mockCoreEchoMethod.requiredCapabilities).thenReturn(Set(JMAP_CORE))
 
     val methods: Set[Method] = Set(mockCoreEchoMethod)
     val apiRoute: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, userProvisionner, mailboxesProvisioner, methods, sessionSupplier)

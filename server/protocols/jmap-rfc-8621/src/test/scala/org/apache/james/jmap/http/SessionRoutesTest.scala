@@ -118,7 +118,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
     val expectedJson = s"""{
                          |  "capabilities" : {
                          |    "urn:ietf:params:jmap:core" : {
-                         |      "maxSizeUpload" : 10000000,
+                         |      "maxSizeUpload" : 31457280,
                          |      "maxConcurrentUpload" : 4,
                          |      "maxSizeRequest" : 10000000,
                          |      "maxConcurrentRequests" : 4,
@@ -146,7 +146,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |      "isReadOnly" : false,
                          |      "accountCapabilities" : {
                          |        "urn:ietf:params:jmap:core" : {
-                         |          "maxSizeUpload" : 10000000,
+                         |          "maxSizeUpload" : 31457280,
                          |          "maxConcurrentUpload" : 4,
                          |          "maxSizeRequest" : 10000000,
                          |          "maxConcurrentRequests" : 4,

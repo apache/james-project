@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.model
 
+import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
@@ -26,7 +27,10 @@ import eu.timepit.refined.string.Uri
 import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
 import org.apache.james.jmap.model.CoreCapabilityProperties.CollationAlgorithm
 import org.apache.james.jmap.model.MailCapability.EmailQuerySortOption
-import org.apache.james.jmap.model.UnsignedInt.UnsignedInt
+import org.apache.james.jmap.model.UnsignedInt.{UnsignedInt, UnsignedIntConstraint}
+import org.apache.james.util.Size
+
+import scala.util.{Failure, Success, Try}
 
 sealed trait CapabilityValidationException extends IllegalArgumentException
 case class MissingCapabilityException(description: String) extends CapabilityValidationException
@@ -49,6 +53,13 @@ trait Capability {
 
 final case class CoreCapability(properties: CoreCapabilityProperties,
                                 identifier: CapabilityIdentifier = JMAP_CORE) extends Capability
+
+object MaxSizeUpload {
+  def of(size: Size): Try[MaxSizeUpload] = refined.refineV[UnsignedIntConstraint](size.asBytes()) match {
+    case Right(value) => Success(MaxSizeUpload(value))
+    case Left(error) => Failure(new NumberFormatException(error))
+  }
+}
 
 case class MaxSizeUpload(value: UnsignedInt)
 case class MaxConcurrentUpload(value: UnsignedInt)

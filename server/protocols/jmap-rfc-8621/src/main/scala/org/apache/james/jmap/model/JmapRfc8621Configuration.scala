@@ -27,7 +27,7 @@ import org.apache.james.util.Size
 
 object JmapRfc8621Configuration {
   val LOCALHOST_URL_PREFIX: String = "http://localhost"
-  val UPLOAD_LIMIT_30_MB: Size = Size.of(30, Size.Unit.M)
+  val UPLOAD_LIMIT_30_MB: MaxSizeUpload = MaxSizeUpload.of(Size.of(30L, Size.Unit.M)).get
   val LOCALHOST_CONFIGURATION: JmapRfc8621Configuration = JmapRfc8621Configuration(LOCALHOST_URL_PREFIX, UPLOAD_LIMIT_30_MB)
   val URL_PREFIX_PROPERTIES: String = "url.prefix"
   val UPLOAD_LIMIT_PROPERTIES: String = "upload.max.size"
@@ -35,11 +35,14 @@ object JmapRfc8621Configuration {
   def from(configuration: Configuration): JmapRfc8621Configuration = {
     JmapRfc8621Configuration(
       urlPrefixString = Option(configuration.getString(URL_PREFIX_PROPERTIES)).getOrElse(LOCALHOST_URL_PREFIX),
-      maxUploadSize = Option(configuration.getString(UPLOAD_LIMIT_PROPERTIES, null)).map(Size.parse).getOrElse(UPLOAD_LIMIT_30_MB))
+      maxUploadSize = Option(configuration.getString(UPLOAD_LIMIT_PROPERTIES, null))
+        .map(Size.parse)
+        .map(MaxSizeUpload.of(_).get)
+        .getOrElse(UPLOAD_LIMIT_30_MB))
   }
 }
 
-case class JmapRfc8621Configuration(urlPrefixString: String, maxUploadSize: Size = UPLOAD_LIMIT_30_MB) {
+case class JmapRfc8621Configuration(urlPrefixString: String, maxUploadSize: MaxSizeUpload = UPLOAD_LIMIT_30_MB) {
   val urlPrefix: URL = new URL(urlPrefixString)
   val apiUrl: URL = new URL(s"$urlPrefixString/jmap")
   val downloadUrl: URL = new URL(urlPrefixString + "/download/$accountId/$blobId/?type=$type&name=$name")

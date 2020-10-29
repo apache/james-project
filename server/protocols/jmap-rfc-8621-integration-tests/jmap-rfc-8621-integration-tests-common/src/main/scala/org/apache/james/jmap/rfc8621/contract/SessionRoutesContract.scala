@@ -42,7 +42,7 @@ object SessionRoutesContract {
   private val expected_session_object: String = """{
                          |  "capabilities" : {
                          |    "urn:ietf:params:jmap:core" : {
-                         |      "maxSizeUpload" : 10000000,
+                         |      "maxSizeUpload" : 31457280,
                          |      "maxConcurrentUpload" : 4,
                          |      "maxSizeRequest" : 10000000,
                          |      "maxConcurrentRequests" : 4,
@@ -70,7 +70,7 @@ object SessionRoutesContract {
                          |      "isReadOnly" : false,
                          |      "accountCapabilities" : {
                          |        "urn:ietf:params:jmap:core" : {
-                         |          "maxSizeUpload" : 10000000,
+                         |          "maxSizeUpload" : 31457280,
                          |          "maxConcurrentUpload" : 4,
                          |          "maxSizeRequest" : 10000000,
                          |          "maxConcurrentRequests" : 4,
