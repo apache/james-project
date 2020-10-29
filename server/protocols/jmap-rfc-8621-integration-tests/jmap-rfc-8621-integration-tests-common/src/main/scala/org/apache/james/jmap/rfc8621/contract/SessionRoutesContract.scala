@@ -103,7 +103,7 @@ object SessionRoutesContract {
                          |  "username" : "bob@domain.tld",
                          |  "apiUrl" : "http://domain.com/jmap",
                          |  "downloadUrl" : "http://domain.com/download/{accountId}/{blobId}/?type={type}&name={name}",
-                         |  "uploadUrl" : "http://domain.com/upload",
+                         |  "uploadUrl" : "http://domain.com/upload/{accountId}",
                          |  "eventSourceUrl" : "http://domain.com/eventSource",
                          |  "state" : "000001"
                          |}""".stripMargin

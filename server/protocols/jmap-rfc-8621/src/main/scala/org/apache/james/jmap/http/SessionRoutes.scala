@@ -27,9 +27,8 @@ import io.netty.handler.codec.http.HttpResponseStatus.OK
 import javax.inject.{Inject, Named}
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE_UTF8
 import org.apache.james.jmap.JMAPRoutes.CORS_CONTROL
-import org.apache.james.jmap.JMAPUrls.AUTHENTICATION
 import org.apache.james.jmap.exceptions.UnauthorizedException
-import org.apache.james.jmap.http.SessionRoutes.{JMAP_SESSION, WELL_KNOWN_JMAP, LOGGER}
+import org.apache.james.jmap.http.SessionRoutes.{JMAP_SESSION, LOGGER, WELL_KNOWN_JMAP}
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.jmap.model.Session

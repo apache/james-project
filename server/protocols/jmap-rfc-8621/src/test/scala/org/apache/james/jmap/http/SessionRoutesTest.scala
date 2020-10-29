@@ -33,6 +33,7 @@ import org.apache.james.core.Username
 import org.apache.james.jmap._
 import org.apache.james.jmap.http.SessionRoutesTest.{BOB, TEST_CONFIGURATION}
 import org.apache.james.jmap.model.JmapRfc8621Configuration
+import org.apache.james.jmap.model.JmapRfc8621Configuration.LOCALHOST_URL_PREFIX
 import org.apache.james.mailbox.MailboxSession
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
@@ -177,10 +178,10 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |    "urn:ietf:params:jmap:vacationresponse": "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401"
                          |  },
                          |  "username" : "bob@james.org",
-                         |  "apiUrl" : "${JmapRfc8621Configuration.LOCALHOST_URL_PREFIX}/jmap",
-                         |  "downloadUrl" : "${JmapRfc8621Configuration.LOCALHOST_URL_PREFIX}/$downloadPath",
-                         |  "uploadUrl" : "${JmapRfc8621Configuration.LOCALHOST_URL_PREFIX}/upload",
-                         |  "eventSourceUrl" : "${JmapRfc8621Configuration.LOCALHOST_URL_PREFIX}/eventSource",
+                         |  "apiUrl" : "$LOCALHOST_URL_PREFIX/jmap",
+                         |  "downloadUrl" : "$LOCALHOST_URL_PREFIX/$downloadPath",
+                         |  "uploadUrl" : "$LOCALHOST_URL_PREFIX/upload/{accountId}",
+                         |  "eventSourceUrl" : "$LOCALHOST_URL_PREFIX/eventSource",
                          |  "state" : "000001"
                          |}""".stripMargin
 
