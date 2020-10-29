@@ -55,7 +55,6 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
                                val metricFactory: MetricFactory,
                                val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[EmailSetRequest] {
 
-
   case class DestroyResults(results: Seq[DestroyResult]) {
     def destroyed: Option[DestroyIds] =
       Option(results.flatMap{
@@ -220,27 +219,24 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
       .map(CreationResults)
 
   private def create(clientId: EmailCreationId, request: EmailCreationRequest, mailboxSession: MailboxSession): SMono[CreationResult] = {
-    if (request.mailboxIds.value.size != 1) {
+    val mailboxIds: List[MailboxId] = request.mailboxIds.value
+    if (mailboxIds.size != 1) {
       SMono.just(CreationFailure(clientId, new IllegalArgumentException("mailboxIds need to have size 1")))
     } else {
-      SMono.fromCallable[CreationResult](() => {
-        request.toMime4JMessage
-          .fold(e => CreationFailure(clientId, e),
-            message => {
-              val mailboxId: MailboxId = request.mailboxIds.value.headOption.get
-              val appendResult = mailboxManager.getMailbox(mailboxId, mailboxSession)
-                .appendMessage(AppendCommand.builder()
-                  .recent()
-                  .withFlags(request.keywords.map(_.asFlags).getOrElse(new Flags()))
-                  .withInternalDate(Date.from(request.receivedAt.getOrElse(UTCDate(ZonedDateTime.now())).asUTC.toInstant))
-                  .build(message),
-                  mailboxSession)
-              CreationSuccess(clientId, EmailCreationResponse(appendResult.getId.getMessageId))
-            }
-          )
-      })
-        .subscribeOn(Schedulers.elastic())
-        .onErrorResume(e => SMono.just[CreationResult](CreationFailure(clientId, e)))
+      request.toMime4JMessage
+        .fold(e => SMono.just(CreationFailure(clientId, e)),
+          message => SMono.fromCallable[CreationResult](() => {
+            val appendResult = mailboxManager.getMailbox(mailboxIds.head, mailboxSession)
+              .appendMessage(AppendCommand.builder()
+                .recent()
+                .withFlags(request.keywords.map(_.asFlags).getOrElse(new Flags()))
+                .withInternalDate(Date.from(request.receivedAt.getOrElse(UTCDate(ZonedDateTime.now())).asUTC.toInstant))
+                .build(message),
+                mailboxSession)
+            CreationSuccess(clientId, EmailCreationResponse(appendResult.getId.getMessageId))
+          })
+            .subscribeOn(Schedulers.elastic())
+            .onErrorResume(e => SMono.just[CreationResult](CreationFailure(clientId, e))))
     }
   }
 

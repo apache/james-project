@@ -248,7 +248,14 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   private implicit val clientEmailBodyValueReads: Reads[ClientEmailBodyValue] = Json.reads[ClientEmailBodyValue]
   private implicit val typeReads: Reads[Type] = Json.valueReads[Type]
   private implicit val clientPartIdReads: Reads[ClientPartId] = Json.valueReads[ClientPartId]
-  private implicit val clientHtmlBodyReads: Reads[ClientHtmlBody] = Json.reads[ClientHtmlBody]
+  private implicit val clientHtmlBodyReads: Reads[ClientHtmlBody] = {
+    case JsObject(underlying) if underlying.contains("charset") => JsError("charset must not be specified in htmlBody")
+    case JsObject(underlying) if underlying.contains("size") => JsError("size must not be specified in htmlBody")
+    case JsObject(underlying) if underlying.contains("header:Content-Transfer-Encoding:asText") => JsError("Content-Transfer-Encoding must not be specified in htmlBody")
+    case o: JsObject => Json.reads[ClientHtmlBody].reads(o)
+    case _ => JsError("Expecting a JsObject to represent an ClientHtmlBody")
+  }
+
   private implicit val bodyValuesReads: Reads[Map[ClientPartId, ClientEmailBodyValue]] =
     readMapEntry[ClientPartId, ClientEmailBodyValue](s => Id.validate(s).fold(e => Left(e.getMessage), partId => Right(ClientPartId(partId))),
       clientEmailBodyValueReads)

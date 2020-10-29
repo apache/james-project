@@ -80,6 +80,7 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
   def toMime4JMessage: Either[IllegalArgumentException, Message] =
     validateHtmlBody.map(maybeHtmlBody => {
       val builder = Message.Builder.of
+      val htmlSubType = "html"
       references.flatMap(_.asString).map(new RawField("References", _)).foreach(builder.setField)
       inReplyTo.flatMap(_.asString).map(new RawField("In-Reply-To", _)).foreach(builder.setField)
       messageId.flatMap(_.asString).map(new RawField(FieldName.MESSAGE_ID, _)).foreach(builder.setField)
@@ -91,15 +92,22 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
       sender.flatMap(_.asMime4JMailboxList).map(_.asJava).map(Fields.addressList(FieldName.SENDER, _)).foreach(builder.setField)
       replyTo.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setReplyTo)
       sentAt.map(_.asUTC).map(_.toInstant).map(Date.from).foreach(builder.setDate)
-      builder.setBody(maybeHtmlBody.getOrElse(""), "html", StandardCharsets.UTF_8)
+      builder.setBody(maybeHtmlBody.getOrElse(""), htmlSubType, StandardCharsets.UTF_8)
       builder.build()
     })
 
   def validateHtmlBody: Either[IllegalArgumentException, Option[String]] = htmlBody match {
     case None => Right(None)
-    case Some(html :: Nil) => bodyValues.getOrElse(Map()).get(html.partId)
-      .map(part => Right(Some(part.value)))
-      .getOrElse(Left(new IllegalArgumentException("todo")))
+    case Some(html :: Nil) if !html.`type`.value.equals("text/html") => Left(new IllegalArgumentException("Expecting htmlBody type to be text/html"))
+    case Some(html :: Nil) => bodyValues.getOrElse(Map())
+      .get(html.partId)
+      .map {
+        case part if part.isTruncated.isDefined && part.isTruncated.get.value.equals(true) => Left(new IllegalArgumentException("Expecting isTruncated to be false"))
+        case part if part.isEncodingProblem.isDefined && part.isEncodingProblem.get.value.equals(true) => Left(new IllegalArgumentException("Expecting isEncodingProblem to be false"))
+        case part => Right(Some(part.value))
+      }
+      .getOrElse(Left(new IllegalArgumentException("Expecting bodyValues to contain the part specified in htmlBody")))
+    case _ => Left(new IllegalArgumentException("Expecting htmlBody to contains only 1 part"))
   }
 }
 
