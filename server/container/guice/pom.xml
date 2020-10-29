@@ -43,6 +43,7 @@
         <module>cassandra-rabbitmq-guice</module>
         <module>cassandra-rabbitmq-ldap-guice</module>
         <module>configuration</module>
+        <module>data-cassandra</module>
         <module>es-metric-reporter</module>
         <module>guice-common</module>
         <module>guice-utils</module>
@@ -81,6 +82,11 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>data-cassandra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-cassandra-ldap-guice</artifactId>
