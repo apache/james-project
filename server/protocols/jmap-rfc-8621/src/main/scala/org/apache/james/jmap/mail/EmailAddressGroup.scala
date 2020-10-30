@@ -19,6 +19,15 @@
 
 package org.apache.james.jmap.mail
 
+import org.apache.james.mime4j.dom.address.{Address, Group, MailboxList}
+
+import scala.jdk.CollectionConverters._
+
 case class GroupName(value: String) extends AnyVal
 
-case class EmailAddressGroup(name: Option[GroupName], addresses: List[EmailAddress])
+case class EmailAddressGroup(name: Option[GroupName], addresses: List[EmailAddress]) {
+  val asAddress: List[Address] = name.map(aName => new Group(aName.value,
+    new MailboxList(addresses.map(_.asMime4JMailbox).asJava)))
+    .map(List(_))
+    .getOrElse(addresses.map(_.asMime4JMailbox))
+}

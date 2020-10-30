@@ -20,13 +20,15 @@
 package org.apache.james.jmap.json
 
 import cats.implicits._
+import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
+import eu.timepit.refined.types.string.NonEmptyString
 import javax.inject.Inject
 import org.apache.james.jmap.core.Id.IdConstraint
-import org.apache.james.jmap.core.{Id, SetError}
+import org.apache.james.jmap.core.{Id, SetError, UTCDate}
 import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId, UnparsedMessageIdConstraint}
 import org.apache.james.jmap.mail.KeywordsFactory.STRICT_KEYWORDS_FACTORY
-import org.apache.james.jmap.mail.{AddressesHeaderValue, ClientEmailBodyValue, ClientHtmlBody, ClientPartId, DestroyIds, EmailAddress, EmailCreationRequest, EmailCreationResponse, EmailSetRequest, EmailSetResponse, EmailSetUpdate, EmailerName, HeaderMessageId, IsEncodingProblem, IsTruncated, Keyword, Keywords, MailboxIds, MessageIdsHeaderValue, Subject, Type}
+import org.apache.james.jmap.mail.{AddressesHeaderValue, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, ClientEmailBodyValue, ClientHtmlBody, ClientPartId, DateHeaderValue, DestroyIds, EmailAddress, EmailAddressGroup, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailSetRequest, EmailSetResponse, EmailSetUpdate, EmailerName, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, MailboxIds, MessageIdsHeaderValue, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, Type, URLsHeaderValue}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json.{JsArray, JsBoolean, JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
 
@@ -260,7 +262,117 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
     readMapEntry[ClientPartId, ClientEmailBodyValue](s => Id.validate(s).fold(e => Left(e.getMessage), partId => Right(ClientPartId(partId))),
       clientEmailBodyValueReads)
 
-  private implicit val emailCreationRequestReads: Reads[EmailCreationRequest] = Json.reads[EmailCreationRequest]
+  case class EmailCreationRequestWithoutHeaders(mailboxIds: MailboxIds,
+                                  messageId: Option[MessageIdsHeaderValue],
+                                  references: Option[MessageIdsHeaderValue],
+                                  inReplyTo: Option[MessageIdsHeaderValue],
+                                  from: Option[AddressesHeaderValue],
+                                  to: Option[AddressesHeaderValue],
+                                  cc: Option[AddressesHeaderValue],
+                                  bcc: Option[AddressesHeaderValue],
+                                  sender: Option[AddressesHeaderValue],
+                                  replyTo: Option[AddressesHeaderValue],
+                                  subject: Option[Subject],
+                                  sentAt: Option[UTCDate],
+                                  keywords: Option[Keywords],
+                                  receivedAt: Option[UTCDate],
+                                  htmlBody: Option[List[ClientHtmlBody]],
+                                  bodyValues: Option[Map[ClientPartId, ClientEmailBodyValue]]) {
+    def toCreationRequest(specificHeaders: List[EmailHeader]): EmailCreationRequest = EmailCreationRequest(
+      mailboxIds = mailboxIds,
+      messageId = messageId,
+      references = references,
+      inReplyTo = inReplyTo,
+      from = from,
+      to = to,
+      cc = cc,
+      bcc = bcc,
+      sender = sender,
+      replyTo = replyTo,
+      subject = subject,
+      sentAt = sentAt,
+      keywords = keywords,
+      receivedAt = receivedAt,
+      specificHeaders = specificHeaders,
+      bodyValues = bodyValues,
+      htmlBody = htmlBody)
+  }
+
+  private implicit val headerUrlReads: Reads[HeaderURL] = Json.valueReads[HeaderURL]
+  private implicit val groupNameReads: Reads[GroupName] = Json.valueReads[GroupName]
+  private implicit val groupReads: Reads[EmailAddressGroup] = Json.reads[EmailAddressGroup]
+
+  private implicit val dateReads: Reads[DateHeaderValue] = {
+    case JsNull => JsSuccess(DateHeaderValue(None))
+    case json: JsValue => UTCDateReads.reads(json).map(date => DateHeaderValue(Some(date)))
+  }
+
+  sealed trait HeaderValueReads extends Reads[EmailHeaderValue]
+  case object RawReads extends HeaderValueReads {
+    val rawReads: Reads[RawHeaderValue] = Json.valueReads[RawHeaderValue]
+    override def reads(json: JsValue): JsResult[EmailHeaderValue] = rawReads.reads(json)
+  }
+  case object TextReads extends HeaderValueReads {
+    val textReads: Reads[TextHeaderValue] = Json.valueReads[TextHeaderValue]
+    override def reads(json: JsValue): JsResult[TextHeaderValue] = textReads.reads(json)
+  }
+  case object AddressesReads extends HeaderValueReads {
+    override def reads(json: JsValue): JsResult[AddressesHeaderValue] = addressesHeaderValueReads.reads(json)
+  }
+  case object DateReads extends HeaderValueReads {
+    override def reads(json: JsValue): JsResult[DateHeaderValue] = dateReads.reads(json)
+  }
+  case object MessageIdReads extends HeaderValueReads {
+    override def reads(json: JsValue): JsResult[MessageIdsHeaderValue] = messageIdsHeaderValueReads.reads(json)
+  }
+  case object URLReads extends HeaderValueReads {
+    val urlsReads: Reads[URLsHeaderValue] = {
+      case JsNull => JsSuccess(URLsHeaderValue(None))
+      case JsArray(value) => value.map(headerUrlReads.reads).map(_.asEither).toList.sequence
+        .fold(e => JsError(e), urls => JsSuccess(URLsHeaderValue(Some(urls))))
+      case _ => JsError("Expecting a JsArray")
+    }
+    override def reads(json: JsValue): JsResult[URLsHeaderValue] = urlsReads.reads(json)
+  }
+  case object GroupedAddressReads extends HeaderValueReads {
+    val groupsReads: Reads[GroupedAddressesHeaderValue] = Json.valueReads[GroupedAddressesHeaderValue]
+    override def reads(json: JsValue): JsResult[GroupedAddressesHeaderValue] = groupsReads.reads(json)
+  }
+
+  def asReads(parseOption: ParseOption): Reads[EmailHeaderValue] = parseOption match {
+      case AsRaw => RawReads
+      case AsText => TextReads
+      case AsAddresses => AddressesReads
+      case AsDate => DateReads
+      case AsMessageIds => MessageIdReads
+      case AsURLs => URLReads
+      case AsGroupedAddresses => GroupedAddressReads
+    }
+
+  private implicit val emailCreationRequestWithoutHeadersReads: Reads[EmailCreationRequestWithoutHeaders] = Json.reads[EmailCreationRequestWithoutHeaders]
+  private implicit val emailCreationRequestReads: Reads[EmailCreationRequest] = {
+    case o: JsObject =>
+      val withoutHeader = emailCreationRequestWithoutHeadersReads.reads(o)
+
+      val specificHeadersEither: Either[IllegalArgumentException, List[EmailHeader]] = o.value.toList
+        .filter {
+          case (name, _) => name.startsWith("header:")
+        }.map {
+          case (name, value) =>
+            val refinedName: Either[String, NonEmptyString] = refineV[NonEmpty](name)
+            refinedName.left.map(e => new IllegalArgumentException(e))
+              .flatMap(property => SpecificHeaderRequest.from(property)
+                .left.map(_ => new IllegalArgumentException(s"$name is an invalid specific header")))
+              .flatMap(_.validate)
+              .flatMap(specificHeaderRequest => asReads(specificHeaderRequest.parseOption.getOrElse(AsRaw))
+                .reads(value).asEither.left.map(e => new IllegalArgumentException(e.toString()))
+                .map(headerValue => EmailHeader(EmailHeaderName(specificHeaderRequest.headerName), headerValue)))
+        }.sequence
+
+      specificHeadersEither.fold(e => JsError(e.getMessage),
+        specificHeaders => withoutHeader.map(_.toCreationRequest(specificHeaders)))
+    case _ => JsError("Expecting a JsObject to represent a creation request")
+  }
 
   def deserialize(input: JsValue): JsResult[EmailSetRequest] = Json.fromJson[EmailSetRequest](input)
 

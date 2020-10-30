@@ -37,6 +37,7 @@ import org.apache.james.jmap.api.projections.{MessageFastViewPrecomputedProperti
 import org.apache.james.jmap.core.{Properties, UTCDate}
 import org.apache.james.jmap.mail.BracketHeader.sanitize
 import org.apache.james.jmap.mail.Email.{Size, sanitizeSize}
+import org.apache.james.jmap.mail.EmailHeaderName.{ADDRESSES_NAMES, DATE, MESSAGE_ID_NAMES}
 import org.apache.james.jmap.mail.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
 import org.apache.james.jmap.method.ZoneIdProvider
 import org.apache.james.mailbox.model.FetchGroup.{FULL_CONTENT, HEADERS, MINIMAL}
@@ -184,6 +185,8 @@ object ParseOptions {
 
 sealed trait ParseOption {
   def extractHeaderValue(field: Field): EmailHeaderValue
+
+  def forbiddenHeaderNames: Set[EmailHeaderName] = Set()
 }
 case object AsRaw extends ParseOption {
   override def extractHeaderValue(field: Field): EmailHeaderValue = RawHeaderValue.from(field)
@@ -193,20 +196,30 @@ case object AsText extends ParseOption {
 }
 case object AsAddresses extends ParseOption {
   override def extractHeaderValue(field: Field): EmailHeaderValue = AddressesHeaderValue.from(field)
+
+  override def forbiddenHeaderNames: Set[EmailHeaderName] = MESSAGE_ID_NAMES + DATE
 }
 case object AsGroupedAddresses extends ParseOption {
   override def extractHeaderValue(field: Field): EmailHeaderValue = GroupedAddressesHeaderValue.from(field)
+
+  override def forbiddenHeaderNames: Set[EmailHeaderName] = MESSAGE_ID_NAMES + DATE
 }
 case object AsMessageIds extends ParseOption {
   override def extractHeaderValue(field: Field): EmailHeaderValue = MessageIdsHeaderValue.from(field)
+
+  override def forbiddenHeaderNames: Set[EmailHeaderName] = ADDRESSES_NAMES + DATE
 }
 case object AsDate extends ParseOption {
   override def extractHeaderValue(field: Field): EmailHeaderValue = DateHeaderValue.from(field, ZoneId.systemDefault())
 
   def extractHeaderValue(field: Field, zoneId: ZoneId): EmailHeaderValue = DateHeaderValue.from(field, zoneId)
+
+  override def forbiddenHeaderNames: Set[EmailHeaderName] = ADDRESSES_NAMES ++ MESSAGE_ID_NAMES
 }
 case object AsURLs extends ParseOption {
   override def extractHeaderValue(field: Field): EmailHeaderValue = URLsHeaderValue.from(field)
+
+  override def forbiddenHeaderNames: Set[EmailHeaderName] = ADDRESSES_NAMES ++ MESSAGE_ID_NAMES + DATE
 }
 
 case class HeaderMessageId(value: String) extends AnyVal

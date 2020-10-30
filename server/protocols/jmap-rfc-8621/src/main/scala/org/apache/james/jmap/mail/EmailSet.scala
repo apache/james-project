@@ -21,6 +21,7 @@ package org.apache.james.jmap.mail
 import java.nio.charset.StandardCharsets
 import java.util.Date
 
+import cats.implicits._
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
@@ -76,24 +77,30 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
                                 keywords: Option[Keywords],
                                 receivedAt: Option[UTCDate],
                                 htmlBody: Option[List[ClientHtmlBody]],
-                                bodyValues: Option[Map[ClientPartId, ClientEmailBodyValue]]) {
+                                bodyValues: Option[Map[ClientPartId, ClientEmailBodyValue]],
+                                specificHeaders: List[EmailHeader]) {
   def toMime4JMessage: Either[IllegalArgumentException, Message] =
-    validateHtmlBody.map(maybeHtmlBody => {
-      val builder = Message.Builder.of
-      val htmlSubType = "html"
-      references.flatMap(_.asString).map(new RawField("References", _)).foreach(builder.setField)
-      inReplyTo.flatMap(_.asString).map(new RawField("In-Reply-To", _)).foreach(builder.setField)
-      messageId.flatMap(_.asString).map(new RawField(FieldName.MESSAGE_ID, _)).foreach(builder.setField)
-      subject.foreach(value => builder.setSubject(value.value))
-      from.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setFrom)
-      to.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setTo)
-      cc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setCc)
-      bcc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setBcc)
-      sender.flatMap(_.asMime4JMailboxList).map(_.asJava).map(Fields.addressList(FieldName.SENDER, _)).foreach(builder.setField)
-      replyTo.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setReplyTo)
-      sentAt.map(_.asUTC).map(_.toInstant).map(Date.from).foreach(builder.setDate)
-      builder.setBody(maybeHtmlBody.getOrElse(""), htmlSubType, StandardCharsets.UTF_8)
-      builder.build()
+    validateHtmlBody
+      .flatMap(maybeHtmlBody => {
+        val builder = Message.Builder.of
+        val htmlSubType = "html"
+        references.flatMap(_.asString).map(new RawField("References", _)).foreach(builder.setField)
+        inReplyTo.flatMap(_.asString).map(new RawField("In-Reply-To", _)).foreach(builder.setField)
+        messageId.flatMap(_.asString).map(new RawField(FieldName.MESSAGE_ID, _)).foreach(builder.setField)
+        subject.foreach(value => builder.setSubject(value.value))
+        from.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setFrom)
+        to.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setTo)
+        cc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setCc)
+        bcc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setBcc)
+        sender.flatMap(_.asMime4JMailboxList).map(_.asJava).map(Fields.addressList(FieldName.SENDER, _)).foreach(builder.setField)
+        replyTo.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setReplyTo)
+        sentAt.map(_.asUTC).map(_.toInstant).map(Date.from).foreach(builder.setDate)
+        validateSpecificHeaders(builder)
+          .map(_ => {
+            specificHeaders.map(_.asField).foreach(builder.addField)
+            builder.setBody(maybeHtmlBody.getOrElse(""), htmlSubType, StandardCharsets.UTF_8)
+            builder.build()
+          })
     })
 
   def validateHtmlBody: Either[IllegalArgumentException, Option[String]] = htmlBody match {
@@ -108,6 +115,18 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
       }
       .getOrElse(Left(new IllegalArgumentException("Expecting bodyValues to contain the part specified in htmlBody")))
     case _ => Left(new IllegalArgumentException("Expecting htmlBody to contains only 1 part"))
+  }
+
+  private def validateSpecificHeaders(message: Message.Builder): Either[IllegalArgumentException, Unit] = {
+    specificHeaders.map(header => {
+      if (Option(message.getField(header.name.value)).isDefined) {
+        Left(new IllegalArgumentException(s"${header.name.value} was already defined by convenience headers"))
+      } else if (header.name.value.startsWith("Content-")) {
+        Left(new IllegalArgumentException(s"Header fields beginning with `Content-` MUST NOT be specified on the Email object, only on EmailBodyPart objects."))
+      } else {
+        scala.Right(())
+      }
+    }).sequence.map(_ => ())
   }
 }
 

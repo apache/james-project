@@ -86,18 +86,27 @@ case class EmailGetResponse(accountId: AccountId,
                             list: List[EmailView],
                             notFound: EmailNotFound)
 
-case class SpecificHeaderRequest(headerName: NonEmptyString, property: String, parseOption: Option[ParseOption]) {
+case class SpecificHeaderRequest(property: NonEmptyString, headerName: String, parseOption: Option[ParseOption]) {
   def retrieveHeader(zoneId: ZoneId, message: Message): (String, Option[EmailHeaderValue]) = {
-    val field: Option[Field] = Option(message.getHeader.getFields(property))
+    val field: Option[Field] = Option(message.getHeader.getFields(headerName))
       .map(_.asScala)
       .flatMap(fields => fields.reverse.headOption)
 
-    (headerName, field.map({
+    (property.value, field.map({
       val option = parseOption.getOrElse(AsRaw)
         option match {
           case AsDate => AsDate.extractHeaderValue(_, zoneId)
           case _ => option.extractHeaderValue
         }
     }))
+  }
+
+  def validate: Either[IllegalArgumentException, SpecificHeaderRequest] = {
+    val forbiddenNames = parseOption.map(_.forbiddenHeaderNames).getOrElse(Set())
+    if (forbiddenNames.contains(EmailHeaderName(headerName))) {
+      Left(new IllegalArgumentException(s"$property is forbidden with $parseOption"))
+    } else {
+      scala.Right(this)
+    }
   }
 }

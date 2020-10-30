@@ -128,6 +128,256 @@ trait EmailSetMethodContract {
       """.stripMargin, messageId.serialize))
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = Array(
+    """"header:aheader": " a value"""",
+    """"header:aheader:asRaw": " a value"""",
+    """"header:aheader:asText": "a value"""",
+    """"header:aheader:asDate": "2020-10-29T06:39:04Z"""",
+    """"header:aheader:asAddresses": [{"email": "rcpt1@apache.org"}, {"email": "rcpt2@apache.org"}]""",
+    """"header:aheader:asURLs": ["url1", "url2"]""",
+    """"header:aheader:asMessageIds": ["id1@domain.tld", "id2@domain.tld"]""",
+    """"header:aheader:asGroupedAddresses": [{"name": null,"addresses": [{"name": "user1","email": "user1@domain.tld" },{"name": "user2", "email": "user2@domain.tld"}]},{"name": "Friends","addresses": [{"email": "user3@domain.tld"},{"name": "user4","email": "user4@domain.tld"}]}]"""
+  ))
+  def createShouldPositionSpecificHeaders(specificHeader: String, server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val propertyEnd = specificHeader.substring(1).indexOf('"')
+    val property = specificHeader.substring(1, propertyEnd + 1)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa":{
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          $specificHeader
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |     {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "ids": ["#aaaaaa"],
+         |       "properties": ["mailboxIds", "$property"]
+         |     },
+         |     "c2"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
+      .inPath("methodResponses[0][1].created.aaaaaa")
+      .isEqualTo("{}".stripMargin)
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[1][1].list[0].id")
+      .inPath(s"methodResponses[1][1].list")
+      .isEqualTo(s"""[{
+                    |  "mailboxIds": {
+                    |    "${mailboxId.serialize}": true
+                    |  },
+                    |  $specificHeader
+                    |}]""".stripMargin)
+  }
+
+  @Test
+  def specificHeaderShouldMatchSupportedType(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa":{
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "header:To:asMessageId": ["mid@domain.tld"]
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated")
+      .isEqualTo(
+        s"""{
+           |  "aaaaaa": {
+           |    "type": "invalidArguments",
+           |    "description": "List((,List(JsonValidationError(List(header:To:asMessageId is an invalid specific header),ArraySeq()))))"
+           |  }
+           |}""".stripMargin)
+  }
+
+  @Test
+  def specificHeadersCannotOverrideConvenienceHeader(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa":{
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "header:To:asAddresses": [{"email": "rcpt1@apache.org"}, {"email": "rcpt2@apache.org"}],
+         |          "to": [{"email": "rcpt1@apache.org"}, {"email": "rcpt2@apache.org"}]
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated")
+      .isEqualTo(
+        s"""{
+           |  "aaaaaa": {
+           |    "type": "invalidArguments",
+           |    "description": "To was already defined by convenience headers"
+           |  }
+           |}""".stripMargin)
+  }
+
+  @Test
+  def createShouldFailWhenBadJsonPayloadForSpecificHeader(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa":{
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "header:To:asAddresses": "invalid"
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated")
+      .isEqualTo(
+        s"""{
+           |  "aaaaaa": {
+           |    "type": "invalidArguments",
+           |    "description": "List((,List(JsonValidationError(List(List((,List(JsonValidationError(List(error.expected.jsarray),ArraySeq()))))),ArraySeq()))))"
+           |  }
+           |}""".stripMargin)
+  }
+
+  @Test
+  def specificContentHeadersShouldBeRejected(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa":{
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "header:Content-Type:asText": "text/plain"
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated")
+      .isEqualTo(
+        s"""{
+           |  "aaaaaa": {
+           |    "type": "invalidArguments",
+           |    "description": "Header fields beginning with `Content-` MUST NOT be specified on the Email object, only on EmailBodyPart objects."
+           |  }
+           |}""".stripMargin)
+  }
+
   @Test
   def shouldNotResetKeywordWhenFalseValue(server: GuiceJamesServer): Unit = {
     val message: Message = Fixture.createTestMessage
