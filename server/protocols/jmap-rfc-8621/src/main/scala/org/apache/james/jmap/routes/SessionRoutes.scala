@@ -32,6 +32,7 @@ import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.ResponseSerializer
+import org.apache.james.jmap.routes.SessionRoutes.{JMAP_SESSION, LOGGER, WELL_KNOWN_JMAP}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.slf4j.LoggerFactory
 import play.api.libs.json.Json
