@@ -105,7 +105,7 @@ public class MessageV3Migration implements Migration {
 
     private Mono<Void> handleErrorMigrate(MessageRepresentation messageRepresentation, Throwable throwable) {
         LOGGER.error("Error while performing migration for {}", messageRepresentation.getMessageId(), throwable);
-        return Mono.empty();
+        return Mono.error(throwable);
     }
 
     @Override

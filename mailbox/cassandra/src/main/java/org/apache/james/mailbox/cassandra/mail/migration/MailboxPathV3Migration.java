@@ -121,7 +121,7 @@ public class MailboxPathV3Migration implements Migration {
 
     private Mono<Void> handleErrorMigrate(CassandraIdAndPath idAndPath, Throwable throwable) {
         LOGGER.error("Error while performing migration for path {}", idAndPath.getMailboxPath(), throwable);
-        return Mono.empty();
+        return Mono.error(throwable);
     }
 
     @Override
