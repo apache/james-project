@@ -90,6 +90,7 @@ public class MailboxPathV3Migration implements Migration {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(MailboxPathV3Migration.class);
     public static final TaskType TYPE = TaskType.of("cassandra-mailbox-path-v3-migration");
+    private static final int CONCURRENCY = 50;
     private final CassandraMailboxPathV2DAO daoV2;
     private final CassandraMailboxPathV3DAO daoV3;
     private final CassandraMailboxDAO mailboxDAO;
@@ -106,7 +107,7 @@ public class MailboxPathV3Migration implements Migration {
     @Override
     public void apply() {
         daoV2.listAll()
-            .flatMap(this::migrate)
+            .flatMap(this::migrate, CONCURRENCY)
             .doOnError(t -> LOGGER.error("Error while performing migration", t))
             .blockLast();
     }
