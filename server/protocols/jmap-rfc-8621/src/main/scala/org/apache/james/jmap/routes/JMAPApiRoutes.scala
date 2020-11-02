@@ -34,7 +34,7 @@ import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Invocation.MethodName
 import org.apache.james.jmap.core.ProblemDetails.{notJSONProblem, notRequestProblem, unknownCapabilityProblem}
-import org.apache.james.jmap.core._
+import org.apache.james.jmap.core.{DefaultCapabilities, ErrorCode, Invocation, MissingCapabilityException, ProblemDetails, RequestObject, ResponseObject}
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, MailboxesProvisioner, UserProvisioning}

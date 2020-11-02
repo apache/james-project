@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.UnsignedInt.UnsignedInt
 import org.apache.james.jmap.mail.MailboxName.MailboxName
-import org.apache.james.jmap.mail._
+import org.apache.james.jmap.mail.{MailboxValidation, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads}
 import org.apache.james.mailbox.model.MailboxPath
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec

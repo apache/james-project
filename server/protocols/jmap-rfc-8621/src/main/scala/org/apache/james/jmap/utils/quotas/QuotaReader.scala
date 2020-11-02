@@ -23,7 +23,7 @@ import javax.inject.Inject
 import org.apache.james.core.quota.{QuotaLimitValue, QuotaUsageValue}
 import org.apache.james.jmap.core.UnsignedInt
 import org.apache.james.jmap.core.UnsignedInt.UnsignedInt
-import org.apache.james.jmap.mail._
+import org.apache.james.jmap.mail.{Quota, QuotaId, QuotaRoot, Quotas, Value}
 import org.apache.james.mailbox.exception.MailboxException
 import org.apache.james.mailbox.model.{Quota => ModelQuota}
 import org.apache.james.mailbox.quota.QuotaManager

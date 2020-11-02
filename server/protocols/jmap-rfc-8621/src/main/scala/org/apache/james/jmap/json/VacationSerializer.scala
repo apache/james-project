@@ -21,7 +21,7 @@ package org.apache.james.jmap.json
 
 import java.time.format.DateTimeFormatter
 
-import org.apache.james.jmap.core._
+import org.apache.james.jmap.core.{Properties, UTCDate}
 import org.apache.james.jmap.mail.Subject
 import org.apache.james.jmap.vacation.VacationResponse.{UnparsedVacationResponseId, VACATION_RESPONSE_ID}
 import org.apache.james.jmap.vacation.{FromDate, HtmlBody, IsEnabled, TextBody, ToDate, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound, VacationResponsePatchObject, VacationResponseSetError, VacationResponseSetRequest, VacationResponseSetResponse, VacationResponseUpdateResponse}

@@ -27,7 +27,7 @@ import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.CoreCapabilityProperties.CollationAlgorithm
 import org.apache.james.jmap.core.MailCapability.EmailQuerySortOption
 import org.apache.james.jmap.core.State.State
-import org.apache.james.jmap.core._
+import org.apache.james.jmap.core.{Account, Capabilities, CoreCapability, CoreCapabilityProperties, IsPersonal, IsReadOnly, MailCapability, MailCapabilityProperties, MaxCallsInRequest, MaxConcurrentRequests, MaxConcurrentUpload, MaxMailboxDepth, MaxMailboxesPerEmail, MaxObjectsInGet, MaxObjectsInSet, MaxSizeAttachmentsPerEmail, MaxSizeMailboxName, MaxSizeRequest, MaxSizeUpload, MayCreateTopLevelMailbox, QuotaCapability, Session, SharesCapability, VacationResponseCapability}
 import org.apache.james.jmap.json.SessionSerializationTest.SESSION
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec

@@ -22,7 +22,7 @@ package org.apache.james.jmap.routes
 import javax.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.core._
+import org.apache.james.jmap.core.{Account, AccountId, DefaultCapabilities, IsPersonal, IsReadOnly, JmapRfc8621Configuration, Session}
 import reactor.core.scala.publisher.SMono
 
 class SessionSupplier @Inject() (val configuration: JmapRfc8621Configuration){

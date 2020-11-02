@@ -30,11 +30,11 @@ import io.restassured.http.ContentType
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus
 import org.apache.james.core.Username
-import org.apache.james.jmap._
 import org.apache.james.jmap.core.JmapRfc8621Configuration
 import org.apache.james.jmap.core.JmapRfc8621Configuration.LOCALHOST_URL_PREFIX
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.routes.SessionRoutesTest.{BOB, TEST_CONFIGURATION}
+import org.apache.james.jmap.{JMAPConfiguration, JMAPRoutesHandler, JMAPServer, Version, VersionParser}
 import org.apache.james.mailbox.MailboxSession
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
