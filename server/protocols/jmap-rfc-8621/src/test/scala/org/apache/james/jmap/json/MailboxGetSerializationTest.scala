@@ -21,12 +21,12 @@ package org.apache.james.jmap.json
 
 import eu.timepit.refined.auto._
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
+import org.apache.james.jmap.core.{AccountId, Properties}
 import org.apache.james.jmap.json.Fixture._
 import org.apache.james.jmap.json.MailboxGetSerializationTest._
 import org.apache.james.jmap.json.MailboxSerializationTest.MAILBOX
 import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
 import org.apache.james.jmap.mail._
-import org.apache.james.jmap.model.{AccountId, Properties}
 import org.apache.james.mailbox.model.{MailboxId, TestId}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec

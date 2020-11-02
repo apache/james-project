@@ -21,8 +21,8 @@ package org.apache.james.jmap.routes
 
 import javax.inject.Inject
 import org.apache.james.core.Username
-import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model._
+import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.core._
 import reactor.core.scala.publisher.SMono
 
 class SessionSupplier @Inject() (val configuration: JmapRfc8621Configuration){

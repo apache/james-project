@@ -32,14 +32,14 @@ import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, CREATED}
 import javax.inject.{Inject, Named}
 import org.apache.commons.fileupload.util.LimitedInputStream
+import org.apache.james.jmap.core.Id.Id
+import org.apache.james.jmap.core.{AccountId, Id, JmapRfc8621Configuration}
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.UploadSerializer
 import org.apache.james.jmap.mail.BlobId
 import org.apache.james.jmap.mail.Email.Size
-import org.apache.james.jmap.model.Id.Id
-import org.apache.james.jmap.model.{AccountId, Id, JmapRfc8621Configuration}
 import org.apache.james.jmap.routes.UploadRoutes.{LOGGER, sanitizeSize}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.mailbox.model.{AttachmentMetadata, ContentType}

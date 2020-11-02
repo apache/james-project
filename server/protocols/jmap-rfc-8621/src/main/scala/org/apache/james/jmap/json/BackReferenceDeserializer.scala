@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.json
 
-import org.apache.james.jmap.model.Invocation.{MethodCallId, MethodName}
+import org.apache.james.jmap.core.Invocation.{MethodCallId, MethodName}
 import org.apache.james.jmap.routes.{BackReference, JsonPath}
 import play.api.libs.json.{Format, JsError, JsResult, JsString, JsSuccess, JsValue, Json, Reads}
 

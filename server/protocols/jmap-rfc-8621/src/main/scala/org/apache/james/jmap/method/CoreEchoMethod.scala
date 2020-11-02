@@ -20,8 +20,8 @@ package org.apache.james.jmap.method
 
 
 import eu.timepit.refined.auto._
-import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
-import org.apache.james.jmap.model.Invocation.MethodName
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
+import org.apache.james.jmap.core.Invocation.MethodName
 import org.apache.james.mailbox.MailboxSession
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono

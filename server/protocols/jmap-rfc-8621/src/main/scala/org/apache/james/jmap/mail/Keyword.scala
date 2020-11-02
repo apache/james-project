@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  * **************************************************************/
-package org.apache.james.jmap.model
+package org.apache.james.jmap.mail
 
 import java.util.Locale
 
@@ -56,7 +56,7 @@ object Keyword {
 
   def of(flagName: String): Try[Keyword] = parse(flagName) match {
     case Left(errorMessage: String) => Failure(new IllegalArgumentException(errorMessage))
-    case Right(keyword: Keyword) => Success(keyword)
+    case scala.Right(keyword: Keyword) => Success(keyword)
   }
 
   def fromFlag(flag: Flags.Flag): Option[Keyword] = IMAP_SYSTEM_FLAGS.get(flag)

@@ -23,7 +23,7 @@ import java.nio.charset.StandardCharsets.US_ASCII
 import java.time.ZoneId
 
 import org.apache.commons.lang3.StringUtils
-import org.apache.james.jmap.model.UTCDate
+import org.apache.james.jmap.core.UTCDate
 import org.apache.james.mime4j.codec.{DecodeMonitor, DecoderUtil}
 import org.apache.james.mime4j.dom.address.{AddressList, Group, Address => Mime4jAddress, Mailbox => Mime4jMailbox}
 import org.apache.james.mime4j.field.{AddressListFieldImpl, ContentLocationFieldImpl, DateTimeFieldImpl}

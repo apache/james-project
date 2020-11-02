@@ -20,7 +20,7 @@
 package org.apache.james.jmap.json
 
 import eu.timepit.refined.auto._
-import org.apache.james.jmap.model.Invocation.{MethodCallId, MethodName}
+import org.apache.james.jmap.core.Invocation.{MethodCallId, MethodName}
 import org.apache.james.jmap.routes.{ArrayElementPart, BackReference, JsonPath, PlainPart}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec

@@ -20,8 +20,8 @@
 package org.apache.james.jmap.json
 
 import org.apache.james.jmap.api.model.Preview
-import org.apache.james.jmap.mail.{AddressesHeaderValue, BlobId, Charset, DateHeaderValue, Disposition, EmailAddress, EmailAddressGroup, EmailBody, EmailBodyMetadata, EmailBodyPart, EmailBodyValue, EmailFastView, EmailFullView, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailHeaderView, EmailHeaders, EmailIds, EmailMetadata, EmailMetadataView, EmailNotFound, EmailView, EmailerName, FetchAllBodyValues, FetchHTMLBodyValues, FetchTextBodyValues, GroupName, GroupedAddressesHeaderValue, HasAttachment, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Language, Location, MailboxIds, MessageIdsHeaderValue, Name, PartId, RawHeaderValue, Subject, TextHeaderValue, ThreadId, Type, URLsHeaderValue}
-import org.apache.james.jmap.model._
+import org.apache.james.jmap.core._
+import org.apache.james.jmap.mail.{AddressesHeaderValue, BlobId, Charset, DateHeaderValue, Disposition, EmailAddress, EmailAddressGroup, EmailBody, EmailBodyMetadata, EmailBodyPart, EmailBodyValue, EmailFastView, EmailFullView, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailHeaderView, EmailHeaders, EmailIds, EmailMetadata, EmailMetadataView, EmailNotFound, EmailView, EmailerName, FetchAllBodyValues, FetchHTMLBodyValues, FetchTextBodyValues, GroupName, GroupedAddressesHeaderValue, HasAttachment, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Location, MailboxIds, MessageIdsHeaderValue, Name, PartId, RawHeaderValue, Subject, TextHeaderValue, ThreadId, Type, URLsHeaderValue}
 import org.apache.james.mailbox.model.{Cid, MailboxId, MessageId}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._

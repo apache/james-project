@@ -22,10 +22,10 @@ package org.apache.james.jmap.mail
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
+import org.apache.james.jmap.core.State.State
+import org.apache.james.jmap.core.{AccountId, Properties}
 import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
 import org.apache.james.jmap.method.WithAccountId
-import org.apache.james.jmap.model.State.State
-import org.apache.james.jmap.model.{AccountId, Properties}
 import org.apache.james.mailbox.model.MailboxId
 
 import scala.util.{Failure, Try}

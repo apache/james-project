@@ -22,9 +22,9 @@ package org.apache.james.jmap.routes
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.numeric.NonNegInt
+import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
+import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId}
 import org.apache.james.jmap.json.BackReferenceDeserializer
-import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId}
 import play.api.libs.json.{JsArray, JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Reads}
 
 import scala.util.Try

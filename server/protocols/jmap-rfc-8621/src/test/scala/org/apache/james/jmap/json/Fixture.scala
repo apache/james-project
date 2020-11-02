@@ -20,10 +20,10 @@
 package org.apache.james.jmap.json
 
 import eu.timepit.refined.auto._
-import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.Id.Id
-import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.model.{ClientId, CreatedIds, Invocation, ResponseObject, ServerId}
+import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.core.Id.Id
+import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
+import org.apache.james.jmap.core.{ClientId, CreatedIds, Invocation, ResponseObject, ServerId}
 import play.api.libs.json.Json
 
 object Fixture {

@@ -22,11 +22,11 @@ package org.apache.james.jmap.json
 import cats.implicits._
 import eu.timepit.refined.refineV
 import javax.inject.Inject
+import org.apache.james.jmap.core.Id.IdConstraint
+import org.apache.james.jmap.core.{Id, SetError}
 import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId, UnparsedMessageIdConstraint}
-import org.apache.james.jmap.mail.{AddressesHeaderValue, ClientEmailBodyValue, ClientHtmlBody, ClientPartId, DestroyIds, EmailAddress, EmailCreationRequest, EmailCreationResponse, EmailSetRequest, EmailSetResponse, EmailSetUpdate, EmailerName, HeaderMessageId, IsEncodingProblem, IsTruncated, MailboxIds, MessageIdsHeaderValue, Subject, Type}
-import org.apache.james.jmap.model.Id.IdConstraint
-import org.apache.james.jmap.model.KeywordsFactory.STRICT_KEYWORDS_FACTORY
-import org.apache.james.jmap.model.{Id, Keyword, Keywords, SetError}
+import org.apache.james.jmap.mail.KeywordsFactory.STRICT_KEYWORDS_FACTORY
+import org.apache.james.jmap.mail.{AddressesHeaderValue, ClientEmailBodyValue, ClientHtmlBody, ClientPartId, DestroyIds, EmailAddress, EmailCreationRequest, EmailCreationResponse, EmailSetRequest, EmailSetResponse, EmailSetUpdate, EmailerName, HeaderMessageId, IsEncodingProblem, IsTruncated, Keyword, Keywords, MailboxIds, MessageIdsHeaderValue, Subject, Type}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json.{JsArray, JsBoolean, JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
 

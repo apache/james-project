@@ -22,9 +22,11 @@ package org.apache.james.jmap.json
 import java.time.ZonedDateTime
 
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
+import org.apache.james.jmap.core.UTCDate
 import org.apache.james.jmap.json.VacationResponseSerializationTest.VACATION_RESPONSE
-import org.apache.james.jmap.mail.{FromDate, HtmlBody, IsEnabled, Subject, TextBody, ToDate, VacationResponse, VacationResponseId}
-import org.apache.james.jmap.model.UTCDate
+import org.apache.james.jmap.mail.Subject
+import org.apache.james.jmap.vacation
+import org.apache.james.jmap.vacation.{FromDate, HtmlBody, IsEnabled, TextBody, ToDate, VacationResponse, VacationResponseId}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
@@ -41,7 +43,7 @@ object VacationResponseSerializationTest {
   private val TEXT_BODY: Option[TextBody] = Some(TextBody("text is required when enabled"))
   private val HTML_BODY: Option[HtmlBody] = Some(HtmlBody("<b>HTML body</b>"))
 
-  val VACATION_RESPONSE: VacationResponse = VacationResponse(
+  val VACATION_RESPONSE: VacationResponse = vacation.VacationResponse(
     id = VACATION_RESPONSE_ID,
     isEnabled = IS_ENABLED,
     fromDate = FROM_DATE,

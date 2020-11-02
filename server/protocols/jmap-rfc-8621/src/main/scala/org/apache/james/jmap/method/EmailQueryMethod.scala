@@ -21,13 +21,13 @@ package org.apache.james.jmap.method
 import cats.implicits._
 import eu.timepit.refined.auto._
 import javax.inject.Inject
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
+import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
+import org.apache.james.jmap.core.Limit.Limit
+import org.apache.james.jmap.core.Position.Position
+import org.apache.james.jmap.core.{CanCalculateChanges, Invocation, Limit, Position, QueryState}
 import org.apache.james.jmap.json.{EmailQuerySerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{Comparator, EmailQueryRequest, EmailQueryResponse, UnsupportedRequestParameterException}
-import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
-import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.model.Limit.Limit
-import org.apache.james.jmap.model.Position.Position
-import org.apache.james.jmap.model.{CanCalculateChanges, Invocation, Limit, Position, QueryState}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.jmap.utils.search.MailboxFilter
 import org.apache.james.jmap.utils.search.MailboxFilter.QueryFilter

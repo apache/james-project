@@ -31,16 +31,15 @@ import io.netty.handler.codec.http.HttpResponseStatus.OK
 import io.netty.handler.codec.http.{HttpMethod, QueryStringDecoder}
 import javax.inject.{Inject, Named}
 import org.apache.http.HttpStatus.SC_NOT_FOUND
+import org.apache.james.jmap.core.Id.Id
+import org.apache.james.jmap.core.{AccountId, Id}
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.{BlobId, EmailBodyPart, PartId}
-import org.apache.james.jmap.model.Id.Id
-import org.apache.james.jmap.model.{AccountId, Id}
 import org.apache.james.jmap.routes.DownloadRoutes.{BUFFER_SIZE, LOGGER}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
-import org.apache.james.mailbox.exception.AttachmentNotFoundException
 import org.apache.james.mailbox.model.{AttachmentId, AttachmentMetadata, ContentType, FetchGroup, MessageId, MessageResult}
 import org.apache.james.mailbox.{AttachmentManager, MailboxSession, MessageIdManager}
 import org.apache.james.mime4j.codec.EncoderUtil

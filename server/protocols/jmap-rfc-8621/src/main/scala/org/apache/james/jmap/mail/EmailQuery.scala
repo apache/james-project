@@ -20,12 +20,12 @@
 package org.apache.james.jmap.mail
 
 import cats.implicits._
+import org.apache.james.jmap.core.Limit.Limit
+import org.apache.james.jmap.core.Position.Position
+import org.apache.james.jmap.core.{AccountId, CanCalculateChanges, LimitUnparsed, PositionUnparsed, QueryState, UTCDate}
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.IsAscending.ASCENDING
 import org.apache.james.jmap.method.WithAccountId
-import org.apache.james.jmap.model.Limit.Limit
-import org.apache.james.jmap.model.Position.Position
-import org.apache.james.jmap.model.{AccountId, CanCalculateChanges, Keyword, LimitUnparsed, PositionUnparsed, QueryState, UTCDate}
 import org.apache.james.mailbox.model.SearchQuery.Sort.Order.{NATURAL, REVERSE}
 import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause
 import org.apache.james.mailbox.model.{MailboxId, MessageId, SearchQuery}

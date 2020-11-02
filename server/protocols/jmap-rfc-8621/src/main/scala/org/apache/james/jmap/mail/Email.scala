@@ -34,11 +34,11 @@ import eu.timepit.refined.types.string.NonEmptyString
 import javax.inject.Inject
 import org.apache.james.jmap.api.model.Preview
 import org.apache.james.jmap.api.projections.{MessageFastViewPrecomputedProperties, MessageFastViewProjection}
+import org.apache.james.jmap.core.{Properties, UTCDate}
 import org.apache.james.jmap.mail.BracketHeader.sanitize
 import org.apache.james.jmap.mail.Email.{Size, sanitizeSize}
+import org.apache.james.jmap.mail.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
 import org.apache.james.jmap.method.ZoneIdProvider
-import org.apache.james.jmap.model.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
-import org.apache.james.jmap.model.{Keywords, Properties, UTCDate}
 import org.apache.james.mailbox.model.FetchGroup.{FULL_CONTENT, HEADERS, MINIMAL}
 import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MessageId, MessageResult}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}

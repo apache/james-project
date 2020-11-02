@@ -31,15 +31,15 @@ import javax.inject.{Inject, Named}
 import org.apache.http.HttpStatus.SC_BAD_REQUEST
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.JMAP
+import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.core.Invocation.MethodName
+import org.apache.james.jmap.core.ProblemDetails.{notJSONProblem, notRequestProblem, unknownCapabilityProblem}
+import org.apache.james.jmap.core._
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, MailboxesProvisioner, UserProvisioning}
 import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.jmap.method.{InvocationWithContext, Method}
-import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.Invocation.MethodName
-import org.apache.james.jmap.model.ProblemDetails.{notJSONProblem, notRequestProblem, unknownCapabilityProblem}
-import org.apache.james.jmap.model._
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.mailbox.MailboxSession
 import org.slf4j.{Logger, LoggerFactory}

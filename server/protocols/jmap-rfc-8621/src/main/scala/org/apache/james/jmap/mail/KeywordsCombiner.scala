@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.model
+package org.apache.james.jmap.mail
 
 import java.util.function.BinaryOperator
 

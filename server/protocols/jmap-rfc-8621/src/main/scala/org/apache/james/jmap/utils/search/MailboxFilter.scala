@@ -21,9 +21,9 @@ package org.apache.james.jmap.utils.search
 import java.util.Date
 
 import cats.implicits._
+import org.apache.james.jmap.core.CapabilityIdentifier
+import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.mail.{And, EmailQueryRequest, FilterCondition, FilterOperator, FilterQuery, HeaderContains, HeaderExist, Not, Operator, Or, UnsupportedFilterException}
-import org.apache.james.jmap.model.CapabilityIdentifier
-import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery.{AccessibleNamespace, Namespace, PersonalNamespace}
 import org.apache.james.mailbox.model.SearchQuery.DateResolution.Second

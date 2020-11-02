@@ -18,9 +18,9 @@
  * ***************************************************************/
 package org.apache.james.jmap.method
 
+import org.apache.james.jmap.core.CapabilityIdentifier
+import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.json.Fixture.{invocation1, invocation2}
-import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.{CapabilityIdentifier, Invocation}
 import org.apache.james.jmap.routes.ProcessingContext
 import org.apache.james.mailbox.MailboxSession
 import org.mockito.Mockito.mock

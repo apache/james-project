@@ -20,8 +20,8 @@
 package org.apache.james.jmap.json
 
 import eu.timepit.refined.auto._
+import org.apache.james.jmap.core.ResponseObject
 import org.apache.james.jmap.json.Fixture._
-import org.apache.james.jmap.model.ResponseObject
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json._

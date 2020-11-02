@@ -28,10 +28,10 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import org.apache.commons.io.IOUtils
+import org.apache.james.jmap.core.Properties
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.EmailBodyPart.{MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN}
 import org.apache.james.jmap.mail.PartId.PartIdValue
-import org.apache.james.jmap.model.Properties
 import org.apache.james.mailbox.model.{Cid, MessageId, MessageResult}
 import org.apache.james.mime4j.codec.DecodeMonitor
 import org.apache.james.mime4j.dom.{Entity, Message, Multipart, TextBody => Mime4JTextBody}

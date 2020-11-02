@@ -22,14 +22,14 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.api.vacation.{VacationRepository, AccountId => JavaAccountId}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
+import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
+import org.apache.james.jmap.core.State.INSTANCE
+import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, MissingCapabilityException, Properties}
 import org.apache.james.jmap.json.{ResponseSerializer, VacationSerializer}
-import org.apache.james.jmap.mail.VacationResponse.{UNPARSED_SINGLETON, UnparsedVacationResponseId}
-import org.apache.james.jmap.mail.{VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseNotFound}
-import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
-import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.model.State.INSTANCE
-import org.apache.james.jmap.model.{AccountId, ErrorCode, Invocation, MissingCapabilityException, Properties}
 import org.apache.james.jmap.routes.SessionSupplier
+import org.apache.james.jmap.vacation.VacationResponse.{UNPARSED_SINGLETON, UnparsedVacationResponseId}
+import org.apache.james.jmap.vacation.{VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseNotFound}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.{JsError, JsObject, JsSuccess}

@@ -19,8 +19,8 @@
 
 package org.apache.james.jmap.json
 
+import org.apache.james.jmap.core.RequestObject
 import org.apache.james.jmap.json.Fixture._
-import org.apache.james.jmap.model.RequestObject
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json._

@@ -21,10 +21,10 @@ package org.apache.james.jmap.json
 
 import java.time.format.DateTimeFormatter
 
-import org.apache.james.jmap.mail.VacationResponse.{UnparsedVacationResponseId, VACATION_RESPONSE_ID}
-import org.apache.james.jmap.mail.{FromDate, HtmlBody, IsEnabled, Subject, TextBody, ToDate, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound}
-import org.apache.james.jmap.model._
-import org.apache.james.jmap.vacation.{VacationResponsePatchObject, VacationResponseSetError, VacationResponseSetRequest, VacationResponseSetResponse, VacationResponseUpdateResponse}
+import org.apache.james.jmap.core._
+import org.apache.james.jmap.mail.Subject
+import org.apache.james.jmap.vacation.VacationResponse.{UnparsedVacationResponseId, VACATION_RESPONSE_ID}
+import org.apache.james.jmap.vacation.{FromDate, HtmlBody, IsEnabled, TextBody, ToDate, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound, VacationResponsePatchObject, VacationResponseSetError, VacationResponseSetRequest, VacationResponseSetResponse, VacationResponseUpdateResponse}
 import play.api.libs.json._
 
 import scala.language.implicitConversions

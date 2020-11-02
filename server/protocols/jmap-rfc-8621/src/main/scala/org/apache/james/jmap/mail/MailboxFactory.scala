@@ -17,11 +17,11 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.model
+package org.apache.james.jmap.mail
 
 import javax.inject.Inject
+import org.apache.james.jmap.core.UnsignedInt
 import org.apache.james.jmap.mail.MailboxName.MailboxName
-import org.apache.james.jmap.mail._
 import org.apache.james.jmap.utils.quotas.QuotaLoader
 import org.apache.james.mailbox._
 import org.apache.james.mailbox.exception.MailboxNameException

@@ -21,14 +21,14 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
+import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
+import org.apache.james.jmap.core.SetError.SetErrorDescription
+import org.apache.james.jmap.core.{ClientId, Id, Invocation, Properties, ServerId, SetError, State}
 import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
 import org.apache.james.jmap.mail.MailboxSetRequest.MailboxCreationId
 import org.apache.james.jmap.mail.{InvalidPatchException, InvalidPropertyException, InvalidUpdateException, IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxGet, MailboxPatchObject, MailboxRights, MailboxSetError, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, ParentIdUpdate, RemoveEmailsOnDestroy, ServerSetPropertyException, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, UnsupportedPropertyUpdatedException, ValidatedMailboxPatchObject}
-import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
-import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.model.SetError.SetErrorDescription
-import org.apache.james.jmap.model.{ClientId, Id, Invocation, Properties, ServerId, SetError, State}
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.jmap.utils.quotas.QuotaLoaderWithPreloadedDefaultFactory
 import org.apache.james.mailbox.MailboxManager.RenameOption

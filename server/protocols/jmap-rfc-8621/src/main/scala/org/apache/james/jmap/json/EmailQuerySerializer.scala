@@ -20,8 +20,8 @@
 package org.apache.james.jmap.json
 
 import javax.inject.Inject
-import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, Anchor, AnchorOffset, And, Bcc, Body, Cc, CollapseThreads, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, FilterOperator, FilterQuery, From, FromSortProperty, HasAttachment, HasKeywordSortProperty, Header, HeaderContains, HeaderExist, IsAscending, Not, Operator, Or, ReceivedAtSortProperty, SentAtSortProperty, SizeSortProperty, SomeInThreadHaveKeywordSortProperty, SortProperty, Subject, SubjectSortProperty, Text, To, ToSortProperty}
-import org.apache.james.jmap.model.{AccountId, CanCalculateChanges, Keyword, LimitUnparsed, PositionUnparsed, QueryState}
+import org.apache.james.jmap.core.{AccountId, CanCalculateChanges, LimitUnparsed, PositionUnparsed, QueryState}
+import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, Anchor, AnchorOffset, And, Bcc, Body, Cc, CollapseThreads, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, FilterOperator, FilterQuery, From, FromSortProperty, HasAttachment, HasKeywordSortProperty, Header, HeaderContains, HeaderExist, IsAscending, Keyword, Not, Operator, Or, ReceivedAtSortProperty, SentAtSortProperty, SizeSortProperty, SomeInThreadHaveKeywordSortProperty, SortProperty, Subject, SubjectSortProperty, Text, To, ToSortProperty}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json._
 

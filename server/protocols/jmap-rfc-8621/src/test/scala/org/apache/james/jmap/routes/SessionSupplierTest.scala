@@ -20,7 +20,7 @@
 package org.apache.james.jmap.routes
 
 import org.apache.james.core.Username
-import org.apache.james.jmap.model.JmapRfc8621Configuration
+import org.apache.james.jmap.core.JmapRfc8621Configuration
 import org.apache.james.jmap.routes.SessionSupplierTest.USERNAME
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec

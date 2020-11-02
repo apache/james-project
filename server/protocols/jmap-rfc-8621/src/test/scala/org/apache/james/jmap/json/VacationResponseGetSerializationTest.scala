@@ -21,12 +21,12 @@ package org.apache.james.jmap.json
 
 import eu.timepit.refined.auto._
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
+import org.apache.james.jmap.core.{AccountId, Properties}
 import org.apache.james.jmap.json.Fixture.id
 import org.apache.james.jmap.json.VacationResponseGetSerializationTest.{ACCOUNT_ID, PROPERTIES, SINGLETON_ID}
 import org.apache.james.jmap.json.VacationResponseSerializationTest.VACATION_RESPONSE
-import org.apache.james.jmap.mail.VacationResponse.UnparsedVacationResponseId
-import org.apache.james.jmap.mail.{VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseIds, VacationResponseNotFound}
-import org.apache.james.jmap.model.{AccountId, Properties}
+import org.apache.james.jmap.vacation.VacationResponse.UnparsedVacationResponseId
+import org.apache.james.jmap.vacation.{VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseIds, VacationResponseNotFound}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsSuccess, Json}

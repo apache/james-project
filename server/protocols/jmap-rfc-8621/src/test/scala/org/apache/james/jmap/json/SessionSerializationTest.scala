@@ -23,12 +23,12 @@ import java.net.URL
 
 import eu.timepit.refined.auto._
 import org.apache.james.core.Username
+import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.core.CoreCapabilityProperties.CollationAlgorithm
+import org.apache.james.jmap.core.MailCapability.EmailQuerySortOption
+import org.apache.james.jmap.core.State.State
+import org.apache.james.jmap.core._
 import org.apache.james.jmap.json.SessionSerializationTest.SESSION
-import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.CoreCapabilityProperties.CollationAlgorithm
-import org.apache.james.jmap.model.MailCapability.EmailQuerySortOption
-import org.apache.james.jmap.model.State.State
-import org.apache.james.jmap.model._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json

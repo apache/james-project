@@ -23,11 +23,11 @@ import java.io.InputStream
 import java.net.URL
 
 import org.apache.james.core.Username
-import org.apache.james.jmap.model
-import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.model.SetError.SetErrorDescription
-import org.apache.james.jmap.model.{Account, Invocation, Session, _}
+import org.apache.james.jmap.core
+import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
+import org.apache.james.jmap.core.SetError.SetErrorDescription
+import org.apache.james.jmap.core.{Account, Invocation, Session, _}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -61,10 +61,10 @@ object ResponseSerializer {
   private implicit val argumentFormat: Format[Arguments] = Json.valueFormat[Arguments]
   private implicit val methodCallIdFormat: Format[MethodCallId] = Json.valueFormat[MethodCallId]
   private implicit val invocationRead: Reads[Invocation] = (
-    (JsPath \ model.Invocation.METHOD_NAME).read[MethodName] and
-      (JsPath \ model.Invocation.ARGUMENTS).read[Arguments] and
-      (JsPath \ model.Invocation.METHOD_CALL).read[MethodCallId]
-    ) (model.Invocation.apply _)
+    (JsPath \ core.Invocation.METHOD_NAME).read[MethodName] and
+      (JsPath \ core.Invocation.ARGUMENTS).read[Arguments] and
+      (JsPath \ core.Invocation.METHOD_CALL).read[MethodCallId]
+    ) (core.Invocation.apply _)
 
   private implicit val invocationWrite: Writes[Invocation] = (invocation: Invocation) =>
     Json.arr(invocation.methodName, invocation.arguments, invocation.methodCallId)

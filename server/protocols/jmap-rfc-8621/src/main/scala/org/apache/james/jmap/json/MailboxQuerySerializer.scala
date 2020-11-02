@@ -19,8 +19,8 @@
 
 package org.apache.james.jmap.json
 
+import org.apache.james.jmap.core._
 import org.apache.james.jmap.mail.{MailboxFilter, MailboxQueryRequest, MailboxQueryResponse}
-import org.apache.james.jmap.model._
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxId
 import play.api.libs.json._

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.model
+package org.apache.james.jmap.mail
 
 import javax.mail.Flags
 import org.apache.james.mailbox.FlagsBuilder
@@ -42,7 +42,7 @@ object ToKeyword {
 
   val LENIENT: ToKeyword = (value: String) => Keyword.parse(value) match {
     case Left(_) => None
-    case Right(value: Keyword) => Some(value)
+    case scala.Right(value: Keyword) => Some(value)
   }
 }
 

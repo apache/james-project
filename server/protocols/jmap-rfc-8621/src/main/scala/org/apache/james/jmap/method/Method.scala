@@ -18,10 +18,10 @@
  ****************************************************************/
 package org.apache.james.jmap.method
 
+import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.core.Invocation.MethodName
+import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, Session}
 import org.apache.james.jmap.mail.{UnsupportedFilterException, UnsupportedNestingException, UnsupportedRequestParameterException, UnsupportedSortException}
-import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.Invocation.MethodName
-import org.apache.james.jmap.model.{AccountId, ErrorCode, Invocation, Session}
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.exception.MailboxNotFoundException

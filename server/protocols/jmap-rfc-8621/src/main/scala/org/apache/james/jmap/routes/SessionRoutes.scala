@@ -27,11 +27,11 @@ import io.netty.handler.codec.http.HttpResponseStatus.OK
 import javax.inject.{Inject, Named}
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE_UTF8
 import org.apache.james.jmap.JMAPRoutes.CORS_CONTROL
+import org.apache.james.jmap.core.Session
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.ResponseSerializer
-import org.apache.james.jmap.model.Session
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.slf4j.LoggerFactory
 import play.api.libs.json.Json

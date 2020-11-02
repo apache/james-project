@@ -24,11 +24,11 @@ import java.util.Date
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
+import org.apache.james.jmap.core.Id.Id
+import org.apache.james.jmap.core.State.State
+import org.apache.james.jmap.core.{AccountId, SetError, UTCDate}
 import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId}
 import org.apache.james.jmap.method.WithAccountId
-import org.apache.james.jmap.model.Id.Id
-import org.apache.james.jmap.model.State.State
-import org.apache.james.jmap.model.{AccountId, Keywords, SetError, UTCDate}
 import org.apache.james.mailbox.model.MessageId
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.mime4j.dom.field.FieldName

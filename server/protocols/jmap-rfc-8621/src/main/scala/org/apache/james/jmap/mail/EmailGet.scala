@@ -25,12 +25,12 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.types.string.NonEmptyString
+import org.apache.james.jmap.core.State.State
+import org.apache.james.jmap.core.{AccountId, Properties}
 import org.apache.james.jmap.mail.Email.UnparsedEmailId
 import org.apache.james.jmap.mail.EmailGetRequest.MaxBodyValueBytes
 import org.apache.james.jmap.mail.EmailHeaders.SPECIFIC_HEADER_PREFIX
 import org.apache.james.jmap.method.WithAccountId
-import org.apache.james.jmap.model.State.State
-import org.apache.james.jmap.model.{AccountId, Properties}
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.mime4j.stream.Field
 

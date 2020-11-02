@@ -20,7 +20,7 @@
 package org.apache.james.jmap.core
 
 import org.apache.james.jmap.mail.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
-import org.apache.james.jmap.mail.{Keywords, KeywordsCombiner}
+import org.apache.james.jmap.mail.{Keyword, Keywords, KeywordsCombiner}
 import org.apache.james.util.CommutativityChecker
 import org.assertj.core.api.Assertions.assertThat
 import org.scalatest.matchers.must.Matchers
