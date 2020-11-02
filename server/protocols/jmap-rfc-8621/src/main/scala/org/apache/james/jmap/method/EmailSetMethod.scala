@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableList
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import javax.mail.Flags
-import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{EmailSetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId}
 import org.apache.james.jmap.mail.{DestroyIds, EmailCreationRequest, EmailCreationResponse, EmailSet, EmailSetRequest, EmailSetResponse, MailboxIds, ValidatedEmailSetUpdate}
@@ -35,6 +34,7 @@ import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
 import org.apache.james.jmap.model.SetError.SetErrorDescription
 import org.apache.james.jmap.model.{ClientId, Id, Invocation, ServerId, SetError, State, UTCDate}
+import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MessageManager.{AppendCommand, FlagsUpdateMode}
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.{ComposedMessageIdWithMetaData, DeleteResult, MailboxId, MessageId, MessageRange}

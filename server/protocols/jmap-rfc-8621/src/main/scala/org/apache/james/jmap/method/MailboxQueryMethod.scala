@@ -20,12 +20,12 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
-import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{MailboxQuerySerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{MailboxQueryRequest, MailboxQueryResponse}
 import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model._
+import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.{MailboxSession, SystemMailboxesProvider}
 import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.{JsError, JsSuccess}

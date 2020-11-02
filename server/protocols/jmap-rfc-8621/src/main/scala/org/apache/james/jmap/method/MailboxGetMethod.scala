@@ -21,7 +21,6 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
-import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
 import org.apache.james.jmap.mail._
@@ -29,6 +28,7 @@ import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, J
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
 import org.apache.james.jmap.model.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, MailboxFactory, Properties, Subscriptions}
+import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.jmap.utils.quotas.{QuotaLoader, QuotaLoaderWithPreloadedDefaultFactory}
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.search.MailboxQuery

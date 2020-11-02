@@ -33,7 +33,7 @@ import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
-import org.apache.james.jmap.http.{Authenticator, MailboxesProvisioner, SessionSupplier, UserProvisioning}
+import org.apache.james.jmap.http.{Authenticator, MailboxesProvisioner, UserProvisioning}
 import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.jmap.method.{InvocationWithContext, Method}
 import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier

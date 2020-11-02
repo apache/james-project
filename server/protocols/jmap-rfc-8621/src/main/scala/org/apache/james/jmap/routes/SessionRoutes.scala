@@ -17,7 +17,7 @@
  * under the License.                                           *
  * ***************************************************************/
 
-package org.apache.james.jmap.http
+package org.apache.james.jmap.routes
 
 import java.util.stream.Stream
 
@@ -28,7 +28,7 @@ import javax.inject.{Inject, Named}
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE_UTF8
 import org.apache.james.jmap.JMAPRoutes.CORS_CONTROL
 import org.apache.james.jmap.exceptions.UnauthorizedException
-import org.apache.james.jmap.http.SessionRoutes.{JMAP_SESSION, LOGGER, WELL_KNOWN_JMAP}
+import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.jmap.model.Session

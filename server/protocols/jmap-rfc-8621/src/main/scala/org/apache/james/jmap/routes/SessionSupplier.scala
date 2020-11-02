@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.http
+package org.apache.james.jmap.routes
 
 import javax.inject.Inject
 import org.apache.james.core.Username

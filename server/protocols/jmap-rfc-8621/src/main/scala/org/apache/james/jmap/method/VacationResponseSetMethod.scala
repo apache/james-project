@@ -22,13 +22,13 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.api.vacation.{AccountId, VacationPatch, VacationRepository}
-import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{ResponseSerializer, VacationSerializer}
 import org.apache.james.jmap.method.VacationResponseSetMethod.VACATION_RESPONSE_PATCH_OBJECT_KEY
 import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.SetError.SetErrorDescription
 import org.apache.james.jmap.model.{Invocation, State}
+import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.jmap.vacation.{VacationResponseSetError, VacationResponseSetRequest, VacationResponseSetResponse, VacationResponseUpdateResponse}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory

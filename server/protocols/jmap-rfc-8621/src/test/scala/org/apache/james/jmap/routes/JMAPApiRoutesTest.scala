@@ -36,7 +36,7 @@ import org.apache.james.dnsservice.api.DNSService
 import org.apache.james.domainlist.memory.MemoryDomainList
 import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap._
-import org.apache.james.jmap.http.{Authenticator, BasicAuthenticationStrategy, MailboxesProvisioner, SessionSupplier, UserProvisioning}
+import org.apache.james.jmap.http.{Authenticator, BasicAuthenticationStrategy, MailboxesProvisioner, UserProvisioning}
 import org.apache.james.jmap.method.{CoreEchoMethod, Method}
 import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.model.Invocation.MethodName

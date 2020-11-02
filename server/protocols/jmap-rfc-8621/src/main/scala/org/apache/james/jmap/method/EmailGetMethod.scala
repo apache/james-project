@@ -23,7 +23,6 @@ import java.time.ZoneId
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import javax.inject.Inject
-import org.apache.james.jmap.http.SessionSupplier
 import org.apache.james.jmap.json.{EmailGetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.Email.UnparsedEmailId
 import org.apache.james.jmap.mail.{Email, EmailBodyPart, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound, EmailView, EmailViewReaderFactory, SpecificHeaderRequest}
@@ -31,6 +30,7 @@ import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, J
 import org.apache.james.jmap.model.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.model.State.INSTANCE
 import org.apache.james.jmap.model.{AccountId, ErrorCode, Invocation, Properties}
+import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MessageId
 import org.apache.james.metrics.api.MetricFactory
