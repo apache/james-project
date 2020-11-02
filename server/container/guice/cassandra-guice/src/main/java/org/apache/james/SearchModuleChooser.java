@@ -22,7 +22,6 @@ package org.apache.james;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
@@ -102,7 +101,7 @@ public class SearchModuleChooser {
         }
 
         @Override
-        public Stream<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
+        public Flux<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
             throw new NotImplementedException("not implemented");
         }
 

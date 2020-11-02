@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Stream;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -58,7 +57,9 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -151,9 +152,10 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
         synchronized (applicableFlagsLock) {
             applicableFlags = applicableFlags.updateWithNewFlags(messageManager.getApplicableFlags(mailboxSession));
         }
-        try (Stream<MessageUid> stream = messageManager.search(SearchQuery.of(SearchQuery.all()), mailboxSession)) {
-            uidMsnConverter.addAll(stream.collect(Guavate.toImmutableList()));
-        }
+        ImmutableList<MessageUid> uids = Flux.from(messageManager.search(SearchQuery.of(SearchQuery.all()), mailboxSession))
+            .collect(Guavate.toImmutableList())
+            .block();
+        uidMsnConverter.addAll(uids);
     }
 
     @Override

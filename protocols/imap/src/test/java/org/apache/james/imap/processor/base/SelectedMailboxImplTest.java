@@ -30,13 +30,13 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.time.Duration;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
@@ -74,6 +74,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 
@@ -115,7 +116,8 @@ class SelectedMailboxImplTest {
         when(messageManager.getApplicableFlags(any(MailboxSession.class)))
             .thenReturn(new Flags());
         when(messageManager.search(any(SearchQuery.class), any(MailboxSession.class)))
-            .then(delayedSearchAnswer());
+            .thenReturn(Flux.just(MessageUid.of(1), MessageUid.of(3))
+                .delayElements(Duration.ofSeconds(1)));
         when(messageManager.getId()).thenReturn(mailboxId);
 
         imapSession.setMailboxSession(mock(MailboxSession.class));
@@ -184,13 +186,6 @@ class SelectedMailboxImplTest {
         assertThat(successCount.get())
             .as("Get the incremented value in case of successful event processing.")
             .isEqualTo(1);
-    }
-
-    Answer<Stream<MessageUid>> delayedSearchAnswer() {
-        return invocation -> {
-            Thread.sleep(1000);
-            return Stream.of(MessageUid.of(1), MessageUid.of(3));
-        };
     }
 
     Answer<Mono<Registration>> generateEmitEventAnswer(AtomicInteger success) {

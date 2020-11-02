@@ -456,11 +456,10 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     
     
     @Override
-    public Stream<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
+    public Flux<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
 
-        return searchMultimap(ImmutableList.of(mailbox.getMailboxId()), searchQuery)
-            .stream()
+        return Flux.fromIterable(searchMultimap(ImmutableList.of(mailbox.getMailboxId()), searchQuery))
             .map(SearchResult::getMessageUid);
     }
 

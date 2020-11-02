@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
-import java.util.stream.Stream;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -70,6 +69,8 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import reactor.core.publisher.Flux;
 
 public class SearchProcessorTest {
     private static final int DAY = 6;
@@ -463,7 +464,7 @@ public class SearchProcessorTest {
 
     private void check(SearchKey key, final SearchQuery query) throws Exception {
         session.setMailboxSession(mailboxSession);
-        when(mailbox.search(query, mailboxSession)).thenReturn(Stream.empty());
+        when(mailbox.search(query, mailboxSession)).thenReturn(Flux.empty());
         when(selectedMailbox.getApplicableFlags()).thenReturn(new Flags());
         when(selectedMailbox.hasNewApplicableFlags()).thenReturn(false);
 

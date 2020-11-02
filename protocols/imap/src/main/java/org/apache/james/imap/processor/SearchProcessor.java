@@ -225,9 +225,9 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     }
 
     private Collection<MessageUid> performUidSearch(MessageManager mailbox, SearchQuery query, MailboxSession msession) throws MailboxException {
-        try (Stream<MessageUid> stream = mailbox.search(query, msession)) {
-            return stream.collect(Guavate.toImmutableList());
-        }
+        return Flux.from(mailbox.search(query, msession))
+            .collect(Guavate.toImmutableList())
+            .block();
     }
 
     private long[] toArray(Collection<Long> results) {

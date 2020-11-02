@@ -34,7 +34,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -121,14 +120,13 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     }
     
     @Override
-    public Stream<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) {
+    public Flux<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) {
         Preconditions.checkArgument(session != null, "'session' is mandatory");
         Optional<Integer> noLimit = Optional.empty();
 
         return searcher
             .search(ImmutableList.of(mailbox.getMailboxId()), searchQuery, noLimit)
-            .map(SearchResult::getMessageUid)
-            .toStream();
+            .map(SearchResult::getMessageUid);
     }
     
     @Override

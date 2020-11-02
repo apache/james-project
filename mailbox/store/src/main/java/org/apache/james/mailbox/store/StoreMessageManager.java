@@ -37,7 +37,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -707,7 +706,7 @@ public class StoreMessageManager implements MessageManager {
     }
 
     @Override
-    public Stream<MessageUid> search(SearchQuery query, MailboxSession mailboxSession) throws MailboxException {
+    public Flux<MessageUid> search(SearchQuery query, MailboxSession mailboxSession) throws MailboxException {
         if (query.equals(LIST_ALL_QUERY)) {
             return listAllMessageUids(mailboxSession);
         }
@@ -859,11 +858,11 @@ public class StoreMessageManager implements MessageManager {
             .getApplicableFlag(mailbox);
     }
 
-    private Stream<MessageUid> listAllMessageUids(MailboxSession session) throws MailboxException {
+    private Flux<MessageUid> listAllMessageUids(MailboxSession session) throws MailboxException {
         final MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
 
         return messageMapper.execute(
-            () -> messageMapper.listAllMessageUids(mailbox).toStream());
+            () -> messageMapper.listAllMessageUids(mailbox));
     }
 
     @Override
