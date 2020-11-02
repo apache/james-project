@@ -43,6 +43,7 @@
         <module>cassandra-rabbitmq-guice</module>
         <module>cassandra-rabbitmq-ldap-guice</module>
         <module>configuration</module>
+        <module>data-cassandra</module>
         <module>es-metric-reporter</module>
         <module>guice-common</module>
         <module>guice-utils</module>
@@ -55,6 +56,7 @@
         <module>mailbox</module>
         <module>mailbox-plugin-deleted-messages-vault-guice</module>
         <module>mailbox-plugin-spamassassin</module>
+        <module>mailrepository-cassandra</module>
         <module>mailet</module>
         <module>memory-guice</module>
         <module>onami</module>
@@ -81,6 +83,11 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>data-cassandra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-cassandra-ldap-guice</artifactId>
@@ -233,6 +240,11 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-jpa-smtp-common-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>mailrepository-cassandra</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

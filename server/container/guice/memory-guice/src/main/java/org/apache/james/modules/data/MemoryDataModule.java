@@ -31,7 +31,6 @@ import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
-import org.apache.james.modules.server.MailStoreRepositoryModule;
 import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
@@ -52,10 +51,6 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class MemoryDataModule extends AbstractModule {
-    private static final MailRepositoryStoreConfiguration.Item MEMORY_MAILREPOSITORY_DEFAULT_DECLARATION = new MailRepositoryStoreConfiguration.Item(
-        ImmutableList.of(new Protocol("memory")),
-        MemoryMailRepository.class.getName(),
-        new BaseHierarchicalConfiguration());
 
     @Override
     protected void configure() {
@@ -84,7 +79,11 @@ public class MemoryDataModule extends AbstractModule {
 
         bind(UsersRepository.class).to(MemoryUsersRepository.class);
 
-        bind(MailStoreRepositoryModule.DefaultItemSupplier.class).toInstance(() -> MEMORY_MAILREPOSITORY_DEFAULT_DECLARATION);
+        bind(MailRepositoryStoreConfiguration.Item.class)
+            .toProvider(() -> new MailRepositoryStoreConfiguration.Item(
+                ImmutableList.of(new Protocol("memory")),
+                MemoryMailRepository.class.getName(),
+                new BaseHierarchicalConfiguration()));
     }
 
     @Provides

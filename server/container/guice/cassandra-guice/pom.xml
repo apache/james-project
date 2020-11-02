@@ -128,6 +128,10 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>data-cassandra</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>event-sourcing-event-store-cassandra</artifactId>
         </dependency>
         <dependency>
@@ -280,6 +284,10 @@
             <artifactId>james-server-webadmin-core</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>mailrepository-cassandra</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
