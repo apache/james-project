@@ -93,4 +93,32 @@ public class DomainManageTest {
         assertThat(exitCode3).isEqualTo(1);
         assertThat(outputStreamCaptor.toString().trim().toCharArray()).containsOnly("localhost".toCharArray());
     }
+
+    @Test
+    void domainDeleteCommandWithValidDomainShouldSucceed(GuiceJamesServer server) {
+        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
+
+        WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
+            "--url", "http://127.0.0.1:" + port.getValue(), "domain", "create", "linagora.com");
+
+        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
+            "--url", "http://127.0.0.1:" + port.getValue(), "domain", "delete", "linagora.com");
+
+        WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
+            "--url", "http://127.0.0.1:" + port.getValue(), "domain", "list");
+
+        assertThat(exitCode).isEqualTo(0);
+        assertThat(outputStreamCaptor.toString().contains("linagora.com")).isFalse();
+    }
+
+    @Test
+    void domainDeleteCommandWithDefaultDomainShouldFail(GuiceJamesServer server) {
+        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
+
+        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
+            "--url", "http://127.0.0.1:" + port.getValue(), "domain", "delete", "localhost");
+
+        assertThat(exitCode).isEqualTo(1);
+    }
+
 }

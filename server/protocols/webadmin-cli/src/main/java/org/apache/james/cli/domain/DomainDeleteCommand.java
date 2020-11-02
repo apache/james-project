@@ -17,23 +17,44 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.httpclient;
+package org.apache.james.cli.domain;
 
-import java.util.List;
+import java.util.concurrent.Callable;
 
-import feign.Param;
-import feign.RequestLine;
+import org.apache.james.cli.WebAdminCli;
+import org.apache.james.httpclient.DomainClient;
+
+import feign.Feign;
 import feign.Response;
+import picocli.CommandLine;
 
-public interface DomainClient {
+@CommandLine.Command(
+    name = "delete",
+    description = "Delete a domain")
+public class DomainDeleteCommand implements Callable<Integer> {
 
-    @RequestLine("GET")
-    List<String> getDomainList();
+    public static final int DELETED_CODE = 204;
 
-    @RequestLine("PUT /{domainToBeCreated}")
-    Response createADomain(@Param("domainToBeCreated") String domainName);
+    @CommandLine.ParentCommand DomainCommand domainCommand;
 
-    @RequestLine("DELETE /{domainToBeDeleted}")
-    Response deleteADomain(@Param("domainToBeDeleted") String domainName);
+    @CommandLine.Parameters
+    String domainName;
+
+    @Override
+    public Integer call() {
+        try {
+            DomainClient domainClient = Feign.builder()
+                .target(DomainClient.class, domainCommand.webAdminCli.jamesUrl + "/domains");
+            Response rs = domainClient.deleteADomain(domainName);
+            if (rs.status() == DELETED_CODE) {
+                return WebAdminCli.CLI_FINISHED_SUCCEED;
+            } else {
+                return WebAdminCli.CLI_FINISHED_FAILED;
+            }
+        } catch (Exception e) {
+            e.printStackTrace(domainCommand.err);
+            return WebAdminCli.CLI_FINISHED_FAILED;
+        }
+    }
 
 }
