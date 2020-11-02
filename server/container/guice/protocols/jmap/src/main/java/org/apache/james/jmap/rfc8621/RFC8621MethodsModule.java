@@ -20,7 +20,7 @@
 package org.apache.james.jmap.rfc8621;
 
 
-import static org.apache.james.jmap.model.JmapRfc8621Configuration.LOCALHOST_CONFIGURATION;
+import static org.apache.james.jmap.core.JmapRfc8621Configuration.LOCALHOST_CONFIGURATION;
 
 import java.io.FileNotFoundException;
 
@@ -28,6 +28,7 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.jmap.JMAPRoutesHandler;
 import org.apache.james.jmap.Version;
+import org.apache.james.jmap.core.JmapRfc8621Configuration;
 import org.apache.james.jmap.http.Authenticator;
 import org.apache.james.jmap.http.BasicAuthenticationStrategy;
 import org.apache.james.jmap.http.rfc8621.InjectionKeys;
@@ -44,7 +45,6 @@ import org.apache.james.jmap.method.SystemZoneIdProvider;
 import org.apache.james.jmap.method.VacationResponseGetMethod;
 import org.apache.james.jmap.method.VacationResponseSetMethod;
 import org.apache.james.jmap.method.ZoneIdProvider;
-import org.apache.james.jmap.model.JmapRfc8621Configuration;
 import org.apache.james.jmap.routes.DownloadRoutes;
 import org.apache.james.jmap.routes.JMAPApiRoutes;
 import org.apache.james.jmap.routes.SessionRoutes;

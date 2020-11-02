@@ -17,13 +17,15 @@
  * under the License.                                           *
  * **************************************************************/
 
-package org.apache.james.jmap.model
+package org.apache.james.jmap.core
 
-import org.apache.james.jmap.model.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
+import org.apache.james.jmap.mail.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
+import org.apache.james.jmap.mail.{Keywords, KeywordsCombiner}
 import org.apache.james.util.CommutativityChecker
 import org.assertj.core.api.Assertions.assertThat
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+
 import scala.jdk.CollectionConverters._
 
 class KeywordsCombinerTest extends AnyWordSpec with Matchers {

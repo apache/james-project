@@ -16,10 +16,10 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.model
+package org.apache.james.jmap.core
 
 import eu.timepit.refined.auto._
-import org.apache.james.jmap.model.CapabilityIdentifier.{CapabilityIdentifier, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
 
 object DefaultCapabilities {
   def coreCapability(maxUploadSize: MaxSizeUpload) = CoreCapability(

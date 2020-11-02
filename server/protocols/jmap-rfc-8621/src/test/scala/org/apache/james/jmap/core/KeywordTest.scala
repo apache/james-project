@@ -17,14 +17,16 @@
  * under the License.                                           *
  * **************************************************************/
 
-package org.apache.james.jmap.model
+package org.apache.james.jmap.core
 
 import javax.mail.Flags
 import nl.jqno.equalsverifier.EqualsVerifier
 import org.apache.commons.lang3.StringUtils
+import org.apache.james.jmap.mail.Keyword
 import org.assertj.core.api.Assertions.{assertThat, assertThatCode}
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+
 import scala.util.Failure
 
 object KeywordTest {

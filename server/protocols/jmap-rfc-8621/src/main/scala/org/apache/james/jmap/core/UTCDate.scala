@@ -16,16 +16,22 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.model
 
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.string.Uri
-import eu.timepit.refined.auto._
+package org.apache.james.jmap.core
 
-object RequestLevelErrorType {
-  type ErrorTypeIdentifier = String Refined Uri
-  val UNKNOWN_CAPABILITY: ErrorTypeIdentifier = "urn:ietf:params:jmap:error:unknownCapability"
-  val NOT_JSON: ErrorTypeIdentifier = "urn:ietf:params:jmap:error:notJSON"
-  val NOT_REQUEST: ErrorTypeIdentifier = "urn:ietf:params:jmap:error:notRequest"
-  val LIMIT: ErrorTypeIdentifier = "urn:ietf:params:jmap:error:limit"
+import java.time.{ZoneId, ZonedDateTime}
+import java.util.Date
+
+import org.apache.james.jmap.core.UTCDate.UTC_ZONE_ID
+
+object UTCDate {
+  private val UTC_ZONE_ID: ZoneId = ZoneId.of("UTC")
+
+  def from(date: Date, zoneId: ZoneId): UTCDate = UTCDate(ZonedDateTime.ofInstant(date.toInstant, zoneId))
+}
+
+case class UTCDate(date: ZonedDateTime) {
+  def asUTC: ZonedDateTime = {
+    date.withZoneSameInstant(UTC_ZONE_ID)
+  }
 }

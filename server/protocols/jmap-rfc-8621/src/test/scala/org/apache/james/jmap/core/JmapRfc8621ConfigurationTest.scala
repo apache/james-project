@@ -17,13 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.model
+package org.apache.james.jmap.core
 
 import java.net.URL
 
 import org.apache.commons.configuration2.{Configuration, PropertiesConfiguration}
-import org.apache.james.jmap.model.JmapRfc8621Configuration.URL_PREFIX_PROPERTIES
-import org.apache.james.jmap.model.JmapRfc8621ConfigurationTest.{emptyConfiguration, providedConfiguration}
+import org.apache.james.jmap.core.JmapRfc8621Configuration.URL_PREFIX_PROPERTIES
+import org.apache.james.jmap.core.JmapRfc8621ConfigurationTest.{emptyConfiguration, providedConfiguration}
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 

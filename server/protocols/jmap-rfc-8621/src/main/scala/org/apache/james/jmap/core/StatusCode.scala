@@ -16,23 +16,12 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.model
 
-import eu.timepit.refined.auto._
-import org.apache.http.HttpStatus.SC_BAD_REQUEST
-import org.apache.james.jmap.model.RequestLevelErrorType.ErrorTypeIdentifier
-import org.apache.james.jmap.model.StatusCode.ErrorStatus
+package org.apache.james.jmap.core
 
-/**
- * Problem Details for HTTP APIs within the JMAP context
- * https://tools.ietf.org/html/rfc7807
- * see https://jmap.io/spec-core.html#errors
- */
-case class ProblemDetails(`type`: ErrorTypeIdentifier, status: ErrorStatus, limit: Option[String], detail: String)
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.numeric.Interval.Closed
 
-object ProblemDetails {
-  def notRequestProblem(message: String): ProblemDetails = ProblemDetails(RequestLevelErrorType.NOT_REQUEST, SC_BAD_REQUEST, None, message)
-  def notJSONProblem(message: String): ProblemDetails = ProblemDetails(RequestLevelErrorType.NOT_JSON, SC_BAD_REQUEST, None, message)
-  def unknownCapabilityProblem(message: String): ProblemDetails = ProblemDetails(RequestLevelErrorType.UNKNOWN_CAPABILITY, SC_BAD_REQUEST, None, message)
-  def invalidResultReference(message: String): ProblemDetails = ProblemDetails(RequestLevelErrorType.UNKNOWN_CAPABILITY, SC_BAD_REQUEST, None, message)
+object StatusCode {
+  type ErrorStatus = Int Refined Closed[100, 599]
 }

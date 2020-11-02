@@ -17,12 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.model
+package org.apache.james.jmap.core
 
 import java.net.URL
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.james.jmap.model.JmapRfc8621Configuration.UPLOAD_LIMIT_30_MB
+import org.apache.james.jmap.core.JmapRfc8621Configuration.UPLOAD_LIMIT_30_MB
 import org.apache.james.util.Size
 
 object JmapRfc8621Configuration {

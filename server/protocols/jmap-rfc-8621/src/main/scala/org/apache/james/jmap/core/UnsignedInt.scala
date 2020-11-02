@@ -17,13 +17,27 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.model
+package org.apache.james.jmap.core
 
-import eu.timepit.refined.auto._
-import org.apache.james.jmap.model.State.State
+import eu.timepit.refined
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.numeric.Interval.Closed
 
-case class ResponseObject(sessionState: State, methodResponses: Seq[Invocation])
+object UnsignedInt {
+  //Unsigned int between [0, 2^53]
+  type UnsignedIntConstraint = Closed[0L, 9007199254740992L]
+  type UnsignedInt = Long Refined UnsignedIntConstraint
 
-object ResponseObject {
-  val SESSION_STATE: State = "75128aab4b1b"
+  def validate(value: Long): Either[NumberFormatException, UnsignedInt] =
+    refined.refineV[UnsignedIntConstraint](value) match {
+      case Right(value) => Right(value)
+      case Left(error) => Left(new NumberFormatException(error))
+    }
+
+  def liftOrThrow(value: Long): UnsignedInt =
+    validate(value) match {
+      case Right(value) => value
+      case Left(error) => throw error
+    }
+
 }

@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.model
+package org.apache.james.jmap.core
 
 import com.google.common.hash.Hashing
 import eu.timepit.refined.api.Refined

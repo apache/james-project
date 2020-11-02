@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ * http://www.apache.org/licenses/LICENSE-2.0                   *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -17,29 +17,24 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.model
+package org.apache.james.jmap.core
 
-import java.time.ZonedDateTime
+import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.core.Id.Id
 
-import org.scalatest.matchers.must.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-
-object UTCDateTest {
-  private val UTC_DATE: ZonedDateTime = ZonedDateTime.parse("2016-10-09T01:07:06Z[UTC]")
+final case class ClientId(value: Id) {
+  def referencesPreviousCreationId: Boolean = value.value.startsWith("#")
+  def retrieveOriginalClientId: Option[Either[IllegalArgumentException, ClientId]] =
+    if (referencesPreviousCreationId) {
+      Some(Id.validate(value.value.substring(1, value.value.length))
+        .map(ClientId))
+    } else {
+      None
+    }
 }
 
-class UTCDateTest extends AnyWordSpec with Matchers {
-  import UTCDateTest.UTC_DATE
+final case class ServerId(value: Id)
 
-  "asUTC" should {
-    "return correct UTC date" in {
-      val zonedDate: ZonedDateTime = ZonedDateTime.parse("2016-10-09T08:07:06+07:00[Asia/Vientiane]")
+case class CreatedIds(value: Map[ClientId, ServerId])
 
-      UTCDate(zonedDate).asUTC must be(UTC_DATE)
-    }
-
-    "return same date when already UTC date" in {
-      UTCDate(UTC_DATE).asUTC must be(UTC_DATE)
-    }
-  }
-}
+case class RequestObject(using: Seq[CapabilityIdentifier], methodCalls: Seq[Invocation], createdIds: Option[CreatedIds] = None)

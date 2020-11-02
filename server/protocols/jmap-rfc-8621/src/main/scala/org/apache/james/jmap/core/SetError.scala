@@ -17,12 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.model
+package org.apache.james.jmap.core
 
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
-import org.apache.james.jmap.model.SetError.{SetErrorDescription, SetErrorType}
+import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
 
 object SetError {
   type SetErrorType = String Refined NonEmpty

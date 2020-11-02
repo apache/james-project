@@ -17,14 +17,15 @@
  * under the License.                                           *
  * **************************************************************/
 
-package org.apache.james.jmap.model
+package org.apache.james.jmap.core
 
-import org.assertj.core.api.Assertions.assertThat
 import javax.mail.Flags
 import javax.mail.Flags.Flag
-import org.apache.james.mailbox.FlagsBuilder
 import nl.jqno.equalsverifier.EqualsVerifier
-import org.apache.james.jmap.model.KeywordsFactory.{LENIENT_KEYWORDS_FACTORY, STRICT_KEYWORDS_FACTORY}
+import org.apache.james.jmap.mail.Keywords
+import org.apache.james.jmap.mail.KeywordsFactory.{LENIENT_KEYWORDS_FACTORY, STRICT_KEYWORDS_FACTORY}
+import org.apache.james.mailbox.FlagsBuilder
+import org.assertj.core.api.Assertions.assertThat
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 

@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.model
+package org.apache.james.jmap.core
 
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV

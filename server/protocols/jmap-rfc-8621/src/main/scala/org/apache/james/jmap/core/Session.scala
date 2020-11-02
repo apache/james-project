@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.model
+package org.apache.james.jmap.core
 
 import java.net.URL
 import java.nio.charset.StandardCharsets
@@ -28,9 +28,9 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
 import org.apache.james.core.Username
-import org.apache.james.jmap.model.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.model.Id.Id
-import org.apache.james.jmap.model.State.{INSTANCE, State}
+import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.core.Id.Id
+import org.apache.james.jmap.core.State.{INSTANCE, State}
 
 case class IsPersonal(value: Boolean)
 case class IsReadOnly(value: Boolean)
