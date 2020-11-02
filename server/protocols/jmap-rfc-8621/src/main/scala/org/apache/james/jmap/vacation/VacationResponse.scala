@@ -17,14 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.mail
+package org.apache.james.jmap.vacation
 
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import org.apache.james.jmap.api.vacation.Vacation
-import org.apache.james.jmap.model.Id.Id
-import org.apache.james.jmap.model.{Properties, UTCDate}
+import org.apache.james.jmap.core.Id.Id
+import org.apache.james.jmap.core.{Properties, UTCDate}
+import org.apache.james.jmap.mail.Subject
 
 import scala.compat.java8.OptionConverters._
 

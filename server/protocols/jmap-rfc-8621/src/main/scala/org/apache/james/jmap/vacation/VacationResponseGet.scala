@@ -17,12 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.mail
+package org.apache.james.jmap.vacation
 
-import org.apache.james.jmap.mail.VacationResponse.UnparsedVacationResponseId
+import org.apache.james.jmap.core.State.State
+import org.apache.james.jmap.core.{AccountId, Properties}
 import org.apache.james.jmap.method.WithAccountId
-import org.apache.james.jmap.model.State.State
-import org.apache.james.jmap.model.{AccountId, Properties}
+import org.apache.james.jmap.vacation.VacationResponse.UnparsedVacationResponseId
 
 case class VacationResponseIds(value: List[UnparsedVacationResponseId])
 
