@@ -28,8 +28,9 @@ import org.apache.james.jmap.json.MailboxSerializer
 import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
 import org.apache.james.jmap.mail.{InvalidPatchException, InvalidPropertyException, InvalidUpdateException, MailboxGet, MailboxPatchObject, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, NameUpdate, ParentIdUpdate, ServerSetPropertyException, UnsupportedPropertyUpdatedException, ValidatedMailboxPatchObject}
 import org.apache.james.jmap.method.MailboxSetUpdatePerformer.{MailboxUpdateFailure, MailboxUpdateResult, MailboxUpdateResults, MailboxUpdateSuccess}
-import org.apache.james.mailbox.MailboxManager.RenameOption
+import org.apache.james.mailbox.MailboxManager.{MailboxSearchFetchType, RenameOption}
 import org.apache.james.mailbox.exception.{InsufficientRightsException, MailboxExistsException, MailboxNameException, MailboxNotFoundException}
+import org.apache.james.mailbox.model.search.{MailboxQuery, PrefixedWildcard}
 import org.apache.james.mailbox.model.{MailboxId, MailboxPath}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageManager, Role, SubscriptionManager}
 import reactor.core.scala.publisher.{SFlux, SMono}
@@ -58,7 +59,6 @@ object MailboxSetUpdatePerformer {
       case e: SystemMailboxChangeException => SetError.invalidArguments(SetErrorDescription("Invalid change to a system mailbox"), filter(Properties("name", "parentId")))
       case e: LoopInMailboxGraphException => SetError.invalidArguments(SetErrorDescription("A mailbox parentId property can not be set to itself or one of its child"), Some(Properties("parentId")))
       case e: InsufficientRightsException => SetError.invalidArguments(SetErrorDescription("Invalid change to a delegated mailbox"))
-      case e: MailboxHasChildException => SetError.invalidArguments(SetErrorDescription(s"${e.mailboxId.serialize()} parentId property cannot be updated as this mailbox has child mailboxes"), Some(Properties("parentId")))
       case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage), None)
       case _ => SetError.serverFail(SetErrorDescription(exception.getMessage))
     }
@@ -184,8 +184,19 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
       val currentName = originalPath.getName(mailboxSession.getPathDelimiter)
       parentIdUpdate.newId
         .map(id => {
-          if (mailboxManager.hasChildren(originalPath, mailboxSession)) {
-            throw MailboxHasChildException(mailboxId)
+          val createsALoop = SFlux.fromPublisher(
+            mailboxManager.search(MailboxQuery.builder()
+              .userAndNamespaceFrom(originalPath)
+              .expression(new PrefixedWildcard(originalPath.getName + mailboxSession.getPathDelimiter))
+              .build(),
+              MailboxSearchFetchType.Minimal,
+              mailboxSession))
+            .filter(child => child.getId.equals(id))
+            .hasElements
+            .block()
+
+          if (createsALoop) {
+            throw LoopInMailboxGraphException(mailboxId)
           }
           val parentPath = mailboxManager.getMailbox(id, mailboxSession).getMailboxPath
           parentPath.child(currentName, mailboxSession.getPathDelimiter)

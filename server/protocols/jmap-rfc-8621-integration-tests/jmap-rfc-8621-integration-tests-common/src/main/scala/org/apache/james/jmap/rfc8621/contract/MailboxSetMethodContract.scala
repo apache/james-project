@@ -5928,7 +5928,7 @@ trait MailboxSetMethodContract {
          |                "notUpdated": {
          |                    "${mailboxId.serialize}": {
          |                        "type": "invalidArguments",
-         |                        "description": "${mailboxId.serialize} parentId property cannot be updated as this mailbox has child mailboxes",
+         |                        "description": "A mailbox parentId property can not be set to itself or one of its child",
          |                        "properties": [
          |                            "parentId"
          |                        ]
@@ -7176,7 +7176,7 @@ trait MailboxSetMethodContract {
   }
 
   @Test
-  def updatingParentIdShouldFailWhenMailboxHasAChild(server: GuiceJamesServer): Unit = {
+  def updatingParentIdShouldSucceedWhenMailboxHasAChild(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox"))
     mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox.child"))
@@ -7217,20 +7217,22 @@ trait MailboxSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
-         |  "methodResponses": [
-         |    ["Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "newState": "000001",
-         |      "notUpdated": {
-         |        "${mailboxId.serialize}": {
-         |          "type": "invalidArguments",
-         |          "description": "${mailboxId.serialize} parentId property cannot be updated as this mailbox has child mailboxes",
-         |          "properties": ["parentId"]
-         |        }
-         |      }
-         |    }, "c1"]
-         |  ]
+         |    "sessionState": "75128aab4b1b",
+         |    "methodResponses": [
+         |        [
+         |            "Mailbox/set",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "newState": "000001",
+         |                "updated": {
+         |                    "${mailboxId.serialize}": {
+         |
+         |                    }
+         |                }
+         |            },
+         |            "c1"
+         |        ]
+         |    ]
          |}""".stripMargin)
   }
 
