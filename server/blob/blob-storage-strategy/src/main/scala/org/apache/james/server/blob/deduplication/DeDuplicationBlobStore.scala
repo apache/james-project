@@ -91,10 +91,10 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
     blobStoreDAO.deleteBucket(bucketName)
   }
 
-  override def delete(bucketName: BucketName, blobId: BlobId): Publisher[Void] = {
+  override def delete(bucketName: BucketName, blobId: BlobId): Publisher[java.lang.Boolean] = {
     Preconditions.checkNotNull(bucketName)
     Preconditions.checkNotNull(blobId)
 
-    SMono.empty
+    SMono.just(Boolean.box(false))
   }
 }

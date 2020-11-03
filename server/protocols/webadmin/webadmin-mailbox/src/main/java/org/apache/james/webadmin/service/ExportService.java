@@ -139,7 +139,8 @@ public class ExportService {
             .onErrorResume(e -> {
                 LOGGER.error("Error deleting Blob with blobId: {}", blobId.asString(), e);
                 return Mono.empty();
-            });
+            })
+            .then();
     }
 
     private Mono<Void> writeUserMailboxesContent(Username username, PipedOutputStream out) {

@@ -55,5 +55,5 @@ public interface BlobStore {
 
     Publisher<Void> deleteBucket(BucketName bucketName);
 
-    Publisher<Void> delete(BucketName bucketName, BlobId blobId);
+    Publisher<Boolean> delete(BucketName bucketName, BlobId blobId);
 }

@@ -108,7 +108,8 @@ public interface Store<T, I> {
         @Override
         public Publisher<Void> delete(I blobIds) {
             return Flux.fromIterable(blobIds.asMap().values())
-                .flatMap(id -> blobStore.delete(blobStore.getDefaultBucketName(), id));
+                .flatMap(id -> blobStore.delete(blobStore.getDefaultBucketName(), id))
+                .then();
         }
     }
 }

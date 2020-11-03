@@ -91,7 +91,7 @@ public class MetricableBlobStore implements BlobStore {
     }
 
     @Override
-    public Publisher<Void> delete(BucketName bucketName, BlobId blobId) {
+    public Publisher<Boolean> delete(BucketName bucketName, BlobId blobId) {
         return metricFactory.decoratePublisherWithTimerMetric(DELETE_TIMER_NAME, blobStoreImpl.delete(bucketName, blobId));
     }
 

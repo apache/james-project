@@ -69,10 +69,11 @@ class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
     blobStoreDAO.deleteBucket(bucketName)
   }
 
-  override def delete(bucketName: BucketName, blobId: BlobId): Publisher[Void] = {
+  override def delete(bucketName: BucketName, blobId: BlobId): Publisher[java.lang.Boolean] = {
     Preconditions.checkNotNull(bucketName)
     Preconditions.checkNotNull(blobId)
 
-    blobStoreDAO.delete(bucketName, blobId)
+    SMono.fromPublisher(blobStoreDAO.delete(bucketName, blobId))
+      .`then`(SMono.just(Boolean.box(true)))
   }
 }

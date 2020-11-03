@@ -216,12 +216,15 @@ public class CachedBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
+    public Mono<Boolean> delete(BucketName bucketName, BlobId blobId) {
         return Mono.from(backend.delete(bucketName, blobId))
-            .then(Mono.just(bucketName)
-                .filter(backend.getDefaultBucketName()::equals)
-                .flatMap(ignored -> Mono.from(cache.remove(blobId)))
-                .then());
+            .flatMap(deleted -> {
+                if (backend.getDefaultBucketName().equals(bucketName)
+                      && deleted) {
+                    return Mono.from(cache.remove(blobId)).thenReturn(deleted);
+                }
+                return Mono.just(deleted);
+            });
     }
 
     @Override
