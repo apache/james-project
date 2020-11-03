@@ -20,6 +20,7 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
+import java.time.Duration
 
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
@@ -38,11 +39,12 @@ import org.apache.james.mailbox.model.MailboxACL.{EntryKey, Right}
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath}
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
+import org.apache.james.util.concurrency.ConcurrentTestRunner
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.{Assertions, SoftAssertions}
 import org.hamcrest.Matchers.{equalTo, hasSize}
-import org.junit.jupiter.api.{BeforeEach, Disabled, Tag, Test}
+import org.junit.jupiter.api.{BeforeEach, Disabled, RepeatedTest, Tag, Test}
 
 trait MailboxSetMethodContract {
 
@@ -5939,6 +5941,159 @@ trait MailboxSetMethodContract {
          |        ]
          |    ]
          |}""".stripMargin)
+  }
+
+  @RepeatedTest(100)
+  def concurrencyChecksUponParentIdUpdate(server: GuiceJamesServer): Unit = {
+    val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
+    val mailboxId2: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, "mailbox2"))
+    val request1 =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+         |   "methodCalls": [
+         |       [
+         |           "Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "${mailboxId1.serialize}": {
+         |                      "parentId": "${mailboxId2.serialize}"
+         |                    }
+         |                }
+         |           },
+         |    "c1"
+         |       ]
+         |   ]
+         |}
+         |""".stripMargin
+    val request2 =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+         |   "methodCalls": [
+         |       [
+         |           "Mailbox/set",
+         |           {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "update": {
+         |                    "${mailboxId2.serialize}": {
+         |                      "parentId": "${mailboxId1.serialize}"
+         |                    }
+         |                }
+         |           },
+         |    "c1"
+         |       ]
+         |   ]
+         |}
+         |""".stripMargin
+
+    ConcurrentTestRunner.builder()
+      .operation {
+        case (threadNb, step) =>
+          if ((threadNb + step) % 2 == 0) {
+            `with`
+              .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+              .body(request1)
+              .post
+          } else {
+            `with`
+              .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+              .body(request2)
+              .post
+          }
+      }
+      .threadCount(2)
+      .operationCount(1)
+      .runSuccessfullyWithin(Duration.ofSeconds(10))
+
+    // Test a list all request
+    val request =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+         |   "methodCalls": [
+         |       ["Mailbox/get",
+         |         {
+         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "ids": null,
+         |           "properties": ["id", "name"]
+         |          },
+         |       "c2"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
+      .inPath("methodResponses[0][1].list")
+      .isArray
+      .contains(
+        s"""{"id": "${mailboxId1.serialize}", "name":"mailbox1"}""",
+        s"""{"id": "${mailboxId2.serialize}", "name":"mailbox2"}""")
+
+    //Test retrieving these mailboxes specifically
+    val requestSpecific =
+      s"""
+         |{
+         |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+         |   "methodCalls": [
+         |       ["Mailbox/get",
+         |         {
+         |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |           "ids": ["${mailboxId1.serialize}", "${mailboxId2.serialize}"],
+         |           "properties": ["id", "name"]
+         |          },
+         |       "c2"]
+         |   ]
+         |}
+         |""".stripMargin
+
+    val responseSpecific = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(requestSpecific)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(responseSpecific)
+      .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
+      .inPath("methodResponses[0][1].list")
+      .isArray
+      .contains(
+        s"""{"id": "${mailboxId1.serialize}", "name":"mailbox1"}""",
+        s"""{"id": "${mailboxId2.serialize}", "name":"mailbox2"}""")
+
+    /*
+    Data race happens within the hierarchical level upon mailbox rename,
+    and might lead to missing intermediary mailboxes. This is because renaming
+    mailboxes is not concurrent proof.
+
+    This leads to a mailbox having no parentId in JMAP while in IMAP it has some.
+
+    The impact is very low. Note that the mailbox can still be accessed, renamed and moved.
+     */
   }
 
   @Test

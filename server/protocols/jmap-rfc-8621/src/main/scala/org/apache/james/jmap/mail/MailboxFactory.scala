@@ -24,13 +24,14 @@ import org.apache.james.jmap.core.UnsignedInt
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.utils.quotas.QuotaLoader
 import org.apache.james.mailbox._
-import org.apache.james.mailbox.exception.MailboxNameException
+import org.apache.james.mailbox.exception.{MailboxNameException, MailboxNotFoundException}
 import org.apache.james.mailbox.model.MailboxACL.EntryKey
 import org.apache.james.mailbox.model.{MailboxCounters, MailboxId, MailboxMetaData, MailboxPath, MailboxACL => JavaMailboxACL}
 import reactor.core.scala.publisher.SMono
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
+import scala.util.Try
 
 object MailboxValidation {
   private def retrieveMailboxName(mailboxPath: MailboxPath, pathDelimiter: Char): Either[MailboxNameException, MailboxName] =
@@ -178,7 +179,12 @@ class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager, mailbo
               val rights: Rights = getRights(resolvedACL)
               val namespace: MailboxNamespace = getNamespace(messageManager.getMailboxPath, mailboxSession)
               val parentId: Option[MailboxId] = getParentPath(messageManager.getMailboxPath, mailboxSession)
-                .map(parentPath => mailboxManager.getMailbox(parentPath, mailboxSession))
+                .flatMap(parentPath => {
+                  Try(Some(mailboxManager.getMailbox(parentPath, mailboxSession)))
+                    .recover({
+                      case _: MailboxNotFoundException => None
+                    }).get
+                })
                 .map(_.getId)
               val myRights: MailboxRights = getMyRights(messageManager.getMailboxPath, resolvedACL, mailboxSession)
               val isSubscribed: IsSubscribed = retrieveIsSubscribed(messageManager.getMailboxPath, mailboxSession)
