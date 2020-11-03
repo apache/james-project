@@ -251,13 +251,14 @@ case class EmailBodyPart(partId: PartId,
   private val shouldBeDisplayedAsAttachment: Boolean = !shouldBeDisplayedAsBody && subParts.isEmpty
 
   private def textBodyOfMultipart: List[EmailBodyPart] = `type` match {
-    case MULTIPART_ALTERNATIVE => textPlainSubparts
+    case MULTIPART_ALTERNATIVE => getBodyParts(subParts.getOrElse(Nil), TEXT_PLAIN)
     case _ => subParts.getOrElse(Nil)
       .flatMap(subPart => subPart.textBody)
   }
 
   private def htmlBodyOfMultipart: List[EmailBodyPart] = `type` match {
-    case MULTIPART_ALTERNATIVE => textHtmlSubparts
+    case MULTIPART_ALTERNATIVE => getBodyParts(subParts.getOrElse(Nil), TEXT_HTML)
+      .flatMap(subPart => subPart.htmlBody)
     case _ => subParts.getOrElse(Nil)
       .flatMap(subPart => subPart.htmlBody)
   }
@@ -265,9 +266,14 @@ case class EmailBodyPart(partId: PartId,
   private def attachmentsOfMultipart: List[EmailBodyPart] = subParts.getOrElse(Nil)
     .flatMap(_.attachments)
 
-  private def textPlainSubparts: List[EmailBodyPart] = subParts.getOrElse(Nil)
-    .filter(subPart => subPart.`type`.equals(TEXT_PLAIN))
-
-  private def textHtmlSubparts: List[EmailBodyPart] = subParts.getOrElse(Nil)
-    .filter(subPart => subPart.`type`.equals(TEXT_HTML))
+  private def getBodyParts(bodyParts: List[EmailBodyPart], `type`: Type): List[EmailBodyPart] =
+    if (bodyParts.isEmpty) {
+      Nil
+    } else {
+      bodyParts.filter(subPart => subPart.`type`.equals(`type`)) ++
+        getBodyParts(
+          bodyParts
+            .filter(subPart => !subPart.`type`.equals(`type`))
+            .flatMap(subPart => subPart.subParts.getOrElse(Nil)), `type`)
+    }
 }
