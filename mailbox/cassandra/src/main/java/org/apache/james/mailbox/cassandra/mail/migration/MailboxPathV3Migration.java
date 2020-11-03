@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail.migration;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -37,6 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.RetryBackoffSpec;
 
 public class MailboxPathV3Migration implements Migration {
 
@@ -91,6 +94,9 @@ public class MailboxPathV3Migration implements Migration {
     public static final Logger LOGGER = LoggerFactory.getLogger(MailboxPathV3Migration.class);
     public static final TaskType TYPE = TaskType.of("cassandra-mailbox-path-v3-migration");
     private static final int CONCURRENCY = 50;
+    private static final int MAX_ATTEMPTS = 3;
+    private static final Duration MIN_BACKOFF = Duration.ofSeconds(1);
+
     private final CassandraMailboxPathV2DAO daoV2;
     private final CassandraMailboxPathV3DAO daoV3;
     private final CassandraMailboxDAO mailboxDAO;
@@ -117,6 +123,9 @@ public class MailboxPathV3Migration implements Migration {
             .flatMap(mailbox -> daoV3.save(mailbox)
                 .then(daoV2.delete(idAndPath.getMailboxPath())))
             .onErrorResume(error -> handleErrorMigrate(idAndPath, error))
+            .retryWhen(RetryBackoffSpec.backoff(MAX_ATTEMPTS, MIN_BACKOFF)
+                .jitter(0.5)
+                .scheduler(Schedulers.elastic()))
             .then();
     }
 
