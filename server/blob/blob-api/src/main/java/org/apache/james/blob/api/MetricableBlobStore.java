@@ -70,6 +70,17 @@ public class MetricableBlobStore implements BlobStore {
     }
 
     @Override
+    public Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
+        return metricFactory.decoratePublisherWithTimerMetric(READ_BYTES_TIMER_NAME, blobStoreImpl.readBytes(bucketName, blobId, storagePolicy));
+    }
+
+    @Override
+    public InputStream read(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
+        return metricFactory
+            .decorateSupplierWithTimerMetric(READ_TIMER_NAME, () -> blobStoreImpl.read(bucketName, blobId, storagePolicy));
+    }
+
+    @Override
     public Publisher<Void> deleteBucket(BucketName bucketName) {
         return metricFactory.decoratePublisherWithTimerMetric(DELETE_BUCKET_TIMER_NAME, blobStoreImpl.deleteBucket(bucketName));
     }
