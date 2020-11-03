@@ -41,6 +41,22 @@ import org.awaitility.Awaitility
 import org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS
 import org.junit.jupiter.api.{BeforeEach, Test}
 
+/*
+  TODO
+   - Bob can not send from Andre Account ID
+   - Bob can not use Andre in mailFrom
+   - Bob cannot use Andra in sender & from Mime fields
+   - Emails with empty recipients are rejected
+   - Can send an email to himself
+   - message not found are handled
+   - extra properties are rejected
+   - message not founds are handled
+   - I can chain Email/set create & EmailSubmission/create
+   - multiple recipients
+   - cannot send other people mail
+   - can send delegated emails (read permission)
+ */
+
 trait EmailSubmissionSetMethodContract {
   private lazy val slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS
   private lazy val calmlyAwait = Awaitility.`with`
