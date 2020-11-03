@@ -297,7 +297,8 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize}"]
+         |      "ids": ["${messageId.serialize}"],
+         |      "properties": ["id", "size"]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -2263,7 +2264,8 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize}", "invalid", "${nonExistingMessageId.serialize}"]
+         |      "ids": ["${messageId.serialize}", "invalid", "${nonExistingMessageId.serialize}"],
+         |      "properties": ["id", "size"]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -2324,7 +2326,8 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId1.serialize()}", "${messageId2.serialize()}"]
+         |      "ids": ["${messageId1.serialize()}", "${messageId2.serialize()}"],
+         |      "properties": ["id", "size"]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -2366,6 +2369,126 @@ trait EmailGetMethodContract {
   }
 
   @Test
+  def useDefaultPropertiesWhenNone(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.builder()
+        .withInternalDate(Date.from(ZonedDateTime.parse("2014-10-30T14:12:00Z").toInstant))
+        .build(ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize}"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response).isEqualTo(
+      s"""{
+         |    "sessionState": "75128aab4b1b",
+         |    "methodResponses": [
+         |        [
+         |            "Email/get",
+         |            {
+         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |                "state": "000001",
+         |                "list": [
+         |                    {
+         |                        "threadId": "${messageId.serialize}",
+         |                        "size": 2695,
+         |                        "keywords": {},
+         |                        "blobId": "1",
+         |                        "mailboxIds": {"${mailboxId.serialize}": true},
+         |                        "id": "${messageId.serialize}",
+         |                        "receivedAt": "2014-10-30T14:12:00Z",
+         |                        "references": null,
+         |                        "subject": "MultiAttachment",
+         |                        "inReplyTo": null,
+         |                        "messageId": ["13d4375e-a4a9-f613-06a1-7e8cb1e0ea93@linagora.com"],
+         |                        "from": [{"name": "Lina","email": "from@linagora.com"}],
+         |                        "sentAt": "2017-02-27T04:24:48Z",
+         |                        "to": [{"email": "to@linagora.com"}],
+         |                        "textBody": [
+         |                            {
+         |                                "partId": "2",
+         |                                "blobId": "${messageId.serialize}_2",
+         |                                "size": 8,
+         |                                "type": "text/plain",
+         |                                "charset": "utf-8"
+         |                            }
+         |                        ],
+         |                        "attachments": [
+         |                            {
+         |                                "partId": "3",
+         |                                "blobId": "${messageId.serialize}_3",
+         |                                "size": 271,
+         |                                "name": "text1",
+         |                                "type": "text/plain",
+         |                                "charset": "UTF-8",
+         |                                "disposition": "attachment"
+         |                            },
+         |                            {
+         |                                "partId": "4",
+         |                                "blobId": "${messageId.serialize}_4",
+         |                                "size": 398,
+         |                                "name": "text2",
+         |                                "type": "application/vnd.ms-publisher",
+         |                                "charset": "us-ascii",
+         |                                "disposition": "attachment"
+         |                            },
+         |                            {
+         |                                "partId": "5",
+         |                                "blobId": "${messageId.serialize}_5",
+         |                                "size": 412,
+         |                                "name": "text3",
+         |                                "type": "text/plain",
+         |                                "charset": "UTF-8",
+         |                                "disposition": "attachment"
+         |                            }
+         |                        ],
+         |                        "htmlBody": [
+         |                            {
+         |                                "partId": "2",
+         |                                "blobId": "${messageId.serialize}_2",
+         |                                "size": 8,
+         |                                "type": "text/plain",
+         |                                "charset": "utf-8"
+         |                            }
+         |                        ],
+         |                        "bodyValues": {},
+         |                        "preview": "Send",
+         |                        "hasAttachment": true
+         |                    }
+         |                ],
+         |                "notFound": []
+         |            },
+         |            "c1"
+         |        ]
+         |    ]
+         |}""".stripMargin)
+  }
+
+  @Test
   def requestingTheSameIdTwiceReturnsItOnce(server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder
       .of
@@ -2386,7 +2509,8 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize}", "${messageId.serialize}"]
+         |      "ids": ["${messageId.serialize}", "${messageId.serialize}"],
+         |      "properties": ["id", "size"]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -2766,7 +2890,8 @@ trait EmailGetMethodContract {
          |    "Email/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["${messageId.serialize}"]
+         |      "ids": ["${messageId.serialize}"],
+         |      "properties": ["id", "size"]
          |    },
          |    "c1"]]
          |}""".stripMargin

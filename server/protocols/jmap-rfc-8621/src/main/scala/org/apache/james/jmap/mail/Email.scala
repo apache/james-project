@@ -63,7 +63,10 @@ object Email {
   type UnparsedEmailIdConstraint = NonEmpty
   type UnparsedEmailId = String Refined UnparsedEmailIdConstraint
 
-  val defaultProperties: Properties = Properties("id", "size")
+  val defaultProperties: Properties = Properties("id", "blobId", "threadId", "mailboxIds", "keywords", "size",
+    "receivedAt", "messageId", "inReplyTo", "references", "sender", "from",
+    "to", "cc", "bcc", "replyTo", "subject", "sentAt", "hasAttachment",
+    "preview", "bodyValues", "textBody", "htmlBody", "attachments")
   val allowedProperties: Properties = Properties("id", "size", "bodyStructure", "textBody", "htmlBody",
     "attachments", "headers", "bodyValues", "messageId", "inReplyTo", "references", "to", "cc", "bcc",
     "from", "sender", "replyTo", "subject", "sentAt", "mailboxIds", "blobId", "threadId", "receivedAt",
