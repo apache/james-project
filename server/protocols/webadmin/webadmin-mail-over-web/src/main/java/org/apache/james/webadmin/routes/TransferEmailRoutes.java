@@ -14,8 +14,6 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.webadmin.Routes;
-import org.apache.james.webadmin.utils.ErrorResponder;
-import org.apache.james.webadmin.utils.JsonExtractor;
 import org.eclipse.jetty.http.HttpStatus;
 
 import io.swagger.annotations.Api;
@@ -27,9 +25,9 @@ import io.swagger.annotations.ApiResponses;
 import spark.Service;
 
 @Api(tags = "OverWebMailReceiver")
-@Path(ReceiveMailOverWebRoutes.BASE_URL)
+@Path(TransferEmailRoutes.BASE_URL)
 @Produces("application/json")
-public class ReceiveMailOverWebRoutes implements Routes {
+public class TransferEmailRoutes implements Routes {
 
     public static final String BASE_URL = "/mail-transfer-service";
 
@@ -41,7 +39,7 @@ public class ReceiveMailOverWebRoutes implements Routes {
     }
 
     @Inject
-    public ReceiveMailOverWebRoutes(MailQueueFactory<?> queueFactory) {
+    public TransferEmailRoutes(MailQueueFactory<?> queueFactory) {
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
     }
 
