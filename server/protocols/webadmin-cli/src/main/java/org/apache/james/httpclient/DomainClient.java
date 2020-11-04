@@ -36,4 +36,7 @@ public interface DomainClient {
     @RequestLine("DELETE /{domainToBeDeleted}")
     Response deleteADomain(@Param("domainToBeDeleted") String domainName);
 
+    @RequestLine("GET /{domainName}")
+    Response doesExist(@Param("domainName") String domainName);
+
 }
