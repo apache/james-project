@@ -55,50 +55,37 @@ public class ReceiveMailOverWebRoutesTest {
                 .build();
     }
 
-    @Test
-    public void whenFromIsMissingInRequestThenRequestFails() {
-        given()
-                .body(ClassLoaderUtils.getSystemResourceAsString("json/withoutFrom.json"))
-                .when()
-                .post()
-                .then()
-                .assertThat()
-                .statusCode(500)
-                .body("message", Matchers.containsString("Mail missing from"));
-    }
 
     @Test
     public void whenToIsMissingInRequestThenRequestFails() {
         given()
-                .body(ClassLoaderUtils.getSystemResourceAsString("json/withoutTos.json"))
+                .body(ClassLoaderUtils.getSystemResourceAsString("message/rfc822/message-without-tos.eml"))
                 .when()
                 .post()
                 .then()
                 .assertThat()
-                .statusCode(500)
-                .body("message", Matchers.containsString("Mail missing to addresses"));
+                .statusCode(500);
     }
 
     @Test
-    public void statusCode204ReturnedWhenSendingMailWithAllRequiredFields() {
+    public void statusCode201ReturnedWhenSendingMailWithAllRequiredFields() {
         given()
-                .body(ClassLoaderUtils.getSystemResourceAsString("json/mail.json"))
+                .body(ClassLoaderUtils.getSystemResourceAsString("message/rfc822/message.eml"))
                 .when()
                 .post()
                 .then()
                 .assertThat()
-                .statusCode(204);
+                .statusCode(201);
     }
 
     @Test
     public void requestFailsOnEmptyBody() {
         given()
-                .body("{}")
+                .body("")
                 .when()
                 .post()
                 .then()
                 .assertThat()
-                .statusCode(500)
-                .body("message", Matchers.containsString("The mail will not be sent"));
+                .statusCode(500);
     }
 }
