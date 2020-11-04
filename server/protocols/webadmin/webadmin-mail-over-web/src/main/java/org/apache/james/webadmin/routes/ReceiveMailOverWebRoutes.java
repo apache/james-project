@@ -1,6 +1,11 @@
 package org.apache.james.webadmin.routes;
 
+import java.io.ByteArrayInputStream;
+import java.util.UUID;
+
 import javax.inject.Inject;
+import javax.mail.Session;
+import javax.mail.internet.MimeMessage;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -9,7 +14,6 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.webadmin.Routes;
-import org.apache.james.webadmin.request.MailProps;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.eclipse.jetty.http.HttpStatus;
@@ -27,9 +31,7 @@ import spark.Service;
 @Produces("application/json")
 public class ReceiveMailOverWebRoutes implements Routes {
 
-    private final JsonExtractor<MailProps> mailPropsJsonExtractor;
-
-    public static final String BASE_URL = "/receiveMail";
+    public static final String BASE_URL = "/mail-transfer-service";
 
     private MailQueue queue;
 
@@ -41,7 +43,6 @@ public class ReceiveMailOverWebRoutes implements Routes {
     @Inject
     public ReceiveMailOverWebRoutes(MailQueueFactory<?> queueFactory) {
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
-        this.mailPropsJsonExtractor = new JsonExtractor<>(MailProps.class);
     }
 
     @Override
@@ -50,34 +51,27 @@ public class ReceiveMailOverWebRoutes implements Routes {
     }
 
     @POST
-    @Path("/receiveMail")
-    @ApiOperation(value = "Deleting an user")
+    @Path("/mail-transfer-service")
+    @ApiOperation(value = "Receiving a message/rfc822 over REST interface")
     @ApiImplicitParams({
             @ApiImplicitParam(required = true, dataType = "string", name = "username", paramType = "path")
     })
     @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. User is removed."),
-            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid input user."),
+            @ApiResponse(code = HttpStatus.CREATED_201, message = ""),
+            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Could not ceate mail from supplied body"),
             @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
                     message = "Internal server error - Something went bad on the server side.")
     })
     public void defineReceiveMailFromWebService(Service service) {
         service.post(BASE_URL, (request, response) -> {
-            try {
-                //Parse the json object to org.apache.james.webadmin.request.MailProps and build the MailImpl object
-                MailImpl mail = mailPropsJsonExtractor.parse(request.body()).asMailImpl();
-                //Send to queue api for mail processing
-                queue.enQueue(mail);
-                response.body("ENQUEUED");
-                response.status(204);
-            } catch (Exception e) {
-                ErrorResponder.builder()
-                        .cause(e)
-                        .statusCode(500)
-                        .type(ErrorResponder.ErrorType.SERVER_ERROR)
-                        .message("The mail will not be sent: " + e.getMessage())
-                        .haltError();
-            }
+            //parse MimeMessage from request body
+            MimeMessage mimeMessage = new MimeMessage(Session.getDefaultInstance(System.getProperties()), new ByteArrayInputStream(request.bodyAsBytes()));
+            //create MailImpl object from MimeMessage
+            MailImpl mail = MailImpl.fromMimeMessage(UUID.randomUUID().toString(), mimeMessage);
+            //Send to queue api for mail processing
+            queue.enQueue(mail);
+            response.body("");
+            response.status(201);
 
             return response.body();
         });
