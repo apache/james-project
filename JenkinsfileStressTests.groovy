@@ -119,6 +119,13 @@ pipeline {
                                     sh "docker exec james_run ${jamesCliWithOptions} adduser user${n}@open-paas.org secret"
                                 }
                             }
+                            if (params.PROFILE == "reference") {
+                                // Sometimes Zenko fails at starting correctly with provisioning.
+                                // There is a timeout when it tries to connect to metadata service.
+                                // Maybe too much metadata to charge? It seems a restart helps with this for now
+                                sh "docker restart s3"
+                                sh 'sleep 5'
+                            }
                         }
                     }
                 }
