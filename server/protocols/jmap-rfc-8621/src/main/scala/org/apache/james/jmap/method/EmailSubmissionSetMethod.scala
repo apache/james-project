@@ -25,6 +25,7 @@ import eu.timepit.refined.auto._
 import javax.annotation.PreDestroy
 import javax.inject.Inject
 import javax.mail.internet.{InternetAddress, MimeMessage}
+import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
@@ -40,6 +41,7 @@ import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.queue.api.MailQueueFactory.SPOOL
 import org.apache.james.queue.api.{MailQueue, MailQueueFactory}
+import org.apache.james.rrt.api.CanSendFrom
 import org.apache.james.server.core.{MailImpl, MimeMessageCopyOnWriteProxy, MimeMessageInputStreamSource}
 import org.apache.mailet.{Attribute, AttributeName, AttributeValue}
 import org.slf4j.{Logger, LoggerFactory}
@@ -66,6 +68,7 @@ case class ForbiddenMailFromException(from: List[String]) extends Exception
 class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerializer,
                                          messageIdManager: MessageIdManager,
                                          mailQueueFactory: MailQueueFactory[_ <: MailQueue],
+                                         canSendFrom: CanSendFrom,
                                          val metricFactory: MetricFactory,
                                          val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[EmailSubmissionSetRequest] with Startable {
   override val methodName: MethodName = MethodName("EmailSubmission/set")
@@ -223,13 +226,13 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
   private def validate(session: MailboxSession)(mimeMessage: MimeMessage, envelope: Envelope): Try[MimeMessage] = {
     val forbiddenMailFrom: List[String] = (Option(mimeMessage.getSender).toList ++ Option(mimeMessage.getFrom).toList.flatten)
       .map(_.asInstanceOf[InternetAddress].getAddress)
-      .filter(from => !from.equals(session.getUser.asString()))
+      .filter(addressAsString => !canSendFrom.userCanSendFrom(session.getUser, Username.fromMailAddress(new MailAddress(addressAsString))))
 
     if (forbiddenMailFrom.nonEmpty) {
       Failure(ForbiddenMailFromException(forbiddenMailFrom))
     } else if (envelope.rcptTo.isEmpty) {
       Failure(NoRecipientException())
-    } else if (!envelope.mailFrom.email.asString.equals(session.getUser.asString())) {
+    } else if (!canSendFrom.userCanSendFrom(session.getUser, Username.fromMailAddress(envelope.mailFrom.email))) {
       Failure(ForbiddenFromException(envelope.mailFrom.email.asString))
     } else {
       Success(mimeMessage)
