@@ -21,7 +21,6 @@ package org.apache.james.jmap.mail
 
 import java.util.UUID
 
-import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
@@ -36,7 +35,7 @@ import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json.JsObject
 
 object EmailSubmissionSet {
-  type EmailSubmissionCreationId = String Refined NonEmpty
+  type EmailSubmissionCreationId = Id
 }
 
 object EmailSubmissionId {
@@ -55,7 +54,6 @@ case class EmailSubmissionId(value: Id)
 
 case class EmailSubmissionCreationResponse(id: EmailSubmissionId)
 
-case class Parameters(value: String)
 case class EmailSubmissionAddress(email: MailAddress)
 
 case class Envelope(mailFrom: EmailSubmissionAddress, rcptTo: List[EmailSubmissionAddress])

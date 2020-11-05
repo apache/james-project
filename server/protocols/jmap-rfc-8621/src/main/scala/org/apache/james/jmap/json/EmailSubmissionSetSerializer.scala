@@ -19,13 +19,13 @@
 
 package org.apache.james.jmap.json
 
-import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
 import javax.inject.Inject
 import org.apache.james.core.MailAddress
+import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.mail.EmailSubmissionSet.EmailSubmissionCreationId
-import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, Parameters}
+import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json.{JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, Reads, Writes}
 
@@ -33,7 +33,7 @@ import scala.util.Try
 
 class EmailSubmissionSetSerializer @Inject()(messageIdFactory: MessageId.Factory) {
   private implicit val mapCreationRequestByEmailSubmissionCreationId: Reads[Map[EmailSubmissionCreationId, JsObject]] =
-    readMapEntry[EmailSubmissionCreationId, JsObject](s => refineV[NonEmpty](s),
+    readMapEntry[EmailSubmissionCreationId, JsObject](s => refineV[IdConstraint](s),
       {
         case o: JsObject => JsSuccess(o)
         case _ => JsError("Expecting a JsObject as a creation entry")
@@ -56,7 +56,6 @@ class EmailSubmissionSetSerializer @Inject()(messageIdFactory: MessageId.Factory
 
   private implicit val emailSubmissionIdWrites: Writes[EmailSubmissionId] = Json.valueWrites[EmailSubmissionId]
 
-  private implicit val parametersReads: Reads[Parameters] = Json.valueReads[Parameters]
   private implicit val emailSubmissionAddresReads: Reads[EmailSubmissionAddress] = Json.reads[EmailSubmissionAddress]
   private implicit val envelopeReads: Reads[Envelope] = Json.reads[Envelope]
 

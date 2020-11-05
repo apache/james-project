@@ -96,19 +96,19 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
   }
   case class CreationResults(created: Seq[CreationResult]) {
     def retrieveCreated: Map[EmailSubmissionCreationId, EmailSubmissionCreationResponse] = created
-      .flatMap(result => result match {
+      .flatMap {
         case success: CreationSuccess => Some(success.emailSubmissionCreationId, success.emailSubmissionCreationResponse)
         case _ => None
-      })
+      }
       .toMap
       .map(creation => (creation._1, creation._2))
 
 
     def retrieveErrors: Map[EmailSubmissionCreationId, SetError] = created
-      .flatMap(result => result match {
+      .flatMap {
         case failure: CreationFailure => Some(failure.emailSubmissionCreationId, failure.asSetError)
         case _ => None
-      })
+      }
       .toMap
   }
 
