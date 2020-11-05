@@ -24,14 +24,14 @@ import java.io.InputStream
 import eu.timepit.refined.auto._
 import javax.annotation.PreDestroy
 import javax.inject.Inject
-import javax.mail.internet.MimeMessage
+import javax.mail.internet.{InternetAddress, MimeMessage}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, SetError, State}
-import org.apache.james.jmap.core.SetError.SetErrorDescription
+import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
+import org.apache.james.jmap.core.{ClientId, Id, Invocation, Properties, ServerId, SetError, State}
 import org.apache.james.jmap.json.{EmailSubmissionSetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.EmailSubmissionSet.EmailSubmissionCreationId
-import org.apache.james.jmap.mail.{EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse}
+import org.apache.james.jmap.mail.{EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope}
 import org.apache.james.jmap.method.EmailSubmissionSetMethod.{LOGGER, MAIL_METADATA_USERNAME_ATTRIBUTE}
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.lifecycle.api.{LifecycleUtil, Startable}
@@ -48,14 +48,20 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
 import scala.jdk.CollectionConverters._
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object EmailSubmissionSetMethod {
   val MAIL_METADATA_USERNAME_ATTRIBUTE: AttributeName = AttributeName.of("org.apache.james.jmap.send.MailMetaData.username")
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[EmailSubmissionSetMethod])
+  val noRecipients: SetErrorType = "noRecipients"
+  val forbiddenFrom: SetErrorType = "forbiddenFrom"
+  val forbiddenMailFrom: SetErrorType = "forbiddenMailFrom"
 }
 
 case class EmailSubmissionCreationParseException(setError: SetError) extends Exception
+case class NoRecipientException() extends Exception
+case class ForbiddenFromException(from: String) extends Exception
+case class ForbiddenMailFromException(from: List[String]) extends Exception
 
 class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerializer,
                                          messageIdManager: MessageIdManager,
@@ -64,7 +70,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
                                          val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[EmailSubmissionSetRequest] with Startable {
   override val methodName: MethodName = MethodName("EmailSubmission/set")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
-  var queue: MailQueue = null
+  var queue: MailQueue = _
 
   sealed trait CreationResult {
     def emailSubmissionCreationId: EmailSubmissionCreationId
@@ -73,6 +79,16 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
   case class CreationFailure(emailSubmissionCreationId: EmailSubmissionCreationId, exception: Throwable) extends CreationResult {
     def asSetError: SetError = exception match {
       case e: EmailSubmissionCreationParseException => e.setError
+      case _: NoRecipientException => SetError(EmailSubmissionSetMethod.noRecipients,
+        SetErrorDescription("Attempt to send a mail with no recipients"), None)
+      case e: ForbiddenMailFromException => SetError(EmailSubmissionSetMethod.forbiddenMailFrom,
+        SetErrorDescription(s"Attempt to send a mail whose MimeMessage From and Sender fields not allowed for connected user: ${e.from}"), None)
+      case e: ForbiddenFromException => SetError(EmailSubmissionSetMethod.forbiddenFrom,
+        SetErrorDescription(s"Attempt to send a mail whose envelope From not allowed for connected user: ${e.from}"),
+        Some(Properties("envelope.mailFrom")))
+      case _: MessageNotFoundException => SetError(SetError.invalidArgumentValue,
+        SetErrorDescription("The email to be sent cannot be found"),
+        Some(Properties("emailId")))
       case e: Exception =>
         e.printStackTrace()
         SetError.serverFail(SetErrorDescription(exception.getMessage))
@@ -179,6 +195,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
     message.flatMap(m => {
       val submissionId = EmailSubmissionId.generate
       toMimeMessage(submissionId.value, m.getFullContent.getInputStream)
+        .flatMap(message => validate(mailboxSession)(message, request.envelope))
         .flatMap(mimeMessage => {
           Try(queue.enQueue(MailImpl.builder()
               .name(submissionId.value)
@@ -201,6 +218,22 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         LifecycleUtil.dispose(source)
         throw e
       })
+  }
+
+  private def validate(session: MailboxSession)(mimeMessage: MimeMessage, envelope: Envelope): Try[MimeMessage] = {
+    val forbiddenMailFrom: List[String] = (Option(mimeMessage.getSender).toList ++ Option(mimeMessage.getFrom).toList.flatten)
+      .map(_.asInstanceOf[InternetAddress].getAddress)
+      .filter(from => !from.equals(session.getUser.asString()))
+
+    if (forbiddenMailFrom.nonEmpty) {
+      Failure(ForbiddenMailFromException(forbiddenMailFrom))
+    } else if (envelope.rcptTo.isEmpty) {
+      Failure(NoRecipientException())
+    } else if (!envelope.mailFrom.email.asString.equals(session.getUser.asString())) {
+      Failure(ForbiddenFromException(envelope.mailFrom.email.asString))
+    } else {
+      Success(mimeMessage)
+    }
   }
 
   private def recordCreationIdInProcessingContext(emailSubmissionCreationId: EmailSubmissionCreationId,

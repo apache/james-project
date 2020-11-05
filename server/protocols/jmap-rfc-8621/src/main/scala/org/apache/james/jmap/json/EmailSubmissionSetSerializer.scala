@@ -23,6 +23,7 @@ import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
 import javax.inject.Inject
 import org.apache.james.core.MailAddress
+import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.mail.EmailSubmissionSet.EmailSubmissionCreationId
 import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, Parameters}
 import org.apache.james.mailbox.model.MessageId
@@ -43,6 +44,7 @@ class EmailSubmissionSetSerializer @Inject()(messageIdFactory: MessageId.Factory
       .fold(_ => JsError("Invalid messageId"), messageId => messageId)
     case _ => JsError("Expecting messageId to be represented by a JsString")
   }
+  private implicit val notCreatedWrites: Writes[Map[EmailSubmissionCreationId, SetError]] = mapWrites[EmailSubmissionCreationId, SetError](_.value, setErrorWrites)
 
   private implicit val mailAddressReads: Reads[MailAddress] = {
     case JsString(value) => Try(JsSuccess(new MailAddress(value)))
