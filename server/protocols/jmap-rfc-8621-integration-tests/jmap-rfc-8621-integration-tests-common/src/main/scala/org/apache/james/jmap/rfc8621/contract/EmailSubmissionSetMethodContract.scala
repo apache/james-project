@@ -686,7 +686,7 @@ trait EmailSubmissionSetMethodContract {
 
     assertThatJson(response)
       // Ids are randomly generated, and not stored, let's ignore it
-      .whenIgnoringPaths("methodResponses[0][1].created.k1490.id")
+      .whenIgnoringPaths("methodResponses[0][1].created.k1490")
       .inPath("methodResponses[0][1].created")
       .isEqualTo("""{"k1490": {}}""")
   }
