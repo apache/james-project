@@ -45,12 +45,13 @@ object EmailSubmissionId {
 
 case class EmailSubmissionSetRequest(accountId: AccountId,
                                      create: Option[Map[EmailSubmissionCreationId, JsObject]],
-                                     onSuccessUpdateEmail: Option[Map[UnparsedMessageId, JsObject]]) extends WithAccountId {
+                                     onSuccessUpdateEmail: Option[Map[UnparsedMessageId, JsObject]],
+                                     onSuccessDestroyEmail: Option[DestroyIds]) extends WithAccountId {
   def implicitEmailSetRequest: EmailSetRequest = EmailSetRequest(
     accountId = accountId,
     create = None,
     update = onSuccessUpdateEmail,
-    destroy = None)
+    destroy = onSuccessDestroyEmail)
 }
 
 case class EmailSubmissionSetResponse(accountId: AccountId,

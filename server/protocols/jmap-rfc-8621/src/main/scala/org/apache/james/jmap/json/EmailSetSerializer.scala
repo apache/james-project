@@ -223,9 +223,7 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   private implicit val unitWrites: Writes[Unit] = _ => JsNull
   private implicit val updatedWrites: Writes[Map[MessageId, Unit]] = mapWrites[MessageId, Unit](_.serialize, unitWrites)
   private implicit val notDestroyedWrites: Writes[Map[UnparsedMessageId, SetError]] = mapWrites[UnparsedMessageId, SetError](_.value, setErrorWrites)
-  private implicit val destroyIdsReads: Reads[DestroyIds] = {
-    Json.valueFormat[DestroyIds]
-  }
+  private implicit val destroyIdsReads: Reads[DestroyIds] = Json.valueFormat[DestroyIds]
   private implicit val destroyIdsWrites: Writes[DestroyIds] = Json.valueWrites[DestroyIds]
   private implicit val emailRequestSetReads: Reads[EmailSetRequest] = Json.reads[EmailSetRequest]
   private implicit val emailCreationResponseWrites: Writes[EmailCreationResponse] = Json.writes[EmailCreationResponse]

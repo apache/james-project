@@ -26,7 +26,7 @@ import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.mail.EmailSet.{UnparsedMessageId, UnparsedMessageIdConstraint}
 import org.apache.james.jmap.mail.EmailSubmissionSet.EmailSubmissionCreationId
-import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope}
+import org.apache.james.jmap.mail.{DestroyIds, EmailSubmissionAddress, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json.{JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, Reads, Writes}
 
@@ -59,6 +59,7 @@ class EmailSubmissionSetSerializer @Inject()(messageIdFactory: MessageId.Factory
         case o: JsObject => JsSuccess(o)
         case _ => JsError("Expecting a JsObject as an update entry")
       })
+  private implicit val destroyIdsReads: Reads[DestroyIds] = Json.valueFormat[DestroyIds]
 
   private implicit val emailSubmissionSetRequestReads: Reads[EmailSubmissionSetRequest] = Json.reads[EmailSubmissionSetRequest]
 
