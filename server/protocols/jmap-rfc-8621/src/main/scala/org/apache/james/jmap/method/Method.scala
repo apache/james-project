@@ -29,7 +29,9 @@ import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
 
-case class InvocationWithContext(invocation: Invocation, processingContext: ProcessingContext)
+case class InvocationWithContext(invocation: Invocation, processingContext: ProcessingContext) {
+  def recordInvocation: InvocationWithContext = InvocationWithContext(invocation, processingContext.recordInvocation(invocation))
+}
 
 trait Method {
   val JMAP_RFC8621_PREFIX: String = "JMAP-RFC8621-"
@@ -49,13 +51,14 @@ trait MethodRequiringAccountId[REQUEST <: WithAccountId] extends Method {
   def sessionSupplier: SessionSupplier
 
   override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): Publisher[InvocationWithContext] = {
-    val result = (for {
-      request <- getRequest(mailboxSession, invocation.invocation)
-      response <- validateAccountId(request.accountId, mailboxSession, sessionSupplier, invocation.invocation).flatMap{
-        case Right(_) => doProcess(capabilities, invocation, mailboxSession, request)
-        case Left(errorInvocation) => SMono.just(InvocationWithContext(errorInvocation, invocation.processingContext))
-      }
-    } yield response)
+    val result = getRequest(mailboxSession, invocation.invocation)
+      .flatMapMany(request => {
+        validateAccountId(request.accountId, mailboxSession, sessionSupplier, invocation.invocation)
+          .flatMapMany {
+            case Right(_) => doProcess(capabilities, invocation, mailboxSession, request)
+            case Left(errorInvocation) => SMono.just(InvocationWithContext(errorInvocation, invocation.processingContext))
+          }
+      })
       .onErrorResume {
         case e: UnsupportedRequestParameterException => SMono.just(InvocationWithContext(Invocation.error(
           ErrorCode.InvalidArguments,
@@ -78,7 +81,6 @@ trait MethodRequiringAccountId[REQUEST <: WithAccountId] extends Method {
         case e: Throwable => SMono.raiseError(e)
       }
 
-
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value, result)
   }
 
@@ -89,7 +91,7 @@ trait MethodRequiringAccountId[REQUEST <: WithAccountId] extends Method {
       .switchIfEmpty(SMono.just(Left[Invocation, Session](Invocation.error(ErrorCode.AccountNotFound, invocation.methodCallId))))
   }
 
-  def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: REQUEST): SMono[InvocationWithContext]
+  def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: REQUEST): Publisher[InvocationWithContext]
 
   def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[REQUEST]
 }

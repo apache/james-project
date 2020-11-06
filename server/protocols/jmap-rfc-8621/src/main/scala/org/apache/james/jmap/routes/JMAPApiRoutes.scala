@@ -44,7 +44,7 @@ import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.mailbox.MailboxSession
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.{JsError, JsSuccess}
-import reactor.core.publisher.Mono
+import reactor.core.publisher.{Flux, Mono}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
@@ -134,11 +134,11 @@ class JMAPApiRoutes (val authenticator: Authenticator,
 
   private def processSequentiallyAndUpdateContext(requestObject: RequestObject, mailboxSession: MailboxSession, processingContext: ProcessingContext, capabilities: Set[CapabilityIdentifier]): SMono[Seq[(InvocationWithContext)]] = {
     SFlux.fromIterable(requestObject.methodCalls)
-      .foldLeft(List[SMono[InvocationWithContext]]())((acc, elem) => {
+      .foldLeft(List[SFlux[InvocationWithContext]]())((acc, elem) => {
         val lastProcessingContext: SMono[ProcessingContext] = acc.headOption
-          .map(last => last.map(_.processingContext))
+          .map(last => SMono.fromPublisher(Flux.from(last.map(_.processingContext)).last()))
           .getOrElse(SMono.just(processingContext))
-        val invocation: SMono[InvocationWithContext] = lastProcessingContext.flatMap(context => process(capabilities, mailboxSession, InvocationWithContext(elem, context)))
+        val invocation: SFlux[InvocationWithContext] = lastProcessingContext.flatMapMany(context => process(capabilities, mailboxSession, InvocationWithContext(elem, context)))
         invocation.cache() :: acc
       })
       .map(_.reverse)
@@ -147,26 +147,26 @@ class JMAPApiRoutes (val authenticator: Authenticator,
         .collectSeq())
   }
 
-  private def process(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession, invocation: InvocationWithContext) : SMono[InvocationWithContext] = {
-    SMono.defer(() => {
+  private def process(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession, invocation: InvocationWithContext) : SFlux[InvocationWithContext] = {
+    SFlux.fromPublisher(Flux.defer(() => {
       invocation.processingContext.resolveBackReferences(invocation.invocation) match {
-        case Left(e) => SMono.just(InvocationWithContext(Invocation.error(
+        case Left(e) => SFlux.just[InvocationWithContext](InvocationWithContext(Invocation.error(
           errorCode = ErrorCode.InvalidResultReference,
           description = s"Failed resolving back-reference: ${e.message}",
           methodCallId = invocation.invocation.methodCallId), invocation.processingContext))
         case Right(resolvedInvocation) => processMethodWithMatchName(capabilities, InvocationWithContext(resolvedInvocation, invocation.processingContext), mailboxSession)
-          .map((invocationWithContext: InvocationWithContext) => InvocationWithContext(invocationWithContext.invocation, invocationWithContext.processingContext.recordInvocation(invocationWithContext.invocation)))
+          .map(_.recordInvocation)
       }
-    })
+    }))
   }
 
-  private def processMethodWithMatchName(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): SMono[InvocationWithContext] =
+  private def processMethodWithMatchName(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): SFlux[InvocationWithContext] =
     SMono.justOrEmpty(methodsByName.get(invocation.invocation.methodName))
-      .flatMap(method => validateCapabilities(capabilities, method.requiredCapabilities)
-      .fold(e => SMono.just(InvocationWithContext(Invocation.error(ErrorCode.UnknownMethod, e.description, invocation.invocation.methodCallId), invocation.processingContext)),
-        _ => SMono.fromPublisher(method.process(capabilities, invocation, mailboxSession))))
+      .flatMapMany(method => validateCapabilities(capabilities, method.requiredCapabilities)
+        .fold(e => SFlux.just(InvocationWithContext(Invocation.error(ErrorCode.UnknownMethod, e.description, invocation.invocation.methodCallId), invocation.processingContext)),
+          _ => SFlux.fromPublisher(method.process(capabilities, invocation, mailboxSession))))
       .onErrorResume(throwable => SMono.just(InvocationWithContext(Invocation.error(ErrorCode.ServerFail, throwable.getMessage, invocation.invocation.methodCallId), invocation.processingContext)))
-      .switchIfEmpty(SMono.just(InvocationWithContext(Invocation.error(ErrorCode.UnknownMethod, invocation.invocation.methodCallId), invocation.processingContext)))
+      .switchIfEmpty(SFlux.just(InvocationWithContext(Invocation.error(ErrorCode.UnknownMethod, invocation.invocation.methodCallId), invocation.processingContext)))
 
   private def validateCapabilities(capabilities: Set[CapabilityIdentifier], requiredCapabilities: Set[CapabilityIdentifier]): Either[MissingCapabilityException, Unit] = {
     val missingCapabilities = requiredCapabilities -- capabilities
