@@ -173,12 +173,7 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   }
 
   private implicit val mailboxIdsMapReads: Reads[Map[MailboxId, Boolean]] =
-    readMapEntry[MailboxId, Boolean](s => Try(mailboxIdFactory.fromString(s)).toEither.left.map(error => error.getMessage),
-      {
-        case JsBoolean(true) => JsSuccess(true)
-        case JsBoolean(false) => JsError("mailboxId value can only be true")
-        case _ => JsError("Expecting mailboxId value to be a boolean")
-      })
+    Reads.mapReads[MailboxId, Boolean] {s => Try(mailboxIdFactory.fromString(s)).fold(e => JsError(e.getMessage), JsSuccess(_)) } (mapMarkerReads)
 
   private implicit val mailboxIdsReads: Reads[MailboxIds] = jsValue => mailboxIdsMapReads.reads(jsValue).map(
     mailboxIdsMap => MailboxIds(mailboxIdsMap.keys.toList))
@@ -189,18 +184,10 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   }
 
   private implicit val updatesMapReads: Reads[Map[UnparsedMessageId, JsObject]] =
-    readMapEntry[UnparsedMessageId, JsObject](s => refineV[UnparsedMessageIdConstraint](s),
-      {
-        case o: JsObject => JsSuccess(o)
-        case _ => JsError("Expecting a JsObject as an update entry")
-      })
+    Reads.mapReads[UnparsedMessageId, JsObject] {string => refineV[UnparsedMessageIdConstraint](string).fold(JsError(_), id => JsSuccess(id)) }
 
   private implicit val createsMapReads: Reads[Map[EmailCreationId, JsObject]] =
-    readMapEntry[EmailCreationId, JsObject](s => refineV[IdConstraint](s),
-      {
-        case o: JsObject => JsSuccess(o)
-        case _ => JsError("Expecting a JsObject as an update entry")
-      })
+    Reads.mapReads[EmailCreationId, JsObject] {s => refineV[IdConstraint](s).fold(JsError(_), JsSuccess(_)) }
 
   private implicit val keywordReads: Reads[Keyword] = {
     case jsString: JsString => Keyword.parse(jsString.value)
@@ -210,12 +197,7 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   }
 
   private implicit val keywordsMapReads: Reads[Map[Keyword, Boolean]] =
-    readMapEntry[Keyword, Boolean](s => Keyword.parse(s),
-      {
-        case JsBoolean(true) => JsSuccess(true)
-        case JsBoolean(false) => JsError("keyword value can only be true")
-        case _ => JsError("Expecting keyword value to be a boolean")
-      })
+    Reads.mapReads[Keyword, Boolean] {string => Keyword.parse(string).fold(JsError(_), JsSuccess(_)) } (mapMarkerReads)
   private implicit val keywordsReads: Reads[Keywords] = jsValue => keywordsMapReads.reads(jsValue).flatMap(
     keywordsMap => STRICT_KEYWORDS_FACTORY.fromSet(keywordsMap.keys.toSet)
       .fold(e => JsError(e.getMessage), keywords => JsSuccess(keywords)))
@@ -227,6 +209,10 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   private implicit val destroyIdsWrites: Writes[DestroyIds] = Json.valueWrites[DestroyIds]
   private implicit val emailRequestSetReads: Reads[EmailSetRequest] = Json.reads[EmailSetRequest]
   private implicit val emailCreationResponseWrites: Writes[EmailCreationResponse] = Json.writes[EmailCreationResponse]
+  private implicit val createsMapWrites: Writes[Map[EmailCreationId, EmailCreationResponse]] =
+    mapWrites[EmailCreationId, EmailCreationResponse](_.value, emailCreationResponseWrites)
+  private implicit val notCreatedMapWrites: Writes[Map[EmailCreationId, SetError]] =
+    mapWrites[EmailCreationId, SetError](_.value, setErrorWrites)
   private implicit val emailResponseSetWrites: OWrites[EmailSetResponse] = Json.writes[EmailSetResponse]
 
   private implicit val subjectReads: Reads[Subject] = Json.valueReads[Subject]
@@ -248,17 +234,21 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   private implicit val clientEmailBodyValueReads: Reads[ClientEmailBodyValue] = Json.reads[ClientEmailBodyValue]
   private implicit val typeReads: Reads[Type] = Json.valueReads[Type]
   private implicit val clientPartIdReads: Reads[ClientPartId] = Json.valueReads[ClientPartId]
+  private val rawHTMLReads: Reads[ClientHtmlBody] = Json.reads[ClientHtmlBody]
   private implicit val clientHtmlBodyReads: Reads[ClientHtmlBody] = {
     case JsObject(underlying) if underlying.contains("charset") => JsError("charset must not be specified in htmlBody")
     case JsObject(underlying) if underlying.contains("size") => JsError("size must not be specified in htmlBody")
     case JsObject(underlying) if underlying.contains("header:Content-Transfer-Encoding:asText") => JsError("Content-Transfer-Encoding must not be specified in htmlBody")
-    case o: JsObject => Json.reads[ClientHtmlBody].reads(o)
+    case o: JsObject => rawHTMLReads.reads(o)
     case _ => JsError("Expecting a JsObject to represent an ClientHtmlBody")
   }
 
   private implicit val bodyValuesReads: Reads[Map[ClientPartId, ClientEmailBodyValue]] =
-    readMapEntry[ClientPartId, ClientEmailBodyValue](s => Id.validate(s).fold(e => Left(e.getMessage), partId => Right(ClientPartId(partId))),
-      clientEmailBodyValueReads)
+    Reads.mapReads[ClientPartId, ClientEmailBodyValue] {
+      s => Id.validate(s).fold(
+        e => JsError(e.getMessage),
+        partId => JsSuccess(ClientPartId(partId)))
+    }
 
   case class EmailCreationRequestWithoutHeaders(mailboxIds: MailboxIds,
                                   messageId: Option[MessageIdsHeaderValue],

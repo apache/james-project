@@ -34,11 +34,7 @@ import scala.util.Try
 
 class EmailSubmissionSetSerializer @Inject()(messageIdFactory: MessageId.Factory) {
   private implicit val mapCreationRequestByEmailSubmissionCreationId: Reads[Map[EmailSubmissionCreationId, JsObject]] =
-    readMapEntry[EmailSubmissionCreationId, JsObject](s => refineV[IdConstraint](s),
-      {
-        case o: JsObject => JsSuccess(o)
-        case _ => JsError("Expecting a JsObject as a creation entry")
-      })
+    Reads.mapReads[EmailSubmissionCreationId, JsObject] {string => refineV[IdConstraint](string).fold(JsError(_), id => JsSuccess(id)) }
 
   private implicit val messageIdReads: Reads[MessageId] = {
     case JsString(serializedMessageId) => Try(JsSuccess(messageIdFactory.fromString(serializedMessageId)))
@@ -54,11 +50,7 @@ class EmailSubmissionSetSerializer @Inject()(messageIdFactory: MessageId.Factory
   }
 
   private implicit val emailUpdatesMapReads: Reads[Map[UnparsedMessageId, JsObject]] =
-    readMapEntry[UnparsedMessageId, JsObject](s => refineV[UnparsedMessageIdConstraint](s),
-      {
-        case o: JsObject => JsSuccess(o)
-        case _ => JsError("Expecting a JsObject as an update entry")
-      })
+    Reads.mapReads[UnparsedMessageId, JsObject] {string => refineV[UnparsedMessageIdConstraint](string).fold(JsError(_), id => JsSuccess(id)) }
   private implicit val destroyIdsReads: Reads[DestroyIds] = Json.valueFormat[DestroyIds]
 
   private implicit val emailSubmissionSetRequestReads: Reads[EmailSubmissionSetRequest] = Json.reads[EmailSubmissionSetRequest]

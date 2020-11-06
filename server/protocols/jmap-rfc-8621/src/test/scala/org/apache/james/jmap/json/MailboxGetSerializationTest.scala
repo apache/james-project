@@ -21,7 +21,7 @@ package org.apache.james.jmap.json
 
 import eu.timepit.refined.auto._
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
-import org.apache.james.jmap.core.{AccountId, Properties}
+import org.apache.james.jmap.core.{AccountId, DefaultCapabilities, Properties}
 import org.apache.james.jmap.json.Fixture._
 import org.apache.james.jmap.json.MailboxGetSerializationTest._
 import org.apache.james.jmap.json.MailboxSerializationTest.MAILBOX
@@ -196,7 +196,7 @@ class MailboxGetSerializationTest extends AnyWordSpec with Matchers {
           |}
           |""".stripMargin
 
-      assertThatJson(Json.stringify(SERIALIZER.serialize(actualValue)(SERIALIZER.mailboxWrites(Mailbox.allProperties)))).isEqualTo(expectedJson)
+      assertThatJson(Json.stringify(SERIALIZER.serialize(actualValue, Mailbox.allProperties, DefaultCapabilities.SUPPORTED_CAPABILITY_IDENTIFIERS))).isEqualTo(expectedJson)
     }
   }
 }

@@ -20,7 +20,7 @@
 package org.apache.james.jmap.json
 
 import javax.inject.Inject
-import org.apache.james.jmap.core.{AccountId, CanCalculateChanges, LimitUnparsed, PositionUnparsed, QueryState}
+import org.apache.james.jmap.core.{CanCalculateChanges, LimitUnparsed, PositionUnparsed, QueryState}
 import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, Anchor, AnchorOffset, And, Bcc, Body, Cc, CollapseThreads, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, FilterOperator, FilterQuery, From, FromSortProperty, HasAttachment, HasKeywordSortProperty, Header, HeaderContains, HeaderExist, IsAscending, Keyword, Not, Operator, Or, ReceivedAtSortProperty, SentAtSortProperty, SizeSortProperty, SomeInThreadHaveKeywordSortProperty, SortProperty, Subject, SubjectSortProperty, Text, To, ToSortProperty}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json._
@@ -29,8 +29,6 @@ import scala.language.implicitConversions
 import scala.util.Try
 
 class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
-  private implicit val accountIdWrites: Format[AccountId] = Json.valueFormat[AccountId]
-
   private implicit val mailboxIdWrites: Writes[MailboxId] = mailboxId => JsString(mailboxId.serialize)
   private implicit val mailboxIdReads: Reads[MailboxId] = {
     case JsString(serializedMailboxId) => Try(JsSuccess(mailboxIdFactory.fromString(serializedMailboxId))).getOrElse(JsError())
@@ -81,16 +79,16 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
     case _ => JsError(s"Expecting a JsString to represent a known operator")
   }
 
+  private val filterConditionRawRead: Reads[FilterCondition] = Json.reads[FilterCondition]
   private implicit val filterConditionReads: Reads[FilterCondition] = {
-    case JsObject(underlying) => {
+    case JsObject(underlying) =>
       val unsupported: collection.Set[String] = underlying.keySet.diff(FilterCondition.SUPPORTED)
       if (unsupported.nonEmpty) {
         JsError(s"These '${unsupported.mkString("[", ", ", "]")}' was unsupported filter options")
       } else {
-        Json.reads[FilterCondition].reads(JsObject(underlying))
+        filterConditionRawRead.reads(JsObject(underlying))
       }
-    }
-    case jsValue => Json.reads[FilterCondition].reads(jsValue)
+    case jsValue => filterConditionRawRead.reads(jsValue)
   }
 
   private implicit val limitUnparsedReads: Reads[LimitUnparsed] = Json.valueReads[LimitUnparsed]
@@ -133,7 +131,7 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
 
   private implicit val emailQueryRequestReads: Reads[EmailQueryRequest] = Json.reads[EmailQueryRequest]
 
-  private implicit def emailQueryResponseWrites: OWrites[EmailQueryResponse] = Json.writes[EmailQueryResponse]
+  private implicit val emailQueryResponseWrites: OWrites[EmailQueryResponse] = Json.writes[EmailQueryResponse]
 
   def serialize(emailQueryResponse: EmailQueryResponse): JsObject = Json.toJsObject(emailQueryResponse)
 

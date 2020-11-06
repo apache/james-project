@@ -44,6 +44,7 @@ case class Properties(value: Set[NonEmptyString]) {
   def isEmpty(): Boolean = value.isEmpty
 
   def contains(property: NonEmptyString): Boolean = value.contains(property)
+  def containsString(property: String): Boolean = refineV[NonEmpty](property).fold(e => false, refined => contains(refined))
 
   def format(): String = value.mkString(", ")
 

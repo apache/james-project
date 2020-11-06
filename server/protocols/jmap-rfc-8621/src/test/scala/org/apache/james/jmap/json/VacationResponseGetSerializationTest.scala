@@ -175,7 +175,7 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
           |}
           |""".stripMargin
 
-      assertThatJson(Json.stringify(VacationSerializer.serialize(actualValue)(VacationSerializer.vacationResponseWrites(VacationResponse.allProperties)))).isEqualTo(expectedJson)
+      assertThatJson(Json.stringify(VacationSerializer.serialize(actualValue, VacationResponse.allProperties))).isEqualTo(expectedJson)
     }
   }
 }

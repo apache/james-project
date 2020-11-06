@@ -68,7 +68,7 @@ class VacationResponseSerializationTest extends AnyWordSpec with Matchers {
           | "htmlBody":"<b>HTML body</b>"
           |}""".stripMargin
 
-      assertThatJson(Json.stringify(VacationSerializer.serialize(VACATION_RESPONSE)(VacationSerializer.vacationResponseWrites(VacationResponse.allProperties)))).isEqualTo(expectedJson)
+      assertThatJson(Json.stringify(VacationSerializer.serialize(VACATION_RESPONSE))).isEqualTo(expectedJson)
     }
   }
 }

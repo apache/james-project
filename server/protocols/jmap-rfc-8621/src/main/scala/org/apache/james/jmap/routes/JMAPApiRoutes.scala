@@ -58,8 +58,7 @@ object JMAPApiRoutes {
 class JMAPApiRoutes (val authenticator: Authenticator,
                      userProvisioner: UserProvisioning,
                      mailboxesProvisioner: MailboxesProvisioner,
-                     methods: Set[Method],
-                     sessionSupplier: SessionSupplier) extends JMAPRoutes {
+                     methods: Set[Method]) extends JMAPRoutes {
 
   private val methodsByName: Map[MethodName, Method] = methods.map(method => method.methodName -> method).toMap
 
@@ -67,9 +66,8 @@ class JMAPApiRoutes (val authenticator: Authenticator,
   def this(@Named(InjectionKeys.RFC_8621) authenticator: Authenticator,
            userProvisioner: UserProvisioning,
            mailboxesProvisioner: MailboxesProvisioner,
-           javaMethods: java.util.Set[Method],
-           sessionSupplier: SessionSupplier) {
-    this(authenticator, userProvisioner, mailboxesProvisioner, javaMethods.asScala.toSet, sessionSupplier)
+           javaMethods: java.util.Set[Method]) {
+    this(authenticator, userProvisioner, mailboxesProvisioner, javaMethods.asScala.toSet)
   }
 
   override def routes(): stream.Stream[JMAPRoute] = Stream.of(

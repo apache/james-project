@@ -24,7 +24,6 @@ import java.time.format.DateTimeFormatter
 
 import eu.timepit.refined.api.{RefType, Validate}
 import org.apache.james.core.MailAddress
-import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{AccountId, Properties, SetError, UTCDate}
 import play.api.libs.json._
@@ -32,6 +31,17 @@ import play.api.libs.json._
 import scala.util.{Failure, Success, Try}
 
 package object json {
+  implicit val jsObjectReads: Reads[JsObject] = {
+    case o: JsObject => JsSuccess(o)
+    case _ => JsError("Expecting a JsObject as a creation entry")
+  }
+
+  val mapMarkerReads: Reads[Boolean] = {
+    case JsBoolean(true) => JsSuccess(true)
+    case JsBoolean(false) => JsError("map marker value can only be true")
+    case _ => JsError("Expecting mailboxId value to be a boolean")
+  }
+
   def mapWrites[K, V](keyWriter: K => String, valueWriter: Writes[V]): Writes[Map[K, V]] =
     (ids: Map[K, V]) => {
       ids.foldLeft(JsObject.empty)((jsObject, kv) => {
@@ -39,31 +49,6 @@ package object json {
         jsObject.+(keyWriter.apply(key), valueWriter.writes(value))
       })
     }
-
-  def readMapEntry[K, V](keyValidator: String => Either[String, K], valueReads: Reads[V]): Reads[Map[K, V]] =
-    _.validate[Map[String, JsValue]]
-      .flatMap(mapWithStringKey =>{
-        val firstAcc = scala.util.Right[JsError, Map[K, V]](Map.empty)
-        mapWithStringKey
-          .foldLeft[Either[JsError, Map[K, V]]](firstAcc)((acc: Either[JsError, Map[K, V]], keyValue) => {
-            acc match {
-              case error@Left(_) => error
-              case scala.util.Right(validatedAcc) =>
-                val refinedKey: Either[String, K] = keyValidator.apply(keyValue._1)
-                refinedKey match {
-                  case Left(error) => Left(JsError(error))
-                  case scala.util.Right(unparsedK) =>
-                    val transformedValue: JsResult[V] = valueReads.reads(keyValue._2)
-                    transformedValue.fold(
-                      error => Left(JsError(error)),
-                      v => scala.util.Right(validatedAcc + (unparsedK -> v)))
-                }
-            }
-          }) match {
-          case Left(jsError) => jsError
-          case scala.util.Right(value) => JsSuccess(value)
-        }
-      })
 
   // code copied from https://github.com/avdv/play-json-refined/blob/master/src/main/scala/de.cbley.refined.play.json/package.scala
   implicit def writeRefined[T, P, F[_, _]](
@@ -84,11 +69,6 @@ package object json {
           case Left(error)   => JsError(error)
         }
       })
-
-  implicit def idMapWrite[Any](implicit vr: Writes[Any]): Writes[Map[Id, Any]] =
-    (m: Map[Id, Any]) => {
-      JsObject(m.map { case (k, v) => (k.value, vr.writes(v)) }.toSeq)
-    }
 
   private[json] implicit val UTCDateReads: Reads[UTCDate] = {
     case JsString(value) =>

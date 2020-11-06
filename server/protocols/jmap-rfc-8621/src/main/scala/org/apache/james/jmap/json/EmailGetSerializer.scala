@@ -21,12 +21,42 @@ package org.apache.james.jmap.json
 
 import org.apache.james.jmap.api.model.Preview
 import org.apache.james.jmap.core.Properties
+import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.{AddressesHeaderValue, BlobId, Charset, DateHeaderValue, Disposition, EmailAddress, EmailAddressGroup, EmailBody, EmailBodyMetadata, EmailBodyPart, EmailBodyValue, EmailFastView, EmailFullView, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailHeaderView, EmailHeaders, EmailIds, EmailMetadata, EmailMetadataView, EmailNotFound, EmailView, EmailerName, FetchAllBodyValues, FetchHTMLBodyValues, FetchTextBodyValues, GroupName, GroupedAddressesHeaderValue, HasAttachment, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, PartId, RawHeaderValue, Subject, TextHeaderValue, ThreadId, Type, URLsHeaderValue}
 import org.apache.james.mailbox.model.{Cid, MailboxId, MessageId}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
 import scala.language.implicitConversions
+
+object EmailBodyPartToSerialize {
+  def from(part: EmailBodyPart): EmailBodyPartToSerialize = EmailBodyPartToSerialize(
+    partId = part.partId,
+    blobId = part.blobId,
+    headers = part.headers,
+    size = part.size,
+    `type` = part.`type`,
+    charset = part.charset,
+    disposition = part.disposition,
+    cid = part.cid,
+    language = part.language,
+    location = part.location,
+    name = part.name,
+    subParts = part.subParts.map(list => list.map(EmailBodyPartToSerialize.from)))
+}
+
+case class EmailBodyPartToSerialize(partId: PartId,
+                                    blobId: Option[BlobId],
+                                    headers: List[EmailHeader],
+                                    size: Size,
+                                    name: Option[Name],
+                                    `type`: Type,
+                                    charset: Option[Charset],
+                                    disposition: Option[Disposition],
+                                    cid: Option[Cid],
+                                    language: Option[Languages],
+                                    location: Option[Location],
+                                    subParts: Option[List[EmailBodyPartToSerialize]])
 
 object EmailGetSerializer {
   private implicit val mailboxIdWrites: Writes[MailboxId] = mailboxId => JsString(mailboxId.serialize)
@@ -88,65 +118,97 @@ object EmailGetSerializer {
     case (keyword, b) => (keyword.flagName, JsBoolean(b))
   })
 
-  private implicit def bodyValueMapWrites(implicit bodyValueWriter: Writes[EmailBodyValue]): Writes[Map[PartId, EmailBodyValue]] =
-    mapWrites[PartId, EmailBodyValue](_.value.toString(), bodyValueWriter)
-  private def bodyPartWritesWithPropertyFilter(properties: Properties): Writes[EmailBodyPart] =
-    new Writes[EmailBodyPart] {
-      def removeJsNull(obj: JsObject): JsObject =
-        JsObject(obj.fields.filter({
-          case (_, JsNull) => false
-          case _ => true
-        }))
-      def writes(part: EmailBodyPart): JsValue = properties.filter(
-        removeJsNull(
-          Json.obj("partId" -> Json.toJson(part.partId),
-            "blobId" -> Json.toJson(part.blobId),
-            "headers" -> Json.toJson(part.headers),
-            "size" -> Json.toJson(part.size),
-            "name" -> Json.toJson(part.name),
-            "type" -> Json.toJson(part.`type`),
-            "charset" -> Json.toJson(part.charset),
-            "disposition" -> Json.toJson(part.disposition),
-            "cid" -> Json.toJson(part.cid),
-            "language" -> Json.toJson(part.language),
-            "location" -> Json.toJson(part.location),
-            "subParts" -> part.subParts.map(list => list.map(writes)))))
-    }
+  private implicit val bodyValueMapWrites: Writes[Map[PartId, EmailBodyValue]] =
+    mapWrites[PartId, EmailBodyValue](_.value.toString(), bodyValueWrites)
 
-  private def emailWritesWithPropertyFilter(properties: Properties)(implicit partsWrites: Writes[EmailBodyPart]): Writes[EmailView] = {
-    implicit val emailMetadataWrites: OWrites[EmailMetadata] = Json.writes[EmailMetadata]
-    implicit val emailHeadersWrites: Writes[EmailHeaders] = Json.writes[EmailHeaders]
-    implicit val emailBodyWrites: Writes[EmailBody] = Json.writes[EmailBody]
-    implicit val emailBodyMetadataWrites: Writes[EmailBodyMetadata] = Json.writes[EmailBodyMetadata]
+  private implicit val bodyPartWritesToSerializeWrites: Writes[EmailBodyPartToSerialize] = (
+      (__ \ "partId").write[PartId] and
+      (__ \ "blobId").writeNullable[BlobId] and
+      (__ \ "headers").write[List[EmailHeader]] and
+      (__ \ "size").write[Size] and
+      (__ \ "name").writeNullable[Name] and
+      (__ \ "type").write[Type] and
+      (__ \ "charset").writeNullable[Charset] and
+      (__ \ "disposition").writeNullable[Disposition] and
+      (__ \ "cid").writeNullable[Cid] and
+      (__ \ "language").writeNullable[Languages] and
+      (__ \ "location").writeNullable[Location] and
+      (__ \ "subParts").lazyWriteNullable(implicitly[Writes[List[EmailBodyPartToSerialize]]])
+    )(unlift(EmailBodyPartToSerialize.unapply))
 
-    val emailFullViewWrites: OWrites[EmailFullView] = (JsPath.write[EmailMetadata] and
-        JsPath.write[EmailHeaders] and
-        JsPath.write[EmailBody] and
-        JsPath.write[EmailBodyMetadata] and
-        JsPath.write[Map[String, Option[EmailHeaderValue]]]) (unlift(EmailFullView.unapply))
+  private implicit val bodyPartWrites: Writes[EmailBodyPart] = part => bodyPartWritesToSerializeWrites.writes(EmailBodyPartToSerialize.from(part))
 
-    val emailFastViewWrites: OWrites[EmailFastView] = (JsPath.write[EmailMetadata] and
-        JsPath.write[EmailHeaders] and
-        JsPath.write[EmailBodyMetadata] and
-        JsPath.write[Map[String, Option[EmailHeaderValue]]]) (unlift(EmailFastView.unapply))
-    val emailHeaderViewWrites: OWrites[EmailHeaderView] = (JsPath.write[EmailMetadata] and
-        JsPath.write[EmailHeaders] and
-        JsPath.write[Map[String, Option[EmailHeaderValue]]]) (unlift(EmailHeaderView.unapply))
-    val emailMetadataViewWrites: OWrites[EmailMetadataView] = view => Json.toJsObject(view.metadata)
+  private implicit val emailMetadataWrites: OWrites[EmailMetadata] = Json.writes[EmailMetadata]
+  private implicit val emailHeadersWrites: Writes[EmailHeaders] = Json.writes[EmailHeaders]
+  private implicit val emailBodyMetadataWrites: Writes[EmailBodyMetadata] = Json.writes[EmailBodyMetadata]
 
-    val emailWrites: OWrites[EmailView] = {
-      case view: EmailMetadataView => emailMetadataViewWrites.writes(view)
-      case view: EmailHeaderView => emailHeaderViewWrites.writes(view)
-      case view: EmailFastView => emailFastViewWrites.writes(view)
-      case view: EmailFullView => emailFullViewWrites.writes(view)
-    }
-
-    emailWrites.transform(properties.filter(_))
+  private val emailFastViewWrites: OWrites[EmailFastView] = (JsPath.write[EmailMetadata] and
+    JsPath.write[EmailHeaders] and
+    JsPath.write[EmailBodyMetadata] and
+    JsPath.write[Map[String, Option[EmailHeaderValue]]]) (unlift(EmailFastView.unapply))
+  private val emailHeaderViewWrites: OWrites[EmailHeaderView] = (JsPath.write[EmailMetadata] and
+    JsPath.write[EmailHeaders] and
+    JsPath.write[Map[String, Option[EmailHeaderValue]]]) (unlift(EmailHeaderView.unapply))
+  private val emailMetadataViewWrites: OWrites[EmailMetadataView] = view => Json.toJsObject(view.metadata)
+  private implicit val emailBodyWrites: Writes[EmailBody] = Json.writes[EmailBody]
+  private implicit val emailFullViewWrites: OWrites[EmailFullView] = (JsPath.write[EmailMetadata] and
+    JsPath.write[EmailHeaders] and
+    JsPath.write[EmailBody] and
+    JsPath.write[EmailBodyMetadata] and
+    JsPath.write[Map[String, Option[EmailHeaderValue]]]) (unlift(EmailFullView.unapply))
+  private implicit val emailWrites: OWrites[EmailView] = {
+    case view: EmailMetadataView => emailMetadataViewWrites.writes(view)
+    case view: EmailHeaderView => emailHeaderViewWrites.writes(view)
+    case view: EmailFastView => emailFastViewWrites.writes(view)
+    case view: EmailFullView => emailFullViewWrites.writes(view)
   }
-  private implicit def emailGetResponseWrites(implicit emailWrites: Writes[EmailView]): Writes[EmailGetResponse] = Json.writes[EmailGetResponse]
+  private implicit val emailGetResponseWrites: Writes[EmailGetResponse] = Json.writes[EmailGetResponse]
 
   def serialize(emailGetResponse: EmailGetResponse, properties: Properties, bodyProperties: Properties): JsValue =
-    Json.toJson(emailGetResponse)(emailGetResponseWrites(emailWritesWithPropertyFilter(properties)(bodyPartWritesWithPropertyFilter(bodyProperties))))
+    Json.toJson(emailGetResponse)
+      .transform((__ \ "list").json.update {
+        case JsArray(underlying) => JsSuccess(JsArray(underlying.map(js => js.transform {
+          case jsonObject: JsObject =>
+           bodyPropertiesFilteringTransformation(bodyProperties)
+             .reads(properties.filter(jsonObject))
+          case js => JsSuccess(js)
+        }.fold(_ => JsArray(underlying), o => o))))
+        case jsValue => JsSuccess(jsValue)
+      }).get
+
+  private def bodyPropertiesFilteringTransformation(bodyProperties: Properties): Reads[JsValue] = {
+    case serializedMailbox: JsObject =>
+      val bodyPropertiesToRemove = EmailBodyPart.allowedProperties -- bodyProperties
+      val noop: JsValue => JsValue = o => o
+
+      JsSuccess(Seq(
+          bodyPropertiesFilteringTransformation(bodyPropertiesToRemove, "attachments"),
+          bodyPropertiesFilteringTransformation(bodyPropertiesToRemove, "bodyStructure"),
+          bodyPropertiesFilteringTransformation(bodyPropertiesToRemove, "textBody"),
+          bodyPropertiesFilteringTransformation(bodyPropertiesToRemove, "htmlBody"))
+        .reduceLeftOption(_ compose _)
+        .getOrElse(noop)
+        .apply(serializedMailbox))
+    case js => JsSuccess(js)
+  }
+
+  private def bodyPropertiesFilteringTransformation(properties: Properties, field: String): JsValue => JsValue =
+  {
+    case JsObject(underlying) =>JsObject(underlying.map {
+      case (key, jsValue) if key.equals(field) => (field, removeFieldsRecursively(properties).apply(jsValue))
+      case (key, jsValue) => (key, jsValue)
+    })
+    case jsValue => jsValue
+  }
+
+  private def removeFieldsRecursively(properties: Properties): JsValue => JsValue = {
+    case JsObject(underlying) => JsObject(underlying.flatMap {
+      case (key, _) if properties.containsString(key) => None
+      case (key, value) => Some((key, removeFieldsRecursively(properties).apply(value)))
+    })
+    case JsArray(others) => JsArray(others.map(removeFieldsRecursively(properties)))
+    case o: JsValue => o
+  }
 
   def deserializeEmailGetRequest(input: JsValue): JsResult[EmailGetRequest] = Json.fromJson[EmailGetRequest](input)
 }
