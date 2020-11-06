@@ -31,9 +31,9 @@ import org.apache.james.jmap.mail.EmailSet.EmailCreationId
 import org.apache.james.jmap.mail.{EmailCreationRequest, EmailCreationResponse, EmailSetRequest}
 import org.apache.james.jmap.method.EmailSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
 import org.apache.james.mailbox.MessageManager.AppendCommand
-import org.apache.james.mailbox.exception.MailboxNotFoundException
+import org.apache.james.mailbox.exception.{AttachmentNotFoundException, MailboxNotFoundException}
 import org.apache.james.mailbox.model.MailboxId
-import org.apache.james.mailbox.{MailboxManager, MailboxSession}
+import org.apache.james.mailbox.{AttachmentContentLoader, AttachmentManager, MailboxManager, MailboxSession}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
@@ -59,14 +59,17 @@ object EmailSetCreatePerformer {
   case class CreationSuccess(clientId: EmailCreationId, response: EmailCreationResponse) extends CreationResult
   case class CreationFailure(clientId: EmailCreationId, e: Throwable) extends CreationResult {
     def asMessageSetError: SetError = e match {
-      case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
       case e: MailboxNotFoundException => SetError.notFound(SetErrorDescription("Mailbox " + e.getMessage))
+      case e: AttachmentNotFoundException => SetError.invalidArguments(SetErrorDescription(s"${e.getMessage}"))
+      case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
       case _ => SetError.serverFail(SetErrorDescription(e.getMessage))
     }
   }
 }
 
 class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
+                                        attachmentManager: AttachmentManager,
+                                        attachmentContentLoader: AttachmentContentLoader,
                                         mailboxManager: MailboxManager) {
 
   def create(request: EmailSetRequest, mailboxSession: MailboxSession): SMono[CreationResults] =
@@ -83,7 +86,7 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
     if (mailboxIds.size != 1) {
       SMono.just(CreationFailure(clientId, new IllegalArgumentException("mailboxIds need to have size 1")))
     } else {
-      request.toMime4JMessage
+      request.toMime4JMessage(attachmentManager, attachmentContentLoader, mailboxSession)
         .fold(e => SMono.just(CreationFailure(clientId, e)),
           message => SMono.fromCallable[CreationResult](() => {
             val appendResult = mailboxManager.getMailbox(mailboxIds.head, mailboxSession)

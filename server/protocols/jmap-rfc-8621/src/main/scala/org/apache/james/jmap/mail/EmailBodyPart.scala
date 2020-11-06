@@ -33,7 +33,7 @@ import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.EmailBodyPart.{MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN}
 import org.apache.james.jmap.mail.PartId.PartIdValue
 import org.apache.james.mailbox.model.{Cid, MessageId, MessageResult}
-import org.apache.james.mime4j.codec.DecodeMonitor
+import org.apache.james.mime4j.codec.{DecodeMonitor, DecoderUtil}
 import org.apache.james.mime4j.dom.{Entity, Message, Multipart, TextBody => Mime4JTextBody}
 import org.apache.james.mime4j.message.{DefaultMessageBuilder, DefaultMessageWriter}
 import org.apache.james.mime4j.stream.MimeConfig
@@ -65,6 +65,7 @@ object EmailBodyPart {
   val TEXT_PLAIN: Type = Type("text/plain")
   val TEXT_HTML: Type = Type("text/html")
   val MULTIPART_ALTERNATIVE: Type = Type("multipart/alternative")
+  val FILENAME_PREFIX = "name"
 
   val defaultProperties: Properties = Properties("partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "language", "location")
   val allowedProperties: Properties = defaultProperties ++ Properties("subParts", "headers")
@@ -123,10 +124,16 @@ object EmailBodyPart {
           blobId = blobId,
           headers = entity.getHeader.getFields.asScala.toList.map(EmailHeader(_)),
           size = size,
-          name = Option(entity.getFilename).map(Name),
+          name = Option(entity.getFilename).map(Name)
+              .orElse({
+                headerValue(entity, "Content-Type")
+                  .map(value => DecoderUtil.decodeEncodedWords(value, DecodeMonitor.SILENT))
+                  .filter(_.contains(FILENAME_PREFIX))
+                  .map(v => Name(v.substring(v.indexOf(FILENAME_PREFIX) + FILENAME_PREFIX.length + 1).replace("\"", "")))
+              }),
           `type` = Type(entity.getMimeType),
           charset = Option(entity.getCharset).map(Charset),
-          disposition = Option(entity.getDispositionType).map(Disposition),
+          disposition = Option(entity.getDispositionType).map(Disposition(_)),
           cid = headerValue(entity, "Content-Id")
             .flatMap(Cid.parser()
               .relaxed()
@@ -134,7 +141,7 @@ object EmailBodyPart {
               .parse(_)
               .toScala),
           language = headerValue(entity, "Content-Language")
-            .map(Language),
+            .map(_.split("; ").toList.map(Language)),
           location = headerValue(entity, "Content-Location")
             .map(Location),
           subParts = subParts,
@@ -165,6 +172,12 @@ object EmailBodyPart {
 case class Name(value: String)
 case class Type(value: String)
 case class Charset(value: String)
+
+object Disposition {
+  val ATTACHMENT = Disposition("attachment")
+  val INLINE = Disposition("inline")
+}
+
 case class Disposition(value: String)
 case class Language(value: String)
 case class Location(value: String)
@@ -178,7 +191,7 @@ case class EmailBodyPart(partId: PartId,
                          charset: Option[Charset],
                          disposition: Option[Disposition],
                          cid: Option[Cid],
-                         language: Option[Language],
+                         language: Option[List[Language]],
                          location: Option[Location],
                          subParts: Option[List[EmailBodyPart]],
                          entity: Entity) {

@@ -27,6 +27,11 @@ public class AttachmentNotFoundException extends MailboxException {
         this.attachmentId = attachmentId;
     }
 
+    public AttachmentNotFoundException(String attachmentId, String msg, Throwable cause) {
+        super(msg, cause);
+        this.attachmentId = attachmentId;
+    }
+
     public final String getAttachmentId() {
         return attachmentId;
     }

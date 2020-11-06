@@ -28,7 +28,7 @@ import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{Id, SetError, UTCDate}
 import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId, UnparsedMessageIdConstraint}
 import org.apache.james.jmap.mail.KeywordsFactory.STRICT_KEYWORDS_FACTORY
-import org.apache.james.jmap.mail.{AddressesHeaderValue, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, ClientEmailBodyValue, ClientHtmlBody, ClientPartId, DateHeaderValue, DestroyIds, EmailAddress, EmailAddressGroup, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailSetRequest, EmailSetResponse, EmailSetUpdate, EmailerName, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, MailboxIds, MessageIdsHeaderValue, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, Type, URLsHeaderValue}
+import org.apache.james.jmap.mail.{AddressesHeaderValue, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, Attachment, BlobId, Charset, ClientEmailBodyValue, ClientHtmlBody, ClientPartId, DateHeaderValue, DestroyIds, Disposition, EmailAddress, EmailAddressGroup, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailSetRequest, EmailSetResponse, EmailSetUpdate, EmailerName, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Location, MailboxIds, MessageIdsHeaderValue, Name, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, Type, URLsHeaderValue}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json.{JsArray, JsBoolean, JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
 
@@ -275,7 +275,8 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
                                   keywords: Option[Keywords],
                                   receivedAt: Option[UTCDate],
                                   htmlBody: Option[List[ClientHtmlBody]],
-                                  bodyValues: Option[Map[ClientPartId, ClientEmailBodyValue]]) {
+                                  bodyValues: Option[Map[ClientPartId, ClientEmailBodyValue]],
+                                  attachments: Option[List[Attachment]]) {
     def toCreationRequest(specificHeaders: List[EmailHeader]): EmailCreationRequest = EmailCreationRequest(
       mailboxIds = mailboxIds,
       messageId = messageId,
@@ -293,7 +294,8 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
       receivedAt = receivedAt,
       specificHeaders = specificHeaders,
       bodyValues = bodyValues,
-      htmlBody = htmlBody)
+      htmlBody = htmlBody,
+      attachments = attachments)
   }
 
   private implicit val headerUrlReads: Reads[HeaderURL] = Json.valueReads[HeaderURL]
@@ -347,6 +349,13 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
       case AsGroupedAddresses => GroupedAddressReads
     }
 
+  private implicit val blobIdReads: Reads[BlobId] = Json.valueReads[BlobId]
+  private implicit val nameReads: Reads[Name] = Json.valueReads[Name]
+  private implicit val charsetReads: Reads[Charset] = Json.valueReads[Charset]
+  private implicit val dispositionReads: Reads[Disposition] = Json.valueReads[Disposition]
+  private implicit val languageReads: Reads[Language] = Json.valueReads[Language]
+  private implicit val locationReads: Reads[Location] = Json.valueReads[Location]
+  private implicit val attachmentReads: Reads[Attachment] = Json.reads[Attachment]
   private implicit val emailCreationRequestWithoutHeadersReads: Reads[EmailCreationRequestWithoutHeaders] = Json.reads[EmailCreationRequestWithoutHeaders]
   private implicit val emailCreationRequestReads: Reads[EmailCreationRequest] = {
     case o: JsObject =>

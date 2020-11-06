@@ -39,7 +39,7 @@ import org.apache.james.mime4j.dom.Message
 object Fixture {
   val ACCOUNT_ID: String = "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
   val ALICE_ACCOUNT_ID: String = "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90"
-  def andreAccountId: String = "1e8584548eca20f26faf6becc1704a0f352839f12c208a47fbd486d60f491f7c"
+  val ANDRE_ACCOUNT_ID: String = "1e8584548eca20f26faf6becc1704a0f352839f12c208a47fbd486d60f491f7c"
 
   def createTestMessage: Message = Message.Builder
       .of

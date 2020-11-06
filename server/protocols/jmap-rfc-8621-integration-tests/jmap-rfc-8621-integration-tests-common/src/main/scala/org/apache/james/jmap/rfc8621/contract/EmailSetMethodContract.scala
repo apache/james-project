@@ -26,15 +26,17 @@ import java.util.Date
 
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
+import io.restassured.builder.ResponseSpecBuilder
 import io.restassured.http.ContentType.JSON
 import javax.mail.Flags
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
-import org.apache.http.HttpStatus.SC_OK
+import org.apache.http.HttpStatus.{SC_CREATED, SC_OK}
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.core.UTCDate
 import org.apache.james.jmap.draft.{JmapGuiceProbe, MessageIdProbe}
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.DownloadContract.accountId
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.FlagsBuilder
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
@@ -47,6 +49,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{BeforeEach, Test}
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import play.api.libs.json.{JsString, Json}
 
 import scala.jdk.CollectionConverters._
 
@@ -1718,6 +1721,524 @@ trait EmailSetMethodContract {
            |  "type": "invalidArguments",
            |  "description": "List((/htmlBody(0),List(JsonValidationError(List(Content-Transfer-Encoding must not be specified in htmlBody),ArraySeq()))))"
            |}""".stripMargin)
+  }
+
+  @Test
+  def createShouldSupportAttachment(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
+
+    val uploadResponse: String = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .contentType("text/plain")
+      .body(payload)
+    .when
+      .post(s"/upload/$ACCOUNT_ID/")
+    .`then`
+      .statusCode(SC_CREATED)
+      .extract
+      .body
+      .asString
+
+    val blobId: String = Json.parse(uploadResponse).\("blobId").get.asInstanceOf[JsString].value
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa": {
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "subject": "World domination",
+         |          "attachments": [
+         |            {
+         |              "blobId": "$blobId",
+         |              "type":"text/plain",
+         |              "charset":"UTF-8",
+         |              "disposition": "attachment",
+         |              "language": ["fr", "en"],
+         |              "location": "http://125.26.23.36/content"
+         |            }
+         |          ]
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |      {
+         |        "accountId": "$ACCOUNT_ID",
+         |        "ids": ["#aaaaaa"],
+         |        "properties": ["mailboxIds", "subject", "attachments"],
+         |        "bodyProperties": ["partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "language", "location"]
+         |      },
+         |    "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
+      .inPath("methodResponses[0][1].created.aaaaaa")
+      .isEqualTo("{}".stripMargin)
+
+    val blobIdToDownload = Json.parse(response)
+      .\("methodResponses")
+      .\(1).\(1)
+      .\("list")
+      .\(0)
+      .\("attachments")
+      .\(0)
+      .\("blobId")
+      .get.asInstanceOf[JsString].value
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[1][1].list[0].id")
+      .inPath(s"methodResponses[1][1].list")
+      .isEqualTo(
+        s"""[{
+           |  "mailboxIds": {
+           |    "${mailboxId.serialize}": true
+           |  },
+           |  "subject": "World domination",
+           |  "attachments": [
+           |    {
+           |      "partId": "3",
+           |      "blobId": "$blobIdToDownload",
+           |      "size": 11,
+           |      "type": "text/plain",
+           |      "charset": "UTF-8",
+           |      "disposition": "attachment",
+           |      "language": ["fr", "en"],
+           |      "location": "http://125.26.23.36/content"
+           |    }
+           |  ]
+           |}]""".stripMargin)
+
+    val downloadResponse = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+    .when
+      .get(s"/download/$accountId/$blobIdToDownload")
+    .`then`
+      .statusCode(SC_OK)
+      .contentType("text/plain")
+      .extract
+      .body
+      .asInputStream()
+
+    assertThat(downloadResponse)
+      .hasSameContentAs(new ByteArrayInputStream(payload))
+  }
+
+  @Test
+  def createShouldSupportAttachmentAndHtmlBody(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
+    val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
+
+    val uploadResponse: String = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .contentType("text/plain")
+      .body(payload)
+    .when
+      .post(s"/upload/$ACCOUNT_ID/")
+    .`then`
+      .statusCode(SC_CREATED)
+      .extract
+      .body
+      .asString
+
+    val blobId: String = Json.parse(uploadResponse).\("blobId").get.asInstanceOf[JsString].value
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa": {
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "subject": "World domination",
+         |          "attachments": [
+         |            {
+         |              "blobId": "$blobId",
+         |              "type":"text/plain",
+         |              "charset":"UTF-8",
+         |              "disposition": "attachment"
+         |            }
+         |          ],
+         |          "htmlBody": [
+         |            {
+         |              "partId": "a49d",
+         |              "type": "text/html"
+         |            }
+         |          ],
+         |          "bodyValues": {
+         |            "a49d": {
+         |              "value": "$htmlBody",
+         |              "isTruncated": false,
+         |              "isEncodingProblem": false
+         |            }
+         |          }
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |      {
+         |        "accountId": "$ACCOUNT_ID",
+         |        "ids": ["#aaaaaa"],
+         |        "properties": ["mailboxIds", "subject", "attachments", "htmlBody", "bodyValues"],
+         |        "fetchHTMLBodyValues": true
+         |      },
+         |    "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
+      .inPath("methodResponses[0][1].created.aaaaaa")
+      .isEqualTo("{}".stripMargin)
+
+    val blobIdToDownload = Json.parse(response)
+      .\("methodResponses")
+      .\(1).\(1)
+      .\("list")
+      .\(0)
+      .\("attachments")
+      .\(0)
+      .\("blobId")
+      .get.asInstanceOf[JsString].value
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[1][1].list[0].id")
+      .inPath(s"methodResponses[1][1].list")
+      .isEqualTo(
+        s"""[{
+           |  "mailboxIds": {
+           |    "${mailboxId.serialize}": true
+           |  },
+           |  "subject": "World domination",
+           |  "attachments": [
+           |    {
+           |      "partId": "3",
+           |      "blobId": "$blobIdToDownload",
+           |      "size": 11,
+           |      "type": "text/plain",
+           |      "charset": "UTF-8",
+           |      "disposition": "attachment"
+           |    }
+           |  ],
+           |  "htmlBody": [
+           |    {
+           |      "partId": "2",
+           |      "blobId": "1_2",
+           |      "size": 166,
+           |      "type": "text/html",
+           |      "charset": "UTF-8"
+           |    }
+           |  ],
+           |  "bodyValues": {
+           |    "2": {
+           |      "value": "$htmlBody",
+           |      "isEncodingProblem": false,
+           |      "isTruncated": false
+           |    }
+           |  }
+           |}]""".stripMargin)
+
+    val downloadResponse = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+    .when
+      .get(s"/download/$accountId/$blobIdToDownload")
+    .`then`
+      .statusCode(SC_OK)
+      .contentType("text/plain")
+      .extract
+      .body
+      .asInputStream()
+
+    assertThat(downloadResponse)
+      .hasSameContentAs(new ByteArrayInputStream(payload))
+  }
+
+  @Test
+  def createShouldSupportAttachmentWithName(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
+
+    val uploadResponse: String = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .contentType("text/plain")
+      .body(payload)
+      .when
+      .post(s"/upload/$ACCOUNT_ID/")
+      .`then`
+      .statusCode(SC_CREATED)
+      .extract
+      .body
+      .asString
+
+    val blobId: String = Json.parse(uploadResponse).\("blobId").get.asInstanceOf[JsString].value
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa": {
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "subject": "World domination",
+         |          "attachments": [
+         |            {
+         |              "name": "myAttachment",
+         |              "blobId": "$blobId",
+         |              "type":"text/plain",
+         |              "charset":"UTF-8",
+         |              "disposition": "attachment",
+         |              "language": ["fr", "en"],
+         |              "location": "http://125.26.23.36/content"
+         |            }
+         |          ]
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |      {
+         |        "accountId": "$ACCOUNT_ID",
+         |        "ids": ["#aaaaaa"],
+         |        "properties": ["mailboxIds", "subject", "attachments"],
+         |        "bodyProperties": ["partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "language", "location"]
+         |      },
+         |    "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post.prettyPeek()
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
+      .inPath("methodResponses[0][1].created.aaaaaa")
+      .isEqualTo("{}".stripMargin)
+
+    val blobIdToDownload = Json.parse(response)
+      .\("methodResponses")
+      .\(1).\(1)
+      .\("list")
+      .\(0)
+      .\("attachments")
+      .\(0)
+      .\("blobId")
+      .get.asInstanceOf[JsString].value
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[1][1].list[0].id")
+      .inPath(s"methodResponses[1][1].list")
+      .isEqualTo(
+        s"""[{
+           |  "mailboxIds": {
+           |    "${mailboxId.serialize}": true
+           |  },
+           |  "subject": "World domination",
+           |  "attachments": [
+           |    {
+           |      "name": "myAttachment",
+           |      "partId": "3",
+           |      "blobId": "$blobIdToDownload",
+           |      "size": 11,
+           |      "type": "text/plain",
+           |      "charset": "UTF-8",
+           |      "disposition": "attachment",
+           |      "language": ["fr", "en"],
+           |      "location": "http://125.26.23.36/content"
+           |    }
+           |  ]
+           |}]""".stripMargin)
+
+    val downloadResponse = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+    .when
+      .get(s"/download/$accountId/$blobIdToDownload")
+    .`then`
+      .statusCode(SC_OK)
+      .contentType("text/plain")
+      .extract
+      .body
+      .asInputStream()
+
+    assertThat(downloadResponse)
+      .hasSameContentAs(new ByteArrayInputStream(payload))
+  }
+
+  @Test
+  def createShouldFailWhenAttachmentNotFound(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa": {
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "subject": "World domination",
+         |          "attachments": [
+         |            {
+         |              "blobId": "123",
+         |              "type":"text/plain",
+         |              "charset":"UTF-8",
+         |              "disposition": "attachment"
+         |            }
+         |          ]
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
+      .inPath("methodResponses[0][1].notCreated.aaaaaa")
+      .isEqualTo(s"""{
+        |  "type": "invalidArguments",
+        |  "description": "Attachment not found: 123"
+        |}""".stripMargin)
+  }
+
+  @Test
+  def createShouldFailWhenAttachmentDoesNotBelongToUser(server: GuiceJamesServer): Unit = {
+    val andrePath = MailboxPath.inbox(ANDRE)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
+
+    val payload = "123456789\r\n".repeat(1).getBytes
+
+    val uploadResponse: String = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .contentType("text/plain")
+      .body(payload)
+    .when
+      .post(s"/upload/$ACCOUNT_ID/")
+    .`then`
+      .statusCode(SC_CREATED)
+      .extract
+      .body
+      .asString
+
+    val blobId: String = Json.parse(uploadResponse).\("blobId").get.asInstanceOf[JsString].value
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ANDRE_ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa": {
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "subject": "World domination",
+         |          "attachments": [
+         |            {
+         |              "blobId": "$blobId",
+         |              "type":"text/plain",
+         |              "charset":"UTF-8",
+         |              "disposition": "attachment"
+         |            }
+         |          ]
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`(
+      baseRequestSpecBuilder(server)
+        .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+        .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .setBody(request)
+        .build, new ResponseSpecBuilder().build)
+    .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
+      .inPath("methodResponses[0][1].notCreated.aaaaaa")
+      .isEqualTo(s"""{
+                    |  "type": "invalidArguments",
+                    |  "description": "Attachment not found: $blobId"
+                    |}""".stripMargin)
   }
 
   @Test
