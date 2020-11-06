@@ -29,6 +29,7 @@ import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.State.State
 import org.apache.james.jmap.core.{AccountId, Id, Properties, SetError}
+import org.apache.james.jmap.mail.EmailSet.UnparsedMessageId
 import org.apache.james.jmap.mail.EmailSubmissionSet.EmailSubmissionCreationId
 import org.apache.james.jmap.method.{EmailSubmissionCreationParseException, WithAccountId}
 import org.apache.james.mailbox.model.MessageId
@@ -43,7 +44,14 @@ object EmailSubmissionId {
 }
 
 case class EmailSubmissionSetRequest(accountId: AccountId,
-                                     create: Option[Map[EmailSubmissionCreationId, JsObject]]) extends WithAccountId
+                                     create: Option[Map[EmailSubmissionCreationId, JsObject]],
+                                     onSuccessUpdateEmail: Option[Map[UnparsedMessageId, JsObject]]) extends WithAccountId {
+  def implicitEmailSetRequest: EmailSetRequest = EmailSetRequest(
+    accountId = accountId,
+    create = None,
+    update = onSuccessUpdateEmail,
+    destroy = None)
+}
 
 case class EmailSubmissionSetResponse(accountId: AccountId,
                                       newState: State,
@@ -59,7 +67,7 @@ case class EmailSubmissionAddress(email: MailAddress)
 case class Envelope(mailFrom: EmailSubmissionAddress, rcptTo: List[EmailSubmissionAddress])
 
 object EmailSubmissionCreationRequest {
-  private val assignableProperties = Set("emailId", "envelope")
+  private val assignableProperties = Set("emailId", "envelope", "onSuccessUpdateEmail")
 
   def validateProperties(jsObject: JsObject): Either[EmailSubmissionCreationParseException, JsObject] =
     jsObject.keys.diff(assignableProperties) match {

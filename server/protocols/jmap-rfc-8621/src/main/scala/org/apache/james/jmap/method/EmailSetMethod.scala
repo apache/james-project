@@ -50,7 +50,7 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
       created <- createPerformer.create(request, mailboxSession)
     } yield InvocationWithContext(
       invocation = Invocation(
-        methodName = invocation.invocation.methodName,
+        methodName = methodName,
         arguments = Arguments(serializer.serialize(EmailSetResponse(
           accountId = request.accountId,
           newState = State.INSTANCE,

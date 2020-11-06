@@ -44,6 +44,7 @@ import org.apache.james.queue.api.{MailQueue, MailQueueFactory}
 import org.apache.james.rrt.api.CanSendFrom
 import org.apache.james.server.core.{MailImpl, MimeMessageCopyOnWriteProxy, MimeMessageInputStreamSource}
 import org.apache.mailet.{Attribute, AttributeName, AttributeValue}
+import org.reactivestreams.Publisher
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json._
 import reactor.core.scala.publisher.{SFlux, SMono}
@@ -69,6 +70,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
                                          messageIdManager: MessageIdManager,
                                          mailQueueFactory: MailQueueFactory[_ <: MailQueue],
                                          canSendFrom: CanSendFrom,
+                                         emailSetMethod: EmailSetMethod,
                                          val metricFactory: MetricFactory,
                                          val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[EmailSubmissionSetRequest] with Startable {
   override val methodName: MethodName = MethodName("EmailSubmission/set")
@@ -122,8 +124,8 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
     Try(queue.close())
       .recover(e => LOGGER.debug("error closing queue", e))
 
-  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailSubmissionSetRequest): SMono[InvocationWithContext] = {
-    for {
+  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailSubmissionSetRequest): Publisher[InvocationWithContext] = {
+    val result = for {
       createdResults <- create(request, mailboxSession, invocation.processingContext)
     } yield InvocationWithContext(
       invocation = Invocation(
@@ -136,6 +138,13 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
           .as[JsObject]),
         methodCallId = invocation.invocation.methodCallId),
       processingContext = createdResults._2)
+
+    SFlux.concat(result,
+      emailSetMethod.doProcess(
+        capabilities = capabilities,
+        invocation = invocation,
+        mailboxSession = mailboxSession,
+        request = request.implicitEmailSetRequest))
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[EmailSubmissionSetRequest] =

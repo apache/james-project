@@ -24,6 +24,7 @@ import javax.inject.Inject
 import org.apache.james.core.MailAddress
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.SetError
+import org.apache.james.jmap.mail.EmailSet.{UnparsedMessageId, UnparsedMessageIdConstraint}
 import org.apache.james.jmap.mail.EmailSubmissionSet.EmailSubmissionCreationId
 import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope}
 import org.apache.james.mailbox.model.MessageId
@@ -51,6 +52,13 @@ class EmailSubmissionSetSerializer @Inject()(messageIdFactory: MessageId.Factory
       .fold(e => JsError(s"Invalid mailAddress: ${e.getMessage}"), mailAddress => mailAddress)
     case _ => JsError("Expecting mailAddress to be represented by a JsString")
   }
+
+  private implicit val emailUpdatesMapReads: Reads[Map[UnparsedMessageId, JsObject]] =
+    readMapEntry[UnparsedMessageId, JsObject](s => refineV[UnparsedMessageIdConstraint](s),
+      {
+        case o: JsObject => JsSuccess(o)
+        case _ => JsError("Expecting a JsObject as an update entry")
+      })
 
   private implicit val emailSubmissionSetRequestReads: Reads[EmailSubmissionSetRequest] = Json.reads[EmailSubmissionSetRequest]
 
