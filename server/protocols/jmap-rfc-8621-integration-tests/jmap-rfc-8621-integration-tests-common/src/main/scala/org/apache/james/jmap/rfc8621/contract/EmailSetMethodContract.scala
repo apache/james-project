@@ -1818,7 +1818,7 @@ trait EmailSetMethodContract {
            |  "subject": "World domination",
            |  "attachments": [
            |    {
-           |      "partId": "3",
+           |      "partId": "4",
            |      "blobId": "$blobIdToDownload",
            |      "size": 11,
            |      "type": "text/plain",
@@ -1951,8 +1951,8 @@ trait EmailSetMethodContract {
            |  "subject": "World domination",
            |  "attachments": [
            |    {
-           |      "partId": "3",
-           |      "blobId": "${messageId}_3",
+           |      "partId": "4",
+           |      "blobId": "${messageId}_4",
            |      "size": 11,
            |      "type": "text/plain",
            |      "charset": "UTF-8",
@@ -1961,15 +1961,15 @@ trait EmailSetMethodContract {
            |  ],
            |  "htmlBody": [
            |    {
-           |      "partId": "2",
-           |      "blobId": "${messageId}_2",
+           |      "partId": "3",
+           |      "blobId": "${messageId}_3",
            |      "size": 166,
            |      "type": "text/html",
            |      "charset": "UTF-8"
            |    }
            |  ],
            |  "bodyValues": {
-           |    "2": {
+           |    "3": {
            |      "value": "$htmlBody",
            |      "isEncodingProblem": false,
            |      "isTruncated": false
@@ -2065,7 +2065,7 @@ trait EmailSetMethodContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
-      .post.prettyPeek()
+      .post
     .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
@@ -2097,8 +2097,8 @@ trait EmailSetMethodContract {
            |  "subject": "World domination",
            |  "attachments": [
            |    {
-           |      "partId": "3",
-           |      "blobId": "${messageId}_3",
+           |      "partId": "4",
+           |      "blobId": "${messageId}_4",
            |      "size": 11,
            |      "type": "text/plain",
            |      "charset": "UTF-8",
@@ -2106,8 +2106,8 @@ trait EmailSetMethodContract {
            |      "cid": "abc"
            |    },
            |    {
-           |      "partId": "4",
-           |      "blobId": "${messageId}_4",
+           |      "partId": "5",
+           |      "blobId": "${messageId}_5",
            |      "size": 11,
            |      "type": "text/plain",
            |      "charset": "UTF-8",
@@ -2115,8 +2115,8 @@ trait EmailSetMethodContract {
            |      "cid": "def"
            |    },
            |    {
-           |      "partId": "5",
-           |      "blobId": "${messageId}_5",
+           |      "partId": "6",
+           |      "blobId": "${messageId}_6",
            |      "size": 11,
            |      "type": "text/plain",
            |      "charset": "UTF-8",
@@ -2125,21 +2125,192 @@ trait EmailSetMethodContract {
            |  ],
            |  "htmlBody": [
            |    {
-           |      "partId": "2",
-           |      "blobId": "${messageId}_2",
+           |      "partId": "3",
+           |      "blobId": "${messageId}_3",
            |      "size": 166,
            |      "type": "text/html",
            |      "charset": "UTF-8"
            |    }
            |  ],
            |  "bodyValues": {
-           |    "2": {
+           |    "3": {
            |      "value": "$htmlBody",
            |      "isEncodingProblem": false,
            |      "isTruncated": false
            |    }
            |  }
            |}]""".stripMargin)
+  }
+
+  @Test
+  def inlinedAttachmentsShouldBeWrappedInRelatedMultipart(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
+    val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
+
+    val uploadResponse: String = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .contentType("text/plain")
+      .body(payload)
+    .when
+      .post(s"/upload/$ACCOUNT_ID/")
+    .`then`
+      .statusCode(SC_CREATED)
+      .extract
+      .body
+      .asString
+
+    val blobId: String = Json.parse(uploadResponse).\("blobId").get.asInstanceOf[JsString].value
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa": {
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "subject": "World domination",
+         |          "attachments": [
+         |            {
+         |              "blobId": "$blobId",
+         |              "type":"text/plain",
+         |              "charset":"UTF-8",
+         |              "disposition": "inline",
+         |              "cid": "abc"
+         |            },
+         |            {
+         |              "blobId": "$blobId",
+         |              "type":"text/plain",
+         |              "charset":"UTF-8",
+         |              "disposition": "inline",
+         |              "cid": "def"
+         |            },
+         |            {
+         |              "blobId": "$blobId",
+         |              "type":"text/plain",
+         |              "charset":"UTF-8",
+         |              "disposition": "attachment"
+         |            }
+         |          ],
+         |          "htmlBody": [
+         |            {
+         |              "partId": "a49d",
+         |              "type": "text/html"
+         |            }
+         |          ],
+         |          "bodyValues": {
+         |            "a49d": {
+         |              "value": "$htmlBody",
+         |              "isTruncated": false,
+         |              "isEncodingProblem": false
+         |            }
+         |          }
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |      {
+         |        "accountId": "$ACCOUNT_ID",
+         |        "ids": ["#aaaaaa"],
+         |        "properties": ["bodyStructure"],
+         |        "bodyProperties": ["type", "disposition", "cid", "subParts"]
+         |      },
+         |    "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
+      .inPath("methodResponses[0][1].created.aaaaaa")
+      .isEqualTo("{}".stripMargin)
+
+    val messageId = Json.parse(response)
+      .\("methodResponses")
+      .\(1).\(1)
+      .\("list")
+      .\(0)
+      .\("id")
+      .get.asInstanceOf[JsString].value
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "75128aab4b1b",
+           |    "methodResponses": [
+           |        [
+           |            "Email/set",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "newState": "000001",
+           |                "created": {
+           |                    "aaaaaa": {
+           |                        "id": "$messageId"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ],
+           |        [
+           |            "Email/get",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "state": "000001",
+           |                "list": [
+           |                    {
+           |                        "id": "$messageId",
+           |                        "bodyStructure": {
+           |                            "type": "multipart/mixed",
+           |                            "subParts": [
+           |                                {
+           |                                    "type": "multipart/related",
+           |                                    "subParts": [
+           |                                        {
+           |                                            "type": "text/html"
+           |                                        },
+           |                                        {
+           |                                            "type": "text/plain",
+           |                                            "disposition": "inline",
+           |                                            "cid": "abc"
+           |                                        },
+           |                                        {
+           |                                            "type": "text/plain",
+           |                                            "disposition": "inline",
+           |                                            "cid": "def"
+           |                                        }
+           |                                    ]
+           |                                },
+           |                                {
+           |                                    "type": "text/plain",
+           |                                    "disposition": "attachment"
+           |                                }
+           |                            ]
+           |                        }
+           |                    }
+           |                ],
+           |                "notFound": []
+           |            },
+           |            "c2"
+           |        ]
+           |    ]
+           |}""".stripMargin)
   }
 
   @Test
@@ -2239,7 +2410,7 @@ trait EmailSetMethodContract {
            |  "attachments": [
            |    {
            |      "name": "myAttachment",
-           |      "partId": "3",
+           |      "partId": "4",
            |      "blobId": "$blobIdToDownload",
            |      "size": 11,
            |      "type": "text/plain",
