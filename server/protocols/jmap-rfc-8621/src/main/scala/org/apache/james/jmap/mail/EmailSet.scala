@@ -137,7 +137,7 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
         validateSpecificHeaders(builder)
           .flatMap(_ => {
             specificHeaders.map(_.asField).foreach(builder.addField)
-            attachments.map(attachments =>
+            attachments.filter(_.nonEmpty).map(attachments =>
               createMultipartWithAttachments(maybeHtmlBody, attachments, attachmentManager, attachmentContentLoader, mailboxSession)
                 .map(multipartBuilder => {
                   builder.setBody(multipartBuilder)
@@ -160,26 +160,53 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
         .sequence
 
     maybeAttachments.map(list => {
-      val inlineAttachments = list.filter(_._1.isInline)
-      val normalAttachments = list.filter(!_._1.isInline)
 
-      val mixedMultipartBuilder = MultipartBuilder.create(SubType.MIXED_SUBTYPE)
-      val relatedMultipartBuilder = MultipartBuilder.create(SubType.RELATED_SUBTYPE)
-      relatedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(maybeHtmlBody.getOrElse(""), SubType.HTML_SUBTYPE, StandardCharsets.UTF_8).build)
-      inlineAttachments.foldLeft(relatedMultipartBuilder) {
-        case (acc, (attachment, storedMetadata, content)) =>
-          acc.addBodyPart(toBodypartBuilder(attachment, storedMetadata, content))
-          acc
-      }
-
-      mixedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(relatedMultipartBuilder.build))
-
-      normalAttachments.foldLeft(mixedMultipartBuilder) {
-        case (acc, (attachment, storedMetadata, content)) =>
-          acc.addBodyPart(toBodypartBuilder(attachment, storedMetadata, content))
-          acc
+      (list.filter(_._1.isInline), list.filter(!_._1.isInline)) match {
+        case (Nil, normalAttachments) => createMixedBody(maybeHtmlBody, normalAttachments)
+        case (inlineAttachments, Nil) => createRelatedBody(maybeHtmlBody, inlineAttachments)
+        case (inlineAttachments, normalAttachments) => createMixedRelatedBody(maybeHtmlBody, inlineAttachments, normalAttachments)
       }
     })
+  }
+
+  private def createMixedRelatedBody(maybeHtmlBody: Option[String], inlineAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])], normalAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])]) = {
+    val mixedMultipartBuilder = MultipartBuilder.create(SubType.MIXED_SUBTYPE)
+    val relatedMultipartBuilder = MultipartBuilder.create(SubType.RELATED_SUBTYPE)
+    relatedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(maybeHtmlBody.getOrElse(""), SubType.HTML_SUBTYPE, StandardCharsets.UTF_8).build)
+    inlineAttachments.foldLeft(relatedMultipartBuilder) {
+      case (acc, (attachment, storedMetadata, content)) =>
+        acc.addBodyPart(toBodypartBuilder(attachment, storedMetadata, content))
+        acc
+    }
+
+    mixedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(relatedMultipartBuilder.build))
+
+    normalAttachments.foldLeft(mixedMultipartBuilder) {
+      case (acc, (attachment, storedMetadata, content)) =>
+        acc.addBodyPart(toBodypartBuilder(attachment, storedMetadata, content))
+        acc
+    }
+  }
+
+  private def createMixedBody(maybeHtmlBody: Option[String], normalAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])]) = {
+    val mixedMultipartBuilder = MultipartBuilder.create(SubType.MIXED_SUBTYPE)
+    mixedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(maybeHtmlBody.getOrElse(""), SubType.HTML_SUBTYPE, StandardCharsets.UTF_8).build)
+    normalAttachments.foldLeft(mixedMultipartBuilder) {
+      case (acc, (attachment, storedMetadata, content)) =>
+        acc.addBodyPart(toBodypartBuilder(attachment, storedMetadata, content))
+        acc
+    }
+  }
+
+  private def createRelatedBody(maybeHtmlBody: Option[String], inlineAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])]) = {
+    val relatedMultipartBuilder = MultipartBuilder.create(SubType.RELATED_SUBTYPE)
+    relatedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(maybeHtmlBody.getOrElse(""), SubType.HTML_SUBTYPE, StandardCharsets.UTF_8).build)
+    inlineAttachments.foldLeft(relatedMultipartBuilder) {
+      case (acc, (attachment, storedMetadata, content)) =>
+        acc.addBodyPart(toBodypartBuilder(attachment, storedMetadata, content))
+        acc
+    }
+    relatedMultipartBuilder
   }
 
   private def toBodypartBuilder(attachment: Attachment, storedMetadata: AttachmentMetadata, content: Array[Byte]) = {
