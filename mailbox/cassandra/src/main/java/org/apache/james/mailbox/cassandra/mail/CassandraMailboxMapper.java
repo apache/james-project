@@ -61,6 +61,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     private static final Duration MIN_RETRY_BACKOFF = Duration.ofMillis(10);
     private static final Duration MAX_RETRY_BACKOFF = Duration.ofMillis(1000);
     private static final SchemaVersion MAILBOX_PATH_V_3_MIGRATION_PERFORMED_VERSION = new SchemaVersion(8);
+    private static final int CONCURRENCY = 10;
 
     private final CassandraMailboxDAO mailboxDAO;
     private final CassandraMailboxPathDAOImpl mailboxPathDAO;
@@ -124,7 +125,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
                 return performPathReadRepair(mailboxPathEntry);
             }
             return Mono.just(mailboxPathEntry);
-        });
+        }, CONCURRENCY);
     }
 
     private Mono<Mailbox> performPathReadRepair(Mailbox mailboxPathEntry) {
@@ -242,7 +243,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
         return performReadRepair(listMailboxes(fixedNamespace, fixedUser))
             .filter(mailbox -> query.isPathMatch(mailbox.generateAssociatedPath()))
             .distinct(Mailbox::generateAssociatedPath)
-            .flatMap(this::addAcl);
+            .flatMap(this::addAcl, CONCURRENCY);
     }
 
     private Flux<Mailbox> listMailboxes(String fixedNamespace, Username fixedUser) {
@@ -254,7 +255,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
                         Flux.concat(
                                 mailboxPathV2DAO.listUserMailboxes(fixedNamespace, fixedUser),
                                 mailboxPathDAO.listUserMailboxes(fixedNamespace, fixedUser))
-                            .flatMap(this::retrieveMailbox));
+                            .flatMap(this::retrieveMailbox, CONCURRENCY));
                 }
                 return mailboxPathV3DAO.listUserMailboxes(fixedNamespace, fixedUser);
             });
@@ -324,7 +325,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     @Override
     public Flux<Mailbox> list() {
         return performReadRepair(mailboxDAO.retrieveAllMailboxes())
-            .flatMap(this::toMailboxWithAcl);
+            .flatMap(this::toMailboxWithAcl, CONCURRENCY);
     }
 
     @Override
@@ -364,6 +365,6 @@ public class CassandraMailboxMapper implements MailboxMapper {
             userMailboxRightsDAO.listRightsForUser(userName)
                 .filter(mailboxId -> mailboxId.getRight().contains(right))
                 .map(Pair::getLeft)
-                .flatMap(this::retrieveMailbox));
+                .flatMap(this::retrieveMailbox, CONCURRENCY));
     }
 }
