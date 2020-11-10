@@ -29,6 +29,7 @@ import eu.timepit.refined.collection.NonEmpty
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.State.State
 import org.apache.james.jmap.core.{AccountId, SetError, UTCDate}
+import org.apache.james.jmap.mail.Disposition.INLINE
 import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId}
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.mailbox.exception.AttachmentNotFoundException
@@ -96,7 +97,7 @@ case class Attachment(blobId: BlobId,
                       location: Option[Location],
                       cid: Option[ClientCid]) {
 
-  def isInline: Boolean = disposition.contains("inline")
+  def isInline: Boolean = disposition.contains(INLINE)
 }
 
 case class EmailCreationRequest(mailboxIds: MailboxIds,
@@ -154,7 +155,6 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
 
     val maybeAttachments: Either[Exception, List[(Attachment, AttachmentMetadata, Array[Byte])]] =
       attachments
-        .filter(!_.isInline)
         .map(attachment => getAttachmentMetadata(attachment, attachmentManager, mailboxSession))
         .map(attachmentMetadataList => attachmentMetadataList
           .flatMap(attachmentAndMetadata => loadAttachment(attachmentAndMetadata._1, attachmentAndMetadata._2, attachmentContentLoader, mailboxSession)))
