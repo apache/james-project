@@ -21,7 +21,7 @@ package org.apache.james.jmap.json
 
 import org.apache.james.jmap.api.model.Preview
 import org.apache.james.jmap.core.Properties
-import org.apache.james.jmap.mail.{AddressesHeaderValue, BlobId, Charset, DateHeaderValue, Disposition, EmailAddress, EmailAddressGroup, EmailBody, EmailBodyMetadata, EmailBodyPart, EmailBodyValue, EmailFastView, EmailFullView, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailHeaderView, EmailHeaders, EmailIds, EmailMetadata, EmailMetadataView, EmailNotFound, EmailView, EmailerName, FetchAllBodyValues, FetchHTMLBodyValues, FetchTextBodyValues, GroupName, GroupedAddressesHeaderValue, HasAttachment, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Location, MailboxIds, MessageIdsHeaderValue, Name, PartId, RawHeaderValue, Subject, TextHeaderValue, ThreadId, Type, URLsHeaderValue}
+import org.apache.james.jmap.mail._
 import org.apache.james.mailbox.model.{Cid, MailboxId, MessageId}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -42,7 +42,8 @@ object EmailGetSerializer {
   private implicit val typeWrites: Writes[Type] = Json.valueWrites[Type]
   private implicit val charsetWrites: Writes[Charset] = Json.valueWrites[Charset]
   private implicit val dispositionWrites: Writes[Disposition] = Json.valueWrites[Disposition]
-  private implicit val languageWrites: Writes[Language] = Json.valueWrites[Language]
+  private implicit val languageWrites: Format[Language] = Json.valueFormat[Language]
+  private implicit val languagesFormat: Format[Languages] = Json.valueFormat[Languages]
   private implicit val locationWrites: Writes[Location] = Json.valueWrites[Location]
   private implicit val emailerNameWrites: Writes[EmailerName] = Json.valueWrites[EmailerName]
   private implicit val emailAddressWrites: Writes[EmailAddress] = Json.writes[EmailAddress]

@@ -1,4 +1,4 @@
-/****************************************************************
+/** **************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
  * distributed with this work for additional information        *
@@ -6,16 +6,16 @@
  * to you under the Apache License, Version 2.0 (the            *
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
- *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
- *                                                              *
+ * *
+ * http://www.apache.org/licenses/LICENSE-2.0                 *
+ * *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- ****************************************************************/
+ * ***************************************************************/
 package org.apache.james.jmap.mail
 
 import java.io.IOException
@@ -32,18 +32,19 @@ import org.apache.james.jmap.core.{AccountId, SetError, UTCDate}
 import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId}
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.mailbox.exception.AttachmentNotFoundException
-import org.apache.james.mailbox.model.{AttachmentId, AttachmentMetadata, MessageId}
+import org.apache.james.mailbox.model.{AttachmentId, AttachmentMetadata, MessageId, Cid => MailboxCid}
 import org.apache.james.mailbox.{AttachmentContentLoader, AttachmentManager, MailboxSession}
 import org.apache.james.mime4j.codec.EncoderUtil
 import org.apache.james.mime4j.codec.EncoderUtil.Usage
-import org.apache.james.mime4j.dom.Message
-import org.apache.james.mime4j.dom.field.{ContentTypeField, FieldName}
+import org.apache.james.mime4j.dom.field.{ContentIdField, ContentTypeField, FieldName}
+import org.apache.james.mime4j.dom.{Entity, Message}
 import org.apache.james.mime4j.field.Fields
 import org.apache.james.mime4j.message.{BodyPartBuilder, MultipartBuilder}
-import org.apache.james.mime4j.stream.RawField
+import org.apache.james.mime4j.stream.{Field, RawField}
 import play.api.libs.json.JsObject
 
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 import scala.util.{Right, Try}
 
 object EmailSet {
@@ -73,14 +74,27 @@ case class ClientEmailBodyValue(value: String,
                                 isEncodingProblem: Option[IsEncodingProblem],
                                 isTruncated: Option[IsTruncated])
 
+object ClientCid {
+  def of(entity: Entity): Option[MailboxCid] =
+    Option(entity.getHeader.getField(FieldName.CONTENT_ID))
+      .flatMap {
+        case contentIdField: ContentIdField => MailboxCid.parser().relaxed().unwrap().parse(contentIdField.getId).toScala
+        case _ => None
+      }
+}
+
+case class ClientCid(value: String) {
+  def asField: Field = new RawField("Content-ID", value)
+}
+
 case class Attachment(blobId: BlobId,
                       `type`: Type,
                       name: Option[Name],
                       charset: Option[Charset],
                       disposition: Option[Disposition],
-                      language: Option[List[Language]],
+                      language: Option[Languages],
                       location: Option[Location],
-                      cid: Option[String]) {
+                      cid: Option[ClientCid]) {
 
   def isInline: Boolean = disposition.contains("inline")
 }
@@ -137,7 +151,6 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
                                              attachmentContentLoader: AttachmentContentLoader,
                                              mailboxSession: MailboxSession): Either[Exception, MultipartBuilder] = {
     val multipartBuilder = MultipartBuilder.create(SubType.MIXED_SUBTYPE)
-    val bodypartBuilder = BodyPartBuilder.create()
 
     val maybeAttachments: Either[Exception, List[(Attachment, AttachmentMetadata, Array[Byte])]] =
       attachments
@@ -147,26 +160,20 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
           .flatMap(attachmentAndMetadata => loadAttachment(attachmentAndMetadata._1, attachmentAndMetadata._2, attachmentContentLoader, mailboxSession)))
         .sequence
 
+    multipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(maybeHtmlBody.getOrElse(""), SubType.HTML_SUBTYPE, StandardCharsets.UTF_8).build)
     maybeAttachments.map(list => {
       list.foldLeft(multipartBuilder) {
-        case (builder, (attachment, attachmentMetadata, content)) =>
+        case (acc, (attachment, storedMetadata, content)) =>
+          val bodypartBuilder = BodyPartBuilder.create()
           bodypartBuilder.setBody(content, attachment.`type`.value)
-            .setField(contentTypeField(attachment, attachmentMetadata))
+            .setField(contentTypeField(attachment, storedMetadata))
             .setContentDisposition(attachment.disposition.getOrElse(Disposition.ATTACHMENT).value)
+          attachment.cid.map(_.asField).foreach(bodypartBuilder.addField)
+          attachment.location.map(_.asField).foreach(bodypartBuilder.addField)
+          attachment.language.map(_.asField).foreach(bodypartBuilder.addField)
 
-          if (attachment.cid.isDefined) {
-            bodypartBuilder.setField(new RawField("Content-ID", attachment.cid.get))
-          }
-          if(attachment.location.isDefined) {
-            bodypartBuilder.setField(new RawField("Content-Location", attachment.location.map(_.value).get))
-          }
-          if(attachment.language.isDefined) {
-            bodypartBuilder.setField(new RawField("Content-Language", attachment.language.get.map(_.value).mkString("; ")))
-          }
-
-          builder.addBodyPart(BodyPartBuilder.create().setBody(maybeHtmlBody.getOrElse(""), SubType.HTML_SUBTYPE, StandardCharsets.UTF_8).build)
-          builder.addBodyPart(bodypartBuilder)
-          builder
+          acc.addBodyPart(bodypartBuilder)
+          acc
       }
     })
   }
@@ -264,7 +271,7 @@ case class EmailSetUpdate(keywords: Option[Keywords],
       Left(new IllegalArgumentException("Partial update and reset specified for mailboxIds"))
     } else if (keywords.isDefined && (keywordsToAdd.isDefined || keywordsToRemove.isDefined)) {
       Left(new IllegalArgumentException("Partial update and reset specified for keywords"))
-    } else  {
+    } else {
       val mailboxIdsIdentity: Function[MailboxIds, MailboxIds] = ids => ids
       val mailboxIdsAddition: Function[MailboxIds, MailboxIds] = mailboxIdsToAdd
         .map(toBeAdded => (ids: MailboxIds) => ids ++ toBeAdded)
@@ -307,12 +314,14 @@ case class EmailSetUpdate(keywords: Option[Keywords],
     mailboxIdsToAdd.isEmpty && mailboxIdsToRemove.isEmpty
 }
 
-case class ValidatedEmailSetUpdate private (keywordsTransformation: Function[Keywords, Keywords],
-                                            mailboxIdsTransformation: Function[MailboxIds, MailboxIds],
-                                            update: EmailSetUpdate)
+case class ValidatedEmailSetUpdate private(keywordsTransformation: Function[Keywords, Keywords],
+                                           mailboxIdsTransformation: Function[MailboxIds, MailboxIds],
+                                           update: EmailSetUpdate)
 
 class EmailUpdateValidationException() extends IllegalArgumentException
+
 case class InvalidEmailPropertyException(property: String, cause: String) extends EmailUpdateValidationException
+
 case class InvalidEmailUpdateException(property: String, cause: String) extends EmailUpdateValidationException
 
 case class EmailCreationResponse(id: MessageId)

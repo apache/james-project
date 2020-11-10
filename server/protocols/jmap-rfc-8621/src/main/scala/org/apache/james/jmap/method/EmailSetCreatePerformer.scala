@@ -22,10 +22,11 @@ package org.apache.james.jmap.method
 import java.time.ZonedDateTime
 import java.util.Date
 
+import eu.timepit.refined.auto._
 import javax.inject.Inject
 import javax.mail.Flags
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{SetError, UTCDate}
+import org.apache.james.jmap.core.{Properties, SetError, UTCDate}
 import org.apache.james.jmap.json.EmailSetSerializer
 import org.apache.james.jmap.mail.EmailSet.EmailCreationId
 import org.apache.james.jmap.mail.{EmailCreationRequest, EmailCreationResponse, EmailSetRequest}
@@ -60,7 +61,7 @@ object EmailSetCreatePerformer {
   case class CreationFailure(clientId: EmailCreationId, e: Throwable) extends CreationResult {
     def asMessageSetError: SetError = e match {
       case e: MailboxNotFoundException => SetError.notFound(SetErrorDescription("Mailbox " + e.getMessage))
-      case e: AttachmentNotFoundException => SetError.invalidArguments(SetErrorDescription(s"${e.getMessage}"))
+      case e: AttachmentNotFoundException => SetError.invalidArguments(SetErrorDescription(s"${e.getMessage}"), Some(Properties("attachments")))
       case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
       case _ => SetError.serverFail(SetErrorDescription(e.getMessage))
     }

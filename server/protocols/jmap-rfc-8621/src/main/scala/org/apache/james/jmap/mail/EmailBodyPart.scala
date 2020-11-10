@@ -30,16 +30,16 @@ import eu.timepit.refined.refineV
 import org.apache.commons.io.IOUtils
 import org.apache.james.jmap.core.Properties
 import org.apache.james.jmap.mail.Email.Size
-import org.apache.james.jmap.mail.EmailBodyPart.{MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN}
+import org.apache.james.jmap.mail.EmailBodyPart.{FILENAME_PREFIX, MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN}
 import org.apache.james.jmap.mail.PartId.PartIdValue
 import org.apache.james.mailbox.model.{Cid, MessageId, MessageResult}
 import org.apache.james.mime4j.codec.{DecodeMonitor, DecoderUtil}
+import org.apache.james.mime4j.dom.field.{ContentLanguageField, ContentTypeField, FieldName}
 import org.apache.james.mime4j.dom.{Entity, Message, Multipart, TextBody => Mime4JTextBody}
 import org.apache.james.mime4j.message.{DefaultMessageBuilder, DefaultMessageWriter}
-import org.apache.james.mime4j.stream.MimeConfig
+import org.apache.james.mime4j.stream.{Field, MimeConfig, RawField}
 
 import scala.jdk.CollectionConverters._
-import scala.jdk.OptionConverters._
 import scala.util.{Failure, Success, Try}
 
 object PartId {
@@ -124,24 +124,12 @@ object EmailBodyPart {
           blobId = blobId,
           headers = entity.getHeader.getFields.asScala.toList.map(EmailHeader(_)),
           size = size,
-          name = Option(entity.getFilename).map(Name)
-              .orElse({
-                headerValue(entity, "Content-Type")
-                  .map(value => DecoderUtil.decodeEncodedWords(value, DecodeMonitor.SILENT))
-                  .filter(_.contains(FILENAME_PREFIX))
-                  .map(v => Name(v.substring(v.indexOf(FILENAME_PREFIX) + FILENAME_PREFIX.length + 1).replace("\"", "")))
-              }),
+          name = Name.of(entity),
           `type` = Type(entity.getMimeType),
           charset = Option(entity.getCharset).map(Charset),
           disposition = Option(entity.getDispositionType).map(Disposition(_)),
-          cid = headerValue(entity, "Content-Id")
-            .flatMap(Cid.parser()
-              .relaxed()
-              .unwrap()
-              .parse(_)
-              .toScala),
-          language = headerValue(entity, "Content-Language")
-            .map(_.split("; ").toList.map(Language)),
+          cid = ClientCid.of(entity),
+          language = Languages.of(entity),
           location = headerValue(entity, "Content-Location")
             .map(Location),
           subParts = subParts,
@@ -169,6 +157,15 @@ object EmailBodyPart {
   } yield (aValue, bValue)
 }
 
+object Name {
+  def of(entity: Entity): Option[Name] = Option(entity.getHeader.getField(FieldName.CONTENT_TYPE))
+    .flatMap {
+      case contentTypeField: ContentTypeField => Option(contentTypeField.getParameter(FILENAME_PREFIX))
+          .map(DecoderUtil.decodeEncodedWords(_, DecodeMonitor.SILENT))
+      case _ => None
+    }.map(Name(_))
+}
+
 case class Name(value: String)
 case class Type(value: String)
 case class Charset(value: String)
@@ -179,8 +176,25 @@ object Disposition {
 }
 
 case class Disposition(value: String)
+
+object Languages {
+  def of(entity: Entity): Option[Languages] =
+    Option(entity.getHeader.getField(FieldName.CONTENT_LANGUAGE))
+      .flatMap {
+        case contentLanguageField: ContentLanguageField => Some(Languages(contentLanguageField.getLanguages.asScala.toList.map(Language)))
+        case _ => None
+      }
+}
+
+case class Languages(value: List[Language]) {
+  def asField: Field = new RawField("Content-Language", value.map(_.value).mkString(", "))
+}
+
 case class Language(value: String)
-case class Location(value: String)
+
+case class Location(value: String) {
+  def asField: Field = new RawField("Content-Location", value)
+}
 
 case class EmailBodyPart(partId: PartId,
                          blobId: Option[BlobId],
@@ -191,7 +205,7 @@ case class EmailBodyPart(partId: PartId,
                          charset: Option[Charset],
                          disposition: Option[Disposition],
                          cid: Option[Cid],
-                         language: Option[List[Language]],
+                         language: Option[Languages],
                          location: Option[Location],
                          subParts: Option[List[EmailBodyPart]],
                          entity: Entity) {

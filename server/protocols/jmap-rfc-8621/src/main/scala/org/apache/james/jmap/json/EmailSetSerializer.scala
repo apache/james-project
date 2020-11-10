@@ -28,9 +28,9 @@ import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{Id, SetError, UTCDate}
 import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId, UnparsedMessageIdConstraint}
 import org.apache.james.jmap.mail.KeywordsFactory.STRICT_KEYWORDS_FACTORY
-import org.apache.james.jmap.mail.{AddressesHeaderValue, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, Attachment, BlobId, Charset, ClientEmailBodyValue, ClientHtmlBody, ClientPartId, DateHeaderValue, DestroyIds, Disposition, EmailAddress, EmailAddressGroup, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailSetRequest, EmailSetResponse, EmailSetUpdate, EmailerName, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Location, MailboxIds, MessageIdsHeaderValue, Name, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, Type, URLsHeaderValue}
+import org.apache.james.jmap.mail.{AddressesHeaderValue, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, Attachment, BlobId, Charset, ClientCid, ClientEmailBodyValue, ClientHtmlBody, ClientPartId, DateHeaderValue, DestroyIds, Disposition, EmailAddress, EmailAddressGroup, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailSetRequest, EmailSetResponse, EmailSetUpdate, EmailerName, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, Type, URLsHeaderValue}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
-import play.api.libs.json.{JsArray, JsBoolean, JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
+import play.api.libs.json.{Format, JsArray, JsBoolean, JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
 
 import scala.util.Try
 
@@ -353,8 +353,10 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   private implicit val nameReads: Reads[Name] = Json.valueReads[Name]
   private implicit val charsetReads: Reads[Charset] = Json.valueReads[Charset]
   private implicit val dispositionReads: Reads[Disposition] = Json.valueReads[Disposition]
-  private implicit val languageReads: Reads[Language] = Json.valueReads[Language]
+  private implicit val languageReads: Format[Language] = Json.valueFormat[Language]
+  private implicit val languagesWrites: Format[Languages] = Json.valueFormat[Languages]
   private implicit val locationReads: Reads[Location] = Json.valueReads[Location]
+  private implicit val cidFormat: Format[ClientCid] = Json.valueFormat[ClientCid]
   private implicit val attachmentReads: Reads[Attachment] = Json.reads[Attachment]
   private implicit val emailCreationRequestWithoutHeadersReads: Reads[EmailCreationRequestWithoutHeaders] = Json.reads[EmailCreationRequestWithoutHeaders]
   private implicit val emailCreationRequestReads: Reads[EmailCreationRequest] = {

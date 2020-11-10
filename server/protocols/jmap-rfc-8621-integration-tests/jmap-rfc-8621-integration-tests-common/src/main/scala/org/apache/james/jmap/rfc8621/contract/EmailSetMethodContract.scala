@@ -1932,14 +1932,12 @@ trait EmailSetMethodContract {
       .inPath("methodResponses[0][1].created.aaaaaa")
       .isEqualTo("{}".stripMargin)
 
-    val blobIdToDownload = Json.parse(response)
+    val messageId = Json.parse(response)
       .\("methodResponses")
       .\(1).\(1)
       .\("list")
       .\(0)
-      .\("attachments")
-      .\(0)
-      .\("blobId")
+      .\("id")
       .get.asInstanceOf[JsString].value
 
     assertThatJson(response)
@@ -1954,7 +1952,7 @@ trait EmailSetMethodContract {
            |  "attachments": [
            |    {
            |      "partId": "3",
-           |      "blobId": "$blobIdToDownload",
+           |      "blobId": "${messageId}_3",
            |      "size": 11,
            |      "type": "text/plain",
            |      "charset": "UTF-8",
@@ -1964,7 +1962,7 @@ trait EmailSetMethodContract {
            |  "htmlBody": [
            |    {
            |      "partId": "2",
-           |      "blobId": "1_2",
+           |      "blobId": "${messageId}_2",
            |      "size": 166,
            |      "type": "text/html",
            |      "charset": "UTF-8"
@@ -1978,21 +1976,6 @@ trait EmailSetMethodContract {
            |    }
            |  }
            |}]""".stripMargin)
-
-    val downloadResponse = `given`
-      .basePath("")
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-    .when
-      .get(s"/download/$accountId/$blobIdToDownload")
-    .`then`
-      .statusCode(SC_OK)
-      .contentType("text/plain")
-      .extract
-      .body
-      .asInputStream()
-
-    assertThat(downloadResponse)
-      .hasSameContentAs(new ByteArrayInputStream(payload))
   }
 
   @Test
@@ -2006,9 +1989,9 @@ trait EmailSetMethodContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .contentType("text/plain")
       .body(payload)
-      .when
+    .when
       .post(s"/upload/$ACCOUNT_ID/")
-      .`then`
+    .`then`
       .statusCode(SC_CREATED)
       .extract
       .body
@@ -2057,7 +2040,7 @@ trait EmailSetMethodContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
-      .post.prettyPeek()
+      .post
     .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
@@ -2103,21 +2086,6 @@ trait EmailSetMethodContract {
            |    }
            |  ]
            |}]""".stripMargin)
-
-    val downloadResponse = `given`
-      .basePath("")
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-    .when
-      .get(s"/download/$accountId/$blobIdToDownload")
-    .`then`
-      .statusCode(SC_OK)
-      .contentType("text/plain")
-      .extract
-      .body
-      .asInputStream()
-
-    assertThat(downloadResponse)
-      .hasSameContentAs(new ByteArrayInputStream(payload))
   }
 
   @Test
@@ -2167,7 +2135,8 @@ trait EmailSetMethodContract {
       .inPath("methodResponses[0][1].notCreated.aaaaaa")
       .isEqualTo(s"""{
         |  "type": "invalidArguments",
-        |  "description": "Attachment not found: 123"
+        |  "description": "Attachment not found: 123",
+        |  "properties": ["attachments"]
         |}""".stripMargin)
   }
 
@@ -2224,7 +2193,7 @@ trait EmailSetMethodContract {
         .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .setBody(request)
         .build, new ResponseSpecBuilder().build)
-    .post
+      .post
     .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
@@ -2237,7 +2206,8 @@ trait EmailSetMethodContract {
       .inPath("methodResponses[0][1].notCreated.aaaaaa")
       .isEqualTo(s"""{
                     |  "type": "invalidArguments",
-                    |  "description": "Attachment not found: $blobId"
+                    |  "description": "Attachment not found: $blobId",
+                    |  "properties": ["attachments"]
                     |}""".stripMargin)
   }
 
