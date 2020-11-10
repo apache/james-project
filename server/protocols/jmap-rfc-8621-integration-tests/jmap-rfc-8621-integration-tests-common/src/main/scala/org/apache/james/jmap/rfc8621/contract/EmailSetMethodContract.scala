@@ -2154,9 +2154,9 @@ trait EmailSetMethodContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .contentType("text/plain")
       .body(payload)
-      .when
+    .when
       .post(s"/upload/$ACCOUNT_ID/")
-      .`then`
+    .`then`
       .statusCode(SC_CREATED)
       .extract
       .body
@@ -2228,9 +2228,9 @@ trait EmailSetMethodContract {
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
-      .when
+    .when
       .post
-      .`then`
+    .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
       .extract

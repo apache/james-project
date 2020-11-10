@@ -33,7 +33,7 @@ import org.apache.james.jmap.mail.Disposition.INLINE
 import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId}
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.mailbox.exception.AttachmentNotFoundException
-import org.apache.james.mailbox.model.{AttachmentId, AttachmentMetadata, MessageId, Cid => MailboxCid}
+import org.apache.james.mailbox.model.{AttachmentId, AttachmentMetadata, Cid, MessageId}
 import org.apache.james.mailbox.{AttachmentContentLoader, AttachmentManager, MailboxSession}
 import org.apache.james.mime4j.codec.EncoderUtil
 import org.apache.james.mime4j.codec.EncoderUtil.Usage
@@ -77,10 +77,10 @@ case class ClientEmailBodyValue(value: String,
                                 isTruncated: Option[IsTruncated])
 
 object ClientCid {
-  def of(entity: Entity): Option[MailboxCid] =
+  def of(entity: Entity): Option[Cid] =
     Option(entity.getHeader.getField(FieldName.CONTENT_ID))
       .flatMap {
-        case contentIdField: ContentIdField => MailboxCid.parser().relaxed().unwrap().parse(contentIdField.getId).toScala
+        case contentIdField: ContentIdField => Cid.parser().relaxed().unwrap().parse(contentIdField.getId).toScala
         case _ => None
       }
 }
