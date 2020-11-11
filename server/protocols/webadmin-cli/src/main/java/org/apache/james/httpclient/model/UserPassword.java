@@ -17,25 +17,17 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.httpclient;
+package org.apache.james.httpclient.model;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import org.apache.james.httpclient.model.UserName;
-import org.apache.james.httpclient.model.UserPassword;
+public class UserPassword {
 
-import feign.Headers;
-import feign.Param;
-import feign.RequestLine;
-import feign.Response;
+    @JsonProperty("password")
+    private String password;
 
-public interface UserClient {
-
-    @RequestLine("GET")
-    List<UserName> getUserNameList();
-
-    @RequestLine("PUT /{userName}")
-    @Headers("Content-Type: application/json")
-    Response createAUser(@Param("userName") String userName, UserPassword password);
+    public UserPassword(String password) {
+        this.password = password;
+    }
 
 }

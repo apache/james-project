@@ -75,4 +75,37 @@ public class UserManageTest {
         assertThat(exitCode).isEqualTo(0);
         assertThat(outputStreamCaptor.toString().trim().toCharArray()).containsOnly("hqtran@linagora.com".concat("\n").concat("testing@linagora.com").toCharArray());
     }
+
+    @Test
+    void userCreateShouldAddValidUserSucceed(GuiceJamesServer server) throws Exception {
+        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
+        dataProbe = server.getProbe(DataProbeImpl.class);
+        dataProbe.fluent().addDomain("linagora.com");
+
+        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
+            "--url", "http://127.0.0.1:" + port.getValue(), "user", "create", "hqtran@linagora.com", "--password", "123456");
+
+        assertThat(exitCode).isEqualTo(0);
+        assertThat(outputStreamCaptor.toString().trim()).isEqualTo("The user was created successfully");
+        assertThat(dataProbe.listUsers()).containsOnly("hqtran@linagora.com");
+    }
+
+    @Test
+    void userCreateShouldFailWithInvalidUsername(GuiceJamesServer server) throws Exception {
+        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
+        dataProbe = server.getProbe(DataProbeImpl.class);
+        dataProbe.fluent().addDomain("linagora.com");
+
+        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
+            "--url", "http://127.0.0.1:" + port.getValue(), "user", "create", "hq/tran@linagora.com", "--password", "123456");
+
+        int exitCode1 = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
+            "--url", "http://127.0.0.1:" + port.getValue(), "user", "create", "hqtran@google.com", "--password", "123456");
+
+        assertThat(exitCode).isEqualTo(1);
+        assertThat(exitCode1).isEqualTo(1);
+        assertThat(outputStreamCaptor.toString().trim()).isEqualTo("The user name or the payload is invalid");
+        assertThat(dataProbe.listUsers()).isEmpty();
+    }
+
 }
