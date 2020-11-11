@@ -36,7 +36,7 @@ import org.apache.james.mailbox.model.{MailboxACL, MailboxPath, MessageId}
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
-import org.hamcrest.Matchers.{containsString, emptyOrNullString}
+import org.hamcrest.Matchers.containsString
 import org.junit.jupiter.api.{BeforeEach, Test}
 
 object DownloadContract {
@@ -303,14 +303,17 @@ trait DownloadContract {
         ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
       .getMessageId
 
-    `given`
+    val contentDisposition = `given`
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
       .get(s"/download/$accountId/${messageId.serialize()}_3")
     .`then`
       .statusCode(SC_OK)
-      .header("Content-Disposition",  emptyOrNullString())
+      .extract()
+      .header("Content-Disposition")
+
+    assertThat(contentDisposition).isNullOrEmpty()
   }
 
   @Test
@@ -342,14 +345,16 @@ trait DownloadContract {
         ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
       .getMessageId
 
-    `given`
+    val contentDisposition = `given`
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
       .get(s"/download/$accountId/${messageId.serialize()}")
     .`then`
       .statusCode(SC_OK)
-      .header("Content-Disposition", emptyOrNullString())
+      .extract().header("Content-Disposition")
+
+    assertThat(contentDisposition).isNullOrEmpty()
   }
 
   @Test
