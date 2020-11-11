@@ -827,6 +827,14 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
+    void headerContainsShouldBeCaseInsensitive() throws Exception {
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.headerContains("Precedence", "LiSt"));
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
+            .containsOnly(m1.getUid(), m6.getUid(), m8.getUid(), m9.getUid());
+    }
+
+    @Test
     void headerExistsShouldReturnUidsOfMessageHavingThisHeader() throws Exception {
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.headerExists("Precedence"));
 

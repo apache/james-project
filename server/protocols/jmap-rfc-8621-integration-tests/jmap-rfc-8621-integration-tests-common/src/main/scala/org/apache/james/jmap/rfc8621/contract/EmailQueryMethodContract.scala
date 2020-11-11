@@ -4682,10 +4682,69 @@ trait EmailQueryMethodContract {
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
         messageBuilder.build))
       .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "subject": "paradise"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageId1.serialize}"]""")
+    }
+  }
+
+  @Test
+  def subjectShouldBeCaseInsensitive(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    def messageBuilder = Message.Builder
+      .of
+      .setBody("testmail", StandardCharsets.UTF_8)
+    val messageId1 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+        messageBuilder
+          .setSubject("Yet another day in paradise")
+          .build))
+      .getMessageId
+    val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+        messageBuilder
+          .setSubject("Welcome to hell")
+          .build))
+      .getMessageId
+    val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
+        messageBuilder.build))
+      .getMessageId
     val messageId4 = server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder().build(
         messageBuilder
-          .setSubject("Yet another day in PaRaDiSeS")
+          .setSubject("Yet another day in PaRaDiSe")
           .build))
       .getMessageId
 
