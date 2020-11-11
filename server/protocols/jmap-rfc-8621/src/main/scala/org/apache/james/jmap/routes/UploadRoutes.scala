@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.routes
 
-import java.io.{IOException, InputStream, UncheckedIOException}
+import java.io.InputStream
 import java.util.stream
 import java.util.stream.Stream
 
@@ -50,6 +50,8 @@ import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
+
+case class TooBigUploadException() extends RuntimeException
 
 object UploadRoutes {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[DownloadRoutes])
@@ -96,23 +98,23 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
   def post(request: HttpServerRequest, response: HttpServerResponse): Mono[Void] = {
     request.requestHeaders.get(CONTENT_TYPE) match {
       case contentType => SMono.fromPublisher(
-          authenticator.authenticate(request))
-          .flatMap(session => post(request, response, ContentType.of(contentType), session))
-          .onErrorResume {
-            case e: UnauthorizedException => SMono.fromPublisher(handleAuthenticationFailure(response, LOGGER, e))
-            case e: Throwable => SMono.fromPublisher(handleInternalError(response, LOGGER, e))
-          }
-          .asJava().`then`()
+        authenticator.authenticate(request))
+        .flatMap(session => post(request, response, ContentType.of(contentType), session))
+        .onErrorResume {
+          case e: TooBigUploadException => SMono.fromPublisher(response.status(BAD_REQUEST).sendString(SMono.just("Attempt to upload exceed max size")).`then`())
+          case e: UnauthorizedException => SMono.fromPublisher(handleAuthenticationFailure(response, LOGGER, e))
+          case e: Throwable => SMono.fromPublisher(handleInternalError(response, LOGGER, e))
+        }
+        .asJava()
+        .subscribeOn(Schedulers.elastic())
+        .`then`()
       case _ => response.status(BAD_REQUEST).send
     }
   }
 
-  private def handleUncheckedIOException(response: HttpServerResponse, e: UncheckedIOException) =
-    response.status(BAD_REQUEST).sendString(SMono.just(e.getMessage))
-
   def post(request: HttpServerRequest, response: HttpServerResponse, contentType: ContentType, session: MailboxSession): SMono[Void] = {
     Id.validate(request.param(accountIdParam)) match {
-      case Right(id: Id) => {
+      case Right(id: Id) =>
         val targetAccountId: AccountId = AccountId(id)
         AccountId.from(session.getUser).map(accountId => accountId.equals(targetAccountId))
           .fold[SMono[Void]](
@@ -120,11 +122,9 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
             value => if (value) {
               SMono.fromCallable(() => ReactorUtils.toInputStream(request.receive.asByteBuffer))
               .flatMap(content => handle(targetAccountId, contentType, content, session, response))
-              .subscribeOn(Schedulers.elastic())
             } else {
               SMono.raiseError(new UnauthorizedException("Attempt to upload in another account"))
             })
-      }
 
       case Left(throwable: Throwable) => SMono.raiseError(throwable)
     }
@@ -135,16 +135,13 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
 
     SMono.fromCallable(() => new LimitedInputStream(content, maxSize) {
       override def raiseError(max: Long, count: Long): Unit = if (count > max) {
-        throw new IOException("Attempt to upload exceed max size")
+        throw TooBigUploadException()
       }})
       .flatMap(uploadContent(accountId, contentType, _, mailboxSession))
       .flatMap(uploadResponse => SMono.fromPublisher(response
               .header(CONTENT_TYPE, uploadResponse.`type`.asString())
               .status(CREATED)
               .sendString(SMono.just(serializer.serialize(uploadResponse).toString()))))
-      .onErrorResume {
-        case e: UncheckedIOException => SMono.fromPublisher(handleUncheckedIOException(response, e))
-      }
   }
 
 
