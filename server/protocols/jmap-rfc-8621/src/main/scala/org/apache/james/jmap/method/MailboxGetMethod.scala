@@ -29,7 +29,7 @@ import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
 import org.apache.james.jmap.mail.{Mailbox, MailboxFactory, MailboxGet, MailboxGetRequest, MailboxGetResponse, NotFound, PersonalNamespace, Subscriptions}
 import org.apache.james.jmap.routes.SessionSupplier
-import org.apache.james.jmap.utils.quotas.{QuotaLoader, QuotaLoaderWithPreloadedDefaultFactory}
+import org.apache.james.jmap.utils.quotas.{QuotaLoaderWithPreloadedDefault, QuotaLoaderWithPreloadedDefaultFactory}
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.search.MailboxQuery
 import org.apache.james.mailbox.model.{MailboxId, MailboxMetaData}
@@ -138,23 +138,20 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
     val subscriptions: SMono[Subscriptions] = SMono.fromCallable(() =>
       Subscriptions(subscriptionManager.subscriptions(mailboxSession).asScala.toSet))
 
-    quotaFactory.loadFor(mailboxSession)
-      .flatMap(quotaLoader => subscriptions.map[(QuotaLoader, Subscriptions)](subscriptions => (quotaLoader, subscriptions)))
+    SMono.zip(array => (array(0).asInstanceOf[Seq[MailboxMetaData]],
+          array(1).asInstanceOf[QuotaLoaderWithPreloadedDefault],
+          array(2).asInstanceOf[Subscriptions]),
+        getAllMailboxesMetaData(capabilities, mailboxSession),
+        quotaFactory.loadFor(mailboxSession),
+        subscriptions)
       .subscribeOn(Schedulers.elastic)
-      .flatMap {
-        case (quotaLoader, subscriptions) => getAllMailboxesMetaData(capabilities, mailboxSession)
-          .map((_, quotaLoader, subscriptions))
-      }
       .flatMapMany {
         case (mailboxes, quotaLoader, subscriptions) => SFlux.fromIterable(mailboxes)
-          .map(mailbox => (mailboxes, mailbox, quotaLoader, subscriptions))
-      }
-      .flatMap {
-        case (mailboxes, mailbox, quotaLoader, subs) => mailboxFactory.create(mailboxMetaData = mailbox,
-          mailboxSession = mailboxSession,
-          subscriptions = subs,
-          allMailboxesMetadata = mailboxes,
-          quotaLoader = quotaLoader)
+          .flatMap(mailbox => mailboxFactory.create(mailboxMetaData = mailbox,
+            mailboxSession = mailboxSession,
+            subscriptions = subscriptions,
+            allMailboxesMetadata = mailboxes,
+            quotaLoader = quotaLoader))
       }
   }
 
