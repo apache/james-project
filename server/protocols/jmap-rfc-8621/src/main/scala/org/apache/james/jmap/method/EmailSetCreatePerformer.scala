@@ -35,6 +35,7 @@ import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.exception.{AttachmentNotFoundException, MailboxNotFoundException}
 import org.apache.james.mailbox.model.MailboxId
 import org.apache.james.mailbox.{AttachmentContentLoader, AttachmentManager, MailboxManager, MailboxSession}
+import org.apache.james.util.html.HtmlTextExtractor
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
@@ -71,6 +72,7 @@ object EmailSetCreatePerformer {
 class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
                                         attachmentManager: AttachmentManager,
                                         attachmentContentLoader: AttachmentContentLoader,
+                                        htmlTextExtractor: HtmlTextExtractor,
                                         mailboxManager: MailboxManager) {
 
   def create(request: EmailSetRequest, mailboxSession: MailboxSession): SMono[CreationResults] =
@@ -87,7 +89,7 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
     if (mailboxIds.size != 1) {
       SMono.just(CreationFailure(clientId, new IllegalArgumentException("mailboxIds need to have size 1")))
     } else {
-      request.toMime4JMessage(attachmentManager, attachmentContentLoader, mailboxSession)
+      request.toMime4JMessage(attachmentManager, attachmentContentLoader, htmlTextExtractor, mailboxSession)
         .fold(e => SMono.just(CreationFailure(clientId, e)),
           message => SMono.fromCallable[CreationResult](() => {
             val appendResult = mailboxManager.getMailbox(mailboxIds.head, mailboxSession)

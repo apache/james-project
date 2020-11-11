@@ -19,10 +19,12 @@
 package org.apache.james.jmap.mail
 
 import java.io.IOException
-import java.nio.charset.StandardCharsets
+import java.nio.charset.{StandardCharsets, Charset => NioCharset}
 import java.util.Date
 
 import cats.implicits._
+import com.google.common.net.MediaType
+import com.google.common.net.MediaType.{HTML_UTF_8, PLAIN_TEXT_UTF_8}
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
@@ -41,7 +43,8 @@ import org.apache.james.mime4j.dom.field.{ContentIdField, ContentTypeField, Fiel
 import org.apache.james.mime4j.dom.{Entity, Message}
 import org.apache.james.mime4j.field.Fields
 import org.apache.james.mime4j.message.{BodyPartBuilder, MultipartBuilder}
-import org.apache.james.mime4j.stream.{Field, RawField}
+import org.apache.james.mime4j.stream.{Field, NameValuePair, RawField}
+import org.apache.james.util.html.HtmlTextExtractor
 import play.api.libs.json.JsObject
 
 import scala.jdk.CollectionConverters._
@@ -66,6 +69,7 @@ object SubType {
   val HTML_SUBTYPE = "html"
   val MIXED_SUBTYPE = "mixed"
   val RELATED_SUBTYPE = "related"
+  val ALTERNATIVE_SUBTYPE = "alternative"
 }
 
 case class ClientPartId(id: Id)
@@ -119,7 +123,10 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
                                 bodyValues: Option[Map[ClientPartId, ClientEmailBodyValue]],
                                 specificHeaders: List[EmailHeader],
                                 attachments: Option[List[Attachment]]) {
-  def toMime4JMessage(attachmentManager: AttachmentManager, attachmentContentLoader: AttachmentContentLoader, mailboxSession: MailboxSession): Either[Exception, Message] =
+  def toMime4JMessage(attachmentManager: AttachmentManager,
+                      attachmentContentLoader: AttachmentContentLoader,
+                      htmlTextExtractor: HtmlTextExtractor,
+                      mailboxSession: MailboxSession): Either[Exception, Message] =
     validateHtmlBody
       .flatMap(maybeHtmlBody => {
         val builder = Message.Builder.of
@@ -138,19 +145,37 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
           .flatMap(_ => {
             specificHeaders.map(_.asField).foreach(builder.addField)
             attachments.filter(_.nonEmpty).map(attachments =>
-              createMultipartWithAttachments(maybeHtmlBody, attachments, attachmentManager, attachmentContentLoader, mailboxSession)
+              createMultipartWithAttachments(maybeHtmlBody, attachments, attachmentManager, attachmentContentLoader, htmlTextExtractor, mailboxSession)
                 .map(multipartBuilder => {
                   builder.setBody(multipartBuilder)
                   builder.build
                 }))
-              .getOrElse(Right(builder.setBody(maybeHtmlBody.getOrElse(""), SubType.HTML_SUBTYPE, StandardCharsets.UTF_8).build))
+              .getOrElse({
+                builder.setBody(createAlternativeBody(maybeHtmlBody, htmlTextExtractor))
+                Right(builder.build)
+              })
           })
       })
+
+  private def createAlternativeBody(htmlBody: Option[String], htmlTextExtractor: HtmlTextExtractor): MultipartBuilder = {
+    val alternativeBuilder: MultipartBuilder = MultipartBuilder.create(SubType.ALTERNATIVE_SUBTYPE)
+    addBodypart(alternativeBuilder, htmlBody.getOrElse(""), HTML_UTF_8, StandardCharsets.UTF_8)
+    addBodypart(alternativeBuilder, htmlTextExtractor.toPlainText(htmlBody.getOrElse("")), PLAIN_TEXT_UTF_8, StandardCharsets.UTF_8)
+
+    alternativeBuilder
+  }
+
+  private def addBodypart(multipartBuilder: MultipartBuilder, body: String, mediaType: MediaType, charset: NioCharset): MultipartBuilder =
+    multipartBuilder.addBodyPart(
+      BodyPartBuilder.create.setBody(body, charset)
+      .setContentType(mediaType.withoutParameters().toString, new NameValuePair("charset", charset.name))
+      .setContentTransferEncoding("quoted-printable"))
 
   private def createMultipartWithAttachments(maybeHtmlBody: Option[String],
                                              attachments: List[Attachment],
                                              attachmentManager: AttachmentManager,
                                              attachmentContentLoader: AttachmentContentLoader,
+                                             htmlTextExtractor: HtmlTextExtractor,
                                              mailboxSession: MailboxSession): Either[Exception, MultipartBuilder] = {
     val maybeAttachments: Either[Exception, List[(Attachment, AttachmentMetadata, Array[Byte])]] =
       attachments
@@ -162,17 +187,20 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
     maybeAttachments.map(list => {
 
       (list.filter(_._1.isInline), list.filter(!_._1.isInline)) match {
-        case (Nil, normalAttachments) => createMixedBody(maybeHtmlBody, normalAttachments)
-        case (inlineAttachments, Nil) => createRelatedBody(maybeHtmlBody, inlineAttachments)
-        case (inlineAttachments, normalAttachments) => createMixedRelatedBody(maybeHtmlBody, inlineAttachments, normalAttachments)
+        case (Nil, normalAttachments) => createMixedBody(maybeHtmlBody, normalAttachments, htmlTextExtractor)
+        case (inlineAttachments, Nil) => createRelatedBody(maybeHtmlBody, inlineAttachments, htmlTextExtractor)
+        case (inlineAttachments, normalAttachments) => createMixedRelatedBody(maybeHtmlBody, inlineAttachments, normalAttachments, htmlTextExtractor)
       }
     })
   }
 
-  private def createMixedRelatedBody(maybeHtmlBody: Option[String], inlineAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])], normalAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])]) = {
+  private def createMixedRelatedBody(maybeHtmlBody: Option[String],
+                                     inlineAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])],
+                                     normalAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])],
+                                     htmlTextExtractor: HtmlTextExtractor) = {
     val mixedMultipartBuilder = MultipartBuilder.create(SubType.MIXED_SUBTYPE)
     val relatedMultipartBuilder = MultipartBuilder.create(SubType.RELATED_SUBTYPE)
-    relatedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(maybeHtmlBody.getOrElse(""), SubType.HTML_SUBTYPE, StandardCharsets.UTF_8).build)
+    relatedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(createAlternativeBody(maybeHtmlBody, htmlTextExtractor).build))
     inlineAttachments.foldLeft(relatedMultipartBuilder) {
       case (acc, (attachment, storedMetadata, content)) =>
         acc.addBodyPart(toBodypartBuilder(attachment, storedMetadata, content))
@@ -188,9 +216,9 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
     }
   }
 
-  private def createMixedBody(maybeHtmlBody: Option[String], normalAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])]) = {
+  private def createMixedBody(maybeHtmlBody: Option[String], normalAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])], htmlTextExtractor: HtmlTextExtractor) = {
     val mixedMultipartBuilder = MultipartBuilder.create(SubType.MIXED_SUBTYPE)
-    mixedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(maybeHtmlBody.getOrElse(""), SubType.HTML_SUBTYPE, StandardCharsets.UTF_8).build)
+    mixedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(createAlternativeBody(maybeHtmlBody, htmlTextExtractor).build))
     normalAttachments.foldLeft(mixedMultipartBuilder) {
       case (acc, (attachment, storedMetadata, content)) =>
         acc.addBodyPart(toBodypartBuilder(attachment, storedMetadata, content))
@@ -198,9 +226,9 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
     }
   }
 
-  private def createRelatedBody(maybeHtmlBody: Option[String], inlineAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])]) = {
+  private def createRelatedBody(maybeHtmlBody: Option[String], inlineAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])], htmlTextExtractor: HtmlTextExtractor) = {
     val relatedMultipartBuilder = MultipartBuilder.create(SubType.RELATED_SUBTYPE)
-    relatedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(maybeHtmlBody.getOrElse(""), SubType.HTML_SUBTYPE, StandardCharsets.UTF_8).build)
+    relatedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(createAlternativeBody(maybeHtmlBody, htmlTextExtractor).build))
     inlineAttachments.foldLeft(relatedMultipartBuilder) {
       case (acc, (attachment, storedMetadata, content)) =>
         acc.addBodyPart(toBodypartBuilder(attachment, storedMetadata, content))
