@@ -45,4 +45,9 @@ public class MemoryEmailSetMethodTest implements EmailSetMethodContract {
     public MessageId randomMessageId() {
         return InMemoryMessageId.of(ThreadLocalRandom.current().nextInt(100000) + 100);
     }
+
+    @Override
+    public String invalidMessageIdMessage(String invalid) {
+        return String.format("For input string: \\\"%s\\\"", invalid);
+    }
 }

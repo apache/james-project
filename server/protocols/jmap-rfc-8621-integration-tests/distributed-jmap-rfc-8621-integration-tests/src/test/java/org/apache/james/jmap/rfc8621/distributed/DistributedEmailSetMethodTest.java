@@ -62,4 +62,9 @@ public class DistributedEmailSetMethodTest implements EmailSetMethodContract {
     public MessageId randomMessageId() {
         return MESSAGE_ID_FACTORY.of(UUIDs.timeBased());
     }
+
+    @Override
+    public String invalidMessageIdMessage(String invalid) {
+        return String.format("Invalid UUID string: %s", invalid);
+    }
 }

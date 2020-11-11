@@ -46,7 +46,7 @@ object EmailSetUpdatePerformer {
   case class EmailUpdateSuccess(messageId: MessageId) extends EmailUpdateResult
   case class EmailUpdateFailure(unparsedMessageId: UnparsedMessageId, e: Throwable) extends EmailUpdateResult {
     def asMessageSetError: SetError = e match {
-      case e: IllegalArgumentException => SetError.invalidPatch(SetErrorDescription(s"Message $unparsedMessageId update is invalid: ${e.getMessage}"))
+      case e: IllegalArgumentException => SetError.invalidPatch(SetErrorDescription(s"Message update is invalid: ${e.getMessage}"))
       case _: MailboxNotFoundException => SetError.notFound(SetErrorDescription(s"Mailbox not found"))
       case e: MessageNotFoundException => SetError.notFound(SetErrorDescription(s"Cannot find message with messageId: ${e.messageId.serialize()}"))
       case _ => SetError.serverFail(SetErrorDescription(e.getMessage))

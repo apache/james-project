@@ -2417,7 +2417,7 @@ trait EmailGetMethodContract {
          |                        "threadId": "${messageId.serialize}",
          |                        "size": 2695,
          |                        "keywords": {},
-         |                        "blobId": "1",
+         |                        "blobId": "${messageId.serialize}",
          |                        "mailboxIds": {"${mailboxId.serialize}": true},
          |                        "id": "${messageId.serialize}",
          |                        "receivedAt": "2014-10-30T14:12:00Z",
@@ -5885,7 +5885,7 @@ trait EmailGetMethodContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
         s"""{
-           |    "id": "1",
+           |    "id": "${messageId.serialize}",
            |    "header:Bcc:asRaw": " \\"user3\\" user3@domain.tld",
            |    "header:MessageId:asRaw": null,
            |    "header:ReplyTo:asRaw": " \\"user1\\" user1@domain.tld",
