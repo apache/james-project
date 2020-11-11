@@ -108,7 +108,8 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
       case Some(ids) => SFlux.fromIterable(ids.value)
         .flatMap(id => Try(mailboxIdFactory.fromString(id.value))
           .fold(e => SMono.just(MailboxGetResults.notFound(id)),
-            mailboxId => getMailboxResultById(capabilities, mailboxId, mailboxSession)))
+            mailboxId => getMailboxResultById(capabilities, mailboxId, mailboxSession)),
+          maxConcurrency = 5)
     }
 
   private def getMailboxResultById(capabilities: Set[CapabilityIdentifier],

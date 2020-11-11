@@ -92,7 +92,7 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
               e => SMono.just(MailboxUpdateFailure(unparsedMailboxId, e, None)),
               mailboxId => updateMailbox(mailboxSession, mailboxId, unparsedMailboxId, patch, capabilities))
             .onErrorResume(e => SMono.just(MailboxUpdateFailure(unparsedMailboxId, e, None)))
-      })
+      }, maxConcurrency = 5)
       .collectSeq()
       .map(MailboxUpdateResults)
   }
@@ -216,9 +216,8 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
     }).getOrElse(SMono.empty)
 
     val partialUpdatesOperation: SMono[Unit] = SFlux.fromIterable(validatedPatch.rightsPartialUpdates)
-      .flatMap(partialUpdate => SMono.fromCallable(() => {
-        mailboxManager.applyRightsCommand(mailboxId, partialUpdate.asACLCommand(), mailboxSession)
-      }))
+      .flatMap(partialUpdate => SMono.fromCallable(() => mailboxManager.applyRightsCommand(mailboxId, partialUpdate.asACLCommand(), mailboxSession)),
+        maxConcurrency = 5)
       .`then`()
 
     SFlux.merge(Seq(resetOperation, partialUpdatesOperation))

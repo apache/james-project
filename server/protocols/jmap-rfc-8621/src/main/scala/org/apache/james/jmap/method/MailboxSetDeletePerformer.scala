@@ -67,7 +67,8 @@ class MailboxSetDeletePerformer @Inject()(mailboxManager: MailboxManager,
   def deleteMailboxes(mailboxSession: MailboxSession, mailboxSetRequest: MailboxSetRequest): SMono[MailboxDeletionResults] = {
     SFlux.fromIterable(mailboxSetRequest.destroy.getOrElse(Seq()))
       .flatMap(id => delete(mailboxSession, id, mailboxSetRequest.onDestroyRemoveEmails.getOrElse(RemoveEmailsOnDestroy(false)))
-        .onErrorRecover(e => MailboxDeletionFailure(id, e)))
+        .onErrorRecover(e => MailboxDeletionFailure(id, e)),
+        maxConcurrency = 5)
       .collectSeq()
       .map(MailboxDeletionResults)
   }
