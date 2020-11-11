@@ -147,6 +147,7 @@ public class MailboxMappingFactory {
 
                         .startObject(USER_FLAGS)
                             .field(TYPE, KEYWORD)
+                            .field(NORMALIZER, CASE_INSENSITIVE)
                         .endObject()
 
                         .startObject(MEDIA_TYPE)
