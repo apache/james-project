@@ -100,11 +100,6 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-guice-activemq</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-configuration</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -254,6 +249,11 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>mailrepository-cassandra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>queue-activemq-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
