@@ -23,14 +23,14 @@ for this component.
 
 Relying on more software for every read also harms our resiliency as ElasticSearch outages have major impacts.
 
-Also we should mention our ElasticSearch implementation in Distributed James suffer the following flows:
- - Updates of flags leads to updates of the all Email object, leading to sparse segments
+Also we should mention our ElasticSearch implementation in Distributed James suffers the following flaws:
+ - Updates of flags lead to updates of the all Email object, leading to sparse segments
  - We currently rely on scrolling for JMAP (in order to ensure messageId uniqueness in the response while respecting limit & position)
  - We noticed some very slow traces against ElasticSearch, even for simple queries.
 
 Regarding Distributed James data-stores responsibilities:
- - Cassandra is the source of truth for metadata, its storage need to be adapted to known access patterns.
- - ElasticSearch allows resolution of arbitrary queries, and perform full text search.
+ - Cassandra is the source of truth for metadata, its storage needs to be adapted to known access patterns.
+ - ElasticSearch allows resolution of arbitrary queries, and performs full text search.
 
 ## Decision
 
@@ -47,9 +47,100 @@ Administrators would be offered a configuration option to turn this view on and 
 
 If enabled administrators would no longer need to ensure high availability and good performances for ElasticSearch.
 We thus expect a decrease in overall ElasticSearch load, allowing savings compared to actual deployments.
-Furthermore, we expected better performances by resolving such queries against Cassandra.
+Furthermore, we expect better performances by resolving such queries against Cassandra.
 
 ## Alternatives
 
 Those not willing to adopt this view will not be affected. By disabling the listener and the view usage, they will keep
 resolving all `Email/query` against ElasticSearch.
+
+## Example of optimized JMAP requests
+
+### A: Email list sorted by sentAt, with limit
+
+RFC-8621:
+
+```
+["Email/query",
+ {
+   "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+   "filter: {
+       "inMailbox":"abcd"
+   }
+   "comparator": [{
+     "property":"sentAt",
+     "isAscending": false
+   }]
+ },
+ "c1"]
+```
+
+Draft:
+
+```
+[["getMessageList", {"filter":{"inMailboxes": ["abcd"]}, "sort": ["date desc"]}, "#0"]]
+```
+
+### B: Email list sorted by sentAt, with limit, after a given receivedAt date
+
+RFC-8621:
+
+```
+["Email/query",
+ {
+   "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+   "filter: {
+       "inMailbox":"abcd",
+       "after": "aDate"
+   }
+   "comparator": [{
+     "property":"sentAt",
+     "isAscending": false
+   }]
+ },
+ "c1"]
+```
+
+### C: Email list sorted by sentAt, with limit, after a given sentAt date
+
+Draft:
+
+```
+[["getMessageList", {"filter":{"after":"aDate", "inMailboxes": ["abcd"]}, "sort": ["date desc"]}, "#0"]]
+```
+
+## Cassandra table structure
+
+Several tables are required in order to implement this view on top of Cassandra.
+
+Eventual denormalization consistency can be enforced by using BATCH statements.
+
+A table allows sorting messages of a mailbox by sentAt, allows answering A and C:
+
+```
+TABLE email_query_view_sent_at
+PRIMARY KEY mailboxId
+CLUSTERING COLUMN sentAt
+CLUSTERING COLUMN messageId
+```
+
+A table allows filtering emails after a receivedAt date. Given a limited number of results, soft sorting and limits can
+be applied using the sentAt column. This allows answering B:
+
+```
+TABLE email_query_view_sent_at
+PRIMARY KEY mailboxId
+CLUSTERING COLUMN receivedAt
+CLUSTERING COLUMN messageId
+COLUMN sentAt
+```
+
+Finally upon deletes, receivedAt and sentAt should be known. Thus we need to provide a lookup table:
+
+```
+TABLE email_query_view_date_lookup
+PRIMARY KEY mailboxId
+CLUSTERING COLUMN messageId
+COLUMN sentAt
+COLUMN receivedAt
+```
