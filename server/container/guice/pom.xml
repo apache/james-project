@@ -77,7 +77,7 @@
         <module>protocols/webadmin-swagger</module>
         <module>protocols/webadmin-mail-over-web</module>
         <module>queue/activemq</module>
-        <module>rabbitmq</module>
+        <module>queue/rabbitmq</module>
         <module>testing</module>
         <module>sieve-file</module>
         <module>sieve-jpa</module>
