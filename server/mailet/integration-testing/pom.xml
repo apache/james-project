@@ -55,11 +55,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-activemq</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-common</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -96,6 +91,11 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>mock-smtp-server</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>queue-activemq-guice</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

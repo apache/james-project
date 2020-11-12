@@ -1450,11 +1450,6 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-guice-activemq</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1935,6 +1930,11 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>mock-smtp-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>queue-activemq-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

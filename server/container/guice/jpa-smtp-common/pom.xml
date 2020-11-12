@@ -39,10 +39,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-activemq</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-common</artifactId>
         </dependency>
         <dependency>
@@ -72,6 +68,10 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-jpa-common-guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>queue-activemq-guice</artifactId>
         </dependency>
         <dependency>
             <groupId>com.linagora</groupId>

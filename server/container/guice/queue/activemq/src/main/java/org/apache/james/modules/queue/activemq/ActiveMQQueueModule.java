@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.activemq;
+package org.apache.james.modules.queue.activemq;
 
 import javax.jms.ConnectionFactory;
 
