@@ -35,7 +35,7 @@ import org.apache.james.modules.mailbox.KeyspacesConfiguration;
 import org.apache.james.modules.objectstorage.DefaultBucketModule;
 import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType;
-import org.apache.james.modules.rabbitmq.RabbitMQModule;
+import org.apache.james.modules.queue.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
