@@ -77,6 +77,7 @@
         <module>protocols/webadmin-swagger</module>
         <module>protocols/webadmin-mail-over-web</module>
         <module>queue/activemq</module>
+        <module>queue/memory</module>
         <module>queue/rabbitmq</module>
         <module>testing</module>
         <module>sieve-file</module>
@@ -253,6 +254,11 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>mailrepository-cassandra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>queue-memory-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
