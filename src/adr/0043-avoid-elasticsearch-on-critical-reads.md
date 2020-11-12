@@ -122,6 +122,7 @@ TABLE email_query_view_sent_at
 PRIMARY KEY mailboxId
 CLUSTERING COLUMN sentAt
 CLUSTERING COLUMN messageId
+ORDERED BY sentAt
 ```
 
 A table allows filtering emails after a receivedAt date. Given a limited number of results, soft sorting and limits can
@@ -133,6 +134,7 @@ PRIMARY KEY mailboxId
 CLUSTERING COLUMN receivedAt
 CLUSTERING COLUMN messageId
 COLUMN sentAt
+ORDERED BY receivedAt
 ```
 
 Finally upon deletes, receivedAt and sentAt should be known. Thus we need to provide a lookup table:
