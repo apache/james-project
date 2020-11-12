@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.rabbitmq;
+package org.apache.james.modules.queue.rabbitmq;
 
 import java.io.FileNotFoundException;
 

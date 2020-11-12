@@ -108,12 +108,12 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-rabbitmq</artifactId>
+            <artifactId>james-server-testing</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-testing</artifactId>
-            <scope>test</scope>
+            <artifactId>queue-rabbitmq-guice</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
