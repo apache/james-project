@@ -43,7 +43,7 @@ import com.google.common.collect.ImmutableSet;
 
 class CamelMailetContainerModuleTest {
 
-    public static final ImmutableSet<CamelMailetContainerModule.TransportProcessorCheck> NO_TRANSPORT_CHECKS = ImmutableSet.of();
+    public static final ImmutableSet<CamelMailetContainerModule.ProcessorsCheck> NO_TRANSPORT_CHECKS = ImmutableSet.of();
 
     @Test
     void getMailetContextConfigurationShouldReturnEmptyWhenNoContextSection() throws Exception {

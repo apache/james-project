@@ -38,6 +38,7 @@ import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Lists;
 
 class MailetPreconditionTest {
@@ -49,7 +50,7 @@ class MailetPreconditionTest {
     class VacationMailetCheck {
         @Test
         void vacationMailetCheckShouldThrowOnEmptyList() {
-            assertThatThrownBy(() -> JMAPModule.VACATION_MAILET_CHECK.check(Lists.newArrayList()))
+            assertThatThrownBy(() -> JMAPModule.VACATION_MAILET_CHECK.check(ImmutableMultimap.of()))
                 .isInstanceOf(ConfigurationException.class);
         }
 
@@ -61,25 +62,29 @@ class MailetPreconditionTest {
 
         @Test
         void vacationMailetCheckShouldThrowOnWrongMatcher() {
-            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), new VacationMailet(null, null, null, null, null)));
-
-            assertThatThrownBy(() -> JMAPModule.VACATION_MAILET_CHECK.check(pairs))
+            assertThatThrownBy(() -> JMAPModule.VACATION_MAILET_CHECK.check(ImmutableMultimap.of(
+                "transport", new MatcherMailetPair(new All(), new VacationMailet(null, null, null, null, null)))))
                 .isInstanceOf(ConfigurationException.class);
         }
 
         @Test
         void vacationMailetCheckShouldThrowOnWrongMailet() {
-            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(), new Null()));
-
-            assertThatThrownBy(() -> JMAPModule.VACATION_MAILET_CHECK.check(pairs))
+            assertThatThrownBy(() -> JMAPModule.VACATION_MAILET_CHECK.check(ImmutableMultimap.of(
+                "transport", new MatcherMailetPair(new All(), new Null()))))
                 .isInstanceOf(ConfigurationException.class);
         }
 
         @Test
         void vacationMailetCheckShouldNotThrowIfValidPairPresent() {
-            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(), new VacationMailet(null, null, null, null, null)));
+            assertThatCode(() -> JMAPModule.VACATION_MAILET_CHECK.check(ImmutableMultimap.of(
+                "transport", new MatcherMailetPair(new RecipientIsLocal(), new VacationMailet(null, null, null, null, null)))))
+                .doesNotThrowAnyException();
+        }
 
-            assertThatCode(() -> JMAPModule.VACATION_MAILET_CHECK.check(pairs))
+        @Test
+        void vacationMailetCheckShouldSupportLocalDeliveryProcessor() {
+            assertThatCode(() -> JMAPModule.VACATION_MAILET_CHECK.check(ImmutableMultimap.of(
+                "local-delivery", new MatcherMailetPair(new All(), new VacationMailet(null, null, null, null, null)))))
                 .doesNotThrowAnyException();
         }
     }
@@ -88,7 +93,7 @@ class MailetPreconditionTest {
     class FilteringMailetCheck {
         @Test
         void filteringMailetCheckShouldThrowOnEmptyList() {
-            assertThatThrownBy(() -> JMAPModule.FILTERING_MAILET_CHECK.check(Lists.newArrayList()))
+            assertThatThrownBy(() -> JMAPModule.FILTERING_MAILET_CHECK.check(ImmutableMultimap.of()))
                 .isInstanceOf(ConfigurationException.class);
         }
 
@@ -100,7 +105,7 @@ class MailetPreconditionTest {
 
         @Test
         void filteringMailetCheckShouldThrowOnWrongMatcher() {
-            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), new JMAPFiltering(null, null, null)));
+            ImmutableMultimap<String, MatcherMailetPair> pairs = ImmutableMultimap.of("tansport", new MatcherMailetPair(new All(), new JMAPFiltering(null, null, null)));
 
             assertThatThrownBy(() -> JMAPModule.FILTERING_MAILET_CHECK.check(pairs))
                 .isInstanceOf(ConfigurationException.class);
@@ -108,7 +113,7 @@ class MailetPreconditionTest {
 
         @Test
         void filteringMailetCheckShouldThrowOnWrongMailet() {
-            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(), new Null()));
+            ImmutableMultimap<String, MatcherMailetPair> pairs = ImmutableMultimap.of("tansport", new MatcherMailetPair(new All(), new Null()));
 
             assertThatThrownBy(() -> JMAPModule.FILTERING_MAILET_CHECK.check(pairs))
                 .isInstanceOf(ConfigurationException.class);
@@ -116,7 +121,15 @@ class MailetPreconditionTest {
 
         @Test
         void filteringMailetCheckShouldNotThrowIfValidPairPresent() {
-            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(), new JMAPFiltering(null, null, null)));
+            ImmutableMultimap<String, MatcherMailetPair> pairs = ImmutableMultimap.of("transport", new MatcherMailetPair(new RecipientIsLocal(), new JMAPFiltering(null, null, null)));
+
+            assertThatCode(() -> JMAPModule.FILTERING_MAILET_CHECK.check(pairs))
+                .doesNotThrowAnyException();
+        }
+
+        @Test
+        void filteringMailetCheckShouldSupportLocalDeliveryProcessor() {
+            ImmutableMultimap<String, MatcherMailetPair> pairs = ImmutableMultimap.of("local-delivery", new MatcherMailetPair(new All(), new JMAPFiltering(null, null, null)));
 
             assertThatCode(() -> JMAPModule.FILTERING_MAILET_CHECK.check(pairs))
                 .doesNotThrowAnyException();
@@ -127,7 +140,7 @@ class MailetPreconditionTest {
     class BccCheck {
         @Test
         void bccMailetCheckShouldThrowOnEmptyList() {
-            assertThatThrownBy(() -> CamelMailetContainerModule.BCC_Check.check(Lists.newArrayList()))
+            assertThatThrownBy(() -> CamelMailetContainerModule.BCC_Check.check(ImmutableMultimap.of()))
                 .isInstanceOf(ConfigurationException.class);
         }
 
@@ -139,7 +152,7 @@ class MailetPreconditionTest {
 
         @Test
         void bccMailetCheckShouldThrowOnWrongMatcher() {
-            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(), new RemoveMimeHeader()));
+            ImmutableMultimap<String, MatcherMailetPair> pairs = ImmutableMultimap.of("tansport", new MatcherMailetPair(new RecipientIsLocal(), new RemoveMimeHeader()));
 
             assertThatThrownBy(() -> CamelMailetContainerModule.BCC_Check.check(pairs))
                 .isInstanceOf(ConfigurationException.class);
@@ -147,7 +160,7 @@ class MailetPreconditionTest {
 
         @Test
         void bccMailetCheckShouldThrowOnWrongMailet() {
-            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), new Null()));
+            ImmutableMultimap<String, MatcherMailetPair> pairs = ImmutableMultimap.of("tansport", new MatcherMailetPair(new All(), new Null()));
 
             assertThatThrownBy(() -> CamelMailetContainerModule.BCC_Check.check(pairs))
                 .isInstanceOf(ConfigurationException.class);
@@ -162,7 +175,7 @@ class MailetPreconditionTest {
                 .setProperty("name", "bad")
                 .build());
 
-            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), removeMimeHeader));
+            ImmutableMultimap<String, MatcherMailetPair> pairs = ImmutableMultimap.of("tansport", new MatcherMailetPair(new All(), removeMimeHeader));
 
             assertThatThrownBy(() -> CamelMailetContainerModule.BCC_Check.check(pairs))
                 .isInstanceOf(ConfigurationException.class);
@@ -177,7 +190,7 @@ class MailetPreconditionTest {
                 .setProperty("name", BCC)
                 .build());
 
-            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), removeMimeHeader));
+            ImmutableMultimap<String, MatcherMailetPair> pairs = ImmutableMultimap.of("transport", new MatcherMailetPair(new All(), removeMimeHeader));
             assertThatCode(() -> CamelMailetContainerModule.BCC_Check.check(pairs))
                 .doesNotThrowAnyException();
         }

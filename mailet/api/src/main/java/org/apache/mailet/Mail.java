@@ -78,10 +78,28 @@ import com.google.common.collect.ImmutableMap;
  * {@link #removeAllAttributes() all} attributes of a Mail instance.
  */
 public interface Mail extends Serializable, Cloneable {
+    /**
+     * "ghost" state applies to mail that should no longer be processed
+     */
     String GHOST = "ghost";
+    /**
+     * "root" state applies to mail entering mail processing
+     */
     String DEFAULT = "root";
+    /**
+     * "error" state applies to mail whose processing fails. This is the default
+     * way of handling errors.
+     */
     String ERROR = "error";
+    /**
+     * "transport" is commonly used for expressing decisions taken on an email
+     * (whether to relay it? Deliver it to local recipients? Etc...).
+     */
     String TRANSPORT = "transport";
+    /**
+     * "local-delivery" is commonly used operations to perform for local recipients upon receiving emails.
+     */
+    String LOCAL_DELIVERY = "local-delivery";
 
     AttributeName SMTP_AUTH_USER = AttributeName.of("org.apache.james.SMTPAuthUser");
     AttributeName MAILET_ERROR = AttributeName.of("org.apache.james.MailetError");
