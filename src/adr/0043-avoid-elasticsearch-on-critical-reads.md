@@ -17,7 +17,7 @@ A user willing to use a webmail powered by the JMAP protocol will end up doing t
  - `Email/get` to retrieve various levels of details. Depending on requested properties, this is either
  retrieved from Cassandra alone or from ObjectStorage.
 
-So, ElasticSearch is queried on every JMAP interaction. Administrators thus need to enforce availability and good performance
+So, ElasticSearch is queried on every JMAP interaction for listing emails. Administrators thus need to enforce availability and good performance
 for this component.
 
 Relying on more services for every read also harms our resiliency as ElasticSearch outages have major impacts.
