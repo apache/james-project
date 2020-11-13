@@ -10,13 +10,12 @@ Scope: Distributed James
 
 ## Context
 
-James powers the JMAP protocol.
-
-A user willing to use a webmail will end up doing the following operations:
+A user willing to use a webmail powered by the JMAP protocol will end up doing the following operations:
  - `Mailbox/get` to retrieve the mailboxes. This call is resolved against metadata stored in Cassandra.
- - `Email/query` to retrieve the list of emails. This call is nowadays resolved on ElasticSearch.
+ - `Email/query` to retrieve the list of emails. This call is nowadays resolved on ElasticSearch for Email search after
+ a right resolution pass against Cassandra.
  - `Email/get` to retrieve various levels of details. Depending of requested properties, this is either
- resolved on Cassandra alone or on ElasticSearch.
+ resolved on Cassandra alone or on ObjectStorage.
 
 So, ElasticSearch is queried on every JMAP interaction. Administrators thus need to enforce availability and good performance
 for this component.
@@ -49,6 +48,9 @@ If enabled administrators would no longer need to ensure high availability and g
 We thus expect a decrease in overall ElasticSearch load, allowing savings compared to actual deployments.
 Furthermore, we expect better performances by resolving such queries against Cassandra.
 
+The expected added load to Cassandra is low, as the search is a simple Cassandra read. As we only store messageId,
+Cassandra dataset size will only grow of a few percents if enabled.
+
 ## Alternatives
 
 Those not willing to adopt this view will not be affected. By disabling the listener and the view usage, they will keep
@@ -70,7 +72,9 @@ RFC-8621:
    "comparator": [{
      "property":"sentAt",
      "isAscending": false
-   }]
+   }],
+   "position": 30,
+   "limit": 30
  },
  "c1"]
 ```
@@ -96,10 +100,15 @@ RFC-8621:
    "comparator": [{
      "property":"sentAt",
      "isAscending": false
-   }]
+   }],
+   "position": 30,
+   "limit": 30
  },
  "c1"]
 ```
+
+Draft: Draft do only expose a single date property thus do not differenciate sentAt from receivedAt. Draft adopts sentAt
+to back the date property up, thus the above request cannot be written using draft syntax.
 
 ### C: Email list sorted by sentAt, with limit, after a given sentAt date
 
@@ -108,6 +117,8 @@ Draft:
 ```
 [["getMessageList", {"filter":{"after":"aDate", "inMailboxes": ["abcd"]}, "sort": ["date desc"]}, "#0"]]
 ```
+
+RFC-8621: There is no filter properties targeting "sentAt" thus the above request cannot be written.
 
 ## Cassandra table structure
 
