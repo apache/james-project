@@ -27,6 +27,7 @@ import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
+import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.api.projections.MessageFastViewProjectionHealthCheck;
 import org.apache.james.jmap.api.vacation.NotificationRegistry;
@@ -34,6 +35,7 @@ import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.cassandra.access.CassandraAccessModule;
 import org.apache.james.jmap.cassandra.access.CassandraAccessTokenRepository;
 import org.apache.james.jmap.cassandra.filtering.FilteringRuleSetDefineDTOModules;
+import org.apache.james.jmap.cassandra.projections.CassandraEmailQueryView;
 import org.apache.james.jmap.cassandra.projections.CassandraMessageFastViewProjection;
 import org.apache.james.jmap.cassandra.projections.CassandraMessageFastViewProjectionModule;
 import org.apache.james.jmap.cassandra.vacation.CassandraNotificationRegistry;
@@ -68,6 +70,9 @@ public class CassandraJmapModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), HealthCheck.class)
             .addBinding()
             .to(MessageFastViewProjectionHealthCheck.class);
+
+        bind(CassandraEmailQueryView.class).in(Scopes.SINGLETON);
+        bind(EmailQueryView.class).to(CassandraEmailQueryView.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(CassandraAccessModule.MODULE);

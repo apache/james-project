@@ -23,11 +23,13 @@ import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
+import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.api.projections.MessageFastViewProjectionHealthCheck;
 import org.apache.james.jmap.api.vacation.NotificationRegistry;
 import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
+import org.apache.james.jmap.memory.projections.MemoryEmailQueryView;
 import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
 import org.apache.james.jmap.memory.vacation.MemoryNotificationRegistry;
 import org.apache.james.jmap.memory.vacation.MemoryVacationRepository;
@@ -60,6 +62,9 @@ public class MemoryDataJmapModule extends AbstractModule {
 
         bind(MemoryMessageFastViewProjection.class).in(Scopes.SINGLETON);
         bind(MessageFastViewProjection.class).to(MemoryMessageFastViewProjection.class);
+
+        bind(MemoryEmailQueryView.class).in(Scopes.SINGLETON);
+        bind(EmailQueryView.class).to(MemoryEmailQueryView.class);
 
         bind(MessageFastViewProjectionHealthCheck.class).in(Scopes.SINGLETON);
         Multibinder.newSetBinder(binder(), HealthCheck.class)
