@@ -76,6 +76,11 @@ public class PropagateLookupRightListener implements MailboxListener.GroupMailbo
         }
     }
 
+    @Override
+    public boolean isHandling(Event event) {
+        return event instanceof MailboxACLUpdated || event instanceof MailboxRenamed;
+    }
+
     private MailboxSession createMailboxSession(Event event) throws MailboxException {
         return mailboxManager.createSystemSession(event.getUsername());
     }

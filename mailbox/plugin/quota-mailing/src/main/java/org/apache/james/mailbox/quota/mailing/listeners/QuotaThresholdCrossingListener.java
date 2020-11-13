@@ -74,6 +74,10 @@ public class QuotaThresholdCrossingListener implements MailboxListener.ReactiveG
         return GROUP;
     }
 
+    @Override
+    public boolean isHandling(Event event) {
+        return event instanceof QuotaUsageUpdatedEvent;
+    }
 
     @Override
     public Publisher<Void> reactiveEvent(Event event) {
