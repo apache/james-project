@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.event;
 
+import java.io.IOException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Optional;
@@ -32,9 +33,11 @@ import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener.ReactiveGroupMailboxListener;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
+import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.reactivestreams.Publisher;
@@ -90,18 +93,18 @@ public class PopulateEmailQueryViewListener implements ReactiveGroupMailboxListe
         return Mono.empty();
     }
 
-    public Publisher<Void> handleMailboxDeletion(MailboxDeletion mailboxDeletion) {
+    private Publisher<Void> handleMailboxDeletion(MailboxDeletion mailboxDeletion) {
         return view.delete(mailboxDeletion.getMailboxId());
     }
 
-    public Publisher<Void> handleExpunged(Expunged expunged) {
+    private Publisher<Void> handleExpunged(Expunged expunged) {
         return Flux.fromStream(expunged.getUids().stream()
             .map(uid -> expunged.getMetaData(uid).getMessageId()))
             .concatMap(messageId -> view.delete(expunged.getMailboxId(), messageId))
             .then();
     }
 
-    public Mono<Void> handleAdded(Added added) {
+    private Mono<Void> handleAdded(Added added) {
         MailboxSession session = sessionProvider.createSystemSession(added.getUsername());
         return Flux.fromStream(added.getUids().stream()
             .map(added::getMetaData))
@@ -109,20 +112,23 @@ public class PopulateEmailQueryViewListener implements ReactiveGroupMailboxListe
             .then();
     }
 
-    public Mono<Void> handleAdded(Added added, MessageMetaData messageMetaData, MailboxSession session) {
+    private Mono<Void> handleAdded(Added added, MessageMetaData messageMetaData, MailboxSession session) {
         MessageId messageId = messageMetaData.getMessageId();
         ZonedDateTime receivedAt = ZonedDateTime.ofInstant(messageMetaData.getInternalDate().toInstant(), ZoneOffset.UTC);
 
-        Mono<ZonedDateTime> sentAtMono = Flux.from(messageIdManager.getMessagesReactive(ImmutableList.of(messageId), FetchGroup.HEADERS, session))
+        return Flux.from(messageIdManager.getMessagesReactive(ImmutableList.of(messageId), FetchGroup.HEADERS, session))
             .next()
-            .map(Throwing.function(messageResult -> Message.Builder
-                .of()
-                .use(MimeConfig.PERMISSIVE)
-                .parse(messageResult.getFullContent().getInputStream())
-                .build()))
+            .map(Throwing.function(this::parseMessage))
             .map(message -> Optional.ofNullable(message.getDate()).orElse(messageMetaData.getInternalDate()))
-            .map(date -> ZonedDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC));
+            .map(date -> ZonedDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC))
+            .flatMap(sentAt -> view.save(added.getMailboxId(), sentAt, receivedAt, messageId));
+    }
 
-        return sentAtMono.flatMap(sentAt -> view.save(added.getMailboxId(), sentAt, receivedAt, messageId));
+    private Message parseMessage(MessageResult messageResult) throws IOException, MailboxException {
+        return Message.Builder
+            .of()
+            .use(MimeConfig.PERMISSIVE)
+            .parse(messageResult.getFullContent().getInputStream())
+            .build();
     }
 }

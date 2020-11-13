@@ -31,4 +31,12 @@
   <preDeletionHook>
     <class>org.apache.james.vault.DeletedMessageVaultHook</class>
   </preDeletionHook>
+
+  <!-- Enable to populate JMAP EmailQueryView -->
+  <!--
+  <listener>
+    <class>org.apache.james.jmap.event.PopulateEmailQueryViewListener</class>
+    <async>true</async>
+  </listener>
+  -->
 </listeners>
