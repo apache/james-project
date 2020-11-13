@@ -20,7 +20,7 @@ A user willing to use a webmail powered by the JMAP protocol will end up doing t
 So, ElasticSearch is queried on every JMAP interaction. Administrators thus need to enforce availability and good performance
 for this component.
 
-Relying on more software for every read also harms our resiliency as ElasticSearch outages have major impacts.
+Relying on more services for every read also harms our resiliency as ElasticSearch outages have major impacts.
 
 Also we should mention our ElasticSearch implementation in Distributed James suffers the following flaws:
  - Updates of flags lead to updates of the all Email object, leading to sparse segments
