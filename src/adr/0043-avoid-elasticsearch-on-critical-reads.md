@@ -36,7 +36,7 @@ Regarding Distributed James data-stores responsibilities:
 Provide an optional view for most common `Email/query` requests both on Draft and RFC-8621 implementations.
 This includes filters and sorts on 'sentAt'.
 
-This view will be stored on Cassandra, and updated asynchronously via a MailboxListener.
+This view will be stored into Cassandra, and updated asynchronously via a MailboxListener.
 
 ## Consequences
 
