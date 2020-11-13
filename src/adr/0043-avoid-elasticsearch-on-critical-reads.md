@@ -157,3 +157,5 @@ CLUSTERING COLUMN messageId
 COLUMN sentAt
 COLUMN receivedAt
 ```
+
+Note that to handle position & limit, we need to fetch `position + limit` ordered items then removing `position` firsts items.
