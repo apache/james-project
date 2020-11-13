@@ -25,13 +25,14 @@ import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType
 import org.apache.commons.io.IOUtils
-import org.apache.http.HttpStatus.{SC_BAD_REQUEST, SC_CREATED, SC_OK, SC_UNAUTHORIZED}
+import org.apache.http.HttpStatus.{SC_BAD_REQUEST, SC_CREATED, SC_FORBIDDEN, SC_OK, SC_UNAUTHORIZED}
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ALICE, ALICE_ACCOUNT_ID, ALICE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, RFC8621_VERSION_HEADER, _2_DOT_DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ALICE, ALICE_ACCOUNT_ID, ALICE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, _2_DOT_DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.UploadContract.{BIG_INPUT_STREAM, VALID_INPUT_STREAM}
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
+import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.{BeforeEach, Test}
 import play.api.libs.json.{JsString, Json}
 
@@ -97,7 +98,10 @@ trait UploadContract {
     .when
       .post(s"/upload/$ALICE_ACCOUNT_ID/")
     .`then`
-      .statusCode(SC_UNAUTHORIZED)
+      .statusCode(SC_FORBIDDEN)
+      .body("status", equalTo(403))
+      .body("type", equalTo("about:blank"))
+      .body("detail", equalTo("Upload to other accounts is forbidden"))
   }
 
   @Test
@@ -124,11 +128,14 @@ trait UploadContract {
       .get(s"/download/$ALICE_ACCOUNT_ID/$blobId")
     .`then`
       .statusCode(SC_UNAUTHORIZED)
+      .body("status", equalTo(401))
+      .body("type", equalTo("about:blank"))
+      .body("detail", equalTo("No valid authentication methods provided"))
   }
 
   @Test
   def shouldRejectWhenUploadFileTooBig(): Unit = {
-    val response: String = `given`
+    `given`
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .contentType(ContentType.BINARY)
@@ -137,12 +144,9 @@ trait UploadContract {
       .post(s"/upload/$ACCOUNT_ID/")
     .`then`
       .statusCode(SC_BAD_REQUEST)
-      .extract
-      .body
-      .asString
-
-    assertThat(response)
-      .contains("Attempt to upload exceed max size")
+      .body("status", equalTo(400))
+      .body("type", equalTo("about:blank"))
+      .body("detail", equalTo("Attempt to upload exceed max size"))
   }
 
   @Test
@@ -158,5 +162,8 @@ trait UploadContract {
       .post(s"/upload/$ACCOUNT_ID/")
     .`then`
       .statusCode(SC_UNAUTHORIZED)
+      .body("status", equalTo(401))
+      .body("type", equalTo("about:blank"))
+      .body("detail", equalTo("No valid authentication methods provided"))
   }
 }

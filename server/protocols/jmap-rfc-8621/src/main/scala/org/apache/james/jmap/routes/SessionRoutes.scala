@@ -19,15 +19,16 @@
 
 package org.apache.james.jmap.routes
 
+import java.nio.charset.StandardCharsets
 import java.util.stream.Stream
 
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
-import io.netty.handler.codec.http.HttpMethod
-import io.netty.handler.codec.http.HttpResponseStatus.OK
+import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK, UNAUTHORIZED}
+import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus}
 import javax.inject.{Inject, Named}
-import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE_UTF8
+import org.apache.james.jmap.HttpConstants.{JSON_CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8}
 import org.apache.james.jmap.JMAPRoutes.CORS_CONTROL
-import org.apache.james.jmap.core.Session
+import org.apache.james.jmap.core.{ProblemDetails, Session}
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
@@ -88,7 +89,22 @@ class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
 
   def errorHandling(throwable: Throwable, response: HttpServerResponse): Mono[Void] =
     throwable match {
-      case _: UnauthorizedException => handleAuthenticationFailure(response, LOGGER, throwable)
-      case _ => handleInternalError(response, LOGGER, throwable)
+      case e: UnauthorizedException =>
+        LOGGER.warn("Unauthorized", e)
+        respondDetails(response,
+          ProblemDetails(status = UNAUTHORIZED, detail = e.getMessage),
+          UNAUTHORIZED)
+      case e =>
+        LOGGER.error("Unexpected error upon requesting session", e)
+        respondDetails(response,
+          ProblemDetails(status = INTERNAL_SERVER_ERROR, detail = e.getMessage),
+          INTERNAL_SERVER_ERROR)
     }
+
+
+  private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails, statusCode: HttpResponseStatus = BAD_REQUEST): Mono[Void] =
+    httpServerResponse.status(statusCode)
+      .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
+      .sendString(SMono.fromCallable(() => ResponseSerializer.serialize(details).toString), StandardCharsets.UTF_8)
+      .`then`
 }

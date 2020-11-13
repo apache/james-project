@@ -19,6 +19,7 @@
 package org.apache.james.jmap.routes
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream}
+import java.nio.charset.StandardCharsets
 import java.util.stream
 import java.util.stream.Stream
 
@@ -27,15 +28,16 @@ import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
-import io.netty.handler.codec.http.HttpResponseStatus.OK
-import io.netty.handler.codec.http.{HttpMethod, QueryStringDecoder}
+import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED}
+import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus, QueryStringDecoder}
 import javax.inject.{Inject, Named}
-import org.apache.http.HttpStatus.SC_NOT_FOUND
+import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.core.Id.Id
-import org.apache.james.jmap.core.{AccountId, Id}
+import org.apache.james.jmap.core.{AccountId, Id, ProblemDetails}
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
+import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.{BlobId, EmailBodyPart, PartId}
 import org.apache.james.jmap.routes.DownloadRoutes.{BUFFER_SIZE, LOGGER}
@@ -84,6 +86,7 @@ trait Blob {
 }
 
 case class BlobNotFoundException(blobId: BlobId) extends RuntimeException
+case class ForbiddenException() extends RuntimeException
 
 case class MessageBlob(blobId: BlobId, message: MessageResult) extends Blob {
   override def contentType: ContentType = new ContentType("message/rfc822")
@@ -212,11 +215,24 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
     SMono(authenticator.authenticate(request))
       .flatMap(mailboxSession => getIfOwner(request, response, mailboxSession))
       .onErrorResume {
-        case e: UnauthorizedException => SMono.fromPublisher(handleAuthenticationFailure(response, LOGGER, e)).`then`
-        case _: BlobNotFoundException => SMono.fromPublisher(response.status(SC_NOT_FOUND).send).`then`
+        case e: ForbiddenException =>
+          respondDetails(response,
+            ProblemDetails(status = FORBIDDEN, detail = "You cannot upload in others accounts"),
+            FORBIDDEN)
+        case e: UnauthorizedException =>
+          LOGGER.warn("Unauthorized", e)
+          respondDetails(response,
+            ProblemDetails(status = UNAUTHORIZED, detail = e.getMessage),
+            UNAUTHORIZED)
+        case _: BlobNotFoundException =>
+          respondDetails(response,
+            ProblemDetails(status = NOT_FOUND, detail = "The resource could not be found"),
+            NOT_FOUND)
         case e =>
-          LOGGER.error("Unexpected error", e)
-          SMono.fromPublisher(handleInternalError(response, LOGGER, e)).`then`
+          LOGGER.error("Unexpected error upon downloads", e)
+          respondDetails(response,
+            ProblemDetails(status = INTERNAL_SERVER_ERROR, detail = e.getMessage),
+            INTERNAL_SERVER_ERROR)
       }
       .subscribeOn(Schedulers.elastic)
       .asJava()
@@ -245,7 +261,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
             value => if (value) {
               get(request, response, mailboxSession)
             } else {
-              SMono.raiseError(new UnauthorizedException("You cannot upload to others"))
+              SMono.raiseError(ForbiddenException())
             })
       }
 
@@ -295,4 +311,10 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
       .toList
       .flatMap(_.asScala)
       .headOption
+
+  private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails, statusCode: HttpResponseStatus = BAD_REQUEST): SMono[Unit] =
+    SMono.fromPublisher(httpServerResponse.status(statusCode)
+      .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
+      .sendString(SMono.fromCallable(() => ResponseSerializer.serialize(details).toString), StandardCharsets.UTF_8)
+      .`then`).`then`
 }

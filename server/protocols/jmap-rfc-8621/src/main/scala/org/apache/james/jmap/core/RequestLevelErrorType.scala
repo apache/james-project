@@ -28,4 +28,5 @@ object RequestLevelErrorType {
   val NOT_JSON: ErrorTypeIdentifier = "urn:ietf:params:jmap:error:notJSON"
   val NOT_REQUEST: ErrorTypeIdentifier = "urn:ietf:params:jmap:error:notRequest"
   val LIMIT: ErrorTypeIdentifier = "urn:ietf:params:jmap:error:limit"
+  val DEFAULT_ERROR_TYPE: ErrorTypeIdentifier = "about:blank"
 }

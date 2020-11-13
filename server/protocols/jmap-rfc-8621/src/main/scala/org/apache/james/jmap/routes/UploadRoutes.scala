@@ -20,6 +20,7 @@
 package org.apache.james.jmap.routes
 
 import java.io.InputStream
+import java.nio.charset.StandardCharsets
 import java.util.stream
 import java.util.stream.Stream
 
@@ -28,16 +29,17 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
-import io.netty.handler.codec.http.HttpMethod
-import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, CREATED}
+import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, UNAUTHORIZED}
+import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus}
 import javax.inject.{Inject, Named}
 import org.apache.commons.fileupload.util.LimitedInputStream
+import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.core.Id.Id
-import org.apache.james.jmap.core.{AccountId, Id, JmapRfc8621Configuration}
+import org.apache.james.jmap.core.{AccountId, Id, JmapRfc8621Configuration, ProblemDetails}
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
-import org.apache.james.jmap.json.UploadSerializer
+import org.apache.james.jmap.json.{ResponseSerializer, UploadSerializer}
 import org.apache.james.jmap.mail.BlobId
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.routes.UploadRoutes.{LOGGER, sanitizeSize}
@@ -101,9 +103,24 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
         authenticator.authenticate(request))
         .flatMap(session => post(request, response, ContentType.of(contentType), session))
         .onErrorResume {
-          case e: TooBigUploadException => SMono.fromPublisher(response.status(BAD_REQUEST).sendString(SMono.just("Attempt to upload exceed max size")).`then`())
-          case e: UnauthorizedException => SMono.fromPublisher(handleAuthenticationFailure(response, LOGGER, e))
-          case e: Throwable => SMono.fromPublisher(handleInternalError(response, LOGGER, e))
+          case e: UnauthorizedException =>
+            LOGGER.warn("Unauthorized", e)
+            respondDetails(response,
+              ProblemDetails(status = UNAUTHORIZED, detail = e.getMessage),
+              UNAUTHORIZED)
+          case _: TooBigUploadException =>
+            respondDetails(response,
+              ProblemDetails(status = BAD_REQUEST, detail = "Attempt to upload exceed max size"),
+              BAD_REQUEST)
+          case _: ForbiddenException =>
+            respondDetails(response,
+              ProblemDetails(status = FORBIDDEN, detail = "Upload to other accounts is forbidden"),
+              FORBIDDEN)
+          case e =>
+            LOGGER.error("Unexpected error upon uploads", e)
+            respondDetails(response,
+              ProblemDetails(status = INTERNAL_SERVER_ERROR, detail = e.getMessage),
+              INTERNAL_SERVER_ERROR)
         }
         .asJava()
         .subscribeOn(Schedulers.elastic())
@@ -123,7 +140,7 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
               SMono.fromCallable(() => ReactorUtils.toInputStream(request.receive.asByteBuffer))
               .flatMap(content => handle(targetAccountId, contentType, content, session, response))
             } else {
-              SMono.raiseError(new UnauthorizedException("Attempt to upload in another account"))
+              SMono.raiseError(ForbiddenException())
             })
 
       case Left(throwable: Throwable) => SMono.raiseError(throwable)
@@ -144,7 +161,6 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
               .sendString(SMono.just(serializer.serialize(uploadResponse).toString()))))
   }
 
-
   def uploadContent(accountId: AccountId, contentType: ContentType, inputStream: InputStream, session: MailboxSession): SMono[UploadResponse] =
     SMono
       .fromPublisher(attachmentManager.storeAttachment(contentType, inputStream, session))
@@ -156,4 +172,10 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
         `type` = ContentType.of(attachmentMetadata.getType.asString),
         size = sanitizeSize(attachmentMetadata.getSize),
         accountId = accountId)
+
+  private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails, statusCode: HttpResponseStatus = BAD_REQUEST): SMono[Void] =
+    SMono.fromPublisher(httpServerResponse.status(statusCode)
+      .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
+      .sendString(SMono.fromCallable(() => ResponseSerializer.serialize(details).toString), StandardCharsets.UTF_8)
+      .`then`)
 }

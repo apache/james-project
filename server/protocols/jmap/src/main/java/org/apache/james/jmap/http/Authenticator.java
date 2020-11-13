@@ -54,6 +54,6 @@ public class Authenticator {
             Flux.fromIterable(authMethods)
                 .concatMap(auth -> auth.createMailboxSession(request))
                 .next()
-                .switchIfEmpty(Mono.error(new UnauthorizedException("Unexpected error")))));
+                .switchIfEmpty(Mono.error(new UnauthorizedException("No valid authentication methods provided")))));
     }
 }

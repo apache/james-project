@@ -23,6 +23,7 @@ import java.io.InputStream
 import java.net.URL
 
 import eu.timepit.refined.refineV
+import io.netty.handler.codec.http.HttpResponseStatus
 import org.apache.james.core.Username
 import org.apache.james.jmap.core
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
@@ -60,6 +61,7 @@ object ResponseSerializer {
 
   private implicit val invocationWrite: Writes[Invocation] = (invocation: Invocation) =>
     Json.arr(invocation.methodName, invocation.arguments, invocation.methodCallId)
+  private implicit val statusWrite: Writes[HttpResponseStatus] = status => JsNumber(status.code())
 
   // RequestObject
   private implicit val requestObjectRead: Format[RequestObject] = Json.format[RequestObject]

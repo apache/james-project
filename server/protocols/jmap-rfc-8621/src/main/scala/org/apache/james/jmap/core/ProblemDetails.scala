@@ -18,21 +18,23 @@
  ****************************************************************/
 package org.apache.james.jmap.core
 
-import eu.timepit.refined.auto._
-import org.apache.http.HttpStatus.SC_BAD_REQUEST
-import org.apache.james.jmap.core.RequestLevelErrorType.ErrorTypeIdentifier
-import org.apache.james.jmap.core.StatusCode.ErrorStatus
+import io.netty.handler.codec.http.HttpResponseStatus
+import io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST
+import org.apache.james.jmap.core.RequestLevelErrorType.{DEFAULT_ERROR_TYPE, ErrorTypeIdentifier}
 
 /**
  * Problem Details for HTTP APIs within the JMAP context
  * https://tools.ietf.org/html/rfc7807
  * see https://jmap.io/spec-core.html#errors
  */
-case class ProblemDetails(`type`: ErrorTypeIdentifier, status: ErrorStatus, limit: Option[String], detail: String)
+case class ProblemDetails(`type`: ErrorTypeIdentifier = DEFAULT_ERROR_TYPE,
+                          status: HttpResponseStatus,
+                          limit: Option[String] = None,
+                          detail: String)
 
 object ProblemDetails {
-  def notRequestProblem(message: String): ProblemDetails = ProblemDetails(RequestLevelErrorType.NOT_REQUEST, SC_BAD_REQUEST, None, message)
-  def notJSONProblem(message: String): ProblemDetails = ProblemDetails(RequestLevelErrorType.NOT_JSON, SC_BAD_REQUEST, None, message)
-  def unknownCapabilityProblem(message: String): ProblemDetails = ProblemDetails(RequestLevelErrorType.UNKNOWN_CAPABILITY, SC_BAD_REQUEST, None, message)
-  def invalidResultReference(message: String): ProblemDetails = ProblemDetails(RequestLevelErrorType.UNKNOWN_CAPABILITY, SC_BAD_REQUEST, None, message)
+  def notRequestProblem(message: String): ProblemDetails = ProblemDetails(RequestLevelErrorType.NOT_REQUEST, BAD_REQUEST, None, message)
+  def notJSONProblem(message: String): ProblemDetails = ProblemDetails(RequestLevelErrorType.NOT_JSON, BAD_REQUEST, None, message)
+  def unknownCapabilityProblem(message: String): ProblemDetails = ProblemDetails(RequestLevelErrorType.UNKNOWN_CAPABILITY, BAD_REQUEST, None, message)
+  def invalidResultReference(message: String): ProblemDetails = ProblemDetails(RequestLevelErrorType.UNKNOWN_CAPABILITY, BAD_REQUEST, None, message)
 }
