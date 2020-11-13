@@ -828,7 +828,7 @@ This is a standard "/queryChanges" method as described in [@!RFC8620], Section 5
 ## Email/set
 
 <aside class="warning">
-Not implemented yet
+Partially implemented
 </aside>
 
 This is a standard "/set" method as described in [@!RFC8620], Section 5.3. The *Email/set* method encompasses:
@@ -852,17 +852,17 @@ Due to the format of the Email object, when creating an Email there are a number
 - Header fields beginning with `Content-` MUST NOT be specified on the Email
   object, only on EmailBodyPart objects.
 - If a bodyStructure property is given, there MUST NOT be textBody, htmlBody, or
-  attachments properties.
+  attachments properties. <aside class="warning">Not implemented. *bodyStructure* property is not supported in Email/set create.</aside>
 - If given, the bodyStructure EmailBodyPart MUST NOT contain a property
   representing a header field that is already defined on the top-level Email
-  object.
+  object. <aside class="warning">Not implemented. *bodyStructure* property is not supported in Email/set create.</aside>
 - If given, textBody MUST contain exactly one body part and it MUST be of type
-  `text/plain`.
+  `text/plain`. <aside class="warning">Not implemented. *textBody* property is not supported in Email/set create.</aside>
 - If given, htmlBody MUST contain exactly one body part and it MUST be of type
   `text/html`.
 - Within an EmailBodyPart:
-  - The client may specify a partId OR a blobId, but not both. If a partId is
-    given, this partId MUST be present in the bodyValues property.
+  - The client may specify a *partId* OR a *blobId*, but not both. If a *partId* is
+    given, this *partId* MUST be present in the bodyValues property. <aside>htmlBody part needs to have a *partId*. `attachments` parts need to specify *blobId*. </aside>
   - The charset property MUST be omitted if a partId is given (the part's
     content is included in bodyValues, and the server may choose any appropriate
     encoding).
@@ -870,6 +870,7 @@ Due to the format of the Email object, when creating an Email there are a number
     given, it may be included but is ignored by the server (the size is
     actually calculated from the blob content itself).
   - A `Content-Transfer-Encoding` header field MUST NOT be given.
+  - <aside>EmailBodyPart specific headers are not supported for Email/set create. </aside>
 - Within an EmailBodyValue object, isEncodingProblem and isTruncated MUST be
   either `false` or omitted.
 
