@@ -67,16 +67,9 @@
             <mailet match="All" class="RecipientRewriteTable">
                 <errorProcessor>rrt-error</errorProcessor>
             </mailet>
-            <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet"/>
-            <mailet match="RecipientIsLocal" class="SpamAssassin">
-                <spamdHost>localhost</spamdHost>
-                <spamdPort>783</spamdPort>
+            <mailet match="RecipientIsLocal" class="ToProcessor">
+                <processor>local-delivery</processor>
             </mailet>
-            <mailet match="IsMarkedAsSpam" class="WithStorageDirective">
-                <targetFolderName>Spam</targetFolderName>
-            </mailet>
-            <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.filter.JMAPFiltering"/>
-            <mailet match="RecipientIsLocal" class="LocalDelivery"/>
             <mailet match="HostIsLocal" class="ToProcessor">
                 <processor>local-address-error</processor>
                 <notice>550 - Requested action not taken: no such user here</notice>
@@ -93,6 +86,21 @@
             <mailet match="All" class="ToProcessor">
                 <processor>relay-denied</processor>
             </mailet>
+        </processor>
+
+        <processor state="local-delivery" enableJmx="true">
+            <mailet match="All" class="SpamAssassin">
+                <spamdHost>localhost</spamdHost>
+                <spamdPort>783</spamdPort>
+            </mailet>
+            <mailet match="IsMarkedAsSpam" class="WithStorageDirective">
+                <targetFolderName>Spam</targetFolderName>
+            </mailet>
+            <mailet match="All" class="org.apache.james.jmap.mailet.VacationMailet"/>
+            <mailet match="All" class="Sieve"/>
+            <mailet match="All" class="AddDeliveredToHeader"/>
+            <mailet match="All" class="org.apache.james.jmap.mailet.filter.JMAPFiltering"/>
+            <mailet match="All" class="LocalDelivery"/>
         </processor>
 
         <processor state="local-address-error" enableJmx="false">
