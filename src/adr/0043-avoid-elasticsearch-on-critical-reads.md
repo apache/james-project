@@ -44,9 +44,12 @@ A migration task will be provided for new adopters.
 
 Administrators would be offered a configuration option to turn this view on and off as needed.
 
-If enabled administrators would no longer need to ensure high availability and good performances for ElasticSearch.
-We thus expect a decrease in overall ElasticSearch load, allowing savings compared to actual deployments.
-Furthermore, we expect better performances by resolving such queries against Cassandra.
+If enabled, given clients following well defined Email/query requests, administrators would no longer need
+to ensure high availability and good performances for ElasticSearch to ensure availability of basic usages
+(mailbox content listing).
+
+Given these pre-requisites, we thus expect a decrease in overall ElasticSearch load, allowing savings compared
+to actual deployments. Furthermore, we expect better performances by resolving such queries against Cassandra.
 
 The expected added load to Cassandra is low, as the search is a simple Cassandra read. As we only store messageId,
 Cassandra dataset size will only grow of a few percents if enabled.
