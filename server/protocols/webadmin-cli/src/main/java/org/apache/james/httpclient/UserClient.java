@@ -38,4 +38,7 @@ public interface UserClient {
     @Headers("Content-Type: application/json")
     Response createAUser(@Param("userName") String userName, UserPassword password);
 
+    @RequestLine("DELETE /{userToBeDeleted}")
+    Response deleteAUser(@Param("userToBeDeleted") String userName);
+
 }

@@ -19,36 +19,41 @@
 
 package org.apache.james.cli.user;
 
-import java.io.PrintStream;
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
+import org.apache.james.httpclient.UserClient;
 
+import feign.Feign;
+import feign.Response;
 import picocli.CommandLine;
 
 @CommandLine.Command(
-    name = "user",
-    description = "Manage Users",
-    subcommands = {
-        UserListCommand.class,
-        UserCreateCommand.class,
-        UserDeleteCommand.class
-    })
-public class UserCommand implements Callable<Integer> {
+    name = "delete",
+    description = "Delete a user")
+public class UserDeleteCommand implements Callable<Integer> {
 
-    protected final WebAdminCli webAdminCli;
-    protected final PrintStream out;
-    protected final PrintStream err;
+    public static final int DELETED_CODE = 204;
 
-    public UserCommand(PrintStream out, WebAdminCli webAdminCli, PrintStream err) {
-        this.out = out;
-        this.webAdminCli = webAdminCli;
-        this.err = err;
-    }
+    @CommandLine.ParentCommand UserCommand userCommand;
+
+    @CommandLine.Parameters String userName;
 
     @Override
     public Integer call() {
-        return WebAdminCli.CLI_FINISHED_SUCCEED;
+        try {
+            UserClient userClient = Feign.builder()
+                .target(UserClient.class, userCommand.webAdminCli.jamesUrl + "/users");
+            Response rs = userClient.deleteAUser(userName);
+            if (rs.status() == DELETED_CODE) {
+                return WebAdminCli.CLI_FINISHED_SUCCEED;
+            } else {
+                return WebAdminCli.CLI_FINISHED_FAILED;
+            }
+        } catch (Exception e) {
+            e.printStackTrace(userCommand.err);
+            return WebAdminCli.CLI_FINISHED_FAILED;
+        }
     }
 
 }
