@@ -54,19 +54,20 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
   private def processRequest(mailboxSession: MailboxSession,
                              invocation: Invocation,
                              request: EmailQueryRequest,
-                             capabilities: Set[CapabilityIdentifier]): SMono[Invocation] =
-    searchQueryFromRequest(request, capabilities, mailboxSession)
-      .flatMap(searchQuery => Limit.validateRequestLimit(request.limit).map((searchQuery, _)))
-      .flatMap {
-        case (searchQuery, limit) => Position.validateRequestPosition(request.position)
-          .map((searchQuery, limit, _))
-      }.map {
-      case (searchQuery, limitToUse, positionToUse) => executeQuery(mailboxSession, request, searchQuery, positionToUse, limitToUse)
-        .map(response => Invocation(
-          methodName = methodName,
-          arguments = Arguments(serializer.serialize(response)),
-          methodCallId = invocation.methodCallId))
-    }.fold(SMono.raiseError, res => res)
+                             capabilities: Set[CapabilityIdentifier]): SMono[Invocation] = {
+    def validation: Either[Throwable, SMono[Invocation]] = for {
+        searchQuery <- searchQueryFromRequest(request, capabilities, mailboxSession)
+        limit <- Limit.validateRequestLimit(request.limit)
+        position <- Position.validateRequestPosition(request.position)
+      } yield {
+        executeQuery(mailboxSession, request, searchQuery, position, limit)
+          .map(response => Invocation(
+            methodName = methodName,
+            arguments = Arguments(serializer.serialize(response)),
+            methodCallId = invocation.methodCallId))
+      }
+    validation.fold(SMono.raiseError, res => res)
+  }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[EmailQueryRequest] = asEmailQueryRequest(invocation.arguments)
 
