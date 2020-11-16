@@ -23,7 +23,7 @@
         <groupId>org.apache.james</groupId>
         <artifactId>james-server-guice</artifactId>
         <version>3.6.0-SNAPSHOT</version>
-	<relativePath>../../pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>queue-rabbitmq-guice</artifactId>
@@ -46,15 +46,15 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-webadmin-rabbitmq</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-queue-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-queue-rabbitmq</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-webadmin-rabbitmq</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

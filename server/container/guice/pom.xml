@@ -56,8 +56,8 @@
         <module>mailbox</module>
         <module>mailbox-plugin-deleted-messages-vault-guice</module>
         <module>mailbox-plugin-spamassassin</module>
-        <module>mailrepository-cassandra</module>
         <module>mailet</module>
+        <module>mailrepository-cassandra</module>
         <module>memory-guice</module>
         <module>onami</module>
         <module>protocols/imap</module>
@@ -70,18 +70,18 @@
         <module>protocols/webadmin</module>
         <module>protocols/webadmin-data</module>
         <module>protocols/webadmin-jmap</module>
+        <module>protocols/webadmin-mail-over-web</module>
         <module>protocols/webadmin-mailbox</module>
         <module>protocols/webadmin-mailqueue</module>
         <module>protocols/webadmin-mailrepository</module>
         <module>protocols/webadmin-rabbitmq-mailqueue</module>
         <module>protocols/webadmin-swagger</module>
-        <module>protocols/webadmin-mail-over-web</module>
         <module>queue/activemq</module>
         <module>queue/memory</module>
         <module>queue/rabbitmq</module>
-        <module>testing</module>
         <module>sieve-file</module>
         <module>sieve-jpa</module>
+        <module>testing</module>
     </modules>
 
     <dependencyManagement>
@@ -201,12 +201,12 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-guice-webadmin-rabbitmq-mailqueue</artifactId>
+                <artifactId>james-server-guice-webadmin-mailrepository</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-guice-webadmin-mailrepository</artifactId>
+                <artifactId>james-server-guice-webadmin-rabbitmq-mailqueue</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -216,19 +216,19 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-jpa-common-guice</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-jpa-common-guice</artifactId>
-                <type>test-jar</type>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-jmap-rfc-8621</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-jpa-common-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-jpa-common-guice</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
@@ -247,12 +247,12 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>queue-rabbitmq-guice</artifactId>
+                <artifactId>queue-memory-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>queue-memory-guice</artifactId>
+                <artifactId>queue-rabbitmq-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
