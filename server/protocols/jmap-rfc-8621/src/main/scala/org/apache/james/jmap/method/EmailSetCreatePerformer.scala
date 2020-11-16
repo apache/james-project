@@ -29,7 +29,7 @@ import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Properties, SetError, UTCDate}
 import org.apache.james.jmap.json.EmailSetSerializer
 import org.apache.james.jmap.mail.EmailSet.EmailCreationId
-import org.apache.james.jmap.mail.{EmailCreationRequest, EmailCreationResponse, EmailSetRequest}
+import org.apache.james.jmap.mail.{BlobId, Email, EmailCreationRequest, EmailCreationResponse, EmailSetRequest}
 import org.apache.james.jmap.method.EmailSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.exception.{AttachmentNotFoundException, MailboxNotFoundException}
@@ -99,7 +99,9 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
                 .withInternalDate(Date.from(request.receivedAt.getOrElse(UTCDate(ZonedDateTime.now())).asUTC.toInstant))
                 .build(message),
                 mailboxSession)
-            CreationSuccess(clientId, EmailCreationResponse(appendResult.getId.getMessageId))
+
+            val blobId: Option[BlobId] = BlobId.of(appendResult.getId.getMessageId).toOption
+            CreationSuccess(clientId, EmailCreationResponse(appendResult.getId.getMessageId, blobId, blobId, Email.sanitizeSize(appendResult.getSize)))
           })
             .subscribeOn(Schedulers.elastic())
             .onErrorResume(e => SMono.just[CreationResult](CreationFailure(clientId, e))))

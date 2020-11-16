@@ -92,6 +92,7 @@ public class SetMessagesUpdateProcessorTest {
     private static final InMemoryId OUTBOX_ID = InMemoryId.of(12345);
     private static final String DRAFTS = "drafts";
     private static final InMemoryId DRAFTS_ID = InMemoryId.of(12);
+    private static final Long TEST_MESSAGE_SIZE = 1L;
 
     public static class TestSystemMailboxesProvider implements SystemMailboxesProvider {
 
@@ -200,7 +201,7 @@ public class SetMessagesUpdateProcessorTest {
 
         when(outbox.appendMessage(any(MessageManager.AppendCommand.class), any(MailboxSession.class)))
             .thenReturn(new MessageManager.AppendResult(
-                new ComposedMessageId(OUTBOX_ID, TestMessageId.of(23), MessageUid.of(1)),
+                new ComposedMessageId(OUTBOX_ID, TestMessageId.of(23), MessageUid.of(1)), TEST_MESSAGE_SIZE,
                 Optional.empty()));
 
         drafts = mock(MessageManager.class);

@@ -202,6 +202,7 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
     keywordsMap => STRICT_KEYWORDS_FACTORY.fromSet(keywordsMap.keys.toSet)
       .fold(e => JsError(e.getMessage), keywords => JsSuccess(keywords)))
 
+  private implicit val blobIdFormat: Format[BlobId] = Json.valueFormat[BlobId]
   private implicit val unitWrites: Writes[Unit] = _ => JsNull
   private implicit val updatedWrites: Writes[Map[MessageId, Unit]] = mapWrites[MessageId, Unit](_.serialize, unitWrites)
   private implicit val notDestroyedWrites: Writes[Map[UnparsedMessageId, SetError]] = mapWrites[UnparsedMessageId, SetError](_.value, setErrorWrites)
@@ -339,7 +340,6 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
       case AsGroupedAddresses => GroupedAddressReads
     }
 
-  private implicit val blobIdReads: Reads[BlobId] = Json.valueReads[BlobId]
   private implicit val nameReads: Reads[Name] = Json.valueReads[Name]
   private implicit val charsetReads: Reads[Charset] = Json.valueReads[Charset]
   private implicit val dispositionReads: Reads[Disposition] = Json.valueReads[Disposition]

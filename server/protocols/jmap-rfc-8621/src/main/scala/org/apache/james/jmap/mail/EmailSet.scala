@@ -32,6 +32,7 @@ import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.State.State
 import org.apache.james.jmap.core.{AccountId, SetError, UTCDate}
 import org.apache.james.jmap.mail.Disposition.INLINE
+import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId}
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.mailbox.exception.AttachmentNotFoundException
@@ -394,5 +395,5 @@ case class InvalidEmailPropertyException(property: String, cause: String) extend
 
 case class InvalidEmailUpdateException(property: String, cause: String) extends EmailUpdateValidationException
 
-case class EmailCreationResponse(id: MessageId)
+case class EmailCreationResponse(id: MessageId, blobId: Option[BlobId], threadId: Option[BlobId], size: Size)
 

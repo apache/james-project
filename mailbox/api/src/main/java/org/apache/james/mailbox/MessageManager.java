@@ -147,15 +147,21 @@ public interface MessageManager {
 
     class AppendResult {
         private final ComposedMessageId id;
+        private final Long size;
         private final Optional<List<MessageAttachmentMetadata>> messageAttachments;
 
-        public AppendResult(ComposedMessageId id, Optional<List<MessageAttachmentMetadata>> messageAttachments) {
+        public AppendResult(ComposedMessageId id, Long size, Optional<List<MessageAttachmentMetadata>> messageAttachments) {
             this.id = id;
+            this.size = size;
             this.messageAttachments = messageAttachments;
         }
 
         public ComposedMessageId getId() {
             return id;
+        }
+
+        public Long getSize() {
+            return size;
         }
 
         public List<MessageAttachmentMetadata> getMessageAttachments() {

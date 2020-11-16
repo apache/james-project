@@ -102,6 +102,7 @@ public class SetMessagesCreationProcessorTest {
     private static final InMemoryId OUTBOX_ID = InMemoryId.of(12345);
     private static final String DRAFTS = "drafts";
     private static final InMemoryId DRAFTS_ID = InMemoryId.of(12);
+    private static final Long TEST_MESSAGE_SIZE = 1L;
 
     private final CreationMessage.Builder creationMessageBuilder = CreationMessage.builder()
             .from(DraftEmailer.builder().name("alice").email("alice@example.com").build())
@@ -194,7 +195,7 @@ public class SetMessagesCreationProcessorTest {
         when(outbox.getMailboxPath()).thenReturn(MailboxPath.forUser(USER, OUTBOX));
         
         when(outbox.appendMessage(any(MessageManager.AppendCommand.class), any(MailboxSession.class)))
-            .thenReturn(new MessageManager.AppendResult(new ComposedMessageId(OUTBOX_ID, TestMessageId.of(23), MessageUid.of(1)),
+            .thenReturn(new MessageManager.AppendResult(new ComposedMessageId(OUTBOX_ID, TestMessageId.of(23), MessageUid.of(1)), TEST_MESSAGE_SIZE,
                 Optional.of(ImmutableList.of())));
 
         drafts = mock(MessageManager.class);

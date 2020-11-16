@@ -82,7 +82,7 @@ object Email {
   type Size = Long Refined NonNegative
   val Zero: Size = 0L
 
-  private[mail] def sanitizeSize(value: Long): Size = {
+  def sanitizeSize(value: Long): Size = {
     val size: Either[String, Size] = refineV[NonNegative](value)
     size.fold(e => {
       logger.error(s"Encountered an invalid Email size: $e")

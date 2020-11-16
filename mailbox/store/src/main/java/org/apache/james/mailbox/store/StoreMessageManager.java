@@ -450,7 +450,7 @@ public class StoreMessageManager implements MessageManager {
                     .block();
                 MessageMetaData messageMetaData = data.getLeft();
                 ComposedMessageId ids = new ComposedMessageId(mailbox.getMailboxId(), messageMetaData.getMessageId(), messageMetaData.getUid());
-                return new AppendResult(ids, data.getRight());
+                return new AppendResult(ids, messageMetaData.getSize(), data.getRight());
             }, MailboxPathLocker.LockType.Write);
         }
     }

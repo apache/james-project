@@ -49,7 +49,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{BeforeEach, Test}
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.{JsNumber, JsString, Json}
 
 import scala.jdk.CollectionConverters._
 
@@ -186,10 +186,28 @@ trait EmailSetMethodContract {
       .body
       .asString
 
+    val createResponse = Json.parse(response)
+      .\("methodResponses")
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = createResponse
+      .\("id")
+      .get.asInstanceOf[JsString].value
+    val size = createResponse
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
+
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
       .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
+      .isEqualTo(
+        s"""{
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[1][1].list[0].id")
@@ -475,10 +493,28 @@ trait EmailSetMethodContract {
       .body
       .asString
 
+    val responseAsJson = Json.parse(response)
+      .\("methodResponses")
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = responseAsJson
+      .\("id")
+      .get.asInstanceOf[JsString].value
+    val size = responseAsJson
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
+
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
       .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
+      .isEqualTo(
+        s"""{
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[1][1].list[0].id")
@@ -535,10 +571,28 @@ trait EmailSetMethodContract {
       .body
       .asString
 
+    val responseAsJson = Json.parse(response)
+      .\("methodResponses")
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = responseAsJson
+      .\("id")
+      .get.asInstanceOf[JsString].value
+    val size = responseAsJson
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
+
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
       .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
+      .isEqualTo(
+        s"""{
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[1][1].list[0].id")
@@ -592,10 +646,28 @@ trait EmailSetMethodContract {
       .body
       .asString
 
+    val responseAsJson = Json.parse(response)
+      .\("methodResponses")
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = responseAsJson
+      .\("id")
+      .get.asInstanceOf[JsString].value
+    val size = responseAsJson
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
+
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
       .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
+      .isEqualTo(
+        s"""{
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[1][1].list[0].id")
@@ -648,10 +720,28 @@ trait EmailSetMethodContract {
       .body
       .asString
 
+    val createResponse = Json.parse(response)
+      .\("methodResponses")
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = createResponse
+      .\("id")
+      .get.asInstanceOf[JsString].value
+    val size = createResponse
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
+
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
       .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
+      .isEqualTo(
+        s"""{
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[1][1].list[0].id")
@@ -709,10 +799,28 @@ trait EmailSetMethodContract {
       .body
       .asString
 
+    val createResponse = Json.parse(response)
+      .\("methodResponses")
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = createResponse
+      .\("id")
+      .get.asInstanceOf[JsString].value
+    val size = createResponse
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
+
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
       .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
+      .isEqualTo(
+        s"""{
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[1][1].list[0].id")
@@ -767,10 +875,28 @@ trait EmailSetMethodContract {
       .body
       .asString
 
+    val createResponse = Json.parse(response)
+      .\("methodResponses")
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = createResponse
+      .\("id")
+      .get.asInstanceOf[JsString].value
+    val size = createResponse
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
+
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
       .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
+      .isEqualTo(
+        s"""{
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[1][1].list[0].id")
@@ -826,10 +952,28 @@ trait EmailSetMethodContract {
       .body
       .asString
 
+    val responseAsJson = Json.parse(response)
+      .\("methodResponses")
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = responseAsJson
+      .\("id")
+      .get.asInstanceOf[JsString].value
+    val size = responseAsJson
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
+
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
       .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
+      .isEqualTo(
+        s"""{
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[1][1].list[0].id")
@@ -1162,10 +1306,28 @@ trait EmailSetMethodContract {
       .body
       .asString
 
+    val responseAsJson = Json.parse(response)
+      .\("methodResponses")
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = responseAsJson
+      .\("id")
+      .get.asInstanceOf[JsString].value
+    val size = responseAsJson
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
+
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
       .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
+      .isEqualTo(
+        s"""{
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[1][1].list[0].id")
@@ -1241,10 +1403,28 @@ trait EmailSetMethodContract {
       .body
       .asString
 
+    val responseAsJson = Json.parse(response)
+      .\("methodResponses")
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = responseAsJson
+      .\("id")
+      .get.asInstanceOf[JsString].value
+    val size = responseAsJson
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
+
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
       .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
+      .isEqualTo(
+        s"""{
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[1][1].list[0].id")
@@ -1794,20 +1974,28 @@ trait EmailSetMethodContract {
       .body
       .asString
 
-    assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
-      .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
-
-    val blobIdToDownload = Json.parse(response)
+    val responseAsJson = Json.parse(response)
       .\("methodResponses")
-      .\(1).\(1)
-      .\("list")
-      .\(0)
-      .\("attachments")
-      .\(0)
-      .\("blobId")
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = responseAsJson
+      .\("id")
       .get.asInstanceOf[JsString].value
+    val size = responseAsJson
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].created.aaaaaa")
+      .isEqualTo(
+        s"""{
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[1][1].list[0].id")
@@ -1821,7 +2009,7 @@ trait EmailSetMethodContract {
            |  "attachments": [
            |    {
            |      "partId": "5",
-           |      "blobId": "$blobIdToDownload",
+           |      "blobId": "${messageId}_5",
            |      "size": 11,
            |      "type": "text/plain",
            |      "charset": "UTF-8",
@@ -1836,7 +2024,7 @@ trait EmailSetMethodContract {
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
-      .get(s"/download/$accountId/$blobIdToDownload")
+      .get(s"/download/$accountId/${messageId}_5")
     .`then`
       .statusCode(SC_OK)
       .contentType("text/plain")
@@ -1929,18 +2117,28 @@ trait EmailSetMethodContract {
       .body
       .asString
 
-    assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
-      .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
-
-    val messageId = Json.parse(response)
+    val responseAsJson = Json.parse(response)
       .\("methodResponses")
-      .\(1).\(1)
-      .\("list")
-      .\(0)
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = responseAsJson
       .\("id")
       .get.asInstanceOf[JsString].value
+    val size = responseAsJson
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].created.aaaaaa")
+      .isEqualTo(
+        s"""{
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[1][1].list[0].id")
@@ -2075,18 +2273,28 @@ trait EmailSetMethodContract {
       .body
       .asString
 
-    assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
-      .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
-
-    val messageId = Json.parse(response)
+    val responseAsJson = Json.parse(response)
       .\("methodResponses")
-      .\(1).\(1)
-      .\("list")
-      .\(0)
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = responseAsJson
       .\("id")
       .get.asInstanceOf[JsString].value
+    val size = responseAsJson
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].created.aaaaaa")
+      .isEqualTo(
+        s"""{
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[1][1].list[0].id")
@@ -2239,79 +2447,59 @@ trait EmailSetMethodContract {
       .body
       .asString
 
-    assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
-      .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
-
-    val messageId = Json.parse(response)
+    val responseAsJson = Json.parse(response)
       .\("methodResponses")
-      .\(1).\(1)
-      .\("list")
-      .\(0)
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = responseAsJson
       .\("id")
       .get.asInstanceOf[JsString].value
+    val size = responseAsJson
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
 
     assertThatJson(response)
+      .inPath(s"methodResponses[1][1].list[0]")
       .isEqualTo(
         s"""{
-           |  "sessionState": "75128aab4b1b",
-           |  "methodResponses": [
-           |    ["Email/set", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |      "newState": "000001",
-           |      "created": {
-           |        "aaaaaa": {
-           |          "id": "$messageId"
-           |        }
-           |      }
-           |    }, "c1"],
-           |    ["Email/get", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |      "state": "000001",
-           |      "list": [
-           |        {
-           |          "id": "$messageId",
-           |          "bodyStructure": {
-           |            "type": "multipart/mixed",
+           |  "id": "$messageId",
+           |  "bodyStructure": {
+           |    "type": "multipart/mixed",
+           |    "subParts": [
+           |      {
+           |        "type": "multipart/related",
+           |        "subParts": [
+           |          {
+           |            "type": "multipart/alternative",
            |            "subParts": [
            |              {
-           |                "type": "multipart/related",
-           |                "subParts": [
-           |                  {
-           |                    "type": "multipart/alternative",
-           |                    "subParts": [
-           |                      {
-           |                        "type": "text/html"
-           |                      },
-           |                      {
-           |                        "type": "text/plain"
-           |                      }
-           |                    ]
-           |                  },
-           |                  {
-           |                    "type": "text/plain",
-           |                    "disposition": "inline",
-           |                    "cid": "abc"
-           |                  },
-           |                  {
-           |                    "type": "text/plain",
-           |                    "disposition": "inline",
-           |                    "cid": "def"
-           |                  }
-           |                ]
+           |                "type": "text/html"
            |              },
            |              {
-           |                "type": "text/plain",
-           |                "disposition": "attachment"
+           |                "type": "text/plain"
            |              }
            |            ]
+           |          },
+           |          {
+           |            "type": "text/plain",
+           |            "disposition": "inline",
+           |            "cid": "abc"
+           |          },
+           |          {
+           |            "type": "text/plain",
+           |            "disposition": "inline",
+           |            "cid": "def"
            |          }
-           |        }
-           |      ],
-           |      "notFound": []
-           |    }, "c2"]
-           |  ]
+           |        ]
+           |      },
+           |      {
+           |        "type": "text/plain",
+           |        "disposition": "attachment"
+           |      }
+           |    ]
+           |  }
            |}""".stripMargin)
   }
 
@@ -2396,64 +2584,54 @@ trait EmailSetMethodContract {
       .body
       .asString
 
-    assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
-      .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
-
-    val messageId = Json.parse(response)
+    val responseAsJson = Json.parse(response)
       .\("methodResponses")
-      .\(1).\(1)
-      .\("list")
-      .\(0)
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = responseAsJson
       .\("id")
       .get.asInstanceOf[JsString].value
+    val size = responseAsJson
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
 
     assertThatJson(response)
+      .inPath("methodResponses[0][1].created.aaaaaa")
       .isEqualTo(
         s"""{
-           |  "sessionState": "75128aab4b1b",
-           |  "methodResponses": [
-           |    ["Email/set", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |      "newState": "000001",
-           |      "created": {
-           |        "aaaaaa": {
-           |          "id": "$messageId"
-           |        }
-           |      }
-           |    }, "c1"],
-           |    ["Email/get", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |      "state": "000001",
-           |      "list": [
-           |        {
-           |          "id": "$messageId",
-           |          "bodyStructure": {
-           |            "type": "multipart/mixed",
-           |            "subParts": [
-           |              {
-           |                "type":"multipart/alternative",
-           |                "subParts": [
-           |                  {
-           |                    "type":"text/html"
-           |                  },
-           |                  {
-           |                    "type":"text/plain"
-           |                  }
-           |                ]
-           |              },
-           |              {
-           |                "type": "text/plain",
-           |                "disposition": "attachment"
-           |              }
-           |            ]
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
+
+    assertThatJson(response)
+      .inPath(s"methodResponses[1][1].list[0]")
+      .isEqualTo(
+        s"""{
+           |  "id": "$messageId",
+           |  "bodyStructure": {
+           |    "type": "multipart/mixed",
+           |    "subParts": [
+           |      {
+           |        "type":"multipart/alternative",
+           |        "subParts": [
+           |          {
+           |            "type":"text/html"
+           |          },
+           |          {
+           |            "type":"text/plain"
            |          }
-           |        }
-           |      ],
-           |      "notFound": []
-           |    }, "c2"]
-           |  ]
+           |        ]
+           |      },
+           |      {
+           |        "type": "text/plain",
+           |        "disposition": "attachment"
+           |      }
+           |    ]
+           |  }
            |}""".stripMargin)
   }
 
@@ -2546,70 +2724,60 @@ trait EmailSetMethodContract {
       .body
       .asString
 
-    assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
-      .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
-
-    val messageId = Json.parse(response)
+    val responseAsJson = Json.parse(response)
       .\("methodResponses")
-      .\(1).\(1)
-      .\("list")
-      .\(0)
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = responseAsJson
       .\("id")
       .get.asInstanceOf[JsString].value
+    val size = responseAsJson
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
 
     assertThatJson(response)
+      .inPath("methodResponses[0][1].created.aaaaaa")
       .isEqualTo(
         s"""{
-           |  "sessionState": "75128aab4b1b",
-           |  "methodResponses": [
-           |    ["Email/set", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |      "newState": "000001",
-           |      "created": {
-           |        "aaaaaa": {
-           |          "id": "$messageId"
-           |        }
-           |      }
-           |    }, "c1"],
-           |    ["Email/get", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |      "state": "000001",
-           |      "list": [
-           |        {
-           |          "id": "$messageId",
-           |          "bodyStructure": {
-           |            "type": "multipart/related",
-           |            "subParts": [
-           |              {
-           |                "type":"multipart/alternative",
-           |                "subParts": [
-           |                  {
-           |                    "type":"text/html"
-           |                  },
-           |                  {
-           |                    "type":"text/plain"
-           |                  }
-           |                ]
-           |              },
-           |              {
-           |                "type": "text/plain",
-           |                "disposition": "inline",
-           |                "cid": "abc"
-           |              },
-           |              {
-           |                "type": "text/plain",
-           |                "disposition": "inline",
-           |                "cid": "def"
-           |              }
-           |            ]
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
+
+    assertThatJson(response)
+      .inPath(s"methodResponses[1][1].list[0]")
+      .isEqualTo(
+        s"""{
+           |  "id": "$messageId",
+           |  "bodyStructure": {
+           |    "type": "multipart/related",
+           |    "subParts": [
+           |      {
+           |        "type":"multipart/alternative",
+           |        "subParts": [
+           |          {
+           |            "type":"text/html"
+           |          },
+           |          {
+           |            "type":"text/plain"
            |          }
-           |        }
-           |      ],
-           |      "notFound": []
-           |    }, "c2"]
-           |  ]
+           |        ]
+           |      },
+           |      {
+           |        "type": "text/plain",
+           |        "disposition": "inline",
+           |        "cid": "abc"
+           |      },
+           |      {
+           |        "type": "text/plain",
+           |        "disposition": "inline",
+           |        "cid": "def"
+           |      }
+           |    ]
+           |  }
            |}""".stripMargin)
   }
 
@@ -2685,18 +2853,28 @@ trait EmailSetMethodContract {
       .body
       .asString
 
-    assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
-      .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
-
-    val messageId = Json.parse(response)
+    val responseAsJson = Json.parse(response)
       .\("methodResponses")
-      .\(1).\(1)
-      .\("list")
-      .\(0)
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = responseAsJson
       .\("id")
       .get.asInstanceOf[JsString].value
+    val size = responseAsJson
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].created.aaaaaa")
+      .isEqualTo(
+        s"""{
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
 
     assertThatJson(response)
       .isEqualTo(
@@ -2708,7 +2886,10 @@ trait EmailSetMethodContract {
            |      "newState": "000001",
            |      "created": {
            |        "aaaaaa": {
-           |          "id": "$messageId"
+           |          "id": "$messageId",
+           |          "blobId": "$messageId",
+           |          "threadId": "$messageId",
+           |          "size": $size
            |        }
            |      }
            |    }, "c1"],
@@ -2794,18 +2975,18 @@ trait EmailSetMethodContract {
       .body
       .asString
 
-    assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
-      .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
-
-    val messageId = Json.parse(response)
+    val responseAsJson = Json.parse(response)
       .\("methodResponses")
-      .\(1).\(1)
-      .\("list")
-      .\(0)
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = responseAsJson
       .\("id")
       .get.asInstanceOf[JsString].value
+    val size = responseAsJson
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
 
     assertThatJson(response)
       .isEqualTo(
@@ -2817,7 +2998,10 @@ trait EmailSetMethodContract {
            |      "newState": "000001",
            |      "created": {
            |        "aaaaaa": {
-           |          "id": "$messageId"
+           |          "id": "$messageId",
+           |          "blobId": "$messageId",
+           |          "threadId": "$messageId",
+           |          "size": $size
            |        }
            |      }
            |    }, "c1"],
@@ -2956,80 +3140,69 @@ trait EmailSetMethodContract {
       .body
       .asString
 
-    assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
-      .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
-
-    val messageId = Json.parse(response)
+    val createResponse = Json.parse(response)
       .\("methodResponses")
-      .\(1).\(1)
-      .\("list")
-      .\(0)
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = createResponse
       .\("id")
       .get.asInstanceOf[JsString].value
+    val size = createResponse
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
 
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
+      .inPath("methodResponses[0][1].created.aaaaaa")
       .isEqualTo(
         s"""{
-           |  "sessionState": "75128aab4b1b",
-           |  "methodResponses": [
-           |    ["Email/set", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |      "newState": "000001",
-           |      "created": {
-           |        "aaaaaa": {
-           |          "id": "$messageId"
-           |        }
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
+
+    assertThatJson(response)
+      .inPath(s"methodResponses[1][1].list[0]")
+      .isEqualTo(
+        s"""{
+           |  "id": "$messageId",
+           |  "bodyStructure": {
+           |    "type": "multipart/mixed",
+           |    "subParts": [
+           |      {
+           |        "type": "multipart/related",
+           |        "subParts": [
+           |          {
+           |            "type": "multipart/alternative",
+           |            "subParts": [
+           |              {
+           |                "type": "text/html"
+           |              },
+           |              {
+           |                "type": "text/plain"
+           |              }
+           |            ]
+           |          },
+           |          {
+           |            "type": "text/plain",
+           |            "disposition": "inline",
+           |            "cid": "abc"
+           |          },
+           |          {
+           |            "type": "text/plain",
+           |            "disposition": "inline",
+           |            "cid": "def"
+           |          }
+           |        ]
+           |      },
+           |      {
+           |        "type": "text/plain",
+           |        "disposition": "attachment"
            |      }
-           |    }, "c1"],
-           |    ["Email/get", {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |      "state": "000001",
-           |      "list": [
-           |        {
-           |          "id": "$messageId",
-           |          "bodyStructure": {
-           |          "type": "multipart/mixed",
-           |          "subParts": [
-           |            {
-           |              "type": "multipart/related",
-           |              "subParts": [
-           |                {
-           |                  "type": "multipart/alternative",
-           |                  "subParts": [
-           |                    {
-           |                      "type": "text/html"
-           |                    },
-           |                    {
-           |                      "type": "text/plain"
-           |                    }
-           |                  ]
-           |                },
-           |                {
-           |                  "type": "text/plain",
-           |                  "disposition": "inline",
-           |                  "cid": "abc"
-           |                },
-           |                {
-           |                  "type": "text/plain",
-           |                  "disposition": "inline",
-           |                  "cid": "def"
-           |                }
-           |              ]
-           |            },
-           |            {
-           |              "type": "text/plain",
-           |              "disposition": "attachment"
-           |             }
-           |           ]
-           |         }
-           |       }
-           |     ],
-           |     "notFound": []
-           |    }, "c2"]
-           |  ]
+           |    ]
+           |  }
            |}""".stripMargin)
   }
 
@@ -3103,26 +3276,34 @@ trait EmailSetMethodContract {
       .body
       .asString
 
-    assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].created.aaaaaa.id")
-      .inPath("methodResponses[0][1].created.aaaaaa")
-      .isEqualTo("{}".stripMargin)
-
-    val blobIdToDownload = Json.parse(response)
+    val responseAsJson = Json.parse(response)
       .\("methodResponses")
-      .\(1).\(1)
-      .\("list")
-      .\(0)
-      .\("attachments")
-      .\(0)
-      .\("blobId")
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = responseAsJson
+      .\("id")
       .get.asInstanceOf[JsString].value
+    val size = responseAsJson
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
 
     assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[1][1].list[0].id")
-      .inPath(s"methodResponses[1][1].list")
+      .inPath("methodResponses[0][1].created.aaaaaa")
       .isEqualTo(
-        s"""[{
+        s"""{
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
+
+    assertThatJson(response)
+      .inPath(s"methodResponses[1][1].list[0]")
+      .isEqualTo(
+        s"""{
+           |  "id": "$messageId",
            |  "mailboxIds": {
            |    "${mailboxId.serialize}": true
            |  },
@@ -3131,7 +3312,7 @@ trait EmailSetMethodContract {
            |    {
            |      "name": "myAttachment",
            |      "partId": "5",
-           |      "blobId": "$blobIdToDownload",
+           |      "blobId": "${messageId}_5",
            |      "size": 11,
            |      "type": "text/plain",
            |      "charset": "UTF-8",
@@ -3140,7 +3321,7 @@ trait EmailSetMethodContract {
            |      "location": "http://125.26.23.36/content"
            |    }
            |  ]
-           |}]""".stripMargin)
+           |}""".stripMargin)
   }
 
   @Test
