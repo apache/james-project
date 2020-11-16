@@ -39,6 +39,14 @@ public interface Filter {
 
     String prettyPrint(String indentation);
 
+    default boolean inMailboxFilterOnly() {
+        return false;
+    }
+
+    default boolean inMailboxAndAfterFiltersOnly() {
+        return false;
+    }
+
     default List<FilterCondition> breadthFirstVisit() {
         return this.breadthFirstVisit(0)
             .collect(Guavate.toImmutableList());

@@ -21,6 +21,7 @@ package org.apache.james.jmap.draft.methods;
 
 import static org.apache.james.util.ReactorUtils.context;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -31,6 +32,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.jmap.JMAPConfiguration;
+import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.jmap.draft.model.Filter;
 import org.apache.james.jmap.draft.model.FilterCondition;
 import org.apache.james.jmap.draft.model.GetMessageListRequest;
@@ -42,17 +45,19 @@ import org.apache.james.jmap.draft.utils.FilterToCriteria;
 import org.apache.james.jmap.draft.utils.SortConverter;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxId.Factory;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.streams.Limit;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -71,17 +76,25 @@ public class GetMessageListMethod implements Method {
     private final long maximumLimit;
     private final GetMessagesMethod getMessagesMethod;
     private final Factory mailboxIdFactory;
+    private final EmailQueryView emailQueryView;
+    private final JMAPConfiguration configuration;
     private final MetricFactory metricFactory;
 
     @Inject
-    @VisibleForTesting public GetMessageListMethod(MailboxManager mailboxManager,
-            @Named(MAXIMUM_LIMIT) long maximumLimit, GetMessagesMethod getMessagesMethod, MailboxId.Factory mailboxIdFactory,
-            MetricFactory metricFactory) {
+    private GetMessageListMethod(MailboxManager mailboxManager,
+                                 @Named(MAXIMUM_LIMIT) long maximumLimit,
+                                 GetMessagesMethod getMessagesMethod,
+                                 Factory mailboxIdFactory,
+                                 EmailQueryView emailQueryView,
+                                 JMAPConfiguration configuration,
+                                 MetricFactory metricFactory) {
 
         this.mailboxManager = mailboxManager;
         this.maximumLimit = maximumLimit;
         this.getMessagesMethod = getMessagesMethod;
         this.mailboxIdFactory = mailboxIdFactory;
+        this.emailQueryView = emailQueryView;
+        this.configuration = configuration;
         this.metricFactory = metricFactory;
     }
 
@@ -149,14 +162,64 @@ public class GetMessageListMethod implements Method {
     }
 
     private Mono<GetMessageListResponse> getMessageListResponse(GetMessageListRequest messageListRequest, MailboxSession mailboxSession) {
+        long position = messageListRequest.getPosition().map(Number::asLong).orElse(DEFAULT_POSITION);
+        long limit = position + messageListRequest.getLimit().map(Number::asLong).orElse(maximumLimit);
+
+        if (isListingContentInMailboxQuery(messageListRequest)) {
+            Filter filter = messageListRequest.getFilter().get();
+            FilterCondition condition = (FilterCondition) filter;
+            String mailboxIdAsString = condition.getInMailboxes().get().iterator().next();
+            MailboxId mailboxId = mailboxIdFactory.fromString(mailboxIdAsString);
+            Limit aLimit = Limit.from(Math.toIntExact(limit));
+
+            return Mono.fromCallable(() -> mailboxManager.getMailbox(mailboxId, mailboxSession))
+                .subscribeOn(Schedulers.elastic())
+                .then(emailQueryView.listMailboxContent(mailboxId, aLimit)
+                    .skip(position)
+                    .take(limit)
+                    .reduce(GetMessageListResponse.builder(), GetMessageListResponse.Builder::messageId)
+                    .map(GetMessageListResponse.Builder::build))
+                .onErrorResume(MailboxNotFoundException.class, e -> Mono.just(GetMessageListResponse.builder().build()));
+        }
+        if (isListingContentInMailboxAfterQuery(messageListRequest)) {
+            Filter filter = messageListRequest.getFilter().get();
+            FilterCondition condition = (FilterCondition) filter;
+            String mailboxIdAsString = condition.getInMailboxes().get().iterator().next();
+            MailboxId mailboxId = mailboxIdFactory.fromString(mailboxIdAsString);
+            ZonedDateTime after = condition.getAfter().get();
+            Limit aLimit = Limit.from(Math.toIntExact(limit));
+
+            return Mono.fromCallable(() -> mailboxManager.getMailbox(mailboxId, mailboxSession))
+                .subscribeOn(Schedulers.elastic())
+                .then(emailQueryView.listMailboxContentSinceReceivedAt(mailboxId, after, aLimit)
+                    .skip(position)
+                    .take(limit)
+                    .reduce(GetMessageListResponse.builder(), GetMessageListResponse.Builder::messageId)
+                    .map(GetMessageListResponse.Builder::build))
+                .onErrorResume(MailboxNotFoundException.class, e -> Mono.just(GetMessageListResponse.builder().build()));
+        }
+        return querySearchBackend(messageListRequest, position, limit, mailboxSession);
+    }
+
+    private boolean isListingContentInMailboxQuery(GetMessageListRequest messageListRequest) {
+        return configuration.isEmailQueryViewEnabled()
+            && messageListRequest.getFilter().map(Filter::inMailboxFilterOnly).orElse(false)
+            && messageListRequest.getSort().equals(ImmutableList.of("date desc"));
+    }
+
+    private boolean isListingContentInMailboxAfterQuery(GetMessageListRequest messageListRequest) {
+        return configuration.isEmailQueryViewEnabled()
+            && messageListRequest.getFilter().map(Filter::inMailboxAndAfterFiltersOnly).orElse(false)
+            && messageListRequest.getSort().equals(ImmutableList.of("date desc"));
+    }
+
+    private Mono<GetMessageListResponse> querySearchBackend(GetMessageListRequest messageListRequest, long position, long limit, MailboxSession mailboxSession) {
         Mono<MultimailboxesSearchQuery> searchQuery = Mono.fromCallable(() -> convertToSearchQuery(messageListRequest))
             .subscribeOn(Schedulers.parallel());
-        Long positionValue = messageListRequest.getPosition().map(Number::asLong).orElse(DEFAULT_POSITION);
-        long limit = positionValue + messageListRequest.getLimit().map(Number::asLong).orElse(maximumLimit);
 
         return searchQuery
             .flatMapMany(Throwing.function(query -> mailboxManager.search(query, mailboxSession, limit)))
-            .skip(positionValue)
+            .skip(position)
             .reduce(GetMessageListResponse.builder(), GetMessageListResponse.Builder::messageId)
             .map(GetMessageListResponse.Builder::build);
     }

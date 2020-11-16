@@ -1771,6 +1771,28 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
+    public void getMessageListShouldSortMessagesWhenSortedByDateDescAndInMailbox() throws Exception {
+        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "mailbox");
+
+        LocalDate date = LocalDate.now();
+        ComposedMessageId message1 = mailboxProbe.appendMessage(ALICE.asString(), ALICE_MAILBOX,
+                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), convertToDate(date.plusDays(1)), false, new Flags());
+        ComposedMessageId message2 = mailboxProbe.appendMessage(ALICE.asString(), ALICE_MAILBOX,
+                new ByteArrayInputStream("Subject: test2\r\n\r\ntestmail".getBytes()), convertToDate(date), false, new Flags());
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.asString())
+            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId.serialize() + "\"]}, \"sort\":[\"date desc\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"))
+            .body(ARGUMENTS + ".messageIds", contains(message1.getMessageId().serialize(), message2.getMessageId().serialize()));
+    }
+
+    @Test
     public void getMessageListShouldWorkWhenCollapseThreadIsFalse() {
         given()
             .header("Authorization", aliceAccessToken.asString())

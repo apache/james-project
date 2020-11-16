@@ -279,6 +279,45 @@ public class FilterCondition implements Filter {
         this.attachmentFileName = attachmentFileName;
     }
 
+    @Override
+    public boolean inMailboxFilterOnly() {
+        return inMailboxes.filter(list -> list.size() == 1).isPresent()
+            && after.isEmpty()
+            && noOtherFiltersSet();
+    }
+
+    @Override
+    public boolean inMailboxAndAfterFiltersOnly() {
+        return inMailboxes.filter(list -> list.size() == 1).isPresent()
+            && after.isPresent()
+            && noOtherFiltersSet();
+    }
+
+    private boolean noOtherFiltersSet() {
+        return notInMailboxes.isEmpty()
+            && before.isEmpty()
+            && minSize.isEmpty()
+            && maxSize.isEmpty()
+            && isFlagged.isEmpty()
+            && isUnread.isEmpty()
+            && isAnswered.isEmpty()
+            && isDraft.isEmpty()
+            && isForwarded.isEmpty()
+            && hasAttachment.isEmpty()
+            && text.isEmpty()
+            && from.isEmpty()
+            && to.isEmpty()
+            && cc.isEmpty()
+            && bcc.isEmpty()
+            && subject.isEmpty()
+            && body.isEmpty()
+            && attachments.isEmpty()
+            && header.isEmpty()
+            && hasKeyword.isEmpty()
+            && notKeyword.isEmpty()
+            && attachmentFileName.isEmpty();
+    }
+
     public Optional<List<String>> getInMailboxes() {
         return inMailboxes;
     }

@@ -46,4 +46,8 @@
   <listener>
     <class>org.apache.james.mailbox.spamassassin.SpamAssassinListener</class>
   </listener>
+  <listener>
+    <class>org.apache.james.jmap.event.PopulateEmailQueryViewListener</class>
+    <async>true</async>
+  </listener>
 </listeners>
