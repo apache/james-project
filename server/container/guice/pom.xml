@@ -34,10 +34,10 @@
 
     <modules>
 
-        <module>blob-api-guice</module>
-        <module>blob-export-guice</module>
-        <module>blob-memory-guice</module>
-        <module>blob-s3-guice</module>
+        <module>blob/api</module>
+        <module>blob/export</module>
+        <module>blob/memory</module>
+        <module>blob/s3</module>
         <module>cassandra-guice</module>
         <module>cassandra-ldap-guice</module>
         <module>cassandra-rabbitmq-guice</module>
