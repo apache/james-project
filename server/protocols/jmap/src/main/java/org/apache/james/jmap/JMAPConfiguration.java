@@ -33,6 +33,7 @@ public class JMAPConfiguration {
 
     public static class Builder {
         private Optional<Boolean> enabled = Optional.empty();
+        private Optional<Boolean> emailQueryViewEnabled = Optional.empty();
         private Optional<Port> port = Optional.empty();
 
         private Builder() {
@@ -52,6 +53,23 @@ public class JMAPConfiguration {
             return enabled(false);
         }
 
+        public Builder enableEmailQueryView(boolean enabled) {
+            return enableEmailQueryView(Optional.of(enabled));
+        }
+
+        public Builder enableEmailQueryView(Optional<Boolean> enabled) {
+            this.emailQueryViewEnabled = enabled;
+            return this;
+        }
+
+        public Builder enableEmailQueryView() {
+            return enableEmailQueryView(true);
+        }
+
+        public Builder disableEmailQueryView() {
+            return enableEmailQueryView(false);
+        }
+
         public Builder port(Port port) {
             this.port = Optional.of(port);
             return this;
@@ -64,18 +82,20 @@ public class JMAPConfiguration {
 
         public JMAPConfiguration build() {
             Preconditions.checkState(enabled.isPresent(), "You should specify if JMAP server should be started");
-            return new JMAPConfiguration(enabled.get(), port);
+            return new JMAPConfiguration(enabled.get(), port, emailQueryViewEnabled.orElse(false));
         }
 
     }
 
     private final boolean enabled;
     private final Optional<Port> port;
+    private final boolean emailQueryViewEnabled;
 
     @VisibleForTesting
-    JMAPConfiguration(boolean enabled, Optional<Port> port) {
+    JMAPConfiguration(boolean enabled, Optional<Port> port, boolean emailQueryViewEnabled) {
         this.enabled = enabled;
         this.port = port;
+        this.emailQueryViewEnabled = emailQueryViewEnabled;
     }
 
     public boolean isEnabled() {
@@ -84,5 +104,9 @@ public class JMAPConfiguration {
 
     public Optional<Port> getPort() {
         return port;
+    }
+
+    public boolean isEmailQueryViewEnabled() {
+        return emailQueryViewEnabled;
     }
 }

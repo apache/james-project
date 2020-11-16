@@ -64,6 +64,11 @@
                     <dt><strong>upload.max.size</strong></dt>
                     <dd>Optional. Configuration max size Upload in new JMAP-RFC-8621.</dd>
                     <dd>Default value: 30M. Supported units are B (bytes) K (KB) M (MB) G (GB).</dd>
+
+                    <dt><strong>view.email.query.enabled</strong></dt>
+                    <dd>Optional boolean. Defaults to false.</dd>
+                    <dd>Should simple Email/query be resolved against a Cassandra projection, or should we resolve them against ElasticSearch?
+                        This enables a higher resilience, but the projection needs to be correctly populated.</dd>
                 </dl>
 
             </subsection>
