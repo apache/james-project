@@ -25,20 +25,19 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.{NonNegative, Positive}
 import eu.timepit.refined.refineV
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
-import reactor.core.scala.publisher.SMono
 
 case class PositionUnparsed(value: Int) extends AnyVal
 object Position {
   type Position = Int Refined NonNegative
   val zero: Position = 0
 
-  def validateRequestPosition(requestPosition: Option[PositionUnparsed]): SMono[Position] = {
+  def validateRequestPosition(requestPosition: Option[PositionUnparsed]): Either[IllegalArgumentException, Position] = {
     val refinedPosition : Option[Either[String, Position]] =  requestPosition.map(position => refineV[NonNegative](position.value))
 
     refinedPosition match {
-      case Some(Left(_))  =>  SMono.raiseError(new IllegalArgumentException(s"Negative position are not supported yet. ${requestPosition.map(_.value).getOrElse("")} was provided."))
-      case Some(Right(position)) => SMono.just(position)
-      case None => SMono.just(Position.zero)
+      case Some(Left(_))  =>  Left(new IllegalArgumentException(s"Negative position are not supported yet. ${requestPosition.map(_.value).getOrElse("")} was provided."))
+      case Some(Right(position)) => Right(position)
+      case None => Right(Position.zero)
     }
   }
 }
@@ -46,16 +45,16 @@ object Position {
 case class LimitUnparsed(value: Long) extends AnyVal
 
 object Limit {
-  type Limit = Long Refined Positive
-  val default: Limit = 256L
+  type Limit = Int Refined Positive
+  val default: Limit = 256
 
-  def validateRequestLimit(requestLimit: Option[LimitUnparsed]): SMono[Limit] = {
+  def validateRequestLimit(requestLimit: Option[LimitUnparsed]): Either[IllegalArgumentException, Limit] = {
     val refinedLimit : Option[Either[String, Limit]] =  requestLimit.map(limit => refineV[Positive](limit.value))
 
     refinedLimit match {
-      case Some(Left(_))  =>  SMono.raiseError(new IllegalArgumentException(s"The limit can not be negative. ${requestLimit.map(_.value).getOrElse("")} was provided."))
-      case Some(Right(limit)) if limit.value < default.value => SMono.just(limit)
-      case _ => SMono.just(default)
+      case Some(Left(_))  =>  Left(new IllegalArgumentException(s"The limit can not be negative. ${requestLimit.map(_.value).getOrElse("")} was provided."))
+      case Some(Right(limit)) if limit.value < default.value => Right(limit)
+      case _ => Right(default)
     }
   }
 }
