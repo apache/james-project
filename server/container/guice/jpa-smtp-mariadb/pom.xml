@@ -62,10 +62,6 @@
             <artifactId>james-server-mailets</artifactId>
         </dependency>
         <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-mailets</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
             <scope>test</scope>
