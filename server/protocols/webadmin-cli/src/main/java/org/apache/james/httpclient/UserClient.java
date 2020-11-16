@@ -41,4 +41,7 @@ public interface UserClient {
     @RequestLine("DELETE /{userToBeDeleted}")
     Response deleteAUser(@Param("userToBeDeleted") String userName);
 
+    @RequestLine("HEAD /{userName}")
+    Response doesExist(@Param("userName") String userName);
+
 }

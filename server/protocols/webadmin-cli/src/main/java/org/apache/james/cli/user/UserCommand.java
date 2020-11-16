@@ -32,7 +32,8 @@ import picocli.CommandLine;
     subcommands = {
         UserListCommand.class,
         UserCreateCommand.class,
-        UserDeleteCommand.class
+        UserDeleteCommand.class,
+        UserExistCommand.class
     })
 public class UserCommand implements Callable<Integer> {
 
