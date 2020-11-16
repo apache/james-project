@@ -1629,6 +1629,78 @@ trait EmailQueryMethodContract {
   }
 
   @Test
+  def listMailsShouldBeSortedByDescendingOrderOfSentAtAndInMailbox(server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+
+    val requestDateMessage1 = Date.from(ZonedDateTime.now().minusDays(1).toInstant)
+    val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+        AppendCommand.builder()
+          .withInternalDate(requestDateMessage1)
+          .build(message))
+      .getMessageId
+
+    val requestDateMessage2 = Date.from(ZonedDateTime.now().minusDays(2).toInstant)
+    val messageId2 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+        AppendCommand.builder()
+          .withInternalDate(requestDateMessage2)
+          .build(message))
+      .getMessageId
+
+    val requestDateMessage3 = Date.from(ZonedDateTime.now().minusDays(3).toInstant)
+    val messageId3 = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
+        AppendCommand.builder()
+          .withInternalDate(requestDateMessage3)
+          .build(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter": {
+         |        "inMailbox": "${mailboxId.serialize}"
+         |      },
+         |      "comparator": [{
+         |        "property":"sentAt",
+         |        "isAscending": false
+         |      }]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+    assertThatJson(response)
+      .inPath("$.methodResponses[0][1].ids")
+      .isEqualTo(s"""["${messageId1.serialize}", "${messageId2.serialize}", "${messageId3.serialize}"]""")
+    }
+  }
+
+  @Test
   def listMailsShouldBeSortedByAscendingOrderOfSentAt(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val otherMailboxPath = MailboxPath.forUser(BOB, "other")
@@ -2967,6 +3039,7 @@ trait EmailQueryMethodContract {
         .isEqualTo(s"""["${messageId1.serialize}"]""")
     }
   }
+
   @Test
   def shouldListMailsReceivedBeforeADateInclusively(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage

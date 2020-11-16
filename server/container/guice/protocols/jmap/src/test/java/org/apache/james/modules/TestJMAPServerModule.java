@@ -116,6 +116,7 @@ public class TestJMAPServerModule extends AbstractModule {
         return JMAPConfiguration.builder()
             .enable()
             .randomPort()
+            .enableEmailQueryView()
             .build();
     }
 
