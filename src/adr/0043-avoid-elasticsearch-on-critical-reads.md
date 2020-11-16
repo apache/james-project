@@ -59,6 +59,12 @@ Cassandra dataset size will only grow of a few percents if enabled.
 Those not willing to adopt this view will not be affected. By disabling the listener and the view usage, they will keep
 resolving all `Email/query` against ElasticSearch.
 
+Another solution is to implement the projecting using a in-memory datagrid such as infinispan. The projection
+would be computed using a MailboxListener and the data would be first fetched from this cache and fallback to
+ElasticSearch. We did not choose it as Cassandra is already there, well mastered, as disk storage is cheaper than
+memory. InfiniSpan would moreover need additional datastore to allow a persistent state. Infinispan on the other hand
+would be faster and would have less restrictions on data filtering and sorting. Also this would require one more software dependency.
+
 ## Example of optimized JMAP requests
 
 ### A: Email list sorted by sentAt, with limit
