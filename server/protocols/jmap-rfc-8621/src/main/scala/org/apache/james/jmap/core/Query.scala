@@ -42,7 +42,7 @@ object Position {
   }
 }
 
-case class LimitUnparsed(value: Long) extends AnyVal
+case class LimitUnparsed(value: Int) extends AnyVal
 
 object Limit {
   type Limit = Int Refined Positive
