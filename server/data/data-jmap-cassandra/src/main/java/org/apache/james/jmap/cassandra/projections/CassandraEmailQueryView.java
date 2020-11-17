@@ -60,7 +60,6 @@ import reactor.core.publisher.Mono;
 
 public class CassandraEmailQueryView implements EmailQueryView {
     private static final String LIMIT_MARKER = "LIMIT_BIND_MARKER";
-    private static final int CONCURRENCY = 10;
 
     private final CassandraMessageId.Factory messageIdFactory;
     private final CassandraAsyncExecutor executor;
