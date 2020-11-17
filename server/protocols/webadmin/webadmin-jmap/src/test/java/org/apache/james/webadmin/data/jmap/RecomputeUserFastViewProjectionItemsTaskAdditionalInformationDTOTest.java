@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 class RecomputeUserFastViewProjectionItemsTaskAdditionalInformationDTOTest {
     private static final Instant INSTANT = Instant.parse("2007-12-03T10:15:30.00Z");
     private static final RecomputeUserFastViewProjectionItemsTask.AdditionalInformation DOMAIN_OBJECT = new RecomputeUserFastViewProjectionItemsTask.AdditionalInformation(
-        MessageFastViewProjectionCorrector.RunningOptions.withMessageRatePerSecond(20),
+        RunningOptions.withMessageRatePerSecond(20),
         Username.of("bob"), 2, 3, INSTANT);
 
     @Test
@@ -51,7 +51,7 @@ class RecomputeUserFastViewProjectionItemsTaskAdditionalInformationDTOTest {
             .deserialize(ClassLoaderUtils.getSystemResourceAsString("json/recomputeUser.additionalInformation.legacy.json"));
 
         RecomputeUserFastViewProjectionItemsTask.AdditionalInformation expected = new RecomputeUserFastViewProjectionItemsTask.AdditionalInformation(
-            MessageFastViewProjectionCorrector.RunningOptions.DEFAULT,
+            RunningOptions.DEFAULT,
             Username.of("bob"),
             2,
             3,

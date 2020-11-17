@@ -21,8 +21,6 @@ package org.apache.james.webadmin.data.jmap;
 
 import java.util.Optional;
 
-import org.apache.james.webadmin.data.jmap.MessageFastViewProjectionCorrector.RunningOptions;
-
 import spark.Request;
 
 public class RunningOptionsParser {

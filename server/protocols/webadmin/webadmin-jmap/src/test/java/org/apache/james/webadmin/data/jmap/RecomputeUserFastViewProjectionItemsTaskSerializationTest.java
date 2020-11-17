@@ -26,7 +26,6 @@ import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.core.Username;
 import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.util.ClassLoaderUtils;
-import org.apache.james.webadmin.data.jmap.MessageFastViewProjectionCorrector.RunningOptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -19,30 +19,24 @@
 
 package org.apache.james.webadmin.data.jmap;
 
-import java.util.Optional;
+import com.google.common.base.Preconditions;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-public class RunningOptionsDTO {
-    public static RunningOptionsDTO asDTO(RunningOptions domainObject) {
-        return new RunningOptionsDTO(Optional.of(domainObject.getMessagesPerSecond()));
+public class RunningOptions {
+    public static RunningOptions withMessageRatePerSecond(int messageRatePerSecond) {
+        return new RunningOptions(messageRatePerSecond);
     }
 
-    private final Optional<Integer> messagesPerSecond;
+    public static RunningOptions DEFAULT = new RunningOptions(10);
 
-    @JsonCreator
-    public RunningOptionsDTO(
-            @JsonProperty("messagesPerSecond") Optional<Integer> messagesPerSecond) {
+    private final int messagesPerSecond;
+
+    public RunningOptions(int messagesPerSecond) {
+        Preconditions.checkArgument(messagesPerSecond > 0, "'messagesPerSecond' must be strictly positive");
+
         this.messagesPerSecond = messagesPerSecond;
     }
 
-    public Optional<Integer> getMessagesPerSecond() {
+    public int getMessagesPerSecond() {
         return messagesPerSecond;
-    }
-
-    public RunningOptions asDomainObject() {
-        return messagesPerSecond.map(RunningOptions::withMessageRatePerSecond)
-            .orElse(RunningOptions.DEFAULT);
     }
 }

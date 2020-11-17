@@ -53,7 +53,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -63,26 +62,6 @@ public class MessageFastViewProjectionCorrector {
     private static final Duration PERIOD = Duration.ofSeconds(1);
     public static final int USER_CONCURRENCY = 1;
     public static final int MAILBOX_CONCURRENCY = 1;
-
-    public static class RunningOptions {
-        public static RunningOptions withMessageRatePerSecond(int messageRatePerSecond) {
-            return new RunningOptions(messageRatePerSecond);
-        }
-
-        public static RunningOptions DEFAULT = new RunningOptions(10);
-
-        private final int messagesPerSecond;
-
-        public RunningOptions(int messagesPerSecond) {
-            Preconditions.checkArgument(messagesPerSecond > 0, "'messagesPerSecond' must be strictly positive");
-
-            this.messagesPerSecond = messagesPerSecond;
-        }
-
-        public int getMessagesPerSecond() {
-            return messagesPerSecond;
-        }
-    }
 
     private static class ProjectionEntry {
         private final MessageManager messageManager;

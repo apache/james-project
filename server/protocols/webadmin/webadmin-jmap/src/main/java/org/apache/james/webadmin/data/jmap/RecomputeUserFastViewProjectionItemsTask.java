@@ -20,7 +20,6 @@
 package org.apache.james.webadmin.data.jmap;
 
 import static org.apache.james.webadmin.data.jmap.MessageFastViewProjectionCorrector.Progress;
-import static org.apache.james.webadmin.data.jmap.MessageFastViewProjectionCorrector.RunningOptions;
 
 import java.time.Clock;
 import java.time.Instant;
