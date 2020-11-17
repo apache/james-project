@@ -64,7 +64,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class GetMessageListMethod implements Method {
-
     private static final long DEFAULT_POSITION = 0;
     public static final String MAXIMUM_LIMIT = "maximumLimit";
     public static final long DEFAULT_MAXIMUM_LIMIT = 256;
@@ -137,28 +136,28 @@ public class GetMessageListMethod implements Method {
 
     private Flux<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, GetMessageListRequest messageListRequest) {
         return getMessageListResponse(messageListRequest, mailboxSession)
-                .flatMapMany(messageListResponse -> Flux.concat(
-                    Mono.just(JmapResponse.builder().methodCallId(methodCallId)
-                        .response(messageListResponse)
-                        .responseName(RESPONSE_NAME)
-                        .build()),
-                    processGetMessages(messageListRequest, messageListResponse, methodCallId, mailboxSession)))
-                .onErrorResume(NotImplementedException.class, e -> Mono.just(JmapResponse.builder()
-                    .methodCallId(methodCallId)
+            .flatMapMany(messageListResponse -> Flux.concat(
+                Mono.just(JmapResponse.builder().methodCallId(methodCallId)
+                    .response(messageListResponse)
                     .responseName(RESPONSE_NAME)
-                    .error(ErrorResponse.builder()
-                        .type("invalidArguments")
-                        .description(e.getMessage())
-                        .build())
-                    .build()))
-                .onErrorResume(Filter.TooDeepFilterHierarchyException.class, e -> Mono.just(JmapResponse.builder()
-                    .methodCallId(methodCallId)
-                    .responseName(RESPONSE_NAME)
-                    .error(ErrorResponse.builder()
-                        .type("invalidArguments")
-                        .description(e.getMessage())
-                        .build())
-                    .build()));
+                    .build()),
+                processGetMessages(messageListRequest, messageListResponse, methodCallId, mailboxSession)))
+            .onErrorResume(NotImplementedException.class, e -> Mono.just(JmapResponse.builder()
+                .methodCallId(methodCallId)
+                .responseName(RESPONSE_NAME)
+                .error(ErrorResponse.builder()
+                    .type("invalidArguments")
+                    .description(e.getMessage())
+                    .build())
+                .build()))
+            .onErrorResume(Filter.TooDeepFilterHierarchyException.class, e -> Mono.just(JmapResponse.builder()
+                .methodCallId(methodCallId)
+                .responseName(RESPONSE_NAME)
+                .error(ErrorResponse.builder()
+                    .type("invalidArguments")
+                    .description(e.getMessage())
+                    .build())
+                .build()));
     }
 
     private Mono<GetMessageListResponse> getMessageListResponse(GetMessageListRequest messageListRequest, MailboxSession mailboxSession) {
@@ -232,9 +231,9 @@ public class GetMessageListMethod implements Method {
 
         SearchQuery.Builder searchQueryBuilder = SearchQuery.builder();
 
-            messageListRequest.getFilter()
-                .map(filter -> new FilterToCriteria().convert(filter).collect(Guavate.toImmutableList()))
-                .ifPresent(searchQueryBuilder::andCriteria);
+        messageListRequest.getFilter()
+            .map(filter -> new FilterToCriteria().convert(filter).collect(Guavate.toImmutableList()))
+            .ifPresent(searchQueryBuilder::andCriteria);
         Set<MailboxId> inMailboxes = buildFilterMailboxesSet(messageListRequest.getFilter(), FilterCondition::getInMailboxes);
         Set<MailboxId> notInMailboxes = buildFilterMailboxesSet(messageListRequest.getFilter(), FilterCondition::getNotInMailboxes);
         List<SearchQuery.Sort> sorts = SortConverter.convertToSorts(messageListRequest.getSort());
@@ -242,10 +241,10 @@ public class GetMessageListMethod implements Method {
             searchQueryBuilder.sorts(sorts);
         }
         return MultimailboxesSearchQuery
-                .from(searchQueryBuilder.build())
-                .inMailboxes(inMailboxes)
-                .notInMailboxes(notInMailboxes)
-                .build();
+            .from(searchQueryBuilder.build())
+            .inMailboxes(inMailboxes)
+            .notInMailboxes(notInMailboxes)
+            .build();
     }
 
     private boolean containsNestedMailboxFilters(Filter filter) {
@@ -276,28 +275,28 @@ public class GetMessageListMethod implements Method {
     
     private Stream<FilterCondition> filterToFilterCondition(Optional<Filter> maybeCondition) {
         return Guavate.stream(maybeCondition)
-                .flatMap(c -> {
-                    if (c instanceof FilterCondition) {
-                        return Stream.of((FilterCondition)c);
-                    }
-                    return Stream.of();
-                });
+            .flatMap(c -> {
+                if (c instanceof FilterCondition) {
+                    return Stream.of((FilterCondition)c);
+                }
+                return Stream.of();
+            });
     }
-    
+
     private Flux<JmapResponse> processGetMessages(GetMessageListRequest messageListRequest, GetMessageListResponse messageListResponse, MethodCallId methodCallId, MailboxSession mailboxSession) {
         if (shouldChainToGetMessages(messageListRequest)) {
             GetMessagesRequest getMessagesRequest = GetMessagesRequest.builder()
-                    .ids(messageListResponse.getMessageIds())
-                    .properties(messageListRequest.getFetchMessageProperties())
-                    .build();
+                .ids(messageListResponse.getMessageIds())
+                .properties(messageListRequest.getFetchMessageProperties())
+                .build();
             return getMessagesMethod.process(getMessagesRequest, methodCallId, mailboxSession);
         }
         return Flux.empty();
     }
 
     private boolean shouldChainToGetMessages(GetMessageListRequest messageListRequest) {
-        return messageListRequest.isFetchMessages().orElse(false) 
-                && !messageListRequest.isFetchThreads().orElse(false);
+        return messageListRequest.isFetchMessages().orElse(false)
+            && !messageListRequest.isFetchThreads().orElse(false);
     }
 
 }
