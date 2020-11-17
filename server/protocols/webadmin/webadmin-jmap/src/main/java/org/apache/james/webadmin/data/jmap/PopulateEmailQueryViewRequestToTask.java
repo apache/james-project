@@ -19,9 +19,16 @@
 
 package org.apache.james.webadmin.data.jmap;
 
-import org.apache.james.webadmin.tasks.TaskRegistrationKey;
+import static org.apache.james.webadmin.data.jmap.Constants.POPULATE_EMAIL_QUERY_VIEW;
 
-public interface Constants {
-    TaskRegistrationKey TASK_REGISTRATION_KEY = TaskRegistrationKey.of("recomputeFastViewProjectionItems");
-    TaskRegistrationKey POPULATE_EMAIL_QUERY_VIEW = TaskRegistrationKey.of("populateEmailQueryView");
+import javax.inject.Inject;
+
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+
+public class PopulateEmailQueryViewRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
+    @Inject
+    PopulateEmailQueryViewRequestToTask(EmailQueryViewPopulator populator) {
+        super(POPULATE_EMAIL_QUERY_VIEW,
+            request -> new PopulateEmailQueryViewTask(populator, RunningOptionsParser.parse(request)));
+    }
 }
