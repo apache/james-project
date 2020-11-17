@@ -19,6 +19,7 @@
 
 package org.apache.james.modules.server;
 
+import org.apache.james.webadmin.data.jmap.PopulateEmailQueryViewRequestToTask;
 import org.apache.james.webadmin.data.jmap.RecomputeAllFastViewProjectionItemsRequestToTask;
 import org.apache.james.webadmin.data.jmap.RecomputeUserFastViewProjectionItemsRequestToTask;
 import org.apache.james.webadmin.routes.MailboxesRoutes;
@@ -36,6 +37,9 @@ public class JmapTasksModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.TaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS))
             .addBinding().to(RecomputeAllFastViewProjectionItemsRequestToTask.class);
+
+        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.TaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS))
+            .addBinding().to(PopulateEmailQueryViewRequestToTask.class);
 
         Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.TaskRegistration.class, Names.named(UserMailboxesRoutes.USER_MAILBOXES_OPERATIONS_INJECTION_KEY))
             .addBinding().to(RecomputeUserFastViewProjectionItemsRequestToTask.class);

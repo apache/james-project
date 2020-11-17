@@ -24,7 +24,10 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.webadmin.data.jmap.EmailQueryViewPopulator;
 import org.apache.james.webadmin.data.jmap.MessageFastViewProjectionCorrector;
+import org.apache.james.webadmin.data.jmap.PopulateEmailQueryViewTask;
+import org.apache.james.webadmin.data.jmap.PopulateEmailQueryViewTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.data.jmap.RecomputeAllFastViewProjectionItemsTask;
 import org.apache.james.webadmin.data.jmap.RecomputeAllFastViewTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.data.jmap.RecomputeUserFastViewProjectionItemsTask;
@@ -42,6 +45,11 @@ public class JmapTaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> populateEmailQueryViewTask(EmailQueryViewPopulator populator) {
+        return PopulateEmailQueryViewTask.module(populator);
+    }
+
+    @ProvidesIntoSet
     public TaskDTOModule<? extends Task, ? extends TaskDTO> recomputeUserJmapPreviewsTask(MessageFastViewProjectionCorrector corrector) {
         return RecomputeUserFastViewProjectionItemsTask.module(corrector);
     }
@@ -55,6 +63,17 @@ public class JmapTaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminRecomputeAllJmapPreviewsAdditionalInformation() {
         return RecomputeAllFastViewTaskAdditionalInformationDTO.module();
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> populateEmailQueryViewAdditionalInformation() {
+        return PopulateEmailQueryViewTaskAdditionalInformationDTO.module();
+    }
+
+    @Named(DTOModuleInjections.WEBADMIN_DTO)
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminPopulateEmailQueryViewAdditionalInformation() {
+        return PopulateEmailQueryViewTaskAdditionalInformationDTO.module();
     }
 
     @ProvidesIntoSet
