@@ -19,36 +19,52 @@
 package org.apache.james.modules.mailbox;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class ListenersConfiguration {
 
     public static ListenersConfiguration of(ListenerConfiguration... listenersConfiguration) {
-        return new ListenersConfiguration(ImmutableList.copyOf(listenersConfiguration));
+        return new ListenersConfiguration(ImmutableList.copyOf(listenersConfiguration), true);
+    }
+
+    public static ListenersConfiguration disabled() {
+        return new ListenersConfiguration(ImmutableList.of(), false);
     }
 
     public static ListenersConfiguration from(HierarchicalConfiguration<ImmutableNode> configuration) {
         List<HierarchicalConfiguration<ImmutableNode>> listeners = configuration.configurationsAt("listener");
+        Optional<Boolean> consumeGroups = Optional.ofNullable(configuration.getBoolean("executeGroupListeners", null));
 
         return new ListenersConfiguration(listeners
-            .stream()
-            .map(ListenerConfiguration::from)
-            .collect(Guavate.toImmutableList()));
+                .stream()
+                .map(ListenerConfiguration::from)
+                .collect(Guavate.toImmutableList()),
+            consumeGroups.orElse(true));
     }
     
     private final List<ListenerConfiguration> listenersConfiguration;
+    private final boolean enableGroupListenerConsumption;
 
-    @VisibleForTesting ListenersConfiguration(List<ListenerConfiguration> listenersConfiguration) {
+    @VisibleForTesting ListenersConfiguration(List<ListenerConfiguration> listenersConfiguration, boolean enableGroupListenerConsumption) {
+        Preconditions.checkArgument(enableGroupListenerConsumption || listenersConfiguration.isEmpty(),
+            "'executeGroupListeners' can not be false while extra listeners are configured");
         this.listenersConfiguration = listenersConfiguration;
+        this.enableGroupListenerConsumption = enableGroupListenerConsumption;
     }
 
     public List<ListenerConfiguration> getListenersConfiguration() {
         return listenersConfiguration;
+    }
+
+    public boolean isGroupListenerConsumptionEnabled() {
+        return enableGroupListenerConsumption;
     }
 }

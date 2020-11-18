@@ -70,11 +70,13 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
     public void configure(ListenersConfiguration listenersConfiguration) {
         LOGGER.info("Loading user registered mailbox listeners");
 
-        guiceDefinedListeners.forEach(eventBus::register);
+        if (listenersConfiguration.isGroupListenerConsumptionEnabled()) {
+            guiceDefinedListeners.forEach(eventBus::register);
 
-        listenersConfiguration.getListenersConfiguration().stream()
-            .map(this::createListener)
-            .forEach(this::register);
+            listenersConfiguration.getListenersConfiguration().stream()
+                .map(this::createListener)
+                .forEach(this::register);
+        }
     }
 
     @Override

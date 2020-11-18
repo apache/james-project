@@ -21,6 +21,7 @@
 <!-- Read https://james.apache.org/server/config-listeners.html for further details -->
 
 <listeners>
+  <executeGroupListeners>true</executeGroupListeners>
   <listener>
     <class>org.apache.james.mailbox.spamassassin.SpamAssassinListener</class>
     <async>true</async>
