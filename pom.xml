@@ -3428,6 +3428,70 @@
             </extension>
         </extensions>
     </build>
+    <reporting>
+        <plugins>
+            <!-- Order matters. First project-info-reports, second jxr. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jxr-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+            </plugin>
+            <!--
+            See JAMES-2511 basicRuleSet.xml do not exist so when re-enabled this plugin failed.
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+            </plugin>
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+            </plugin>
+
+            <!--
+                <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-changes-plugin</artifactId>
+                <configuration>
+                <onlyCurrentVersion>true</onlyCurrentVersion>
+                <resolutionIds>Fixed</resolutionIds>
+                <statusIds>Resolved,Closed</statusIds>
+                <columnNames>Type,Key,Summary,Status,Resolution,Fix Version</columnNames>
+                </configuration>
+                <reportSets>
+                <reportSet>
+                <reports>
+                <report>jira-report</report>
+                </reports>
+                </reportSet>
+                </reportSets>
+                </plugin>
+            -->
+        </plugins>
+    </reporting>
 
     <profiles>
         <!--
@@ -3534,68 +3598,4 @@
             </build>
         </profile>
     </profiles>
-    <reporting>
-        <plugins>
-            <!-- Order matters. First project-info-reports, second jxr. -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-project-info-reports-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jxr-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-report-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.rat</groupId>
-                <artifactId>apache-rat-plugin</artifactId>
-            </plugin>
-            <!--
-            See JAMES-2511 basicRuleSet.xml do not exist so when re-enabled this plugin failed.
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-            </plugin>
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>findbugs-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>versions-maven-plugin</artifactId>
-            </plugin>
-
-            <!--
-                <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-changes-plugin</artifactId>
-                <configuration>
-                <onlyCurrentVersion>true</onlyCurrentVersion>
-                <resolutionIds>Fixed</resolutionIds>
-                <statusIds>Resolved,Closed</statusIds>
-                <columnNames>Type,Key,Summary,Status,Resolution,Fix Version</columnNames>
-                </configuration>
-                <reportSets>
-                <reportSet>
-                <reports>
-                <report>jira-report</report>
-                </reports>
-                </reportSet>
-                </reportSets>
-                </plugin>
-            -->
-        </plugins>
-    </reporting>
 </project>
