@@ -65,11 +65,11 @@
                     <artifactId>apache-mailet</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>${james.groupId}</groupId>
+                    <groupId>org.apache.james</groupId>
                     <artifactId>apache-mime4j-core</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>${james.groupId}</groupId>
+                    <groupId>org.apache.james</groupId>
                     <artifactId>apache-mime4j-dom</artifactId>
                 </exclusion>
                 <exclusion>
@@ -94,11 +94,11 @@
                     <artifactId>apache-mailet</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>${james.groupId}</groupId>
+                    <groupId>org.apache.james</groupId>
                     <artifactId>apache-mime4j-core</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>${james.groupId}</groupId>
+                    <groupId>org.apache.james</groupId>
                     <artifactId>apache-mime4j-dom</artifactId>
                 </exclusion>
                 <exclusion>

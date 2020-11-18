@@ -1047,16 +1047,6 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>apache-mime4j-dom</artifactId>
-                <version>${apache-mime4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>apache-mime4j-james-utils</artifactId>
-                <version>${apache-mime4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
                 <artifactId>backup</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -2433,6 +2423,16 @@
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
                 <version>4.5.10</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-mime4j-dom</artifactId>
+                <version>${apache-mime4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.james</groupId>
+                <artifactId>apache-mime4j-james-utils</artifactId>
+                <version>${apache-mime4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.james.jspf</groupId>
