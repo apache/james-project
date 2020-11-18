@@ -90,8 +90,8 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-ldap</artifactId>
-            <type>test-jar</type>
             <version>${project.version}</version>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>

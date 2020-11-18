@@ -53,7 +53,7 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>javax-mail-extension</artifactId>
+            <artifactId>james-mdn</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -62,7 +62,7 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-mdn</artifactId>
+            <artifactId>javax-mail-extension</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

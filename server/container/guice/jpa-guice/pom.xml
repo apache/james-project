@@ -51,11 +51,11 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-mailbox-quota-search-scanning</artifactId>
+            <artifactId>apache-james-mailbox-lucene</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-mailbox-lucene</artifactId>
+            <artifactId>apache-james-mailbox-quota-search-scanning</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -64,10 +64,6 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-mailbox</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -93,6 +89,10 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-guice-mailbox</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-mailbox-plugin-spamassassin</artifactId>
         </dependency>
         <dependency>
@@ -105,11 +105,11 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-smtp</artifactId>
+            <artifactId>james-server-guice-sieve-jpa</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-sieve-jpa</artifactId>
+            <artifactId>james-server-guice-smtp</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

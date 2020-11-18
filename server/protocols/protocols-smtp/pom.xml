@@ -66,12 +66,12 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-dnsservice-test</artifactId>
-            <scope>test</scope>
+            <artifactId>james-server-dnsservice-library</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-dnsservice-library</artifactId>
+            <artifactId>james-server-dnsservice-test</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -129,6 +129,31 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>${james.protocols.groupId}</groupId>
+            <artifactId>protocols-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.protocols.groupId}</groupId>
+            <artifactId>protocols-api</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.protocols.groupId}</groupId>
+            <artifactId>protocols-netty</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>${james.protocols.groupId}</groupId>
+            <artifactId>protocols-smtp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.protocols.groupId}</groupId>
+            <artifactId>protocols-smtp</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <scope>test</scope>
@@ -156,37 +181,12 @@
             <artifactId>javax.inject</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james.jspf</groupId>
-            <artifactId>apache-jspf-resolver</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.protocols.groupId}</groupId>
-            <artifactId>protocols-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.protocols.groupId}</groupId>
-            <artifactId>protocols-api</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.protocols.groupId}</groupId>
-            <artifactId>protocols-netty</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>${james.protocols.groupId}</groupId>
-            <artifactId>protocols-smtp</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.protocols.groupId}</groupId>
-            <artifactId>protocols-smtp</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-configuration2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james.jspf</groupId>
+            <artifactId>apache-jspf-resolver</artifactId>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>

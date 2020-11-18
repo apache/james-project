@@ -33,13 +33,13 @@
 
     <dependencies>
         <dependency>
-            <groupId>${james.groupId}.protocols</groupId>
-            <artifactId>protocols-netty</artifactId>
-        </dependency>
-        <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>testing-base</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}.protocols</groupId>
+            <artifactId>protocols-netty</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>

@@ -36,8 +36,8 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-memory-guice</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
