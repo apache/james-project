@@ -34,7 +34,6 @@
 
     <modules>
         <module>blob-api</module>
-        <module>blob-storage-strategy</module>
         <module>blob-cassandra</module>
         <module>blob-common</module>
         <module>blob-export-api</module>
@@ -42,6 +41,7 @@
         <module>blob-gc</module>
         <module>blob-memory</module>
         <module>blob-s3</module>
+        <module>blob-storage-strategy</module>
 
         <module>mail-store</module>
     </modules>

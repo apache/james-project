@@ -34,7 +34,7 @@
 
     <modules>
         <module>custom-mailets</module>
-        <module>dependency</module>
         <module>custom-mailets-implementation</module>
+        <module>dependency</module>
     </modules>
 </project>
