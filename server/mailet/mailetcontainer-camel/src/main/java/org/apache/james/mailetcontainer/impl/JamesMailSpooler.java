@@ -53,6 +53,8 @@ import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -227,12 +229,17 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
      */
     @PostConstruct
     public void init() {
-        LOGGER.info("init...");
-        LOGGER.info("Concurrency level is {}", concurrencyLevel);
-        MailQueue queue = queueFactory.createQueue(MailQueueFactory.SPOOL, MailQueueFactory.prefetchCount(concurrencyLevel));
-        runner = Optional.of(new Runner(metricFactory,
-            mailProcessor, errorRepository(), errorRepositoryURL, queue, concurrencyLevel));
-        LOGGER.info("Spooler started");
+        Preconditions.checkArgument(concurrencyLevel >= 0, "'threads' needs to be greater than or equal to zero");
+        if (concurrencyLevel > 0) {
+            LOGGER.info("init...");
+            LOGGER.info("Concurrency level is {}", concurrencyLevel);
+            MailQueue queue = queueFactory.createQueue(MailQueueFactory.SPOOL, MailQueueFactory.prefetchCount(concurrencyLevel));
+            runner = Optional.of(new Runner(metricFactory,
+                mailProcessor, errorRepository(), errorRepositoryURL, queue, concurrencyLevel));
+            LOGGER.info("Spooler started");
+        } else {
+            LOGGER.info("Spooler had been dis-activated. To enable is set 'threads' count to a value greater than zero");
+        }
     }
 
     private MailRepository errorRepository() {
