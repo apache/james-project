@@ -562,17 +562,17 @@ object EmailFastViewReader {
   val logger: Logger = LoggerFactory.getLogger(classOf[EmailFastViewReader])
 }
 
+private sealed trait FastViewResult
+
+private case class FastViewAvailable(id: MessageId, fastView: MessageFastViewPrecomputedProperties) extends FastViewResult
+
+private case class FastViewUnavailable(id: MessageId) extends FastViewResult
+
 private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
                                             messageFastViewProjection: MessageFastViewProjection,
                                             zoneIdProvider: ZoneIdProvider,
                                             fullViewFactory: EmailFullViewFactory) extends EmailViewReader[EmailView] {
   private val fullReader: GenericEmailViewReader[EmailFullView] = new GenericEmailViewReader[EmailFullView](messageIdManager, FULL_CONTENT, fullViewFactory)
-
-  private sealed trait FastViewResult
-
-  private case class FastViewAvailable(id: MessageId, fastView: MessageFastViewPrecomputedProperties) extends FastViewResult
-
-  private case class FastViewUnavailable(id: MessageId) extends FastViewResult
 
   override def read[T >: EmailView](ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T] = {
     SMono.fromPublisher(messageFastViewProjection.retrieve(ids.asJava))

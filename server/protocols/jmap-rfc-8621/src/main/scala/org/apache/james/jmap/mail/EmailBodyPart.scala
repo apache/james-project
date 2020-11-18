@@ -166,16 +166,16 @@ object Name {
     }.map(Name(_))
 }
 
-case class Name(value: String)
-case class Type(value: String)
-case class Charset(value: String)
+case class Name(value: String) extends AnyVal
+case class Type(value: String) extends AnyVal
+case class Charset(value: String) extends AnyVal
 
 object Disposition {
   val ATTACHMENT = Disposition("attachment")
   val INLINE = Disposition("inline")
 }
 
-case class Disposition(value: String)
+case class Disposition(value: String) extends AnyVal
 
 object Languages {
   def of(entity: Entity): Option[Languages] =
@@ -190,9 +190,9 @@ case class Languages(value: List[Language]) {
   def asField: Field = new RawField("Content-Language", value.map(_.value).mkString(", "))
 }
 
-case class Language(value: String)
+case class Language(value: String) extends AnyVal
 
-case class Location(value: String) {
+case class Location(value: String) extends AnyVal {
   def asField: Field = new RawField("Content-Location", value)
 }
 

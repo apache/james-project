@@ -49,7 +49,7 @@ sealed trait VacationResponseUpdateResult {
 
   def asVacationResponseUpdateResults = VacationResponseUpdateResults(updated, notUpdated)
 }
-case class VacationResponseUpdateSuccess() extends VacationResponseUpdateResult {
+case object VacationResponseUpdateSuccess extends VacationResponseUpdateResult {
   override def updated: Map[String, VacationResponseUpdateResponse] = Map(VACATION_RESPONSE_PATCH_OBJECT_KEY -> VacationResponseUpdateResponse(JsObject(Seq())))
 
   override def notUpdated: Map[String, VacationResponseSetError] = Map()
@@ -101,7 +101,7 @@ class VacationResponseSetMethod @Inject()(vacationRepository: VacationRepository
   private def update(validatedPatch: VacationPatch, mailboxSession: MailboxSession): SMono[VacationResponseUpdateResult] =
     SMono.fromPublisher(
       vacationRepository.modifyVacation(toVacationAccountId(mailboxSession), validatedPatch))
-      .`then`(SMono.just(VacationResponseUpdateSuccess()))
+      .`then`(SMono.just(VacationResponseUpdateSuccess))
 
   private def toVacationAccountId(mailboxSession: MailboxSession): AccountId = {
     AccountId.fromUsername(mailboxSession.getUser)

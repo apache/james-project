@@ -42,6 +42,24 @@ import reactor.core.scheduler.Schedulers
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 
+object MailboxGetResults {
+  def merge(result1: MailboxGetResults, result2: MailboxGetResults): MailboxGetResults = result1.merge(result2)
+  def empty(): MailboxGetResults = MailboxGetResults(Set.empty, NotFound(Set.empty))
+  def found(mailbox: Mailbox): MailboxGetResults = MailboxGetResults(Set(mailbox), NotFound(Set.empty))
+  def notFound(mailboxId: UnparsedMailboxId): MailboxGetResults = MailboxGetResults(Set.empty, NotFound(Set(mailboxId)))
+  def notFound(mailboxId: MailboxId): MailboxGetResults = MailboxGetResults(Set.empty, NotFound(Set(MailboxGet.asUnparsed(mailboxId))))
+}
+
+case class MailboxGetResults(mailboxes: Set[Mailbox], notFound: NotFound) {
+  def merge(other: MailboxGetResults): MailboxGetResults = MailboxGetResults(this.mailboxes ++ other.mailboxes, this.notFound.merge(other.notFound))
+
+  def asResponse(accountId: AccountId): MailboxGetResponse = MailboxGetResponse(
+    accountId = accountId,
+    state = INSTANCE,
+    list = mailboxes.toList.sortBy(_.sortOrder),
+    notFound = notFound)
+}
+
 class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
                                   mailboxManager: MailboxManager,
                                   subscriptionManager: SubscriptionManager,
@@ -52,24 +70,6 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
                                   val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[MailboxGetRequest] {
   override val methodName: MethodName = MethodName("Mailbox/get")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
-
-  object MailboxGetResults {
-    def merge(result1: MailboxGetResults, result2: MailboxGetResults): MailboxGetResults = result1.merge(result2)
-    def empty(): MailboxGetResults = MailboxGetResults(Set.empty, NotFound(Set.empty))
-    def found(mailbox: Mailbox): MailboxGetResults = MailboxGetResults(Set(mailbox), NotFound(Set.empty))
-    def notFound(mailboxId: UnparsedMailboxId): MailboxGetResults = MailboxGetResults(Set.empty, NotFound(Set(mailboxId)))
-    def notFound(mailboxId: MailboxId): MailboxGetResults = MailboxGetResults(Set.empty, NotFound(Set(MailboxGet.asUnparsed(mailboxId))))
-  }
-
-  case class MailboxGetResults(mailboxes: Set[Mailbox], notFound: NotFound) {
-    def merge(other: MailboxGetResults): MailboxGetResults = MailboxGetResults(this.mailboxes ++ other.mailboxes, this.notFound.merge(other.notFound))
-
-    def asResponse(accountId: AccountId): MailboxGetResponse = MailboxGetResponse(
-      accountId = accountId,
-      state = INSTANCE,
-      list = mailboxes.toList.sortBy(_.sortOrder),
-      notFound = notFound)
-  }
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxGetRequest): SMono[InvocationWithContext] = {
     val requestedProperties: Properties = request.properties.getOrElse(Mailbox.allProperties)

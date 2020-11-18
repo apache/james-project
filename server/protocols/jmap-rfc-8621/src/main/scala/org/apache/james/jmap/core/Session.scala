@@ -32,8 +32,8 @@ import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.State.{INSTANCE, State}
 
-case class IsPersonal(value: Boolean)
-case class IsReadOnly(value: Boolean)
+case class IsPersonal(value: Boolean) extends AnyVal
+case class IsReadOnly(value: Boolean) extends AnyVal
 
 object AccountId {
   def from(username: Username): Either[IllegalArgumentException, AccountId] = {

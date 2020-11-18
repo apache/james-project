@@ -31,11 +31,11 @@ import scala.compat.java8.OptionConverters._
 
 case class VacationResponseId()
 
-case class IsEnabled(value: Boolean)
+case class IsEnabled(value: Boolean) extends AnyVal
 case class FromDate(value: UTCDate)
 case class ToDate(value: UTCDate)
-case class TextBody(value: String)
-case class HtmlBody(value: String)
+case class TextBody(value: String) extends AnyVal
+case class HtmlBody(value: String) extends AnyVal
 
 object VacationResponse {
   val VACATION_RESPONSE_ID: Id = "singleton"

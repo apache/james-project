@@ -24,8 +24,8 @@ import java.nio.{ByteBuffer, CharBuffer}
 
 import org.apache.james.jmap.mail.EmailGetRequest.{MaxBodyValueBytes, ZERO}
 
-case class IsEncodingProblem(value: Boolean)
-case class IsTruncated(value: Boolean)
+case class IsEncodingProblem(value: Boolean) extends AnyVal
+case class IsTruncated(value: Boolean) extends AnyVal
 
 case class EmailBodyValue(value: String,
                           isEncodingProblem: IsEncodingProblem,
