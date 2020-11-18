@@ -3183,7 +3183,7 @@
                                         <execute>
                                             <runOnIncremental>false</runOnIncremental>
                                         </execute>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -3199,7 +3199,7 @@
                                         <execute>
                                             <runOnIncremental>false</runOnIncremental>
                                         </execute>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -3215,7 +3215,7 @@
                                         <execute>
                                             <runOnIncremental>false</runOnIncremental>
                                         </execute>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -3229,7 +3229,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                             </pluginExecutions>
