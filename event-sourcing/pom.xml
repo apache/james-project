@@ -25,9 +25,9 @@
         <artifactId>james-project</artifactId>
         <version>3.6.0-SNAPSHOT</version>
     </parent>
+    <artifactId>event-sourcing</artifactId>
 
     <packaging>pom</packaging>
-    <artifactId>event-sourcing</artifactId>
 
     <name>Apache James :: Event Sourcing</name>
 

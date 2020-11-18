@@ -22,8 +22,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>apache-james-mpt-imapmailbox</artifactId>
         <groupId>org.apache.james</groupId>
+        <artifactId>apache-james-mpt-imapmailbox</artifactId>
         <version>3.6.0-SNAPSHOT</version>
     </parent>
 

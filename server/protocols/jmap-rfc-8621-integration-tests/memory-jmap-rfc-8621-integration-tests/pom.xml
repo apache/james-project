@@ -17,19 +17,17 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>jmap-rfc-8621-integration-tests</artifactId>
-        <groupId>org.apache.james</groupId>
-        <version>3.6.0-SNAPSHOT</version>
-    </parent>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.james</groupId>
+        <artifactId>jmap-rfc-8621-integration-tests</artifactId>
+        <version>3.6.0-SNAPSHOT</version>
+    </parent>
     <artifactId>memory-jmap-rfc-8621-integration-tests</artifactId>
-    <description>JMAP RFC-8621 integration test for memory product</description>
     <name>Apache James :: Server :: JMAP RFC-8621 :: Memory Integration Testing</name>
+    <description>JMAP RFC-8621 integration test for memory product</description>
 
     <dependencies>
         <dependency>
