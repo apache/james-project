@@ -82,16 +82,14 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>
-                        <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
+                        <phase>package</phase>
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>
-                                        org.apache.james.cli.WebAdminCli
-                                    </mainClass>
+                                    <mainClass>org.apache.james.cli.WebAdminCli</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>

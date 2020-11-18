@@ -65,10 +65,10 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <phase>compile</phase>
                         <goals>
                             <goal>generate</goal>
                         </goals>
+                        <phase>compile</phase>
                     </execution>
                 </executions>
             </plugin>
