@@ -71,7 +71,6 @@
         <module>dns-service/dnsservice-test</module>
 
         <module>mailet/dkim</module>
-
         <module>mailet/integration-testing</module>
         <module>mailet/mailetcontainer-api</module>
         <module>mailet/mailetcontainer-camel</module>
