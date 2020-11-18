@@ -81,10 +81,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-mailbox-plugin-deleted-messages-vault-guice</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-quota-search-elasticsearch</artifactId>
         </dependency>
         <dependency>
@@ -137,8 +133,8 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>event-sourcing-event-store-cassandra</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -157,10 +153,6 @@
             <artifactId>james-server-guice-common</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-mailet</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -198,6 +190,10 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-guice-mailet</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-managedsieve</artifactId>
         </dependency>
         <dependency>
@@ -215,14 +211,6 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-webadmin-data</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-webadmin-cassandra</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-webadmin-cassandra-data</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -260,6 +248,10 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-mailbox-plugin-deleted-messages-vault-guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-mailets</artifactId>
         </dependency>
         <dependency>
@@ -274,6 +266,14 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-webadmin-cassandra</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-webadmin-cassandra-data</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

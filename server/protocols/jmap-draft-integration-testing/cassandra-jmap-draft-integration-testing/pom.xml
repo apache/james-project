@@ -35,13 +35,13 @@
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-backends-es</artifactId>
+            <artifactId>apache-james-backends-cassandra</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-backends-cassandra</artifactId>
+            <artifactId>apache-james-backends-es</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -71,6 +71,12 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-tika</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>apache-james-spamassassin</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -133,12 +139,6 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-jmap-draft-integration-testing</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-spamassassin</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

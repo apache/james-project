@@ -38,8 +38,8 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-linshare</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -114,7 +114,15 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-guice-mailbox</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-mailbox-plugin-spamassassin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-guice-mailet</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -162,19 +170,11 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-mailbox</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-mailet</artifactId>
+            <artifactId>james-server-mailbox-adapter</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-mailbox-plugin-deleted-messages-vault-guice</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-mailbox-adapter</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

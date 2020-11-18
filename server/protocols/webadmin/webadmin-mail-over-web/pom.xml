@@ -43,16 +43,12 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-webadmin-core</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>james-server-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>james-server-queue-memory</artifactId>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>metrics-tests</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -67,8 +63,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>metrics-tests</artifactId>
+            <groupId>org.apache.james</groupId>
+            <artifactId>james-server-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>james-server-queue-memory</artifactId>
             <scope>test</scope>
         </dependency>
 

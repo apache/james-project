@@ -49,6 +49,10 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>apache-james-mpt-smtp-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>blob-s3</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -58,10 +62,6 @@
             <artifactId>blob-s3-guice</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-mpt-smtp-core</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

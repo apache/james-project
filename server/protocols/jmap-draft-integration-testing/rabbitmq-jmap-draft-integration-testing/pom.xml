@@ -65,11 +65,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-dnsservice-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-cassandra-guice</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -87,8 +82,7 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-jmap-draft-integration-testing</artifactId>
-            <type>test-jar</type>
+            <artifactId>james-server-dnsservice-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -100,6 +94,12 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-jmap</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-jmap-draft-integration-testing</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

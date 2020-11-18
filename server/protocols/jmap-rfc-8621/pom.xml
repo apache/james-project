@@ -50,8 +50,8 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-memory</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -89,8 +89,8 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-util</artifactId>
-            <scope>test</scope>
             <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -103,11 +103,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>commons-fileupload</groupId>
-            <artifactId>commons-fileupload</artifactId>
-            <version>1.4</version>
-        </dependency>
-        <dependency>
             <groupId>com.github.dpaukov</groupId>
             <artifactId>combinatoricslib3</artifactId>
             <scope>test</scope>
@@ -115,6 +110,11 @@
         <dependency>
             <groupId>com.typesafe.play</groupId>
             <artifactId>play-json_${scala.base}</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+            <version>1.4</version>
         </dependency>
         <dependency>
             <groupId>eu.timepit</groupId>
@@ -145,14 +145,14 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-java8-compat_${scala.base}</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scala.base}</artifactId>
             <version>3.1.1</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.scala-lang.modules</groupId>
-            <artifactId>scala-java8-compat_${scala.base}</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
