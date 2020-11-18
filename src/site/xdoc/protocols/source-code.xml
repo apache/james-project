@@ -40,7 +40,7 @@
   </section>
 
   <section name="Build Source Code">
-    <p>You can read a tutorial on how to build Apache James Server on <a href="http://james.apache.org/server/3/dev-build.html">http://james.apache.org/server/3/dev-build.html</a>.</p>
+    <p>You can read a tutorial on how to build Apache James Server on <a href="http://james.apache.org/server/dev-build.html">http://james.apache.org/server/dev-build.html</a>.</p>
     <p>The GIT URLs and the project names must be adapted, but the requirements and process are the same and you can inspire
        from the build the Apache James IMAP libraries.</p>
   </section>
@@ -59,7 +59,7 @@
       <p><code>apache-james-protocols-impl</code> provides common services that can be used by any mail protocol.</p>
     </subsection>
     <subsection name="James Protocols SMTP">
-      <p><code>apache-james-protocols-smtp</code> implements the SMTP protocols with <a href="http://james.apache.org/server/3/dev-extend-smtp-hook.html">hooks</a> for extensions.</p>
+      <p><code>apache-james-protocols-smtp</code> implements the SMTP protocols with <a href="http://james.apache.org/server/dev-extend-smtp-hook.html">hooks</a> for extensions.</p>
     </subsection>
   </section>
 

@@ -219,7 +219,7 @@ DEBUG 17:24:17,829 | james.smtpserver | 262 org.apache.james.smtpserver.SenderAu
 #  specific language governing permissions and limitations
 #  under the License.
 
-# See http://james.apache.org/server/3/config.html for usage
+# See http://james.apache.org/server/config.html for usage
 
 log4j.rootLogger=DEBUG
 

@@ -54,7 +54,7 @@
   </section>
 
   <section name="Build Source Code">
-    <p>You can read a tutorial on how to build Apache James Server on <a href="http://james.apache.org/server/3/dev-build.html">http://james.apache.org/server/3/dev-build.html</a>.</p>
+    <p>You can read a tutorial on how to build Apache James Server on <a href="http://james.apache.org/server/dev-build.html">http://james.apache.org/server/3/dev-build.html</a>.</p>
     <p>The GIT URLs and the project names must be adapted, but the requirements and process are the same and you can inspire
        from the build the Apache James Mailbox libraries.</p>
   </section>

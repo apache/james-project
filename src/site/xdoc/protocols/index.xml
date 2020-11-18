@@ -44,7 +44,7 @@
     <p>The <a href="source-code.html">source code</a> page contains information on how 
        to develop with James Protocols.</p>
     <p>You can also read more on the way the James Server
-       uses James Protocols to <a href="http://james.apache.org/server/3/dev-extend-smtp-hook.html">Hook SMTP</a>.</p>
+       uses James Protocols to <a href="http://james.apache.org/server/dev-extend-smtp-hook.html">Hook SMTP</a>.</p>
     <img src="images/uml/org.apache.james.protocols-package.png"/>
   </section>
 

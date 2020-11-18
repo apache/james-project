@@ -75,9 +75,9 @@ Persistence
 - Users persistence is configured in usersrepository.xml
 - All database connection use the database.properties in case of database access.
 
-Mailet Container - http://james.apache.org/server/3/feature-mailetcontainer.html
+Mailet Container - http://james.apache.org/server/feature-mailetcontainer.html
 
-SMTP Hooks - http://james.apache.org/server/3/feature-smtp-hooks.html
+SMTP Hooks - http://james.apache.org/server/feature-smtp-hooks.html
 
 Step 4: Configure
 #################
