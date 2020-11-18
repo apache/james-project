@@ -5496,6 +5496,106 @@ trait EmailQueryMethodContract {
   }
 
   @Test
+  def emailQueryShouldRejectFilterOperatorWithExtraFields(server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val requestDate = ZonedDateTime.now().minusDays(1)
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "inMailbox": "${mailboxId.serialize}",
+         |        "before": "${UTCDate(requestDate.plusHours(1)).asUTC.format(UTC_DATE_FORMAT)}",
+         |        "operator": "AND",
+         |        "conditions": [
+         |          { "hasKeyword": "custom" }, { "hasKeyword": "another_custom" }
+         |        ]
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(s"""{
+                    |    "sessionState": "75128aab4b1b",
+                    |    "methodResponses": [
+                    |        [
+                    |            "error",
+                    |            {
+                    |                "type": "invalidArguments",
+                    |                "description": "{\\"errors\\":[{\\"path\\":\\"obj.filter\\",\\"messages\\":[\\"Expecting filterOperator to contain only operator and conditions\\"]}]}"
+                    |            },
+                    |            "c1"
+                    |        ]
+                    |    ]
+                    |}""".stripMargin)
+  }
+
+  @Test
+  def emailQueryShouldRejectOperatorWithoutCondition(server: GuiceJamesServer): Unit = {
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "filter" : {
+         |        "operator": "AND"
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(s"""{
+                    |    "sessionState": "75128aab4b1b",
+                    |    "methodResponses": [
+                    |        [
+                    |            "error",
+                    |            {
+                    |                "type": "invalidArguments",
+                    |                "description": "{\\"errors\\":[{\\"path\\":\\"obj.filter\\",\\"messages\\":[\\"Expecting filterOperator to contain only operator and conditions\\"]}]}"
+                    |            },
+                    |            "c1"
+                    |        ]
+                    |    ]
+                    |}""".stripMargin)
+  }
+
+  @Test
   def inMailboxShouldBeRejectedWhenInOperator(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
