@@ -45,6 +45,7 @@ import org.apache.james.mailetcontainer.impl.JamesMailetContext;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.mailetcontainer.impl.camel.CamelCompositeProcessor;
 import org.apache.james.mailetcontainer.impl.camel.CamelMailetProcessor;
+import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.transport.mailets.RemoveMimeHeader;
 import org.apache.james.transport.matchers.All;
@@ -123,12 +124,19 @@ public class CamelMailetContainerModule extends AbstractModule {
         return camelContext;
     }
 
+    @Provides
+    @Singleton
+    public JamesMailSpooler.Configuration spoolerConfiguration(MailRepositoryStore mailRepositoryStore, ConfigurationProvider configurationProvider) {
+        HierarchicalConfiguration<ImmutableNode> conf = getJamesSpoolerConfiguration(configurationProvider);
+        return JamesMailSpooler.Configuration.from(mailRepositoryStore, conf);
+    }
+
     @ProvidesIntoSet
-    InitializationOperation startSpooler(JamesMailSpooler jamesMailSpooler, ConfigurationProvider configurationProvider) {
+    InitializationOperation startSpooler(JamesMailSpooler jamesMailSpooler, JamesMailSpooler.Configuration configuration) {
         return InitilizationOperationBuilder
             .forClass(JamesMailSpooler.class)
             .init(() -> {
-                jamesMailSpooler.configure(getJamesSpoolerConfiguration(configurationProvider));
+                jamesMailSpooler.configure(configuration);
                 jamesMailSpooler.init();
             });
     }
