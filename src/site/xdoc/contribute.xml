@@ -253,13 +253,21 @@ Here is some more details about what my commit does, and the rationals of the ch
               <ol>Then we order by artifactId</ol>
               <ol>Then we order by type. <i>test-jar</i> goes last.</ol>
             </ul>
-            Hopefully, some tools are doing this sorting for you:</li>
+            Proper ordering is enforced by the project build. The build will fail in case violations are detected</li>
+          <li>POM files, as well as sections ordering should follows the <a href="http://maven.apache.org/ref/3.0.3/maven-model/maven.html">Maven Model</a></li>
         </ul>
+
+        You can quickly check the status of your pom files using:
         <pre>
-          <code>mvn com.github.ekryd.sortpom:sortpom-maven-plugin:sort -Dsort.keepBlankLines -Dsort.sortDependencies=groupId,artifactId -Dsort.nrOfIndentSpace=4 -Dsort.createBackupFile=false -Dsort.sortModules=true -Dsort.expandEmptyElements=false  -Dsort.predefinedSortOrder="recommended_2008_06"</code>
+          <code>mvn validate</code>
         </pre>
+        You can ask the build to reorder pom files according to the rules using the <code>sortPom</code> profile:
+        <pre>
+          <code>mvn validate -PsortPom</code>
+        </pre>
+        <p>Make sure you properly review all changes made by the automatic rewriting as XML processing tools are liberal
+        with whitespace.</p>
         <p>You should also split multiple attributes each on a new line.</p>
-        <p>You should ensure your POM files, as well as sections ordering follows the <a href="http://maven.apache.org/ref/3.0.3/maven-model/maven.html">Maven Model</a></p>
       </p>
       <p>
         <strong>Eclipse IDE</strong>

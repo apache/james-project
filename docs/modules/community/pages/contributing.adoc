@@ -110,7 +110,7 @@ https://www.oracle.com/java/technologies/javase/codeconventions-contents.html[Ja
 for fixing their own code.*
 
 . Your code should pass our https://github.com/apache/james-project/blob/master/checkstyle.xml[checkstyle] which runs
-upon mvn clean install.
+upon `mvn compile` and all phases which depend on `compile`.
 . Extra spaces between parentheses are not allowed:
 
 ```
@@ -134,18 +134,22 @@ GREATLY appreciated as this will help to improve the James project.
 
 ** Define your dependency versions in james-project pom.xml. This structurally ensures all projects get the same v
 ersion, and that there is no version clashes.
-** Don't use _org.apache.james_ groupId for your dependencies. Use _${james.groupId}_. If not, you break the policies
-for automatic sorting, as well as make it more ambiguous.
-** You should be ordering your dependencies. The sort order is:
-*** If the project is part of org.james.apache groupId? Internal dependencies goes first.
-*** Then we order by groupId
-*** Then we order by artifactId
-*** Then we order by type. test-jar goes last.
+** Don't use _org.apache.james_ groupId for internal dependencies. Use _${james.groupId}_. If not, you break the policies
+for automatic sorting, as well as make it more ambiguous. One exception is apache-mime4j-* artifacts which share the
+james groupId despite living in a different repository.
+** You should be ordering your dependencies. The sort order of tags and dependencies in the pom is automatically enforced at build time. By default the build
+will fail if violations are detected.
 
-You should also split multiple attributes each on a new line.
-
-You should ensure your POM files, as well as sections ordering follow the
-https://maven.apache.org/ref/3.0.3/maven-model/maven.html[Maven Model].
+The pom file ordering can be quickly checked using :
+```
+mvn validate
+```
+If you get an error and want the tool to fix it for you, you can use :
+```
+mvn validate -PsortPom
+```
+The `sortPom` profile can be used on all maven phases. Make sure to review the changes made by the tool, it is known to
+sometimes remove whitespaces which may not be desirable.
 
 === Code patches
 
