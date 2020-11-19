@@ -17,13 +17,17 @@ to get some examples and hints.
 
 == Configuration
 
+The <executeGroupListeners> controls whether to launch group mailbox listener consumption. Defaults to true. Use with caution:
+never disable on standalone james servers, and ensure at least some instances do consume group mailbox listeners within a
+clustered topology.
+
 Mailbox listener configuration is under the XML element <listener>.
 
 Some MailboxListener allows you to specify if you want to run them synchronously or asynchronously. To do so,
 for MailboxListener that supports this, you can use the *async* attribute (optional, per mailet default) to govern the execution mode.
 If *true* the execution will be scheduled in a reactor elastic scheduler. If *false*, the execution is synchronous.
 
-Already provided additional listeners are docmented below.
+Already provided additional listeners are documented below.
 
 === SpamAssassinListener
 

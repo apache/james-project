@@ -44,6 +44,12 @@
 
         <section name="MailboxListener configuration">
             <p>
+                The &lt;executeGroupListeners&gt; controls whether to launch group mailbox listener consumption.
+                Defaults to true. Use with caution:
+                never disable on standalone james servers, and ensure at least some instances do consume group mailbox listeners within a
+                clustered topology.
+            </p>
+            <p>
                 Mailbox listener configuration is under the XML element &lt;listener&gt;
             </p>
             <p>
