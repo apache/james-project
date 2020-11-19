@@ -56,6 +56,10 @@ interfaces to the MPT library.</description>
 
     <build>
         <plugins>
+            <?SORTPOM IGNORE?>
+            <!-- We need to run a specific execution of sortpom after the shade plugin has
+            generated the dependency reduced file and execution order is defined by order of
+            declaration -->
             <!-- Uber Jar -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -79,7 +83,23 @@ interfaces to the MPT library.</description>
                     </execution>
                 </executions>
             </plugin>
-
+            <plugin>
+                <groupId>com.github.ekryd.sortpom</groupId>
+                <artifactId>sortpom-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>sort-reduced-pom</id>
+                        <goals>
+                            <goal>sort</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <pomFile>dependency-reduced-pom.xml</pomFile>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <?SORTPOM RESUME?>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
