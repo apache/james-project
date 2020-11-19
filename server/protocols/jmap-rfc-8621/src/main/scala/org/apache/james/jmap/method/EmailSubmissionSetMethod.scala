@@ -147,10 +147,10 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         request = request.implicitEmailSetRequest))
   }
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[EmailSubmissionSetRequest] =
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailSubmissionSetRequest] =
     serializer.deserializeEmailSubmissionSetRequest(invocation.arguments.value) match {
-      case JsSuccess(emailSubmissionSetRequest, _) => SMono.just(emailSubmissionSetRequest)
-      case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
+      case JsSuccess(emailSubmissionSetRequest, _) => Right(emailSubmissionSetRequest)
+      case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
     }
 
   private def create(request: EmailSubmissionSetRequest,

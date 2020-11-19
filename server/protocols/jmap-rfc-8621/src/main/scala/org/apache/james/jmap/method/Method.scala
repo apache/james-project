@@ -27,7 +27,9 @@ import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
-import reactor.core.scala.publisher.SMono
+import reactor.core.scala.publisher.{SFlux, SMono}
+
+case class AccountNotFoundException(invocation: Invocation) extends IllegalArgumentException
 
 case class InvocationWithContext(invocation: Invocation, processingContext: ProcessingContext) {
   def recordInvocation: InvocationWithContext = InvocationWithContext(invocation, processingContext.recordInvocation(invocation))
@@ -51,47 +53,50 @@ trait MethodRequiringAccountId[REQUEST <: WithAccountId] extends Method {
   def sessionSupplier: SessionSupplier
 
   override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): Publisher[InvocationWithContext] = {
-    val result = getRequest(mailboxSession, invocation.invocation)
-      .flatMapMany(request => {
-        validateAccountId(request.accountId, mailboxSession, sessionSupplier, invocation.invocation)
-          .flatMapMany {
-            case Right(_) => doProcess(capabilities, invocation, mailboxSession, request)
-            case Left(errorInvocation) => SMono.just(InvocationWithContext(errorInvocation, invocation.processingContext))
-          }
-      })
-      .onErrorResume {
-        case e: UnsupportedRequestParameterException => SMono.just(InvocationWithContext(Invocation.error(
+    val either: Either[Exception, Publisher[InvocationWithContext]] = for {
+      request <- getRequest(mailboxSession, invocation.invocation)
+      _ <- validateAccountId(request.accountId, mailboxSession, sessionSupplier, invocation.invocation)
+    } yield {
+      doProcess(capabilities, invocation, mailboxSession, request)
+    }
+
+    val result: SFlux[InvocationWithContext] = SFlux.fromPublisher(either.fold(e => SFlux.raiseError[InvocationWithContext](e), r => r))
+      .onErrorResume[InvocationWithContext] {
+        case e: AccountNotFoundException => SFlux.just[InvocationWithContext] (InvocationWithContext(e.invocation, invocation.processingContext))
+        case e: UnsupportedRequestParameterException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(
           ErrorCode.InvalidArguments,
           s"The following parameter ${e.unsupportedParam} is syntactically valid, but is not supported by the server.",
           invocation.invocation.methodCallId), invocation.processingContext))
-        case e: UnsupportedSortException => SMono.just(InvocationWithContext(Invocation.error(
+        case e: UnsupportedSortException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(
           ErrorCode.UnsupportedSort,
           s"The sort ${e.unsupportedSort} is syntactically valid, but it includes a property the server does not support sorting on or a collation method it does not recognise.",
           invocation.invocation.methodCallId), invocation.processingContext))
-        case e: UnsupportedFilterException => SMono.just(InvocationWithContext(Invocation.error(
+        case e: UnsupportedFilterException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(
           ErrorCode.UnsupportedFilter,
           s"The filter ${e.unsupportedFilter} is syntactically valid, but the server cannot process it. If the filter was the result of a user’s search input, the client SHOULD suggest that the user simplify their search.",
           invocation.invocation.methodCallId), invocation.processingContext))
-        case e: UnsupportedNestingException => SMono.just(InvocationWithContext(Invocation.error(
+        case e: UnsupportedNestingException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(
           ErrorCode.UnsupportedFilter,
           description = e.message,
           invocation.invocation.methodCallId), invocation.processingContext))
-        case e: IllegalArgumentException => SMono.just(InvocationWithContext(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.invocation.methodCallId), invocation.processingContext))
-        case e: MailboxNotFoundException => SMono.just(InvocationWithContext(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.invocation.methodCallId), invocation.processingContext))
-        case e: Throwable => SMono.raiseError(e)
+        case e: IllegalArgumentException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.invocation.methodCallId), invocation.processingContext))
+        case e: MailboxNotFoundException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.invocation.methodCallId), invocation.processingContext))
+        case e: Throwable => SFlux.raiseError[InvocationWithContext] (e)
       }
 
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value, result)
   }
 
-  private def validateAccountId(accountId: AccountId, mailboxSession: MailboxSession, sessionSupplier: SessionSupplier, invocation: Invocation): SMono[Either[Invocation, Session]] = {
+  private def validateAccountId(accountId: AccountId, mailboxSession: MailboxSession, sessionSupplier: SessionSupplier, invocation: Invocation): Either[IllegalArgumentException, Session] =
     sessionSupplier.generate(mailboxSession.getUser)
-      .filter(session => session.accounts.map(_.accountId).contains(accountId))
-      .map(session => Right[Invocation, Session](session).asInstanceOf[Either[Invocation, Session]])
-      .switchIfEmpty(SMono.just(Left[Invocation, Session](Invocation.error(ErrorCode.AccountNotFound, invocation.methodCallId))))
-  }
+      .flatMap(session =>
+        if (session.accounts.map(_.accountId).contains(accountId)) {
+          Right(session)
+        } else {
+          Left(AccountNotFoundException(Invocation.error(ErrorCode.AccountNotFound, invocation.methodCallId)))
+        })
 
   def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: REQUEST): Publisher[InvocationWithContext]
 
-  def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[REQUEST]
+  def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, REQUEST]
 }

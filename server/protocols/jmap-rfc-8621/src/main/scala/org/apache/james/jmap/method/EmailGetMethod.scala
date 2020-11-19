@@ -89,7 +89,11 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
     }).map(invocationResult => InvocationWithContext(invocationResult, invocation.processingContext))
   }
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[EmailGetRequest] = asEmailGetRequest(invocation.arguments)
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailGetRequest] =
+    EmailGetSerializer.deserializeEmailGetRequest(invocation.arguments.value) match {
+      case JsSuccess(emailGetRequest, _) => Right(emailGetRequest)
+      case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
+    }
 
   private def computeResponseInvocation(request: EmailGetRequest, invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] =
     validateProperties(request)
@@ -131,12 +135,6 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
         } else {
           Left(new IllegalArgumentException(s"The following bodyProperties [${invalidProperties.format()}] do not exist."))
         }
-    }
-
-  private def asEmailGetRequest(arguments: Arguments): SMono[EmailGetRequest] =
-    EmailGetSerializer.deserializeEmailGetRequest(arguments.value) match {
-      case JsSuccess(emailGetRequest, _) => SMono.just(emailGetRequest)
-      case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
     }
 
   private def getEmails(request: EmailGetRequest, mailboxSession: MailboxSession): SMono[EmailGetResponse] =
@@ -181,7 +179,7 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
         .read(ids, request, mailboxSession)
         .collectMap(_.metadata.id)
 
-    foundResultsMono.flatMapMany(foundResults => SFlux.fromIterable(ids)
+    foundResultsMono.flatMapIterable(foundResults => ids
       .map(id => foundResults.get(id)
         .map(EmailGetResults.found)
         .getOrElse(EmailGetResults.notFound(id))))

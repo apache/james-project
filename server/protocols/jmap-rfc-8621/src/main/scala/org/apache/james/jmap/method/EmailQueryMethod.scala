@@ -78,7 +78,18 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
     validation.fold(SMono.raiseError, res => res)
   }
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[EmailQueryRequest] = asEmailQueryRequest(invocation.arguments)
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, EmailQueryRequest] =
+    serializer.deserializeEmailQueryRequest(invocation.arguments.value) match {
+      case JsSuccess(emailQueryRequest, _) => validateRequestParameters(emailQueryRequest)
+      case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
+    }
+
+  private def validateRequestParameters(request: EmailQueryRequest): Either[Exception, EmailQueryRequest] =
+    (request.anchor, request.anchorOffset) match {
+      case (Some(anchor), _) => Left(UnsupportedRequestParameterException("anchor"))
+      case (_, Some(anchorOffset)) => Left(UnsupportedRequestParameterException("anchorOffset"))
+      case _ => Right(request)
+    }
 
   private def executeQuery(session: MailboxSession, request: EmailQueryRequest, searchQuery: MultimailboxesSearchQuery, position: Position, limit: Limit): SMono[EmailQueryResponse] = {
     val ids: SMono[Seq[MessageId]] = request match {
@@ -167,16 +178,4 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
       .map(MailboxFilter.buildQuery(request, _, capabilities, session))
   }
 
-  private def asEmailQueryRequest(arguments: Arguments): SMono[EmailQueryRequest] =
-    serializer.deserializeEmailQueryRequest(arguments.value) match {
-      case JsSuccess(emailQueryRequest, _) => validateRequestParameters(emailQueryRequest)
-      case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
-    }
-
-  private def validateRequestParameters(request: EmailQueryRequest): SMono[EmailQueryRequest] =
-    (request.anchor, request.anchorOffset) match {
-      case (Some(anchor), _) => SMono.raiseError(UnsupportedRequestParameterException("anchor"))
-      case (_, Some(anchorOffset)) => SMono.raiseError(UnsupportedRequestParameterException("anchorOffset"))
-      case _ => SMono.just(request)
-    }
 }

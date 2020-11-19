@@ -28,7 +28,7 @@ import reactor.core.scala.publisher.SMono
 class SessionSupplier @Inject() (val configuration: JmapRfc8621Configuration){
   private val maxSizeUpload = configuration.maxUploadSize
 
-  def generate(username: Username): SMono[Session] = {
+  def generate(username: Username): Either[IllegalArgumentException, Session] =
     accounts(username)
       .map(account => Session(
         DefaultCapabilities.supported(maxSizeUpload),
@@ -39,13 +39,9 @@ class SessionSupplier @Inject() (val configuration: JmapRfc8621Configuration){
         downloadUrl = configuration.downloadUrl,
         uploadUrl = configuration.uploadUrl,
         eventSourceUrl = configuration.eventSourceUrl))
-  }
 
-  private def accounts(username: Username): SMono[Account] = SMono.defer(() =>
-    Account.from(username, IsPersonal(true), IsReadOnly(false), DefaultCapabilities.supported(maxSizeUpload).toSet) match {
-      case Left(ex: IllegalArgumentException) => SMono.raiseError(ex)
-      case Right(account: Account) => SMono.just(account)
-    })
+  private def accounts(username: Username): Either[IllegalArgumentException, Account] =
+    Account.from(username, IsPersonal(true), IsReadOnly(false), DefaultCapabilities.supported(maxSizeUpload).toSet)
 
   private def primaryAccounts(accountId: AccountId): Map[CapabilityIdentifier, AccountId] =
     DefaultCapabilities.supported(maxSizeUpload).toSet

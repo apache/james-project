@@ -82,11 +82,10 @@ class VacationResponseGetMethod @Inject()(vacationRepository: VacationRepository
     }
   }
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[VacationResponseGetRequest] = asVacationResponseGetRequest(invocation.arguments)
-
-  private def asVacationResponseGetRequest(arguments: Arguments): SMono[VacationResponseGetRequest] = VacationSerializer.deserializeVacationResponseGetRequest(arguments.value) match {
-      case JsSuccess(vacationResponseGetRequest, _) => SMono.just(vacationResponseGetRequest)
-      case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, VacationResponseGetRequest] =
+    VacationSerializer.deserializeVacationResponseGetRequest(invocation.arguments.value) match {
+      case JsSuccess(vacationResponseGetRequest, _) => Right(vacationResponseGetRequest)
+      case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
     }
 
   private def handleRequestValidationErrors(exception: Exception, methodCallId: MethodCallId): SMono[Invocation] = exception match {

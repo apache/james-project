@@ -159,12 +159,12 @@ class JMAPApiRoutes (val authenticator: Authenticator,
   }
 
   private def processMethodWithMatchName(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): SFlux[InvocationWithContext] =
-    SMono.justOrEmpty(methodsByName.get(invocation.invocation.methodName))
-      .flatMapMany(method => validateCapabilities(capabilities, method.requiredCapabilities)
+    methodsByName.get(invocation.invocation.methodName)
+      .map(method => validateCapabilities(capabilities, method.requiredCapabilities)
         .fold(e => SFlux.just(InvocationWithContext(Invocation.error(ErrorCode.UnknownMethod, e.description, invocation.invocation.methodCallId), invocation.processingContext)),
           _ => SFlux.fromPublisher(method.process(capabilities, invocation, mailboxSession))))
+      .getOrElse(SFlux.just(InvocationWithContext(Invocation.error(ErrorCode.UnknownMethod, invocation.invocation.methodCallId), invocation.processingContext)))
       .onErrorResume(throwable => SMono.just(InvocationWithContext(Invocation.error(ErrorCode.ServerFail, throwable.getMessage, invocation.invocation.methodCallId), invocation.processingContext)))
-      .switchIfEmpty(SFlux.just(InvocationWithContext(Invocation.error(ErrorCode.UnknownMethod, invocation.invocation.methodCallId), invocation.processingContext)))
 
   private def validateCapabilities(capabilities: Set[CapabilityIdentifier], requiredCapabilities: Set[CapabilityIdentifier]): Either[MissingCapabilityException, Unit] = {
     val missingCapabilities = requiredCapabilities -- capabilities

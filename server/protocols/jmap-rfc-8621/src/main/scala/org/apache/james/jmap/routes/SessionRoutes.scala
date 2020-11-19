@@ -54,7 +54,7 @@ class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
   private val generateSession: JMAPRoute.Action =
     (request, response) => SMono.fromPublisher(authenticator.authenticate(request))
       .map(_.getUser)
-      .flatMap(sessionSupplier.generate)
+      .flatMap(username => sessionSupplier.generate(username).fold(SMono.raiseError[Session], SMono.just[Session]))
       .flatMap(session => sendRespond(session, response))
       .onErrorResume(throwable => SMono.fromPublisher(errorHandling(throwable, response)))
       .subscribeOn(Schedulers.elastic())

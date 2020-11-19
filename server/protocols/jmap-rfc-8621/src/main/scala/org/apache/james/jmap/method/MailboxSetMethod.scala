@@ -57,7 +57,11 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
     updateResults <- updatePerformer.updateMailboxes(mailboxSession, request, capabilities)
   } yield InvocationWithContext(createResponse(capabilities, invocation.invocation, request, creationResultsWithUpdatedProcessingContext._1, deletionResults, updateResults), creationResultsWithUpdatedProcessingContext._2)
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[MailboxSetRequest] = asMailboxSetRequest(invocation.arguments)
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, MailboxSetRequest] =
+    serializer.deserializeMailboxSetRequest(invocation.arguments.value) match {
+      case JsSuccess(mailboxSetRequest, _) => Right(mailboxSetRequest)
+      case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
+    }
 
   private def createResponse(capabilities: Set[CapabilityIdentifier],
                              invocation: Invocation,
@@ -81,10 +85,4 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
       invocation.methodCallId)
   }
 
-  private def asMailboxSetRequest(arguments: Arguments): SMono[MailboxSetRequest] = {
-    serializer.deserializeMailboxSetRequest(arguments.value) match {
-      case JsSuccess(mailboxSetRequest, _) => SMono.just(mailboxSetRequest)
-      case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
-    }
-  }
 }

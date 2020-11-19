@@ -81,7 +81,11 @@ class VacationResponseSetMethod @Inject()(vacationRepository: VacationRepository
       .map(InvocationWithContext(_, invocation.processingContext))
   }
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[VacationResponseSetRequest] = asVacationResponseSetRequest(invocation.arguments)
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, VacationResponseSetRequest] =
+    VacationSerializer.deserializeVacationResponseSetRequest(invocation.arguments.value) match {
+      case JsSuccess(vacationResponseSetRequest, _) => Right(vacationResponseSetRequest)
+      case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
+    }
 
   private def update(mailboxSession: MailboxSession, vacationResponseSetRequest: VacationResponseSetRequest): SMono[VacationResponseUpdateResults] = {
     SFlux.fromIterable(vacationResponseSetRequest.parsePatch()
@@ -103,16 +107,7 @@ class VacationResponseSetMethod @Inject()(vacationRepository: VacationRepository
       vacationRepository.modifyVacation(toVacationAccountId(mailboxSession), validatedPatch))
       .`then`(SMono.just(VacationResponseUpdateSuccess))
 
-  private def toVacationAccountId(mailboxSession: MailboxSession): AccountId = {
-    AccountId.fromUsername(mailboxSession.getUser)
-  }
-
-  private def asVacationResponseSetRequest(arguments: Arguments): SMono[VacationResponseSetRequest] = {
-    VacationSerializer.deserializeVacationResponseSetRequest(arguments.value) match {
-      case JsSuccess(vacationResponseSetRequest, _) => SMono.just(vacationResponseSetRequest)
-      case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
-    }
-  }
+  private def toVacationAccountId(mailboxSession: MailboxSession): AccountId = AccountId.fromUsername(mailboxSession.getUser)
 
   private def createResponse(invocation: Invocation,
                              vacationResponseSetRequest: VacationResponseSetRequest,

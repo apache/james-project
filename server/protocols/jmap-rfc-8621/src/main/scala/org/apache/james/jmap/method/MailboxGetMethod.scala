@@ -89,13 +89,10 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
 
   }
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[MailboxGetRequest] = asMailboxGetRequest(invocation.arguments)
-
-  private def asMailboxGetRequest(arguments: Arguments): SMono[MailboxGetRequest] = {
-    serializer.deserializeMailboxGetRequest(arguments.value) match {
-      case JsSuccess(mailboxGetRequest, _) => SMono.just(mailboxGetRequest)
-      case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
-    }
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, MailboxGetRequest] =
+    serializer.deserializeMailboxGetRequest(invocation.arguments.value) match {
+    case JsSuccess(mailboxGetRequest, _) => Right(mailboxGetRequest)
+    case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
   }
 
   private def getMailboxes(capabilities: Set[CapabilityIdentifier],

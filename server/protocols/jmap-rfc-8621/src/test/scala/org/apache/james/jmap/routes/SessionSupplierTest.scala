@@ -33,11 +33,11 @@ class SessionSupplierTest extends AnyWordSpec with Matchers {
 
   "generate" should {
     "return correct username" in {
-      new SessionSupplier(JmapRfc8621Configuration.LOCALHOST_CONFIGURATION).generate(USERNAME).block().username should equal(USERNAME)
+      new SessionSupplier(JmapRfc8621Configuration.LOCALHOST_CONFIGURATION).generate(USERNAME).toOption.get.username should equal(USERNAME)
     }
 
     "return correct account" which {
-      val accounts = new SessionSupplier(JmapRfc8621Configuration.LOCALHOST_CONFIGURATION).generate(USERNAME).block().accounts
+      val accounts = new SessionSupplier(JmapRfc8621Configuration.LOCALHOST_CONFIGURATION).generate(USERNAME).toOption.get.accounts
 
       "has size" in {
         accounts should have size 1

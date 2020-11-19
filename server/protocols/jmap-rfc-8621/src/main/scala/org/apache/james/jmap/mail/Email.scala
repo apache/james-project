@@ -405,10 +405,13 @@ private class GenericEmailViewReader[+EmailView](messageIdManager: MessageIdMana
         ids.toList.asJava,
         fetchGroup,
         mailboxSession))
-      .groupBy(_.getMessageId)
-      .flatMap(groupedFlux => groupedFlux.collectSeq().map(results => (groupedFlux.key(), results)))
+      .collectSeq()
+      .flatMapIterable(messages => messages.groupBy(_.getMessageId).toSet)
       .map(metadataViewFactory.toEmail(request))
-      .flatMap(SMono.fromTry(_))
+      .handle[T]((aTry, sink) => aTry match {
+        case Success(value) => sink.next(value)
+        case Failure(e) => sink.error(e)
+      })
 }
 
 private class EmailMetadataViewFactory @Inject()(zoneIdProvider: ZoneIdProvider) extends EmailViewFactory[EmailMetadataView] {
@@ -574,16 +577,13 @@ private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
                                             fullViewFactory: EmailFullViewFactory) extends EmailViewReader[EmailView] {
   private val fullReader: GenericEmailViewReader[EmailFullView] = new GenericEmailViewReader[EmailFullView](messageIdManager, FULL_CONTENT, fullViewFactory)
 
-  override def read[T >: EmailView](ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T] = {
+  override def read[T >: EmailView](ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T] =
     SMono.fromPublisher(messageFastViewProjection.retrieve(ids.asJava))
       .map(_.asScala.toMap)
-      .flatMapMany(fastViews => SFlux.fromIterable(ids)
-        .map(id => fastViews.get(id)
-          .map(FastViewAvailable(id, _))
-          .getOrElse(FastViewUnavailable(id))))
-      .collectSeq()
+      .map(fastViews => ids.map(id => fastViews.get(id)
+        .map(FastViewAvailable(id, _))
+        .getOrElse(FastViewUnavailable(id))))
       .flatMapMany(results => toEmailViews(results, request, mailboxSession))
-  }
 
   private def toEmailViews[T >: EmailView](results: Seq[FastViewResult], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T] = {
     val availables: Seq[FastViewAvailable] = results.flatMap {
@@ -618,10 +618,13 @@ private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
     val ids: Seq[MessageId] = fastViews.map(_.id)
 
     SFlux.fromPublisher(messageIdManager.getMessagesReactive(ids.asJava, HEADERS, mailboxSession))
-      .groupBy(_.getMessageId)
-      .flatMap(groupedFlux => groupedFlux.collectSeq().map(results => (groupedFlux.key(), results)))
+      .collectSeq()
+      .flatMapIterable(messages => messages.groupBy(_.getMessageId).toSet)
       .map(x => toEmail(request)(x, fastViewsAsMap(x._1)))
-      .flatMap(SMono.fromTry(_))
+      .handle[EmailView]((aTry, sink) => aTry match {
+        case Success(value) => sink.next(value)
+        case Failure(e) => sink.error(e)
+      })
   }
 
   private def toEmail(request: EmailGetRequest)(message: (MessageId, Seq[MessageResult]), fastView: MessageFastViewPrecomputedProperties): Try[EmailView] = {

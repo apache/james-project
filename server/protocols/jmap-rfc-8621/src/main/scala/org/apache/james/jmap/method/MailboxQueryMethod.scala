@@ -35,7 +35,7 @@ import reactor.core.scheduler.Schedulers
 class MailboxQueryMethod @Inject()(systemMailboxesProvider: SystemMailboxesProvider,
                                    val metricFactory: MetricFactory,
                                    val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[MailboxQueryRequest] {
-  override val methodName = MethodName("Mailbox/query")
+  override val methodName: MethodName = MethodName("Mailbox/query")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxQueryRequest): SMono[InvocationWithContext] = {
@@ -51,9 +51,13 @@ class MailboxQueryMethod @Inject()(systemMailboxesProvider: SystemMailboxesProvi
       .map(invocationResult => InvocationWithContext(invocationResult, invocation.processingContext))
   }
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): SMono[MailboxQueryRequest] = asMailboxQueryRequest(invocation.arguments)
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, MailboxQueryRequest] =
+    MailboxQuerySerializer.deserialize(invocation.arguments.value) match {
+      case JsSuccess(emailQueryRequest, _) => Right(emailQueryRequest)
+      case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
+    }
 
-  private def processRequest(mailboxSession: MailboxSession, invocation: Invocation, request: MailboxQueryRequest): SMono[Invocation] = {
+  private def processRequest(mailboxSession: MailboxSession, invocation: Invocation, request: MailboxQueryRequest): SMono[Invocation] =
     SFlux.fromPublisher(systemMailboxesProvider.getMailboxByRole(request.filter.role, mailboxSession.getUser))
       .map(_.getId)
       .collectSeq()
@@ -65,12 +69,4 @@ class MailboxQueryMethod @Inject()(systemMailboxesProvider: SystemMailboxesProvi
         limit = Some(Limit.default)))
       .map(response => Invocation(methodName = methodName, arguments = Arguments(MailboxQuerySerializer.serialize(response)), methodCallId = invocation.methodCallId))
       .subscribeOn(Schedulers.elastic())
-  }
-
-  private def asMailboxQueryRequest(arguments: Arguments): SMono[MailboxQueryRequest] =
-    MailboxQuerySerializer.deserialize(arguments.value) match {
-      case JsSuccess(emailQueryRequest, _) => SMono.just(emailQueryRequest)
-      case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
-    }
-
 }
