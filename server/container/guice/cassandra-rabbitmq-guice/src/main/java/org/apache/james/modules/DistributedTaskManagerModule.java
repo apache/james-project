@@ -20,6 +20,14 @@
 
 package org.apache.james.modules;
 
+import static org.apache.james.modules.queue.rabbitmq.RabbitMQModule.RABBITMQ_CONFIGURATION_NAME;
+
+import java.io.FileNotFoundException;
+
+import javax.inject.Singleton;
+
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.modules.server.HostnameModule;
 import org.apache.james.modules.server.TaskSerializationModule;
@@ -32,11 +40,15 @@ import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetai
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionModule;
 import org.apache.james.task.eventsourcing.distributed.RabbitMQTerminationSubscriber;
 import org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueue;
+import org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueueConfiguration;
+import org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueueConfiguration$;
 import org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueueSupplier;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
+import org.apache.james.utils.PropertiesProvider;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
@@ -59,6 +71,17 @@ public class DistributedTaskManagerModule extends AbstractModule {
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(CassandraTaskExecutionDetailsProjectionModule.MODULE());
+    }
+
+    @Provides
+    @Singleton
+    private RabbitMQWorkQueueConfiguration getWorkQueueConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+        try {
+            Configuration configuration = propertiesProvider.getConfiguration(RABBITMQ_CONFIGURATION_NAME);
+            return RabbitMQWorkQueueConfiguration$.MODULE$.from(configuration);
+        } catch (FileNotFoundException e) {
+            return RabbitMQWorkQueueConfiguration$.MODULE$.enabled();
+        }
     }
 
     @ProvidesIntoSet

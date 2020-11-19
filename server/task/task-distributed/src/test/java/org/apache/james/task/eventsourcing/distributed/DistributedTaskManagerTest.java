@@ -111,7 +111,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
 
         TrackedRabbitMQWorkQueueSupplier(Sender sender, ReceiverProvider receiverProvider, JsonTaskSerializer taskSerializer) {
             workQueues = new ArrayList<>();
-            supplier = new RabbitMQWorkQueueSupplier(sender, receiverProvider, taskSerializer);
+            supplier = new RabbitMQWorkQueueSupplier(sender, receiverProvider, taskSerializer, RabbitMQWorkQueueConfiguration$.MODULE$.enabled());
         }
 
         @Override

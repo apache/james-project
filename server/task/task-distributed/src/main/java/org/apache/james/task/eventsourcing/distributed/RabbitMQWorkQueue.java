@@ -76,6 +76,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
 
     private final TaskManagerWorker worker;
     private final JsonTaskSerializer taskSerializer;
+    private final RabbitMQWorkQueueConfiguration configuration;
     private final Sender sender;
     private final ReceiverProvider receiverProvider;
     private Receiver receiver;
@@ -85,11 +86,14 @@ public class RabbitMQWorkQueue implements WorkQueue {
     private Disposable cancelRequestListenerHandle;
     private Receiver cancelRequestListener;
 
-    public RabbitMQWorkQueue(TaskManagerWorker worker, Sender sender, ReceiverProvider receiverProvider, JsonTaskSerializer taskSerializer) {
+    public RabbitMQWorkQueue(TaskManagerWorker worker, Sender sender,
+                             ReceiverProvider receiverProvider, JsonTaskSerializer taskSerializer,
+                             RabbitMQWorkQueueConfiguration configuration) {
         this.worker = worker;
         this.receiverProvider = receiverProvider;
         this.sender = sender;
         this.taskSerializer = taskSerializer;
+        this.configuration = configuration;
     }
 
     @Override
@@ -100,7 +104,10 @@ public class RabbitMQWorkQueue implements WorkQueue {
 
     private void startWorkqueue() {
         declareQueue();
-        consumeWorkqueue();
+
+        if (configuration.enabled()) {
+            consumeWorkqueue();
+        }
     }
 
     @VisibleForTesting

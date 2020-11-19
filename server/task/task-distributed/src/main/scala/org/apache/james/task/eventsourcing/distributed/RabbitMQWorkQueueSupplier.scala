@@ -33,7 +33,8 @@ import reactor.rabbitmq.Sender
 
 class RabbitMQWorkQueueSupplier @Inject()(private val sender: Sender,
                                           private val receiverProvider: ReceiverProvider,
-                                          private val jsonTaskSerializer: JsonTaskSerializer) extends WorkQueueSupplier {
+                                          private val jsonTaskSerializer: JsonTaskSerializer,
+                                          private val configuration: RabbitMQWorkQueueConfiguration) extends WorkQueueSupplier {
 
   val DEFAULT_ADDITIONAL_INFORMATION_POLLING_INTERVAL =  Duration.ofSeconds(30)
   override def apply(eventSourcingSystem: EventSourcingSystem): RabbitMQWorkQueue = {
@@ -44,7 +45,7 @@ class RabbitMQWorkQueueSupplier @Inject()(private val sender: Sender,
   def apply(eventSourcingSystem: EventSourcingSystem, additionalInformationPollingInterval: Duration): RabbitMQWorkQueue = {
     val listener = WorkerStatusListener(eventSourcingSystem)
     val worker = new SerialTaskManagerWorker(listener, additionalInformationPollingInterval)
-    val rabbitMQWorkQueue = new RabbitMQWorkQueue(worker, sender, receiverProvider, jsonTaskSerializer)
+    val rabbitMQWorkQueue = new RabbitMQWorkQueue(worker, sender, receiverProvider, jsonTaskSerializer, configuration)
     rabbitMQWorkQueue
   }
 }
