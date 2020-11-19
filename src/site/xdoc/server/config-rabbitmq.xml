@@ -107,6 +107,20 @@
       </dl>
   </section>
 
+  <section name="RabbitMQ Tasks Configuration">
+      <p>Tasks are WebAdmin triggered long running jobs. RabbitMQ is used to organise their execution in a work queue,
+          with an exclusive consumer.
+      </p>
+      <dl>
+          <dt><strong>task.consumption.enabled</strong></dt>
+          <dd>
+              Whether to enable task consumption on this node.
+              Disable with caution (this only makes sense in a distributed setup where other nodes consume tasks).
+              Defaults to true.
+          </dd>
+      </dl>
+  </section>
+
 </body>
 
 </document>

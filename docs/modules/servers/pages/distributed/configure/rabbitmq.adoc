@@ -66,3 +66,19 @@ Tips for choosing metricsEnabled are explained in
 https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/rabbitmq.properties[rabbitmq.properties]
 
 |===
+
+== RabbitMQ Tasks Configuration
+
+Tasks are WebAdmin triggered long running jobs. RabbitMQ is used to organise their execution in a work queue,
+with an exclusive consumer.
+
+.rabbitmq.properties content
+|===
+| Property name | explanation
+
+| task.consumption.enabled
+| Whether to enable task consumption on this node.
+Disable with caution (this only makes sense in a distributed setup where other nodes consume tasks).
+Defaults to true.
+
+|===
