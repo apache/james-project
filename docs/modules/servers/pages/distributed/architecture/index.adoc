@@ -34,6 +34,12 @@ The following protocols should be considered experimental
 * *JMAP* (draft specification as defined link:https://github.com/apache/james-project/tree/master/server/protocols/jmap-draft/doc[here])
 * *POP3*
 
+== Topology
+
+While it is perfectly possible to deploy homogeneous James instances, with the same configuration and thus the same
+protocols and the same responsibilities one might want to investigate in
+xref:distributed/architecture/specialized-instances.adoc['Specialized instances'].
+
 == Components
 
 This section presents the various components of the Distributed server, providing context about

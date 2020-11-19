@@ -1,0 +1,37 @@
+= Distributed James Server &mdash; Specialized instances
+:navtitle: Specialized instances
+
+While it is perfectly possible to deploy homogeneous James instances, with the same configuration and thus the same
+protocols and the same responsibilities one might want to investigate in 'Specialized instances'.
+
+This deployment topology consists of Distributed James servers with heterogeneous configurations on top of shared
+data-bases. Groups of James servers will thus handle various protocols and have different responsibilities.
+
+This approach limits cascading failures across protocols and services. Think of *OutOfMemoryErrors*, Cassandra driver 
+queue overuse, CPUs starvation, etc.
+
+However, we can't speak of micro-services here: all James instances runs the same code, James is still a monolith, and
+databases need to be shared across instances.
+
+image::specialized-instances.png[Example of Specialized instances topology]
+
+We speak of:
+
+ - **Front-line servers** serves protocols. James enables to easily turn protocols on and off. Typically, each protocol would 
+ be isolated in its own group of James instances: james-imap, james-jmap, james-smtp, james-webadmin, etc... Refer to
+ protocols configuration files to learn more.
+ 
+ - **Back-office servers** handles other services like:
+    - Mail processing.
+    - Remote delivery.
+    - Event processing.
+    - Task execution.
+
+Front-line servers will likely not handle back office responsibilities (but be sure to have back-office servers that do!).
+  - xref:distributed/configure/mailetcontainer.adoc[Mail processing can be switched off].
+  - xref:distributed/configure/listeners.adoc[Mailbox event processing can be switched off].
+  - xref:distributed/configure/rabbitmq.adoc[Task execution can be switched off].
+  - Remote Delivery service is not started if the RemoteDelivery mailet is not positioned in mailetcontainer.xml.
+  
+Of course, the above instances can be collocated at will, to reach some intermediate deployments with fewer 
+instances to mitigate costs.
