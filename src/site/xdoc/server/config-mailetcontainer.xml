@@ -49,7 +49,8 @@
             If this is set to a non-local email address, the mail server
             will still function, but will generate a warning on startup.</dd>
           <dt><strong>spooler.threads</strong></dt>
-          <dd>Number of simultaneous threads used to spool the mails.</dd>
+          <dd>Number of simultaneous threads used to spool the mails. Set to zero, it disables mail processing - use with
+              caution.</dd>
           <dt><strong>spooler.errorRepository</strong></dt>
           <dd>Mail repository to store email in after several unrecoverable errors. Mails failing processing, for which
               the Mailet Container could not handle Error, will be stored there after their processing had been attempted

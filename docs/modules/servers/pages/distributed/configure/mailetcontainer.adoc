@@ -30,7 +30,8 @@ If this is set to a non-local email address, the mail server
 will still function, but will generate a warning on startup.
 
 | spooler.threads
-| Number of simultaneous threads used to spool the mails.
+| Number of simultaneous threads used to spool the mails. Set to zero, it disables mail processing - use with
+caution.
 
 | spooler.errorRepository
 | Mail repository to store email in after several unrecoverable errors. Mails failing processing, for which
