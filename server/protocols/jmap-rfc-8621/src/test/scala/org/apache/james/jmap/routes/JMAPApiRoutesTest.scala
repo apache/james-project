@@ -49,10 +49,11 @@ import org.apache.james.metrics.tests.RecordingMetricFactory
 import org.apache.james.user.memory.MemoryUsersRepository
 import org.hamcrest.Matchers.equalTo
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{doThrow, mock, when}
+import org.mockito.Mockito.{doReturn, doThrow, mock, when}
 import org.scalatest.BeforeAndAfter
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import reactor.core.scala.publisher.SFlux
 
 object JMAPApiRoutesTest {
   private val TEST_CONFIGURATION: JMAPConfiguration = JMAPConfiguration.builder().enable().randomPort().build()
@@ -433,7 +434,7 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
   "RFC-8621 with random error when processing request " should "return 200, with serverFail error, others method call proceed normally" in {
     val mockCoreEchoMethod = mock(classOf[CoreEchoMethod])
 
-    doThrow(new RuntimeException("Unexpected Exception occur, the others method may proceed normally"))
+    doReturn(SFlux.raiseError(new RuntimeException("Unexpected Exception occur, the others method may proceed normally")))
       .doCallRealMethod()
       .when(mockCoreEchoMethod)
       .process(any[Set[CapabilityIdentifier]], any(), any())
