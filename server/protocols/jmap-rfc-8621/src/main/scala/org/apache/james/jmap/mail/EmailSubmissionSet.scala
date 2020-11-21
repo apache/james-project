@@ -87,4 +87,5 @@ object EmailSubmissionCreationRequest {
 }
 
 case class EmailSubmissionCreationRequest(emailId: MessageId,
+                                          identityId: Option[Id],
                                           envelope: Envelope)
