@@ -41,7 +41,7 @@ class JMAPConfigurationTest {
 
     @Test
     void buildShouldWorkWhenRandomPort() {
-        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(ENABLED, Optional.empty(), ENABLED);
+        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(ENABLED, Optional.empty(), ENABLED, Version.DRAFT);
 
         JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
             .enable()
@@ -53,7 +53,7 @@ class JMAPConfigurationTest {
 
     @Test
     void buildShouldWorkWhenFixedPort() {
-        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(ENABLED, Optional.of(Port.of(80)), ENABLED);
+        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(ENABLED, Optional.of(Port.of(80)), ENABLED, Version.DRAFT);
 
         JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
             .enable()
@@ -66,7 +66,7 @@ class JMAPConfigurationTest {
 
     @Test
     void buildShouldWorkWhenDisabled() {
-        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(DISABLED, Optional.empty(), DISABLED);
+        JMAPConfiguration expectedJMAPConfiguration = new JMAPConfiguration(DISABLED, Optional.empty(), DISABLED, Version.DRAFT);
 
         JMAPConfiguration jmapConfiguration = JMAPConfiguration.builder()
             .disable()

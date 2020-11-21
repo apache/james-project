@@ -37,7 +37,7 @@ class VersionParserTest {
 
     @BeforeEach
     void setUp() {
-        versionParser = new VersionParser(SUPPORTED_VERSIONS);
+        versionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT);
     }
 
     @Test

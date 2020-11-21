@@ -25,6 +25,10 @@ public class Version {
     public static final Version DRAFT = new Version("draft");
     public static final Version RFC8621 = new Version("rfc-8621");
 
+    public static Version of(String value) {
+        return new Version(value);
+    }
+
     private final String version;
 
     Version(String version) {

@@ -133,13 +133,15 @@ public class JMAPModule extends AbstractModule {
 
     @Provides
     @Singleton
-    JMAPConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException, IOException {
+    JMAPConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
             Configuration configuration = propertiesProvider.getConfiguration("jmap");
             return JMAPConfiguration.builder()
                 .enabled(configuration.getBoolean("enabled", true))
                 .port(Port.of(configuration.getInt("jmap.port", DEFAULT_JMAP_PORT)))
                 .enableEmailQueryView(Optional.ofNullable(configuration.getBoolean("view.email.query.enabled", null)))
+                .defaultVersion(Optional.ofNullable(configuration.getString("jmap.version.default", null))
+                    .map(Version::of))
                 .build();
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find JMAP configuration file. JMAP server will not be enabled.");

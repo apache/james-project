@@ -255,7 +255,7 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
   var jmapServer: JMAPServer = _
 
   before {
-    val versionParser: VersionParser = new VersionParser(SUPPORTED_VERSIONS)
+    val versionParser: VersionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT)
     jmapServer = new JMAPServer(TEST_CONFIGURATION, ROUTES_HANDLER, versionParser)
     jmapServer.start()
 
@@ -446,7 +446,7 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
     val apiRoute: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, userProvisionner, mailboxesProvisioner, methods)
     val routesHandler: ImmutableSet[JMAPRoutesHandler] = ImmutableSet.of(new JMAPRoutesHandler(Version.RFC8621, apiRoute))
 
-    val versionParser: VersionParser = new VersionParser(SUPPORTED_VERSIONS)
+    val versionParser: VersionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT)
     jmapServer = new JMAPServer(TEST_CONFIGURATION, routesHandler, versionParser)
     jmapServer.start()
 

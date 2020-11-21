@@ -69,6 +69,12 @@
                     <dd>Optional boolean. Defaults to false.</dd>
                     <dd>Should simple Email/query be resolved against a Cassandra projection, or should we resolve them against ElasticSearch?
                         This enables a higher resilience, but the projection needs to be correctly populated.</dd>
+
+                    <dt><strong>jmap.version.default</strong></dt>
+                    <dd>Optional string. Defaults to draft. Allowed values: draft, rfc-8621.</dd>
+                    <dd>Which version of the JMAP protocol should be served when none supplied in the Accept header.
+                    Defaults to draft for legacy reasons (avoid breaking changes) but setting the value to
+                    rfc-8621 allow compatibility with other third party apps.</dd>
                 </dl>
 
             </subsection>

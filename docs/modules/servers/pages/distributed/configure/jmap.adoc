@@ -42,6 +42,12 @@ This should not be the same keystore than the ones used by TLS based protocols.
 | Should simple Email/query be resolved against a Cassandra projection, or should we resolve them against ElasticSearch?
 This enables a higher resilience, but the projection needs to be correctly populated.
 
+| jmap.version.default
+| Optional string. Defaults to draft. Allowed values: draft, rfc-8621.
+| Which version of the JMAP protocol should be served when none supplied in the Accept header.
+Defaults to draft for legacy reasons (avoid breaking changes) but setting the value to
+rfc-8621 allow compatibility with other third party apps.
+
 |===
 
 == Wire tapping

@@ -35,6 +35,7 @@ public class JMAPConfiguration {
         private Optional<Boolean> enabled = Optional.empty();
         private Optional<Boolean> emailQueryViewEnabled = Optional.empty();
         private Optional<Port> port = Optional.empty();
+        private Optional<Version> defaultVersion = Optional.empty();
 
         private Builder() {
 
@@ -75,6 +76,15 @@ public class JMAPConfiguration {
             return this;
         }
 
+        public Builder defaultVersion(Version defaultVersion) {
+            return defaultVersion(Optional.of(defaultVersion));
+        }
+
+        public Builder defaultVersion(Optional<Version> defaultVersion) {
+            this.defaultVersion = defaultVersion;
+            return this;
+        }
+
         public Builder randomPort() {
             this.port = Optional.empty();
             return this;
@@ -82,20 +92,24 @@ public class JMAPConfiguration {
 
         public JMAPConfiguration build() {
             Preconditions.checkState(enabled.isPresent(), "You should specify if JMAP server should be started");
-            return new JMAPConfiguration(enabled.get(), port, emailQueryViewEnabled.orElse(false));
+            return new JMAPConfiguration(enabled.get(), port, emailQueryViewEnabled.orElse(false),
+                    defaultVersion.orElse(Version.DRAFT));
         }
-
     }
+
+    public static JMAPConfiguration DEFAULT = JMAPConfiguration.builder().enable().build();
 
     private final boolean enabled;
     private final Optional<Port> port;
     private final boolean emailQueryViewEnabled;
+    private final Version defaultVersion;
 
     @VisibleForTesting
-    JMAPConfiguration(boolean enabled, Optional<Port> port, boolean emailQueryViewEnabled) {
+    JMAPConfiguration(boolean enabled, Optional<Port> port, boolean emailQueryViewEnabled, Version defaultVersion) {
         this.enabled = enabled;
         this.port = port;
         this.emailQueryViewEnabled = emailQueryViewEnabled;
+        this.defaultVersion = defaultVersion;
     }
 
     public boolean isEnabled() {
@@ -108,5 +122,9 @@ public class JMAPConfiguration {
 
     public boolean isEmailQueryViewEnabled() {
         return emailQueryViewEnabled;
+    }
+
+    public Version getDefaultVersion() {
+        return defaultVersion;
     }
 }

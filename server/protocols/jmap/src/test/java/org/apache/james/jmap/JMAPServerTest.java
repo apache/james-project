@@ -88,7 +88,7 @@ class JMAPServerTest {
 
     @Test
     void serverShouldAnswerWhenStarted() {
-        VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS);
+        VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT);
         JMAPServer jmapServer = new JMAPServer(TEST_CONFIGURATION, NO_ROUTES_HANDLERS, versionParser);
         jmapServer.start();
 
@@ -107,7 +107,7 @@ class JMAPServerTest {
 
     @Test
     void startShouldNotThrowWhenConfigurationDisabled() {
-        VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS);
+        VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT);
         JMAPServer jmapServer = new JMAPServer(DISABLED_CONFIGURATION, NO_ROUTES_HANDLERS, versionParser);
 
         assertThatCode(jmapServer::start).doesNotThrowAnyException();
@@ -115,7 +115,7 @@ class JMAPServerTest {
 
     @Test
     void stopShouldNotThrowWhenConfigurationDisabled() {
-        VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS);
+        VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT);
         JMAPServer jmapServer = new JMAPServer(DISABLED_CONFIGURATION, NO_ROUTES_HANDLERS, versionParser);
         jmapServer.start();
 
@@ -124,7 +124,7 @@ class JMAPServerTest {
 
     @Test
     void getPortShouldThrowWhenServerIsNotStarted() {
-        VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS);
+        VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT);
         JMAPServer jmapServer = new JMAPServer(TEST_CONFIGURATION, NO_ROUTES_HANDLERS, versionParser);
 
         assertThatThrownBy(jmapServer::getPort)
@@ -133,7 +133,7 @@ class JMAPServerTest {
 
     @Test
     void getPortShouldThrowWhenDisabledConfiguration() {
-        VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS);
+        VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT);
         JMAPServer jmapServer = new JMAPServer(DISABLED_CONFIGURATION, NO_ROUTES_HANDLERS, versionParser);
         jmapServer.start();
 
@@ -147,7 +147,7 @@ class JMAPServerTest {
 
         @BeforeEach
         void setUp() {
-            VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS);
+            VersionParser versionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT);
             server = new JMAPServer(TEST_CONFIGURATION, FAKE_ROUTES_HANDLERS, versionParser);
             server.start();
 
