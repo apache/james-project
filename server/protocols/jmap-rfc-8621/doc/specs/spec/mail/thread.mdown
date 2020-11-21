@@ -1,8 +1,7 @@
 # Threads
 
-<aside class="warning">
-  Not implemented yet
-</aside>
+> :warning:
+> Not implemented
 
 Replies are grouped together with the original message to form a Thread. In JMAP, a Thread is simply a flat list of Emails, ordered by date. Every Email MUST belong to a Thread, even if it is the only Email in the Thread.
 

@@ -1,8 +1,7 @@
 # Binary Data
 
-<aside class="warning">
-  Not implemented yet
-</aside>
+> :warning:
+> Not implemented yet
 
 Binary data is referenced by a *blobId* in JMAP and uploaded/downloaded separately to the core API. The blobId solely represents the raw bytes of data, not any associated metadata such as a file name or content type. Such metadata is stored alongside the blobId in the object referencing it. The data represented by a blobId is immutable.
 

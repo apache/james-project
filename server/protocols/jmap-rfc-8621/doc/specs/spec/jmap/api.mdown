@@ -10,9 +10,8 @@ The request MUST be of type `application/json` and consist of a single JSON-enco
 
 ## The Invocation Data Type
 
-<aside class="notice">
-  Implemented
-</aside>
+> :warning:
+> Implemented
 
 Method calls and responses are represented by the **Invocation** data type. This is a tuple, represented as a JSON array containing three elements:
 
@@ -24,9 +23,8 @@ Method calls and responses are represented by the **Invocation** data type. This
 
 ## The Request Object
 
-<aside class="notice">
-  Implemented
-</aside>
+> :warning:
+> Implemented
 
 A **Request** object has the following properties:
 
@@ -67,9 +65,8 @@ Future specifications MAY add further properties to the Request object to extend
 
 ## The Response Object
 
-<aside class="notice">
-  Implemented
-</aside>
+> :warning:
+> Implemented
 
 A **Response** object has the following properties:
 
@@ -82,9 +79,9 @@ A **Response** object has the following properties:
   additional ones added for newly created records.
 - **sessionState**: `String` The current value of the "state" string on the
   Session object, as described in Section 2. Clients may use this to detect if this object has changed and needs to be refetched.
-  <aside class="warning">
-    Not implemented
-  </aside>
+
+> :warning:
+> Not implemented
 
 Unless otherwise specified, if the method call completed successfully, its response name is the same as the method name in the request.
 
@@ -128,9 +125,8 @@ Finally, methods that make changes to the server state often act upon a number o
 
 ### Request-Level Errors
 
-<aside class="notice">
-  Implemented
-</aside>
+> :warning:
+> Implemented
 
 When an HTTP error response is returned to the client, the server
 SHOULD return a JSON "problem details" object as the response body,
@@ -145,9 +141,10 @@ The following problem types are defined:
 - `urn:ietf:params:jmap:error:notRequest`
   The request parsed as JSON but did not match the type signature of the Request object.
 - `urn:ietf:params:jmap:error:limit`
-  <aside class="warning">
-    Not implemented
-  </aside>
+
+> :warning:
+> Not implemented
+
   The request was not processed as it would have exceeded one of the **request**
   limits defined on the capability object, such as maxSizeRequest,
   maxCallsInRequest, or maxConcurrentRequests. A "limit" property MUST also be
@@ -419,9 +416,8 @@ Method calls within a single request MUST be executed in order. However, method 
 
 # The Core/echo Method
 
-<aside class="notice">
-  Implemented
-</aside>
+> :warning:
+> Implemented
 
 The *Core/echo* method returns exactly the same arguments as it is given. It is useful for testing if you have a valid authenticated connection to a JMAP API endpoint.
 

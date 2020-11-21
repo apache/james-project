@@ -1,8 +1,7 @@
 # Identities
 
-<aside class="warning">
-  Not implemented yet
-</aside>
+> :warning:
+> Not implemented yet
 
 An **Identity** object stores information about an email address or domain the user may send from. It has the following properties:
 

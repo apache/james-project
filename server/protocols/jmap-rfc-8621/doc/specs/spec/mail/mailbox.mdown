@@ -5,26 +5,27 @@ A Mailbox represents a named set of Emails. This is the primary mechanism for or
 For compatibility with IMAP, an Email MUST belong to one or more Mailboxes. The Email id does not change if the Email changes Mailboxes.
 
 A **Mailbox** object has the following properties:
-<aside class="notice">
-  Implemented
-</aside>
+
+> :warning:
+> Implemented
 
 - **id**: `Id` (immutable; server-set)
   The id of the Mailbox.
 - **name**: `String`
 
-<aside class="notice">
-  "name" should not contain the IMAP hierarchy delimiter ".".
-</aside>
+> :warning:
+> "name" should not contain the IMAP hierarchy delimiter ".".
+
 
   User-visible name for the Mailbox, e.g., "Inbox". This MUST be a Net-Unicode string [@!RFC5198] of at least 1 character in length, subject to the maximum size given in the capability object. There MUST NOT be two sibling Mailboxes with both the same parent and the same name. Servers MAY reject names that violate server policy (e.g., names containing a slash (/) or control characters).
 - **parentId**: `Id|null` (default: null)
   The Mailbox id for the parent of this Mailbox, or `null` if this Mailbox is at the top level. Mailboxes form acyclic graphs (forests) directed by the child-to-parent relationship. There MUST NOT be a loop.
 - **role**: `String|null` (default: null)
-  <aside class="warning">
-    Partially implemented. Role are based on the name of the mailbox. An evolution would be to use a mailbox annotation to hold its
-    value, removing the link with the name, and allow the user to define locale based system mailboxes. This value cannot be updated.
-  </aside>
+
+> :warning:
+> Partially implemented. Role are based on the name of the mailbox. An evolution would be to use a mailbox annotation to hold its
+> value, removing the link with the name, and allow the user to define locale based system mailboxes. This value cannot be updated.
+
   Identifies Mailboxes that have a particular common purpose (e.g., the "inbox"), regardless of the *name* property (which may be localised).
 
     This value is shared with IMAP (exposed in IMAP via the SPECIAL-USE extension [@!RFC6154]). However, unlike in IMAP, a Mailbox MUST only have a single role, and there MUST NOT be two Mailboxes in the same account with the same role. Servers providing IMAP access to the same data are encouraged to enforce these extra restrictions in IMAP as well. Otherwise, modifying the IMAP attributes to ensure compliance when exposing the data over JMAP is implementation dependent.
@@ -34,9 +35,10 @@ A **Mailbox** object has the following properties:
     An account is not required to have Mailboxes with any particular roles.
 
 - **sortOrder**: `UnsignedInt` (default: 0)
-  <aside class="warning">
-    Partially implemented. Based on the role. This value cannot be updated.
-  </aside>
+
+> :warning:
+> Partially implemented. Based on the role. This value cannot be updated.
+
   Defines the sort order of Mailboxes when presented in the client's UI, so it
   is consistent between devices. The number MUST be an integer in the range
   0 <= sortOrder < 2^31.
@@ -48,14 +50,16 @@ A **Mailbox** object has the following properties:
 - **unreadEmails**: `UnsignedInt` (server-set)
   The number of Emails in this Mailbox that have neither the `$seen` keyword nor the `$draft` keyword.
 - **totalThreads**: `UnsignedInt` (server-set)
-  <aside class="warning">
-    Threads are not implemented. So far, each email is its own thread, so totalThreads will have the same value than totalEmails
-  </aside>
+
+> :warning:
+> Threads are not implemented. So far, each email is its own thread, so totalThreads will have the same value than totalEmails
+
   The number of Threads where at least one Email in the Thread is in this Mailbox.
 - **unreadThreads**: `UnsignedInt` (server-set)
-  <aside class="warning">
-    Threads are not implemented. So far, each email is its own thread, so unreadThreads will have the same value than unreadEmails
-  </aside>
+
+> :warning:
+> Threads are not implemented. So far, each email is its own thread, so unreadThreads will have the same value than unreadEmails
+
   An indication of the number of "unread" Threads in the Mailbox.
 
     For compatibility with existing implementations, the way "unread Threads" is
@@ -105,9 +109,8 @@ The following JMAP methods are supported.
 
 ## Mailbox/get
 
-<aside class="notice">
-  Implemented
-</aside>
+> :warning:
+> Implemented
 
 This is a standard "/get" method as described in [@!RFC8620], Section 5.1. The *ids* argument may be `null` to fetch all at once.
 
@@ -122,14 +125,13 @@ Since counts frequently change but other properties are generally only changed r
 
 ## Mailbox/query
 
-  <aside class="warning">
-    Partially implemented. `sortAsTree` and `filterAsTree` options are unsupported.
-
-    `FilterCondition` only accepts a `role` property. `filter` property needs to be a `FilterCondition`,
-    `FilterOperator` are not supported.
-
-    `position`, `anchor`, `anchorOffset`, `limit`, `sort`, `calculateTotal` properties are not supported for this `/query` call.
-  </aside>
+> :warning:
+> Partially implemented. `sortAsTree` and `filterAsTree` options are unsupported.
+>
+>    `FilterCondition` only accepts a `role` property. `filter` property needs to be a `FilterCondition`,
+>    `FilterOperator` are not supported.
+>
+>    `position`, `anchor`, `anchorOffset`, `limit`, `sort`, `calculateTotal` properties are not supported for this `/query` call.
 
 This is a standard "/query" method as described in [@!RFC8620], Section 5.5, but with the following additional request argument:
 
@@ -174,9 +176,8 @@ This is a standard "/queryChanges" method as described in [@!RFC8620], Section 5
 
 ## Mailbox/set
 
-<aside class="notice">
-  Implemented
-</aside>
+> :warning:
+> Implemented
 
 This is a standard "/set" method as described in [@!RFC8620], Section 5.3, but with the following additional request argument:
 
@@ -192,13 +193,12 @@ For **destroy**:
 - `mailboxHasEmail`: The Mailbox has at least one Email assigned to it, and
   the *onDestroyRemoveEmails* argument was `false`.
 
-<aside class="notice">
-Restrictions:
- - "parentId" updates only succeeds if the given mailbox has no child.
- - all updates to shared mailboxes by a sharee are forbidden.
- - Updates to server-set fields are rejected, even if they match the server value.
- - as "role" and "sortOrder" are server-set by the current James implementation, updating them is not supported.
-</aside>
+> :warning:
+> Restrictions:
+> - "parentId" updates only succeeds if the given mailbox has no child.
+> - all updates to shared mailboxes by a sharee are forbidden.
+> - Updates to server-set fields are rejected, even if they match the server value.
+> - as "role" and "sortOrder" are server-set by the current James implementation, updating them is not supported.
 
 ## Example
 

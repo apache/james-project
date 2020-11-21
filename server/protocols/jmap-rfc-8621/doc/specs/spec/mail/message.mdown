@@ -1,8 +1,7 @@
 # Emails
 
-<aside class="warning">
-  Partially implemented
-</aside>
+>:warning:
+>Partially implemented
 
 An **Email** object is a representation of a message [@!RFC5322], which allows clients to avoid the complexities of MIME parsing, transfer encoding, and character encoding.
 
@@ -39,9 +38,8 @@ These properties represent metadata about the message in the mail store and are 
 - **threadId**: `Id` (immutable; server-set)
   The id of the Thread to which this Email belongs.
 
-<aside class="warning">
-  threadId support is not implemented yet. Default to the id of the email.
-</aside>
+>:warning:
+>threadId support is not implemented yet. Default to the id of the email.
 
 - **mailboxIds**: `Id[Boolean]`
   The set of Mailbox ids this Email belongs to. An Email in the mail store MUST belong to one or more Mailboxes at all times (until it is destroyed). The set is represented as an object, with each key being a *Mailbox id*. The value for each key in the object MUST be `true`.
@@ -57,10 +55,9 @@ These properties represent metadata about the message in the mail store and are 
 
     The IMAP `\Recent` keyword is not exposed via JMAP. The IMAP `\Deleted` keyword is also not present: IMAP uses a delete+expunge model, which JMAP does not. Any message with the `\Deleted` keyword MUST NOT be visible via JMAP (and so are not counted in the "totalEmails", "unreadEmails", "totalThreads", and "unreadThreads" Mailbox properties).
 
-<aside class="warning">
- The current implementation do not expose `\Deleted`, `\Recent` keywords.
- However emails marked as `\Deleted` can still be retrieved via Email/query Email/set (and so are counted in the "totalEmails", "unreadEmails", "totalThreads", and "unreadThreads" Mailbox properties).
-</aside>
+> :warning:
+> The current implementation do not expose `\Deleted`, `\Recent` keywords.
+> However emails marked as `\Deleted` can still be retrieved via Email/query Email/set (and so are counted in the "totalEmails", "unreadEmails", "totalThreads", and "unreadThreads" Mailbox properties).
 
     Users may add arbitrary keywords to an Email. For compatibility with IMAP, a keyword is a case-insensitive string of 1–255 characters in the ASCII subset %x21–%x7e (excludes control chars and space), and it MUST NOT include any of these characters:
 
@@ -229,14 +226,13 @@ To prevent obviously nonsense behaviour, which can lead to interoperability issu
 
 #### Date
 
-<aside class="warning">
-  The underlying parsing library James relies on (MIME4J) does not
-  carry over the timezone (as it represents dates via java.util.date).
-
-  Thus the type for Date header format is:
-
-  Type: `UTCDate|null`
-</aside>
+> :warning:
+>  The underlying parsing library James relies on (MIME4J) does not
+>  carry over the timezone (as it represents dates via java.util.date).
+>
+>  Thus the type for Date header format is:
+>
+>  Type: `UTCDate|null`
 
 Type: `Date|null`
 
@@ -288,9 +284,8 @@ Where `{header-field-name}` means any series of one or more printable ASCII char
   - **:all**
     This means the value is an array, with the items corresponding to each instance of the header field, in the order they appear in the message. If this suffix is not used, the result is the value of the **last** instance of the header field (i.e., identical to the **last** item in the array if :all is used), or `null` if none.
 
-<aside class="warning">
- :all prefix support is not implemented yet
-</aside>
+> :warning:
+> :all prefix support is not implemented yet
 
 If both suffixes are used, they MUST be specified in the order above. Header field names are matched case insensitively. The value is typed according to the requested form or to an array of that type if :all is used. If no header fields exist in the message with the requested name, the value is `null` if fetching a single instance or an empty array if requesting :all.
 
@@ -362,9 +357,9 @@ An **EmailBodyPart** object has the following properties:
 
 In addition, the client may request/send EmailBodyPart properties representing individual header fields, following the same syntax and semantics as for the Email object, e.g., `header:Content-Type`.
 
-<aside class="warning">
- We support fetching specific headers for the Email entity, but this is not yet implemented for the EmailBodyPart entity
-</aside>
+> :warning:
+> We support fetching specific headers for the Email entity, but this is not yet implemented for the EmailBodyPart entity
+
 
 The following **Email** properties are specified for access to the body data of the message:
 
@@ -561,10 +556,9 @@ This is a standard "/get" method as described in [@!RFC8620], Section 5.1, with 
 
     The server MUST ensure the truncation results in valid UTF-8 and does not occur mid-codepoint. If the part is of type `text/html`, the server SHOULD NOT truncate inside an HTML tag, e.g., in the middle of `<a href="https://example.com">`. There is no requirement for the truncated form to be a balanced tree or valid HTML (indeed, the original source may well be neither of these things).
 
-<aside class="warning">
-  Body truncation implementation does not take html structure into account.
-  Truncation can happen in the middle of an html tag.
-</aside>
+> :warning:
+>  Body truncation implementation does not take html structure into account.
+>  Truncation can happen in the middle of an html tag.
 
 If the standard *properties* argument is omitted or `null`, the following default MUST be used instead of "all" properties:
 
@@ -662,28 +656,25 @@ and response:
 
 ## Email/changes
 
-<aside class="warning">
-  Not implemented yet
-</aside>
+> :warning:
+>  Not implemented yet
 
 This is a standard "/changes" method as described in [@!RFC8620], Section 5.2. If generating intermediate states for a large set of changes, it is recommended that newer changes be returned first, as these are generally of more interest to users.
 
 ## Email/query
 
-<aside class="warning">
-    Partially implemented
-    
-    The calcultateTotal field is not supported and so nor are the negative position.
-</aside>
+> :warning:
+> Partially implemented
+>
+> The calculateTotal field is not supported and so nor are the negative position.
 
 This is a standard "/query" method as described in [@!RFC8620], Section 5.5, but with the following additional request arguments:
 
 - **collapseThreads**: `Boolean` (default: false)
   If `true`, Emails in the same Thread as a previous Email in the list (given the filter and sort order) will be removed from the list. This means only one Email at most will be included in the list for any given Thread.
 
-<aside class="warning">
-  Each message belonging to a single thread according to our current implementation, collapseThread is a noop operation.
-</aside>
+> :warning:
+> Each message belonging to a single thread according to our current implementation, collapseThread is a noop operation.
 
 In quality implementations, the query "total" property is expected to be fast to calculate when the filter consists solely of a single `inMailbox` property, as it is the same as the totalEmails or totalThreads properties (depending on whether collapseThreads is true) of the associated Mailbox object.
 
@@ -734,17 +725,16 @@ A **FilterCondition** object has the following properties, any of which may be o
 
 If zero properties are specified on the FilterCondition, the condition MUST always evaluate to `true`. If multiple properties are specified, ALL must apply for the condition to be `true` (it is equivalent to splitting the object into one-property conditions and making them all the child of an AND filter operator).
 
-<aside class="warning">
-These properties are not supported yet for filtering:
-- allInThreadHaveKeyword
-- someInThreadHaveKeyword
-- noneInThreadHaveKeyword
-- text
-- body
-
-Also please note that inMailbox and inMailboxOtherThan filters are rejected
-when nested in operator. They need to be specified in a filter condition.
-</aside>
+> :warning:
+>These properties are not supported yet for filtering:
+> - allInThreadHaveKeyword
+> - someInThreadHaveKeyword
+> - noneInThreadHaveKeyword
+> - text
+> - body
+>
+> Also please note that inMailbox and inMailboxOtherThan filters are rejected
+> when nested in operator. They need to be specified in a filter condition.
 
 The exact semantics for matching `String` fields is **deliberately not defined** to allow for flexibility in indexing implementation, subject to the following:
 
@@ -777,16 +767,15 @@ The following values for the *property* field on the Comparator object SHOULD be
 - **allInThreadHaveKeyword** - This value MUST be considered `true` for the Email if **all** of the Emails in the same Thread have the keyword given as an additional *keyword* property on the *Comparator* object.
 - **someInThreadHaveKeyword** - This value MUST be considered `true` for the Email if **any** of the Emails in the same Thread have the keyword given as an additional *keyword* property on the *Comparator* object.
 
-<aside class="warning">
- These properties are not supported yet for sorting:
- - size
- - from
- - to
- - subject
- - hasKeyword
- - allInThreadHaveKeyword
- - someInThreadHaveKeyword
-</aside>
+> :warning:
+> These properties are not supported yet for sorting:
+> - size
+> - from
+> - to
+> - subject
+> - hasKeyword
+> - allInThreadHaveKeyword
+> - someInThreadHaveKeyword
 
 The server MAY support sorting based on other properties as well. A client can discover which properties are supported by inspecting the account's *capabilities* object (see Section 1.3).
 
@@ -810,15 +799,13 @@ This would sort Emails in flagged Threads first (the Thread is considered flagge
 
 When *collapseThreads* is `true`, then after filtering and sorting the Email list, the list is further winnowed by removing any Emails for a Thread id that has already been seen (when passing through the list sequentially). A Thread will therefore only appear **once** in the result, at the position of the first Email in the list that belongs to the Thread (given the current sort/filter).
 
-<aside class="warning">
- Each message belonging to a single thread according to our current implementation, collapseThread is a noop operation.
-</aside>
+> :warning:
+> Each message belonging to a single thread according to our current implementation, collapseThread is a noop operation.
 
 ## Email/queryChanges
 
-<aside class="warning">
-Not implemented yet
-</aside>
+> :warning:
+> Not implemented yet
 
 This is a standard "/queryChanges" method as described in [@!RFC8620], Section 5.6, with the following additional request argument:
 
@@ -827,9 +814,8 @@ This is a standard "/queryChanges" method as described in [@!RFC8620], Section 5
 
 ## Email/set
 
-<aside class="warning">
-Partially implemented
-</aside>
+> :warning:
+> Partially implemented
 
 This is a standard "/set" method as described in [@!RFC8620], Section 5.3. The *Email/set* method encompasses:
 
@@ -852,17 +838,31 @@ Due to the format of the Email object, when creating an Email there are a number
 - Header fields beginning with `Content-` MUST NOT be specified on the Email
   object, only on EmailBodyPart objects.
 - If a bodyStructure property is given, there MUST NOT be textBody, htmlBody, or
-  attachments properties. <aside class="warning">Not implemented. *bodyStructure* property is not supported in Email/set create.</aside>
+  attachments properties.
+
+> :warning:
+> Not implemented. *bodyStructure* property is not supported in Email/set create.
+
 - If given, the bodyStructure EmailBodyPart MUST NOT contain a property
   representing a header field that is already defined on the top-level Email
-  object. <aside class="warning">Not implemented. *bodyStructure* property is not supported in Email/set create.</aside>
+  object.
+> :warning:
+> Not implemented. *bodyStructure* property is not supported in Email/set create.
+
 - If given, textBody MUST contain exactly one body part and it MUST be of type
-  `text/plain`. <aside class="warning">Not implemented. *textBody* property is not supported in Email/set create.</aside>
+  `text/plain`.
+> :warning:
+> Not implemented. *textBody* property is not supported in Email/set create.
+
 - If given, htmlBody MUST contain exactly one body part and it MUST be of type
   `text/html`.
 - Within an EmailBodyPart:
   - The client may specify a *partId* OR a *blobId*, but not both. If a *partId* is
-    given, this *partId* MUST be present in the bodyValues property. <aside>htmlBody part needs to have a *partId*. `attachments` parts need to specify *blobId*. </aside>
+    given, this *partId* MUST be present in the bodyValues property.
+
+> :warning:
+> htmlBody part needs to have a *partId*. `attachments` parts need to specify *blobId*.
+
   - The charset property MUST be omitted if a partId is given (the part's
     content is included in bodyValues, and the server may choose any appropriate
     encoding).
@@ -870,7 +870,10 @@ Due to the format of the Email object, when creating an Email there are a number
     given, it may be included but is ignored by the server (the size is
     actually calculated from the blob content itself).
   - A `Content-Transfer-Encoding` header field MUST NOT be given.
-  - <aside>EmailBodyPart specific headers are not supported for Email/set create. </aside>
+
+> :warning:
+> EmailBodyPart specific headers are not supported for Email/set create.
+
 - Within an EmailBodyValue object, isEncodingProblem and isTruncated MUST be
   either `false` or omitted.
 
@@ -901,9 +904,8 @@ For **create** and **update**:
 
 ## Email/copy
 
-<aside class="warning">
-Not implemented yet
-</aside>
+> :warning:
+> Not implemented yet
 
 This is a standard "/copy" method as described in [@!RFC8620], Section 5.4, except only the *mailboxIds*, *keywords*, and *receivedAt* properties may be set during the copy. This method cannot modify the message represented by the Email.
 
@@ -914,9 +916,8 @@ For successfully copied Email objects, the *created* response contains the *id*,
 
 ## Email/import
 
-<aside class="warning">
-Not implemented yet
-</aside>
+> :warning:
+> Not implemented yet
 
 The *Email/import* method adds messages [@!RFC5322] to the set of Emails in an account. The server MUST support messages with Email Address Internationalization (EAI) headers [@!RFC6532]. The messages must first be uploaded as blobs using the standard upload mechanism. The method takes the following arguments:
 
@@ -967,9 +968,8 @@ The following additional errors may be returned instead of the *Email/import* re
 
 ## Email/parse
 
-<aside class="warning">
-Not implemented yet
-</aside>
+> :warning:
+> Not implemented yet
 
 This method allows you to parse blobs as messages [@!RFC5322] to get Email objects. The server MUST support messages with EAI headers [@!RFC6532]. This can be used to parse and display attached messages without having to import them as top-level Email objects in the mail store in their own right.
 
