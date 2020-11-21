@@ -96,7 +96,7 @@ The value of this property in an account's *accountCapabilities* property is an 
 ### urn:ietf:params:jmap:submission
 
 > :warning:
-> Not implemented yet
+> Partially implemented
 
 This represents support for the Identity and EmailSubmission data types and associated API methods. The value of this property in the JMAP session *capabilities* property is an empty object.
 
@@ -127,7 +127,7 @@ The value of this property in an account's *accountCapabilities* property is an 
 ### urn:ietf:params:jmap:vacationresponse
 
 > :warning:
-> Not implemented yet
+> Implemented
 
 This represents support for the VacationResponse data type and associated API methods. The value of this property is an empty object in both the JMAP session *capabilities* property and an account's *accountCapabilities* property.
 

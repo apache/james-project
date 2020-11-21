@@ -1,7 +1,7 @@
 # Binary Data
 
 > :warning:
-> Not implemented yet
+> Implemented
 
 Binary data is referenced by a *blobId* in JMAP and uploaded/downloaded separately to the core API. The blobId solely represents the raw bytes of data, not any associated metadata such as a file name or content type. Such metadata is stored alongside the blobId in the object referencing it. The data represented by a blobId is immutable.
 
@@ -66,6 +66,9 @@ As the data for a particular blobId is immutable, and thus the response in the g
 When an HTTP error response is returned to the client, the server SHOULD return a JSON "problem details" object as the response body, as per [@!RFC7807].
 
 ## Blob/copy
+
+> :warning:
+> Not implemented.
 
 Binary data may be copied **between** two different accounts using the *Blob/copy* method rather than having to download and then reupload on the client.
 

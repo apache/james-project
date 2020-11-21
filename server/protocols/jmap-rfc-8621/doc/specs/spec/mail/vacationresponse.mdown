@@ -1,7 +1,7 @@
 # Vacation Response
 
 > :warning:
-> Partially implemented
+> Implemented
 
 A vacation response sends an automatic reply when a message is delivered to the mail store, informing the original sender that their message may not be read for some time.
 
@@ -27,9 +27,6 @@ The **VacationResponse** object represents the state of vacation-response-relate
 The following JMAP methods are supported.
 
 ## VacationResponse/get
-
-> :warning:
-> Implemented
 
 This is a standard "/get" method as described in [@!RFC8620], Section 5.1.
 

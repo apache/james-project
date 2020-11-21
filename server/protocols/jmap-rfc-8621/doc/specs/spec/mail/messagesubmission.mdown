@@ -1,7 +1,7 @@
 # Email Submission
 
 > :warning:
-> Not implemented yet
+> Partially implemented
 
 An **EmailSubmission** object represents the submission of an Email for delivery to one or more recipients. It has the following properties:
 
@@ -9,6 +9,10 @@ An **EmailSubmission** object represents the submission of an Email for delivery
   The id of the EmailSubmission.
 - **identityId**: `Id` (immutable)
   The id of the Identity to associate with this submission.
+
+> :warning:
+> Not implemented. Submissions cannot be created with identityId. This field should be omitted.
+
 - **emailId**: `Id` (immutable)
   The id of the Email to send. The Email being sent does not have to be a draft, for example, when "redirecting" an existing Email to a different address.
 - **threadId**: `Id` (immutable; server-set)
@@ -35,6 +39,9 @@ An **EmailSubmission** object represents the submission of an Email for delivery
       The email address being represented by the object. This is a "Mailbox" as used in the Reverse-path or Forward-path of the MAIL FROM or RCPT TO command in [@!RFC5321].
     - **parameters**: `Object|null`
       Any parameters to send with the email address (either mail-parameter or rcpt-parameter as appropriate, as specified in [@!RFC5321]). If supplied, each key in the object is a parameter name, and the value is either the parameter value (type `String`) or `null` if the parameter does not take a value. For both name and value, any xtext or unitext encodings are removed (see [@!RFC3461] and [@!RFC6533]) and JSON string encoding is applied.
+
+> :warning:
+> Not implemented. Submissions cannot be created with parameters. This field should be omitted.
 
     If the *envelope* property is `null` or omitted on creation, the server MUST generate this from the referenced Email as follows:
 
@@ -144,13 +151,22 @@ The following JMAP methods are supported.
 
 ## EmailSubmission/get
 
+> :warning:
+> Not implemented
+
 This is a standard "/get" method as described in [@!RFC8620], Section 5.1.
 
 ## EmailSubmission/changes
 
+> :warning:
+> Not implemented
+
 This is a standard "/changes" method as described in [@!RFC8620], Section 5.2.
 
 ## EmailSubmission/query
+
+> :warning:
+> Not implemented
 
 This is a standard "/query" method as described in [@!RFC8620], Section 5.5.
 
@@ -186,12 +202,23 @@ This is a standard "/queryChanges" method as described in [@!RFC8620], Section 5
 
 ## EmailSubmission/set
 
+> :warning:
+> Partially implemented. Only EmailSubmission/set create is supported.
+> No result is stored.
+
 This is a standard "/set" method as described in [@!RFC8620], Section 5.3 with the following two additional request arguments:
 
 - **onSuccessUpdateEmail**: `Id[PatchObject]|null`
   A map of *EmailSubmission id* to an object containing properties to update on the Email object referenced by the EmailSubmission if the create/update/destroy succeeds. (For references to EmailSubmissions created in the same "/set" invocation, this is equivalent to a creation-reference, so the id will be the creation id prefixed with a `#`.)
+
+> :warning:
+> Implemented
+
 - **onSuccessDestroyEmail**: `Id[]|null`
   A list of *EmailSubmission ids* for which the Email with the corresponding emailId should be destroyed if the create/update/destroy succeeds. (For references to EmailSubmission creations, this is equivalent to a creation-reference so the id will be the creation id prefixed with a `#`.)
+
+> :warning:
+> Implemented
 
 After all create/update/destroy items in the *EmailSubmission/set* invocation  have been processed, a single implicit *Email/set* call MUST be made to perform any changes requested in these two arguments. The response to this MUST be returned after the *EmailSubmission/set* response.
 
