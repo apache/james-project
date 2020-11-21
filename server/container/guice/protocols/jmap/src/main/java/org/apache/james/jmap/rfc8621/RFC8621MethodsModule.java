@@ -32,19 +32,7 @@ import org.apache.james.jmap.http.Authenticator;
 import org.apache.james.jmap.http.BasicAuthenticationStrategy;
 import org.apache.james.jmap.http.rfc8621.InjectionKeys;
 import org.apache.james.jmap.jwt.JWTAuthenticationStrategy;
-import org.apache.james.jmap.method.CoreEchoMethod;
-import org.apache.james.jmap.method.EmailGetMethod;
-import org.apache.james.jmap.method.EmailQueryMethod;
-import org.apache.james.jmap.method.EmailSetMethod;
-import org.apache.james.jmap.method.EmailSubmissionSetMethod;
-import org.apache.james.jmap.method.MailboxGetMethod;
-import org.apache.james.jmap.method.MailboxQueryMethod;
-import org.apache.james.jmap.method.MailboxSetMethod;
-import org.apache.james.jmap.method.Method;
-import org.apache.james.jmap.method.SystemZoneIdProvider;
-import org.apache.james.jmap.method.VacationResponseGetMethod;
-import org.apache.james.jmap.method.VacationResponseSetMethod;
-import org.apache.james.jmap.method.ZoneIdProvider;
+import org.apache.james.jmap.method.*;
 import org.apache.james.jmap.routes.DownloadRoutes;
 import org.apache.james.jmap.routes.JMAPApiRoutes;
 import org.apache.james.jmap.routes.SessionRoutes;
@@ -84,6 +72,7 @@ public class RFC8621MethodsModule extends AbstractModule {
         methods.addBinding().to(EmailQueryMethod.class);
         methods.addBinding().to(VacationResponseGetMethod.class);
         methods.addBinding().to(VacationResponseSetMethod.class);
+        methods.addBinding().to(IdentityGetMethod.class);
     }
 
     @ProvidesIntoSet
