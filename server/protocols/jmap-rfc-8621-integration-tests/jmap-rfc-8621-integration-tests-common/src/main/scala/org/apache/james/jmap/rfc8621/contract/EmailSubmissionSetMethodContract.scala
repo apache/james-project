@@ -87,7 +87,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestBob =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
          |       "accountId": "$ACCOUNT_ID",
@@ -113,7 +113,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestAndre =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [[
          |    "Email/query",
          |    {
@@ -165,7 +165,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestBob =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
          |       "accountId": "$ACCOUNT_ID",
@@ -191,7 +191,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestReadMail =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [[
          |    "Email/query",
          |    {
@@ -243,7 +243,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestBob =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
          |       "accountId": "$ACCOUNT_ID",
@@ -269,7 +269,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestReadMail =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [[
          |    "Email/query",
          |    {
@@ -321,7 +321,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestBob =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
          |       "accountId": "$ACCOUNT_ID",
@@ -347,7 +347,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestReadMail =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [[
          |    "Email/query",
          |    {
@@ -399,7 +399,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestBob =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
          |       "accountId": "$ACCOUNT_ID",
@@ -425,7 +425,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestReadMail =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [[
          |    "Email/query",
          |    {
@@ -478,7 +478,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestBob =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
          |       "accountId": "$ACCOUNT_ID",
@@ -571,7 +571,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestBob =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |    ["Email/set", {
          |      "accountId": "$ACCOUNT_ID",
@@ -656,7 +656,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestBob =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
          |       "accountId": "$ACCOUNT_ID",
@@ -710,7 +710,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestBob =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
          |       "accountId": "$ACCOUNT_ID",
@@ -816,7 +816,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestBob =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
          |       "accountId": "$ACCOUNT_ID",
@@ -911,7 +911,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestBob =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
          |       "accountId": "$ANDRE_ACCOUNT_ID",
@@ -949,10 +949,69 @@ trait EmailSubmissionSetMethodContract {
   }
 
   @Test
-  def setShouldRejectMessageNotFound(): Unit = {
+  def setShouldRejectMissingCapability(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(BOB.asString)
+      .setFrom(BOB.asString)
+      .setTo(ANDRE.asString)
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+
+    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+      .build(message))
+      .getMessageId
+
     val requestBob =
       s"""{
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |     ["EmailSubmission/set", {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "create": {
+         |         "k1490": {
+         |           "emailId": "${messageId.serialize}",
+         |           "envelope": {
+         |             "mailFrom": {"email": "${BOB.asString}"},
+         |             "rcptTo": [{"email": "${ANDRE.asString}"}]
+         |           }
+         |         }
+         |    }
+         |  }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(requestBob)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0]")
+      .isEqualTo("""[
+                   |  "error",
+                   |  {
+                   |    "type": "unknownMethod",
+                   |    "description": "Missing capability(ies): urn:ietf:params:jmap:submission"
+                   |  },
+                   |  "c1"
+                   |]""".stripMargin)
+  }
+
+  @Test
+  def setShouldRejectMessageNotFound(): Unit = {
+    val requestBob =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
          |       "accountId": "$ACCOUNT_ID",
@@ -995,7 +1054,7 @@ trait EmailSubmissionSetMethodContract {
   def setShouldRejectExtraProperties(): Unit = {
     val requestBob =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
          |       "accountId": "$ACCOUNT_ID",
@@ -1054,7 +1113,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestBob =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
          |       "accountId": "$ACCOUNT_ID",
@@ -1115,7 +1174,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestBob =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
          |       "accountId": "$ACCOUNT_ID",
@@ -1190,7 +1249,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestBob =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
          |       "accountId": "$ACCOUNT_ID",
@@ -1247,7 +1306,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestBob =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
          |       "accountId": "$ACCOUNT_ID",
@@ -1304,7 +1363,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestBob =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
          |       "accountId": "$ACCOUNT_ID",
@@ -1362,7 +1421,7 @@ trait EmailSubmissionSetMethodContract {
 
     val requestBob =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
          |  "methodCalls": [
          |     ["EmailSubmission/set", {
          |       "accountId": "$ACCOUNT_ID",
