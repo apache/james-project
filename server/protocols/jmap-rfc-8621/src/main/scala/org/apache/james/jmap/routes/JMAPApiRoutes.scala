@@ -145,8 +145,8 @@ class JMAPApiRoutes (val authenticator: Authenticator,
         .collectSeq())
   }
 
-  private def process(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession, invocation: InvocationWithContext) : SFlux[InvocationWithContext] = {
-    SFlux.fromPublisher(Flux.defer(() => {
+  private def process(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession, invocation: InvocationWithContext) : SFlux[InvocationWithContext] =
+    SFlux.fromPublisher(
       invocation.processingContext.resolveBackReferences(invocation.invocation) match {
         case Left(e) => SFlux.just[InvocationWithContext](InvocationWithContext(Invocation.error(
           errorCode = ErrorCode.InvalidResultReference,
@@ -154,9 +154,7 @@ class JMAPApiRoutes (val authenticator: Authenticator,
           methodCallId = invocation.invocation.methodCallId), invocation.processingContext))
         case Right(resolvedInvocation) => processMethodWithMatchName(capabilities, InvocationWithContext(resolvedInvocation, invocation.processingContext), mailboxSession)
           .map(_.recordInvocation)
-      }
-    }))
-  }
+      })
 
   private def processMethodWithMatchName(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): SFlux[InvocationWithContext] =
     methodsByName.get(invocation.invocation.methodName)
