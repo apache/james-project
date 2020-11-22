@@ -28,6 +28,9 @@ import org.apache.james.jmap.json.BackReferenceDeserializer
 import play.api.libs.json.{JsArray, JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Reads}
 
 import scala.util.Try
+import scala.collection.IndexedSeq
+import scala.collection.Map
+import scala.collection.immutable.{Map => ImmutableMap}
 
 sealed trait JsonPathPart
 
@@ -83,20 +86,16 @@ object JsonPath {
         }
     })
 
-  private def asPlainPart(part: String): List[JsonPathPart] = {
-    List(PlainPart(part))
-  }
+  private def asPlainPart(part: String): List[JsonPathPart] = List(PlainPart(part))
 
-  private def asArrayElementInAnObject(string: String, part: String, arrayElementPartPosition: Int): List[JsonPathPart] = {
+  private def asArrayElementInAnObject(string: String, part: String, arrayElementPartPosition: Int): List[JsonPathPart] =
     ArrayElementPart.parse(string.substring(arrayElementPartPosition))
       .map(List(PlainPart(part.substring(0, arrayElementPartPosition)), _))
       .getOrElse(List(PlainPart(part)))
-  }
 
-  private def asArrayElementPart(string: String): List[JsonPathPart] = {
+  private def asArrayElementPart(string: String): List[JsonPathPart] =
     List(ArrayElementPart.parse(string)
       .getOrElse(PlainPart(string)))
-  }
 }
 
 case class JsonPath(parts: List[JsonPathPart]) {
@@ -105,29 +104,28 @@ case class JsonPath(parts: List[JsonPathPart]) {
     case head :: tail =>
       val tailAsJsonPath = JsonPath(tail)
       head match {
-        case part: PlainPart => part.read(jsValue).flatMap(subPart => tailAsJsonPath.evaluate(subPart))
-        case part: ArrayElementPart => part.read(jsValue).flatMap(subPart => tailAsJsonPath.evaluate(subPart))
+        case part: PlainPart => part.read(jsValue).flatMap(tailAsJsonPath.evaluate)
+        case part: ArrayElementPart => part.read(jsValue).flatMap(tailAsJsonPath.evaluate)
         case WildcardPart => tailAsJsonPath.readWildcard(jsValue)
       }
   }
 
   private def readWildcard(jsValue: JsValue): JsResult[JsValue] = jsValue match {
     case JsArray(arrayItems) =>
-      val evaluationResults: List[JsResult[JsValue]] = arrayItems.toList.map(evaluate)
+      val evaluationResults: IndexedSeq[JsResult[JsValue]] = arrayItems.map(evaluate)
 
-      evaluationResults.find(x => x.isInstanceOf[JsError])
+      evaluationResults.find(_.isInstanceOf[JsError])
         .getOrElse(JsSuccess(expendArray(evaluationResults)))
     case _ => JsError("Expecting an array")
   }
 
-  private def expendArray(evaluationResults: List[JsResult[JsValue]]): JsArray = {
+  private def expendArray(evaluationResults: IndexedSeq[JsResult[JsValue]]): JsArray =
     JsArray(evaluationResults
       .map(_.get)
       .flatMap({
         case JsArray(nestedArray) => nestedArray
         case other: JsValue => List(other)
       }))
-  }
 }
 
 case class BackReference(name: MethodName, path: JsonPath, resultOf: MethodCallId) {
@@ -140,14 +138,15 @@ case class BackReference(name: MethodName, path: JsonPath, resultOf: MethodCallI
 
 case class InvalidResultReferenceException(message: String) extends IllegalArgumentException
 
-case class ProcessingContext(private val creationIds: Map[ClientId, ServerId], private val invocations: Map[MethodCallId, Invocation]) {
+case class ProcessingContext(private val creationIds: ImmutableMap[ClientId, ServerId],
+                             private val invocations: ImmutableMap[MethodCallId, Invocation]) {
 
   def recordCreatedId(clientId: ClientId, serverId: ServerId): ProcessingContext = ProcessingContext(creationIds + (clientId -> serverId), invocations)
 
   def recordInvocation(invocation: Invocation): ProcessingContext = ProcessingContext(creationIds, invocations + (invocation.methodCallId -> invocation))
 
   def resolveBackReferences(invocation: Invocation): Either[InvalidResultReferenceException, Invocation] =
-    backReferenceResolver().reads(invocation.arguments.value) match {
+    backReferenceResolver.reads(invocation.arguments.value) match {
       case JsError(e) => Left(InvalidResultReferenceException(e.toString()))
       case JsSuccess(JsObject(underlying), _) => Right(Invocation(methodName = invocation.methodName,
         methodCallId = invocation.methodCallId,
@@ -155,7 +154,7 @@ case class ProcessingContext(private val creationIds: Map[ClientId, ServerId], p
       case others: JsSuccess[JsValue] => Left(InvalidResultReferenceException(s"Unexpected value $others"))
     }
 
-  private def backReferenceResolver(): Reads[JsValue] = {
+  private val backReferenceResolver: Reads[JsValue] = {
     case JsArray(value) => resolveBackReferences(value)
     case JsObject(underlying) => resolveBackReference(underlying)
     case JsString(value) if value.startsWith("#") => resolveCreationId(value)
@@ -164,25 +163,18 @@ case class ProcessingContext(private val creationIds: Map[ClientId, ServerId], p
     case others: JsValue => JsSuccess(others)
   }
 
-  private def resolveBackReferences(array: collection.IndexedSeq[JsValue]): JsResult[JsValue] = {
-    val resolver: Reads[JsValue] = backReferenceResolver()
-    val results: Seq[JsResult[JsValue]] = array.map(resolver.reads).toSeq
+  private def resolveBackReferences(array: IndexedSeq[JsValue]): JsResult[JsValue] = {
+    val results: IndexedSeq[JsResult[JsValue]] = array.map(backReferenceResolver.reads)
     results.find(_.isError)
       .getOrElse(JsSuccess(JsArray(results.map(_.get))))
   }
 
-  private def resolveBackReference(underlying: collection.Map[String, JsValue]): JsResult[JsObject] = {
-    val resolutions = underlying.map(resolveBackReference(_))
+  private def resolveBackReference(underlying: Map[String, JsValue]): JsResult[JsObject] = {
+    val resolutions = underlying.map(resolveBackReference)
 
-    val firstError = resolutions.flatMap({
-      case Left(jsError) => Some(jsError)
-      case _ => None
-    }).headOption
+    val firstError = resolutions.flatMap(_.left.toOption).headOption
 
-    val transformedMap = resolutions.flatMap({
-      case Right((entry, value)) => Some((entry, value))
-      case _ => None
-    }).toMap
+    val transformedMap = resolutions.flatMap(_.toOption).toMap
 
     firstError.getOrElse(JsSuccess(JsObject(transformedMap)))
   }
@@ -194,8 +186,8 @@ case class ProcessingContext(private val creationIds: Map[ClientId, ServerId], p
       BackReferenceDeserializer.deserializeBackReference(entry._2) match {
         case JsSuccess(backReference, _) => resolveBackReference(newEntry, backReference)
         // If the JSON object is not a back-reference continue parsing (it could be a creationId)
-        case JsError(_) =>
-          backReferenceResolver().reads(entry._2)
+        case _: JsError =>
+          backReferenceResolver.reads(entry._2)
             .fold(e => Left(JsError(e)),
               json => resolveCreationId(entry._1)
                 .fold(_ => Right((entry._1, json)),
@@ -206,21 +198,17 @@ case class ProcessingContext(private val creationIds: Map[ClientId, ServerId], p
     }
   }
 
-  private def resolveBackReference(newEntry: String, backReference: BackReference): Either[JsError, (String, JsValue)] = {
+  private def resolveBackReference(newEntry: String, backReference: BackReference): Either[JsError, (String, JsValue)] =
     resolve(backReference) match {
-      case JsError(e) => Left(JsError(e))
+      case e: JsError => Left(e)
       case JsSuccess(resolvedBackReference, _) => Right((newEntry, resolvedBackReference))
     }
-  }
 
-  private def propagateBackReferenceResolution(entry: (String, JsValue)): Either[JsError, (String, JsValue)] = {
-    val entryPayload: JsResult[JsValue] = backReferenceResolver().reads(entry._2)
-
-    entryPayload match {
-      case JsError(e) => Left(JsError(e))
+  private def propagateBackReferenceResolution(entry: (String, JsValue)): Either[JsError, (String, JsValue)] =
+    backReferenceResolver.reads(entry._2) match {
+      case e: JsError => Left(e)
       case JsSuccess(newValue, _) => Right((entry._1, newValue))
     }
-  }
 
   private def retrieveInvocation(callId: MethodCallId): Option[Invocation] = invocations.get(callId)
 
@@ -235,7 +223,7 @@ case class ProcessingContext(private val creationIds: Map[ClientId, ServerId], p
  private def resolveServerId(id: ClientId): Either[IllegalArgumentException, ServerId] =
   id.retrieveOriginalClientId
     .map(maybePreviousClientId => maybePreviousClientId.flatMap(previousClientId => retrieveServerId(previousClientId)
-      .map(serverId => Right(serverId))
+      .map(Right(_))
       .getOrElse(Left[IllegalArgumentException, ServerId](new IllegalArgumentException(s"$id was not used in previously defined creationIds")))))
     .getOrElse(Right(ServerId(id.value)))
 
