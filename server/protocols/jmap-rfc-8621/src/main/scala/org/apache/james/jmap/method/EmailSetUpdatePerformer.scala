@@ -106,9 +106,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
     for {
       updates <- SFlux.fromPublisher(messageIdManager.messagesMetadata(validUpdates.map(_._1).asJavaCollection, session))
         .collectMultimap(metaData => metaData.getComposedMessageId.getMessageId)
-        .flatMap(metaData => {
-          doUpdate(validUpdates, metaData, session)
-        })
+        .flatMap(doUpdate(validUpdates, _, session))
     } yield {
       EmailUpdateResults(updates ++ failures)
     }

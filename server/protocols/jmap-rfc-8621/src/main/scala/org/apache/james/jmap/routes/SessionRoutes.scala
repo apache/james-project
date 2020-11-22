@@ -37,7 +37,7 @@ import org.apache.james.jmap.routes.SessionRoutes.{JMAP_SESSION, LOGGER, WELL_KN
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.slf4j.LoggerFactory
 import play.api.libs.json.Json
-import reactor.core.publisher.Mono
+import reactor.core.publisher.{Mono, SynchronousSink}
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.HttpServerResponse
@@ -54,7 +54,10 @@ class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
   private val generateSession: JMAPRoute.Action =
     (request, response) => SMono.fromPublisher(authenticator.authenticate(request))
       .map(_.getUser)
-      .flatMap(username => sessionSupplier.generate(username).fold(SMono.raiseError[Session], SMono.just[Session]))
+      .handle[Session] {
+        case (username, sink) =>  sessionSupplier.generate(username)
+          .fold(sink.error, session => sink.next(session))
+      }
       .flatMap(session => sendRespond(session, response))
       .onErrorResume(throwable => SMono.fromPublisher(errorHandling(throwable, response)))
       .subscribeOn(Schedulers.elastic())

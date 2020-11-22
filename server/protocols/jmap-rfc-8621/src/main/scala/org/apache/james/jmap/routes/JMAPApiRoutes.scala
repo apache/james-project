@@ -93,18 +93,20 @@ class JMAPApiRoutes (val authenticator: Authenticator,
       .asJava()
       .`then`()
 
-  private def requestAsJsonStream(httpServerRequest: HttpServerRequest): SMono[RequestObject] = {
+  private def requestAsJsonStream(httpServerRequest: HttpServerRequest): SMono[RequestObject] =
     SMono.fromPublisher(httpServerRequest
       .receive()
       .aggregate()
       .asInputStream())
-      .flatMap(this.parseRequestObject)
-  }
+      .handle[RequestObject] {
+        case (input, sink) => parseRequestObject(input)
+          .fold(sink.error, sink.next)
+      }
 
-  private def parseRequestObject(inputStream: InputStream): SMono[RequestObject] =
+  private def parseRequestObject(inputStream: InputStream): Either[IllegalArgumentException, RequestObject] =
     ResponseSerializer.deserializeRequestObject(inputStream) match {
-      case JsSuccess(requestObject, _) => SMono.just(requestObject)
-      case errors: JsError => SMono.raiseError(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString()))
+      case JsSuccess(requestObject, _) => Right(requestObject)
+      case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString()))
     }
 
   private def process(requestObject: RequestObject,
