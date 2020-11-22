@@ -119,6 +119,10 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
     val downloadPath: String = "download/{accountId}/{blobId}/?type={type}&name={name}"
     val expectedJson = s"""{
                          |  "capabilities" : {
+                         |    "urn:ietf:params:jmap:submission": {
+                         |      "maxDelayedSend": 0,
+                         |      "submissionExtensions": []
+                         |    },
                          |    "urn:ietf:params:jmap:core" : {
                          |      "maxSizeUpload" : 31457280,
                          |      "maxConcurrentUpload" : 4,
@@ -147,6 +151,10 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |      "isPersonal" : true,
                          |      "isReadOnly" : false,
                          |      "accountCapabilities" : {
+                         |        "urn:ietf:params:jmap:submission": {
+                         |          "maxDelayedSend": 0,
+                         |          "submissionExtensions": []
+                         |        },
                          |        "urn:ietf:params:jmap:core" : {
                          |          "maxSizeUpload" : 31457280,
                          |          "maxConcurrentUpload" : 4,
@@ -172,6 +180,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |    }
                          |  },
                          |  "primaryAccounts" : {
+                         |    "urn:ietf:params:jmap:submission": "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401",
                          |    "urn:ietf:params:jmap:core" : "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401",
                          |    "urn:ietf:params:jmap:mail" : "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401",
                          |    "urn:apache:james:params:jmap:mail:quota": "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401",

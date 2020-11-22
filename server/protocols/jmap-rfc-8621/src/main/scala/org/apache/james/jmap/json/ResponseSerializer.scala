@@ -87,9 +87,14 @@ object ResponseSerializer {
   private implicit val urlWrites: Writes[URL] = url => JsString(url.toString)
   private implicit val coreCapabilityWrites: Writes[CoreCapabilityProperties] = Json.writes[CoreCapabilityProperties]
   private implicit val mailCapabilityWrites: Writes[MailCapabilityProperties] = Json.writes[MailCapabilityProperties]
+  private implicit val maxDelayedSendWrites: Writes[MaxDelayedSend] = Json.valueWrites[MaxDelayedSend]
+  private implicit val ehloNameWrites: Writes[EhloName] = Json.valueWrites[EhloName]
+  private implicit val ehloArgsWrites: Writes[EhloArgs] = Json.valueWrites[EhloArgs]
+  private implicit val submissionPropertiesWrites: Writes[SubmissionProperties] = Json.writes[SubmissionProperties]
   private implicit val quotaCapabilityWrites: Writes[QuotaCapabilityProperties] = OWrites[QuotaCapabilityProperties](_ => Json.obj())
   private implicit val sharesCapabilityWrites: Writes[SharesCapabilityProperties] = OWrites[SharesCapabilityProperties](_ => Json.obj())
   private implicit val vacationResponseCapabilityWrites: Writes[VacationResponseCapabilityProperties] = OWrites[VacationResponseCapabilityProperties](_ => Json.obj())
+  private implicit val submissionCapabilityWrites: Writes[SubmissionCapability] = OWrites[SubmissionCapability](_ => Json.obj())
 
   private implicit val setCapabilityWrites: Writes[Set[_ <: Capability]] =
     (set: Set[_ <: Capability]) => {
@@ -105,6 +110,8 @@ object ResponseSerializer {
             jsObject.+(capability.identifier.value, sharesCapabilityWrites.writes(capability.properties))
           case capability: VacationResponseCapability =>
             jsObject.+(capability.identifier.value, vacationResponseCapabilityWrites.writes(capability.properties))
+          case capability: SubmissionCapability =>
+            jsObject.+(capability.identifier.value, submissionPropertiesWrites.writes(capability.properties))
           case _ => jsObject
         }
       })

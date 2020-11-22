@@ -24,7 +24,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.string.Uri
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
 import org.apache.james.jmap.core.CoreCapabilityProperties.CollationAlgorithm
 import org.apache.james.jmap.core.MailCapability.EmailQuerySortOption
 import org.apache.james.jmap.core.UnsignedInt.{UnsignedInt, UnsignedIntConstraint}
@@ -40,6 +40,7 @@ object CapabilityIdentifier {
   val JMAP_CORE: CapabilityIdentifier = "urn:ietf:params:jmap:core"
   val JMAP_MAIL: CapabilityIdentifier = "urn:ietf:params:jmap:mail"
   val JMAP_VACATION_RESPONSE: CapabilityIdentifier = "urn:ietf:params:jmap:vacationresponse"
+  val EMAIL_SUBMISSION: CapabilityIdentifier = "urn:ietf:params:jmap:submission"
   val JAMES_QUOTA: CapabilityIdentifier = "urn:apache:james:params:jmap:mail:quota"
   val JAMES_SHARES: CapabilityIdentifier = "urn:apache:james:params:jmap:mail:shares"
 }
@@ -80,8 +81,17 @@ final case class CoreCapabilityProperties(maxSizeUpload: MaxSizeUpload,
                                           maxCallsInRequest: MaxCallsInRequest,
                                           maxObjectsInGet: MaxObjectsInGet,
                                           maxObjectsInSet: MaxObjectsInSet,
-                                          collationAlgorithms: List[CollationAlgorithm]) extends CapabilityProperties {
-}
+                                          collationAlgorithms: List[CollationAlgorithm]) extends CapabilityProperties
+
+final case class MaxDelayedSend(value: Int) extends AnyVal
+final case class EhloName(value: String) extends AnyVal
+final case class EhloArgs(value: String) extends AnyVal
+
+final case class SubmissionCapability(identifier: CapabilityIdentifier = EMAIL_SUBMISSION,
+                                      properties: SubmissionProperties = SubmissionProperties()) extends Capability
+
+final case class SubmissionProperties(maxDelayedSend: MaxDelayedSend = MaxDelayedSend(0),
+                                      submissionExtensions: Map[EhloName, List[EhloArgs]] = Map()) extends CapabilityProperties
 
 object MailCapability {
   type EmailQuerySortOption = String Refined NonEmpty

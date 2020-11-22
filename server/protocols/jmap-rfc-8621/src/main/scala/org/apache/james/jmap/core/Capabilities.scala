@@ -19,10 +19,10 @@
 package org.apache.james.jmap.core
 
 import eu.timepit.refined.auto._
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
 
 object DefaultCapabilities {
-  def coreCapability(maxUploadSize: MaxSizeUpload) = CoreCapability(
+  private def coreCapability(maxUploadSize: MaxSizeUpload) = CoreCapability(
     properties = CoreCapabilityProperties(
       maxUploadSize,
       MaxConcurrentUpload(4L),
@@ -32,8 +32,7 @@ object DefaultCapabilities {
       MaxObjectsInGet(500L),
       MaxObjectsInSet(500L),
       collationAlgorithms = List("i;unicode-casemap")))
-
-  val MAIL_CAPABILITY = MailCapability(
+  private val MAIL_CAPABILITY = MailCapability(
     properties = MailCapabilityProperties(
       MaxMailboxesPerEmail(Some(10_000_000L)),
       MaxMailboxDepth(None),
@@ -41,20 +40,24 @@ object DefaultCapabilities {
       MaxSizeAttachmentsPerEmail(20_000_000L),
       emailQuerySortOptions = List("receivedAt", "sentAt"),
       MayCreateTopLevelMailbox(true)))
+  private val QUOTA_CAPABILITY = QuotaCapability()
+  private val SHARES_CAPABILITY = SharesCapability()
+  private val VACATION_RESPONSE_CAPABILITY = VacationResponseCapability()
+  private val SUBMISSION_CAPABILITY = SubmissionCapability()
 
-  val QUOTA_CAPABILITY = QuotaCapability()
+  val SUPPORTED_CAPABILITY_IDENTIFIERS: Set[CapabilityIdentifier] =
+    Set(JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE, JAMES_SHARES, JAMES_QUOTA, EMAIL_SUBMISSION)
 
-  val SHARES_CAPABILITY = SharesCapability()
-
-  val VACATION_RESPONSE_CAPABILITY = VacationResponseCapability()
-
-  val SUPPORTED_CAPABILITY_IDENTIFIERS = Set(JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE, JAMES_SHARES, JAMES_QUOTA)
-
-  def supported(maxUploadSize: MaxSizeUpload) = Capabilities(coreCapability(maxUploadSize), MAIL_CAPABILITY, QUOTA_CAPABILITY, SHARES_CAPABILITY, VACATION_RESPONSE_CAPABILITY)
+  def supported(maxUploadSize: MaxSizeUpload): Capabilities = Capabilities(coreCapability(maxUploadSize),
+    MAIL_CAPABILITY,
+    QUOTA_CAPABILITY,
+    SHARES_CAPABILITY,
+    VACATION_RESPONSE_CAPABILITY,
+    SUBMISSION_CAPABILITY)
 }
 
 case class Capabilities(capabilities: Capability*) {
-  def toSet : Set[Capability] = capabilities.toSet
+  def toSet: Set[Capability] = capabilities.toSet
 
-  def ids : Set[CapabilityIdentifier] = toSet.map(_.identifier())
+  def ids: Set[CapabilityIdentifier] = toSet.map(_.identifier())
 }

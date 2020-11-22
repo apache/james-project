@@ -41,6 +41,10 @@ import org.junit.jupiter.api.{BeforeEach, Tag, Test}
 object SessionRoutesContract {
   private val expected_session_object: String = """{
                          |  "capabilities" : {
+                         |    "urn:ietf:params:jmap:submission": {
+                         |      "maxDelayedSend": 0,
+                         |      "submissionExtensions": []
+                         |    },
                          |    "urn:ietf:params:jmap:core" : {
                          |      "maxSizeUpload" : 31457280,
                          |      "maxConcurrentUpload" : 4,
@@ -69,6 +73,10 @@ object SessionRoutesContract {
                          |      "isPersonal" : true,
                          |      "isReadOnly" : false,
                          |      "accountCapabilities" : {
+                         |        "urn:ietf:params:jmap:submission": {
+                         |          "maxDelayedSend": 0,
+                         |          "submissionExtensions": []
+                         |        },
                          |        "urn:ietf:params:jmap:core" : {
                          |          "maxSizeUpload" : 31457280,
                          |          "maxConcurrentUpload" : 4,
@@ -94,6 +102,7 @@ object SessionRoutesContract {
                          |    }
                          |  },
                          |  "primaryAccounts" : {
+                         |    "urn:ietf:params:jmap:submission": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
                          |    "urn:ietf:params:jmap:core" : "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
                          |    "urn:ietf:params:jmap:mail" : "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
                          |    "urn:apache:james:params:jmap:mail:quota": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
