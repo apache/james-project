@@ -22,6 +22,7 @@ package org.apache.james.backends.rabbitmq;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Comparator;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.function.BiConsumer;
 
@@ -129,6 +130,17 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
 
         public static RequiresRetries builder() {
             return retries -> minBorrowDelay -> maxChannel -> new Configuration(minBorrowDelay, retries, maxChannel);
+        }
+
+        public static Configuration from(org.apache.commons.configuration2.Configuration configuration) {
+            Duration minBorrowDelay = Optional.ofNullable(configuration.getLong("channel.pool.min.delay.ms", null))
+                    .map(Duration::ofMillis)
+                    .orElse(MIN_BORROW_DELAY);
+
+            return builder()
+                .retries(configuration.getInt("channel.pool.retries", MAX_BORROW_RETRIES))
+                .minBorrowDelay(minBorrowDelay)
+                .maxChannel(configuration.getInt("channel.pool.size", MAX_CHANNELS_NUMBER));
         }
 
         private final Duration minBorrowDelay;

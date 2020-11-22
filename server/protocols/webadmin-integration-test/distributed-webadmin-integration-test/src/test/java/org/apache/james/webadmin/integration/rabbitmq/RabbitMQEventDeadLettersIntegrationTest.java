@@ -224,12 +224,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
                     .maxRetries(MAX_RETRIES)
                     .firstBackoff(java.time.Duration.ofMillis(10))
                     .jitterFactor(0.2)
-                    .build()))
-            .overrideWith(binder -> binder.bind(ReactorRabbitMQChannelPool.Configuration.class)
-                .toInstance(ReactorRabbitMQChannelPool.Configuration.builder()
-                    .retries(2)
-                    .minBorrowDelay(java.time.Duration.ofMillis(5))
-                    .maxChannel(3))))
+                    .build())))
         .build();
 
     private static final String DOMAIN = "domain.tld";

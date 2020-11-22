@@ -57,6 +57,26 @@
 
           <dt><strong>management.password</strong></dt>
           <dd>password used to access management service</dd>
+
+          <dt><strong>connection.pool.retries</strong></dt>
+          <dd>Configure retries count to retrieve a connection. Exponential backoff is performed between each retries.
+              Optional integer, defaults to 10</dd>
+
+          <dt><strong>connection.pool.min.delay.ms</strong></dt>
+          <dd>Configure initial duration (in ms) between two connection retries. Exponential backoff is performed between each retries.
+              Optional integer, defaults to 100</dd>
+
+          <dt><strong>channel.pool.retries</strong></dt>
+          <dd>Configure retries count to retrieve a channel. Exponential backoff is performed between each retries.
+              Optional integer, defaults to 3</dd>
+
+          <dt><strong>channel.pool.min.delay.ms</strong></dt>
+          <dd>Configure initial duration (in ms) between two channel retries. Exponential backoff is performed between each retries.
+              Optional integer, defaults to 50</dd>
+
+          <dt><strong>channel.pool.size</strong></dt>
+          <dd>Configure the size of the channel pool.
+              Optional integer, defaults to 3</dd>
       </dl>
   </section>
 

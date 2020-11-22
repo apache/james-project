@@ -22,12 +22,15 @@ package org.apache.james.modules;
 import static org.apache.james.backends.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
 
 import java.net.URISyntaxException;
+import java.time.Duration;
 
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.GuiceModuleTestRule;
 import org.apache.james.backends.rabbitmq.DockerRabbitMQ;
 import org.apache.james.backends.rabbitmq.DockerRabbitMQSingleton;
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
+import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
+import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
@@ -56,6 +59,15 @@ public class DockerRabbitMQRule implements GuiceModuleTestRule {
                     throw new RuntimeException(e);
                 }
             },
+            binder -> binder.bind(ReactorRabbitMQChannelPool.Configuration.class)
+                .toInstance(ReactorRabbitMQChannelPool.Configuration.builder()
+                    .retries(2)
+                    .minBorrowDelay(java.time.Duration.ofMillis(5))
+                    .maxChannel(3)),
+            binder -> binder.bind(SimpleConnectionPool.Configuration.class)
+                .toInstance(SimpleConnectionPool.Configuration.builder()
+                    .retries(2)
+                    .initialDelay(Duration.ofMillis(5))),
             binder -> Multibinder.newSetBinder(binder, CleanupTasksPerformer.CleanupTask.class)
                 .addBinding()
                 .to(TestRabbitMQModule.QueueCleanUp.class));

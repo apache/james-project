@@ -26,6 +26,26 @@ Details about URI format is in https://www.rabbitmq.com/management.html#usage-ui
 | management.password
 | password used to access management service
 
+| connection.pool.retries
+| Configure retries count to retrieve a connection. Exponential backoff is performed between each retries.
+Optional integer, defaults to 10
+
+| connection.pool.min.delay.ms
+| Configure initial duration (in ms) between two connection retries. Exponential backoff is performed between each retries.
+Optional integer, defaults to 100
+
+| channel.pool.retries
+| Configure retries count to retrieve a channel. Exponential backoff is performed between each retries.
+Optional integer, defaults to 3
+
+| channel.pool.min.delay.ms
+| Configure initial duration (in ms) between two channel retries. Exponential backoff is performed between each retries.
+Optional integer, defaults to 50
+
+| channel.pool.size
+| Configure the size of the channel pool.
+Optional integer, defaults to 3
+
 |===
 
 == RabbitMQ MailQueue Configuration

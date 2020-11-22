@@ -57,6 +57,12 @@ public class SimpleConnectionPool implements AutoCloseable {
             return retries -> initialDelay -> new Configuration(retries, initialDelay);
         }
 
+        public static Configuration from(org.apache.commons.configuration2.Configuration configuration) {
+            return builder()
+                .retries(configuration.getInt("connection.pool.retries", 10))
+                .initialDelay(Duration.ofMillis(configuration.getLong("connection.pool.min.delay.ms", 100)));
+        }
+
         private final int numRetries;
         private final Duration initialDelay;
 

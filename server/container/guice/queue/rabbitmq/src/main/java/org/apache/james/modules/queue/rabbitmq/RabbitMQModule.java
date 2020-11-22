@@ -21,6 +21,7 @@ package org.apache.james.modules.queue.rabbitmq;
 import java.io.FileNotFoundException;
 
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -178,13 +179,23 @@ public class RabbitMQModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public SimpleConnectionPool.Configuration provideConnectionPoolConfiguration() {
-        return SimpleConnectionPool.Configuration.DEFAULT;
+    public SimpleConnectionPool.Configuration provideConnectionPoolConfiguration(@Named(RABBITMQ_CONFIGURATION_NAME) Provider<org.apache.commons.configuration2.Configuration> configuration) {
+        try {
+            return SimpleConnectionPool.Configuration.from(configuration.get());
+        } catch (Exception e) {
+            LOGGER.info("Error while retrieving SimpleConnectionPool.Configuration, falling back to defaults.", e);
+            return SimpleConnectionPool.Configuration.DEFAULT;
+        }
     }
 
     @Provides
     @Singleton
-    public ReactorRabbitMQChannelPool.Configuration provideChannelPoolConfiguration() {
-        return ReactorRabbitMQChannelPool.Configuration.DEFAULT;
+    public ReactorRabbitMQChannelPool.Configuration provideChannelPoolConfiguration(@Named(RABBITMQ_CONFIGURATION_NAME) Provider<org.apache.commons.configuration2.Configuration> configuration) {
+        try {
+            return ReactorRabbitMQChannelPool.Configuration.from(configuration.get());
+        } catch (Exception e) {
+            LOGGER.info("Error while retrieving ReactorRabbitMQChannelPool.Configuration, falling back to defaults.", e);
+            return ReactorRabbitMQChannelPool.Configuration.DEFAULT;
+        }
     }
 }
