@@ -38,13 +38,51 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
 
 public class SimpleConnectionPool implements AutoCloseable {
+    public static class Configuration {
+        @FunctionalInterface
+        public interface RequiresRetries {
+            RequiresInitialDelay retries(int retries);
+        }
+
+        @FunctionalInterface
+        public interface RequiresInitialDelay {
+            Configuration initialDelay(Duration minBorrowDelay);
+        }
+
+        public static final Configuration DEFAULT = builder()
+                .retries(10)
+                .initialDelay(Duration.ofMillis(100));
+
+        public static RequiresRetries builder() {
+            return retries -> initialDelay -> new Configuration(retries, initialDelay);
+        }
+
+        private final int numRetries;
+        private final Duration initialDelay;
+
+        public Configuration(int numRetries, Duration initialDelay) {
+            this.numRetries = numRetries;
+            this.initialDelay = initialDelay;
+        }
+
+        public int getNumRetries() {
+            return numRetries;
+        }
+
+        public Duration getInitialDelay() {
+            return initialDelay;
+        }
+    }
+
     private final AtomicReference<Connection> connectionReference;
     private final RabbitMQConnectionFactory connectionFactory;
+    private final Configuration configuration;
 
     @Inject
     @VisibleForTesting
-    public SimpleConnectionPool(RabbitMQConnectionFactory factory) {
+    public SimpleConnectionPool(RabbitMQConnectionFactory factory, Configuration configuration) {
         this.connectionFactory = factory;
+        this.configuration = configuration;
         this.connectionReference = new AtomicReference<>();
     }
 
@@ -57,14 +95,8 @@ public class SimpleConnectionPool implements AutoCloseable {
     }
 
     public Mono<Connection> getResilientConnection() {
-        int numRetries = 10;
-        Duration initialDelay = Duration.ofMillis(100);
-        return getResilientConnection(numRetries, initialDelay);
-    }
-
-    public Mono<Connection> getResilientConnection(int numRetries, Duration initialDelay) {
         return Mono.defer(this::getOpenConnection)
-            .retryWhen(Retry.backoff(numRetries, initialDelay).scheduler(Schedulers.elastic()));
+            .retryWhen(Retry.backoff(configuration.getNumRetries(), configuration.getInitialDelay()).scheduler(Schedulers.elastic()));
     }
 
     private Mono<Connection> getOpenConnection() {

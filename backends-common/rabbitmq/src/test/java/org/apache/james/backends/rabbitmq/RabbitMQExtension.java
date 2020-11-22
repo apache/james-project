@@ -139,8 +139,11 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
         dockerRestartPolicy.beforeEach(rabbitMQ);
 
         RabbitMQConnectionFactory connectionFactory = createRabbitConnectionFactory();
-        connectionPool = new SimpleConnectionPool(connectionFactory);
-        channelPool = new ReactorRabbitMQChannelPool(connectionPool.getResilientConnection(2, Duration.ofMillis(5)),
+        connectionPool = new SimpleConnectionPool(connectionFactory,
+            SimpleConnectionPool.Configuration.builder()
+                .retries(2)
+                .initialDelay(Duration.ofMillis(5)));
+        channelPool = new ReactorRabbitMQChannelPool(connectionPool.getResilientConnection(),
             ReactorRabbitMQChannelPool.Configuration.builder()
                 .retries(2)
                 .minBorrowDelay(Duration.ofMillis(5))

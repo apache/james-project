@@ -20,6 +20,7 @@
 
 package org.apache.james.mpt.imapmailbox.rabbitmq.host;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.backends.rabbitmq.DockerRabbitMQ;
@@ -73,7 +74,10 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
     public void beforeTest() throws Exception {
         super.beforeTest();
 
-        connectionPool = new SimpleConnectionPool(dockerRabbitMQ.createRabbitConnectionFactory());
+        connectionPool = new SimpleConnectionPool(dockerRabbitMQ.createRabbitConnectionFactory(),
+            SimpleConnectionPool.Configuration.builder()
+                .retries(2)
+                .initialDelay(Duration.ofMillis(5)));
         reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(connectionPool.getResilientConnection(),
             ReactorRabbitMQChannelPool.Configuration.DEFAULT);
         reactorRabbitMQChannelPool.start();
