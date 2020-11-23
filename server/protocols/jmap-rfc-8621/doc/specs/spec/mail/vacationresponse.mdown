@@ -1,6 +1,6 @@
 # Vacation Response
 
-> :warning:
+> :information_source:
 > Implemented
 
 A vacation response sends an automatic reply when a message is delivered to the mail store, informing the original sender that their message may not be read for some time.

@@ -45,7 +45,7 @@ signature. These have the following meanings:
 
 ## The Id Data Type
 
-> :warning:
+> :information_source:
 > Implemented
 
 All record ids are assigned by the server and are immutable.

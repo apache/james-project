@@ -6,7 +6,7 @@ For compatibility with IMAP, an Email MUST belong to one or more Mailboxes. The 
 
 A **Mailbox** object has the following properties:
 
-> :warning:
+> :information_source:
 > Implemented
 
 - **id**: `Id` (immutable; server-set)
@@ -109,7 +109,7 @@ The following JMAP methods are supported.
 
 ## Mailbox/get
 
-> :warning:
+> :information_source:
 > Implemented
 
 This is a standard "/get" method as described in [@!RFC8620], Section 5.1. The *ids* argument may be `null` to fetch all at once.
@@ -176,7 +176,7 @@ This is a standard "/queryChanges" method as described in [@!RFC8620], Section 5
 
 ## Mailbox/set
 
-> :warning:
+> :information_source:
 > Implemented
 
 This is a standard "/set" method as described in [@!RFC8620], Section 5.3, but with the following additional request argument:

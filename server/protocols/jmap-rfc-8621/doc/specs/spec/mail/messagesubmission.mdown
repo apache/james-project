@@ -211,13 +211,13 @@ This is a standard "/set" method as described in [@!RFC8620], Section 5.3 with t
 - **onSuccessUpdateEmail**: `Id[PatchObject]|null`
   A map of *EmailSubmission id* to an object containing properties to update on the Email object referenced by the EmailSubmission if the create/update/destroy succeeds. (For references to EmailSubmissions created in the same "/set" invocation, this is equivalent to a creation-reference, so the id will be the creation id prefixed with a `#`.)
 
-> :warning:
+> :information_source:
 > Implemented
 
 - **onSuccessDestroyEmail**: `Id[]|null`
   A list of *EmailSubmission ids* for which the Email with the corresponding emailId should be destroyed if the create/update/destroy succeeds. (For references to EmailSubmission creations, this is equivalent to a creation-reference so the id will be the creation id prefixed with a `#`.)
 
-> :warning:
+> :information_source:
 > Implemented
 
 After all create/update/destroy items in the *EmailSubmission/set* invocation  have been processed, a single implicit *Email/set* call MUST be made to perform any changes requested in these two arguments. The response to this MUST be returned after the *EmailSubmission/set* response.

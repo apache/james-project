@@ -10,7 +10,7 @@ The request MUST be of type `application/json` and consist of a single JSON-enco
 
 ## The Invocation Data Type
 
-> :warning:
+> :information_source:
 > Implemented
 
 Method calls and responses are represented by the **Invocation** data type. This is a tuple, represented as a JSON array containing three elements:
@@ -23,7 +23,7 @@ Method calls and responses are represented by the **Invocation** data type. This
 
 ## The Request Object
 
-> :warning:
+> :information_source:
 > Implemented
 
 A **Request** object has the following properties:
@@ -65,7 +65,7 @@ Future specifications MAY add further properties to the Request object to extend
 
 ## The Response Object
 
-> :warning:
+> :information_source:
 > Implemented
 
 A **Response** object has the following properties:
@@ -125,7 +125,7 @@ Finally, methods that make changes to the server state often act upon a number o
 
 ### Request-Level Errors
 
-> :warning:
+> :information_source:
 > Implemented
 
 When an HTTP error response is returned to the client, the server
@@ -416,7 +416,7 @@ Method calls within a single request MUST be executed in order. However, method 
 
 # The Core/echo Method
 
-> :warning:
+> :information_source:
 > Implemented
 
 The *Core/echo* method returns exactly the same arguments as it is given. It is useful for testing if you have a valid authenticated connection to a JMAP API endpoint.

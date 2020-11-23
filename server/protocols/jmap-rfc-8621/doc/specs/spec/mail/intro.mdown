@@ -50,8 +50,7 @@ This document defines three additional capability URIs.
 
 ### urn:ietf:params:jmap:mail
 
-
-> :warning:
+> :information_source:
 > Implemented
 
 This represents support for the Mailbox, Thread, Email, and SearchSnippet data types and associated API methods. The value of this property in the JMAP session *capabilities* property is an empty object.
@@ -126,7 +125,7 @@ The value of this property in an account's *accountCapabilities* property is an 
 
 ### urn:ietf:params:jmap:vacationresponse
 
-> :warning:
+> :information_source:
 > Implemented
 
 This represents support for the VacationResponse data type and associated API methods. The value of this property is an empty object in both the JMAP session *capabilities* property and an account's *accountCapabilities* property.
