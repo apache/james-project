@@ -68,7 +68,7 @@ case class EmailSubmissionAddress(email: MailAddress)
 case class Envelope(mailFrom: EmailSubmissionAddress, rcptTo: List[EmailSubmissionAddress])
 
 object EmailSubmissionCreationRequest {
-  private val assignableProperties = Set("emailId", "envelope", "onSuccessUpdateEmail")
+  private val assignableProperties = Set("emailId", "envelope", "identityId", "onSuccessUpdateEmail")
 
   def validateProperties(jsObject: JsObject): Either[EmailSubmissionCreationParseException, JsObject] =
     jsObject.keys.diff(assignableProperties) match {
