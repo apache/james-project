@@ -23,6 +23,7 @@ import java.io.PrintStream;
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
+import org.apache.james.httpclient.UserClient;
 
 import picocli.CommandLine;
 
@@ -50,6 +51,10 @@ public class UserCommand implements Callable<Integer> {
     @Override
     public Integer call() {
         return WebAdminCli.CLI_FINISHED_SUCCEED;
+    }
+
+    public UserClient fullyQualifiedURL(String partOfUrl) {
+        return webAdminCli.feignClientFactory(err).target(UserClient.class, webAdminCli.jamesUrl + partOfUrl);
     }
 
 }

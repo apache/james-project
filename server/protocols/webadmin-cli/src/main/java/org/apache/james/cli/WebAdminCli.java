@@ -20,11 +20,17 @@
 package org.apache.james.cli;
 
 import java.io.PrintStream;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.domain.DomainCommand;
 import org.apache.james.cli.user.UserCommand;
+import org.apache.james.httpclient.FeignClientFactory;
+import org.apache.james.httpclient.JwtToken;
 
+import feign.Feign;
+import feign.jackson.JacksonDecoder;
+import feign.jackson.JacksonEncoder;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -40,6 +46,16 @@ public class WebAdminCli implements Callable<Integer> {
         description = "James server URL",
         defaultValue = "http://127.0.0.1:8000")
     String jamesUrl;
+
+    public @CommandLine.Option(
+        names = "--jwt-token",
+        description = "Authentication Token")
+    String jwt;
+
+    public @CommandLine.Option(
+        names = "--jwt-from-file",
+        description = "Authentication Token from a file")
+    String jwtFilePath;
 
     @Override
     public Integer call() {
@@ -64,6 +80,14 @@ public class WebAdminCli implements Callable<Integer> {
 
     public static int executeFluent(PrintStream out, PrintStream err, String... args) {
         return execute(out, err, args);
+    }
+
+    public Feign.Builder feignClientFactory(PrintStream err) {
+        return new FeignClientFactory(new JwtToken(Optional.ofNullable(jwt),
+            Optional.ofNullable(jwtFilePath), err))
+            .builder()
+            .decoder(new JacksonDecoder())
+            .encoder(new JacksonEncoder());
     }
 
 }

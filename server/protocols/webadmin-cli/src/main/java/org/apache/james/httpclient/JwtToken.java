@@ -17,41 +17,23 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.cli.user;
+package org.apache.james.httpclient;
 
-import java.util.concurrent.Callable;
+import java.io.PrintStream;
+import java.util.Optional;
 
-import org.apache.james.cli.WebAdminCli;
-import org.apache.james.httpclient.UserClient;
+public class JwtToken {
 
-import feign.Response;
-import picocli.CommandLine;
+    final Optional<String> jwtTokenString;
 
-@CommandLine.Command(
-    name = "delete",
-    description = "Delete a user")
-public class UserDeleteCommand implements Callable<Integer> {
+    final Optional<String> jwtFilePath;
 
-    public static final int DELETED_CODE = 204;
+    PrintStream err;
 
-    @CommandLine.ParentCommand UserCommand userCommand;
-
-    @CommandLine.Parameters String userName;
-
-    @Override
-    public Integer call() {
-        try {
-            UserClient userClient = userCommand.fullyQualifiedURL("/users");
-            Response rs = userClient.deleteAUser(userName);
-            if (rs.status() == DELETED_CODE) {
-                return WebAdminCli.CLI_FINISHED_SUCCEED;
-            } else {
-                return WebAdminCli.CLI_FINISHED_FAILED;
-            }
-        } catch (Exception e) {
-            e.printStackTrace(userCommand.err);
-            return WebAdminCli.CLI_FINISHED_FAILED;
-        }
+    public JwtToken(Optional<String> jwtTokenString, Optional<String> jwtFilePath, PrintStream err) {
+        this.jwtTokenString = jwtTokenString;
+        this.jwtFilePath = jwtFilePath;
+        this.err = err;
     }
 
 }

@@ -24,8 +24,6 @@ import java.util.concurrent.Callable;
 import org.apache.james.cli.WebAdminCli;
 import org.apache.james.httpclient.UserClient;
 
-import feign.Feign;
-import feign.jackson.JacksonDecoder;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -38,9 +36,7 @@ public class UserListCommand implements Callable<Integer> {
     @Override
     public Integer call() {
         try {
-            UserClient userClient = Feign.builder()
-                .decoder(new JacksonDecoder())
-                .target(UserClient.class, userCommand.webAdminCli.jamesUrl + "/users");
+            UserClient userClient = userCommand.fullyQualifiedURL("/users");
             userClient.getUserNameList().forEach(userName -> userCommand.out.println(userName.getUserName()));
             return WebAdminCli.CLI_FINISHED_SUCCEED;
         } catch (Exception e) {
