@@ -28,7 +28,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
@@ -72,7 +71,6 @@ class KeyRegistrationHandler {
     private final MailboxListenerExecutor mailboxListenerExecutor;
     private final RetryBackoffConfiguration retryBackoff;
     private Optional<Disposable> receiverSubscriber;
-    private AtomicBoolean registrationQueueInitialized = new AtomicBoolean(false);
 
     KeyRegistrationHandler(EventBusId eventBusId, EventSerializer eventSerializer,
                            Sender sender, ReceiverProvider receiverProvider,
@@ -86,7 +84,7 @@ class KeyRegistrationHandler {
         this.receiver = receiverProvider.createReceiver();
         this.mailboxListenerExecutor = mailboxListenerExecutor;
         this.retryBackoff = retryBackoff;
-        this.registrationQueue = new RegistrationQueueName();
+        this.registrationQueue = new RegistrationQueueName(EVENTBUS_QUEUE_NAME_PREFIX + eventBusId.asString());
         this.registrationBinder = new RegistrationBinder(sender, registrationQueue);
         this.receiverSubscriber = Optional.empty();
 
@@ -116,12 +114,6 @@ class KeyRegistrationHandler {
             .timeout(TOPOLOGY_CHANGES_TIMEOUT)
             .map(AMQP.Queue.DeclareOk::getQueue)
             .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()))
-            .doOnSuccess(queueName -> {
-                if (!registrationQueueInitialized.get()) {
-                    registrationQueue.initialize(queueName);
-                    registrationQueueInitialized.set(true);
-                }
-            })
             .block();
     }
 

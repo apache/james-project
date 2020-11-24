@@ -19,24 +19,14 @@
 
 package org.apache.james.mailbox.events;
 
-import java.util.Optional;
-
-import com.google.common.base.Preconditions;
-
 class RegistrationQueueName {
-    private Optional<String> queueName;
+    private final String queueName;
 
-    RegistrationQueueName() {
-        this.queueName = Optional.empty();
-    }
-
-    void initialize(String queueName) {
-        Preconditions.checkNotNull(queueName);
-        Preconditions.checkState(!this.queueName.isPresent(), "'queueName' must be empty for initializing");
-        this.queueName = Optional.of(queueName);
+    RegistrationQueueName(String queueName) {
+        this.queueName = queueName;
     }
 
     String asString() {
-        return queueName.orElseThrow(() -> new IllegalStateException("'queueName' is not yet initialized"));
+        return queueName;
     }
 }
