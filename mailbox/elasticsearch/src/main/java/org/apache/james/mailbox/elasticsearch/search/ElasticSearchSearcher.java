@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.elasticsearch.search;
 
+import static org.apache.james.util.ReactorUtils.publishIfPresent;
+
 import java.util.Collection;
 import java.util.Optional;
 
@@ -81,7 +83,8 @@ public class ElasticSearchSearcher {
         SearchRequest searchRequest = prepareSearch(mailboxIds, query, limit);
         Flux<MessageSearchIndex.SearchResult> pairStream = new ScrolledSearch(client, searchRequest)
             .searchHits()
-            .flatMap(this::extractContentFromHit);
+            .map(this::extractContentFromHit)
+            .handle(publishIfPresent());
 
         return limit.map(pairStream::take)
             .orElse(pairStream);
@@ -123,20 +126,20 @@ public class ElasticSearchSearcher {
             .orElse(size);
     }
 
-    private Flux<MessageSearchIndex.SearchResult> extractContentFromHit(SearchHit hit) {
+    private Optional<MessageSearchIndex.SearchResult> extractContentFromHit(SearchHit hit) {
         DocumentField mailboxId = hit.field(JsonMessageConstants.MAILBOX_ID);
         DocumentField uid = hit.field(JsonMessageConstants.UID);
         Optional<DocumentField> id = retrieveMessageIdField(hit);
         if (mailboxId != null && uid != null) {
             Number uidAsNumber = uid.getValue();
-            return Flux.just(
+            return Optional.of(
                 new MessageSearchIndex.SearchResult(
                     id.map(field -> messageIdFactory.fromString(field.getValue())),
                     mailboxIdFactory.fromString(mailboxId.getValue()),
                     MessageUid.of(uidAsNumber.longValue())));
         } else {
             LOGGER.warn("Can not extract UID, MessageID and/or MailboxId for search result {}", hit.getId());
-            return Flux.empty();
+            return Optional.empty();
         }
     }
 
