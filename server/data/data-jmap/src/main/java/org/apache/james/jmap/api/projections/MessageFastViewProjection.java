@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.api.projections;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.util.Collection;
 import java.util.Map;
 
@@ -50,7 +52,7 @@ public interface MessageFastViewProjection {
 
         return Flux.fromIterable(messageIds)
             .flatMap(messageId -> Mono.from(this.retrieve(messageId))
-                .map(preview -> Pair.of(messageId, preview)))
+                .map(preview -> Pair.of(messageId, preview)), DEFAULT_CONCURRENCY)
             .collectMap(Pair::getLeft, Pair::getRight);
     }
 }

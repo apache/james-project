@@ -19,6 +19,8 @@
 
 package org.apache.james.rrt.cassandra.migration;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
@@ -112,7 +114,7 @@ public class MappingsSourcesMigration implements Migration {
     @Override
     public void apply() {
         cassandraRecipientRewriteTableDAO.getAllMappings()
-            .flatMap(this::migrate)
+            .flatMap(this::migrate, DEFAULT_CONCURRENCY)
             .then(Mono.fromRunnable(() -> {
                 if (errorMappingsCount.get() > 0) {
                     throw new MigrationException("MappingsSourcesMigration failed");

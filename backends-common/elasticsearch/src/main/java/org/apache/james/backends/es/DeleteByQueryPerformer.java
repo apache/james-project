@@ -19,6 +19,8 @@
 
 package org.apache.james.backends.es;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import org.apache.james.backends.es.search.ScrolledSearch;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -54,7 +56,7 @@ public class DeleteByQueryPerformer {
 
         return new ScrolledSearch(client, searchRequest).searchResponses()
             .filter(searchResponse -> searchResponse.getHits().getHits().length > 0)
-            .flatMap(searchResponse -> deleteRetrievedIds(searchResponse, routingKey))
+            .flatMap(searchResponse -> deleteRetrievedIds(searchResponse, routingKey), DEFAULT_CONCURRENCY)
             .then();
     }
 

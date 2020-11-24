@@ -31,6 +31,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.MAI
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.UIDVALIDITY;
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import javax.inject.Inject;
 
@@ -189,7 +190,7 @@ public class CassandraMailboxDAO {
     public Flux<Mailbox> retrieveAllMailboxes() {
         return executor.execute(listStatement.bind())
             .flatMapMany(cassandraUtils::convertToFlux)
-            .flatMap(this::toMailboxWithId);
+            .flatMap(this::toMailboxWithId, DEFAULT_CONCURRENCY);
     }
 
     private Mono<Mailbox> toMailboxWithId(Row row) {

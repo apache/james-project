@@ -22,6 +22,7 @@ package org.apache.james.mailbox.store;
 import static org.apache.james.mailbox.store.MailboxReactorUtils.block;
 import static org.apache.james.mailbox.store.MailboxReactorUtils.blockOptional;
 import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -583,7 +584,7 @@ public class StoreMailboxManager implements MailboxManager {
                                 .build(),
                             new MailboxIdRegistrationKey(sub.getMailboxId())))
                         .then(Mono.fromRunnable(() -> LOGGER.debug("Rename mailbox sub-mailbox {} to {}", subOriginalName, subNewName)));
-                })
+                }, DEFAULT_CONCURRENCY)
                 .then());
 
             return null;

@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.task;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.time.Duration;
@@ -96,7 +97,7 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
             .delayElement(pollingInterval, Schedulers.elastic())
             .repeat()
             .handle(publishIfPresent())
-            .flatMap(information -> Mono.from(listener.updated(taskWithId.getId(), information)).thenReturn(information));
+            .flatMap(information -> Mono.from(listener.updated(taskWithId.getId(), information)).thenReturn(information), DEFAULT_CONCURRENCY);
     }
 
 

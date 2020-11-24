@@ -47,6 +47,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.concurrent.Queues;
 
 public class DeliveryRunnable implements Disposable {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeliveryRunnable.class);
@@ -87,7 +88,7 @@ public class DeliveryRunnable implements Disposable {
     public void start() {
         remoteDeliveryScheduler = Schedulers.newBoundedElastic(Schedulers.DEFAULT_BOUNDED_ELASTIC_SIZE, Schedulers.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "RemoteDelivery");
         disposable = Flux.from(queue.deQueue())
-            .flatMap(queueItem -> runStep(queueItem).subscribeOn(remoteDeliveryScheduler))
+            .flatMap(queueItem -> runStep(queueItem).subscribeOn(remoteDeliveryScheduler), Queues.SMALL_BUFFER_SIZE)
             .onErrorContinue(((throwable, nothing) -> LOGGER.error("Exception caught in RemoteDelivery", throwable)))
             .subscribeOn(remoteDeliveryScheduler)
             .subscribe();

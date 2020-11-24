@@ -20,6 +20,7 @@
 package org.apache.james.vault.blob;
 
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.io.InputStream;
 import java.time.Clock;
@@ -174,7 +175,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
             metricFactory.decoratePublisherWithTimerMetric(
                 DELETE_EXPIRED_MESSAGES_METRIC_NAME,
                 retentionQualifiedBuckets(beginningOfRetentionPeriod)
-                    .flatMap(bucketName -> deleteBucketData(bucketName).then(Mono.just(bucketName)))));
+                    .flatMap(bucketName -> deleteBucketData(bucketName).then(Mono.just(bucketName)), DEFAULT_CONCURRENCY)));
 
     }
 

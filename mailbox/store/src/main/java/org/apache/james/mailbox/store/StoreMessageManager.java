@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store;
 
 import static org.apache.james.mailbox.extension.PreDeletionHook.DeleteOperation;
 import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -697,7 +698,7 @@ public class StoreMessageManager implements MessageManager {
 
         Mono<DeleteOperation> deleteOperation = Flux.fromIterable(MessageRange.toRanges(uids))
             .publishOn(Schedulers.elastic())
-            .flatMap(range -> messageMapper.findInMailboxReactive(mailbox, range, FetchType.Metadata, UNLIMITED))
+            .flatMap(range -> messageMapper.findInMailboxReactive(mailbox, range, FetchType.Metadata, UNLIMITED), DEFAULT_CONCURRENCY)
             .map(mailboxMessage -> MetadataWithMailboxId.from(mailboxMessage.metaData(), mailboxMessage.getMailboxId()))
             .collect(Guavate.toImmutableList())
             .map(DeleteOperation::from);

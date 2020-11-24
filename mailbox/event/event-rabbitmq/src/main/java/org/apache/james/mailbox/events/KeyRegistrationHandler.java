@@ -97,7 +97,7 @@ class KeyRegistrationHandler {
 
         receiverSubscriber = Optional.of(receiver.consumeAutoAck(registrationQueue.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE))
             .subscribeOn(Schedulers.parallel())
-            .flatMap(this::handleDelivery)
+            .flatMap(this::handleDelivery, EventBus.EXECUTION_RATE)
             .subscribe());
     }
 
@@ -169,7 +169,7 @@ class KeyRegistrationHandler {
 
         return localListenerRegistry.getLocalMailboxListeners(registrationKey)
             .filter(listener -> !isLocalSynchronousListeners(eventBusId, listener))
-            .flatMap(listener -> executeListener(listener, event, registrationKey))
+            .flatMap(listener -> executeListener(listener, event, registrationKey), EventBus.EXECUTION_RATE)
             .then();
     }
 

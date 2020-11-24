@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.event;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.io.IOException;
 
 import javax.inject.Inject;
@@ -88,9 +90,9 @@ public class ComputeMessageFastViewProjectionListener implements MailboxListener
         return Flux.from(messageIdManager.getMessagesReactive(addedEvent.getMessageIds(), FetchGroup.FULL_CONTENT, session))
             .flatMap(Throwing.function(messageResult -> Mono.fromCallable(
                 () -> Pair.of(messageResult.getMessageId(), computeFastViewPrecomputedProperties(messageResult)))
-                    .subscribeOn(Schedulers.parallel())))
+                    .subscribeOn(Schedulers.parallel())), DEFAULT_CONCURRENCY)
             .publishOn(Schedulers.elastic())
-            .flatMap(message -> messageFastViewProjection.store(message.getKey(), message.getValue()))
+            .flatMap(message -> messageFastViewProjection.store(message.getKey(), message.getValue()), DEFAULT_CONCURRENCY)
             .then();
     }
 

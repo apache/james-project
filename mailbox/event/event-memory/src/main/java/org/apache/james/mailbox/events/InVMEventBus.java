@@ -94,13 +94,13 @@ public class InVMEventBus implements EventBus {
 
     private Mono<Void> keyDeliveries(Event event, Set<RegistrationKey> keys) {
         return Flux.fromIterable(registeredListenersByKeys(keys))
-            .flatMap(listener -> eventDelivery.deliver(listener, event, EventDelivery.DeliveryOption.none()))
+            .flatMap(listener -> eventDelivery.deliver(listener, event, EventDelivery.DeliveryOption.none()), EventBus.EXECUTION_RATE)
             .then();
     }
 
     private Mono<Void> groupDeliveries(Event event) {
         return Flux.fromIterable(groups.entrySet())
-            .flatMap(entry -> groupDelivery(event, entry.getValue(), entry.getKey()))
+            .flatMap(entry -> groupDelivery(event, entry.getValue(), entry.getKey()), EventBus.EXECUTION_RATE)
             .then();
     }
 

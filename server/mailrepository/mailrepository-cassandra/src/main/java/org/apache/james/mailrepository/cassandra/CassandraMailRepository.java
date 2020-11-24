@@ -19,6 +19,7 @@
 
 package org.apache.james.mailrepository.cassandra;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.util.Collection;
@@ -121,7 +122,7 @@ public class CassandraMailRepository implements MailRepository {
     public void remove(Collection<Mail> toRemove) {
         Flux.fromIterable(toRemove)
             .map(MailKey::forMail)
-            .flatMap(this::removeAsync)
+            .flatMap(this::removeAsync, DEFAULT_CONCURRENCY)
             .then()
             .block();
     }
@@ -160,7 +161,7 @@ public class CassandraMailRepository implements MailRepository {
     @Override
     public void removeAll() {
         keysDAO.list(url)
-            .flatMap(this::removeAsync)
+            .flatMap(this::removeAsync, DEFAULT_CONCURRENCY)
             .then()
             .block();
     }

@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -163,8 +165,8 @@ public class StoreMessageIdManager implements MessageIdManager {
         MessageMapper.FetchType fetchType = FetchGroupConverter.getFetchType(fetchGroup);
         return messageIdMapper.findReactive(messageIds, fetchType)
             .groupBy(MailboxMessage::getMailboxId)
-            .filterWhen(groupedFlux -> hasRightsOnMailboxReactive(mailboxSession, Right.Read).apply(groupedFlux.key()))
-            .flatMap(Function.identity())
+            .filterWhen(groupedFlux -> hasRightsOnMailboxReactive(mailboxSession, Right.Read).apply(groupedFlux.key()), DEFAULT_CONCURRENCY)
+            .flatMap(Function.identity(), DEFAULT_CONCURRENCY)
             .map(Throwing.function(messageResultConverter(fetchGroup)).sneakyThrow());
     }
 
@@ -175,15 +177,15 @@ public class StoreMessageIdManager implements MessageIdManager {
         return Flux.fromIterable(ids)
             .flatMap(id -> Flux.from(messageIdMapper.findMetadata(id)), concurrency)
             .groupBy(metaData -> metaData.getComposedMessageId().getMailboxId())
-            .filterWhen(groupedFlux -> hasRightsOnMailboxReactive(session, Right.Read).apply(groupedFlux.key()))
-            .flatMap(Function.identity());
+            .filterWhen(groupedFlux -> hasRightsOnMailboxReactive(session, Right.Read).apply(groupedFlux.key()), DEFAULT_CONCURRENCY)
+            .flatMap(Function.identity(), DEFAULT_CONCURRENCY);
     }
 
     private ImmutableSet<MailboxId> getAllowedMailboxIds(MailboxSession mailboxSession, List<MailboxMessage> messageList, Right... rights) throws MailboxException {
         return MailboxReactorUtils.block(Flux.fromIterable(messageList)
             .map(MailboxMessage::getMailboxId)
             .distinct()
-            .filterWhen(hasRightsOnMailboxReactive(mailboxSession, rights))
+            .filterWhen(hasRightsOnMailboxReactive(mailboxSession, rights), DEFAULT_CONCURRENCY)
             .collect(Guavate.toImmutableSet()));
     }
 
@@ -256,7 +258,7 @@ public class StoreMessageIdManager implements MessageIdManager {
                         .mailbox(mailbox)
                         .addMetaData(metadataWithMailboxId.getMessageMetaData())
                         .build(),
-                    new MailboxIdRegistrationKey(metadataWithMailboxId.getMailboxId()))))
+                    new MailboxIdRegistrationKey(metadataWithMailboxId.getMailboxId()))), DEFAULT_CONCURRENCY)
             .then()
             .subscribeOn(Schedulers.elastic())
             .block();
@@ -356,7 +358,7 @@ public class StoreMessageIdManager implements MessageIdManager {
                         .mailbox(mailbox)
                         .addMetaData(eventPayload)
                         .build(),
-                    new MailboxIdRegistrationKey(mailbox.getMailboxId())))
+                    new MailboxIdRegistrationKey(mailbox.getMailboxId())), DEFAULT_CONCURRENCY)
                 .then());
     }
     
@@ -472,7 +474,7 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     private Mono<Void> assertRightsOnMailboxIds(Collection<MailboxId> mailboxIds, MailboxSession mailboxSession, Right... rights) {
         return Flux.fromIterable(mailboxIds)
-            .filterWhen(hasRightsOnMailboxReactive(mailboxSession, rights).andThen(result -> result.map(FunctionalUtils.negate())))
+            .filterWhen(hasRightsOnMailboxReactive(mailboxSession, rights).andThen(result -> result.map(FunctionalUtils.negate())), DEFAULT_CONCURRENCY)
             .next()
             .flatMap(mailboxForbidden -> {
                 LOGGER.info("Mailbox with Id {} does not belong to {}", mailboxForbidden, mailboxSession.getUser().asString());
@@ -497,10 +499,10 @@ public class StoreMessageIdManager implements MessageIdManager {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         Mono<List<Mailbox>> target = Flux.fromIterable(messageMoves.getTargetMailboxIds())
-            .flatMap(mailboxMapper::findMailboxById)
+            .flatMap(mailboxMapper::findMailboxById, DEFAULT_CONCURRENCY)
             .collect(Guavate.toImmutableList());
         Mono<List<Mailbox>> previous = Flux.fromIterable(messageMoves.getPreviousMailboxIds())
-            .flatMap(mailboxMapper::findMailboxById)
+            .flatMap(mailboxMapper::findMailboxById, DEFAULT_CONCURRENCY)
             .collect(Guavate.toImmutableList());
 
         return target.zipWith(previous)

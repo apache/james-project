@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.service;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.util.Optional;
 
 import org.apache.james.mailbox.events.Event;
@@ -50,7 +52,7 @@ public interface EventRetriever {
 
     default Flux<Tuple3<Group, Event, EventDeadLetters.InsertionId>> listGroupEvents(EventDeadLetters deadLetters, Group group) {
         return deadLetters.failedIds(group)
-            .flatMap(insertionId -> Flux.zip(Mono.just(group), deadLetters.failedEvent(group, insertionId), Mono.just(insertionId)));
+            .flatMap(insertionId -> Flux.zip(Mono.just(group), deadLetters.failedEvent(group, insertionId), Mono.just(insertionId)), DEFAULT_CONCURRENCY);
     }
 
     class AllEventsRetriever implements EventRetriever {
@@ -67,7 +69,7 @@ public interface EventRetriever {
         @Override
         public Flux<Tuple3<Group, Event, EventDeadLetters.InsertionId>> retrieveEvents(EventDeadLetters deadLetters) {
             return deadLetters.groupsWithFailedEvents()
-                .flatMap(group -> listGroupEvents(deadLetters, group));
+                .flatMap(group -> listGroupEvents(deadLetters, group), DEFAULT_CONCURRENCY);
         }
     }
 

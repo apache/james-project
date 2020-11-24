@@ -138,7 +138,7 @@ class GroupRegistration implements Registration {
         return receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE))
             .publishOn(Schedulers.parallel())
             .filter(delivery -> Objects.nonNull(delivery.getBody()))
-            .flatMap(this::deliver)
+            .flatMap(this::deliver, EventBus.EXECUTION_RATE)
             .subscribe();
     }
 

@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -88,7 +89,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     public List<AttachmentMetadata> getAttachments(Collection<AttachmentId> attachmentIds) {
         Preconditions.checkArgument(attachmentIds != null);
         return Flux.fromIterable(attachmentIds)
-            .flatMap(this::getAttachmentsAsMono)
+            .flatMap(this::getAttachmentsAsMono, DEFAULT_CONCURRENCY)
             .collect(Guavate.toImmutableList())
             .block();
     }

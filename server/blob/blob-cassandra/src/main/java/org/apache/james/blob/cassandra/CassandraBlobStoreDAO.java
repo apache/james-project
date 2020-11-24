@@ -19,6 +19,8 @@
 
 package org.apache.james.blob.cassandra;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -158,7 +160,7 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
         return bucketDAO.listAll()
             .filter(bucketNameBlobIdPair -> bucketNameBlobIdPair.getKey().equals(bucketName))
             .map(Pair::getValue)
-            .flatMap(blobId -> delete(bucketName, blobId))
+            .flatMap(blobId -> delete(bucketName, blobId), DEFAULT_CONCURRENCY)
             .then();
     }
 

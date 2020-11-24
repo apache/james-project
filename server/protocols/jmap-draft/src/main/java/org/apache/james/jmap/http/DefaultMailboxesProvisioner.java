@@ -19,6 +19,7 @@
 package org.apache.james.jmap.http;
 
 import static org.apache.james.util.FunctionalUtils.negate;
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.util.Optional;
 import java.util.function.Function;
@@ -73,7 +74,7 @@ class DefaultMailboxesProvisioner {
 
         return Flux.fromIterable(DefaultMailboxes.DEFAULT_MAILBOXES)
             .map(toMailboxPath(session))
-            .filterWhen(mailboxPath -> mailboxDoesntExist(mailboxPath, session))
+            .filterWhen(mailboxPath -> mailboxDoesntExist(mailboxPath, session), DEFAULT_CONCURRENCY)
             .concatMap(mailboxPath -> Mono.fromRunnable(() -> createMailbox(mailboxPath, session))
                 .subscribeOn(Schedulers.elastic()))
             .then();

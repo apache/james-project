@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -77,11 +79,11 @@ public class CassandraIndexTableHandler {
     public Mono<Void> updateIndexOnDelete(CassandraId mailboxId, Collection<MessageMetaData> metaData) {
         return Flux.mergeDelayError(Queues.XS_BUFFER_SIZE,
                 Flux.fromIterable(metaData)
-                    .flatMap(message -> updateFirstUnseenOnDelete(mailboxId, message.getFlags(), message.getUid())),
+                    .flatMap(message -> updateFirstUnseenOnDelete(mailboxId, message.getFlags(), message.getUid()), DEFAULT_CONCURRENCY),
                 Flux.fromIterable(metaData)
-                    .flatMap(message -> updateRecentOnDelete(mailboxId, message.getUid(), message.getFlags())),
+                    .flatMap(message -> updateRecentOnDelete(mailboxId, message.getUid(), message.getFlags()), DEFAULT_CONCURRENCY),
                 Flux.fromIterable(metaData)
-                    .flatMap(message -> updateDeletedMessageProjectionOnDelete(mailboxId, message.getUid(), message.getFlags())),
+                    .flatMap(message -> updateDeletedMessageProjectionOnDelete(mailboxId, message.getUid(), message.getFlags()), DEFAULT_CONCURRENCY),
                 decrementCountersOnDelete(mailboxId, metaData))
             .then();
     }

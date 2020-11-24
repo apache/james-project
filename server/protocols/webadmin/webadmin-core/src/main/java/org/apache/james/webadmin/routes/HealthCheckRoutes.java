@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.routes;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.util.List;
 import java.util.Set;
 
@@ -185,7 +187,7 @@ public class HealthCheckRoutes implements PublicRoutes {
 
     private Flux<Result> executeHealthChecks() {
         return Flux.fromIterable(healthChecks)
-            .flatMap(HealthCheck::check)
+            .flatMap(HealthCheck::check, DEFAULT_CONCURRENCY)
             .doOnNext(this::logFailedCheck);
     }
 

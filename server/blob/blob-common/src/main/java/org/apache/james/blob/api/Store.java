@@ -40,6 +40,8 @@ public interface Store<T, I> {
 
     class Impl<T, I extends BlobPartsId> implements Store<T, I> {
 
+        public static final int DEFAULT_CONCURRENCY = 16;
+
         public interface ValueToSave {
             Mono<BlobId> saveIn(BucketName bucketName, BlobStore blobStore);
         }
@@ -108,7 +110,7 @@ public interface Store<T, I> {
         @Override
         public Publisher<Void> delete(I blobIds) {
             return Flux.fromIterable(blobIds.asMap().values())
-                .flatMap(id -> blobStore.delete(blobStore.getDefaultBucketName(), id))
+                .flatMap(id -> blobStore.delete(blobStore.getDefaultBucketName(), id), DEFAULT_CONCURRENCY)
                 .then();
         }
     }

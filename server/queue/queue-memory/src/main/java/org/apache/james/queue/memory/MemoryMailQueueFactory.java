@@ -19,6 +19,8 @@
 
 package org.apache.james.queue.memory;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.Instant;
@@ -101,7 +103,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory<MemoryMailQueueF
                 .repeat()
                 .subscribeOn(Schedulers.elastic())
                 .flatMap(item ->
-                    Mono.fromRunnable(() -> inProcessingMailItems.add(item)).thenReturn(item))
+                    Mono.fromRunnable(() -> inProcessingMailItems.add(item)).thenReturn(item), DEFAULT_CONCURRENCY)
                 .map(item -> mailQueueItemDecoratorFactory.decorate(item, name));
         }
 

@@ -19,6 +19,8 @@
 
 package org.apache.james.blob.objectstorage.aws;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -290,8 +292,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
         return clientPool.withPoolable(client -> Mono.fromFuture(() -> client.listObjects(builder -> builder.bucket(bucketName.asString())))
             .flatMapIterable(ListObjectsResponse::contents))
             .window(EMPTY_BUCKET_BATCH_SIZE)
-            .flatMap(this::buildListForBatch)
-            .flatMap(identifiers -> deleteObjects(bucketName, identifiers))
+            .flatMap(this::buildListForBatch, DEFAULT_CONCURRENCY)
+            .flatMap(identifiers -> deleteObjects(bucketName, identifiers), DEFAULT_CONCURRENCY)
             .then(Mono.just(bucketName));
     }
 
@@ -311,7 +313,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
     public Mono<Void> deleteAllBuckets() {
         return clientPool.withPoolable(client -> Mono.fromFuture(client::listBuckets)
                 .flatMapIterable(ListBucketsResponse::buckets)
-                     .flatMap(bucket -> deleteResolvedBucket(BucketName.of(bucket.name()))))
+                     .flatMap(bucket -> deleteResolvedBucket(BucketName.of(bucket.name())), DEFAULT_CONCURRENCY))
             .then();
     }
 }

@@ -19,6 +19,8 @@
 
 package org.apache.james.backends.cassandra.init;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.util.function.Predicate;
 
 import javax.inject.Inject;
@@ -65,7 +67,7 @@ public class CassandraTableManager {
         Flux.fromIterable(module.moduleTables())
                 .publishOn(Schedulers.elastic())
                 .map(CassandraTable::getName)
-                .flatMap(name -> truncate(executor, name))
+                .flatMap(name -> truncate(executor, name), DEFAULT_CONCURRENCY)
                 .then()
                 .block();
     }

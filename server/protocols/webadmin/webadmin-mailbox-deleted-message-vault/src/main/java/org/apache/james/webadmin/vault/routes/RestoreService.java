@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.vault.routes;
 
 import static org.apache.james.mailbox.MessageManager.AppendCommand;
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 import static org.apache.james.webadmin.vault.routes.RestoreService.RestoreResult.RESTORE_FAILED;
 import static org.apache.james.webadmin.vault.routes.RestoreService.RestoreResult.RESTORE_SUCCEED;
 
@@ -74,7 +75,7 @@ class RestoreService {
         MessageManager restoreMessageManager = restoreMailboxManager(session);
 
         return Flux.from(deletedMessageVault.search(usernameToRestore, searchQuery))
-            .flatMap(deletedMessage -> appendToMailbox(restoreMessageManager, deletedMessage, session));
+            .flatMap(deletedMessage -> appendToMailbox(restoreMessageManager, deletedMessage, session), DEFAULT_CONCURRENCY);
     }
 
     private Mono<RestoreResult> appendToMailbox(MessageManager restoreMailboxManager, DeletedMessage deletedMessage, MailboxSession session) {

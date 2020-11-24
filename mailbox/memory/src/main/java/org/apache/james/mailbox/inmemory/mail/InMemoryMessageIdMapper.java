@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.inmemory.mail;
 
 import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.util.Collection;
 import java.util.List;
@@ -71,7 +72,7 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
     @Override
     public Publisher<ComposedMessageIdWithMetaData> findMetadata(MessageId messageId) {
         return mailboxMapper.list()
-            .flatMap(mailbox -> messageMapper.findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.Full, UNLIMITED))
+            .flatMap(mailbox -> messageMapper.findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.Full, UNLIMITED), DEFAULT_CONCURRENCY)
             .map(message -> new ComposedMessageIdWithMetaData(
                 new ComposedMessageId(
                     message.getMailboxId(),
@@ -84,7 +85,7 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
     @Override
     public Flux<MailboxMessage> findReactive(Collection<MessageId> messageIds, MessageMapper.FetchType fetchType) {
         return mailboxMapper.list()
-            .flatMap(mailbox -> messageMapper.findInMailboxReactive(mailbox, MessageRange.all(), fetchType, UNLIMITED))
+            .flatMap(mailbox -> messageMapper.findInMailboxReactive(mailbox, MessageRange.all(), fetchType, UNLIMITED), DEFAULT_CONCURRENCY)
             .filter(message -> messageIds.contains(message.getMessageId()));
     }
 

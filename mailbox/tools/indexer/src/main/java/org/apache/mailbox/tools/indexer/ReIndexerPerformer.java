@@ -19,6 +19,8 @@
 
 package org.apache.mailbox.tools.indexer;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.time.Duration;
 
 import javax.inject.Inject;
@@ -200,7 +202,7 @@ public class ReIndexerPerformer {
 
         return mailboxSessionMapperFactory.getMessageIdMapper(session)
             .findReactive(ImmutableList.of(messageId), MessageMapper.FetchType.Full)
-            .flatMap(mailboxMessage -> reIndex(mailboxMessage, session))
+            .flatMap(mailboxMessage -> reIndex(mailboxMessage, session), DEFAULT_CONCURRENCY)
             .reduce(Task::combine)
             .switchIfEmpty(Mono.just(Result.COMPLETED))
             .onErrorResume(e -> {
@@ -215,7 +217,7 @@ public class ReIndexerPerformer {
 
         Flux<Either<Failure, ReIndexingEntry>> entriesToIndex = Flux.merge(
             Flux.fromIterable(previousReIndexingFailures.messageFailures())
-                .flatMap(this::createReindexingEntryFromFailure),
+                .flatMap(this::createReindexingEntryFromFailure, ReactorUtils.DEFAULT_CONCURRENCY),
             Flux.fromIterable(previousReIndexingFailures.mailboxFailures())
                 .flatMap(mailboxId -> mapper.findMailboxById(mailboxId)
                     .flatMapMany(mailbox -> reIndexingEntriesForMailbox(mailbox, mailboxSession, runningOptions))

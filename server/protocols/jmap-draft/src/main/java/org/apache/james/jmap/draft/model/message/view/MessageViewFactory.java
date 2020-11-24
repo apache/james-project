@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.draft.model.message.view;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
@@ -132,9 +134,9 @@ public interface MessageViewFactory<T extends MessageView> {
         static <T extends MessageView> Flux<T> toMessageViews(Flux<MessageResult> messageResults, FromMessageResult<T> converter) {
             return messageResults
                 .groupBy(MessageResult::getMessageId)
-                .flatMap(Flux::collectList)
+                .flatMap(Flux::collectList, DEFAULT_CONCURRENCY)
                 .filter(Predicate.not(List::isEmpty))
-                .flatMap(toMessageViews(converter));
+                .flatMap(toMessageViews(converter), DEFAULT_CONCURRENCY);
         }
 
         static Instant getDateFromHeaderOrInternalDateOtherwise(Message mimeMessage, MessageResult message) {

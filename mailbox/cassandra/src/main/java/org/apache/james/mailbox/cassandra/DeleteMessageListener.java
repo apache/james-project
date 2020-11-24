@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra;
 
 import static org.apache.james.util.FunctionalUtils.negate;
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -213,8 +214,8 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
 
     private Mono<Void> deleteUnreferencedAttachments(MessageRepresentation message) {
         return Flux.fromIterable(message.getAttachments())
-            .filterWhen(attachment -> ownerDAO.retrieveOwners(attachment.getAttachmentId()).hasElements().map(negate()))
-            .filterWhen(attachment -> hasOtherMessagesReferences(message, attachment))
+            .filterWhen(attachment -> ownerDAO.retrieveOwners(attachment.getAttachmentId()).hasElements().map(negate()), DEFAULT_CONCURRENCY)
+            .filterWhen(attachment -> hasOtherMessagesReferences(message, attachment), DEFAULT_CONCURRENCY)
             .concatMap(attachment -> attachmentDAO.getAttachment(attachment.getAttachmentId())
                 .map(CassandraAttachmentDAOV2.DAOAttachment::getBlobId)
                 .flatMap(blobId -> Mono.from(blobStore.delete(blobStore.getDefaultBucketName(), blobId)))

@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.draft.methods;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 import static org.apache.james.util.ReactorUtils.context;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
@@ -144,7 +145,7 @@ public class GetMailboxesMethod implements Method {
                     .session(mailboxSession)
                     .usingPreloadedMailboxesMetadata(NO_PRELOADED_METADATA)
                     .build())
-                .subscribeOn(Schedulers.elastic()))
+                .subscribeOn(Schedulers.elastic()), DEFAULT_CONCURRENCY)
             .handle(publishIfPresent());
     }
 

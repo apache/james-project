@@ -19,6 +19,8 @@
 
 package org.apache.james.queue.rabbitmq;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.time.Duration;
 import java.time.Instant;
 
@@ -130,6 +132,6 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
                 .thenReturn(item.getMail().getName());
 
         return mailQueueView.browseOlderThanReactive(olderThan)
-            .flatMap(requeue);
+            .flatMap(requeue, DEFAULT_CONCURRENCY);
     }
 }

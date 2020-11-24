@@ -19,6 +19,8 @@
 
 package org.apache.james;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.util.Set;
 
 import javax.annotation.PreDestroy;
@@ -60,7 +62,7 @@ public class PeriodicalHealthChecks implements Startable {
     public void start() {
         disposable = Flux.interval(configuration.getPeriod(), scheduler)
             .flatMapIterable(any -> healthChecks)
-            .flatMap(healthCheck -> Mono.from(healthCheck.check()))
+            .flatMap(healthCheck -> Mono.from(healthCheck.check()), DEFAULT_CONCURRENCY)
             .doOnNext(this::logResult)
             .onErrorContinue(this::logError)
             .subscribeOn(Schedulers.elastic())

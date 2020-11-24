@@ -26,6 +26,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraUserMailboxRight
 import static org.apache.james.mailbox.cassandra.table.CassandraUserMailboxRightsTable.RIGHTS;
 import static org.apache.james.mailbox.cassandra.table.CassandraUserMailboxRightsTable.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraUserMailboxRightsTable.USER_NAME;
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -112,7 +113,8 @@ public class CassandraUserMailboxRightsDAO {
             .flatMap(entry -> cassandraAsyncExecutor.executeVoid(
                 delete.bind()
                     .setString(USER_NAME, entry.getKey().getName())
-                    .setUUID(MAILBOX_ID, cassandraId.asUuid())));
+                    .setUUID(MAILBOX_ID, cassandraId.asUuid())),
+                DEFAULT_CONCURRENCY);
     }
 
     private Flux<Void> addAll(CassandraId cassandraId, Stream<MailboxACL.Entry> addedEntries) {
@@ -121,7 +123,8 @@ public class CassandraUserMailboxRightsDAO {
                 insert.bind()
                     .setString(USER_NAME, entry.getKey().getName())
                     .setUUID(MAILBOX_ID, cassandraId.asUuid())
-                    .setString(RIGHTS, entry.getValue().serialize())));
+                    .setString(RIGHTS, entry.getValue().serialize())),
+                DEFAULT_CONCURRENCY);
     }
 
     public Mono<Optional<Rfc4314Rights>> retrieve(Username userName, CassandraId mailboxId) {

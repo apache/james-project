@@ -39,11 +39,13 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Signal;
 import reactor.core.publisher.SynchronousSink;
+import reactor.util.concurrent.Queues;
 import reactor.util.context.Context;
 
 public class ReactorUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReactorUtils.class);
     public static final String MDC_KEY_PREFIX = "MDC-";
+    public static final int DEFAULT_CONCURRENCY = 16;
 
     public static <T, U> RequiresQuantity<T, U> throttle() {
         return elements -> duration -> operation -> {
@@ -55,7 +57,7 @@ public class ReactorUtils {
                 .onErrorContinue((e, o) -> LOGGER.error("Error encountered while generating throttled entries", e))
                 .window(elements)
                 .delayElements(duration)
-                .concatMap(window -> window.flatMap(operation)
+                .concatMap(window -> window.flatMap(operation, Queues.SMALL_BUFFER_SIZE)
                     .onErrorResume(e -> {
                         LOGGER.error("Error encountered while throttling", e);
                         return Mono.empty();
