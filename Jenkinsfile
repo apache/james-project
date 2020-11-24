@@ -96,10 +96,6 @@ pipeline {
                 }
             }
         }
-        /**
-          Unsure what the project's policy is regarding deployment 
-          I left a sane sample in the file to facilitate further config 
-          by a maintainer 
 
         stage('Deploy') {
             when {
@@ -112,7 +108,6 @@ pipeline {
                 sh 'mvn -B -e deploy -Pdeploy -DskipTests'
             }
         }
-        */
     }
 
     // Do any post build stuff ... such as sending emails depending on the overall build result.
