@@ -55,9 +55,9 @@ import reactor.util.retry.Retry;
 
 class KeyRegistrationHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyRegistrationHandler.class);
-    private static final String EVENTBUS_QUEUE_NAME_PREFIX = "eventbus-";
+    static final String EVENTBUS_QUEUE_NAME_PREFIX = "eventbus-";
     private static final Duration EXPIRATION_TIMEOUT = Duration.ofMinutes(30);
-    private static final Map<String, Object> QUEUE_ARGUMENTS = ImmutableMap.of("x-expires", EXPIRATION_TIMEOUT.toMillis());
+    static final Map<String, Object> QUEUE_ARGUMENTS = ImmutableMap.of("x-expires", EXPIRATION_TIMEOUT.toMillis());
 
     private static final Duration TOPOLOGY_CHANGES_TIMEOUT = Duration.ofMinutes(1);
 
@@ -103,6 +103,10 @@ class KeyRegistrationHandler {
 
     @VisibleForTesting
     void declareQueue() {
+        declareQueue(sender);
+    }
+
+    private void declareQueue(Sender sender) {
         sender.declareQueue(
             QueueSpecification.queue(EVENTBUS_QUEUE_NAME_PREFIX + eventBusId.asString())
                 .durable(DURABLE)

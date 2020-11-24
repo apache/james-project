@@ -20,12 +20,13 @@
 
 package org.apache.james.task.eventsourcing.distributed;
 
+import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
+import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
-import java.util.UUID;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
@@ -60,10 +61,10 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
     static final String QUEUE_NAME_PREFIX = "terminationSubscriber";
     static final String ROUTING_KEY = "terminationSubscriberRoutingKey";
 
+    private final TerminationQueueName queueName;
     private final JsonEventSerializer serializer;
     private final Sender sender;
     private final ReceiverProvider receiverProvider;
-    private final String queueName;
     private UnicastProcessor<OutboundMessage> sendQueue;
     private DirectProcessor<Event> listener;
     private Disposable sendQueueHandle;
@@ -71,17 +72,17 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
     private Receiver listenerReceiver;
 
     @Inject
-    RabbitMQTerminationSubscriber(Sender sender, ReceiverProvider receiverProvider, JsonEventSerializer serializer) {
+    RabbitMQTerminationSubscriber(TerminationQueueName queueName, Sender sender, ReceiverProvider receiverProvider, JsonEventSerializer serializer) {
+        this.queueName = queueName;
         this.sender = sender;
         this.receiverProvider = receiverProvider;
         this.serializer = serializer;
-        this.queueName = QUEUE_NAME_PREFIX + UUID.randomUUID().toString();
     }
 
     public void start() {
         sender.declareExchange(ExchangeSpecification.exchange(EXCHANGE_NAME)).block();
-        sender.declare(QueueSpecification.queue(queueName).durable(false).autoDelete(true)).block();
-        sender.bind(BindingSpecification.binding(EXCHANGE_NAME, ROUTING_KEY, queueName)).block();
+        sender.declare(QueueSpecification.queue(queueName.asString()).durable(!DURABLE).autoDelete(AUTO_DELETE)).block();
+        sender.bind(BindingSpecification.binding(EXCHANGE_NAME, ROUTING_KEY, queueName.asString())).block();
         sendQueue = UnicastProcessor.create();
         sendQueueHandle = sender
             .send(sendQueue)
@@ -91,7 +92,7 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
         listenerReceiver = receiverProvider.createReceiver();
         listener = DirectProcessor.create();
         listenQueueHandle = listenerReceiver
-            .consumeAutoAck(queueName)
+            .consumeAutoAck(queueName.asString())
             .subscribeOn(Schedulers.elastic())
             .map(this::toEvent)
             .handle(publishIfPresent())

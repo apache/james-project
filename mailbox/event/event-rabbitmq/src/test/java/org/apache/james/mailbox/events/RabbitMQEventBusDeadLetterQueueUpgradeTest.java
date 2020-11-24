@@ -58,7 +58,8 @@ class RabbitMQEventBusDeadLetterQueueUpgradeTest {
 
         eventBus = new RabbitMQEventBus(rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(),
             eventSerializer, RETRY_BACKOFF_CONFIGURATION, routingKeyConverter,
-            memoryEventDeadLetters, new RecordingMetricFactory(), rabbitMQExtension.getRabbitChannelPool());
+            memoryEventDeadLetters, new RecordingMetricFactory(), rabbitMQExtension.getRabbitChannelPool(),
+            EventBusId.random());
 
         eventBus.start();
     }

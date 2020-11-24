@@ -111,7 +111,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
 
         TrackedRabbitMQWorkQueueSupplier(Sender sender, ReceiverProvider receiverProvider, JsonTaskSerializer taskSerializer) {
             workQueues = new ArrayList<>();
-            supplier = new RabbitMQWorkQueueSupplier(sender, receiverProvider, taskSerializer, RabbitMQWorkQueueConfiguration$.MODULE$.enabled());
+            supplier = new RabbitMQWorkQueueSupplier(sender, receiverProvider, taskSerializer, CancelRequestQueueName.generate(), RabbitMQWorkQueueConfiguration$.MODULE$.enabled());
         }
 
         @Override
@@ -213,7 +213,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     EventSourcingTaskManager taskManager(Hostname hostname) {
-        RabbitMQTerminationSubscriber terminationSubscriber = new RabbitMQTerminationSubscriber(rabbitMQExtension.getSender(),
+        RabbitMQTerminationSubscriber terminationSubscriber = new RabbitMQTerminationSubscriber(TerminationQueueName.generate(), rabbitMQExtension.getSender(),
             rabbitMQExtension.getReceiverProvider(),
             eventSerializer);
         terminationSubscribers.add(terminationSubscriber);

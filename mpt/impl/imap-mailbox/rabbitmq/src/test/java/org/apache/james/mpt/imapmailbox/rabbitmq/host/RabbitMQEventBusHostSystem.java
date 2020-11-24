@@ -20,6 +20,8 @@
 
 package org.apache.james.mpt.imapmailbox.rabbitmq.host;
 
+import static org.apache.james.backends.rabbitmq.RabbitMQExtension.RECONNECTION_HANDLERS;
+
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
@@ -34,6 +36,7 @@ import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.events.EventBusId;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.events.MemoryEventDeadLetters;
 import org.apache.james.mailbox.events.RabbitMQEventBus;
@@ -75,7 +78,7 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
         super.beforeTest();
 
         connectionPool = new SimpleConnectionPool(dockerRabbitMQ.createRabbitConnectionFactory(),
-            SimpleConnectionPool.Configuration.builder()
+            RECONNECTION_HANDLERS, SimpleConnectionPool.Configuration.builder()
                 .retries(2)
                 .initialDelay(Duration.ofMillis(5)));
         reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(connectionPool.getResilientConnection(),
@@ -117,7 +120,7 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
         return new RabbitMQEventBus(reactorRabbitMQChannelPool.getSender(), reactorRabbitMQChannelPool::createReceiver,
             eventSerializer, RetryBackoffConfiguration.DEFAULT, routingKeyConverter, new MemoryEventDeadLetters(),
             new RecordingMetricFactory(),
-            reactorRabbitMQChannelPool);
+            reactorRabbitMQChannelPool, EventBusId.random());
     }
 
     @Override

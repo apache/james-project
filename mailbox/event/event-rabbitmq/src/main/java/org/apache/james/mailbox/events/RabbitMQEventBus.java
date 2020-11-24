@@ -66,12 +66,13 @@ public class RabbitMQEventBus implements EventBus, Startable {
     public RabbitMQEventBus(Sender sender, ReceiverProvider receiverProvider, EventSerializer eventSerializer,
                             RetryBackoffConfiguration retryBackoff,
                             RoutingKeyConverter routingKeyConverter,
-                            EventDeadLetters eventDeadLetters, MetricFactory metricFactory, ReactorRabbitMQChannelPool channelPool) {
+                            EventDeadLetters eventDeadLetters, MetricFactory metricFactory, ReactorRabbitMQChannelPool channelPool,
+                            EventBusId eventBusId) {
         this.sender = sender;
         this.receiverProvider = receiverProvider;
         this.mailboxListenerExecutor = new MailboxListenerExecutor(metricFactory);
         this.channelPool = channelPool;
-        this.eventBusId = EventBusId.random();
+        this.eventBusId = eventBusId;
         this.eventSerializer = eventSerializer;
         this.routingKeyConverter = routingKeyConverter;
         this.retryBackoff = retryBackoff;

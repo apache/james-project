@@ -34,12 +34,14 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
 import com.github.fge.lambdas.consumers.ThrowingConsumer;
+import com.google.common.collect.ImmutableSet;
 
 import reactor.rabbitmq.Sender;
 
 public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback, AfterAllCallback, AfterEachCallback, ParameterResolver {
 
     private static final Consumer<DockerRabbitMQ> DO_NOTHING = dockerRabbitMQ -> { };
+    public static final ImmutableSet<SimpleConnectionPool.ReconnectionHandler> RECONNECTION_HANDLERS = ImmutableSet.of();
 
     public enum DockerRestartPolicy {
         PER_TEST(DockerRabbitMQ::start, DockerRabbitMQ::start, DockerRabbitMQ::stop, DockerRabbitMQ::stop),
@@ -140,6 +142,7 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
 
         RabbitMQConnectionFactory connectionFactory = createRabbitConnectionFactory();
         connectionPool = new SimpleConnectionPool(connectionFactory,
+            RECONNECTION_HANDLERS,
             SimpleConnectionPool.Configuration.builder()
                 .retries(2)
                 .initialDelay(Duration.ofMillis(5)));

@@ -93,6 +93,8 @@ public class RabbitMQModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), StartUpCheck.class).addBinding().to(CassandraMailQueueViewStartUpCheck.class);
         Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(RabbitMQHealthCheck.class);
+
+        Multibinder.newSetBinder(binder(), SimpleConnectionPool.ReconnectionHandler.class);
     }
 
     @Provides

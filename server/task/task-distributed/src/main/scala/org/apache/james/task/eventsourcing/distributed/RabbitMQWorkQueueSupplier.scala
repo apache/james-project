@@ -20,20 +20,19 @@ package org.apache.james.task.eventsourcing.distributed
 
 import java.time.Duration
 
+import com.google.common.annotations.VisibleForTesting
 import javax.inject.Inject
-
 import org.apache.james.backends.rabbitmq.ReceiverProvider
 import org.apache.james.eventsourcing.EventSourcingSystem
 import org.apache.james.server.task.json.JsonTaskSerializer
 import org.apache.james.task.SerialTaskManagerWorker
 import org.apache.james.task.eventsourcing.{WorkQueueSupplier, WorkerStatusListener}
-
-import com.google.common.annotations.VisibleForTesting
 import reactor.rabbitmq.Sender
 
 class RabbitMQWorkQueueSupplier @Inject()(private val sender: Sender,
                                           private val receiverProvider: ReceiverProvider,
                                           private val jsonTaskSerializer: JsonTaskSerializer,
+                                          private val cancelRequestName: CancelRequestQueueName,
                                           private val configuration: RabbitMQWorkQueueConfiguration) extends WorkQueueSupplier {
 
   val DEFAULT_ADDITIONAL_INFORMATION_POLLING_INTERVAL =  Duration.ofSeconds(30)
@@ -45,7 +44,7 @@ class RabbitMQWorkQueueSupplier @Inject()(private val sender: Sender,
   def apply(eventSourcingSystem: EventSourcingSystem, additionalInformationPollingInterval: Duration): RabbitMQWorkQueue = {
     val listener = WorkerStatusListener(eventSourcingSystem)
     val worker = new SerialTaskManagerWorker(listener, additionalInformationPollingInterval)
-    val rabbitMQWorkQueue = new RabbitMQWorkQueue(worker, sender, receiverProvider, jsonTaskSerializer, configuration)
+    val rabbitMQWorkQueue = new RabbitMQWorkQueue(worker, sender, receiverProvider, jsonTaskSerializer, configuration, cancelRequestName)
     rabbitMQWorkQueue
   }
 }

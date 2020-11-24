@@ -24,15 +24,19 @@ import static org.apache.james.util.ReactorUtils.publishIfPresent;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
+import org.reactivestreams.Publisher;
+
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.rabbitmq.client.Connection;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
@@ -80,14 +84,20 @@ public class SimpleConnectionPool implements AutoCloseable {
         }
     }
 
+    public interface ReconnectionHandler {
+        Publisher<Void> handleReconnection(Connection connection);
+    }
+
     private final AtomicReference<Connection> connectionReference;
     private final RabbitMQConnectionFactory connectionFactory;
+    private final Set<ReconnectionHandler> reconnectionHandlers;
     private final Configuration configuration;
 
     @Inject
     @VisibleForTesting
-    public SimpleConnectionPool(RabbitMQConnectionFactory factory, Configuration configuration) {
+    public SimpleConnectionPool(RabbitMQConnectionFactory factory, Set<ReconnectionHandler> reconnectionHandlers, Configuration configuration) {
         this.connectionFactory = factory;
+        this.reconnectionHandlers = reconnectionHandlers;
         this.configuration = configuration;
         this.connectionReference = new AtomicReference<>();
     }
@@ -112,6 +122,12 @@ public class SimpleConnectionPool implements AutoCloseable {
             .orElseGet(connectionFactory::create);
         boolean updated = connectionReference.compareAndSet(previous, current);
         if (updated) {
+            if (previous != null && previous != current) {
+                return Flux.fromIterable(reconnectionHandlers)
+                    .concatMap(handler -> handler.handleReconnection(current))
+                    .then()
+                    .thenReturn(current);
+            }
             return Mono.just(current);
         } else {
             try {
