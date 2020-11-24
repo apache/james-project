@@ -98,11 +98,7 @@ pipeline {
         }
 
         stage('Deploy') {
-            when {
-                expression {
-                    env.BRANCH_NAME ==~ /master/
-                }
-            }
+            when { branch 'master' }
             steps {
                 echo 'Deploying'
                 sh 'mvn -B -e deploy -Pdeploy -DskipTests'
