@@ -56,6 +56,7 @@ import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class MessageFastViewProjectionCorrector {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageFastViewProjectionCorrector.class);
@@ -210,7 +211,8 @@ public class MessageFastViewProjectionCorrector {
     }
 
     private Mono<MessageManager> retrieveMailbox(MailboxSession session, MailboxMetaData mailboxMetadata) {
-        return Mono.fromCallable(() -> mailboxManager.getMailbox(mailboxMetadata.getId(), session));
+        return Mono.fromCallable(() -> mailboxManager.getMailbox(mailboxMetadata.getId(), session))
+            .subscribeOn(Schedulers.elastic());
     }
 
     private Flux<ComposedMessageIdWithMetaData> listAllMailboxMessages(MessageManager messageManager, MailboxSession session) {
@@ -220,6 +222,7 @@ public class MessageFastViewProjectionCorrector {
     private Mono<MessageResult> retrieveContent(MessageManager messageManager, MailboxSession session, MessageUid uid) {
         try {
             return Iterators.toFlux(messageManager.getMessages(MessageRange.one(uid), FetchGroup.FULL_CONTENT, session))
+                .subscribeOn(Schedulers.elastic())
                 .next();
         } catch (MailboxException e) {
             return Mono.error(e);

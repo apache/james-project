@@ -157,6 +157,64 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
+    void recomputeFastViewProjectionItemsShouldComplete(GuiceJamesServer server) throws Exception {
+        server.getProbe(DataProbeImpl.class).addUser(USERNAME, "secret");
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
+        mailboxProbe.appendMessage(
+            USERNAME,
+            MailboxPath.inbox(Username.of(USERNAME)),
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
+            new Date(),
+            false,
+            new Flags());
+
+        String taskId = with()
+            .post("/mailboxes?task=recomputeFastViewProjectionItems")
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("taskId", is(notNullValue()))
+            .body("type", is("RecomputeAllFastViewProjectionItemsTask"))
+            .body("additionalInformation.processedMessageCount", is(1))
+            .body("additionalInformation.failedMessageCount", is(0));
+    }
+
+    @Test
+    void populateEmailQueryViewShouldComplete(GuiceJamesServer server) throws Exception {
+        server.getProbe(DataProbeImpl.class).addUser(USERNAME, "secret");
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
+        mailboxProbe.appendMessage(
+            USERNAME,
+            MailboxPath.inbox(Username.of(USERNAME)),
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
+            new Date(),
+            false,
+            new Flags());
+
+        String taskId = with()
+            .post("/mailboxes?task=populateEmailQueryView")
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("taskId", is(notNullValue()))
+            .body("type", is("PopulateEmailQueryViewTask"))
+            .body("additionalInformation.processedMessageCount", is(1))
+            .body("additionalInformation.failedMessageCount", is(0));
+    }
+
+    @Test
     void deleteMailsFromMailQueueShouldCompleteWhenSenderIsValid() {
         String firstMailQueue = with()
                 .basePath(MailQueueRoutes.BASE_URL)
