@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
+import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.util.ValuePatch;
 import org.junit.jupiter.api.Test;
 

@@ -17,32 +17,22 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.api.vacation;
+package org.apache.james.jmap.memory.change;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.apache.james.jmap.api.change.MailboxChangeRepository;
+import org.apache.james.jmap.api.change.MailboxChangeRepositoryContract;
+import org.junit.jupiter.api.BeforeEach;
 
-import org.apache.james.jmap.api.model.AccountId;
-import org.junit.jupiter.api.Test;
+public class MemoryMailboxChangeRepositoryTest implements MailboxChangeRepositoryContract {
+    MailboxChangeRepository mailboxChangeRepository;
 
-class AccountIdTest {
-    static final String IDENTIFIER = "id";
-
-    @Test
-    void createShouldThrowOnNullIdentifier() {
-        assertThatThrownBy(() -> AccountId.fromString(null))
-            .isInstanceOf(IllegalArgumentException.class);
+    @BeforeEach
+    void setup() {
+        mailboxChangeRepository = new MemoryMailboxChangeRepository();
     }
 
-    @Test
-    void createShouldThrowOnEmptyIdentifier() {
-        assertThatThrownBy(() -> AccountId.fromString(""))
-            .isInstanceOf(IllegalArgumentException.class);
+    @Override
+    public MailboxChangeRepository mailboxChangeRepository() {
+        return mailboxChangeRepository;
     }
-
-    @Test
-    void createShouldWork() {
-        assertThat(AccountId.fromString(IDENTIFIER).getIdentifier()).isEqualTo(IDENTIFIER);
-    }
-
 }

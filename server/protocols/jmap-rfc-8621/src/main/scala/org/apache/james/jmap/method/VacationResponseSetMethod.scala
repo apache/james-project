@@ -21,7 +21,8 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
-import org.apache.james.jmap.api.vacation.{AccountId, VacationPatch, VacationRepository}
+import org.apache.james.jmap.api.model.AccountId
+import org.apache.james.jmap.api.vacation.{VacationPatch, VacationRepository}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription

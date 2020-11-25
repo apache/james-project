@@ -31,7 +31,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.jmap.api.vacation.AccountId;
+import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.jmap.api.vacation.RecipientId;
 import org.apache.james.jmap.cassandra.vacation.tables.CassandraNotificationTable;
 

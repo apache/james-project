@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.api.vacation;
 
+import org.apache.james.jmap.api.model.AccountId;
+
 import reactor.core.publisher.Mono;
 
 public interface VacationRepository {

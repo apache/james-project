@@ -23,7 +23,7 @@ import static org.apache.james.jmap.http.LoggingHelper.jmapAction;
 
 import javax.inject.Inject;
 
-import org.apache.james.jmap.api.vacation.AccountId;
+import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.draft.model.GetVacationRequest;

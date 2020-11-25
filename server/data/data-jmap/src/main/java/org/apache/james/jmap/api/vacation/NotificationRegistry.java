@@ -22,6 +22,8 @@ package org.apache.james.jmap.api.vacation;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
+import org.apache.james.jmap.api.model.AccountId;
+
 import reactor.core.publisher.Mono;
 
 public interface NotificationRegistry {

@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.api.vacation;
+package org.apache.james.jmap.api.model;
 
 import java.util.Objects;
 

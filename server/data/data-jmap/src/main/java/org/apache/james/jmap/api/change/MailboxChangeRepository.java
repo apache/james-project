@@ -17,32 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.api.vacation;
+package org.apache.james.jmap.api.change;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import java.util.Optional;
 
+import org.apache.james.jmap.api.change.MailboxChange.Limit;
+import org.apache.james.jmap.api.change.MailboxChange.State;
 import org.apache.james.jmap.api.model.AccountId;
-import org.junit.jupiter.api.Test;
 
-class AccountIdTest {
-    static final String IDENTIFIER = "id";
+import reactor.core.publisher.Mono;
 
-    @Test
-    void createShouldThrowOnNullIdentifier() {
-        assertThatThrownBy(() -> AccountId.fromString(null))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
+public interface MailboxChangeRepository {
 
-    @Test
-    void createShouldThrowOnEmptyIdentifier() {
-        assertThatThrownBy(() -> AccountId.fromString(""))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
+    Mono<Void> save(MailboxChange change);
 
-    @Test
-    void createShouldWork() {
-        assertThat(AccountId.fromString(IDENTIFIER).getIdentifier()).isEqualTo(IDENTIFIER);
-    }
-
+    Mono<MailboxChanges> getSinceState(AccountId accountId, State state, Optional<Limit> maxIdsToReturn);
 }

@@ -22,7 +22,7 @@ package org.apache.james.jmap.memory.vacation;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.james.jmap.api.vacation.AccountId;
+import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.jmap.api.vacation.VacationRepository;

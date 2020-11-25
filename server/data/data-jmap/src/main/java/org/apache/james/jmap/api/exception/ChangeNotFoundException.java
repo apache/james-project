@@ -17,32 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.api.vacation;
+package org.apache.james.jmap.api.exception;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.apache.james.jmap.api.change.MailboxChange;
 
-import org.apache.james.jmap.api.model.AccountId;
-import org.junit.jupiter.api.Test;
+public class ChangeNotFoundException extends RuntimeException {
+    private final MailboxChange.State state;
 
-class AccountIdTest {
-    static final String IDENTIFIER = "id";
-
-    @Test
-    void createShouldThrowOnNullIdentifier() {
-        assertThatThrownBy(() -> AccountId.fromString(null))
-            .isInstanceOf(IllegalArgumentException.class);
+    public ChangeNotFoundException(MailboxChange.State state, String msg) {
+        super(msg);
+        this.state = state;
     }
 
-    @Test
-    void createShouldThrowOnEmptyIdentifier() {
-        assertThatThrownBy(() -> AccountId.fromString(""))
-            .isInstanceOf(IllegalArgumentException.class);
+    public MailboxChange.State getState() {
+        return state;
     }
-
-    @Test
-    void createShouldWork() {
-        assertThat(AccountId.fromString(IDENTIFIER).getIdentifier()).isEqualTo(IDENTIFIER);
-    }
-
 }
