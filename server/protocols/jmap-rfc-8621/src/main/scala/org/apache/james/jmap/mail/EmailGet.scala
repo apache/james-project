@@ -25,7 +25,9 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.types.string.NonEmptyString
+import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.State.State
+import org.apache.james.jmap.core.UnsignedInt.UnsignedInt
 import org.apache.james.jmap.core.{AccountId, Properties}
 import org.apache.james.jmap.mail.Email.UnparsedEmailId
 import org.apache.james.jmap.mail.EmailGetRequest.MaxBodyValueBytes
@@ -110,3 +112,16 @@ case class SpecificHeaderRequest(property: NonEmptyString, headerName: String, p
     }
   }
 }
+
+case class EmailChangesRequest(accountId: AccountId,
+                                sinceState: State,
+                                maxChanged: Option[UnsignedInt]) extends WithAccountId
+
+
+case class EmailChangesResponse(accountId: AccountId,
+                                oldState: State,
+                                newState: State,
+                                hasMoreChanges: HasMoreChanges,
+                                created: List[Id],
+                                updated: List[Id],
+                                destroyed: List[Id])

@@ -58,6 +58,10 @@ object ErrorCode {
     override def code: String = "serverFail"
   }
 
+  case object CannotCalculateChanges extends ErrorCode {
+    override def code: String = "cannotCalculateChanges"
+  }
+
   case object UnknownMethod extends ErrorCode {
     override def code: String = "unknownMethod"
   }

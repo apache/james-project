@@ -27,7 +27,7 @@ import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.{ClientId, Properties, SetError}
 import org.apache.james.jmap.mail.MailboxGet.{UnparsedMailboxId, UnparsedMailboxIdConstraint}
 import org.apache.james.jmap.mail.MailboxSetRequest.MailboxCreationId
-import org.apache.james.jmap.mail.{DelegatedNamespace, Ids, IsSubscribed, Mailbox, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, Value}
+import org.apache.james.jmap.mail.{DelegatedNamespace, Ids, IsSubscribed, Mailbox, MailboxChangesRequest, MailboxChangesResponse, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, Value}
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxACL.{Right => JavaRight}
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId}
@@ -112,6 +112,7 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
   private implicit val idsRead: Reads[Ids] = Json.valueReads[Ids]
 
   private implicit val mailboxGetRequest: Reads[MailboxGetRequest] = Json.reads[MailboxGetRequest]
+  private implicit val mailboxChangesRequest: Reads[MailboxChangesRequest] = Json.reads[MailboxChangesRequest]
 
   private implicit val mailboxRemoveEmailsOnDestroy: Reads[RemoveEmailsOnDestroy] = Json.valueFormat[RemoveEmailsOnDestroy]
   implicit val mailboxCreationRequest: Reads[MailboxCreationRequest] = Json.reads[MailboxCreationRequest]
@@ -144,6 +145,9 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
     mapWrites[MailboxId, MailboxUpdateResponse](_.serialize(), mailboxSetUpdateResponseWrites)
 
   private implicit val mailboxSetResponseWrites: Writes[MailboxSetResponse] = Json.writes[MailboxSetResponse]
+  private implicit val changesResponseWrites: OWrites[MailboxChangesResponse] = Json.writes[MailboxChangesResponse]
+
+  def serializeChanges(changesResponse: MailboxChangesResponse): JsObject = Json.toJson(changesResponse).as[JsObject]
 
   def serialize(mailbox: Mailbox): JsValue = Json.toJson(mailbox)
 
@@ -178,6 +182,8 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
   def deserializeMailboxGetRequest(input: String): JsResult[MailboxGetRequest] = Json.parse(input).validate[MailboxGetRequest]
 
   def deserializeMailboxGetRequest(input: JsValue): JsResult[MailboxGetRequest] = Json.fromJson[MailboxGetRequest](input)
+
+  def deserializeMailboxChangesRequest(input: JsValue): JsResult[MailboxChangesRequest] = Json.fromJson[MailboxChangesRequest](input)
 
   def deserializeMailboxSetRequest(input: JsValue): JsResult[MailboxSetRequest] = Json.fromJson[MailboxSetRequest](input)
 

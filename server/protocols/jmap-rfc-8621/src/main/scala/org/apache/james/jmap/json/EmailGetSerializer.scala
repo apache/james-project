@@ -22,7 +22,7 @@ package org.apache.james.jmap.json
 import org.apache.james.jmap.api.model.Preview
 import org.apache.james.jmap.core.Properties
 import org.apache.james.jmap.mail.Email.Size
-import org.apache.james.jmap.mail.{AddressesHeaderValue, BlobId, Charset, DateHeaderValue, Disposition, EmailAddress, EmailAddressGroup, EmailBody, EmailBodyMetadata, EmailBodyPart, EmailBodyValue, EmailFastView, EmailFullView, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailHeaderView, EmailHeaders, EmailIds, EmailMetadata, EmailMetadataView, EmailNotFound, EmailView, EmailerName, FetchAllBodyValues, FetchHTMLBodyValues, FetchTextBodyValues, GroupName, GroupedAddressesHeaderValue, HasAttachment, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, PartId, RawHeaderValue, Subject, TextHeaderValue, ThreadId, Type, URLsHeaderValue}
+import org.apache.james.jmap.mail.{AddressesHeaderValue, BlobId, Charset, DateHeaderValue, Disposition, EmailAddress, EmailAddressGroup, EmailBody, EmailBodyMetadata, EmailBodyPart, EmailBodyValue, EmailChangesRequest, EmailChangesResponse, EmailFastView, EmailFullView, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailHeaderView, EmailHeaders, EmailIds, EmailMetadata, EmailMetadataView, EmailNotFound, EmailView, EmailerName, FetchAllBodyValues, FetchHTMLBodyValues, FetchTextBodyValues, GroupName, GroupedAddressesHeaderValue, HasAttachment, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, PartId, RawHeaderValue, Subject, TextHeaderValue, ThreadId, Type, URLsHeaderValue}
 import org.apache.james.mailbox.model.{Cid, MailboxId, MessageId}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -110,6 +110,7 @@ object EmailGetSerializer {
   private implicit val bodyValueWrites: Writes[EmailBodyValue] = Json.writes[EmailBodyValue]
   private implicit val emailIdsReads: Reads[EmailIds] = Json.valueReads[EmailIds]
   private implicit val emailGetRequestReads: Reads[EmailGetRequest] = Json.reads[EmailGetRequest]
+  private implicit val emailChangesRequestReads: Reads[EmailChangesRequest] = Json.reads[EmailChangesRequest]
   private implicit val subjectWrites: Writes[Subject] = Json.valueWrites[Subject]
   private implicit val emailNotFoundWrites: Writes[EmailNotFound] = Json.valueWrites[EmailNotFound]
   private implicit val messageIdWrites: Writes[MessageId] = id => JsString(id.serialize())
@@ -163,6 +164,9 @@ object EmailGetSerializer {
     case view: EmailFullView => emailFullViewWrites.writes(view)
   }
   private implicit val emailGetResponseWrites: Writes[EmailGetResponse] = Json.writes[EmailGetResponse]
+  private implicit val changesResponseWrites: OWrites[EmailChangesResponse] = Json.writes[EmailChangesResponse]
+
+  def serializeChanges(changesResponse: EmailChangesResponse): JsObject = Json.toJson(changesResponse).as[JsObject]
 
   def serialize(emailGetResponse: EmailGetResponse, properties: Properties, bodyProperties: Properties): JsValue =
     Json.toJson(emailGetResponse)
@@ -211,4 +215,6 @@ object EmailGetSerializer {
   }
 
   def deserializeEmailGetRequest(input: JsValue): JsResult[EmailGetRequest] = Json.fromJson[EmailGetRequest](input)
+
+  def deserializeEmailChangesRequest(input: JsValue): JsResult[EmailChangesRequest] = Json.fromJson[EmailChangesRequest](input)
 }

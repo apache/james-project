@@ -33,16 +33,19 @@ import org.apache.james.jmap.http.BasicAuthenticationStrategy;
 import org.apache.james.jmap.http.rfc8621.InjectionKeys;
 import org.apache.james.jmap.jwt.JWTAuthenticationStrategy;
 import org.apache.james.jmap.method.CoreEchoMethod;
+import org.apache.james.jmap.method.EmailChangesMethod;
 import org.apache.james.jmap.method.EmailGetMethod;
 import org.apache.james.jmap.method.EmailQueryMethod;
 import org.apache.james.jmap.method.EmailSetMethod;
 import org.apache.james.jmap.method.EmailSubmissionSetMethod;
 import org.apache.james.jmap.method.IdentityGetMethod;
+import org.apache.james.jmap.method.MailboxChangesMethod;
 import org.apache.james.jmap.method.MailboxGetMethod;
 import org.apache.james.jmap.method.MailboxQueryMethod;
 import org.apache.james.jmap.method.MailboxSetMethod;
 import org.apache.james.jmap.method.Method;
 import org.apache.james.jmap.method.SystemZoneIdProvider;
+import org.apache.james.jmap.method.ThreadChangesMethod;
 import org.apache.james.jmap.method.ThreadGetMethod;
 import org.apache.james.jmap.method.VacationResponseGetMethod;
 import org.apache.james.jmap.method.VacationResponseSetMethod;
@@ -80,13 +83,16 @@ public class RFC8621MethodsModule extends AbstractModule {
         methods.addBinding().to(MailboxGetMethod.class);
         methods.addBinding().to(MailboxQueryMethod.class);
         methods.addBinding().to(MailboxSetMethod.class);
+        methods.addBinding().to(MailboxChangesMethod.class);
         methods.addBinding().to(EmailGetMethod.class);
         methods.addBinding().to(EmailSetMethod.class);
         methods.addBinding().to(EmailSubmissionSetMethod.class);
         methods.addBinding().to(EmailQueryMethod.class);
+        methods.addBinding().to(EmailChangesMethod.class);
         methods.addBinding().to(VacationResponseGetMethod.class);
         methods.addBinding().to(VacationResponseSetMethod.class);
         methods.addBinding().to(IdentityGetMethod.class);
+        methods.addBinding().to(ThreadChangesMethod.class);
         methods.addBinding().to(ThreadGetMethod.class);
     }
 

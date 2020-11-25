@@ -22,7 +22,9 @@ package org.apache.james.jmap.mail
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
+import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.State.State
+import org.apache.james.jmap.core.UnsignedInt.UnsignedInt
 import org.apache.james.jmap.core.{AccountId, Properties}
 import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
 import org.apache.james.jmap.method.WithAccountId
@@ -64,3 +66,16 @@ case class MailboxGetResponse(accountId: AccountId,
                               state: State,
                               list: List[Mailbox],
                               notFound: NotFound)
+
+case class MailboxChangesRequest(accountId: AccountId,
+                                sinceState: State,
+                                maxChanged: Option[UnsignedInt]) extends WithAccountId
+
+case class MailboxChangesResponse(accountId: AccountId,
+                                  oldState: State,
+                                  newState: State,
+                                  hasMoreChanges: HasMoreChanges,
+                                  updatedProperties: Option[Properties],
+                                  created: List[Id],
+                                  updated: List[Id],
+                                  destroyed: List[Id])
