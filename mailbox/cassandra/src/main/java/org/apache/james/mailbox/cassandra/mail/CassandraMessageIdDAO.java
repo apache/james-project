@@ -79,8 +79,9 @@ public class CassandraMessageIdDAO {
     private final PreparedStatement delete;
     private final PreparedStatement insert;
     private final PreparedStatement select;
+    private final PreparedStatement selectAll;
     private final PreparedStatement selectAllUids;
-    private final PreparedStatement selectAllUidsLimited;
+    private final PreparedStatement selectAllLimited;
     private final PreparedStatement selectUidGte;
     private final PreparedStatement selectUidGteLimited;
     private final PreparedStatement selectUidRange;
@@ -96,8 +97,9 @@ public class CassandraMessageIdDAO {
         this.insert = prepareInsert(session);
         this.update = prepareUpdate(session);
         this.select = prepareSelect(session);
+        this.selectAll = prepareSelectAll(session);
         this.selectAllUids = prepareSelectAllUids(session);
-        this.selectAllUidsLimited = prepareSelectAllUidsLimited(session);
+        this.selectAllLimited = prepareSelectAllLimited(session);
         this.selectUidGte = prepareSelectUidGte(session);
         this.selectUidGteLimited = prepareSelectUidGteLimited(session);
         this.selectUidRange = prepareSelectUidRange(session);
@@ -150,13 +152,19 @@ public class CassandraMessageIdDAO {
                 .and(eq(IMAP_UID, bindMarker(IMAP_UID))));
     }
 
-    private PreparedStatement prepareSelectAllUids(Session session) {
+    private PreparedStatement prepareSelectAll(Session session) {
         return session.prepare(select(FIELDS)
             .from(TABLE_NAME)
             .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
     }
 
-    private PreparedStatement prepareSelectAllUidsLimited(Session session) {
+    private PreparedStatement prepareSelectAllUids(Session session) {
+        return session.prepare(select(IMAP_UID)
+            .from(TABLE_NAME)
+            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+    }
+
+    private PreparedStatement prepareSelectAllLimited(Session session) {
         return session.prepare(select(FIELDS)
             .from(TABLE_NAME)
             .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
@@ -263,6 +271,12 @@ public class CassandraMessageIdDAO {
             .map(this::fromRowToComposedMessageIdWithFlags);
     }
 
+    public Flux<MessageUid> listUids(CassandraId mailboxId) {
+        return cassandraAsyncExecutor.executeRows(selectAllUids.bind()
+                .setUUID(MAILBOX_ID, mailboxId.asUuid()))
+            .map(row -> MessageUid.of(row.getLong(IMAP_UID)));
+    }
+
     public Flux<ComposedMessageIdWithMetaData> retrieveAllMessages() {
         return cassandraAsyncExecutor.executeRows(listStatement.bind())
             .map(this::fromRowToComposedMessageIdWithFlags);
@@ -284,10 +298,10 @@ public class CassandraMessageIdDAO {
 
     private Flux<Row> selectAll(CassandraId mailboxId, Limit limit) {
         return cassandraAsyncExecutor.executeRows(limit.getLimit()
-            .map(limitAsInt -> selectAllUidsLimited.bind()
+            .map(limitAsInt -> selectAllLimited.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid())
                 .setInt(LIMIT, limitAsInt))
-            .orElse(selectAllUids.bind()
+            .orElse(selectAll.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid())));
     }
 

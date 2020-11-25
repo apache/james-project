@@ -123,8 +123,7 @@ public class CassandraMessageMapper implements MessageMapper {
     @Override
     public Flux<MessageUid> listAllMessageUids(Mailbox mailbox) {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        return messageIdDAO.retrieveMessages(cassandraId, MessageRange.all(), Limit.unlimited())
-            .map(metaData -> metaData.getComposedMessageId().getUid());
+        return messageIdDAO.listUids(cassandraId);
     }
 
     @Override

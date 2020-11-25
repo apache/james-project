@@ -130,7 +130,7 @@ public class CassandraReIndexerImplTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId;"));
+                    .whenQueryStartsWith("SELECT uid FROM messageIdTable WHERE mailboxId=:mailboxId;"));
 
             Task task = reIndexer.reIndex(ReIndexer.RunningOptions.DEFAULT);
             Task.Result result = task.run();
@@ -149,7 +149,7 @@ public class CassandraReIndexerImplTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId;"));
+                    .whenQueryStartsWith("SELECT uid FROM messageIdTable WHERE mailboxId=:mailboxId;"));
 
             Task task = reIndexer.reIndex(ReIndexer.RunningOptions.DEFAULT);
             task.run();
@@ -169,7 +169,7 @@ public class CassandraReIndexerImplTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId;"));
+                    .whenQueryStartsWith("SELECT uid FROM messageIdTable WHERE mailboxId=:mailboxId;"));
 
             Task task = reIndexer.reIndex(mailbox.getId(), ReIndexer.RunningOptions.DEFAULT);
             Task.Result result = task.run();
@@ -188,7 +188,7 @@ public class CassandraReIndexerImplTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId;"));
+                    .whenQueryStartsWith("SELECT uid FROM messageIdTable WHERE mailboxId=:mailboxId;"));
 
             Task task = reIndexer.reIndex(mailbox.getId(), ReIndexer.RunningOptions.DEFAULT);
             task.run();
@@ -208,7 +208,7 @@ public class CassandraReIndexerImplTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId;"));
+                    .whenQueryStartsWith("SELECT uid FROM messageIdTable WHERE mailboxId=:mailboxId;"));
 
             Task task = reIndexer.reIndex(USERNAME, ReIndexer.RunningOptions.DEFAULT);
             Task.Result result = task.run();
@@ -227,7 +227,7 @@ public class CassandraReIndexerImplTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId;"));
+                    .whenQueryStartsWith("SELECT uid FROM messageIdTable WHERE mailboxId=:mailboxId;"));
 
             Task task = reIndexer.reIndex(USERNAME, ReIndexer.RunningOptions.DEFAULT);
             task.run();
@@ -247,7 +247,7 @@ public class CassandraReIndexerImplTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId;"));
+                    .whenQueryStartsWith("SELECT uid FROM messageIdTable WHERE mailboxId=:mailboxId;"));
 
             Task task = reIndexer.reIndex(new ReIndexingExecutionFailures(
                 ImmutableList.of(new ReIndexingFailure(mailbox.getId(),
@@ -270,7 +270,7 @@ public class CassandraReIndexerImplTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId;"));
+                    .whenQueryStartsWith("SELECT uid FROM messageIdTable WHERE mailboxId=:mailboxId;"));
 
             Task task = reIndexer.reIndex(new ReIndexingExecutionFailures(
                 ImmutableList.of(new ReIndexingFailure(mailbox.getId(),
