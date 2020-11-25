@@ -48,7 +48,7 @@ trait IdentityGetContract {
   def getIdentityShouldReturnDefaultIdentity(): Unit = {
     val request =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:submission"],
          |  "methodCalls": [[
          |    "Identity/get",
          |    {
@@ -92,7 +92,7 @@ trait IdentityGetContract {
     server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
     val request =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:submission"],
          |  "methodCalls": [[
          |    "Identity/get",
          |    {
@@ -143,7 +143,7 @@ trait IdentityGetContract {
     server.getProbe(classOf[DataProbeImpl]).addDomainAliasMapping("domain-alias.tld", "domain.tld")
     val request =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:submission"],
          |  "methodCalls": [[
          |    "Identity/get",
          |    {
@@ -204,7 +204,7 @@ trait IdentityGetContract {
   def propertiesShouldBeSupported(): Unit = {
     val request =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:submission"],
          |  "methodCalls": [[
          |    "Identity/get",
          |    {
@@ -249,7 +249,7 @@ trait IdentityGetContract {
   def propertiesShouldBeFiltered(): Unit = {
     val request =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:submission"],
          |  "methodCalls": [[
          |    "Identity/get",
          |    {
@@ -292,7 +292,7 @@ trait IdentityGetContract {
   def badPropertiesShouldBeRejected(): Unit = {
     val request =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:submission"],
          |  "methodCalls": [[
          |    "Identity/get",
          |    {
@@ -337,7 +337,7 @@ trait IdentityGetContract {
   def badAccountIdShouldBeRejected(): Unit = {
     val request =
       s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "using": ["urn:ietf:params:jmap:submission"],
          |  "methodCalls": [[
          |    "Identity/get",
          |    {

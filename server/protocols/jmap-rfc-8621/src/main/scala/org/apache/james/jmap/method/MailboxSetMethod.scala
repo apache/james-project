@@ -21,7 +21,7 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{Invocation, SetError, State}
 import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
@@ -49,7 +49,7 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
                                  val metricFactory: MetricFactory,
                                  val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[MailboxSetRequest] {
   override val methodName: MethodName = MethodName("Mailbox/set")
-  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
+  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxSetRequest): SMono[InvocationWithContext] = for {
     creationResultsWithUpdatedProcessingContext <- createPerformer.createMailboxes(mailboxSession, request, invocation.processingContext)

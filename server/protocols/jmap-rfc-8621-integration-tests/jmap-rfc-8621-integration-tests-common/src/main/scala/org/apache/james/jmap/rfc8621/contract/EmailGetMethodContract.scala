@@ -3051,7 +3051,7 @@ trait EmailGetMethodContract {
          |    "error",
          |    {
          |      "type": "unknownMethod",
-         |      "description": "Missing capability(ies): urn:ietf:params:jmap:core, urn:ietf:params:jmap:mail"
+         |      "description": "Missing capability(ies): urn:ietf:params:jmap:mail"
          |    },
          |    "c1"]]
          |}""".stripMargin)

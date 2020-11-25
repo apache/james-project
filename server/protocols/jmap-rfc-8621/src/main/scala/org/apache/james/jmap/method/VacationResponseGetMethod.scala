@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.api.vacation.VacationRepository
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_VACATION_RESPONSE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, MissingCapabilityException, Properties}
@@ -60,7 +60,7 @@ class VacationResponseGetMethod @Inject()(vacationRepository: VacationRepository
                                           val metricFactory: MetricFactory,
                                           val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[VacationResponseGetRequest] {
   override val methodName: MethodName = MethodName("VacationResponse/get")
-  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE)
+  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_VACATION_RESPONSE)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: VacationResponseGetRequest): SMono[InvocationWithContext] = {
     {

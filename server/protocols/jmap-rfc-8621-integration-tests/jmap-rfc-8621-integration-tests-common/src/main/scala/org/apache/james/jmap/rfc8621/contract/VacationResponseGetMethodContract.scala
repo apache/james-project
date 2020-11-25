@@ -273,7 +273,7 @@ trait VacationResponseGetMethodContract {
          |    "error",
          |    {
          |      "type": "unknownMethod",
-         |      "description":"Missing capability(ies): urn:ietf:params:jmap:core, urn:ietf:params:jmap:mail, urn:ietf:params:jmap:vacationresponse"
+         |      "description":"Missing capability(ies): urn:ietf:params:jmap:vacationresponse"
          |    },
          |    "c1"]]
          |}""".stripMargin)

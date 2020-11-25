@@ -7398,7 +7398,7 @@ trait MailboxSetMethodContract {
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(s"""{
-               |  "using": [ "urn:ietf:params:jmap:mail" ],
+               |  "using": [ "urn:ietf:params:jmap:core" ],
                |  "methodCalls": [[
                |     "Mailbox/set",
                |     {
@@ -7425,7 +7425,7 @@ trait MailboxSetMethodContract {
          |    "error",
          |    {
          |      "type": "unknownMethod",
-         |      "description": "Missing capability(ies): urn:ietf:params:jmap:core"
+         |      "description": "Missing capability(ies): urn:ietf:params:jmap:mail"
          |    },
          |    "c1"]]
          |}""".stripMargin)
@@ -7465,7 +7465,7 @@ trait MailboxSetMethodContract {
          |    "error",
          |    {
          |      "type": "unknownMethod",
-         |      "description": "Missing capability(ies): urn:ietf:params:jmap:core, urn:ietf:params:jmap:mail"
+         |      "description": "Missing capability(ies): urn:ietf:params:jmap:mail"
          |    },
          |    "c1"]]
          |}""".stripMargin)

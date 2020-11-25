@@ -21,7 +21,7 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_MAIL}
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{Invocation, State}
@@ -36,7 +36,7 @@ import reactor.core.scala.publisher.SMono
 class ThreadGetMethod @Inject()(val metricFactory: MetricFactory,
                                           val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[ThreadGetRequest] {
   override val methodName: MethodName = MethodName("Thread/get")
-  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
+  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: ThreadGetRequest): SMono[InvocationWithContext] = {
     val response = ThreadGetResponse(accountId = request.accountId,

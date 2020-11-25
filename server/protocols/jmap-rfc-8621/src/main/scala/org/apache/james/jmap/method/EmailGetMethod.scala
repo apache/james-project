@@ -23,7 +23,7 @@ import java.time.ZoneId
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import javax.inject.Inject
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, Properties}
@@ -80,7 +80,7 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
                                 val metricFactory: MetricFactory,
                                 val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[EmailGetRequest] {
   override val methodName: MethodName = MethodName("Email/get")
-  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
+  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailGetRequest): SMono[InvocationWithContext] = {
     computeResponseInvocation(request, invocation.invocation, mailboxSession).onErrorResume({
