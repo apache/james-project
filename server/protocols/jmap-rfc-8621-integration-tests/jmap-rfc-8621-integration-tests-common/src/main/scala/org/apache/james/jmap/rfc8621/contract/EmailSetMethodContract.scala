@@ -2008,8 +2008,8 @@ trait EmailSetMethodContract {
            |  "subject": "World domination",
            |  "attachments": [
            |    {
-           |      "partId": "5",
-           |      "blobId": "${messageId}_5",
+           |      "partId": "4",
+           |      "blobId": "${messageId}_4",
            |      "size": 11,
            |      "type": "text/plain",
            |      "charset": "UTF-8",
@@ -2024,7 +2024,7 @@ trait EmailSetMethodContract {
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
-      .get(s"/download/$accountId/${messageId}_5")
+      .get(s"/download/$accountId/${messageId}_4")
     .`then`
       .statusCode(SC_OK)
       .contentType("text/plain")
@@ -2171,6 +2171,148 @@ trait EmailSetMethodContract {
            |  "bodyValues": {
            |    "3": {
            |      "value": "$htmlBody",
+           |      "isEncodingProblem": false,
+           |      "isTruncated": false
+           |    }
+           |  }
+           |}]""".stripMargin)
+  }
+
+  @Test
+  def createShouldSupportAttachmentAndTextBody(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
+    val textBody: String = "Let me tell you all about it."
+
+    val uploadResponse: String = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .contentType("text/plain")
+      .body(payload)
+    .when
+      .post(s"/upload/$ACCOUNT_ID/")
+    .`then`
+      .statusCode(SC_CREATED)
+      .extract
+      .body
+      .asString
+
+    val blobId: String = Json.parse(uploadResponse).\("blobId").get.asInstanceOf[JsString].value
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa": {
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "subject": "World domination",
+         |          "attachments": [
+         |            {
+         |              "blobId": "$blobId",
+         |              "type":"text/plain",
+         |              "charset":"UTF-8",
+         |              "disposition": "attachment"
+         |            }
+         |          ],
+         |          "textBody": [
+         |            {
+         |              "partId": "a49d",
+         |              "type": "text/plain"
+         |            }
+         |          ],
+         |          "bodyValues": {
+         |            "a49d": {
+         |              "value": "$textBody",
+         |              "isTruncated": false,
+         |              "isEncodingProblem": false
+         |            }
+         |          }
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |      {
+         |        "accountId": "$ACCOUNT_ID",
+         |        "ids": ["#aaaaaa"],
+         |        "properties": ["mailboxIds", "subject", "attachments", "textBody", "bodyValues"],
+         |        "fetchTextBodyValues": true
+         |      },
+         |    "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    val responseAsJson = Json.parse(response)
+      .\("methodResponses")
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = responseAsJson
+      .\("id")
+      .get.asInstanceOf[JsString].value
+    val size = responseAsJson
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].created.aaaaaa")
+      .isEqualTo(
+        s"""{
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[1][1].list[0].id")
+      .inPath(s"methodResponses[1][1].list")
+      .isEqualTo(
+        s"""[{
+           |  "mailboxIds": {
+           |    "${mailboxId.serialize}": true
+           |  },
+           |  "subject": "World domination",
+           |  "attachments": [
+           |    {
+           |      "partId": "4",
+           |      "blobId": "${messageId}_4",
+           |      "size": 11,
+           |      "type": "text/plain",
+           |      "charset": "UTF-8",
+           |      "disposition": "attachment"
+           |    }
+           |  ],
+           |  "textBody": [
+           |    {
+           |      "partId": "3",
+           |      "blobId": "${messageId}_3",
+           |      "size": 29,
+           |      "type": "text/plain",
+           |      "charset": "UTF-8"
+           |    }
+           |  ],
+           |  "bodyValues": {
+           |    "3": {
+           |      "value": "$textBody",
            |      "isEncodingProblem": false,
            |      "isTruncated": false
            |    }
@@ -3311,8 +3453,8 @@ trait EmailSetMethodContract {
            |  "attachments": [
            |    {
            |      "name": "myAttachment",
-           |      "partId": "5",
-           |      "blobId": "${messageId}_5",
+           |      "partId": "4",
+           |      "blobId": "${messageId}_4",
            |      "size": 11,
            |      "type": "text/plain",
            |      "charset": "UTF-8",

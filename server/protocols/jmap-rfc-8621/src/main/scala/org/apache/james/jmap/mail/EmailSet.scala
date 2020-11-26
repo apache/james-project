@@ -75,7 +75,7 @@ object SubType {
 
 case class ClientPartId(id: Id)
 
-case class ClientHtmlBody(partId: ClientPartId, `type`: Type)
+case class ClientBody(partId: ClientPartId, `type`: Type)
 
 case class ClientEmailBodyValue(value: String,
                                 isEncodingProblem: Option[IsEncodingProblem],
@@ -120,7 +120,8 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
                                 sentAt: Option[UTCDate],
                                 keywords: Option[Keywords],
                                 receivedAt: Option[UTCDate],
-                                htmlBody: Option[List[ClientHtmlBody]],
+                                htmlBody: Option[List[ClientBody]],
+                                textBody: Option[List[ClientBody]],
                                 bodyValues: Option[Map[ClientPartId, ClientEmailBodyValue]],
                                 specificHeaders: List[EmailHeader],
                                 attachments: Option[List[Attachment]]) {
@@ -129,39 +130,41 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
                       htmlTextExtractor: HtmlTextExtractor,
                       mailboxSession: MailboxSession): Either[Exception, Message] =
     validateHtmlBody
-      .flatMap(maybeHtmlBody => {
-        val builder = Message.Builder.of
-        references.flatMap(_.asString).map(new RawField("References", _)).foreach(builder.setField)
-        inReplyTo.flatMap(_.asString).map(new RawField("In-Reply-To", _)).foreach(builder.setField)
-        messageId.flatMap(_.asString).map(new RawField(FieldName.MESSAGE_ID, _)).foreach(builder.setField)
-        subject.foreach(value => builder.setSubject(value.value))
-        from.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setFrom)
-        to.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setTo)
-        cc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setCc)
-        bcc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setBcc)
-        sender.flatMap(_.asMime4JMailboxList).map(_.asJava).map(Fields.addressList(FieldName.SENDER, _)).foreach(builder.setField)
-        replyTo.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setReplyTo)
-        sentAt.map(_.asUTC).map(_.toInstant).map(Date.from).foreach(builder.setDate)
-        validateSpecificHeaders(builder)
-          .flatMap(_ => {
-            specificHeaders.map(_.asField).foreach(builder.addField)
-            attachments.filter(_.nonEmpty).map(attachments =>
-              createMultipartWithAttachments(maybeHtmlBody, attachments, attachmentManager, attachmentContentLoader, htmlTextExtractor, mailboxSession)
-                .map(multipartBuilder => {
-                  builder.setBody(multipartBuilder)
-                  builder.build
-                }))
-              .getOrElse({
-                builder.setBody(createAlternativeBody(maybeHtmlBody, htmlTextExtractor))
-                Right(builder.build)
-              })
-          })
-      })
+      .flatMap(maybeHtmlBody => validateTextBody.map((maybeHtmlBody, _)))
+      .flatMap {
+        case (maybeHtmlBody, maybeTextBody) =>
+          val builder = Message.Builder.of
+          references.flatMap(_.asString).map(new RawField("References", _)).foreach(builder.setField)
+          inReplyTo.flatMap(_.asString).map(new RawField("In-Reply-To", _)).foreach(builder.setField)
+          messageId.flatMap(_.asString).map(new RawField(FieldName.MESSAGE_ID, _)).foreach(builder.setField)
+          subject.foreach(value => builder.setSubject(value.value))
+          from.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setFrom)
+          to.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setTo)
+          cc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setCc)
+          bcc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setBcc)
+          sender.flatMap(_.asMime4JMailboxList).map(_.asJava).map(Fields.addressList(FieldName.SENDER, _)).foreach(builder.setField)
+          replyTo.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setReplyTo)
+          sentAt.map(_.asUTC).map(_.toInstant).map(Date.from).foreach(builder.setDate)
+          validateSpecificHeaders(builder)
+            .flatMap(_ => {
+              specificHeaders.map(_.asField).foreach(builder.addField)
+              attachments.filter(_.nonEmpty).map(attachments =>
+                createMultipartWithAttachments(maybeHtmlBody, maybeTextBody, attachments, attachmentManager, attachmentContentLoader, htmlTextExtractor, mailboxSession)
+                  .map(multipartBuilder => {
+                    builder.setBody(multipartBuilder)
+                    builder.build
+                  }))
+                .getOrElse({
+                  builder.setBody(createAlternativeBody(maybeHtmlBody, maybeTextBody, htmlTextExtractor))
+                  Right(builder.build)
+                })
+            })
+      }
 
-  private def createAlternativeBody(htmlBody: Option[String], htmlTextExtractor: HtmlTextExtractor): MultipartBuilder = {
+  private def createAlternativeBody(htmlBody: Option[String], textBody: Option[String], htmlTextExtractor: HtmlTextExtractor): MultipartBuilder = {
     val alternativeBuilder: MultipartBuilder = MultipartBuilder.create(SubType.ALTERNATIVE_SUBTYPE)
-    addBodypart(alternativeBuilder, htmlBody.getOrElse(""), HTML_UTF_8, StandardCharsets.UTF_8)
-    addBodypart(alternativeBuilder, htmlTextExtractor.toPlainText(htmlBody.getOrElse("")), PLAIN_TEXT_UTF_8, StandardCharsets.UTF_8)
+    htmlBody.foreach(text => addBodypart(alternativeBuilder, text, HTML_UTF_8, StandardCharsets.UTF_8))
+    addBodypart(alternativeBuilder, textBody.getOrElse(htmlTextExtractor.toPlainText(htmlBody.getOrElse(""))), PLAIN_TEXT_UTF_8, StandardCharsets.UTF_8)
 
     alternativeBuilder
   }
@@ -173,6 +176,7 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
       .setContentTransferEncoding("quoted-printable"))
 
   private def createMultipartWithAttachments(maybeHtmlBody: Option[String],
+                                             maybeTextBody: Option[String],
                                              attachments: List[Attachment],
                                              attachmentManager: AttachmentManager,
                                              attachmentContentLoader: AttachmentContentLoader,
@@ -188,20 +192,21 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
     maybeAttachments.map(list => {
 
       (list.filter(_._1.isInline), list.filter(!_._1.isInline)) match {
-        case (Nil, normalAttachments) => createMixedBody(maybeHtmlBody, normalAttachments, htmlTextExtractor)
-        case (inlineAttachments, Nil) => createRelatedBody(maybeHtmlBody, inlineAttachments, htmlTextExtractor)
-        case (inlineAttachments, normalAttachments) => createMixedRelatedBody(maybeHtmlBody, inlineAttachments, normalAttachments, htmlTextExtractor)
+        case (Nil, normalAttachments) => createMixedBody(maybeHtmlBody, maybeTextBody, normalAttachments, htmlTextExtractor)
+        case (inlineAttachments, Nil) => createRelatedBody(maybeHtmlBody, maybeTextBody, inlineAttachments, htmlTextExtractor)
+        case (inlineAttachments, normalAttachments) => createMixedRelatedBody(maybeHtmlBody, maybeTextBody, inlineAttachments, normalAttachments, htmlTextExtractor)
       }
     })
   }
 
   private def createMixedRelatedBody(maybeHtmlBody: Option[String],
+                                     maybeTextBody: Option[String],
                                      inlineAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])],
                                      normalAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])],
                                      htmlTextExtractor: HtmlTextExtractor) = {
     val mixedMultipartBuilder = MultipartBuilder.create(SubType.MIXED_SUBTYPE)
     val relatedMultipartBuilder = MultipartBuilder.create(SubType.RELATED_SUBTYPE)
-    relatedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(createAlternativeBody(maybeHtmlBody, htmlTextExtractor).build))
+    relatedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(createAlternativeBody(maybeHtmlBody, maybeTextBody, htmlTextExtractor).build))
     inlineAttachments.foldLeft(relatedMultipartBuilder) {
       case (acc, (attachment, storedMetadata, content)) =>
         acc.addBodyPart(toBodypartBuilder(attachment, storedMetadata, content))
@@ -217,9 +222,9 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
     }
   }
 
-  private def createMixedBody(maybeHtmlBody: Option[String], normalAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])], htmlTextExtractor: HtmlTextExtractor) = {
+  private def createMixedBody(maybeHtmlBody: Option[String], maybeTextBody: Option[String], normalAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])], htmlTextExtractor: HtmlTextExtractor) = {
     val mixedMultipartBuilder = MultipartBuilder.create(SubType.MIXED_SUBTYPE)
-    mixedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(createAlternativeBody(maybeHtmlBody, htmlTextExtractor).build))
+    mixedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(createAlternativeBody(maybeHtmlBody, maybeTextBody, htmlTextExtractor).build))
     normalAttachments.foldLeft(mixedMultipartBuilder) {
       case (acc, (attachment, storedMetadata, content)) =>
         acc.addBodyPart(toBodypartBuilder(attachment, storedMetadata, content))
@@ -227,9 +232,9 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
     }
   }
 
-  private def createRelatedBody(maybeHtmlBody: Option[String], inlineAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])], htmlTextExtractor: HtmlTextExtractor) = {
+  private def createRelatedBody(maybeHtmlBody: Option[String], maybeTextBody: Option[String], inlineAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])], htmlTextExtractor: HtmlTextExtractor) = {
     val relatedMultipartBuilder = MultipartBuilder.create(SubType.RELATED_SUBTYPE)
-    relatedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(createAlternativeBody(maybeHtmlBody, htmlTextExtractor).build))
+    relatedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(createAlternativeBody(maybeHtmlBody, maybeTextBody, htmlTextExtractor).build))
     inlineAttachments.foldLeft(relatedMultipartBuilder) {
       case (acc, (attachment, storedMetadata, content)) =>
         acc.addBodyPart(toBodypartBuilder(attachment, storedMetadata, content))
@@ -291,16 +296,27 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
   def validateHtmlBody: Either[IllegalArgumentException, Option[String]] = htmlBody match {
     case None => Right(None)
     case Some(html :: Nil) if !html.`type`.value.equals("text/html") => Left(new IllegalArgumentException("Expecting htmlBody type to be text/html"))
-    case Some(html :: Nil) => bodyValues.getOrElse(Map())
-      .get(html.partId)
+    case Some(html :: Nil) => retrieveCorrespondingBody(html.partId)
+      .getOrElse(Left(new IllegalArgumentException("Expecting bodyValues to contain the part specified in htmlBody")))
+    case _ => Left(new IllegalArgumentException("Expecting htmlBody to contains only 1 part"))
+  }
+
+  def validateTextBody: Either[IllegalArgumentException, Option[String]] = textBody match {
+    case None => Right(None)
+    case Some(text :: Nil) if !text.`type`.value.equals("text/plain") => Left(new IllegalArgumentException("Expecting htmlBody type to be text/html"))
+    case Some(text :: Nil) => retrieveCorrespondingBody(text.partId)
+      .getOrElse(Left(new IllegalArgumentException("Expecting bodyValues to contain the part specified in textBody")))
+    case _ => Left(new IllegalArgumentException("Expecting textBody to contains only 1 part"))
+  }
+
+  private def retrieveCorrespondingBody(partId: ClientPartId): Option[Either[IllegalArgumentException, Some[String]]] =
+    bodyValues.getOrElse(Map())
+      .get(partId)
       .map {
         case part if part.isTruncated.isDefined && part.isTruncated.get.value.equals(true) => Left(new IllegalArgumentException("Expecting isTruncated to be false"))
         case part if part.isEncodingProblem.isDefined && part.isEncodingProblem.get.value.equals(true) => Left(new IllegalArgumentException("Expecting isEncodingProblem to be false"))
         case part => Right(Some(part.value))
       }
-      .getOrElse(Left(new IllegalArgumentException("Expecting bodyValues to contain the part specified in htmlBody")))
-    case _ => Left(new IllegalArgumentException("Expecting htmlBody to contains only 1 part"))
-  }
 
   private def validateSpecificHeaders(message: Message.Builder): Either[IllegalArgumentException, Unit] = {
     specificHeaders.map(header => {

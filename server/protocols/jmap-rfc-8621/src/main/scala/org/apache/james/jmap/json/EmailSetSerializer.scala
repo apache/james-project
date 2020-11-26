@@ -28,7 +28,7 @@ import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{Id, SetError, UTCDate}
 import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId, UnparsedMessageIdConstraint}
 import org.apache.james.jmap.mail.KeywordsFactory.STRICT_KEYWORDS_FACTORY
-import org.apache.james.jmap.mail.{AddressesHeaderValue, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, Attachment, BlobId, Charset, ClientCid, ClientEmailBodyValue, ClientHtmlBody, ClientPartId, DateHeaderValue, DestroyIds, Disposition, EmailAddress, EmailAddressGroup, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailSetRequest, EmailSetResponse, EmailSetUpdate, EmailerName, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, Type, URLsHeaderValue}
+import org.apache.james.jmap.mail.{AddressesHeaderValue, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, Attachment, BlobId, Charset, ClientBody, ClientCid, ClientEmailBodyValue, ClientPartId, DateHeaderValue, DestroyIds, Disposition, EmailAddress, EmailAddressGroup, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailSetRequest, EmailSetResponse, EmailSetUpdate, EmailerName, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, Type, URLsHeaderValue}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json.{Format, JsArray, JsBoolean, JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
 
@@ -235,8 +235,8 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   private implicit val clientEmailBodyValueReads: Reads[ClientEmailBodyValue] = Json.reads[ClientEmailBodyValue]
   private implicit val typeReads: Reads[Type] = Json.valueReads[Type]
   private implicit val clientPartIdReads: Reads[ClientPartId] = Json.valueReads[ClientPartId]
-  private val rawHTMLReads: Reads[ClientHtmlBody] = Json.reads[ClientHtmlBody]
-  private implicit val clientHtmlBodyReads: Reads[ClientHtmlBody] = {
+  private val rawHTMLReads: Reads[ClientBody] = Json.reads[ClientBody]
+  private implicit val clientHtmlBodyReads: Reads[ClientBody] = {
     case JsObject(underlying) if underlying.contains("charset") => JsError("charset must not be specified in htmlBody")
     case JsObject(underlying) if underlying.contains("size") => JsError("size must not be specified in htmlBody")
     case JsObject(underlying) if underlying.contains("header:Content-Transfer-Encoding:asText") => JsError("Content-Transfer-Encoding must not be specified in htmlBody")
@@ -252,22 +252,23 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
     }
 
   case class EmailCreationRequestWithoutHeaders(mailboxIds: MailboxIds,
-                                  messageId: Option[MessageIdsHeaderValue],
-                                  references: Option[MessageIdsHeaderValue],
-                                  inReplyTo: Option[MessageIdsHeaderValue],
-                                  from: Option[AddressesHeaderValue],
-                                  to: Option[AddressesHeaderValue],
-                                  cc: Option[AddressesHeaderValue],
-                                  bcc: Option[AddressesHeaderValue],
-                                  sender: Option[AddressesHeaderValue],
-                                  replyTo: Option[AddressesHeaderValue],
-                                  subject: Option[Subject],
-                                  sentAt: Option[UTCDate],
-                                  keywords: Option[Keywords],
-                                  receivedAt: Option[UTCDate],
-                                  htmlBody: Option[List[ClientHtmlBody]],
-                                  bodyValues: Option[Map[ClientPartId, ClientEmailBodyValue]],
-                                  attachments: Option[List[Attachment]]) {
+                                                messageId: Option[MessageIdsHeaderValue],
+                                                references: Option[MessageIdsHeaderValue],
+                                                inReplyTo: Option[MessageIdsHeaderValue],
+                                                from: Option[AddressesHeaderValue],
+                                                to: Option[AddressesHeaderValue],
+                                                cc: Option[AddressesHeaderValue],
+                                                bcc: Option[AddressesHeaderValue],
+                                                sender: Option[AddressesHeaderValue],
+                                                replyTo: Option[AddressesHeaderValue],
+                                                subject: Option[Subject],
+                                                sentAt: Option[UTCDate],
+                                                keywords: Option[Keywords],
+                                                receivedAt: Option[UTCDate],
+                                                htmlBody: Option[List[ClientBody]],
+                                                textBody: Option[List[ClientBody]],
+                                                bodyValues: Option[Map[ClientPartId, ClientEmailBodyValue]],
+                                                attachments: Option[List[Attachment]]) {
     def toCreationRequest(specificHeaders: List[EmailHeader]): EmailCreationRequest = EmailCreationRequest(
       mailboxIds = mailboxIds,
       messageId = messageId,
@@ -286,6 +287,7 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
       specificHeaders = specificHeaders,
       bodyValues = bodyValues,
       htmlBody = htmlBody,
+      textBody = textBody,
       attachments = attachments)
   }
 
