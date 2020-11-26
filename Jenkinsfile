@@ -80,7 +80,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building'
-                sh 'mvn -U -B -e clean install -DskipTests'
+                sh 'mvn -U -B -e clean install -DskipTests -T1C'
             }
         }
 
