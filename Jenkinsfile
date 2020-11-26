@@ -80,7 +80,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building'
-                sh 'mvn -U -B -e clean install -DskipTests'
+                sh 'mvn -U -B -e clean install -DskipTests -T1C'
             }
         }
 
@@ -88,7 +88,7 @@ pipeline {
             steps {
                 echo 'Running tests'
                 // all tests is very very long (10 hours on Apache Jenkins)
-                sh 'mvn -B -e test'
+                sh 'mvn -B -e test -T1C'
             }
             post {
                 always {
