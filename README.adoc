@@ -114,7 +114,7 @@ To retrieve compiled artifacts, one might mount these volumes:
 
 - --volume $PWD/dockerfiles/run/spring/destination:/spring/destination : is the volume used to get the compiled elements for Spring packaging.
 - --volume $PWD/dockerfiles/run/guice/cassandra/destination:/cassandra/destination : is the volume used to get the compiled elements for Guice Cassandra packaging and Cassandra-LDAP packaging.
-- --volume $PWD/dockerfiles/run/guice/cassandra/destination:/jpa/destination : is the volume used to get the compiled elements for Guice JPA packaging.
+- --volume $PWD/dockerfiles/run/guice/jpa/destination:/jpa/destination : is the volume used to get the compiled elements for Guice JPA packaging.
 - --volume $PWD/swagger:/swagger : is the volume used to get the swagger json files for webadmin documentation.
 
 Some tests needs a DOCKER_HOST environment variable in order to be played, they will be ignored if you don't provide this variable.
