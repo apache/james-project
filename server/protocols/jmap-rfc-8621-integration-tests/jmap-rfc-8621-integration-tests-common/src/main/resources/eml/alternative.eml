@@ -1,0 +1,28 @@
+Return-Path: <from@linagora.com>
+To: to@linagora.com
+From: Lina <from@linagora.com>
+Subject: MultiAttachment
+Message-ID: <13d4375e-a4a9-f613-06a1-7e8cb1e0ea93@linagora.com>
+Date: Mon, 27 Feb 2017 11:24:48 +0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
+ Thunderbird/45.2.0
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="------------64D8D789FC30153D6ED18258"
+
+This is a multi-part message in MIME format.
+--------------64D8D789FC30153D6ED18258
+Content-Type: text/html; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+<p>Send<br/>concerted from html</p>
+
+
+--------------64D8D789FC30153D6ED18258
+Content-Type: text/plain; charset=UTF-8;
+ name="text1"
+Content-Transfer-Encoding: 7bit
+
+I am the text plain part!
+
+--------------64D8D789FC30153D6ED18258

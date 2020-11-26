@@ -38,6 +38,7 @@ import org.apache.james.mime4j.dom.field.{ContentLanguageField, ContentTypeField
 import org.apache.james.mime4j.dom.{Entity, Message, Multipart, TextBody => Mime4JTextBody}
 import org.apache.james.mime4j.message.{DefaultMessageBuilder, DefaultMessageWriter}
 import org.apache.james.mime4j.stream.{Field, MimeConfig, RawField}
+import org.apache.james.util.html.HtmlTextExtractor
 
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
@@ -196,6 +197,22 @@ case class Location(value: String) extends AnyVal {
   def asField: Field = new RawField("Content-Location", value)
 }
 
+object Context {
+  def of(`type`: Type): Context = `type` match {
+    case MULTIPART_ALTERNATIVE => AlternativeContext
+    case _ => NoContext
+  }
+  def of(`type`: Type, previousContext: Context): Context = (`type`, previousContext) match {
+    case (_, AlternativeContext) => AlternativeContext
+    case (MULTIPART_ALTERNATIVE, _) => AlternativeContext
+    case _ => NoContext
+  }
+}
+
+sealed trait Context
+case object NoContext extends Context
+case object AlternativeContext extends Context
+
 case class EmailBodyPart(partId: PartId,
                          blobId: Option[BlobId],
                          headers: List[EmailHeader],
@@ -220,6 +237,14 @@ case class EmailBodyPart(partId: PartId,
           isTruncated = IsTruncated(false)))
       }
     case _ => Success(None)
+  }
+
+  def textBodyContent(htmlTextExtractor: HtmlTextExtractor): Try[Option[EmailBodyValue]] = `type` match {
+    case TEXT_HTML => bodyContent.map(maybeContent => maybeContent.map(
+      content => EmailBodyValue(htmlTextExtractor.toPlainText(content.value),
+        content.isEncodingProblem,
+        content.isTruncated)))
+    case _ => bodyContent
   }
 
   private def charset(charset: Option[String]): java.nio.charset.Charset = charset
