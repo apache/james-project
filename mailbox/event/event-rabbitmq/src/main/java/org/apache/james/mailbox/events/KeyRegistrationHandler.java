@@ -118,13 +118,13 @@ class KeyRegistrationHandler {
     }
 
     void stop() {
-        receiverSubscriber.filter(Predicate.not(Disposable::isDisposed))
-            .ifPresent(Disposable::dispose);
-        receiver.close();
         sender.delete(QueueSpecification.queue(registrationQueue.asString()))
             .timeout(TOPOLOGY_CHANGES_TIMEOUT)
             .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))
             .block();
+        receiverSubscriber.filter(Predicate.not(Disposable::isDisposed))
+                .ifPresent(Disposable::dispose);
+        receiver.close();
     }
 
     Mono<Registration> register(MailboxListener.ReactiveMailboxListener listener, RegistrationKey key) {
