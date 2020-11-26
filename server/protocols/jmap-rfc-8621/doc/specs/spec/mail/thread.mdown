@@ -1,7 +1,7 @@
 # Threads
 
 > :warning:
-> Not implemented
+> Naive implementation
 
 Replies are grouped together with the original message to form a Thread. In JMAP, a Thread is simply a flat list of Emails, ordered by date. Every Email MUST belong to a Thread, even if it is the only Email in the Thread.
 
@@ -24,6 +24,9 @@ A **Thread** object has the following properties:
 The following JMAP methods are supported.
 
 ## Thread/get
+
+> :warning:
+> Naive implementation
 
 This is a standard "/get" method as described in [@!RFC8620], Section 5.1.
 
@@ -55,5 +58,8 @@ with response:
     }, "#1" ]]
 
 ## Thread/changes
+
+> :warning:
+> Naive implementation
 
 This is a standard "/changes" method as described in [@!RFC8620], Section 5.2.

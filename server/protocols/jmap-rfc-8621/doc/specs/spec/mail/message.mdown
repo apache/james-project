@@ -657,7 +657,7 @@ and response:
 ## Email/changes
 
 > :warning:
->  Not implemented yet
+>  Not implemented yet: Naive implementation
 
 This is a standard "/changes" method as described in [@!RFC8620], Section 5.2. If generating intermediate states for a large set of changes, it is recommended that newer changes be returned first, as these are generally of more interest to users.
 
@@ -851,9 +851,6 @@ Due to the format of the Email object, when creating an Email there are a number
 
 - If given, textBody MUST contain exactly one body part and it MUST be of type
   `text/plain`.
-> :warning:
-> Not implemented. *textBody* property is not supported in Email/set create.
-
 - If given, htmlBody MUST contain exactly one body part and it MUST be of type
   `text/html`.
 - Within an EmailBodyPart:
@@ -861,7 +858,7 @@ Due to the format of the Email object, when creating an Email there are a number
     given, this *partId* MUST be present in the bodyValues property.
 
 > :warning:
-> htmlBody part needs to have a *partId*. `attachments` parts need to specify *blobId*.
+> htmlBody and textBody parts needs to have a *partId*. `attachments` parts need to specify *blobId*.
 
   - The charset property MUST be omitted if a partId is given (the part's
     content is included in bodyValues, and the server may choose any appropriate
