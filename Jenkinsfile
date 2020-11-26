@@ -88,7 +88,7 @@ pipeline {
             steps {
                 echo 'Running tests'
                 // all tests is very very long (10 hours on Apache Jenkins)
-                sh 'mvn -B -e test -T1C'
+                sh 'mvn -B -e test'
             }
             post {
                 always {
