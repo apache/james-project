@@ -21,9 +21,12 @@ package org.apache.james.jmap.method
 
 import java.io.InputStream
 
+import cats.implicits._
 import eu.timepit.refined.auto._
 import javax.annotation.PreDestroy
 import javax.inject.Inject
+import javax.mail.Address
+import javax.mail.Message.RecipientType
 import javax.mail.internet.{InternetAddress, MimeMessage}
 import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION}
@@ -32,7 +35,7 @@ import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
 import org.apache.james.jmap.core.{ClientId, Id, Invocation, Properties, ServerId, SetError, State}
 import org.apache.james.jmap.json.{EmailSubmissionSetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.EmailSubmissionSet.EmailSubmissionCreationId
-import org.apache.james.jmap.mail.{EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope}
+import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope}
 import org.apache.james.jmap.method.EmailSubmissionSetMethod.{LOGGER, MAIL_METADATA_USERNAME_ATTRIBUTE}
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.lifecycle.api.{LifecycleUtil, Startable}
@@ -206,18 +209,22 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
 
     message.flatMap(m => {
       val submissionId = EmailSubmissionId.generate
-      toMimeMessage(submissionId.value, m.getFullContent.getInputStream)
-        .flatMap(message => validate(mailboxSession)(message, request.envelope))
-        .flatMap(mimeMessage => {
-          Try(queue.enQueue(MailImpl.builder()
-              .name(submissionId.value)
-              .addRecipients(request.envelope.rcptTo.map(_.email).asJava)
-              .sender(request.envelope.mailFrom.email)
-              .mimeMessage(mimeMessage)
-              .addAttribute(new Attribute(MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of(mailboxSession.getUser.asString())))
-              .build()))
-            .map(_ => EmailSubmissionCreationResponse(submissionId))
-        }).toEither
+
+      val result: Try[EmailSubmissionCreationResponse] = for {
+        message <- toMimeMessage(submissionId.value, m.getFullContent.getInputStream)
+        envelope <- resolveEnvelope(message, request.envelope)
+        validation <- validate(mailboxSession)(message, envelope)
+        enqueue <- Try(queue.enQueue(MailImpl.builder()
+          .name(submissionId.value)
+          .addRecipients(envelope.rcptTo.map(_.email).asJava)
+          .sender(envelope.mailFrom.email)
+          .mimeMessage(message)
+          .addAttribute(new Attribute(MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of(mailboxSession.getUser.asString())))
+          .build()))
+      } yield {
+        EmailSubmissionCreationResponse(submissionId)
+      }
+      result.toEither
     })
   }
 
@@ -245,6 +252,29 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       Failure(ForbiddenFromException(envelope.mailFrom.email.asString))
     } else {
       Success(mimeMessage)
+    }
+  }
+
+  private def resolveEnvelope(mimeMessage: MimeMessage, maybeEnvelope: Option[Envelope]): Try[Envelope] =
+    maybeEnvelope.map(Success(_)).getOrElse(extractEnvelope(mimeMessage))
+
+  private def extractEnvelope(mimeMessage: MimeMessage): Try[Envelope] = {
+    val to: List[Address] = Option(mimeMessage.getRecipients(RecipientType.TO)).toList.flatten
+    val cc: List[Address] = Option(mimeMessage.getRecipients(RecipientType.CC)).toList.flatten
+    val bcc: List[Address] = Option(mimeMessage.getRecipients(RecipientType.BCC)).toList.flatten
+    for {
+      mailFrom <- Option(mimeMessage.getFrom).toList.flatten
+        .headOption
+        .map(_.asInstanceOf[InternetAddress].getAddress)
+        .map(s => Try(new MailAddress(s)))
+        .getOrElse(Failure(new IllegalArgumentException("Implicit envelope detection requires a from field")))
+        .map(EmailSubmissionAddress)
+      rcptTo <- (to ++ cc ++ bcc)
+        .map(_.asInstanceOf[InternetAddress].getAddress)
+        .map(s => Try(new MailAddress(s)))
+        .sequence
+    } yield {
+      Envelope(mailFrom, rcptTo.map(EmailSubmissionAddress))
     }
   }
 
