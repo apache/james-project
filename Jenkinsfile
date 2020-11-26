@@ -35,6 +35,7 @@ pipeline {
         MVN_LOCAL_REPO_OPT = '-Dmaven.repo.local=.repository'
         MVN_TEST_FAIL_IGNORE = '-Dmaven.test.failure.ignore=true'
         CI=true
+        LC_CTYPE = 'en_US.UTF-8'        
     }
 
     tools {
