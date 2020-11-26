@@ -35,6 +35,7 @@ pipeline {
         MVN_LOCAL_REPO_OPT = '-Dmaven.repo.local=.repository'
         MVN_TEST_FAIL_IGNORE = '-Dmaven.test.failure.ignore=true'
         CI=true
+        LC_CTYPE = 'en_US.UTF-8'        
     }
 
     tools {
@@ -79,7 +80,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building'
-                sh 'mvn -U -B -e clean install -DskipTests'
+                sh 'mvn -U -B -e clean install -DskipTests -T1C'
             }
         }
 
@@ -87,7 +88,7 @@ pipeline {
             steps {
                 echo 'Running tests'
                 // all tests is very very long (10 hours on Apache Jenkins)
-                sh 'mvn -B -e test'
+                sh 'mvn -B -e test -T1C'
             }
             post {
                 always {
