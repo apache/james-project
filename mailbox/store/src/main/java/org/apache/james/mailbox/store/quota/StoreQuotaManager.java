@@ -76,19 +76,18 @@ public class StoreQuotaManager implements QuotaManager {
 
     @Override
     public Quotas getQuotas(QuotaRoot quotaRoot) throws MailboxException {
-        Map<Scope, QuotaSizeLimit> maxStorageDetails = maxQuotaManager.listMaxStorageDetails(quotaRoot);
-        Map<Scope, QuotaCountLimit> maxMessageDetails = maxQuotaManager.listMaxMessagesDetails(quotaRoot);
+        MaxQuotaManager.QuotaDetails quotaDetails = maxQuotaManager.quotaDetails(quotaRoot);
         CurrentQuotas currentQuotas = Mono.from(currentQuotaManager.getCurrentQuotas(quotaRoot)).block();
         return new Quotas(
             Quota.<QuotaCountLimit, QuotaCountUsage>builder()
                 .used(currentQuotas.count())
-                .computedLimit(maxQuotaManager.getMaxMessage(maxMessageDetails).orElse(QuotaCountLimit.unlimited()))
-                .limitsByScope(maxMessageDetails)
+                .computedLimit(maxQuotaManager.getMaxMessage(quotaDetails.getMaxMessageDetails()).orElse(QuotaCountLimit.unlimited()))
+                .limitsByScope(quotaDetails.getMaxMessageDetails())
                 .build(),
             Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
                 .used(currentQuotas.size())
-                .computedLimit(maxQuotaManager.getMaxStorage(maxStorageDetails).orElse(QuotaSizeLimit.unlimited()))
-                .limitsByScope(maxStorageDetails)
+                .computedLimit(maxQuotaManager.getMaxStorage(quotaDetails.getMaxStorageDetails()).orElse(QuotaSizeLimit.unlimited()))
+                .limitsByScope(quotaDetails.getMaxStorageDetails())
                 .build());
     }
 }

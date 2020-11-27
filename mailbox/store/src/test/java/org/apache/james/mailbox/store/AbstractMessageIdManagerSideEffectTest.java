@@ -357,11 +357,10 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
     void setInMailboxesShouldThrowExceptionWhenOverQuota() throws Exception {
         MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
 
-        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(
-            Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(2)).computedLimit(QuotaSizeLimit.unlimited()).build());
-        when(quotaManager.getMessageQuota(any(QuotaRoot.class))).thenReturn(OVER_QUOTA);
-        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(
-            Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(2)).computedLimit(QuotaSizeLimit.unlimited()).build());
+        when(quotaManager.getQuotas(any(QuotaRoot.class)))
+            .thenReturn(new QuotaManager.Quotas(
+                OVER_QUOTA,
+                Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(2)).computedLimit(QuotaSizeLimit.unlimited()).build()));
 
         assertThatThrownBy(() -> messageIdManager.setInMailboxes(messageId,
                 ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()),
@@ -526,9 +525,9 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
     }
 
     protected void givenUnlimitedQuota() throws MailboxException {
-        when(quotaManager.getMessageQuota(any(QuotaRoot.class))).thenReturn(
-            Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(2)).computedLimit(QuotaCountLimit.unlimited()).build());
-        when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(
-            Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(2)).computedLimit(QuotaSizeLimit.unlimited()).build());
+        when(quotaManager.getQuotas(any(QuotaRoot.class)))
+            .thenReturn(new QuotaManager.Quotas(
+                Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(2)).computedLimit(QuotaCountLimit.unlimited()).build(),
+                Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(2)).computedLimit(QuotaSizeLimit.unlimited()).build()));
     }
 }

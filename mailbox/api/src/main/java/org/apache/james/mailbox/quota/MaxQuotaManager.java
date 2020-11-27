@@ -152,6 +152,10 @@ public interface MaxQuotaManager {
 
     Map<Quota.Scope, QuotaSizeLimit> listMaxStorageDetails(QuotaRoot quotaRoot);
 
+    default QuotaDetails quotaDetails(QuotaRoot quotaRoot) {
+        return new QuotaDetails(listMaxMessagesDetails(quotaRoot), listMaxStorageDetails(quotaRoot));
+    }
+
     Optional<QuotaCountLimit> getDomainMaxMessage(Domain domain);
 
     void setDomainMaxMessage(Domain domain, QuotaCountLimit count) throws MailboxException;
@@ -180,5 +184,23 @@ public interface MaxQuotaManager {
             .map(Supplier::get)
             .flatMap(Optional::stream)
             .findFirst();
+    }
+
+    class QuotaDetails {
+        private final Map<Quota.Scope, QuotaCountLimit> maxMessageDetails;
+        private final Map<Quota.Scope, QuotaSizeLimit> maxStorageDetails;
+
+        public QuotaDetails(Map<Scope, QuotaCountLimit> maxMessageDetails, Map<Scope, QuotaSizeLimit> maxStorageDetails) {
+            this.maxMessageDetails = maxMessageDetails;
+            this.maxStorageDetails = maxStorageDetails;
+        }
+
+        public Map<Scope, QuotaCountLimit> getMaxMessageDetails() {
+            return maxMessageDetails;
+        }
+
+        public Map<Scope, QuotaSizeLimit> getMaxStorageDetails() {
+            return maxStorageDetails;
+        }
     }
 }

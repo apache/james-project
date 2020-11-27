@@ -21,6 +21,7 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -105,8 +106,8 @@ public class GetQuotaProcessorTest {
             .thenReturn(Flux.just(mailbox));
         when(mockedMailboxManager.hasRight(MAILBOX_PATH, MailboxACL.Right.Read, mailboxSession))
             .thenReturn(true);
-        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(MESSAGE_QUOTA);
-        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(STORAGE_QUOTA);
+        when(mockedQuotaManager.getQuotas(any(QuotaRoot.class)))
+            .thenReturn(new QuotaManager.Quotas(MESSAGE_QUOTA, STORAGE_QUOTA));
 
         QuotaResponse storageQuotaResponse = new QuotaResponse("STORAGE", "plop", STORAGE_QUOTA);
         QuotaResponse messageQuotaResponse = new QuotaResponse("MESSAGE", "plop", MESSAGE_QUOTA);
@@ -132,8 +133,8 @@ public class GetQuotaProcessorTest {
             .thenReturn(Flux.just((mailbox)));
         when(mockedMailboxManager.hasRight(MAILBOX_PATH, MailboxACL.Right.Read, mailboxSession))
             .thenReturn(true);
-        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenThrow(new MailboxException());
-        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(STORAGE_QUOTA);
+        when(mockedQuotaManager.getQuotas(any(QuotaRoot.class)))
+            .thenThrow(new MailboxException());
 
         testee.doProcess(getQuotaRequest, mockedResponder, imapSession);
 
