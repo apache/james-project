@@ -81,9 +81,10 @@ public class UserQuotaService {
 
     public QuotaDetailsDTO getQuota(Username username) throws MailboxException {
         QuotaRoot quotaRoot = userQuotaRootResolver.forUser(username);
+        QuotaManager.Quotas quotas = quotaManager.getQuotas(quotaRoot);
         QuotaDetailsDTO.Builder quotaDetails = QuotaDetailsDTO.builder()
-            .occupation(quotaManager.getStorageQuota(quotaRoot),
-                quotaManager.getMessageQuota(quotaRoot));
+            .occupation(quotas.getStorageQuota(),
+                quotas.getMessageQuota());
 
         mergeMaps(
                 maxQuotaManager.listMaxMessagesDetails(quotaRoot),

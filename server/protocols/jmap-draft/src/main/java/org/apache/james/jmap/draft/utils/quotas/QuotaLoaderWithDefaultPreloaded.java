@@ -52,11 +52,12 @@ public class QuotaLoaderWithDefaultPreloaded extends QuotaLoader {
         if (containsQuotaId(preloadedUserDefaultQuotas, quotaId)) {
             return preloadedUserDefaultQuotas.get();
         }
+        QuotaManager.Quotas quotas = quotaManager.getQuotas(quotaRoot);
         return Quotas.from(
             quotaId,
             Quotas.Quota.from(
-                quotaToValue(quotaManager.getStorageQuota(quotaRoot)),
-                quotaToValue(quotaManager.getMessageQuota(quotaRoot))));
+                quotaToValue(quotas.getStorageQuota()),
+                quotaToValue(quotas.getMessageQuota())));
     }
 
     private boolean containsQuotaId(Optional<Quotas> preloadedUserDefaultQuotas, Quotas.QuotaId quotaId) {
@@ -69,12 +70,12 @@ public class QuotaLoaderWithDefaultPreloaded extends QuotaLoader {
     private Quotas getUserDefaultQuotas() throws MailboxException {
         QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(MailboxPath.inbox(session));
         Quotas.QuotaId quotaId = Quotas.QuotaId.fromQuotaRoot(quotaRoot);
+        QuotaManager.Quotas quotas = quotaManager.getQuotas(quotaRoot);
         return Quotas.from(
             quotaId,
             Quotas.Quota.from(
-                quotaToValue(quotaManager.getStorageQuota(quotaRoot)),
-                quotaToValue(quotaManager.getMessageQuota(quotaRoot))));
-
+                quotaToValue(quotas.getStorageQuota()),
+                quotaToValue(quotas.getMessageQuota())));
     }
 
 }

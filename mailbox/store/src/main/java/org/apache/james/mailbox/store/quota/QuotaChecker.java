@@ -39,14 +39,19 @@ public class QuotaChecker {
 
     public QuotaChecker(QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, Mailbox mailbox) throws MailboxException {
         this.quotaRoot = quotaRootResolver.getQuotaRoot(mailbox.generateAssociatedPath());
-        this.messageQuota = quotaManager.getMessageQuota(quotaRoot);
-        this.sizeQuota = quotaManager.getStorageQuota(quotaRoot);
+        QuotaManager.Quotas quotas = quotaManager.getQuotas(quotaRoot);
+        this.messageQuota = quotas.getMessageQuota();
+        this.sizeQuota = quotas.getStorageQuota();
     }
 
     public QuotaChecker(Quota<QuotaCountLimit, QuotaCountUsage> messageQuota, Quota<QuotaSizeLimit, QuotaSizeUsage> sizeQuota, QuotaRoot quotaRoot) {
         this.messageQuota = messageQuota;
         this.sizeQuota = sizeQuota;
         this.quotaRoot = quotaRoot;
+    }
+
+    public QuotaChecker(QuotaManager.Quotas quotas, QuotaRoot quotaRoot) {
+        this(quotas.getMessageQuota(), quotas.getStorageQuota(), quotaRoot);
     }
 
     public void tryAddition(long count, long size) throws OverQuotaException {

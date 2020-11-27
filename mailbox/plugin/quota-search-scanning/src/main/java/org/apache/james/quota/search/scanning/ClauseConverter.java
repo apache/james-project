@@ -95,8 +95,9 @@ public class ClauseConverter {
     private double retrieveUserRatio(Username username) {
         try {
             QuotaRoot quotaRoot = quotaRootResolver.forUser(username);
-            Quota<QuotaSizeLimit, QuotaSizeUsage> storageQuota = quotaManager.getStorageQuota(quotaRoot);
-            Quota<QuotaCountLimit, QuotaCountUsage> messageQuota = quotaManager.getMessageQuota(quotaRoot);
+            QuotaManager.Quotas quotas = quotaManager.getQuotas(quotaRoot);
+            Quota<QuotaSizeLimit, QuotaSizeUsage> storageQuota = quotas.getStorageQuota();
+            Quota<QuotaCountLimit, QuotaCountUsage> messageQuota = quotas.getMessageQuota();
 
             return QuotaRatio.from(storageQuota, messageQuota).max();
         } catch (MailboxException e) {

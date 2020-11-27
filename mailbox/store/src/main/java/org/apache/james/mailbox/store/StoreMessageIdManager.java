@@ -390,7 +390,7 @@ public class StoreMessageIdManager implements MessageIdManager {
             Integer additionalCopyCount = entry.getValue();
             if (additionalCopyCount > 0) {
                 long additionalOccupiedSpace = additionalCopyCount * mailboxMessage.getFullContentOctets();
-                new QuotaChecker(quotaManager.getMessageQuota(entry.getKey()), quotaManager.getStorageQuota(entry.getKey()), entry.getKey())
+                new QuotaChecker(quotaManager.getQuotas(entry.getKey()), entry.getKey())
                     .tryAddition(additionalCopyCount, additionalOccupiedSpace);
             }
         }

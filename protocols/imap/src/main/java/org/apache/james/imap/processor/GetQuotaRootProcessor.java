@@ -82,8 +82,9 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
         try {
             if (mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Read, mailboxSession)) {
                 QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);
-                Quota<QuotaCountLimit, QuotaCountUsage> messageQuota = quotaManager.getMessageQuota(quotaRoot);
-                Quota<QuotaSizeLimit, QuotaSizeUsage> storageQuota = quotaManager.getStorageQuota(quotaRoot);
+                QuotaManager.Quotas quotas = quotaManager.getQuotas(quotaRoot);
+                Quota<QuotaCountLimit, QuotaCountUsage> messageQuota = quotas.getMessageQuota();
+                Quota<QuotaSizeLimit, QuotaSizeUsage> storageQuota = quotas.getStorageQuota();
                 responder.respond(new QuotaRootResponse(request.getMailboxName(), quotaRoot.getValue()));
                 if (messageQuota.getLimit().isLimited()) {
                     responder.respond(new QuotaResponse(ImapConstants.MESSAGE_QUOTA_RESOURCE, quotaRoot.getValue(), messageQuota));

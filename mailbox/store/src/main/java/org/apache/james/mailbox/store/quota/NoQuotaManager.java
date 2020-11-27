@@ -47,4 +47,9 @@ public class NoQuotaManager implements QuotaManager {
             .computedLimit(QuotaSizeLimit.unlimited())
             .build();
     }
+
+    @Override
+    public Quotas getQuotas(QuotaRoot quotaRoot) {
+        return new Quotas(getMessageQuota(quotaRoot), getStorageQuota(quotaRoot));
+    }
 }

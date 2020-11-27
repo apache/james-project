@@ -75,9 +75,10 @@ public class IsOverQuota extends GenericMatcher {
                 Username userName = usersRepository.getUsername(mailAddress);
                 MailboxPath mailboxPath = MailboxPath.inbox(userName);
                 QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);
+                QuotaManager.Quotas quotas = quotaManager.getQuotas(quotaRoot);
 
-                if (quotaManager.getMessageQuota(quotaRoot).isOverQuotaWithAdditionalValue(SINGLE_EMAIL) ||
-                    quotaManager.getStorageQuota(quotaRoot).isOverQuotaWithAdditionalValue(mail.getMessageSize())) {
+                if (quotas.getMessageQuota().isOverQuotaWithAdditionalValue(SINGLE_EMAIL) ||
+                    quotas.getStorageQuota().isOverQuotaWithAdditionalValue(mail.getMessageSize())) {
                     result.add(mailAddress);
                 }
             }

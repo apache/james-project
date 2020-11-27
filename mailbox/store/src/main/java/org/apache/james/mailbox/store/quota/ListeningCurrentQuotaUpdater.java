@@ -23,16 +23,13 @@ import java.time.Instant;
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
-import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.events.RegistrationKey;
-import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
@@ -45,7 +42,6 @@ import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-import reactor.util.function.Tuple2;
 
 public class ListeningCurrentQuotaUpdater implements MailboxListener.ReactiveGroupMailboxListener, QuotaUpdater {
     public static class ListeningCurrentQuotaUpdaterGroup extends Group {
@@ -110,21 +106,16 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.ReactiveGro
     }
 
     private Mono<Void> dispatchNewQuota(QuotaRoot quotaRoot, Username username) {
-        Mono<Quota<QuotaCountLimit, QuotaCountUsage>> messageQuota = Mono.fromCallable(() -> quotaManager.getMessageQuota(quotaRoot));
-        Mono<Quota<QuotaSizeLimit, QuotaSizeUsage>> storageQuota = Mono.fromCallable(() -> quotaManager.getStorageQuota(quotaRoot));
+        Mono<QuotaManager.Quotas> quotasMono = Mono.fromCallable(() -> quotaManager.getQuotas(quotaRoot));
 
-        Mono<Tuple2<Quota<QuotaCountLimit, QuotaCountUsage>, Quota<QuotaSizeLimit, QuotaSizeUsage>>> quotasMono =
-            messageQuota.zipWith(storageQuota)
-                .subscribeOn(Schedulers.elastic());
-
-        return quotasMono
+        return quotasMono.subscribeOn(Schedulers.elastic())
             .flatMap(quotas -> eventBus.dispatch(
                 EventFactory.quotaUpdated()
                     .randomEventId()
                     .user(username)
                     .quotaRoot(quotaRoot)
-                    .quotaCount(quotas.getT1())
-                    .quotaSize(quotas.getT2())
+                    .quotaCount(quotas.getMessageQuota())
+                    .quotaSize(quotas.getStorageQuota())
                     .instant(Instant.now())
                     .build(),
                 NO_REGISTRATION_KEYS));

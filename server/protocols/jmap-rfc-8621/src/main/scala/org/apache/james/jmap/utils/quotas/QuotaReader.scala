@@ -31,12 +31,15 @@ import reactor.core.scala.publisher.SMono
 
 class QuotaReader @Inject() (quotaManager: QuotaManager) {
   @throws[MailboxException]
-  def retrieveQuotas(quotaRoot: QuotaRoot): SMono[Quotas] =
+  def retrieveQuotas(quotaRoot: QuotaRoot): SMono[Quotas] = {
+    val quotaId = QuotaId.fromQuotaRoot(quotaRoot)
+    val quotas = quotaManager.getQuotas(quotaRoot.toModel)
     SMono.just(Quotas.from(
-      QuotaId.fromQuotaRoot(quotaRoot),
+      quotaId,
       Quota.from(Map(
-        Quotas.Storage -> quotaToValue(quotaManager.getStorageQuota(quotaRoot.toModel)),
-        Quotas.Message -> quotaToValue(quotaManager.getMessageQuota(quotaRoot.toModel))))))
+        Quotas.Storage -> quotaToValue(quotas.getStorageQuota),
+        Quotas.Message -> quotaToValue(quotas.getMessageQuota)))))
+  }
 
   private def quotaToValue[T <: QuotaLimitValue[T], U <: QuotaUsageValue[U, T]](quota: ModelQuota[T, U]): Value =
     Value(

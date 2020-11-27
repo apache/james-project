@@ -41,12 +41,12 @@ public class DefaultQuotaLoader extends QuotaLoader {
     public Quotas getQuotas(MailboxPath mailboxPath) throws MailboxException {
         QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);
         Quotas.QuotaId quotaId = Quotas.QuotaId.fromQuotaRoot(quotaRoot);
-
+        QuotaManager.Quotas quotas = quotaManager.getQuotas(quotaRoot);
         return Quotas.from(
             quotaId,
             Quotas.Quota.from(
-                quotaToValue(quotaManager.getStorageQuota(quotaRoot)),
-                quotaToValue(quotaManager.getMessageQuota(quotaRoot))));
+                quotaToValue(quotas.getStorageQuota()),
+                quotaToValue(quotas.getMessageQuota())));
     }
 
 }

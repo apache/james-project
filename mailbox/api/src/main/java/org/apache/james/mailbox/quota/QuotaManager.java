@@ -32,6 +32,23 @@ import org.apache.james.mailbox.model.QuotaRoot;
  * Part of RFC 2087 implementation
  */
 public interface QuotaManager {
+    class Quotas {
+        private final Quota<QuotaCountLimit, QuotaCountUsage> messageQuota;
+        private final Quota<QuotaSizeLimit, QuotaSizeUsage> storageQuota;
+
+        public Quotas(Quota<QuotaCountLimit, QuotaCountUsage> messageQuota, Quota<QuotaSizeLimit, QuotaSizeUsage> storageQuota) {
+            this.messageQuota = messageQuota;
+            this.storageQuota = storageQuota;
+        }
+
+        public Quota<QuotaCountLimit, QuotaCountUsage> getMessageQuota() {
+            return messageQuota;
+        }
+
+        public Quota<QuotaSizeLimit, QuotaSizeUsage> getStorageQuota() {
+            return storageQuota;
+        }
+    }
 
     /**
      * Return the message count {@link Quota} for the given {@link QuotaRoot} (which in fact is
@@ -49,4 +66,6 @@ public interface QuotaManager {
      * @param quotaRoot Quota root argument from RFC 2087 ( correspond to the user owning this mailbox )
      */
     Quota<QuotaSizeLimit, QuotaSizeUsage> getStorageQuota(QuotaRoot quotaRoot) throws MailboxException;
+
+    Quotas getQuotas(QuotaRoot quotaRoot) throws MailboxException;
 }
