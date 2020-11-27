@@ -86,8 +86,8 @@ class StoreRightManagerTest {
     @Test
     void hasRightShouldThrowMailboxNotFoundExceptionWhenMailboxDoesNotExist() {
         MailboxPath mailboxPath = MailboxPath.forUser(MailboxFixture.ALICE, "unexisting mailbox");
-        when(mockedMailboxMapper.findMailboxByPath(mailboxPath))
-            .thenReturn(Mono.error(new MailboxNotFoundException("")));
+        when(mockedMailboxMapper.pathExists(mailboxPath))
+            .thenReturn(Mono.just(false));
 
         assertThatThrownBy(() ->
             storeRightManager.hasRight(mailboxPath, Right.Read, aliceSession))
