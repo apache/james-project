@@ -19,13 +19,18 @@
 
 package org.apache.james.mailbox.cassandra.quota;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.store.quota.GenericMaxQuotaManagerTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerTest {
@@ -41,4 +46,14 @@ class CassandraPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerTest {
             .getInstance(CassandraPerUserMaxQuotaManager.class);
     }
 
+    @Test
+    void quotaDetailsShouldGroupStatements(CassandraCluster cassandra) {
+        StatementRecorder statementRecorder = new StatementRecorder();
+        cassandra.getConf().recordStatements(statementRecorder);
+
+        maxQuotaManager.quotaDetails(QUOTA_ROOT);
+
+        assertThat(statementRecorder.listExecutedStatements()).hasSize(4);
+        // 1 statement for user limits, 1 for domain limits, 2 for global limits (as count and size don't share the same primary key)
+    }
 }

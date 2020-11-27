@@ -49,8 +49,7 @@ public class CassandraPerUserMaxQuotaDao {
     private final CassandraAsyncExecutor queryExecutor;
     private final PreparedStatement setMaxStorageStatement;
     private final PreparedStatement setMaxMessageStatement;
-    private final PreparedStatement getMaxStorageStatement;
-    private final PreparedStatement getMaxMessageStatement;
+    private final PreparedStatement getMaxStatement;
     private final PreparedStatement removeMaxStorageStatement;
     private final PreparedStatement removeMaxMessageStatement;
 
@@ -59,8 +58,7 @@ public class CassandraPerUserMaxQuotaDao {
         this.queryExecutor = new CassandraAsyncExecutor(session);
         this.setMaxStorageStatement = session.prepare(setMaxStorageStatement());
         this.setMaxMessageStatement = session.prepare(setMaxMessageStatement());
-        this.getMaxStorageStatement = session.prepare(getMaxStorageStatement());
-        this.getMaxMessageStatement = session.prepare(getMaxMessageStatement());
+        this.getMaxStatement = session.prepare(getMaxStatement());
         this.removeMaxStorageStatement = session.prepare(removeMaxStorageStatement());
         this.removeMaxMessageStatement = session.prepare(removeMaxMessageStatement());
     }
@@ -77,14 +75,8 @@ public class CassandraPerUserMaxQuotaDao {
             .where(eq(CassandraMaxQuota.QUOTA_ROOT, bindMarker()));
     }
 
-    private Select.Where getMaxMessageStatement() {
-        return select(CassandraMaxQuota.MESSAGE_COUNT)
-            .from(CassandraMaxQuota.TABLE_NAME)
-            .where(eq(CassandraMaxQuota.QUOTA_ROOT, bindMarker()));
-    }
-
-    private Select.Where getMaxStorageStatement() {
-        return select(CassandraMaxQuota.STORAGE)
+    private Select.Where getMaxStatement() {
+        return select()
             .from(CassandraMaxQuota.TABLE_NAME)
             .where(eq(CassandraMaxQuota.QUOTA_ROOT, bindMarker()));
     }
@@ -110,7 +102,7 @@ public class CassandraPerUserMaxQuotaDao {
     }
 
     Mono<QuotaSizeLimit> getMaxStorage(QuotaRoot quotaRoot) {
-        return queryExecutor.executeSingleRow(getMaxStorageStatement.bind(quotaRoot.getValue()))
+        return queryExecutor.executeSingleRow(getMaxStatement.bind(quotaRoot.getValue()))
             .map(row -> Optional.ofNullable(row.get(CassandraMaxQuota.STORAGE, Long.class)))
             .handle(publishIfPresent())
             .map(QuotaCodec::longToQuotaSize)
@@ -118,11 +110,24 @@ public class CassandraPerUserMaxQuotaDao {
     }
 
     Mono<QuotaCountLimit> getMaxMessage(QuotaRoot quotaRoot) {
-        return queryExecutor.executeSingleRow(getMaxMessageStatement.bind(quotaRoot.getValue()))
+        return queryExecutor.executeSingleRow(getMaxStatement.bind(quotaRoot.getValue()))
             .map(row -> Optional.ofNullable(row.get(CassandraMaxQuota.MESSAGE_COUNT, Long.class)))
             .handle(publishIfPresent())
             .map(QuotaCodec::longToQuotaCount)
             .handle(publishIfPresent());
+    }
+
+    Mono<Limits> getLimits(QuotaRoot quotaRoot) {
+        return queryExecutor.executeSingleRow(getMaxStatement.bind(quotaRoot.getValue()))
+            .map(row -> {
+                Optional<Long> sizeLimit = Optional.ofNullable(row.get(CassandraMaxQuota.STORAGE, Long.class));
+                Optional<Long> countLimit = Optional.ofNullable(row.get(CassandraMaxQuota.MESSAGE_COUNT, Long.class));
+
+                return new Limits(
+                    sizeLimit.flatMap(QuotaCodec::longToQuotaSize),
+                    countLimit.flatMap(QuotaCodec::longToQuotaCount));
+            })
+            .switchIfEmpty(Mono.just(Limits.empty()));
     }
 
     Mono<Void> removeMaxMessage(QuotaRoot quotaRoot) {

@@ -36,8 +36,8 @@ public abstract class GenericMaxQuotaManagerTest {
 
     private static final Domain DOMAIN = Domain.of("domain");
     private static final Domain DOMAIN_CASE_VARIATION = Domain.of("doMain");
-    private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa@domain", Optional.of(DOMAIN));
-    private MaxQuotaManager maxQuotaManager;
+    protected static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa@domain", Optional.of(DOMAIN));
+    protected MaxQuotaManager maxQuotaManager;
 
     protected abstract MaxQuotaManager provideMaxQuotaManager();
 

@@ -25,6 +25,7 @@ import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 
 public class CurrentQuotas {
     private final QuotaCountUsage count;
@@ -39,6 +40,9 @@ public class CurrentQuotas {
     }
 
     public CurrentQuotas(QuotaCountUsage count, QuotaSizeUsage size) {
+        Preconditions.checkNotNull(count);
+        Preconditions.checkNotNull(size);
+
         this.count = count;
         this.size = size;
     }
