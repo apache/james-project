@@ -37,7 +37,6 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -422,7 +421,7 @@ class CassandraMailboxManagerConsistencyTest {
                 }));
             }
 
-            @RepeatedTest(100)
+            @Test
             void deleteMailboxByPathShouldBeConsistentWhenMailboxPathDaoFails(CassandraCluster cassandra) throws Exception {
                 MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                     .get();
