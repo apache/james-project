@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.Authorizator;
@@ -64,11 +65,18 @@ public class CassandraMailboxManagerProvider {
 
     public static CassandraMailboxManager provideMailboxManager(CassandraCluster cassandra,
                                                                 PreDeletionHooks preDeletionHooks) {
+        return provideMailboxManager(cassandra, preDeletionHooks, CassandraConfiguration.DEFAULT_CONFIGURATION);
+    }
+
+    public static CassandraMailboxManager provideMailboxManager(CassandraCluster cassandra,
+                                                                PreDeletionHooks preDeletionHooks,
+                                                                CassandraConfiguration cassandraConfiguration) {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
 
         CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
             cassandra,
-            messageIdFactory);
+            messageIdFactory,
+            cassandraConfiguration);
 
         return provideMailboxManager(cassandra.getConf(), preDeletionHooks, mapperFactory, messageIdFactory);
     }

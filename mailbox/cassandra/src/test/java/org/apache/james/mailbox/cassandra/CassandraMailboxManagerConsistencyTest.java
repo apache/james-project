@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
@@ -63,7 +64,10 @@ class CassandraMailboxManagerConsistencyTest {
     void setUp(CassandraCluster cassandra) {
         testee = CassandraMailboxManagerProvider.provideMailboxManager(
             cassandra,
-            PreDeletionHooks.NO_PRE_DELETION_HOOK);
+            PreDeletionHooks.NO_PRE_DELETION_HOOK,
+            CassandraConfiguration.builder()
+                .mailboxReadRepair(0)
+                .build());
 
         mailboxSession = testee.createSystemSession(USER);
 
