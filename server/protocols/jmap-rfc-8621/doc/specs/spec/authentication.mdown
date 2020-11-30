@@ -1,0 +1,32 @@
+# Authentication
+
+JMAP RFC-8620 deliberately does not address authentication concerns, and only assumes authenticated requests are handled.
+
+Discovery of available authentication mechanism is not part of the JMAP specification.
+
+This document summarizes available authentication mechanism on top of JMAP RFC-8621 implementation as part of the James
+project.
+
+## Basic authentication
+
+James JMAP RFC-8621 supports [Basic Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication).
+
+Please note that while convenient for testing purpose, this authentication mechanism should not be used for production
+workflow: the credentials are transmitted again and over again, should be retained in memory, authentication is
+challenged for each request...
+
+## JWT authentication
+
+We rely on a third party software to supply a signed JWT token, valid according to the James JWT public key.
+If valid, the request is blindly trusted.
+
+[Read more](https://github.com/apache/james-project/blob/master/docs/modules/servers/pages/distributed/configure/jmap.adoc#generating-a-jwt-key-pair).
+
+## Implementing new authentication mechanisms
+
+Administrator might need to adapt authentication to their needs.
+
+To implement custom authentication mechanisms, you need to implement `org.apache.james.jmap.http.AuthenticationStrategy`
+and register it in `RFC8621MethodsModule::provideAuthenticator`.
+
+Note that the Apache James project would happily welcome contributions regarding support of other authentication flows.
