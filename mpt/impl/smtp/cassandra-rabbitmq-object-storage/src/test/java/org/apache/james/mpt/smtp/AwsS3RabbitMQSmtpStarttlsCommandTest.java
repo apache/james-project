@@ -21,28 +21,19 @@ package org.apache.james.mpt.smtp;
 
 import static org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType.SMTP_START_TLS_SERVER;
 
-import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
-import org.junit.Rule;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TestRule;
+import org.apache.james.backends.cassandra.DockerCassandraExtension;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class AwsS3RabbitMQSmtpStarttlsCommandTest extends SmtpStarttlsCommandTest {
 
-    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    @RegisterExtension
+    public static DockerCassandraExtension cassandraServer = new DockerCassandraExtension();
 
+    @RegisterExtension
+    public AwsS3BlobStoreExtension dockerAwsS3TestRule = new AwsS3BlobStoreExtension();
 
-    private DockerAwsS3TestRule dockerAwsS3TestRule = new DockerAwsS3TestRule();
-
-    private SmtpTestRule cassandraRabbitMQAwsS3SmtpTestRule =
-        CassandraRabbitMQAwsS3SmtpTestRuleFactory.create(SMTP_START_TLS_SERVER, cassandraServer.getHost(), dockerAwsS3TestRule);
-
-    @Rule
-    public TestRule composedRule = RuleChain.outerRule(dockerAwsS3TestRule).around(cassandraRabbitMQAwsS3SmtpTestRule);
-
-    @Override
-    protected SmtpHostSystem createSmtpHostSystem() {
-        return cassandraRabbitMQAwsS3SmtpTestRule;
-    }
-
+    @RegisterExtension
+    public SmtpTestExtension cassandraRabbitMQAwsS3SmtpTestRule =
+            CassandraRabbitMQAwsS3SmtpTestRuleFactory.createExtension(SMTP_START_TLS_SERVER, () -> cassandraServer.getDockerCassandra().getHost(), dockerAwsS3TestRule);
 }
