@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mpt.smtp;
 
+import java.util.function.Supplier;
+
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.CleanupTasksPerformer;
@@ -30,10 +32,10 @@ import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreDAO;
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.TestRabbitMQModule;
 import org.apache.james.modules.mailbox.KeyspacesConfiguration;
 import org.apache.james.modules.objectstorage.DefaultBucketModule;
-import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType;
 import org.apache.james.modules.queue.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.CamelMailetContainerModule;
@@ -49,11 +51,12 @@ import com.google.inject.Module;
 import com.google.inject.name.Names;
 
 public final class CassandraRabbitMQAwsS3SmtpTestRuleFactory {
-    public static SmtpTestRule create(SmtpServerConnectedType smtpServerConnectedType, Host cassandraHost, DockerAwsS3TestRule awsS3TestRule) {
-        SmtpTestRule.ServerBuilder createJamesServer = (folder, dnsService) -> createJamesServer(cassandraHost, awsS3TestRule, folder, dnsService);
+    public static SmtpTestExtension createExtension(SmtpServerConnectedType smtpGlobalServer, Supplier<Host> host, AwsS3BlobStoreExtension dockerAwsS3TestRule) {
+        SmtpTestExtension.ServerBuilder createJamesServer = (folder, dnsService) -> createJamesServer(host, dockerAwsS3TestRule.getModule(), folder, dnsService);
 
-        return new SmtpTestRule(smtpServerConnectedType, createJamesServer);
+        return new SmtpTestExtension(smtpGlobalServer, createJamesServer);
     }
+
 
     private static Module BLOB_STORE_MODULE = new AbstractModule() {
         @Override
@@ -65,23 +68,24 @@ public final class CassandraRabbitMQAwsS3SmtpTestRuleFactory {
         }
     };
 
-    private static GuiceJamesServer createJamesServer(Host cassandraHost, DockerAwsS3TestRule awsS3TestRule, TemporaryFolder folder, DNSService dnsService) throws Exception {
+    private static GuiceJamesServer createJamesServer(Supplier<Host> cassandraHost, Module awsS3Module , TemporaryFolder folder, DNSService dnsService) throws Exception {
         Configuration configuration = Configuration.builder()
             .workingDirectory(folder.newFolder())
             .configurationFromClasspath()
             .build();
 
+
         return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraJamesServerMain.CASSANDRA_SERVER_CORE_MODULE,
                 new DefaultBucketModule(),
-                SmtpTestRule.SMTP_PROTOCOL_MODULE,
+                SmtpTestExtension.SMTP_PROTOCOL_MODULE,
                 binder -> binder.bind(MailQueueItemDecoratorFactory.class).to(RawMailQueueItemDecoratorFactory.class),
                 binder -> binder.bind(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
                     .toInstance(BaseHierarchicalConfiguration::new))
             .overrideWith(new RabbitMQModule(), BLOB_STORE_MODULE)
             .overrideWith(
                 new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON),
-                awsS3TestRule.getModule(),
+                    awsS3Module,
                 binder -> binder.bind(KeyspacesConfiguration.class)
                     .toInstance(KeyspacesConfiguration.builder()
                         .keyspace(DockerCassandra.KEYSPACE)
@@ -90,10 +94,11 @@ public final class CassandraRabbitMQAwsS3SmtpTestRuleFactory {
                         .disableDurableWrites()
                         .build()),
                 binder -> binder.bind(ClusterConfiguration.class).toInstance(
-                    DockerCassandra.configurationBuilder(cassandraHost)
+                    DockerCassandra.configurationBuilder(cassandraHost.get())
                         .build()),
                 binder -> binder.bind(DNSService.class).toInstance(dnsService),
                 binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton());
     }
+
 }
 

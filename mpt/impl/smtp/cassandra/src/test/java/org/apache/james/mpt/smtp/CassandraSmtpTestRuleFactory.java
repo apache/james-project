@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mpt.smtp;
 
+import java.util.function.Supplier;
+
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.GuiceJamesServer;
@@ -36,13 +38,14 @@ import org.apache.james.util.Host;
 import org.junit.rules.TemporaryFolder;
 
 public final class CassandraSmtpTestRuleFactory {
-    public static SmtpTestRule create(SmtpServerConnectedType smtpServerConnectedType, Host cassandraHost) {
-        SmtpTestRule.ServerBuilder createJamesServer = (folder, dnsService) -> createJamesServer(cassandraHost, folder, dnsService);
 
-        return new SmtpTestRule(smtpServerConnectedType, createJamesServer);
+    public static SmtpTestExtension createExtension(SmtpServerConnectedType smtpServerConnectedType, Supplier<Host> cassandraHost) {
+        SmtpTestExtension.ServerBuilder createJamesServer = (folder, dnsService) -> createJamesServer(cassandraHost, folder, dnsService);
+
+        return new SmtpTestExtension(smtpServerConnectedType, createJamesServer);
     }
 
-    private static GuiceJamesServer createJamesServer(Host cassandraHost, TemporaryFolder folder, DNSService dnsService) throws Exception {
+    private static GuiceJamesServer createJamesServer(Supplier<Host> cassandraHost, TemporaryFolder folder, DNSService dnsService) throws Exception {
         Configuration configuration = Configuration.builder()
             .workingDirectory(folder.newFolder())
             .configurationFromClasspath()
@@ -52,13 +55,13 @@ public final class CassandraSmtpTestRuleFactory {
             .combineWith(CassandraJamesServerMain.CASSANDRA_SERVER_CORE_MODULE,
                 new CassandraBlobStoreModule(),
                 new CassandraBucketModule(),
-                SmtpTestRule.SMTP_PROTOCOL_MODULE,
+                SmtpTestExtension.SMTP_PROTOCOL_MODULE,
                 binder -> binder.bind(MailQueueItemDecoratorFactory.class).to(RawMailQueueItemDecoratorFactory.class),
                 binder -> binder.bind(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
                     .toInstance(BaseHierarchicalConfiguration::new))
             .overrideWith(
                 binder -> binder.bind(ClusterConfiguration.class).toInstance(
-                    DockerCassandra.configurationBuilder(cassandraHost)
+                    DockerCassandra.configurationBuilder(cassandraHost.get())
                         .build()),
                 binder -> binder.bind(KeyspacesConfiguration.class)
                     .toInstance(KeyspacesConfiguration.builder()

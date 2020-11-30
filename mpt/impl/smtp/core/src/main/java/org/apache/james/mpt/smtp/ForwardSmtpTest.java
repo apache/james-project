@@ -25,48 +25,40 @@ import static org.hamcrest.Matchers.equalTo;
 import java.util.Locale;
 
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
-import org.apache.james.utils.FakeSmtp;
+import org.apache.james.utils.FakeSmtpExtension;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public abstract class ForwardSmtpTest {
 
-    public static final String USER = "bob";
-    public static final String DOMAIN = "mydomain.tld";
-    public static final String USER_AT_DOMAIN = USER + "@" + DOMAIN;
-    public static final String PASSWORD = "secret";
-    public static final Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
-    public static final ConditionFactory calmlyAwait = Awaitility.with()
+public interface ForwardSmtpTest {
+
+    String USER = "bob";
+    String DOMAIN = "mydomain.tld";
+    String USER_AT_DOMAIN = USER + "@" + DOMAIN;
+    String PASSWORD = "secret";
+    Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
+    ConditionFactory calmlyAwait = Awaitility.with()
         .pollInterval(slowPacedPollInterval)
         .await();
 
-    @ClassRule
-    public static FakeSmtp fakeSmtp = FakeSmtp.withDefaultPort();
+    @RegisterExtension
+    FakeSmtpExtension fakeSmtp = FakeSmtpExtension.withDefaultPort();
 
-    protected abstract SmtpHostSystem createSmtpHostSystem();
-    
-    private SmtpHostSystem hostSystem;
-    private SimpleScriptedTestProtocol scriptedTest;
-
-    @Before
-    public void setUp() throws Exception {
-        hostSystem = createSmtpHostSystem();
-
-        scriptedTest = new SimpleScriptedTestProtocol("/org/apache/james/smtp/scripts/", hostSystem)
-                .withLocale(Locale.US)
-                .withUser(USER_AT_DOMAIN, PASSWORD);
-        
-        hostSystem.getInMemoryDnsService()
-            .registerMxRecord("yopmail.com", fakeSmtp.getContainer().getContainerIp());
-        hostSystem.addAddressMapping(USER, DOMAIN, "ray@yopmail.com");
-    }
+    SmtpHostSystem hostSystem();
 
     @Test
-    public void forwardingAnEmailShouldWork() throws Exception {
+    default void forwardingAnEmailShouldWork(FakeSmtpExtension.FakeSmtp fakeSmtp) throws Exception {
+        SimpleScriptedTestProtocol scriptedTest = new SimpleScriptedTestProtocol("/org/apache/james/smtp/scripts/", hostSystem())
+                .withLocale(Locale.US)
+                .withUser(USER_AT_DOMAIN, PASSWORD);
+
+        hostSystem().getInMemoryDnsService()
+                .registerMxRecord("yopmail.com", fakeSmtp.getContainerIp());
+        hostSystem().addAddressMapping(USER, DOMAIN, "ray@yopmail.com");
+
         scriptedTest.run("helo");
 
         calmlyAwait.atMost(TWO_MINUTES).untilAsserted(() ->

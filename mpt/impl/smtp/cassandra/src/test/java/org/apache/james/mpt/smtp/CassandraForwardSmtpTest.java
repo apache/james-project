@@ -21,19 +21,29 @@ package org.apache.james.mpt.smtp;
 
 import static org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType.SMTP_GLOBAL_SERVER;
 
-import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.junit.Rule;
+import org.apache.james.backends.cassandra.DockerCassandraExtension;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraForwardSmtpTest extends ForwardSmtpTest {
+public class CassandraForwardSmtpTest implements ForwardSmtpTest {
 
-    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    @RegisterExtension
+    public static DockerCassandraExtension cassandraServer = new DockerCassandraExtension();
 
-    @Rule
-    public SmtpTestRule cassandraSmtpTestRule = CassandraSmtpTestRuleFactory.create(SMTP_GLOBAL_SERVER, cassandraServer.getHost());
+    @RegisterExtension
+    public SmtpTestExtension smtpTestExtension =
+            CassandraSmtpTestRuleFactory.createExtension(SMTP_GLOBAL_SERVER, () -> cassandraServer.getDockerCassandra().getHost());
+
+    private SmtpHostSystem hostSystem;
+
+    @BeforeEach
+    void setup(SmtpHostSystem hostSystem) {
+        this.hostSystem = hostSystem;
+    }
 
     @Override
-    protected SmtpHostSystem createSmtpHostSystem() {
-        return cassandraSmtpTestRule;
+    public SmtpHostSystem hostSystem() {
+        return hostSystem;
     }
 
 }

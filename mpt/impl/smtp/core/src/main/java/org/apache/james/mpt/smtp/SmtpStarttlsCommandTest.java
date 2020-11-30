@@ -21,10 +21,8 @@ package org.apache.james.mpt.smtp;
 import java.util.Locale;
 
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public abstract class SmtpStarttlsCommandTest {
 
@@ -33,17 +31,12 @@ public abstract class SmtpStarttlsCommandTest {
     public static final String USER_AT_DOMAIN = USER + "@" + DOMAIN;
     public static final String PASSWORD = "secret";
 
-    @Rule
-    public final TemporaryFolder folder = new TemporaryFolder();
-
-    protected abstract SmtpHostSystem createSmtpHostSystem();
-    
-    private SmtpHostSystem hostSystem;
+    protected SmtpHostSystem hostSystem;
     private SimpleScriptedTestProtocol scriptedTest;
 
-    @Before
-    public void setUp() throws Exception {
-        hostSystem = createSmtpHostSystem();
+    @BeforeEach
+    public void setUp(SmtpHostSystem hostSystem) throws Exception {
+        this.hostSystem = hostSystem;
         String scriptDir = "/org/apache/james/smtp/scripts/";
         scriptedTest = new SimpleScriptedTestProtocol(scriptDir, hostSystem)
                 .withLocale(Locale.US)
