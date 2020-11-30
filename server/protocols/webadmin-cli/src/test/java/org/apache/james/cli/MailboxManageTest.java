@@ -170,4 +170,43 @@ public class MailboxManageTest {
         assertThat(outputStreamCaptor.toString().trim()).isEqualTo("Either the user name or the mailbox does not exist.");
     }
 
+    @Test
+    void mailboxListWithTwoAddedMailboxesAndExistedUsernameShouldShowMailboxesNameExactly() throws Exception {
+        dataProbe.fluent().addDomain("linagora.com")
+            .addUser("hqtran@linagora.com", "123456");
+
+        WebAdminCli.executeFluent(new PrintStream(new ByteArrayOutputStream()), new PrintStream(new ByteArrayOutputStream()),
+            "--url", "http://127.0.0.1:" + port.getValue(), "mailbox", "create", "hqtran@linagora.com", "INBOX1");
+
+        WebAdminCli.executeFluent(new PrintStream(new ByteArrayOutputStream()), new PrintStream(new ByteArrayOutputStream()),
+            "--url", "http://127.0.0.1:" + port.getValue(), "mailbox", "create", "hqtran@linagora.com", "INBOX2");
+
+        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
+            "--url", "http://127.0.0.1:" + port.getValue(), "mailbox", "list", "hqtran@linagora.com");
+
+        assertThat(exitCode).isEqualTo(0);
+        assertThat(outputStreamCaptor.toString()).isEqualTo("INBOX1\nINBOX2\n");
+    }
+
+    @Test
+    void mailboxListWithAValidUserAndNonExistingMailboxesShouldShowNothing() throws Exception {
+        dataProbe.fluent().addDomain("linagora.com")
+            .addUser("hqtran@linagora.com", "123456");
+
+        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
+            "--url", "http://127.0.0.1:" + port.getValue(), "mailbox", "list", "hqtran@linagora.com");
+
+        assertThat(exitCode).isEqualTo(0);
+        assertThat(outputStreamCaptor.toString()).isEqualTo("");
+    }
+
+    @Test
+    void mailboxListWithNonExistingUsernameShouldFail() {
+        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
+            "--url", "http://127.0.0.1:" + port.getValue(), "mailbox", "list", "hqtran@linagora.com");
+
+        assertThat(exitCode).isEqualTo(1);
+        assertThat(outputStreamCaptor.toString()).isEmpty();
+    }
+
 }

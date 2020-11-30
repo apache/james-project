@@ -19,41 +19,49 @@
 
 package org.apache.james.cli.mailbox;
 
-import java.io.PrintStream;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
 import org.apache.james.httpclient.MailboxClient;
+import org.apache.james.httpclient.model.MailboxName;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import feign.Response;
 import picocli.CommandLine;
 
 @CommandLine.Command(
-    name = "mailbox",
-    description = "Manage Mailboxes",
-    subcommands = {
-        MailboxCreateCommand.class,
-        MailboxExistCommand.class,
-        MailboxListCommand.class
-    })
-public class MailboxCommand implements Callable<Integer> {
+    name = "list",
+    description = "Show all mailboxes of a user")
+public class MailboxListCommand implements Callable<Integer> {
 
-    protected final WebAdminCli webAdminCli;
-    protected final PrintStream out;
-    protected final PrintStream err;
+    public static int SUCCEED_CODE = 200;
+    public static int USERNAME_NOT_FOUND_CODE = 404;
 
-    public MailboxCommand(PrintStream out, WebAdminCli webAdminCli, PrintStream err) {
-        this.out = out;
-        this.webAdminCli = webAdminCli;
-        this.err = err;
-    }
+    @CommandLine.ParentCommand MailboxCommand mailboxCommand;
+
+    @CommandLine.Parameters(description = "Username to be used")
+    String userName;
 
     @Override
     public Integer call() {
-        return WebAdminCli.CLI_FINISHED_SUCCEED;
-    }
-
-    public MailboxClient fullyQualifiedURL(String partOfUrl) {
-        return webAdminCli.feignClientFactory(err).target(MailboxClient.class, webAdminCli.jamesUrl + partOfUrl);
+        try {
+            MailboxClient mailboxClient = mailboxCommand.fullyQualifiedURL("/users");
+            Response rs = mailboxClient.getMailboxList(userName);
+            if (rs.status() == SUCCEED_CODE) {
+                List<MailboxName> mailboxNameList = new ObjectMapper().readValue(String.valueOf(rs.body()), new TypeReference<List<MailboxName>>(){});
+                mailboxNameList.forEach(mailboxName -> mailboxCommand.out.println(mailboxName.getMailboxName()));
+                return WebAdminCli.CLI_FINISHED_SUCCEED;
+            } else if (rs.status() == USERNAME_NOT_FOUND_CODE) {
+                return WebAdminCli.CLI_FINISHED_FAILED;
+            }
+            return WebAdminCli.CLI_FINISHED_FAILED;
+        } catch (Exception e) {
+            e.printStackTrace(mailboxCommand.err);
+            return WebAdminCli.CLI_FINISHED_FAILED;
+        }
     }
 
 }

@@ -17,21 +17,20 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.httpclient;
+package org.apache.james.httpclient.model;
 
-import feign.Param;
-import feign.RequestLine;
-import feign.Response;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public interface MailboxClient {
+public class MailboxName {
 
-    @RequestLine("PUT /{userNameToBeUsed}/mailboxes/{mailboxNameToBeCreated}")
-    Response createAMailbox(@Param("userNameToBeUsed") String userName, @Param("mailboxNameToBeCreated") String mailboxName);
+    @JsonProperty("mailboxName")
+    private String mailboxName;
 
-    @RequestLine("GET /{usernameToBeUsed}/mailboxes/{mailboxNameToBeTested}")
-    Response doesExist(@Param("usernameToBeUsed") String userName, @Param("mailboxNameToBeTested") String mailboxName);
+    @JsonProperty("mailboxId")
+    private String mailboxId;
 
-    @RequestLine("GET /{usernameToBeUsed}/mailboxes")
-    Response getMailboxList(@Param("usernameToBeUsed") String userName);
+    public String getMailboxName() {
+        return mailboxName;
+    }
 
 }
