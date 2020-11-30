@@ -77,3 +77,22 @@ This token can then be passed as `Bearer` of the `Authorization` header :
     curl -H "Authorization: Bearer $token" -XPOST http://127.0.0.1:80/jmap -d '...'
 
 The public key can be referenced as `jwt.publickeypem.url` of the `jmap.properties` configuration file.
+
+== Annotated specification
+
+The [annotated documentation](https://github.com/apache/james-project/tree/master/server/protocols/jmap-rfc-8621/doc/specs/spec)
+presents the limits of the JMAP RFC-8621 implementation part of the Apache James project.
+
+Some methods / types are not yet implemented, some implementations are naive, and the PUSH is not supported yet.
+
+Users are invited to read these limitations before using actively the JMAP RFC-8621 implementation, and should ensure their
+client applications only uses supported operations.
+
+Contributions enhancing support are furthermore welcomed.
+
+The list of tested JMAP clients are:
+
+ - [OpenPaaS](https://open-paas.org/) is actively using the draft version of the JMAP implementation. Migration to
+ RFC-8621 is planned.
+ - Experiments had been run on top of [LTT.RS](https://github.com/iNPUTmice/lttrs-android). Version in the Accept
+ headers needs to be explicitly set to `rfc-8621`. [Read more](https://github.com/linagora/james-project/pull/4089).
