@@ -28,36 +28,36 @@ import feign.Response;
 import picocli.CommandLine;
 
 @CommandLine.Command(
-    name = "create",
-    description = "Create a new mailbox")
-public class MailboxCreateCommand implements Callable<Integer> {
+    name = "exist",
+    description = "Check if a mailbox exists")
+public class MailboxExistCommand implements Callable<Integer> {
 
-    public static final int CREATED_CODE = 204;
-    public static final int BAD_REQUEST_CODE = 400;
-    public static final int USERNAME_NOT_EXIST_CODE = 404;
+    public static final int EXISTED_CODE = 204;
+    public static final int INVALID_MAILBOX_NAME_CODE = 400;
+    public static final int NOT_EXISTED_CODE = 404;
 
     @CommandLine.ParentCommand MailboxCommand mailboxCommand;
 
-    @CommandLine.Parameters(description = "Username")
+    @CommandLine.Parameters(description = "Username to be checked")
     String userName;
 
-    @CommandLine.Parameters(description = "Mailbox's name to be created")
+    @CommandLine.Parameters(description = "Mailbox's name to be tested existence")
     String mailboxName;
 
     @Override
     public Integer call() {
         try {
             MailboxClient mailboxClient = mailboxCommand.fullyQualifiedURL("/users");
-            Response rs = mailboxClient.createAMailbox(userName, mailboxName);
-            if (rs.status() == CREATED_CODE) {
-                mailboxCommand.out.println("The mailbox now exists on the server.");
+            Response rs = mailboxClient.doesExist(userName, mailboxName);
+            if (rs.status() == EXISTED_CODE) {
+                mailboxCommand.out.println("The mailbox exists.");
                 return WebAdminCli.CLI_FINISHED_SUCCEED;
-            } else if (rs.status() == BAD_REQUEST_CODE) {
+            } else if (rs.status() == INVALID_MAILBOX_NAME_CODE) {
                 mailboxCommand.err.println(rs.body());
                 return WebAdminCli.CLI_FINISHED_FAILED;
-            } else if (rs.status() == USERNAME_NOT_EXIST_CODE) {
-                mailboxCommand.err.println(rs.body());
-                return WebAdminCli.CLI_FINISHED_FAILED;
+            } else if (rs.status() == NOT_EXISTED_CODE) {
+                mailboxCommand.out.println("Either the user name or the mailbox does not exist.");
+                return WebAdminCli.CLI_FINISHED_SUCCEED;
             }
             return WebAdminCli.CLI_FINISHED_FAILED;
         } catch (Exception e) {
@@ -67,3 +67,5 @@ public class MailboxCreateCommand implements Callable<Integer> {
     }
 
 }
+
+

@@ -28,4 +28,7 @@ public interface MailboxClient {
     @RequestLine("PUT /{userNameToBeUsed}/mailboxes/{mailboxNameToBeCreated}")
     Response createAMailbox(@Param("userNameToBeUsed") String userName, @Param("mailboxNameToBeCreated") String mailboxName);
 
+    @RequestLine("GET /{usernameToBeUsed}/mailboxes/{mailboxNameToBeTested}")
+    Response doesExist(@Param("usernameToBeUsed") String userName, @Param("mailboxNameToBeTested") String mailboxName);
+
 }

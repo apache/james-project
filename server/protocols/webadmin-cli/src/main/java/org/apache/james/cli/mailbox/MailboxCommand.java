@@ -31,7 +31,8 @@ import picocli.CommandLine;
     name = "mailbox",
     description = "Manage Mailboxes",
     subcommands = {
-        MailboxCreateCommand.class
+        MailboxCreateCommand.class,
+        MailboxExistCommand.class
     })
 public class MailboxCommand implements Callable<Integer> {
 
