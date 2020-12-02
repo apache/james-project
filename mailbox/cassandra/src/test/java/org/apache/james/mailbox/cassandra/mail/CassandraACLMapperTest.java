@@ -240,10 +240,10 @@ class CassandraACLMapperTest {
     private Future<Boolean> performACLUpdateInExecutor(CassandraCluster cassandra, ExecutorService executor, MailboxACL.EntryKey key, MailboxACL.Rfc4314Rights rights) {
         return executor.submit(() -> {
             CassandraACLMapper aclMapper = new CassandraACLMapper(
-                cassandra.getConf(),
                 new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION),
-                CassandraConfiguration.DEFAULT_CONFIGURATION,
-                cassandraCluster.getCassandraConsistenciesConfiguration());
+                new CassandraACLDAO(cassandra.getConf(),
+                    CassandraConfiguration.DEFAULT_CONFIGURATION,
+                    cassandraCluster.getCassandraConsistenciesConfiguration()));
 
             aclMapper.updateACL(MAILBOX_ID, MailboxACL.command().key(key).rights(rights).asAddition()).block();
             return true;

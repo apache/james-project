@@ -102,10 +102,10 @@ class CassandraMailboxMapperTest {
         mailboxPathV3DAO = new CassandraMailboxPathV3DAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION, cassandraCluster.getCassandraConsistenciesConfiguration());
         CassandraUserMailboxRightsDAO userMailboxRightsDAO = new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
         CassandraACLMapper aclMapper = new CassandraACLMapper(
-            cassandra.getConf(),
             new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION),
-            CassandraConfiguration.DEFAULT_CONFIGURATION,
-            cassandraCluster.getCassandraConsistenciesConfiguration());
+            new CassandraACLDAO(cassandra.getConf(),
+                CassandraConfiguration.DEFAULT_CONFIGURATION,
+                cassandraCluster.getCassandraConsistenciesConfiguration()));
         versionDAO = new CassandraSchemaVersionDAO(cassandra.getConf());
 
         versionDAO.truncateVersion()

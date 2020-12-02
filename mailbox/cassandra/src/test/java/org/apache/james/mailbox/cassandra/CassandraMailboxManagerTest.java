@@ -44,6 +44,7 @@ import org.apache.james.mailbox.MessageManager.AppendResult;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.mail.CassandraACLDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
@@ -788,10 +789,10 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
         private CassandraACLMapper aclMapper(CassandraCluster cassandraCluster) {
             return new CassandraACLMapper(
-                cassandraCluster.getConf(),
                 rightsDAO(cassandraCluster),
-                CassandraConfiguration.DEFAULT_CONFIGURATION,
-                cassandra.getCassandraConsistenciesConfiguration());
+                new CassandraACLDAO(cassandraCluster.getConf(),
+                    CassandraConfiguration.DEFAULT_CONFIGURATION,
+                    cassandra.getCassandraConsistenciesConfiguration()));
         }
 
         private CassandraUserMailboxRightsDAO rightsDAO(CassandraCluster cassandraCluster) {
