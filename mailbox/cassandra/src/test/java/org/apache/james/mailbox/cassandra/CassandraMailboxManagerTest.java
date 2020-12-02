@@ -33,6 +33,8 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.BlobTables;
@@ -45,6 +47,7 @@ import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV1;
+import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV2;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
@@ -792,7 +795,9 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 rightsDAO(cassandraCluster),
                 new CassandraACLDAOV1(cassandraCluster.getConf(),
                     CassandraConfiguration.DEFAULT_CONFIGURATION,
-                    cassandra.getCassandraConsistenciesConfiguration()));
+                    cassandra.getCassandraConsistenciesConfiguration()),
+                new CassandraACLDAOV2(cassandraCluster.getConf()),
+                new CassandraSchemaVersionManager(new CassandraSchemaVersionDAO(cassandraCluster.getConf())));
         }
 
         private CassandraUserMailboxRightsDAO rightsDAO(CassandraCluster cassandraCluster) {

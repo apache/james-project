@@ -31,9 +31,14 @@ import java.util.concurrent.TimeoutException;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.Scenario.Barrier;
+import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -43,15 +48,22 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraACLMapperV1Test extends CassandraACLMapperContract {
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraAclModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
+        CassandraModule.aggregateModules(CassandraAclModule.MODULE, CassandraSchemaVersionModule.MODULE));
 
     private CassandraACLMapper cassandraACLMapper;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
+        CassandraSchemaVersionDAO schemaVersionDAO = new CassandraSchemaVersionDAO(cassandra.getConf());
+        schemaVersionDAO.truncateVersion().block();
+        schemaVersionDAO.updateVersion(new SchemaVersion(9)).block();
+        CassandraSchemaVersionManager versionManager = new CassandraSchemaVersionManager(schemaVersionDAO);
         cassandraACLMapper =  new CassandraACLMapper(
             new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION),
-            new CassandraACLDAOV1(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION, CassandraConsistenciesConfiguration.DEFAULT));
+            new CassandraACLDAOV1(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION, CassandraConsistenciesConfiguration.DEFAULT),
+            new CassandraACLDAOV2(cassandra.getConf()),
+            versionManager);
     }
 
     @Override
@@ -97,8 +109,8 @@ class CassandraACLMapperV1Test extends CassandraACLMapperContract {
         MailboxACL.EntryKey keyBob = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
         MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read);
         MailboxACL.EntryKey keyAlice = new MailboxACL.EntryKey("alice", MailboxACL.NameType.user, false);
-        Future<Boolean> future1 = performACLUpdateInExecutor(cassandra, executor, keyBob, rights);
-        Future<Boolean> future2 = performACLUpdateInExecutor(cassandra, executor, keyAlice, rights);
+        Future<Boolean> future1 = performACLUpdateInExecutor(executor, keyBob, rights);
+        Future<Boolean> future2 = performACLUpdateInExecutor(executor, keyAlice, rights);
 
         barrier.awaitCaller();
         barrier.releaseCaller();
@@ -124,8 +136,8 @@ class CassandraACLMapperV1Test extends CassandraACLMapperContract {
 
         MailboxACL.EntryKey keyBob = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
         MailboxACL.EntryKey keyAlice = new MailboxACL.EntryKey("alice", MailboxACL.NameType.user, false);
-        Future<Boolean> future1 = performACLUpdateInExecutor(cassandra, executor, keyBob, rights);
-        Future<Boolean> future2 = performACLUpdateInExecutor(cassandra, executor, keyAlice, rights);
+        Future<Boolean> future1 = performACLUpdateInExecutor(executor, keyBob, rights);
+        Future<Boolean> future2 = performACLUpdateInExecutor(executor, keyAlice, rights);
 
         barrier.awaitCaller();
         barrier.releaseCaller();
@@ -143,15 +155,9 @@ class CassandraACLMapperV1Test extends CassandraACLMapperContract {
         }
     }
 
-    private Future<Boolean> performACLUpdateInExecutor(CassandraCluster cassandra, ExecutorService executor, MailboxACL.EntryKey key, MailboxACL.Rfc4314Rights rights) {
+    private Future<Boolean> performACLUpdateInExecutor(ExecutorService executor, MailboxACL.EntryKey key, MailboxACL.Rfc4314Rights rights) {
         return executor.submit(() -> {
-            CassandraACLMapper aclMapper = new CassandraACLMapper(
-                new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION),
-                new CassandraACLDAOV1(cassandra.getConf(),
-                    CassandraConfiguration.DEFAULT_CONFIGURATION,
-                    cassandraCluster.getCassandraConsistenciesConfiguration()));
-
-            aclMapper.updateACL(MAILBOX_ID, MailboxACL.command().key(key).rights(rights).asAddition()).block();
+            cassandraACLMapper.updateACL(MAILBOX_ID, MailboxACL.command().key(key).rights(rights).asAddition()).block();
             return true;
         });
     }

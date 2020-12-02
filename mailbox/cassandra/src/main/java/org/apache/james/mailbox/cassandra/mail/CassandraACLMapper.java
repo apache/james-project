@@ -21,6 +21,8 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import javax.inject.Inject;
 
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
+import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -29,35 +31,52 @@ import org.apache.james.mailbox.model.MailboxACL;
 import reactor.core.publisher.Mono;
 
 public class CassandraACLMapper {
+    public static final SchemaVersion ACL_V2_SCHEME_VERSION = new SchemaVersion(10);
     private final CassandraUserMailboxRightsDAO userMailboxRightsDAO;
-    private final CassandraACLDAO cassandraACLDAO;
+    private final CassandraACLDAOV1 cassandraACLDAOV1;
+    private final CassandraACLDAOV2 cassandraACLDAOV2;
+    private final CassandraSchemaVersionManager versionManager;
 
     @Inject
     public CassandraACLMapper(CassandraUserMailboxRightsDAO userMailboxRightsDAO,
-                              CassandraACLDAO cassandraACLDAO) {
-        this.cassandraACLDAO = cassandraACLDAO;
+                              CassandraACLDAOV1 cassandraACLDAOV1,
+                              CassandraACLDAOV2 cassandraACLDAOV2,
+                              CassandraSchemaVersionManager versionManager) {
+        this.cassandraACLDAOV1 = cassandraACLDAOV1;
+        this.cassandraACLDAOV2 = cassandraACLDAOV2;
         this.userMailboxRightsDAO = userMailboxRightsDAO;
+        this.versionManager = versionManager;
+    }
+
+    private Mono<CassandraACLDAO> aclDao() {
+        return versionManager.isBefore(ACL_V2_SCHEME_VERSION)
+            .map(isBefore -> {
+                if (isBefore) {
+                    return cassandraACLDAOV1;
+                }
+                return cassandraACLDAOV2;
+            });
     }
 
     public Mono<MailboxACL> getACL(CassandraId cassandraId) {
-        return cassandraACLDAO.getACL(cassandraId);
+        return aclDao().flatMap(dao -> dao.getACL(cassandraId));
     }
 
     public Mono<ACLDiff> updateACL(CassandraId cassandraId, MailboxACL.ACLCommand command) {
-        return cassandraACLDAO.updateACL(cassandraId, command)
+        return aclDao().flatMap(dao -> dao.updateACL(cassandraId, command)
             .flatMap(aclDiff -> userMailboxRightsDAO.update(cassandraId, aclDiff)
             .thenReturn(aclDiff))
-            .switchIfEmpty(Mono.error(new MailboxException("Unable to update ACL")));
+            .switchIfEmpty(Mono.error(new MailboxException("Unable to update ACL"))));
     }
 
     public Mono<ACLDiff> setACL(CassandraId cassandraId, MailboxACL mailboxACL) {
-        return cassandraACLDAO.setACL(cassandraId, mailboxACL)
+        return aclDao().flatMap(dao -> dao.setACL(cassandraId, mailboxACL)
             .flatMap(aclDiff -> userMailboxRightsDAO.update(cassandraId, aclDiff)
             .thenReturn(aclDiff))
-            .switchIfEmpty(Mono.defer(() -> Mono.error(new MailboxException("Unable to update ACL"))));
+            .switchIfEmpty(Mono.defer(() -> Mono.error(new MailboxException("Unable to update ACL")))));
     }
 
     public Mono<Void> delete(CassandraId cassandraId) {
-        return cassandraACLDAO.delete(cassandraId);
+        return aclDao().flatMap(dao -> dao.delete(cassandraId));
     }
 }
