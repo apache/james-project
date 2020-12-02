@@ -41,7 +41,7 @@ import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.DeleteMessageListener;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.mail.CassandraACLDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV1;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
@@ -122,7 +122,7 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(CassandraFirstUnseenDAO.class).in(Scopes.SINGLETON);
         bind(CassandraMailboxCounterDAO.class).in(Scopes.SINGLETON);
         bind(CassandraMailboxDAO.class).in(Scopes.SINGLETON);
-        bind(CassandraACLDAO.class).in(Scopes.SINGLETON);
+        bind(CassandraACLDAOV1.class).in(Scopes.SINGLETON);
         bind(CassandraMailboxPathDAOImpl.class).in(Scopes.SINGLETON);
         bind(CassandraMailboxPathV2DAO.class).in(Scopes.SINGLETON);
         bind(CassandraMailboxPathV3DAO.class).in(Scopes.SINGLETON);

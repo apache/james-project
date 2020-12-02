@@ -17,26 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.mail;
+package org.apache.james.mailbox.cassandra.table;
 
-import java.util.function.Supplier;
+public interface CassandraACLV2Table {
+    String TABLE_NAME = "aclv2";
 
-import org.apache.james.mailbox.acl.ACLDiff;
-import org.apache.james.mailbox.cassandra.ids.CassandraId;
-import org.apache.james.mailbox.model.MailboxACL;
-
-import reactor.core.publisher.Mono;
-
-public interface CassandraACLDAO {
-    interface CassandraACLDAOSupplier extends Supplier<CassandraACLDAO> {
-
-    }
-
-    Mono<Void> delete(CassandraId cassandraId);
-
-    Mono<MailboxACL> getACL(CassandraId cassandraId);
-
-    Mono<ACLDiff> updateACL(CassandraId cassandraId, MailboxACL.ACLCommand command);
-
-    Mono<ACLDiff> setACL(CassandraId cassandraId, MailboxACL mailboxACL);
+    String ID = "id";
+    String KEY = "key";
+    String RIGHTS = "rights";
 }

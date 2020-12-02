@@ -28,6 +28,8 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.mail.CassandraACLDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV1;
 import org.apache.james.mailbox.model.MessageId;
 
 import com.datastax.driver.core.Session;
@@ -57,6 +59,7 @@ public class GuiceUtils {
                                         CassandraMessageId.Factory messageIdFactory,
                                         CassandraConfiguration configuration) {
         return Modules.combine(
+            binder -> binder.bind(CassandraACLDAO.class).to(CassandraACLDAOV1.class),
             binder -> binder.bind(MessageId.Factory.class).toInstance(messageIdFactory),
             binder -> binder.bind(BlobId.Factory.class).toInstance(new HashBlobId.Factory()),
             binder -> binder.bind(BlobStore.class).toProvider(() -> CassandraBlobStoreFactory.forTesting(session).passthrough()),
