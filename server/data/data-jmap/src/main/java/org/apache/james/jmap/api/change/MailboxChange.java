@@ -19,13 +19,27 @@
 
 package org.apache.james.jmap.api.change;
 
+import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
+import javax.mail.Flags;
+
 import org.apache.james.jmap.api.model.AccountId;
+import org.apache.james.mailbox.events.Event;
+import org.apache.james.mailbox.events.MailboxListener.Added;
+import org.apache.james.mailbox.events.MailboxListener.Expunged;
+import org.apache.james.mailbox.events.MailboxListener.FlagsUpdated;
+import org.apache.james.mailbox.events.MailboxListener.MailboxACLUpdated;
+import org.apache.james.mailbox.events.MailboxListener.MailboxAdded;
+import org.apache.james.mailbox.events.MailboxListener.MailboxDeletion;
+import org.apache.james.mailbox.events.MailboxListener.MailboxRenamed;
 import org.apache.james.mailbox.model.MailboxId;
+
+import com.google.common.collect.ImmutableList;
 
 public class MailboxChange {
 
@@ -80,6 +94,45 @@ public class MailboxChange {
 
     public static MailboxChange of(AccountId accountId, State state,  ZonedDateTime date, List<MailboxId> created, List<MailboxId> updated, List<MailboxId> destroyed) {
         return new MailboxChange(accountId, state, date, created, updated, destroyed);
+    }
+
+    public static Optional<MailboxChange> fromEvent(Event event) {
+        ZonedDateTime now = ZonedDateTime.now(Clock.systemUTC());
+        if (event instanceof MailboxAdded) {
+            MailboxAdded mailboxAdded = (MailboxAdded) event;
+            return Optional.of(MailboxChange.of(AccountId.fromUsername(mailboxAdded.getUsername()), State.of(UUID.randomUUID()), now, ImmutableList.of(mailboxAdded.getMailboxId()), ImmutableList.of(), ImmutableList.of()));
+        }
+        if (event instanceof MailboxRenamed) {
+            MailboxRenamed mailboxRenamed = (MailboxRenamed) event;
+            return Optional.of(MailboxChange.of(AccountId.fromUsername(mailboxRenamed.getUsername()), State.of(UUID.randomUUID()), now, ImmutableList.of(), ImmutableList.of(mailboxRenamed.getMailboxId()), ImmutableList.of()));
+        }
+        if (event instanceof MailboxACLUpdated) {
+            MailboxACLUpdated mailboxACLUpdated = (MailboxACLUpdated) event;
+            return Optional.of(MailboxChange.of(AccountId.fromUsername(mailboxACLUpdated.getUsername()), State.of(UUID.randomUUID()), now, ImmutableList.of(), ImmutableList.of(mailboxACLUpdated.getMailboxId()), ImmutableList.of()));
+        }
+        if (event instanceof MailboxDeletion) {
+            MailboxDeletion mailboxDeletion = (MailboxDeletion) event;
+            return Optional.of(MailboxChange.of(AccountId.fromUsername(mailboxDeletion.getUsername()), State.of(UUID.randomUUID()), now, ImmutableList.of(), ImmutableList.of(), ImmutableList.of(mailboxDeletion.getMailboxId())));
+        }
+        if (event instanceof Added) {
+            Added messageAdded = (Added) event;
+            return Optional.of(MailboxChange.of(AccountId.fromUsername(messageAdded.getUsername()), State.of(UUID.randomUUID()), now, ImmutableList.of(), ImmutableList.of(messageAdded.getMailboxId()), ImmutableList.of()));
+        }
+        if (event instanceof FlagsUpdated) {
+            FlagsUpdated messageFlagUpdated = (FlagsUpdated) event;
+            boolean isSeenChanged = messageFlagUpdated.getUpdatedFlags()
+                .stream()
+                .anyMatch(flags -> flags.isChanged(Flags.Flag.SEEN));
+            if (isSeenChanged) {
+                return Optional.of(MailboxChange.of(AccountId.fromUsername(messageFlagUpdated.getUsername()), State.of(UUID.randomUUID()), now, ImmutableList.of(), ImmutableList.of(messageFlagUpdated.getMailboxId()), ImmutableList.of()));
+            }
+        }
+        if (event instanceof Expunged) {
+            Expunged expunged = (Expunged) event;
+            return Optional.of(MailboxChange.of(AccountId.fromUsername(expunged.getUsername()), State.of(UUID.randomUUID()), now, ImmutableList.of(), ImmutableList.of(expunged.getMailboxId()), ImmutableList.of()));
+        }
+
+        return Optional.empty();
     }
 
     private final AccountId accountId;
