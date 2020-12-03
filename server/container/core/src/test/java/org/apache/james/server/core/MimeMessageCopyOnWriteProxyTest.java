@@ -21,14 +21,19 @@ package org.apache.james.server.core;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 
+import java.time.Duration;
+import java.util.concurrent.ExecutionException;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.lifecycle.api.LifecycleUtil;
+import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.mailet.Mail;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
@@ -234,6 +239,35 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         // the NPE was inside this call
         mw.getMessageSize();
         LifecycleUtil.dispose(mw);
+    }
+
+    @Disabled("JAMES-3477 MimeMessageCopyOnWriteProxy is not thread safe")
+    @Test
+    void testNPE2() throws MessagingException, InterruptedException, ExecutionException {
+        MimeMessageCopyOnWriteProxy mw = new MimeMessageCopyOnWriteProxy(new MimeMessageInputStreamSource("test",
+                new SharedByteArrayInputStream(("Return-path: return@test.com\r\n" + "Content-Transfer-Encoding: plain\r\n" + "Subject: test\r\n\r\n" + "Body Text testNPE1\r\n")
+                        .getBytes())));
+
+        ConcurrentTestRunner
+                .builder()
+                .operation((threadNumber, step) -> {
+                    switch (step % 3) {
+                        case 0:
+                            mw.setSubject(String.valueOf(threadNumber) + "-" + step);
+                            break;
+                        case 1:
+                            MimeMessageCopyOnWriteProxy mw2 = new MimeMessageCopyOnWriteProxy(mw);
+                            mw2.setSubject(String.valueOf(threadNumber) + "-" + step);
+                            LifecycleUtil.dispose(mw2);
+                            break;
+                        case 2:
+                            mw.getSubject();
+                            break;
+                    }
+                })
+                .threadCount(8)
+                .operationCount(1000)
+                .runSuccessfullyWithin(Duration.ofMinutes(1));
     }
 
     /**
