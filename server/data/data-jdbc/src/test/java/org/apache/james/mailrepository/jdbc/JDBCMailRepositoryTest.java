@@ -79,4 +79,10 @@ public class JDBCMailRepositoryTest implements MailRepositoryContract {
     public void storeRegularMailShouldNotFailWhenNullSender() {
 
     }
+
+    @Override
+    @Disabled("JAMES-3431 No support for Attribute collection Java serialization yet")
+    public void shouldPreserveDsnParameters() {
+
+    }
 }

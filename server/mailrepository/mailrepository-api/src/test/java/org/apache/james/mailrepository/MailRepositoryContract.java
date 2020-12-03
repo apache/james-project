@@ -25,6 +25,7 @@ import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
@@ -43,6 +44,7 @@ import org.apache.james.utils.DiscreteDistribution;
 import org.apache.james.utils.DiscreteDistribution.DistributionEntry;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
+import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.MailAddressFixture;
@@ -190,6 +192,24 @@ public interface MailRepositoryContract {
         testee.removeAll();
 
         assertThat(testee.size()).isEqualTo(0L);
+    }
+
+    @Test
+    default void shouldPreserveDsnParameters() throws Exception {
+        MailRepository testee = retrieveRepository();
+        DsnParameters dsnParameters = DsnParameters.builder()
+            .envId(DsnParameters.EnvId.of("434554-55445-33443"))
+            .ret(DsnParameters.Ret.FULL)
+            .addRcptParameter(new MailAddress("bob@apache.org"), DsnParameters.RecipientDsnParameters.of(new MailAddress("andy@apache.org")))
+            .addRcptParameter(new MailAddress("cedric@apache.org"), DsnParameters.RecipientDsnParameters.of(EnumSet.of(DsnParameters.Notify.SUCCESS)))
+            .addRcptParameter(new MailAddress("domi@apache.org"), DsnParameters.RecipientDsnParameters.of(EnumSet.of(DsnParameters.Notify.FAILURE), new MailAddress("eric@apache.org")))
+            .build().get();
+        Mail mail = createMail(MAIL_1);
+        mail.setDsnParameters(dsnParameters);
+
+        testee.store(mail);
+
+        assertThat(testee.retrieve(MAIL_1).dsnParameters()).contains(dsnParameters);
     }
 
     @Test

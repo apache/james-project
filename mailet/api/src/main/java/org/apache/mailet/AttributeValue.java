@@ -221,6 +221,7 @@ public class AttributeValue<T> {
             return Optional.empty();
         }
     }
+    
     public <U> Optional<AttributeValue<Map<String, AttributeValue<U>>>> asMapAttributeValueOf(Class<U> type) {
         if (Map.class.isInstance(value)) {
             Map<String, AttributeValue<?>> aMap = (Map<String, AttributeValue<?>>) value;
