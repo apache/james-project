@@ -77,6 +77,8 @@ public class CassandraACLMapper {
     }
 
     public Mono<Void> delete(CassandraId cassandraId) {
-        return aclDao().flatMap(dao -> dao.delete(cassandraId));
+        return aclDao().flatMap(dao -> dao.getACL(cassandraId)
+            .flatMap(acl -> userMailboxRightsDAO.update(cassandraId, ACLDiff.computeDiff(acl, MailboxACL.EMPTY))
+            .then(dao.delete(cassandraId))));
     }
 }
