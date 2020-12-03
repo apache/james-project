@@ -26,6 +26,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -39,6 +40,7 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.ContractMailTest;
+import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.MailAddressFixture;
@@ -380,5 +382,35 @@ public class MailImplTest extends ContractMailTest {
             .isInstanceOf(MailImpl.class)
             .usingRecursiveComparison()
             .isEqualTo(mail);
+    }
+
+    @Test
+    void mailShouldPreserveDsnParameters() throws Exception {
+        DsnParameters dsnParameters = DsnParameters.builder()
+            .envId(DsnParameters.EnvId.of("434554-55445-33443"))
+            .ret(DsnParameters.Ret.FULL)
+            .addRcptParameter(new MailAddress("bob@apache.org"), DsnParameters.RecipientDsnParameters.of(new MailAddress("andy@apache.org")))
+            .addRcptParameter(new MailAddress("cedric@apache.org"), DsnParameters.RecipientDsnParameters.of(EnumSet.of(DsnParameters.Notify.SUCCESS)))
+            .addRcptParameter(new MailAddress("domi@apache.org"), DsnParameters.RecipientDsnParameters.of(EnumSet.of(DsnParameters.Notify.FAILURE), new MailAddress("eric@apache.org")))
+            .build().get();
+
+        MailImpl mail = MailImpl.builder()
+            .name("mail-id")
+            .build();
+
+        mail.setDsnParameters(dsnParameters);
+
+        assertThat(mail.dsnParameters())
+            .contains(dsnParameters);
+    }
+
+    @Test
+    void dsnParametersShouldBeEmptyByDefault() {
+        MailImpl mail = MailImpl.builder()
+            .name("mail-id")
+            .build();
+
+        assertThat(mail.dsnParameters())
+            .isEmpty();
     }
 }
