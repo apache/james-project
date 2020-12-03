@@ -30,7 +30,7 @@ import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class SpamTrapHandlerTest {
     private static final String SPAM_TRAP_RECIP1 = "spamtrap1@localhost";

@@ -22,7 +22,8 @@ package org.apache.james.protocols.smtp;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.protocols.api.StartTlsResponse;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 
 public class SMTPStartTlsResponseTest {
 

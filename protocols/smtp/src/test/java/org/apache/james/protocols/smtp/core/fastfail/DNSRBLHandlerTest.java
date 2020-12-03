@@ -38,8 +38,8 @@ import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Preconditions;
 
@@ -51,7 +51,7 @@ public class DNSRBLHandlerTest {
 
     private boolean relaying = false;   
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         setRelayingAllowed(false);
     }

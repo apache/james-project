@@ -35,7 +35,7 @@ import org.apache.james.core.Username;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Preconditions;
 

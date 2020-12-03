@@ -51,7 +51,7 @@ import org.apache.james.protocols.smtp.hook.MessageHook;
 import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.io.CharStreams;
 

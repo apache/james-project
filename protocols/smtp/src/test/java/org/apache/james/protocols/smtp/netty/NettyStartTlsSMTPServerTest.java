@@ -32,6 +32,8 @@ import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.sun.mail.smtp.SMTPTransport;
+
 import org.apache.commons.net.smtp.SMTPReply;
 import org.apache.commons.net.smtp.SMTPSClient;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
@@ -53,11 +55,9 @@ import org.apache.james.protocols.smtp.SMTPProtocolHandlerChain;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
 import org.assertj.core.api.AssertDelegateTarget;
 import org.jboss.netty.util.HashedWheelTimer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import com.sun.mail.smtp.SMTPTransport;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class NettyStartTlsSMTPServerTest {
 
@@ -68,12 +68,12 @@ public class NettyStartTlsSMTPServerTest {
     private ProtocolServer server = null;
     private HashedWheelTimer hashedWheelTimer;
 
-    @Before
+    @BeforeEach
     public void setup() {
         hashedWheelTimer = new HashedWheelTimer();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         if (smtpsClient != null) {
             smtpsClient.disconnect();
