@@ -35,7 +35,7 @@ import org.apache.james.core.Username;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Preconditions;
 
@@ -129,7 +129,7 @@ public class ResolvableEhloHeloHandlerTest {
     }
     
     @Test
-    public void testRejectInvalidHelo() throws Exception {
+    void testRejectInvalidHelo() throws Exception {
         MailAddress mailAddress = new MailAddress("test@localhost");
         SMTPSession session = setupMockSession(INVALID_HOST, false, false, null, mailAddress);
         ResolvableEhloHeloHandler handler = createHandler();
@@ -142,7 +142,7 @@ public class ResolvableEhloHeloHandlerTest {
     }
     
     @Test
-    public void testNotRejectValidHelo() throws Exception {
+    void testNotRejectValidHelo() throws Exception {
         MailAddress mailAddress = new MailAddress("test@localhost");
         SMTPSession session = setupMockSession(VALID_HOST, false, false, null, mailAddress);
         ResolvableEhloHeloHandler handler = createHandler();
@@ -156,7 +156,7 @@ public class ResolvableEhloHeloHandlerTest {
     }
    
     @Test
-    public void testRejectInvalidHeloAuthUser() throws Exception {
+    void testRejectInvalidHeloAuthUser() throws Exception {
         MailAddress mailAddress = new MailAddress("test@localhost");
         SMTPSession session = setupMockSession(INVALID_HOST, false, true, Username.of("valid@user"), mailAddress);
         ResolvableEhloHeloHandler handler = createHandler();
@@ -172,7 +172,7 @@ public class ResolvableEhloHeloHandlerTest {
     
    
     @Test
-    public void testRejectRelay() throws Exception {
+    void testRejectRelay() throws Exception {
         MailAddress mailAddress = new MailAddress("test@localhost");
         SMTPSession session = setupMockSession(INVALID_HOST, true, false, null, mailAddress);
         ResolvableEhloHeloHandler handler = createHandler();

@@ -29,7 +29,7 @@ import java.util.Optional;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Preconditions;
 
@@ -37,7 +37,7 @@ public class MaxUnknownCmdHandlerTest {
 
     
     @Test
-    public void testRejectAndClose() throws Exception {
+    void testRejectAndClose() throws Exception {
         SMTPSession session = new BaseFakeSMTPSession() {
             private final HashMap<AttachmentKey<?>, Object> map = new HashMap<>();
 

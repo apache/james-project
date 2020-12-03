@@ -51,7 +51,7 @@ import org.apache.james.protocols.smtp.hook.MessageHook;
 import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.io.CharStreams;
 
@@ -63,7 +63,7 @@ public abstract class AbstractSMTPServerTest {
     protected static final String RCPT2 = "rpct2@domain";
 
     @Test
-    public void testSimpleDelivery() throws Exception {
+    void testSimpleDelivery() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         ProtocolServer server = null;
         try {
@@ -90,7 +90,7 @@ public abstract class AbstractSMTPServerTest {
     }
     
     @Test
-    public void testDeliveryWith4SimultaneousThreads() throws Exception {
+    protected void testDeliveryWith4SimultaneousThreads() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         ProtocolServer server = null;
         try {
@@ -155,7 +155,7 @@ public abstract class AbstractSMTPServerTest {
     }
     
     @Test
-    public void testStartTlsNotSupported() throws Exception {
+    void testStartTlsNotSupported() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         
         ProtocolServer server = null;
@@ -187,7 +187,7 @@ public abstract class AbstractSMTPServerTest {
     }
     
     @Test
-    public void testUnknownCommand() throws Exception {
+    void testUnknownCommand() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         
         ProtocolServer server = null;
@@ -219,7 +219,7 @@ public abstract class AbstractSMTPServerTest {
     }
     
     @Test
-    public void testNoop() throws Exception {
+    void testNoop() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         
         ProtocolServer server = null;
@@ -252,7 +252,7 @@ public abstract class AbstractSMTPServerTest {
     
     
     @Test
-    public void testMailWithoutBrackets() throws Exception {
+    protected void testMailWithoutBrackets() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         
         ProtocolServer server = null;
@@ -294,7 +294,7 @@ public abstract class AbstractSMTPServerTest {
 
 
     @Test
-    public void testInvalidHelo() throws Exception {
+    void testInvalidHelo() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         
         ProtocolServer server = null;
@@ -327,7 +327,7 @@ public abstract class AbstractSMTPServerTest {
     
 
     @Test
-    public void testRcptWithoutBrackets() throws Exception {
+    protected void testRcptWithoutBrackets() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         
         ProtocolServer server = null;
@@ -368,7 +368,7 @@ public abstract class AbstractSMTPServerTest {
     
     
     @Test
-    public void testInvalidNoBracketsEnformance() throws Exception {
+    protected void testInvalidNoBracketsEnformance() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         
         ProtocolServer server = null;
@@ -411,7 +411,7 @@ public abstract class AbstractSMTPServerTest {
     
     
     @Test
-    public void testHeloEnforcement() throws Exception {
+    protected void testHeloEnforcement() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         
         ProtocolServer server = null;
@@ -445,7 +445,7 @@ public abstract class AbstractSMTPServerTest {
     }
     
     @Test
-    public void testHeloEnforcementDisabled() throws Exception {
+    protected void testHeloEnforcementDisabled() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         
         ProtocolServer server = null;
@@ -482,7 +482,7 @@ public abstract class AbstractSMTPServerTest {
     
     
     @Test
-    public void testHeloHookPermanentError() throws Exception {
+    void testHeloHookPermanentError() throws Exception {
         HeloHook hook = (session, helo) -> HookResult.DENY;
         
         ProtocolServer server = null;
@@ -514,7 +514,7 @@ public abstract class AbstractSMTPServerTest {
     
     
     @Test
-    public void testHeloHookTempraryError() throws Exception {
+    void testHeloHookTempraryError() throws Exception {
         HeloHook hook = (session, helo) -> HookResult.DENYSOFT;
         
         ProtocolServer server = null;
@@ -545,7 +545,7 @@ public abstract class AbstractSMTPServerTest {
     }
     
     @Test
-    public void testMailHookPermanentError() throws Exception {
+    void testMailHookPermanentError() throws Exception {
         MailHook hook = new MailHook() {
             @Override
             public HookResult doMail(SMTPSession session, MaybeSender sender) {
@@ -584,7 +584,7 @@ public abstract class AbstractSMTPServerTest {
     }
     
     @Test
-    public void testMailHookTemporaryError() throws Exception {
+    void testMailHookTemporaryError() throws Exception {
         MailHook hook = new MailHook() {
             @Override
             public HookResult doMail(SMTPSession session, MaybeSender sender) {
@@ -624,7 +624,7 @@ public abstract class AbstractSMTPServerTest {
     
     
     @Test
-    public void testRcptHookPermanentError() throws Exception {
+    void testRcptHookPermanentError() throws Exception {
         RcptHook hook = new RcptHook() {
             @Override
             public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
@@ -677,7 +677,7 @@ public abstract class AbstractSMTPServerTest {
     
 
     @Test
-    public void testRcptHookTemporaryError() throws Exception {
+    void testRcptHookTemporaryError() throws Exception {
         RcptHook hook = new RcptHook() {
             @Override
             public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
@@ -728,7 +728,7 @@ public abstract class AbstractSMTPServerTest {
     }
     
     @Test
-    public void testNullSender() throws Exception {
+    void testNullSender() throws Exception {
         ProtocolServer server = null;
         try {
             server = createServer(createProtocol());
@@ -763,7 +763,7 @@ public abstract class AbstractSMTPServerTest {
     }
     
     @Test
-    public void testMessageHookPermanentError() throws Exception {
+    void testMessageHookPermanentError() throws Exception {
         TestMessageHook testHook = new TestMessageHook();
 
         MessageHook hook = (session, mail) -> HookResult.DENY;
@@ -809,7 +809,7 @@ public abstract class AbstractSMTPServerTest {
     
     
     @Test
-    public void testMessageHookTemporaryError() throws Exception {
+    void testMessageHookTemporaryError() throws Exception {
         TestMessageHook testHook = new TestMessageHook();
 
         MessageHook hook = (session, mail) -> HookResult.DENYSOFT;
@@ -856,7 +856,7 @@ public abstract class AbstractSMTPServerTest {
   
     
     @Test
-    public void testConnectHandlerPermananet() throws Exception {
+    void testConnectHandlerPermananet() throws Exception {
         ConnectHandler<SMTPSession> connectHandler = session -> new SMTPResponse("554", "Bye Bye");
         
         ProtocolServer server = null;
@@ -883,7 +883,7 @@ public abstract class AbstractSMTPServerTest {
     
     
     @Test
-    public void testConnectHandlerTemporary() throws Exception {
+    void testConnectHandlerTemporary() throws Exception {
         ConnectHandler<SMTPSession> connectHandler = session -> new SMTPResponse("451", "Bye Bye");
         
         ProtocolServer server = null;
@@ -908,7 +908,7 @@ public abstract class AbstractSMTPServerTest {
     }
     
     @Test
-    public void testDisconnectHandler() throws Exception {
+    void testDisconnectHandler() throws Exception {
         
         final AtomicBoolean called = new AtomicBoolean(false);
         DisconnectHandler<SMTPSession> handler = session -> called.set(true);

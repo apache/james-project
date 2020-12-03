@@ -45,7 +45,7 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.MessageHook;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
 import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
 
@@ -68,18 +68,18 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
 
     @Ignore("LMTP can't handle the queue")
     @Override
-    public void testDeliveryWith4SimultaneousThreads() {
+    protected void testDeliveryWith4SimultaneousThreads() {
     }
 
     @Ignore("Disable")
     @Override
-    public void testInvalidNoBracketsEnformance() throws Exception {
+    protected void testInvalidNoBracketsEnformance() throws Exception {
     }
 
 
     @Ignore("Disable")
     @Override
-    public void testHeloEnforcement() throws Exception {
+    protected void testHeloEnforcement() throws Exception {
     }
 
 
@@ -90,7 +90,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
 
 
     @Override
-    public void testMailWithoutBrackets() throws Exception {
+    protected void testMailWithoutBrackets() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         ProtocolServer server = null;
         try {
@@ -125,7 +125,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
 
 
     @Override
-    public void testRcptWithoutBrackets() throws Exception {
+    protected void testRcptWithoutBrackets() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         ProtocolServer server = null;
         try {
@@ -161,7 +161,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
 
 
     @Test
-    public void testEhloNotSupported() throws Exception {
+    protected void testEhloNotSupported() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         ProtocolServer server = null;
         try {
@@ -191,7 +191,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
     }
 
     @Test
-    public void testDeliveryHook() throws Exception {
+    void testDeliveryHook() throws Exception {
         TestDeliverHook deliverHook = new TestDeliverHook();
         
         ProtocolServer server = null;

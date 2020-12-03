@@ -32,6 +32,8 @@ import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.sun.mail.smtp.SMTPTransport;
+
 import org.apache.commons.net.smtp.SMTPReply;
 import org.apache.commons.net.smtp.SMTPSClient;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
@@ -53,11 +55,9 @@ import org.apache.james.protocols.smtp.SMTPProtocolHandlerChain;
 import org.apache.james.protocols.smtp.utils.TestMessageHook;
 import org.assertj.core.api.AssertDelegateTarget;
 import org.jboss.netty.util.HashedWheelTimer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import com.sun.mail.smtp.SMTPTransport;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class NettyStartTlsSMTPServerTest {
 
@@ -68,13 +68,13 @@ public class NettyStartTlsSMTPServerTest {
     private ProtocolServer server = null;
     private HashedWheelTimer hashedWheelTimer;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         hashedWheelTimer = new HashedWheelTimer();
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         if (smtpsClient != null) {
             smtpsClient.disconnect();
         }
@@ -110,7 +110,7 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     @Test
-    public void connectShouldReturnTrueWhenConnecting() throws Exception {
+    void connectShouldReturnTrueWhenConnecting() throws Exception {
         server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         smtpsClient = createClient();
 
@@ -121,7 +121,7 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     @Test
-    public void ehloShouldReturnTrueWhenSendingTheCommand() throws Exception {
+    void ehloShouldReturnTrueWhenSendingTheCommand() throws Exception {
         server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         smtpsClient = createClient();
 
@@ -134,7 +134,7 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     @Test
-    public void startTlsShouldBeAnnouncedWhenServerSupportsIt() throws Exception {
+    void startTlsShouldBeAnnouncedWhenServerSupportsIt() throws Exception {
         server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         smtpsClient = createClient();
 
@@ -163,7 +163,7 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     @Test
-    public void startTlsShouldReturnTrueWhenServerSupportsIt() throws Exception {
+    void startTlsShouldReturnTrueWhenServerSupportsIt() throws Exception {
         server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         smtpsClient = createClient();
 
@@ -177,7 +177,7 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     @Test
-    public void startTlsShouldFailWhenFollowedByInjectedCommand() throws Exception {
+    void startTlsShouldFailWhenFollowedByInjectedCommand() throws Exception {
         server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         smtpsClient = createClient();
 
@@ -191,7 +191,7 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     @Test
-    public void startTlsShouldFailWhenFollowedByInjectedCommandAndNotAtBeginningOfLine() throws Exception {
+    void startTlsShouldFailWhenFollowedByInjectedCommandAndNotAtBeginningOfLine() throws Exception {
         server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         smtpsClient = createClient();
 
@@ -205,7 +205,7 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     @Test
-    public void startTlsShouldWorkWhenUsingJavamail() throws Exception {
+    void startTlsShouldWorkWhenUsingJavamail() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         server = createServer(createProtocol(Optional.<ProtocolHandler>of(hook)), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         server.bind();

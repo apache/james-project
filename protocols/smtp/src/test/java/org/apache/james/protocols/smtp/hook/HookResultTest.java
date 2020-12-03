@@ -19,14 +19,14 @@
 
 package org.apache.james.protocols.smtp.hook;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class HookResultTest {
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(HookResult.class)
             .verify();
     }

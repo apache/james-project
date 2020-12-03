@@ -29,7 +29,7 @@ import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class MaxRcptHandlerTest {
     
@@ -56,7 +56,7 @@ public class MaxRcptHandlerTest {
     }
     
     @Test
-    public void testRejectMaxRcpt() throws Exception {
+    void testRejectMaxRcpt() throws Exception {
         SMTPSession session = setupMockedSession(3);
         MaxRcptHandler handler = new MaxRcptHandler();
         
@@ -68,7 +68,7 @@ public class MaxRcptHandlerTest {
   
   
     @Test
-    public void testNotRejectMaxRcpt() throws Exception {
+    void testNotRejectMaxRcpt() throws Exception {
         SMTPSession session = setupMockedSession(3);
         MaxRcptHandler handler = new MaxRcptHandler();    
 
