@@ -334,6 +334,46 @@ public class DsnParameters {
         }
     }
 
+    public static class Builder {
+        private Optional<EnvId> envIdParameter;
+        private Optional<Ret> retParameter;
+        private final ImmutableMap.Builder<MailAddress, RecipientDsnParameters> rcptParameters;
+
+        public Builder() {
+            this.envIdParameter = Optional.empty();
+            this.retParameter = Optional.empty();
+            this.rcptParameters = ImmutableMap.builder();
+        }
+
+        public Builder envId(EnvId envId) {
+            this.envIdParameter = Optional.of(envId);
+            return this;
+        }
+
+        public Builder ret(Ret ret) {
+            this.retParameter = Optional.of(ret);
+            return this;
+        }
+
+        public Builder rcptParameters(ImmutableMap<MailAddress, RecipientDsnParameters> rcptParameters) {
+            this.rcptParameters.putAll(rcptParameters);
+            return this;
+        }
+
+        public Builder addRcptParameter(MailAddress recipient, RecipientDsnParameters parameters) {
+            this.rcptParameters.put(recipient, parameters);
+            return this;
+        }
+
+        public Optional<DsnParameters> build() {
+            return of(envIdParameter, retParameter, rcptParameters.build());
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
     public static Optional<DsnParameters> of(Optional<EnvId> envIdParameter, Optional<Ret> retParameter, ImmutableMap<MailAddress, RecipientDsnParameters> rcptParameters) {
         if (envIdParameter.isEmpty() && retParameter.isEmpty() && rcptParameters.isEmpty()) {
             return Optional.empty();
