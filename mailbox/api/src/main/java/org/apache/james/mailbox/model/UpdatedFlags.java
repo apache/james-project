@@ -156,7 +156,12 @@ public class UpdatedFlags {
     }
 
     public boolean isUnchanged(Flags.Flag flag) {
-        return !isModifiedToSet(flag) && !isModifiedToUnset(flag);
+        return !isChanged(flag);
+    }
+
+
+    public boolean isChanged(Flags.Flag flag) {
+        return isModifiedToSet(flag) || isModifiedToUnset(flag);
     }
 
     /**
