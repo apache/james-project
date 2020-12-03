@@ -75,6 +75,12 @@ public class JMSCacheableMailQueueTest implements DelayedManageableMailQueueCont
     }
 
     @Override
+    @Disabled("JAMES-3431 No support for Attribute collection Java serialization yet")
+    public void queueShouldPreserveDsnParameters() {
+
+    }
+
+    @Override
     @Disabled("JAMES-2295 Disabled as test was dead-locking")
     public void dequeueCanBeChainedBeforeAck() {
 

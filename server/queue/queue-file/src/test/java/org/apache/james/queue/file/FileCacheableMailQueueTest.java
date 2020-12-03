@@ -53,6 +53,12 @@ public class FileCacheableMailQueueTest implements DelayedManageableMailQueueCon
     }
 
     @Override
+    @Disabled("JAMES-3431 No support for Attribute collection Java serialization yet")
+    public void queueShouldPreserveDsnParameters() {
+
+    }
+
+    @Override
     public MailQueue getMailQueue() {
         return mailQueue;
     }

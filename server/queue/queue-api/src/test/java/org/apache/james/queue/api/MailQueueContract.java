@@ -31,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -47,6 +48,7 @@ import org.apache.james.core.MaybeSender;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.mailet.Attribute;
+import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.test.FakeMail;
@@ -67,6 +69,26 @@ public interface MailQueueContract {
 
     default void enQueue(Mail mail) throws MailQueue.MailQueueException {
         getMailQueue().enQueue(mail);
+    }
+
+    @Test
+    default void queueShouldPreserveDsnParameters() throws Exception {
+        DsnParameters dsnParameters = DsnParameters.builder()
+            .envId(DsnParameters.EnvId.of("434554-55445-33443"))
+            .ret(DsnParameters.Ret.FULL)
+            .addRcptParameter(new MailAddress("bob@apache.org"), DsnParameters.RecipientDsnParameters.of(new MailAddress("andy@apache.org")))
+            .addRcptParameter(new MailAddress("cedric@apache.org"), DsnParameters.RecipientDsnParameters.of(EnumSet.of(DsnParameters.Notify.SUCCESS)))
+            .addRcptParameter(new MailAddress("domi@apache.org"), DsnParameters.RecipientDsnParameters.of(EnumSet.of(DsnParameters.Notify.FAILURE), new MailAddress("eric@apache.org")))
+            .build().get();
+        Mail mail = defaultMail()
+            .name("mail")
+            .build();
+        mail.setDsnParameters(dsnParameters);
+        enQueue(mail);
+
+        MailQueue.MailQueueItem mailQueueItem = Flux.from(getMailQueue().deQueue()).blockFirst();
+        assertThat(mailQueueItem.getMail().dsnParameters())
+            .contains(dsnParameters);
     }
 
     @Test
