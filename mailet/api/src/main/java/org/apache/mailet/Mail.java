@@ -438,4 +438,14 @@ public interface Mail extends Serializable, Cloneable {
             .flatMap(Optional::stream)
             .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
     }
+
+    default Optional<DsnParameters> dsnParameters() {
+        return DsnParameters.fromAttributeValue(DsnParameters.DsnAttributeValues.extract(attributesMap()));
+    }
+
+    default void setDsnParameters(DsnParameters dsnParameters) {
+        dsnParameters.toAttributes()
+            .asAttributes()
+            .forEach(this::setAttribute);
+    }
 }

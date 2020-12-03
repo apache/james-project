@@ -21,19 +21,25 @@ package org.apache.mailet;
 
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 import javax.mail.internet.AddressException;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Represents DSN parameters attached to the envelope of an Email transiting over SMTP
@@ -64,6 +70,15 @@ public class DsnParameters {
                     .orElseThrow(() -> new IllegalArgumentException(input + " is not a supported value for RET DSN parameter")));
         }
 
+        public static Ret fromAttributeValue(AttributeValue<String> attributeValue) {
+            return parse(attributeValue.value())
+                .orElseThrow(() -> new IllegalArgumentException(attributeValue.value() + " is not a supported value for RET DSN parameter"));
+        }
+
+        public static AttributeValue<String> toAttributeValue(Ret value) {
+            return AttributeValue.of(value.toString());
+        }
+
         public static Optional<Ret> parse(String string) {
             Preconditions.checkNotNull(string);
 
@@ -84,6 +99,10 @@ public class DsnParameters {
                 .map(EnvId::of);
         }
 
+        public static EnvId fromAttributeValue(AttributeValue<String> attributeValue) {
+            return of(attributeValue.value());
+        }
+
         public static EnvId of(String value) {
             Preconditions.checkNotNull(value);
 
@@ -98,6 +117,10 @@ public class DsnParameters {
 
         public String asString() {
             return value;
+        }
+
+        public AttributeValue<String> toAttributeValue() {
+            return AttributeValue.of(value);
         }
 
         @Override
@@ -133,6 +156,14 @@ public class DsnParameters {
         SUCCESS,
         FAILURE,
         DELAY;
+
+        public static EnumSet<Notify> fromAttributeValue(AttributeValue<String> attributeValue) {
+            return parse(attributeValue.value());
+        }
+
+        public static AttributeValue<String> toAttributeValue(EnumSet<Notify> value) {
+            return AttributeValue.of(Joiner.on(',').join(value));
+        }
 
         public static EnumSet<Notify> parse(String input) {
             Preconditions.checkNotNull(input);
@@ -171,10 +202,26 @@ public class DsnParameters {
             Optional<MailAddress> orcptParameter = Optional.ofNullable(rcptToArgLine.get(ORCPT_PARAMETER))
                 .map(RecipientDsnParameters::parseOrcpt);
 
+            return of(notifyParameter, orcptParameter);
+        }
+
+        public static Optional<RecipientDsnParameters> of(Optional<EnumSet<Notify>> notifyParameter, Optional<MailAddress> orcptParameter) {
             if (notifyParameter.isEmpty() && orcptParameter.isEmpty()) {
                 return Optional.empty();
             }
             return Optional.of(new RecipientDsnParameters(notifyParameter, orcptParameter));
+        }
+
+        public static RecipientDsnParameters of(EnumSet<Notify> notifyParameter, MailAddress orcptParameter) {
+            return new RecipientDsnParameters(Optional.of(notifyParameter), Optional.of(orcptParameter));
+        }
+
+        public static RecipientDsnParameters of(MailAddress orcptParameter) {
+            return new RecipientDsnParameters(Optional.empty(), Optional.of(orcptParameter));
+        }
+
+        public static RecipientDsnParameters of(EnumSet<Notify> notifyParameter) {
+            return new RecipientDsnParameters(Optional.of(notifyParameter), Optional.empty());
         }
 
         private static MailAddress parseOrcpt(String input) {
@@ -228,11 +275,103 @@ public class DsnParameters {
         }
     }
 
+    public static class DsnAttributeValues {
+        private static final AttributeName ENVID_ATTRIBUTE_NAME = AttributeName.of("dsn-envid");
+        private static final AttributeName RET_ATTRIBUTE_NAME = AttributeName.of("dsn-ret");
+        private static final AttributeName NOTIFY_ATTRIBUTE_NAME = AttributeName.of("dsn-notify");
+        private static final AttributeName ORCPT_ATTRIBUTE_NAME = AttributeName.of("dsn-orcpt");
+
+        public static DsnAttributeValues extract(Map<AttributeName, Attribute> attributesMap) {
+            Optional<AttributeValue<String>> envId = Optional.ofNullable(attributesMap.get(ENVID_ATTRIBUTE_NAME))
+                .flatMap(attribute -> attribute.getValue().asAttributeValueOf(String.class));
+            Optional<AttributeValue<String>> ret = Optional.ofNullable(attributesMap.get(RET_ATTRIBUTE_NAME))
+                .flatMap(attribute -> attribute.getValue().asAttributeValueOf(String.class));
+            Optional<AttributeValue<Map<String, AttributeValue<String>>>> notify =
+                Optional.ofNullable(attributesMap.get(NOTIFY_ATTRIBUTE_NAME))
+                    .flatMap(attribute -> attribute.getValue().asMapAttributeValueOf(String.class));
+            Optional<AttributeValue<Map<String, AttributeValue<String>>>> orcpt =
+                Optional.ofNullable(attributesMap.get(ORCPT_ATTRIBUTE_NAME))
+                    .flatMap(attribute -> attribute.getValue().asMapAttributeValueOf(String.class));
+
+            return new DsnAttributeValues(notify, orcpt, envId, ret);
+        }
+
+        private final Optional<AttributeValue<Map<String, AttributeValue<String>>>> notifyAttributeValue;
+        private final Optional<AttributeValue<Map<String, AttributeValue<String>>>> orcptAttributeValue;
+        private final Optional<AttributeValue<String>> envIdAttributeValue;
+        private final Optional<AttributeValue<String>> retAttributeValue;
+
+        public DsnAttributeValues(Optional<AttributeValue<Map<String, AttributeValue<String>>>> notifyAttributeValue, Optional<AttributeValue<Map<String, AttributeValue<String>>>> orcptAttributeValue, Optional<AttributeValue<String>> envIdAttributeValue, Optional<AttributeValue<String>> retAttributeValue) {
+            this.notifyAttributeValue = notifyAttributeValue;
+            this.orcptAttributeValue = orcptAttributeValue;
+            this.envIdAttributeValue = envIdAttributeValue;
+            this.retAttributeValue = retAttributeValue;
+        }
+
+        public Optional<AttributeValue<Map<String, AttributeValue<String>>>> getNotifyAttributeValue() {
+            return notifyAttributeValue;
+        }
+
+        public Optional<AttributeValue<Map<String, AttributeValue<String>>>> getOrcptAttributeValue() {
+            return orcptAttributeValue;
+        }
+
+        public Optional<AttributeValue<String>> getEnvIdAttributeValue() {
+            return envIdAttributeValue;
+        }
+
+        public Optional<AttributeValue<String>> getRetAttributeValue() {
+            return retAttributeValue;
+        }
+
+        public List<Attribute> asAttributes() {
+            ImmutableList.Builder<Attribute> result = ImmutableList.builder();
+            envIdAttributeValue.map(value -> new Attribute(ENVID_ATTRIBUTE_NAME, value)).ifPresent(result::add);
+            retAttributeValue.map(value -> new Attribute(RET_ATTRIBUTE_NAME, value)).ifPresent(result::add);
+            notifyAttributeValue.map(value -> new Attribute(NOTIFY_ATTRIBUTE_NAME, value)).ifPresent(result::add);
+            orcptAttributeValue.map(value -> new Attribute(ORCPT_ATTRIBUTE_NAME, value)).ifPresent(result::add);
+            return result.build();
+        }
+    }
+
     public static Optional<DsnParameters> of(Optional<EnvId> envIdParameter, Optional<Ret> retParameter, ImmutableMap<MailAddress, RecipientDsnParameters> rcptParameters) {
         if (envIdParameter.isEmpty() && retParameter.isEmpty() && rcptParameters.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(new DsnParameters(envIdParameter, retParameter, rcptParameters));
+    }
+
+    public static Optional<DsnParameters> fromAttributeValue(DsnAttributeValues dsnAttributeValues) {
+        Optional<EnvId> envId = dsnAttributeValues.getEnvIdAttributeValue().map(EnvId::fromAttributeValue);
+        Optional<Ret> ret = dsnAttributeValues.getRetAttributeValue().map(Ret::fromAttributeValue);
+        Map<MailAddress, EnumSet<Notify>> notify = dsnAttributeValues.getNotifyAttributeValue()
+            .map(mapAttributeValue -> mapAttributeValue.value()
+                .entrySet()
+                .stream()
+                .map(Throwing.function(entry -> Pair.of(new MailAddress(entry.getKey()), Notify.fromAttributeValue(entry.getValue()))))
+                .collect(Guavate.entriesToMap()))
+            .orElse(ImmutableMap.of());
+        Map<MailAddress, MailAddress> orcpt = dsnAttributeValues.getOrcptAttributeValue()
+            .map(mapAttributeValue -> mapAttributeValue.value()
+                .entrySet()
+                .stream()
+                .map(Throwing.function(entry -> Pair.of(new MailAddress(entry.getKey()), new MailAddress(entry.getValue().value()))))
+                .collect(Guavate.toImmutableMap(
+                    Pair::getKey,
+                    Pair::getValue)))
+            .orElse(ImmutableMap.of());
+        ImmutableSet<MailAddress> rcpts = ImmutableSet.<MailAddress>builder()
+            .addAll(notify.keySet())
+            .addAll(orcpt.keySet())
+            .build();
+        ImmutableMap<MailAddress, RecipientDsnParameters> recipientDsnParameters = rcpts.stream()
+            .map(rcpt -> Pair.of(rcpt, new RecipientDsnParameters(
+                Optional.ofNullable(notify.get(rcpt)),
+                Optional.ofNullable(orcpt.get(rcpt)))))
+            .collect(Guavate.toImmutableMap(
+                Pair::getKey,
+                Pair::getValue));
+        return of(envId, ret, recipientDsnParameters);
     }
 
     private final Optional<EnvId> envIdParameter;
@@ -255,6 +394,25 @@ public class DsnParameters {
 
     public ImmutableMap<MailAddress, RecipientDsnParameters> getRcptParameters() {
         return rcptParameters;
+    }
+
+    public DsnAttributeValues toAttributes() {
+        Optional<AttributeValue<String>> envIdAttributeValue = envIdParameter.map(EnvId::asString).map(AttributeValue::of);
+        Optional<AttributeValue<String>> retAttributeValue = retParameter.map(Ret::toString).map(AttributeValue::of);
+        Optional<AttributeValue<Map<String, AttributeValue<String>>>> notifyAttributeValue = AttributeValue.of(rcptParameters.entrySet().stream()
+            .filter(entry -> entry.getValue().getNotifyParameter().isPresent())
+            .map(entry -> Pair.of(entry.getKey().asString(),
+                Notify.toAttributeValue(entry.getValue().getNotifyParameter().get())))
+            .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)))
+            .asMapAttributeValueOf(String.class);
+        Optional<AttributeValue<Map<String, AttributeValue<String>>>> orcptAttributeValue = AttributeValue.of(rcptParameters.entrySet().stream()
+            .filter(entry -> entry.getValue().getOrcptParameter().isPresent())
+            .map(entry -> Pair.of(entry.getKey().asString(),
+                AttributeValue.of(entry.getValue().getOrcptParameter().get().asString())))
+            .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)))
+            .asMapAttributeValueOf(String.class);
+
+        return new DsnAttributeValues(notifyAttributeValue, orcptAttributeValue, envIdAttributeValue, retAttributeValue);
     }
 
     @Override
