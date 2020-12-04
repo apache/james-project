@@ -66,7 +66,7 @@ concept is available.
  - `mailboxes` relies on LWT to enforce name unicity. We hit the same pitfalls than for ACLs as this is a very often
  read table (however mailboxes of a given user being grouped together, primary key read are more limited hence this is
  less critical). Similar results could be expected. Discussions on this topic have not been started yet. Further
- impact studies on performance needs to be conducted.
+ impact studies on performance need to be conducted.
  - `messages` as flags update is so far transactional. However, by better relying on the table structure used to store 
 flags we could be relying on Cassandra to solve data race issues for us. Note also that IMAP CONDSTORE extension is not 
 implemented, and might be a non-viable option performance-wise. We might choose to favor performance other 
@@ -84,9 +84,9 @@ If not implementing IMAP CONDSTORE, generation of IMAP `MODSEQ` likely no longer
 
 Similarly, LWT are used to try to keep the count of emails in MailRepository synchronize. Such a usage is non-performance
 critical for a MDA (Mail Delivery Agent) use case but might have a bigger impact for MTA (Mail Transfer Agent). No
-discussion not work have been started on the topic.
+discussion or work have been started on the topic.
 
-Other usage of LWT includes Sieve script management, initialization of the RabbitMQMailQueue browse start and other
+Other usages of LWT include Sieve script management, initialization of the RabbitMQMailQueue browse start and other
 low-impact use cases.
 
 ## References
