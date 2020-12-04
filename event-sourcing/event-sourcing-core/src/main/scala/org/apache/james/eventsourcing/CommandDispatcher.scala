@@ -20,12 +20,10 @@ package org.apache.james.eventsourcing
 
 import java.util
 
+import com.google.common.base.Preconditions
 import javax.inject.Inject
-
 import org.apache.james.eventsourcing.eventstore.EventStoreFailedException
 import org.reactivestreams.Publisher
-
-import com.google.common.base.Preconditions
 import reactor.core.scala.publisher.SMono
 
 import scala.jdk.CollectionConverters._
@@ -51,7 +49,7 @@ object CommandDispatcher {
 class CommandDispatcher @Inject()(eventBus: EventBus, handlers: Set[CommandHandler[_ <: Command]]) {
   Preconditions.checkArgument(hasOnlyOneHandlerByCommand(handlers), CommandDispatcher.ONLY_ONE_HANDLER_PRECONDITION)
 
-  def dispatch(c: Command): Publisher[Void] = {
+  def dispatch(c: Command): Publisher[util.List[_ <: Event]] = {
     tryDispatch(c)
       .retry(CommandDispatcher.MAX_RETRY, {
         case _: EventStoreFailedException => true
@@ -71,11 +69,11 @@ class CommandDispatcher @Inject()(eventBus: EventBus, handlers: Set[CommandHandl
   private val handlersByClass: Map[Class[_ <: Command], CommandHandler[_ <: Command]] =
     handlers.map(handler => (handler.handledClass, handler)).toMap
 
-  private def tryDispatch(c: Command): SMono[Void] = {
+  private def tryDispatch(c: Command): SMono[util.List[_ <: Event]] = {
     handleCommand(c) match {
       case Some(eventsPublisher) =>
         SMono(eventsPublisher)
-          .flatMap(events => eventBus.publish(events.asScala))
+          .flatMap(events => eventBus.publish(events.asScala).`then`(SMono.just(events)))
       case _ =>
         SMono.raiseError(CommandDispatcher.UnknownCommandException(c))
     }

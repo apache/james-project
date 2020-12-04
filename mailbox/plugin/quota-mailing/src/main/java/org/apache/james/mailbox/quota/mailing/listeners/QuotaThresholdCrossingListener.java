@@ -89,6 +89,7 @@ public class QuotaThresholdCrossingListener implements MailboxListener.ReactiveG
 
     private Mono<Void> handleEvent(Username username, QuotaUsageUpdatedEvent event) {
         return Mono.from(eventSourcingSystem.dispatch(
-            new DetectThresholdCrossing(username, event.getCountQuota(), event.getSizeQuota(), event.getInstant())));
+                new DetectThresholdCrossing(username, event.getCountQuota(), event.getSizeQuota(), event.getInstant())))
+            .then();
     }
 }

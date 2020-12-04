@@ -54,7 +54,7 @@ public class EventSourcingFilteringManagement implements FilteringManagement {
 
     @Override
     public Publisher<Void> defineRulesForUser(Username username, List<Rule> rules) {
-        return eventSourcingSystem.dispatch(new DefineRulesCommand(username, rules));
+        return Mono.from(eventSourcingSystem.dispatch(new DefineRulesCommand(username, rules))).then();
     }
 
     @Override
