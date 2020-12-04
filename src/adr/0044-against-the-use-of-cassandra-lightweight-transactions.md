@@ -99,3 +99,4 @@ low-impact use cases.
 * [ADR-21 ACL inconsistencies](https://github.com/apache/james-project/blob/master/src/adr/0021-cassandra-acl-inconsistency.md)
 * [Buggy IMAP CONDSTORE](https://issues.apache.org/jira/browse/JAMES-2055)
 * [Link to the Mailing list thread discussing this ADR](https://www.mail-archive.com/server-dev@james.apache.org/msg69124.html)
+* [The pull request for this ADR might include useful information as well](https://github.com/apache/james-project/pull/271)
