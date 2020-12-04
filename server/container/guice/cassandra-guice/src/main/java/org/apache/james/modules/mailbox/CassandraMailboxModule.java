@@ -25,6 +25,9 @@ import javax.inject.Singleton;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthorizator;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.Authenticator;
@@ -64,6 +67,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
+import org.apache.james.mailbox.cassandra.mail.eventsourcing.acl.ACLModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
@@ -104,6 +108,7 @@ import org.apache.mailbox.tools.indexer.ReIndexerImpl;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
@@ -206,6 +211,11 @@ public class CassandraMailboxModule extends AbstractModule {
         mailboxListeners.addBinding().to(DeleteMessageListener.class);
 
         bind(MailboxManager.class).annotatedWith(Names.named(MAILBOXMANAGER_NAME)).to(MailboxManager.class);
+
+        Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {})
+            .addBinding().toInstance(ACLModule.ACL_RESET);
+        Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {})
+            .addBinding().toInstance(ACLModule.ACL_UPDATE);
     }
     
     @Singleton
@@ -215,6 +225,4 @@ public class CassandraMailboxModule extends AbstractModule {
             super("cassandra-mailboxmanager", manager);
         }
     }
-    
-
 }

@@ -27,8 +27,7 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
-import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV1;
-import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV2;
+import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
@@ -81,14 +80,14 @@ public class AclV2Migration implements Migration {
     public static final TaskType TYPE = TaskType.of("acl-v2-migration");
 
     private final CassandraMailboxDAO mailboxDAO;
-    private final CassandraACLDAOV1 daoV1;
-    private final CassandraACLDAOV2 daoV2;
+    private final CassandraACLMapper.StoreV1 storeV1;
+    private final CassandraACLMapper.StoreV2 storeV2;
 
     @Inject
-    public AclV2Migration(CassandraMailboxDAO mailboxDAO, CassandraACLDAOV1 daoV1, CassandraACLDAOV2 daoV2) {
+    public AclV2Migration(CassandraMailboxDAO mailboxDAO, CassandraACLMapper.StoreV1 storeV1, CassandraACLMapper.StoreV2 storeV2) {
         this.mailboxDAO = mailboxDAO;
-        this.daoV1 = daoV1;
-        this.daoV2 = daoV2;
+        this.storeV1 = storeV1;
+        this.storeV2 = storeV2;
     }
 
     @Override
@@ -96,8 +95,8 @@ public class AclV2Migration implements Migration {
         mailboxDAO.retrieveAllMailboxes()
             .flatMap(mailbox -> {
                 CassandraId id = (CassandraId) mailbox.getMailboxId();
-                return daoV1.getACL(id)
-                    .flatMap(acl -> daoV2.doSetACL(id, acl));
+                return storeV1.getACL(id)
+                    .flatMap(acl -> storeV2.setACL(id, acl));
             }, CONCURRENCY)
             .doOnError(t -> LOGGER.error("Error while performing migration", t))
             .subscribeOn(Schedulers.elastic())

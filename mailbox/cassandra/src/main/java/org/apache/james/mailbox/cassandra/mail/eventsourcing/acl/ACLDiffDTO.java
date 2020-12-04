@@ -16,71 +16,61 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.cassandra.ids;
 
-import java.io.Serializable;
+package org.apache.james.mailbox.cassandra.mail.eventsourcing.acl;
+
 import java.util.Objects;
-import java.util.UUID;
 
-import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.acl.ACLDiff;
 
-import com.datastax.driver.core.utils.UUIDs;
-import com.google.common.base.MoreObjects;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class CassandraId implements MailboxId, Serializable {
-
-    public static class Factory implements MailboxId.Factory {
-        @Override
-        public CassandraId fromString(String serialized) {
-            return of(serialized);
-        }
-    }
-    
-    private final UUID id;
-
-    public static CassandraId timeBased() {
-        return of(UUIDs.timeBased());
+public class ACLDiffDTO {
+    public static ACLDiffDTO fromACLDiff(ACLDiff aclDiff) {
+        return new ACLDiffDTO(ACLDTO.fromACL(aclDiff.getOldACL()),
+            ACLDTO.fromACL(aclDiff.getNewACL()));
     }
 
-    public static CassandraId of(UUID id) {
-        return new CassandraId(id);
+    private final ACLDTO oldAcl;
+    private final ACLDTO newAcl;
+
+    @JsonCreator
+    public ACLDiffDTO(@JsonProperty("oldAcl") ACLDTO oldAcl,
+                      @JsonProperty("newAcl") ACLDTO newAcl) {
+        this.oldAcl = oldAcl;
+        this.newAcl = newAcl;
     }
 
-    public static CassandraId of(String serialized) {
-        return new CassandraId(UUID.fromString(serialized));
+    @JsonProperty("oldAcl")
+    public ACLDTO getOldAcl() {
+        return oldAcl;
     }
 
-    private CassandraId(UUID id) {
-        this.id = id;
+    @JsonProperty("newAcl")
+    public ACLDTO getNewAcl() {
+        return newAcl;
     }
 
-    @Override
-    public String serialize() {
-        return id.toString();
-    }
-
-    public UUID asUuid() {
-        return id;
+    public ACLDiff asACLDiff() {
+        return ACLDiff.computeDiff(
+            oldAcl.asACL(),
+            newAcl.asACL());
     }
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof CassandraId) {
-            CassandraId other = (CassandraId) o;
-            return Objects.equals(id, other.id);
+        if (o instanceof ACLDiffDTO) {
+            ACLDiffDTO that = (ACLDiffDTO) o;
+
+            return Objects.equals(this.newAcl, that.newAcl)
+                && Objects.equals(this.oldAcl, that.oldAcl);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(id);
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-            .add("id", id)
-            .toString();
+        return Objects.hash(newAcl, oldAcl);
     }
 }

@@ -26,12 +26,20 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.core.Username;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
+import org.apache.james.eventsourcing.eventstore.cassandra.EventStoreDao;
+import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV1;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV2;
+import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
+import org.apache.james.mailbox.cassandra.mail.eventsourcing.acl.ACLModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.model.Mailbox;
@@ -52,8 +60,9 @@ class AclV2MigrationTest {
         UidValidity.generate(), MAILBOX_ID);
 
     public static final CassandraModule MODULES = CassandraModule.aggregateModules(
-        CassandraMailboxModule.MODULE,
         CassandraAclModule.MODULE,
+        CassandraEventStoreModule.MODULE(),
+        CassandraMailboxModule.MODULE,
         CassandraSchemaVersionModule.MODULE);
 
     @RegisterExtension
@@ -69,7 +78,14 @@ class AclV2MigrationTest {
         mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider(), CassandraConsistenciesConfiguration.DEFAULT);
         daoV1 = new CassandraACLDAOV1(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION, CassandraConsistenciesConfiguration.DEFAULT);
         daoV2 = new CassandraACLDAOV2(cassandra.getConf());
-        migration = new AclV2Migration(mailboxDAO, daoV1, daoV2);
+        JsonEventSerializer jsonEventSerializer = JsonEventSerializer
+            .forModules(ACLModule.ACL_RESET, ACLModule.ACL_UPDATE)
+            .withoutNestedType();
+        CassandraEventStore eventStore = new CassandraEventStore(new EventStoreDao(cassandra.getConf(), jsonEventSerializer, CassandraConsistenciesConfiguration.DEFAULT));
+        CassandraUserMailboxRightsDAO usersRightDAO = new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+        migration = new AclV2Migration(mailboxDAO,
+            new CassandraACLMapper.StoreV1(usersRightDAO, daoV1),
+            new CassandraACLMapper.StoreV2(usersRightDAO, daoV2, eventStore));
     }
 
     @Test
@@ -105,7 +121,7 @@ class AclV2MigrationTest {
         MailboxACL acl = new MailboxACL(ImmutableMap.of(MailboxACL.EntryKey.createUserEntryKey(Username.of("alice")), MailboxACL.FULL_RIGHTS));
         daoV1.setACL(MAILBOX_ID, acl).block();
 
-        Task.Result result = migration.runTask();
+        migration.runTask();
 
         assertThat(daoV2.getACL(MAILBOX_ID).block()).isEqualTo(acl);
     }

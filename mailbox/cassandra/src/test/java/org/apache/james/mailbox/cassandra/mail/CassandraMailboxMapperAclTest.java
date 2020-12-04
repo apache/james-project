@@ -23,6 +23,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
@@ -33,6 +34,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class CassandraMailboxMapperAclTest extends MailboxMapperACLTest {
 
     private static final CassandraModule MODULES = CassandraModule.aggregateModules(
+        CassandraEventStoreModule.MODULE(),
         CassandraSchemaVersionModule.MODULE,
         CassandraAclModule.MODULE,
         CassandraMailboxModule.MODULE,

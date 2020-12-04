@@ -16,71 +16,42 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.cassandra.ids;
 
-import java.io.Serializable;
+package org.apache.james.mailbox.cassandra.mail.eventsourcing.acl;
+
 import java.util.Objects;
-import java.util.UUID;
 
-import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.eventsourcing.AggregateId;
+import org.apache.james.mailbox.cassandra.ids.CassandraId;
 
-import com.datastax.driver.core.utils.UUIDs;
-import com.google.common.base.MoreObjects;
+public class MailboxAggregateId implements AggregateId {
+    private final CassandraId cassandraId;
 
-public class CassandraId implements MailboxId, Serializable {
-
-    public static class Factory implements MailboxId.Factory {
-        @Override
-        public CassandraId fromString(String serialized) {
-            return of(serialized);
-        }
-    }
-    
-    private final UUID id;
-
-    public static CassandraId timeBased() {
-        return of(UUIDs.timeBased());
+    public MailboxAggregateId(CassandraId cassandraId) {
+        this.cassandraId = cassandraId;
     }
 
-    public static CassandraId of(UUID id) {
-        return new CassandraId(id);
-    }
-
-    public static CassandraId of(String serialized) {
-        return new CassandraId(UUID.fromString(serialized));
-    }
-
-    private CassandraId(UUID id) {
-        this.id = id;
+    public CassandraId asMailboxId() {
+        return cassandraId;
     }
 
     @Override
-    public String serialize() {
-        return id.toString();
-    }
-
-    public UUID asUuid() {
-        return id;
+    public String asAggregateKey() {
+        return cassandraId.serialize();
     }
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof CassandraId) {
-            CassandraId other = (CassandraId) o;
-            return Objects.equals(id, other.id);
+        if (o instanceof MailboxAggregateId) {
+            MailboxAggregateId that = (MailboxAggregateId) o;
+
+            return Objects.equals(this.cassandraId, that.cassandraId);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(id);
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-            .add("id", id)
-            .toString();
+        return Objects.hash(cassandraId);
     }
 }

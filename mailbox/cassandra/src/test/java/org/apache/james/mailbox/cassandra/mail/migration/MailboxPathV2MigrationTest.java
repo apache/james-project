@@ -25,11 +25,16 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.core.Username;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
+import org.apache.james.eventsourcing.eventstore.cassandra.EventStoreDao;
+import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV1;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV2;
@@ -41,6 +46,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAOImpl;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV2DAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV3DAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
+import org.apache.james.mailbox.cassandra.mail.eventsourcing.acl.ACLModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.model.Mailbox;
@@ -62,7 +68,8 @@ class MailboxPathV2MigrationTest {
     public static final CassandraModule MODULES = CassandraModule.aggregateModules(
             CassandraMailboxModule.MODULE,
             CassandraAclModule.MODULE,
-            CassandraSchemaVersionModule.MODULE);
+            CassandraSchemaVersionModule.MODULE,
+            CassandraEventStoreModule.MODULE());
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MODULES);
@@ -94,6 +101,16 @@ class MailboxPathV2MigrationTest {
             cassandra.getConf(),
             cassandra.getTypesProvider(),
             cassandraCluster.getCassandraConsistenciesConfiguration());
+        CassandraACLDAOV1 aclDAOV1 = new CassandraACLDAOV1(
+            cassandra.getConf(),
+            CassandraConfiguration.DEFAULT_CONFIGURATION,
+            cassandraCluster.getCassandraConsistenciesConfiguration());
+        CassandraACLDAOV2 aclDAOV2 = new CassandraACLDAOV2(cassandra.getConf());
+        JsonEventSerializer jsonEventSerializer = JsonEventSerializer
+            .forModules(ACLModule.ACL_RESET, ACLModule.ACL_UPDATE)
+            .withoutNestedType();
+        CassandraEventStore eventStore = new CassandraEventStore(new EventStoreDao(cassandra.getConf(), jsonEventSerializer, CassandraConsistenciesConfiguration.DEFAULT));
+        CassandraUserMailboxRightsDAO usersRightDAO = new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
         mailboxMapper = new CassandraMailboxMapper(
             mailboxDAO,
             daoV1,
@@ -101,12 +118,8 @@ class MailboxPathV2MigrationTest {
             daoV3,
             userMailboxRightsDAO,
             new CassandraACLMapper(
-                userMailboxRightsDAO,
-                new CassandraACLDAOV1(
-                    cassandra.getConf(),
-                    CassandraConfiguration.DEFAULT_CONFIGURATION,
-                    cassandraCluster.getCassandraConsistenciesConfiguration()),
-                new CassandraACLDAOV2(cassandra.getConf()),
+                new CassandraACLMapper.StoreV1(usersRightDAO, aclDAOV1),
+                new CassandraACLMapper.StoreV2(usersRightDAO, aclDAOV2, eventStore),
                 new CassandraSchemaVersionManager(new CassandraSchemaVersionDAO(cassandra.getConf()))),
             new CassandraSchemaVersionManager(new CassandraSchemaVersionDAO(cassandra.getConf())),
             CassandraConfiguration.DEFAULT_CONFIGURATION);

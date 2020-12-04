@@ -69,7 +69,13 @@ public class MailboxACL {
      * SETACL command mode.
      */
     public enum EditMode {
-        ADD, REMOVE, REPLACE
+        ADD, REMOVE, REPLACE;
+
+        public static Optional<EditMode> parse(String string) {
+            return Arrays.stream(values())
+                .filter(value -> value.toString().equalsIgnoreCase(string))
+                .findAny();
+        }
     }
 
     public enum NameType {
