@@ -24,12 +24,11 @@ import static org.apache.james.MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
-import org.apache.james.jmap.rfc8621.contract.EmailChangesContract;
-import org.apache.james.jmap.rfc8621.contract.MailboxChangesContract;
+import org.apache.james.jmap.rfc8621.contract.MailboxChangesMethodContract;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class MemoryMailboxChangesMethodTest implements MailboxChangesContract {
+public class MemoryMailboxChangesMethodTest implements MailboxChangesMethodContract {
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)

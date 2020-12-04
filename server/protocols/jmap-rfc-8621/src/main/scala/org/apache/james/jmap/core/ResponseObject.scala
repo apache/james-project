@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.core
 
+import eu.timepit.refined.auto._
+
 case class ResponseObject(sessionState: State, methodResponses: Seq[Invocation])
 
 object ResponseObject {

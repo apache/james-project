@@ -19,10 +19,9 @@
 
 package org.apache.james.jmap.mail
 
-import org.apache.james.jmap.core.AccountId
 import org.apache.james.jmap.core.Id.Id
-import org.apache.james.jmap.core.State.State
 import org.apache.james.jmap.core.UnsignedInt.UnsignedInt
+import org.apache.james.jmap.core.{AccountId, State}
 import org.apache.james.jmap.method.WithAccountId
 
 case class Thread(id: Id, emailIds: List[Id])
@@ -37,8 +36,6 @@ case class ThreadGetResponse(accountId: AccountId,
 case class ThreadChangesRequest(accountId: AccountId,
                                 sinceState: State,
                                 maxChanged: Option[UnsignedInt]) extends WithAccountId
-
-case class HasMoreChanges(value: Boolean) extends AnyVal
 
 case class ThreadChangesResponse(accountId: AccountId,
                                  oldState: State,

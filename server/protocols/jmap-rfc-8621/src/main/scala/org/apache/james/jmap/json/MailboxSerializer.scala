@@ -19,12 +19,11 @@
 
 package org.apache.james.jmap.json
 
-import java.util.UUID
-
 import eu.timepit.refined._
 import eu.timepit.refined.collection.NonEmpty
 import javax.inject.Inject
 import org.apache.james.core.{Domain, Username}
+import org.apache.james.jmap.api.change.MailboxChange.Limit
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.{ClientId, Properties, SetError, State}
 import org.apache.james.jmap.mail.MailboxGet.{UnparsedMailboxId, UnparsedMailboxIdConstraint}
@@ -114,6 +113,13 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
   private implicit val idsRead: Reads[Ids] = Json.valueReads[Ids]
 
   private implicit val mailboxGetRequest: Reads[MailboxGetRequest] = Json.reads[MailboxGetRequest]
+
+  private implicit val limitReads: Reads[Limit] = {
+    case JsNumber(underlying) if underlying > 0 => JsSuccess(Limit.of(underlying.intValue))
+    case JsNumber(underlying) if underlying <= 0 => JsError("Expecting a positive integer as Limit")
+    case _ => JsError("Expecting a number as Limit")
+  }
+
   private implicit val mailboxChangesRequest: Reads[MailboxChangesRequest] = Json.reads[MailboxChangesRequest]
 
   private implicit val mailboxRemoveEmailsOnDestroy: Reads[RemoveEmailsOnDestroy] = Json.valueFormat[RemoveEmailsOnDestroy]
@@ -126,10 +132,6 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
   private implicit val mapCreationRequestByMailBoxCreationId: Reads[Map[MailboxCreationId, JsObject]] =
     Reads.mapReads[MailboxCreationId, JsObject] {string => refineV[NonEmpty](string).fold(JsError(_), id => JsSuccess(id)) }
 
-  private implicit val stateReads: Reads[State] = {
-    case JsString(underlying) => Try(UUID.fromString(underlying))
-      .fold(e => JsError(e.getMessage), value => JsSuccess(State(value)))
-  }
   private implicit val mailboxSetRequestReads: Reads[MailboxSetRequest] = Json.reads[MailboxSetRequest]
 
   private implicit val notFoundWrites: Writes[NotFound] = Json.valueWrites[NotFound]
@@ -188,9 +190,9 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
 
   def deserializeMailboxGetRequest(input: String): JsResult[MailboxGetRequest] = Json.parse(input).validate[MailboxGetRequest]
 
-  def deserializeMailboxGetRequest(input: JsValue): JsResult[MailboxGetRequest] = Json.fromJson[MailboxGetRequest](input)
-
   def deserializeMailboxChangesRequest(input: JsValue): JsResult[MailboxChangesRequest] = Json.fromJson[MailboxChangesRequest](input)
+
+  def deserializeMailboxGetRequest(input: JsValue): JsResult[MailboxGetRequest] = Json.fromJson[MailboxGetRequest](input)
 
   def deserializeMailboxSetRequest(input: JsValue): JsResult[MailboxSetRequest] = Json.fromJson[MailboxSetRequest](input)
 

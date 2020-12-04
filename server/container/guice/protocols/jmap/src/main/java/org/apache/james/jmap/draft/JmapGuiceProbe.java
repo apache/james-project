@@ -25,6 +25,8 @@ import javax.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.JMAPServer;
+import org.apache.james.jmap.api.change.MailboxChange;
+import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.api.vacation.Vacation;
@@ -46,6 +48,7 @@ import reactor.core.publisher.Mono;
 public class JmapGuiceProbe implements GuiceProbe {
 
     private final VacationRepository vacationRepository;
+    private final MailboxChangeRepository mailboxChangeRepository;
     private final JMAPServer jmapServer;
     private final MessageIdManager messageIdManager;
     private final MailboxManager mailboxManager;
@@ -53,8 +56,9 @@ public class JmapGuiceProbe implements GuiceProbe {
     private final MessageFastViewProjection messageFastViewProjection;
 
     @Inject
-    private JmapGuiceProbe(VacationRepository vacationRepository, JMAPServer jmapServer, MessageIdManager messageIdManager, MailboxManager mailboxManager, EventBus eventBus, MessageFastViewProjection messageFastViewProjection) {
+    private JmapGuiceProbe(VacationRepository vacationRepository, MailboxChangeRepository mailboxChangeRepository, JMAPServer jmapServer, MessageIdManager messageIdManager, MailboxManager mailboxManager, EventBus eventBus, MessageFastViewProjection messageFastViewProjection) {
         this.vacationRepository = vacationRepository;
+        this.mailboxChangeRepository = mailboxChangeRepository;
         this.jmapServer = jmapServer;
         this.messageIdManager = messageIdManager;
         this.mailboxManager = mailboxManager;
@@ -85,5 +89,9 @@ public class JmapGuiceProbe implements GuiceProbe {
 
     public void clearMessageFastViewProjection() {
         Mono.from(messageFastViewProjection.clear()).block();
+    }
+
+    public void saveMailboxChange(MailboxChange change) {
+        mailboxChangeRepository.save(change).block();
     }
 }

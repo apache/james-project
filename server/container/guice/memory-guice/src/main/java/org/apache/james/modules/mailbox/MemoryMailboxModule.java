@@ -25,6 +25,8 @@ import javax.inject.Singleton;
 
 import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthorizator;
+import org.apache.james.jmap.api.change.MailboxChangeRepository;
+import org.apache.james.jmap.memory.change.MemoryMailboxChangeRepository;
 import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.Authenticator;
@@ -103,6 +105,7 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(Authorizator.class).to(UserRepositoryAuthorizator.class);
         bind(MailboxManager.class).to(InMemoryMailboxManager.class);
         bind(StoreMailboxManager.class).to(InMemoryMailboxManager.class);
+        bind(MailboxChangeRepository.class).to(MemoryMailboxChangeRepository.class);
         bind(MessageIdManager.class).to(StoreMessageIdManager.class);
         bind(AttachmentManager.class).to(StoreAttachmentManager.class);
         bind(SessionProvider.class).to(SessionProviderImpl.class);
@@ -123,6 +126,7 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(UserRepositoryAuthenticator.class).in(Scopes.SINGLETON);
         bind(UserRepositoryAuthorizator.class).in(Scopes.SINGLETON);
         bind(InMemoryMailboxManager.class).in(Scopes.SINGLETON);
+        bind(MemoryMailboxChangeRepository.class).in(Scopes.SINGLETON);
         bind(InMemoryMessageId.Factory.class).in(Scopes.SINGLETON);
         bind(StoreMessageIdManager.class).in(Scopes.SINGLETON);
         bind(StoreAttachmentManager.class).in(Scopes.SINGLETON);

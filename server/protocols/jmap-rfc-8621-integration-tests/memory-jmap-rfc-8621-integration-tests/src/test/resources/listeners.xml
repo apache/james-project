@@ -47,4 +47,7 @@
     <class>org.apache.james.jmap.event.PopulateEmailQueryViewListener</class>
     <async>true</async>
   </listener>
+  <listener>
+    <class>org.apache.james.jmap.change.MailboxChangeListener</class>
+  </listener>
 </listeners>
