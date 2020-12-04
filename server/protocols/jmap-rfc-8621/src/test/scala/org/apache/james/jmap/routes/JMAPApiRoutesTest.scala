@@ -39,6 +39,7 @@ import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.MethodName
 import org.apache.james.jmap.core.RequestLevelErrorType
+import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.{Authenticator, BasicAuthenticationStrategy, UserProvisioning}
 import org.apache.james.jmap.method.{CoreEchoMethod, Method}
 import org.apache.james.jmap.routes.JMAPApiRoutesTest._
@@ -149,8 +150,8 @@ object JMAPApiRoutesTest {
       |}""".stripMargin
 
   private val RESPONSE_OBJECT: String =
-    """{
-      |  "sessionState": "75128aab4b1b",
+    s"""{
+      |  "sessionState": "${SESSION_STATE.value}",
       |  "methodResponses": [
       |    [
       |      "Core/echo",
@@ -164,8 +165,8 @@ object JMAPApiRoutesTest {
       |}""".stripMargin
 
   private val SERVER_FAIL_RESPONSE_OBJECT: String =
-    """{
-      |  "sessionState": "75128aab4b1b",
+    s"""{
+      |  "sessionState": "${SESSION_STATE.value}",
       |  "methodResponses": [
       |    [
       |      "error",
@@ -187,8 +188,8 @@ object JMAPApiRoutesTest {
       |}""".stripMargin
 
   private val RESPONSE_OBJECT_WITH_UNSUPPORTED_METHOD: String =
-    """{
-      |  "sessionState": "75128aab4b1b",
+    s"""{
+      |  "sessionState": "${SESSION_STATE.value}",
       |  "methodResponses": [
       |    [
       |      "Core/echo",

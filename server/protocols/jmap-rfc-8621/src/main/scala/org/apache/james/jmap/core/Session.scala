@@ -21,16 +21,14 @@ package org.apache.james.jmap.core
 
 import java.net.URL
 import java.nio.charset.StandardCharsets
+import java.util.UUID
 
 import com.google.common.hash.Hashing
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.auto._
-import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.Id
-import org.apache.james.jmap.core.State.{INSTANCE, State}
+import org.apache.james.jmap.core.State.INSTANCE
 
 case class IsPersonal(value: Boolean) extends AnyVal
 case class IsReadOnly(value: Boolean) extends AnyVal
@@ -75,10 +73,12 @@ final case class Account private(accountId: AccountId,
                                  accountCapabilities: Set[_ <: Capability])
 
 object State {
-  val INSTANCE: State = "000001"
+  val INSTANCE: State = fromString("2c9f1b12-b35a-43e6-9af2-0106fb53a943")
 
-  type State = String Refined NonEmpty
+  def fromString(value: String): State = State(UUID.fromString(value))
 }
+
+case class State(value: UUID)
 
 final case class Session(capabilities: Capabilities,
                          accounts: List[Account],

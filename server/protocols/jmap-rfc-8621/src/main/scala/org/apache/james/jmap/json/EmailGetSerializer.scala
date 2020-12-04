@@ -20,7 +20,7 @@
 package org.apache.james.jmap.json
 
 import org.apache.james.jmap.api.model.Preview
-import org.apache.james.jmap.core.Properties
+import org.apache.james.jmap.core.{Properties, State}
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.{AddressesHeaderValue, BlobId, Charset, DateHeaderValue, Disposition, EmailAddress, EmailAddressGroup, EmailBody, EmailBodyMetadata, EmailBodyPart, EmailBodyValue, EmailChangesRequest, EmailChangesResponse, EmailFastView, EmailFullView, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailHeaderView, EmailHeaders, EmailIds, EmailMetadata, EmailMetadataView, EmailNotFound, EmailView, EmailerName, FetchAllBodyValues, FetchHTMLBodyValues, FetchTextBodyValues, GroupName, GroupedAddressesHeaderValue, HasAttachment, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, PartId, RawHeaderValue, Subject, TextHeaderValue, ThreadId, Type, URLsHeaderValue}
 import org.apache.james.mailbox.model.{Cid, MailboxId, MessageId}
@@ -163,6 +163,8 @@ object EmailGetSerializer {
     case view: EmailFastView => emailFastViewWrites.writes(view)
     case view: EmailFullView => emailFullViewWrites.writes(view)
   }
+
+  private implicit val stateWrites: Writes[State] = Json.valueWrites[State]
   private implicit val emailGetResponseWrites: Writes[EmailGetResponse] = Json.writes[EmailGetResponse]
   private implicit val changesResponseWrites: OWrites[EmailChangesResponse] = Json.writes[EmailChangesResponse]
 

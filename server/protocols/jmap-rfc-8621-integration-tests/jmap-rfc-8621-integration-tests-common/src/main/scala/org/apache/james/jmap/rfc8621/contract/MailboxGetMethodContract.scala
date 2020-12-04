@@ -30,6 +30,8 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.core.quota.{QuotaCountLimit, QuotaSizeLimit}
+import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
+import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
@@ -104,8 +106,8 @@ trait MailboxGetMethodContract {
       .asString
 
     assertThatJson(response).isEqualTo(
-      """{
-        |  "sessionState": "75128aab4b1b",
+      s"""{
+        |  "sessionState": "${SESSION_STATE.value}",
         |  "methodResponses": [
         |    ["error", {
         |      "type": "accountNotFound"
@@ -146,12 +148,12 @@ trait MailboxGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
          |          "id": "${mailboxId}",
@@ -215,12 +217,12 @@ trait MailboxGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
          |          "id": "${mailboxId}",
@@ -289,12 +291,12 @@ trait MailboxGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
          |          "id": "${mailboxId}",
@@ -364,12 +366,12 @@ trait MailboxGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
          |          "id": "${mailboxId}",
@@ -431,12 +433,12 @@ trait MailboxGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
          |          "id": "${mailboxId}"
@@ -480,12 +482,12 @@ trait MailboxGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
          |          "id": "${mailboxId}",
@@ -530,12 +532,12 @@ trait MailboxGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
          |          "id": "${mailboxId}",
@@ -581,12 +583,12 @@ trait MailboxGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
          |          "id": "${mailboxId}",
@@ -627,12 +629,12 @@ trait MailboxGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [],
          |      "notFound": ["invalid"]
          |    },
@@ -667,12 +669,12 @@ trait MailboxGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "Mailbox/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [],
          |      "notFound": ["#C42"]
          |    },
@@ -712,7 +714,7 @@ trait MailboxGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |   "error", {
          |     "type": "invalidArguments",
@@ -1208,12 +1210,12 @@ trait MailboxGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "Mailbox/get",
          |      {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "state": "000001",
+         |        "state": "${INSTANCE.value}",
          |        "list": [
          |          {
          |            "id": "${mailboxId}",
@@ -1282,12 +1284,12 @@ trait MailboxGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "Mailbox/get",
          |      {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "state": "000001",
+         |        "state": "${INSTANCE.value}",
          |        "list": [
          |          {
          |            "id": "${mailboxId}",
@@ -1475,7 +1477,7 @@ trait MailboxGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "error",
          |    {
@@ -1513,7 +1515,7 @@ trait MailboxGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "error",
          |    {

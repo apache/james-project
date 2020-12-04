@@ -25,6 +25,8 @@ import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
+import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.utils.DataProbeImpl
@@ -53,7 +55,7 @@ trait ThreadChangesContract {
          |    "Thread/changes",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "sinceState": "any-state"
+         |      "sinceState": "2c9f1b12-b35a-43e6-9af2-0106fb53a941"
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -72,8 +74,8 @@ trait ThreadChangesContract {
 
     assertThatJson(response)
       .isEqualTo(
-        """{
-          |    "sessionState": "75128aab4b1b",
+        s"""{
+          |    "sessionState": "${SESSION_STATE.value}",
           |    "methodResponses": [
           |        [
           |            "error",
@@ -96,7 +98,7 @@ trait ThreadChangesContract {
          |    "Thread/changes",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "sinceState": "000001"
+         |      "sinceState": "${INSTANCE.value}"
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -116,10 +118,10 @@ trait ThreadChangesContract {
     assertThatJson(response)
       .inPath("methodResponses[0][1]")
       .isEqualTo(
-        """{
+        s"""{
           |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-          |  "oldState": "000001",
-          |  "newState": "000001",
+          |  "oldState": "${INSTANCE.value}",
+          |  "newState": "${INSTANCE.value}",
           |  "hasMoreChanges": false,
           |  "created": [],
           |  "updated": [],
@@ -136,7 +138,7 @@ trait ThreadChangesContract {
          |    "Thread/changes",
          |    {
          |      "accountId": "bad",
-         |      "sinceState": "any-state"
+         |      "sinceState": "${INSTANCE.value}"
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -155,8 +157,8 @@ trait ThreadChangesContract {
 
     assertThatJson(response)
       .isEqualTo(
-        """{
-          |    "sessionState": "75128aab4b1b",
+        s"""{
+          |    "sessionState": "${SESSION_STATE.value}",
           |    "methodResponses": [
           |        [
           |            "error",

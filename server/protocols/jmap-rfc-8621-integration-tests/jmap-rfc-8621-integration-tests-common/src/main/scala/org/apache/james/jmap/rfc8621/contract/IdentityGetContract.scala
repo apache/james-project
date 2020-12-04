@@ -25,6 +25,8 @@ import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
+import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.utils.DataProbeImpl
@@ -73,9 +75,9 @@ trait IdentityGetContract {
     assertThatJson(response)
       .inPath("methodResponses[0][1]")
       .isEqualTo(
-      """{
+      s"""{
         |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-        |  "state": "000001",
+        |  "state": "${INSTANCE.value}",
         |  "list": [
         |      {
         |          "id": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
@@ -117,9 +119,9 @@ trait IdentityGetContract {
     assertThatJson(response)
       .inPath("methodResponses[0][1]")
       .isEqualTo(
-      """{
+      s"""{
         |    "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-        |    "state": "000001",
+        |    "state": "${INSTANCE.value}",
         |    "list": [
         |        {
         |            "id": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
@@ -168,9 +170,9 @@ trait IdentityGetContract {
     assertThatJson(response)
       .inPath("methodResponses[0][1]")
       .isEqualTo(
-      """{
+      s"""{
         |    "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-        |    "state": "000001",
+        |    "state": "${INSTANCE.value}",
         |    "list": [
         |        {
         |            "id": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
@@ -231,9 +233,9 @@ trait IdentityGetContract {
     assertThatJson(response)
       .inPath("methodResponses[0][1]")
       .isEqualTo(
-        """{
+        s"""{
           |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-          |  "state": "000001",
+          |  "state": "${INSTANCE.value}",
           |  "list": [
           |      {
           |          "id": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
@@ -276,9 +278,9 @@ trait IdentityGetContract {
     assertThatJson(response)
       .inPath("methodResponses[0][1]")
       .isEqualTo(
-        """{
+        s"""{
           |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-          |  "state": "000001",
+          |  "state": "${INSTANCE.value}",
           |  "list": [
           |      {
           |          "id": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
@@ -318,8 +320,8 @@ trait IdentityGetContract {
 
     assertThatJson(response)
       .isEqualTo(
-        """{
-          |    "sessionState": "75128aab4b1b",
+        s"""{
+          |    "sessionState": "${SESSION_STATE.value}",
           |    "methodResponses": [
           |        [
           |            "error",
@@ -361,8 +363,8 @@ trait IdentityGetContract {
 
     assertThatJson(response)
       .isEqualTo(
-        """{
-          |    "sessionState": "75128aab4b1b",
+        s"""{
+          |    "sessionState": "${SESSION_STATE.value}",
           |    "methodResponses": [
           |        [
           |            "error",

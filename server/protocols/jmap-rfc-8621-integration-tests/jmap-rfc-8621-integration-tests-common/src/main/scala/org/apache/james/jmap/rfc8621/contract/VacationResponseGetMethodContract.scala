@@ -29,6 +29,8 @@ import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.api.vacation.VacationPatch
+import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
+import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.draft.JmapGuiceProbe
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
@@ -93,8 +95,8 @@ trait VacationResponseGetMethodContract {
       .asString
 
     assertThatJson(response).isEqualTo(
-      """{
-        |  "sessionState": "75128aab4b1b",
+      s"""{
+        |  "sessionState": "${SESSION_STATE.value}",
         |  "methodResponses": [
         |    ["error", {
         |      "type": "accountNotFound"
@@ -132,12 +134,12 @@ trait VacationResponseGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
          |          "id":"singleton",
@@ -182,12 +184,12 @@ trait VacationResponseGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
          |          "id":"singleton",
@@ -232,7 +234,7 @@ trait VacationResponseGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "error",
          |    {
@@ -268,7 +270,7 @@ trait VacationResponseGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "error",
          |    {
@@ -307,12 +309,12 @@ trait VacationResponseGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
          |          "id":"singleton",
@@ -353,12 +355,12 @@ trait VacationResponseGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [],
          |      "notFound": ["random"]
          |    },
@@ -394,12 +396,12 @@ trait VacationResponseGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
          |          "id":"singleton",
@@ -440,12 +442,12 @@ trait VacationResponseGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [],
          |      "notFound": []
          |    },
@@ -481,13 +483,13 @@ trait VacationResponseGetMethodContract {
       .stripMargin
 
     assertThatJson(response).isEqualTo(
-      """{
-         |  "sessionState": "75128aab4b1b",
+      s"""{
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "error",
          |      {
          |        "type": "invalidArguments",
-         |        "description": "{\"errors\":[{\"path\":\"obj.ids[0]\",\"messages\":[\"Predicate isEmpty() did not fail.\"]}]}"
+         |        "description": "{\\"errors\\":[{\\"path\\":\\"obj.ids[0]\\",\\"messages\\":[\\"Predicate isEmpty() did not fail.\\"]}]}"
          |      },
          |    "c1"]]
          |}""".stripMargin)
@@ -525,12 +527,12 @@ trait VacationResponseGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
          |          "id":"singleton",
@@ -580,12 +582,12 @@ trait VacationResponseGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
          |          "id":"singleton"
@@ -629,12 +631,12 @@ trait VacationResponseGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
          |          "id":"singleton",
@@ -679,12 +681,12 @@ trait VacationResponseGetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "VacationResponse/get",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
          |          "id":"singleton",
@@ -726,8 +728,8 @@ trait VacationResponseGetMethodContract {
       .stripMargin
 
     assertThatJson(response).isEqualTo(
-      """{
-        |  "sessionState": "75128aab4b1b",
+      s"""{
+        |  "sessionState": "${SESSION_STATE.value}",
         |  "methodResponses": [[
         |    "error",
         |    {

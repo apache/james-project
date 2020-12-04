@@ -21,7 +21,8 @@ package org.apache.james.jmap.json
 
 import eu.timepit.refined.auto._
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
-import org.apache.james.jmap.core.{AccountId, Properties}
+import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
+import org.apache.james.jmap.core.{AccountId, Properties, State}
 import org.apache.james.jmap.json.Fixture.id
 import org.apache.james.jmap.json.VacationResponseGetSerializationTest.{ACCOUNT_ID, PROPERTIES, SINGLETON_ID}
 import org.apache.james.jmap.json.VacationResponseSerializationTest.VACATION_RESPONSE
@@ -153,15 +154,15 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
     "succeed" in {
       val actualValue: VacationResponseGetResponse = VacationResponseGetResponse(
         accountId = ACCOUNT_ID,
-        state = "75128aab4b1b",
+        state = State.INSTANCE,
         list = List(VACATION_RESPONSE),
         notFound = VacationResponseNotFound(Set("randomId1", "randomId2")))
 
       val expectedJson: String =
-        """
+        s"""
           |{
           |  "accountId": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8",
-          |  "state": "75128aab4b1b",
+          |  "state": "${SESSION_STATE.value}",
           |  "list": [{
           |    "id":"singleton",
           |    "isEnabled":true,

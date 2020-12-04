@@ -37,6 +37,8 @@ import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
 import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
+import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.core.UTCDate
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
@@ -123,7 +125,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "error",
            |            {
@@ -187,7 +189,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "Email/query",
            |            {
@@ -251,13 +253,13 @@ trait EmailQueryMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |    "sessionState": "75128aab4b1b",
+         |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
          |        [
          |            "Mailbox/set",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "newState": "000001",
+         |                "newState": "${INSTANCE.value}",
          |                "created": {
          |                    "C42": {
          |                        "id": "${mailboxId}",
@@ -348,13 +350,13 @@ trait EmailQueryMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |    "sessionState": "75128aab4b1b",
+         |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
          |        [
          |            "Mailbox/set",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "newState": "000001",
+         |                "newState": "${INSTANCE.value}",
          |                "created": {
          |                    "C42": {
          |                        "id": "${mailboxId}",
@@ -443,7 +445,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "Email/query",
            |            {
@@ -506,7 +508,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "Email/query",
            |            {
@@ -568,7 +570,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |        [
            |            "Email/query",
@@ -635,7 +637,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "Email/query",
            |            {
@@ -697,7 +699,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "Email/query",
            |            {
@@ -770,7 +772,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "Email/query",
            |            {
@@ -982,7 +984,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "Email/query",
            |            {
@@ -1053,7 +1055,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "Email/query",
            |            {
@@ -1134,7 +1136,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "Email/query",
            |            {
@@ -1215,7 +1217,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "Email/query",
            |            {
@@ -1295,7 +1297,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response)
         .isEqualTo(s"""{
-                      |    "sessionState": "75128aab4b1b",
+                      |    "sessionState": "${SESSION_STATE.value}",
                       |    "methodResponses": [
                       |        [
                       |            "error",
@@ -1353,7 +1355,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "Email/query",
            |            {
@@ -1435,7 +1437,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "Email/query",
            |            {
@@ -1540,7 +1542,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "Email/query",
            |            {
@@ -2556,7 +2558,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |        [
            |            "error",
@@ -2718,7 +2720,7 @@ trait EmailQueryMethodContract {
       assertThatJson(response)
         .isEqualTo(
           s"""{
-             |    "sessionState": "75128aab4b1b",
+             |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |        [
              |            "error",
@@ -2767,7 +2769,7 @@ trait EmailQueryMethodContract {
       assertThatJson(response)
         .isEqualTo(
           s"""{
-             |    "sessionState": "75128aab4b1b",
+             |    "sessionState": "${SESSION_STATE.value}",
              |    "methodResponses": [
              |        [
              |            "error",
@@ -3231,7 +3233,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "Email/query",
            |            {
@@ -3320,7 +3322,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "Email/query",
            |            {
@@ -3386,7 +3388,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "Email/query",
            |            {
@@ -3433,7 +3435,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |        [
            |            "error",
@@ -3605,7 +3607,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "Email/query",
            |            {
@@ -3670,7 +3672,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "Email/query",
            |            {
@@ -3729,7 +3731,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [[
            |            "Email/query",
            |            {
@@ -3789,7 +3791,7 @@ trait EmailQueryMethodContract {
 
       assertThatJson(response).isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |        [
            |            "error",
@@ -3883,8 +3885,8 @@ trait EmailQueryMethodContract {
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[0][1].description")
-      .isEqualTo("""{
-                    |    "sessionState": "75128aab4b1b",
+      .isEqualTo(s"""{
+                    |    "sessionState": "${SESSION_STATE.value}",
                     |    "methodResponses": [
                     |        [
                     |            "error",
@@ -3927,11 +3929,10 @@ trait EmailQueryMethodContract {
       .body
       .asString
 
-
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[0][1].description")
-      .isEqualTo("""{
-                   |    "sessionState": "75128aab4b1b",
+      .isEqualTo(s"""{
+                   |    "sessionState": "${SESSION_STATE.value}",
                    |    "methodResponses": [
                    |        [
                    |            "error",
@@ -3978,7 +3979,7 @@ trait EmailQueryMethodContract {
       .whenIgnoringPaths("methodResponses[0][1].description")
       .isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |        [
            |            "error",
@@ -4025,7 +4026,7 @@ trait EmailQueryMethodContract {
       .whenIgnoringPaths("methodResponses[0][1].description")
       .isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |        [
            |            "error",
@@ -4071,8 +4072,8 @@ trait EmailQueryMethodContract {
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[0][1].description")
-      .isEqualTo("""{
-                   |    "sessionState": "75128aab4b1b",
+      .isEqualTo(s"""{
+                   |    "sessionState": "${SESSION_STATE.value}",
                    |    "methodResponses": [
                    |        [
                    |            "error",
@@ -5535,7 +5536,7 @@ trait EmailQueryMethodContract {
 
     assertThatJson(response)
       .isEqualTo(s"""{
-                    |    "sessionState": "75128aab4b1b",
+                    |    "sessionState": "${SESSION_STATE.value}",
                     |    "methodResponses": [
                     |        [
                     |            "error",
@@ -5581,7 +5582,7 @@ trait EmailQueryMethodContract {
 
     assertThatJson(response)
       .isEqualTo(s"""{
-                    |    "sessionState": "75128aab4b1b",
+                    |    "sessionState": "${SESSION_STATE.value}",
                     |    "methodResponses": [
                     |        [
                     |            "error",
@@ -5644,7 +5645,7 @@ trait EmailQueryMethodContract {
 
     assertThatJson(response)
       .isEqualTo(s"""{
-                    |    "sessionState": "75128aab4b1b",
+                    |    "sessionState": "${SESSION_STATE.value}",
                     |    "methodResponses": [
                     |        [
                     |            "error",
@@ -5707,7 +5708,7 @@ trait EmailQueryMethodContract {
 
     assertThatJson(response)
       .isEqualTo(s"""{
-                    |    "sessionState": "75128aab4b1b",
+                    |    "sessionState": "${SESSION_STATE.value}",
                     |    "methodResponses": [
                     |        [
                     |            "error",

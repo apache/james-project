@@ -19,12 +19,14 @@
 
 package org.apache.james.jmap.json
 
+import java.util.UUID
+
 import eu.timepit.refined._
 import eu.timepit.refined.collection.NonEmpty
 import javax.inject.Inject
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.core.{ClientId, Properties, SetError}
+import org.apache.james.jmap.core.{ClientId, Properties, SetError, State}
 import org.apache.james.jmap.mail.MailboxGet.{UnparsedMailboxId, UnparsedMailboxIdConstraint}
 import org.apache.james.jmap.mail.MailboxSetRequest.MailboxCreationId
 import org.apache.james.jmap.mail.{DelegatedNamespace, Ids, IsSubscribed, Mailbox, MailboxChangesRequest, MailboxChangesResponse, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, Value}
@@ -124,10 +126,15 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
   private implicit val mapCreationRequestByMailBoxCreationId: Reads[Map[MailboxCreationId, JsObject]] =
     Reads.mapReads[MailboxCreationId, JsObject] {string => refineV[NonEmpty](string).fold(JsError(_), id => JsSuccess(id)) }
 
+  private implicit val stateReads: Reads[State] = {
+    case JsString(underlying) => Try(UUID.fromString(underlying))
+      .fold(e => JsError(e.getMessage), value => JsSuccess(State(value)))
+  }
   private implicit val mailboxSetRequestReads: Reads[MailboxSetRequest] = Json.reads[MailboxSetRequest]
 
   private implicit val notFoundWrites: Writes[NotFound] = Json.valueWrites[NotFound]
 
+  private implicit val stateWrites: Writes[State] = Json.valueWrites[State]
   private implicit val mailboxGetResponseWrites: Writes[MailboxGetResponse] = Json.writes[MailboxGetResponse]
 
 

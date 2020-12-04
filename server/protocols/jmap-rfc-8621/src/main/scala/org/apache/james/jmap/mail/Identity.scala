@@ -28,8 +28,7 @@ import eu.timepit.refined.refineV
 import javax.inject.Inject
 import org.apache.james.core.MailAddress
 import org.apache.james.jmap.core.Id.Id
-import org.apache.james.jmap.core.State.State
-import org.apache.james.jmap.core.{AccountId, Properties}
+import org.apache.james.jmap.core.{AccountId, Properties, State}
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.rrt.api.CanSendFrom

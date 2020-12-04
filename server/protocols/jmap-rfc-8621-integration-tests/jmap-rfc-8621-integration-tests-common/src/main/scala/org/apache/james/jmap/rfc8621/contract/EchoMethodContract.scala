@@ -24,6 +24,7 @@ import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.EchoMethodContract._
 import org.apache.james.jmap.rfc8621.contract.Fixture._
@@ -57,8 +58,8 @@ object EchoMethodContract {
       |}""".stripMargin
 
   private val RESPONSE_OBJECT_WITH_UNSUPPORTED_METHOD: String =
-    """{
-      |  "sessionState": "75128aab4b1b",
+    s"""{
+      |  "sessionState": "${SESSION_STATE.value}",
       |  "methodResponses": [
       |    [
       |      "Core/echo",
@@ -145,7 +146,7 @@ trait EchoMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "error",
          |    {

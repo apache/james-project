@@ -27,8 +27,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
-import org.apache.james.jmap.core.State.State
-import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, Properties, SetError}
+import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, Properties, SetError, State}
 import org.apache.james.jmap.json.MailboxSerializer
 import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
 import org.apache.james.jmap.mail.MailboxName.MailboxName

@@ -19,8 +19,8 @@
 
 package org.apache.james.jmap.json
 
-import eu.timepit.refined.auto._
-import org.apache.james.jmap.core.ResponseObject
+import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
+import org.apache.james.jmap.core.{ResponseObject, State}
 import org.apache.james.jmap.json.Fixture._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -30,11 +30,11 @@ class ResponseObjectSerializationTest extends AnyWordSpec with Matchers {
   "Deserialize ResponseObject" should {
     "succeed " in {
       val expectedResponseObject = ResponseObject(
-        sessionState = "75128aab4b1b",
+        sessionState = SESSION_STATE,
         methodResponses = Seq(invocation1))
 
       ResponseSerializer.deserializeResponseObject(
-        """
+        s"""
           |{
           |  "methodResponses": [
           |    [ "Core/echo", {
@@ -42,20 +42,20 @@ class ResponseObjectSerializationTest extends AnyWordSpec with Matchers {
           |      "arg2": "arg2data"
           |    }, "c1" ]
           |  ],
-          |  "sessionState": "75128aab4b1b"
+          |  "sessionState": "${SESSION_STATE.value}"
           |}
           |""".stripMargin) should be(JsSuccess(expectedResponseObject))
     }
 
     "succeed with many Capability, methodCalls" in {
       val expectedResponseObject = ResponseObject(
-        sessionState = "75128aab4b1b",
+        sessionState = State.INSTANCE,
         methodResponses = Seq(invocation1, invocation2))
 
       ResponseSerializer.deserializeResponseObject(
-        """
+        s"""
           |{
-          |  "sessionState": "75128aab4b1b",
+          |  "sessionState": "${SESSION_STATE.value}",
           |  "methodResponses": [
           |    [ "Core/echo", {
           |      "arg1": "arg1data",
@@ -74,13 +74,13 @@ class ResponseObjectSerializationTest extends AnyWordSpec with Matchers {
   "Serialize ResponseObject" should {
     "succeed " in {
       val responseObject: ResponseObject = ResponseObject(
-        sessionState = "75128aab4b1b",
+        sessionState = State.INSTANCE,
         methodResponses = Seq(invocation1))
 
       val expectedJson = Json.prettyPrint(Json.parse(
-        """
+        s"""
           |{
-          |  "sessionState": "75128aab4b1b",
+          |  "sessionState": "${SESSION_STATE.value}",
           |  "methodResponses": [
           |    [ "Core/echo", {
           |      "arg1": "arg1data",

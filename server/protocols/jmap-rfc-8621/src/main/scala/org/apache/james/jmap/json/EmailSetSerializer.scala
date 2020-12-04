@@ -25,7 +25,7 @@ import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
 import javax.inject.Inject
 import org.apache.james.jmap.core.Id.IdConstraint
-import org.apache.james.jmap.core.{Id, SetError, UTCDate}
+import org.apache.james.jmap.core.{Id, SetError, State, UTCDate}
 import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId, UnparsedMessageIdConstraint}
 import org.apache.james.jmap.mail.KeywordsFactory.STRICT_KEYWORDS_FACTORY
 import org.apache.james.jmap.mail.{AddressesHeaderValue, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, Attachment, BlobId, Charset, ClientBody, ClientCid, ClientEmailBodyValue, ClientPartId, DateHeaderValue, DestroyIds, Disposition, EmailAddress, EmailAddressGroup, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailSetRequest, EmailSetResponse, EmailSetUpdate, EmailerName, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, Type, URLsHeaderValue}
@@ -214,6 +214,8 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
     mapWrites[EmailCreationId, EmailCreationResponse](_.value, emailCreationResponseWrites)
   private implicit val notCreatedMapWrites: Writes[Map[EmailCreationId, SetError]] =
     mapWrites[EmailCreationId, SetError](_.value, setErrorWrites)
+
+  private implicit val stateWrites: Writes[State] = Json.valueWrites[State]
   private implicit val emailResponseSetWrites: OWrites[EmailSetResponse] = Json.writes[EmailSetResponse]
 
   private implicit val subjectReads: Reads[Subject] = Json.valueReads[Subject]

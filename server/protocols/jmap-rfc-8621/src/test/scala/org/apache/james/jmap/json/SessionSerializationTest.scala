@@ -26,8 +26,7 @@ import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.CoreCapabilityProperties.CollationAlgorithm
 import org.apache.james.jmap.core.MailCapability.EmailQuerySortOption
-import org.apache.james.jmap.core.State.State
-import org.apache.james.jmap.core.{Account, Capabilities, CoreCapability, CoreCapabilityProperties, IsPersonal, IsReadOnly, MailCapability, MailCapabilityProperties, MaxCallsInRequest, MaxConcurrentRequests, MaxConcurrentUpload, MaxMailboxDepth, MaxMailboxesPerEmail, MaxObjectsInGet, MaxObjectsInSet, MaxSizeAttachmentsPerEmail, MaxSizeMailboxName, MaxSizeRequest, MaxSizeUpload, MayCreateTopLevelMailbox, QuotaCapability, Session, SharesCapability, VacationResponseCapability}
+import org.apache.james.jmap.core.{Account, Capabilities, CoreCapability, CoreCapabilityProperties, IsPersonal, IsReadOnly, MailCapability, MailCapabilityProperties, MaxCallsInRequest, MaxConcurrentRequests, MaxConcurrentUpload, MaxMailboxDepth, MaxMailboxesPerEmail, MaxObjectsInGet, MaxObjectsInSet, MaxSizeAttachmentsPerEmail, MaxSizeMailboxName, MaxSizeRequest, MaxSizeUpload, MayCreateTopLevelMailbox, QuotaCapability, Session, SharesCapability, State, VacationResponseCapability}
 import org.apache.james.jmap.json.SessionSerializationTest.SESSION
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -51,7 +50,6 @@ object SessionSerializationTest {
   private val USER_1 = Username.of("user1@james.org")
   private val USER_2 = Username.of("user2@james.org")
   private val URL = new URL("http://james.org")
-  private val STATE : State = "fda9342jcm"
 
   private val MAIL_IDENTIFIER: CapabilityIdentifier = "urn:ietf:params:jmap:mail"
   private val CONTACT_IDENTIFIER: CapabilityIdentifier = "urn:ietf:params:jmap:contact"
@@ -110,7 +108,7 @@ object SessionSerializationTest {
     downloadUrl = URL,
     uploadUrl = URL,
     eventSourceUrl = URL,
-    state = STATE)
+    state = State.INSTANCE)
 
   def readResource(resourceFileName: String): String = {
     Using(Source.fromURL(getClass.getResource(resourceFileName), "UTF-8")) { source =>
@@ -124,7 +122,7 @@ class SessionSerializationTest extends AnyWordSpec with Matchers {
   "sessionWrites" should {
     "serialize session" in {
       val json = Json.parse(
-        """{
+        s"""{
           |  "capabilities": {
           |    "urn:ietf:params:jmap:core": {
           |      "maxSizeUpload": 50000000,
@@ -205,7 +203,7 @@ class SessionSerializationTest extends AnyWordSpec with Matchers {
           |  "downloadUrl": "http://james.org",
           |  "uploadUrl": "http://james.org",
           |  "eventSourceUrl": "http://james.org",
-          |  "state": "fda9342jcm"
+          |  "state": "${State.INSTANCE.value}"
           |}""".stripMargin)
       ResponseSerializer.serialize(SESSION) should equal(json)
     }

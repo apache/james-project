@@ -27,8 +27,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.core.MailAddress
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.State.State
-import org.apache.james.jmap.core.{AccountId, Id, Properties, SetError}
+import org.apache.james.jmap.core.{AccountId, Id, Properties, SetError, State}
 import org.apache.james.jmap.mail.EmailSet.UnparsedMessageId
 import org.apache.james.jmap.mail.EmailSubmissionSet.EmailSubmissionCreationId
 import org.apache.james.jmap.method.{EmailSubmissionCreationParseException, WithAccountId}

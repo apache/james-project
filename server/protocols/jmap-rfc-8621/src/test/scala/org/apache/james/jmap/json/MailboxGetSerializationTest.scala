@@ -21,6 +21,7 @@ package org.apache.james.jmap.json
 
 import eu.timepit.refined.auto._
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
+import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.core.{AccountId, DefaultCapabilities, Properties}
 import org.apache.james.jmap.json.Fixture._
 import org.apache.james.jmap.json.MailboxGetSerializationTest._
@@ -145,15 +146,15 @@ class MailboxGetSerializationTest extends AnyWordSpec with Matchers {
     "succeed" in {
       val actualValue: MailboxGetResponse = MailboxGetResponse(
         accountId = ACCOUNT_ID,
-        state = "75128aab4b1b",
+        state = INSTANCE,
         list = List(MAILBOX),
         notFound = NotFound(Set(MAILBOX_ID_1, MAILBOX_ID_2)))
 
       val expectedJson: String =
-        """
+        s"""
           |{
           |  "accountId": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8",
-          |  "state": "75128aab4b1b",
+          |  "state": "${INSTANCE.value}",
           |  "list": [{
           |    "id":"2",
           |    "name":"inbox",

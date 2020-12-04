@@ -21,6 +21,7 @@ package org.apache.james.jmap.json
 
 import java.io.InputStream
 import java.net.URL
+import java.util.UUID
 
 import eu.timepit.refined.refineV
 import io.netty.handler.codec.http.HttpResponseStatus
@@ -36,6 +37,7 @@ import play.api.libs.json._
 
 import scala.collection.{Seq => LegacySeq}
 import scala.language.implicitConversions
+import scala.util.Try
 
 object ResponseSerializer {
   // CreateIds
@@ -66,6 +68,11 @@ object ResponseSerializer {
   // RequestObject
   private implicit val requestObjectRead: Format[RequestObject] = Json.format[RequestObject]
 
+  private implicit val stateReads: Reads[State] = {
+    case JsString(underlying) => Try(UUID.fromString(underlying))
+      .fold(e => JsError(e.getMessage), value => JsSuccess(State(value)))
+  }
+  private implicit val stateWrites: Writes[State] = Json.valueWrites[State]
   // ResponseObject
   private implicit val responseObjectFormat: Format[ResponseObject] = Json.format[ResponseObject]
 

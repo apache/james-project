@@ -32,6 +32,7 @@ import io.restassured.http.{ContentType, Header, Headers}
 import org.apache.james.GuiceJamesServer
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.JMAPUrls.JMAP
+import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.draft.JmapGuiceProbe
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.mime4j.dom.Message
@@ -127,8 +128,8 @@ object Fixture {
       |}""".stripMargin
 
   val ECHO_RESPONSE_OBJECT: String =
-    """{
-      |  "sessionState": "75128aab4b1b",
+    s"""{
+      |  "sessionState": "${SESSION_STATE.value}",
       |  "methodResponses": [
       |    [
       |      "Core/echo",

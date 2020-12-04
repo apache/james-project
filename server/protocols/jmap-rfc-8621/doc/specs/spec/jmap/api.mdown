@@ -104,7 +104,7 @@ Unless otherwise specified, if the method call completed successfully, its respo
           "type":"unknownMethod"
         }, "c3" ]
       ],
-      "sessionState": "75128aab4b1b"
+      "sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943"
     }
 
 ## Omitting Arguments

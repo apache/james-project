@@ -25,6 +25,8 @@ import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
+import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
@@ -84,8 +86,8 @@ trait VacationResponseSetMethodContract {
       .asString
 
     assertThatJson(response).isEqualTo(
-      """{
-        |  "sessionState": "75128aab4b1b",
+      s"""{
+        |  "sessionState": "${SESSION_STATE.value}",
         |  "methodResponses": [
         |    ["error", {
         |      "type": "accountNotFound"
@@ -140,18 +142,18 @@ trait VacationResponseSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |"sessionState": "75128aab4b1b",
+         |"sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "newState": "000001",
+         |      "newState": "${INSTANCE.value}",
          |      "updated": {
          |        "singleton": {}
          |      }
          |    }, "c1"],
          |    ["VacationResponse/get", {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
          |          "id": "singleton",
@@ -240,18 +242,18 @@ trait VacationResponseSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |"sessionState": "75128aab4b1b",
+         |"sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "newState": "000001",
+         |      "newState": "${INSTANCE.value}",
          |      "updated": {
          |        "singleton": {}
          |      }
          |    }, "c1"],
          |    ["VacationResponse/get", {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
          |          "id": "singleton",
@@ -305,11 +307,11 @@ trait VacationResponseSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |"sessionState": "75128aab4b1b",
+         |"sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "newState": "000001",
+         |      "newState": "${INSTANCE.value}",
          |      "updated": {
          |        "singleton": {}
          |      }
@@ -392,18 +394,18 @@ trait VacationResponseSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |"sessionState": "75128aab4b1b",
+         |"sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "newState": "000001",
+         |      "newState": "${INSTANCE.value}",
          |      "updated": {
          |        "singleton": {}
          |      }
          |    }, "c1"],
          |    ["VacationResponse/get", {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "state": "000001",
+         |      "state": "${INSTANCE.value}",
          |      "list": [
          |        {
          |          "id": "singleton",
@@ -457,11 +459,11 @@ trait VacationResponseSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "newState": "000001",
+         |      "newState": "${INSTANCE.value}",
          |      "notUpdated": {
          |        "invalid": {
          |          "type": "invalidArguments",
@@ -510,11 +512,11 @@ trait VacationResponseSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "newState": "000001",
+         |      "newState": "${INSTANCE.value}",
          |      "notUpdated": {
          |        "singleton": {
          |          "type": "invalidArguments",
@@ -562,11 +564,11 @@ trait VacationResponseSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "newState": "000001",
+         |      "newState": "${INSTANCE.value}",
          |      "notUpdated": {
          |        "singleton": {
          |          "type": "invalidArguments",
@@ -615,11 +617,11 @@ trait VacationResponseSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "newState": "000001",
+         |      "newState": "${INSTANCE.value}",
          |      "notUpdated": {
          |        "singleton": {
          |          "type": "invalidArguments",
@@ -664,11 +666,11 @@ trait VacationResponseSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "newState": "000001"
+         |      "newState": "${INSTANCE.value}"
          |    }, "c1"]
          |  ]
          |}""".stripMargin)
@@ -713,11 +715,11 @@ trait VacationResponseSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "newState": "000001",
+         |      "newState": "${INSTANCE.value}",
          |      "updated": {
          |        "singleton": {}
          |      },
@@ -768,11 +770,11 @@ trait VacationResponseSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "newState": "000001",
+         |      "newState": "${INSTANCE.value}",
          |      "notCreated": {
          |        "singleton": {
          |          "type": "invalidArguments",
@@ -816,11 +818,11 @@ trait VacationResponseSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [
          |    ["VacationResponse/set", {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "newState": "000001",
+         |      "newState": "${INSTANCE.value}",
          |      "notDestroyed": {
          |        "singleton": {
          |          "type": "invalidArguments",
@@ -860,7 +862,7 @@ trait VacationResponseSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "error",
          |    {
@@ -898,7 +900,7 @@ trait VacationResponseSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |  "sessionState": "75128aab4b1b",
+         |  "sessionState": "${SESSION_STATE.value}",
          |  "methodResponses": [[
          |    "error",
          |    {

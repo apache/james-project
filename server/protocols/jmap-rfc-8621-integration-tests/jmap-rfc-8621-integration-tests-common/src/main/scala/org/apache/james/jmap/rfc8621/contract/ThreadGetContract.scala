@@ -25,6 +25,7 @@ import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.utils.DataProbeImpl
@@ -73,9 +74,9 @@ trait ThreadGetContract {
     assertThatJson(response)
       .inPath("methodResponses[0][1]")
       .isEqualTo(
-        """{
+        s"""{
           |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-          |  "state": "000001",
+          |  "state": "${SESSION_STATE.value}",
           |  "list": [
           |      {
           |          "id": "123456",
@@ -114,9 +115,9 @@ trait ThreadGetContract {
     assertThatJson(response)
       .inPath("methodResponses[0][1]")
       .isEqualTo(
-        """{
+        s"""{
           |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-          |  "state": "000001",
+          |  "state": "${SESSION_STATE.value}",
           |  "list": [
           |      {
           |          "id": "123456",
@@ -158,8 +159,8 @@ trait ThreadGetContract {
 
     assertThatJson(response)
       .isEqualTo(
-        """{
-          |    "sessionState": "75128aab4b1b",
+        s"""{
+          |    "sessionState": "${SESSION_STATE.value}",
           |    "methodResponses": [
           |        [
           |            "error",

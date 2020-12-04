@@ -32,6 +32,8 @@ import javax.mail.Flags
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.{SC_CREATED, SC_OK}
 import org.apache.james.GuiceJamesServer
+import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
+import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.core.UTCDate
 import org.apache.james.jmap.draft.{JmapGuiceProbe, MessageIdProbe}
 import org.apache.james.jmap.http.UserCredential
@@ -3021,11 +3023,11 @@ trait EmailSetMethodContract {
     assertThatJson(response)
       .isEqualTo(
         s"""{
-           |  "sessionState": "75128aab4b1b",
+           |  "sessionState": "${SESSION_STATE.value}",
            |  "methodResponses": [
            |    ["Email/set", {
            |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |      "newState": "000001",
+           |      "newState": "${INSTANCE.value}",
            |      "created": {
            |        "aaaaaa": {
            |          "id": "$messageId",
@@ -3037,7 +3039,7 @@ trait EmailSetMethodContract {
            |    }, "c1"],
            |    ["Email/get", {
            |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |      "state": "000001",
+           |      "state": "${INSTANCE.value}",
            |      "list": [
            |        {
            |          "id": "$messageId",
@@ -3133,11 +3135,11 @@ trait EmailSetMethodContract {
     assertThatJson(response)
       .isEqualTo(
         s"""{
-           |  "sessionState": "75128aab4b1b",
+           |  "sessionState": "${SESSION_STATE.value}",
            |  "methodResponses": [
            |    ["Email/set", {
            |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |      "newState": "000001",
+           |      "newState": "${INSTANCE.value}",
            |      "created": {
            |        "aaaaaa": {
            |          "id": "$messageId",
@@ -3149,7 +3151,7 @@ trait EmailSetMethodContract {
            |    }, "c1"],
            |    ["Email/get", {
            |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |      "state": "000001",
+           |      "state": "${INSTANCE.value}",
            |      "list": [
            |        {
            |          "id": "$messageId",
@@ -4647,16 +4649,16 @@ trait EmailSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |    "sessionState": "75128aab4b1b",
+         |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
          |      ["Email/set", {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "newState": "000001",
+         |        "newState": "${INSTANCE.value}",
          |        "destroyed": ["${messageId.serialize}"]
          |      }, "c1"],
          |      ["Email/get", {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "state": "000001",
+         |        "state": "${INSTANCE.value}",
          |        "list": [],
          |        "notFound": ["${messageId.serialize}"]
          |      }, "c2"]
@@ -4692,11 +4694,11 @@ trait EmailSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |    "sessionState": "75128aab4b1b",
+         |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
          |      ["Email/set", {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "newState": "000001",
+         |        "newState": "${INSTANCE.value}",
          |        "notDestroyed": {
          |          "invalid": {
          |            "type": "invalidArguments",
@@ -4737,11 +4739,11 @@ trait EmailSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |    "sessionState": "75128aab4b1b",
+         |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
          |      ["Email/set", {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "newState": "000001",
+         |        "newState": "${INSTANCE.value}",
          |        "notDestroyed": {
          |          "${messageId.serialize}": {
          |            "type": "notFound",
@@ -4789,11 +4791,11 @@ trait EmailSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |    "sessionState": "75128aab4b1b",
+         |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
          |      ["Email/set", {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "newState": "000001",
+         |        "newState": "${INSTANCE.value}",
          |        "notDestroyed": {
          |          "${messageId.serialize}": {
          |            "type": "notFound",
@@ -4848,11 +4850,11 @@ trait EmailSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |    "sessionState": "75128aab4b1b",
+         |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
          |      ["Email/set", {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "newState": "000001",
+         |        "newState": "${INSTANCE.value}",
          |        "notDestroyed": {
          |          "${messageId.serialize}": {
          |            "type": "notFound",
@@ -4912,16 +4914,16 @@ trait EmailSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |    "sessionState": "75128aab4b1b",
+         |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
          |      ["Email/set", {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "newState": "000001",
+         |        "newState": "${INSTANCE.value}",
          |        "destroyed": ["${messageId.serialize}"]
          |      }, "c1"],
          |      ["Email/get", {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "state": "000001",
+         |        "state": "${INSTANCE.value}",
          |        "list": [],
          |        "notFound": ["${messageId.serialize}"]
          |      }, "c2"]
@@ -4982,16 +4984,16 @@ trait EmailSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |    "sessionState": "75128aab4b1b",
+         |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
          |      ["Email/set", {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "newState": "000001",
+         |        "newState": "${INSTANCE.value}",
          |        "destroyed": ["${messageId.serialize}"]
          |      }, "c1"],
          |      ["Email/get", {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "state": "000001",
+         |        "state": "${INSTANCE.value}",
          |        "list": [],
          |        "notFound": ["${messageId.serialize}"]
          |      }, "c2"]
@@ -5305,11 +5307,11 @@ trait EmailSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |    "sessionState": "75128aab4b1b",
+         |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
          |      ["Email/set", {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "newState": "000001",
+         |        "newState": "${INSTANCE.value}",
          |        "destroyed": ["${messageId.serialize}"],
          |        "notDestroyed": {
          |          "invalid": {
@@ -5374,18 +5376,18 @@ trait EmailSetMethodContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |    "sessionState": "75128aab4b1b",
+         |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
          |      ["Email/set", {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "newState": "000001",
+         |        "newState": "${INSTANCE.value}",
          |        "updated": {
          |          "${messageId.serialize}": null
          |        }
          |      }, "c1"],
          |      ["Email/get",{
          |        "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "state":"000001",
+         |        "state":"${INSTANCE.value}",
          |        "list":[
          |          {
          |            "id":"${messageId.serialize}",
@@ -5463,11 +5465,11 @@ trait EmailSetMethodContract {
     assertThatJson(response)
       .isEqualTo(
       s"""{
-         |    "sessionState": "75128aab4b1b",
+         |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
          |      ["Email/set", {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "newState": "000001",
+         |        "newState": "${INSTANCE.value}",
          |        "updated": {
          |          "${messageId1.serialize}": null,
          |          "${messageId2.serialize}": null
@@ -5475,7 +5477,7 @@ trait EmailSetMethodContract {
          |      }, "c1"],
          |      ["Email/get", {
          |        "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "state":"000001",
+         |        "state":"${INSTANCE.value}",
          |        "list":[
          |          {
          |            "id":"${messageId1.serialize}",
@@ -5543,11 +5545,11 @@ trait EmailSetMethodContract {
     assertThatJson(response)
       .isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |        ["Email/set", {
            |          "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |          "newState": "000001",
+           |          "newState": "${INSTANCE.value}",
            |          "notUpdated": {
            |            "${messageId.serialize}": {
            |              "type": "notFound",
@@ -5615,11 +5617,11 @@ trait EmailSetMethodContract {
     assertThatJson(response)
       .isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
            |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |        "newState": "000001",
+           |        "newState": "${INSTANCE.value}",
            |        "notUpdated": {
            |          "${messageId.serialize}": {
            |            "type": "notFound",
@@ -5629,7 +5631,7 @@ trait EmailSetMethodContract {
            |      }, "c1"],
            |      ["Email/get", {
            |        "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |        "state":"000001",
+           |        "state":"${INSTANCE.value}",
            |        "list":[
            |          {
            |            "id":"${messageId.serialize}",
@@ -5700,11 +5702,11 @@ trait EmailSetMethodContract {
     assertThatJson(response)
       .isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
            |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |        "newState": "000001",
+           |        "newState": "${INSTANCE.value}",
            |        "notUpdated": {
            |          "${messageId.serialize}": {
            |            "type": "notFound",
@@ -5714,7 +5716,7 @@ trait EmailSetMethodContract {
            |      }, "c1"],
            |      ["Email/get", {
            |        "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |        "state":"000001",
+           |        "state":"${INSTANCE.value}",
            |        "list":[
            |          {
            |            "id":"${messageId.serialize}",
@@ -5786,18 +5788,18 @@ trait EmailSetMethodContract {
     assertThatJson(response)
       .isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
            |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |        "newState": "000001",
+           |        "newState": "${INSTANCE.value}",
            |        "updated": {
            |          "${messageId.serialize}": null
            |        }
            |      }, "c1"],
            |      ["Email/get", {
            |        "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |        "state":"000001",
+           |        "state":"${INSTANCE.value}",
            |        "list":[
            |          {
            |            "id":"${messageId.serialize}",
@@ -5869,18 +5871,18 @@ trait EmailSetMethodContract {
     assertThatJson(response)
       .isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
            |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |        "newState": "000001",
+           |        "newState": "${INSTANCE.value}",
            |        "updated": {
            |          "${messageId.serialize}": null
            |        }
            |      }, "c1"],
            |      ["Email/get", {
            |        "accountId":"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |        "state":"000001",
+           |        "state":"${INSTANCE.value}",
            |        "list":[
            |          {
            |            "id":"${messageId.serialize}",
@@ -5946,11 +5948,11 @@ trait EmailSetMethodContract {
     assertThatJson(response)
       .isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
            |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |        "newState": "000001",
+           |        "newState": "${INSTANCE.value}",
            |        "updated": {
            |          "${messageId.serialize}": null
            |        }
@@ -6009,11 +6011,11 @@ trait EmailSetMethodContract {
     assertThatJson(response)
       .isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
            |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |        "newState": "000001",
+           |        "newState": "${INSTANCE.value}",
            |        "notUpdated": {
            |          "${messageId.serialize}": {
            |            "type": "invalidPatch",
@@ -6070,11 +6072,11 @@ trait EmailSetMethodContract {
     assertThatJson(response)
       .isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
            |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |        "newState": "000001",
+           |        "newState": "${INSTANCE.value}",
            |        "notUpdated": {
            |          "${messageId.serialize}": {
            |            "type": "invalidPatch",
@@ -6131,11 +6133,11 @@ trait EmailSetMethodContract {
     assertThatJson(response)
       .isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
            |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |        "newState": "000001",
+           |        "newState": "${INSTANCE.value}",
            |        "notUpdated": {
            |          "${messageId.serialize}": {
            |            "type": "invalidPatch",
@@ -6209,11 +6211,11 @@ trait EmailSetMethodContract {
     assertThatJson(response)
       .isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |      ["Email/set", {
            |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |        "newState": "000001",
+           |        "newState": "${INSTANCE.value}",
            |        "updated": {
            |          "${messageId1.serialize}": null
            |        },

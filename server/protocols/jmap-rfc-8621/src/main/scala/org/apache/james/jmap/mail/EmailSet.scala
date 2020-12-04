@@ -29,8 +29,7 @@ import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
 import org.apache.james.jmap.core.Id.Id
-import org.apache.james.jmap.core.State.State
-import org.apache.james.jmap.core.{AccountId, SetError, UTCDate}
+import org.apache.james.jmap.core.{AccountId, SetError, State, UTCDate}
 import org.apache.james.jmap.mail.Disposition.INLINE
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId}

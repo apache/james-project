@@ -27,6 +27,8 @@ import net.javacrumbs.jsonunit.core.Option
 import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
+import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.mailbox.MessageManager.AppendCommand
@@ -89,13 +91,13 @@ trait BackReferenceContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |    "sessionState": "75128aab4b1b",
+         |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
          |        [
          |            "Mailbox/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "000001",
+         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {"id": "1"},
          |                    {"id": "5"},
@@ -112,7 +114,7 @@ trait BackReferenceContract {
          |            "Mailbox/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "000001",
+         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {"id": "1"},
          |                    {"id": "5"},
@@ -168,13 +170,13 @@ trait BackReferenceContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |    "sessionState": "75128aab4b1b",
+         |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
          |        [
          |            "Mailbox/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "000001",
+         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {"id": "1"},
          |                    {"id": "5"},
@@ -238,13 +240,13 @@ trait BackReferenceContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |    "sessionState": "75128aab4b1b",
+         |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
          |        [
          |            "Mailbox/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "000001",
+         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {"id": "1"},
          |                    {"id": "5"},
@@ -308,13 +310,13 @@ trait BackReferenceContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |    "sessionState": "75128aab4b1b",
+         |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
          |        [
          |            "Mailbox/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "000001",
+         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {"id": "1"},
          |                    {"id": "5"},
@@ -378,13 +380,13 @@ trait BackReferenceContract {
 
     assertThatJson(response).isEqualTo(
       s"""{
-         |    "sessionState": "75128aab4b1b",
+         |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
          |        [
          |            "Mailbox/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "000001",
+         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {"id": "1"},
          |                    {"id": "5"},
@@ -487,7 +489,7 @@ trait BackReferenceContract {
       .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
       .isEqualTo(
       s"""{
-         |    "sessionState": "75128aab4b1b",
+         |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
          |        [
          |            "Mailbox/query",
@@ -517,7 +519,7 @@ trait BackReferenceContract {
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "000001",
+         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {"id": "${messageId3.serialize}", "subject": "message 3"},
          |                    {"id": "${messageId2.serialize}", "subject": "message 2"},

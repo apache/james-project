@@ -29,6 +29,8 @@ import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
+import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.DefaultMailboxes
@@ -885,13 +887,13 @@ trait EmailSubmissionSetMethodContract {
       // Ids are randomly generated, and not stored, let's ignore it
       .whenIgnoringPaths("methodResponses[0][1].created.k1490")
       .isEqualTo(s"""{
-                   |    "sessionState": "75128aab4b1b",
+                   |    "sessionState": "${SESSION_STATE.value}",
                    |    "methodResponses": [
                    |        [
                    |            "EmailSubmission/set",
                    |            {
                    |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-                   |                "newState": "000001",
+                   |                "newState": "${INSTANCE.value}",
                    |                "created": {
                    |                    "k1490": "f0850507-bb63-4675-b14f-d560f8dca21f"
                    |                }
@@ -902,7 +904,7 @@ trait EmailSubmissionSetMethodContract {
                    |            "Email/set",
                    |            {
                    |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-                   |                "newState": "000001",
+                   |                "newState": "${INSTANCE.value}",
                    |                "updated": {
                    |                    "${messageId.serialize}": null
                    |                }
@@ -913,7 +915,7 @@ trait EmailSubmissionSetMethodContract {
                    |            "Email/get",
                    |            {
                    |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-                   |                "state": "000001",
+                   |                "state": "${INSTANCE.value}",
                    |                "list": [
                    |                    {
                    |                        "keywords": {"$$sent": true},
@@ -987,13 +989,13 @@ trait EmailSubmissionSetMethodContract {
       // Ids are randomly generated, and not stored, let's ignore it
       .whenIgnoringPaths("methodResponses[0][1].created.k1490")
       .isEqualTo(s"""{
-                   |    "sessionState": "75128aab4b1b",
+                   |    "sessionState": "${SESSION_STATE.value}",
                    |    "methodResponses": [
                    |        [
                    |            "EmailSubmission/set",
                    |            {
                    |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-                   |                "newState": "000001",
+                   |                "newState": "${INSTANCE.value}",
                    |                "created": {
                    |                    "k1490": "f0850507-bb63-4675-b14f-d560f8dca21f"
                    |                }
@@ -1004,7 +1006,7 @@ trait EmailSubmissionSetMethodContract {
                    |            "Email/set",
                    |            {
                    |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-                   |                "newState": "000001",
+                   |                "newState": "${INSTANCE.value}",
                    |                "destroyed": ["${messageId.serialize}"]
                    |            },
                    |            "c1"
@@ -1013,7 +1015,7 @@ trait EmailSubmissionSetMethodContract {
                    |            "Email/get",
                    |            {
                    |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-                   |                "state": "000001",
+                   |                "state": "${INSTANCE.value}",
                    |                "list":[],
                    |                "notFound": ["${messageId.serialize}"]
                    |            },

@@ -26,6 +26,8 @@ import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
+import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath}
@@ -77,8 +79,8 @@ trait MailboxQueryMethodContract {
       .asString
 
     assertThatJson(response).isEqualTo(
-      """{
-        |  "sessionState": "75128aab4b1b",
+      s"""{
+        |  "sessionState": "${SESSION_STATE.value}",
         |  "methodResponses": [
         |    ["error", {
         |      "type": "accountNotFound"
@@ -121,7 +123,7 @@ trait MailboxQueryMethodContract {
       assertThatJson(response)
         .isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${INSTANCE.value}",
            |    "methodResponses": [
            |        [
            |            "Mailbox/query",
@@ -220,7 +222,7 @@ trait MailboxQueryMethodContract {
       assertThatJson(response)
         .isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |        [
            |            "Mailbox/query",
@@ -281,7 +283,7 @@ trait MailboxQueryMethodContract {
       assertThatJson(response)
         .isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |        [
            |            "Mailbox/query",
@@ -332,7 +334,7 @@ trait MailboxQueryMethodContract {
       assertThatJson(response)
         .isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |        [
            |            "error",
@@ -377,7 +379,7 @@ trait MailboxQueryMethodContract {
       assertThatJson(response)
         .isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |        [
            |            "error",
@@ -423,7 +425,7 @@ trait MailboxQueryMethodContract {
       assertThatJson(response)
         .isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |        [
            |            "error",
@@ -470,14 +472,14 @@ trait MailboxQueryMethodContract {
 
     assertThatJson(response)
       .isEqualTo(
-        """{
-           |    "sessionState": "75128aab4b1b",
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |        [
            |            "error",
            |            {
            |                "type": "invalidArguments",
-           |                "description": "{\"errors\":[{\"path\":\"obj.filter\",\"messages\":[\"These '[unsupported_option]' was unsupported filter options\"]}]}"
+           |                "description": "{\\"errors\\":[{\\"path\\":\\"obj.filter\\",\\"messages\\":[\\"These '[unsupported_option]' was unsupported filter options\\"]}]}"
            |            },
            |            "c1"
            |        ]
@@ -515,7 +517,7 @@ trait MailboxQueryMethodContract {
       assertThatJson(response)
         .isEqualTo(
         s"""{
-           |    "sessionState": "75128aab4b1b",
+           |    "sessionState": "${SESSION_STATE.value}",
            |    "methodResponses": [
            |        [
            |            "error",
