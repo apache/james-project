@@ -44,29 +44,29 @@ public abstract class SmtpStarttlsCommandTest {
     }
 
     @Test
-    public void starttlsShouldWork() throws Exception {
+    void starttlsShouldWork() throws Exception {
         scriptedTest.run("starttls");
     }
 
     @Test
-    public void starttlsShouldBeRejectedWhenFollowedByCommand() throws Exception {
+    void starttlsShouldBeRejectedWhenFollowedByCommand() throws Exception {
         scriptedTest.run("starttls_with_injection");
     }
 
     @Test
-    public void shouldNotRejectContentWithStartTls() throws Exception {
+    void shouldNotRejectContentWithStartTls() throws Exception {
         scriptedTest.run("data_with_starttls");
     }
 
 
     @Test
-    public void shouldNotRejectRcptWithStartTls() throws Exception {
+    void shouldNotRejectRcptWithStartTls() throws Exception {
         scriptedTest.withUser("starttls@mydomain.tld", PASSWORD);
         scriptedTest.run("rcpt_with_starttls");
     }
 
     @Test
-    public void shouldNotRejectContentStartsWithStartTls() throws Exception {
+    void shouldNotRejectContentStartsWithStartTls() throws Exception {
         scriptedTest.run("data_starts_with_starttls");
     }
 }
