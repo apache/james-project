@@ -51,7 +51,7 @@ public class SpamTrapHandlerTest {
     }
     
     @Test
-    public void testSpamTrap() throws Exception {
+    void testSpamTrap() throws Exception {
         String ip = "192.168.100.1";
         String ip2 = "192.168.100.2";
         long blockTime = 2000;

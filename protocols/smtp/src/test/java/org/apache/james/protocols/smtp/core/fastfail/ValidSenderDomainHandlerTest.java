@@ -103,7 +103,7 @@ public class ValidSenderDomainHandlerTest {
     
     // Test for JAMES-580
     @Test
-    public void testNullSenderNotReject() {
+    void testNullSenderNotReject() {
         ValidSenderDomainHandler handler = createHandler();
         HookReturnCode response = handler.doMail(setupMockedSession(null), MaybeSender.nullSender()).getResult();
         
@@ -111,7 +111,7 @@ public class ValidSenderDomainHandlerTest {
     }
 
     @Test
-    public void testInvalidSenderDomainReject() throws Exception {
+    void testInvalidSenderDomainReject() throws Exception {
         ValidSenderDomainHandler handler = createHandler();
         SMTPSession session = setupMockedSession(new MailAddress("invalid@invalid"));
         MaybeSender sender = session.getAttachment(SMTPSession.SENDER, State.Transaction).get();

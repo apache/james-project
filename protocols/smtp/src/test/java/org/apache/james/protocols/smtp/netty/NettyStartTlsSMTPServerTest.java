@@ -69,12 +69,12 @@ public class NettyStartTlsSMTPServerTest {
     private HashedWheelTimer hashedWheelTimer;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         hashedWheelTimer = new HashedWheelTimer();
     }
 
     @AfterEach
-    public void tearDown() throws Exception {
+    void tearDown() throws Exception {
         if (smtpsClient != null) {
             smtpsClient.disconnect();
         }
@@ -110,7 +110,7 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     @Test
-    public void connectShouldReturnTrueWhenConnecting() throws Exception {
+    void connectShouldReturnTrueWhenConnecting() throws Exception {
         server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         smtpsClient = createClient();
 
@@ -121,7 +121,7 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     @Test
-    public void ehloShouldReturnTrueWhenSendingTheCommand() throws Exception {
+    void ehloShouldReturnTrueWhenSendingTheCommand() throws Exception {
         server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         smtpsClient = createClient();
 
@@ -134,7 +134,7 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     @Test
-    public void startTlsShouldBeAnnouncedWhenServerSupportsIt() throws Exception {
+    void startTlsShouldBeAnnouncedWhenServerSupportsIt() throws Exception {
         server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         smtpsClient = createClient();
 
@@ -163,7 +163,7 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     @Test
-    public void startTlsShouldReturnTrueWhenServerSupportsIt() throws Exception {
+    void startTlsShouldReturnTrueWhenServerSupportsIt() throws Exception {
         server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         smtpsClient = createClient();
 
@@ -177,7 +177,7 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     @Test
-    public void startTlsShouldFailWhenFollowedByInjectedCommand() throws Exception {
+    void startTlsShouldFailWhenFollowedByInjectedCommand() throws Exception {
         server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         smtpsClient = createClient();
 
@@ -191,7 +191,7 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     @Test
-    public void startTlsShouldFailWhenFollowedByInjectedCommandAndNotAtBeginningOfLine() throws Exception {
+    void startTlsShouldFailWhenFollowedByInjectedCommandAndNotAtBeginningOfLine() throws Exception {
         server = createServer(createProtocol(Optional.empty()), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         smtpsClient = createClient();
 
@@ -205,7 +205,7 @@ public class NettyStartTlsSMTPServerTest {
     }
 
     @Test
-    public void startTlsShouldWorkWhenUsingJavamail() throws Exception {
+    void startTlsShouldWorkWhenUsingJavamail() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         server = createServer(createProtocol(Optional.<ProtocolHandler>of(hook)), Encryption.createStartTls(BogusSslContextFactory.getServerContext()));
         server.bind();

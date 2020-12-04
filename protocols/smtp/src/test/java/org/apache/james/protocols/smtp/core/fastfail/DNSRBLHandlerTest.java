@@ -52,7 +52,7 @@ public class DNSRBLHandlerTest {
     private boolean relaying = false;   
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         setRelayingAllowed(false);
     }
 
@@ -184,7 +184,7 @@ public class DNSRBLHandlerTest {
 
     // ip is blacklisted and has txt details
     @Test
-    public void testBlackListedTextPresent() throws Exception {
+    void testBlackListedTextPresent() throws Exception {
         DNSRBLHandler rbl = createHandler();
        
         setupMockedSMTPSession(new MailAddress("any@domain"));
@@ -198,7 +198,7 @@ public class DNSRBLHandlerTest {
 
     // ip is blacklisted and has txt details but we don'T want to retrieve the txt record
     @Test
-    public void testGetNoDetail() throws Exception {
+    void testGetNoDetail() throws Exception {
         DNSRBLHandler rbl = createHandler();
         setupMockedSMTPSession(new MailAddress("any@domain"));
 
@@ -211,7 +211,7 @@ public class DNSRBLHandlerTest {
 
     // ip is allowed to relay
     @Test
-    public void testRelayAllowed() throws Exception {
+    void testRelayAllowed() throws Exception {
         DNSRBLHandler rbl = createHandler();
         setRelayingAllowed(true);
         setupMockedSMTPSession(new MailAddress("any@domain"));
@@ -225,7 +225,7 @@ public class DNSRBLHandlerTest {
 
     // ip not on blacklist
     @Test
-    public void testNotBlackListed() throws Exception {
+    void testNotBlackListed() throws Exception {
         DNSRBLHandler rbl = createHandler();
 
         setRemoteIp("192.168.0.1");
@@ -240,7 +240,7 @@ public class DNSRBLHandlerTest {
 
     // ip on blacklist without txt details
     @Test
-    public void testBlackListedNoTxt() throws Exception {
+    void testBlackListedNoTxt() throws Exception {
         DNSRBLHandler rbl = createHandler();
 
         setRemoteIp("127.0.0.3");
@@ -255,7 +255,7 @@ public class DNSRBLHandlerTest {
 
     // ip on whitelist
     @Test
-    public void testWhiteListed() throws Exception {
+    void testWhiteListed() throws Exception {
         DNSRBLHandler rbl = createHandler();
 
         setRemoteIp("127.0.0.2");

@@ -31,7 +31,7 @@ public class SMTPStartTlsResponseTest {
      * Test for PROTOCOLS-89
      */
     @Test
-    public void testImmutable() {
+    void testImmutable() {
         SMTPStartTlsResponse response = new SMTPStartTlsResponse("554", "Reject");
         assertThat(response).isInstanceOf(StartTlsResponse.class);
         assertThat(response.immutable()).isInstanceOf(StartTlsResponse.class);

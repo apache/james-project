@@ -26,7 +26,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 public class HookResultTest {
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(HookResult.class)
             .verify();
     }

@@ -37,7 +37,7 @@ public class MaxUnknownCmdHandlerTest {
 
     
     @Test
-    public void testRejectAndClose() throws Exception {
+    void testRejectAndClose() throws Exception {
         SMTPSession session = new BaseFakeSMTPSession() {
             private final HashMap<AttachmentKey<?>, Object> map = new HashMap<>();
 

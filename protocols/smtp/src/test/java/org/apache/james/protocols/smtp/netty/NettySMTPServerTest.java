@@ -41,12 +41,12 @@ public class NettySMTPServerTest extends AbstractSMTPServerTest {
     private HashedWheelTimer hashedWheelTimer;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         hashedWheelTimer = new HashedWheelTimer();
     }
 
     @AfterEach
-    public void teardown() {
+    void teardown() {
         hashedWheelTimer.stop();
     }
 

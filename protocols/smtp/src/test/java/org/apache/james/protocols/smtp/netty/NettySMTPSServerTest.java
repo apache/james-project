@@ -42,12 +42,12 @@ public class NettySMTPSServerTest extends AbstractSMTPSServerTest {
     private HashedWheelTimer hashedWheelTimer;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         hashedWheelTimer = new HashedWheelTimer();
     }
 
     @AfterEach
-    public void teardown() {
+    void teardown() {
         hashedWheelTimer.stop();
     }
 
