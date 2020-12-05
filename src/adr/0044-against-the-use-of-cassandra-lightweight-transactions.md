@@ -32,7 +32,7 @@ as well as softer degradations when load breaking point is exceeded.
 
 Rely on `event sourcing` to maintain a projection of ACLs that do not rely on LWT or SERIAL consistency level. 
 
-Event sourcing is thus responsible of handling concurrency and race conditions as well as governing denormalization
+Event sourcing is thus responsible for handling concurrency and race conditions as well as governing denormalization
 for ACLs. It can be used as a source of truth to re-build ACL projections. 
 
 Note that the ACL projection tables can end up being out of synchronization from the aggregate but we still have a 
@@ -73,7 +73,9 @@ implemented, and might be a non-viable option performance-wise. We might choose 
 transactionality on this topic. Discussions on this topic have not started yet.
 
 LWT are required for `eventSourcing`. As event sourcing usage is limited to low-usage use cases, the performance
-degradations are not an issue.
+degradations are not an issue. Note that `eventSourcing` could be used to maintain LWT free projections for some 
+(infrequent writes) of the LWT mentioned before, thus avoiding performance issues while keeping a consistent source of 
+truth (see decision for ACL).
 
 LWT usage is required to generate `UIDs`. As append message operations tend to be limited compared to
 message update operations, this is likely less critical. UID generation could be handled via alternative systems,
