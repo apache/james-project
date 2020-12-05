@@ -26,18 +26,15 @@ import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
-import org.apache.james.mailbox.model.MailboxACL;
 
 public class ACLUpdated implements Event {
     private final MailboxAggregateId id;
     private final EventId eventId;
-    private final MailboxACL.ACLCommand command;
     private final ACLDiff aclDiff;
 
-    public ACLUpdated(MailboxAggregateId id, EventId eventId, MailboxACL.ACLCommand command, ACLDiff aclDiff) {
+    public ACLUpdated(MailboxAggregateId id, EventId eventId, ACLDiff aclDiff) {
         this.id = id;
         this.eventId = eventId;
-        this.command = command;
         this.aclDiff = aclDiff;
     }
 
@@ -59,10 +56,6 @@ public class ACLUpdated implements Event {
         return aclDiff;
     }
 
-    public MailboxACL.ACLCommand getCommand() {
-        return command;
-    }
-
     @Override
     public final boolean equals(Object o) {
         if (o instanceof ACLUpdated) {
@@ -70,7 +63,6 @@ public class ACLUpdated implements Event {
 
             return Objects.equals(this.eventId, that.eventId)
                 && Objects.equals(this.id, that.id)
-                && Objects.equals(this.command, that.command)
                 && Objects.equals(this.aclDiff, that.aclDiff);
         }
         return false;
@@ -78,6 +70,6 @@ public class ACLUpdated implements Event {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(eventId, id, aclDiff, command);
+        return Objects.hash(eventId, id, aclDiff);
     }
 }

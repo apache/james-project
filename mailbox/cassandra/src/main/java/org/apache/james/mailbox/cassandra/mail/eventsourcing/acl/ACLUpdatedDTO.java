@@ -39,8 +39,7 @@ class ACLUpdatedDTO implements EventDTO {
                 event.eventId().serialize(),
                 event.getAggregateId().asAggregateKey(),
                 type,
-                ACLDiffDTO.fromACLDiff(event.getAclDiff()),
-                ACLCommandDTO.fromCommand(event.getCommand()));
+                ACLDiffDTO.fromACLDiff(event.getAclDiff()));
     }
 
     static ACLUpdatedDTO from(ACLUpdated event) {
@@ -51,19 +50,16 @@ class ACLUpdatedDTO implements EventDTO {
     private final String aggregateKey;
     private final String type;
     private final ACLDiffDTO aclDiff;
-    private final ACLCommandDTO command;
 
     @JsonCreator
     ACLUpdatedDTO(@JsonProperty("eventId") int eventId,
                   @JsonProperty("aggregateKey") String aggregateKey,
                   @JsonProperty("type") String type,
-                  @JsonProperty("aclDiff") ACLDiffDTO aclDiff,
-                  @JsonProperty("command") ACLCommandDTO command) {
+                  @JsonProperty("aclDiff") ACLDiffDTO aclDiff) {
         this.eventId = eventId;
         this.aggregateKey = aggregateKey;
         this.type = type;
         this.aclDiff = aclDiff;
-        this.command = command;
     }
 
     @JsonIgnore
@@ -71,7 +67,6 @@ class ACLUpdatedDTO implements EventDTO {
         return new ACLUpdated(
             new MailboxAggregateId(CassandraId.of(aggregateKey)),
             EventId.fromSerialized(eventId),
-            command.asACLCommand(),
             aclDiff.asACLDiff());
     }
 
@@ -91,10 +86,6 @@ class ACLUpdatedDTO implements EventDTO {
         return aclDiff;
     }
 
-    public ACLCommandDTO getCommand() {
-        return command;
-    }
-
     @Override
     public final boolean equals(Object o) {
         if (o instanceof ACLUpdatedDTO) {
@@ -103,7 +94,6 @@ class ACLUpdatedDTO implements EventDTO {
             return Objects.equals(this.eventId, that.eventId)
                 && Objects.equals(this.aggregateKey, that.aggregateKey)
                 && Objects.equals(this.type, that.type)
-                && Objects.equals(this.command, that.command)
                 && Objects.equals(this.aclDiff, that.aclDiff);
         }
         return false;
@@ -111,6 +101,6 @@ class ACLUpdatedDTO implements EventDTO {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(eventId, aggregateKey, type, aclDiff, command);
+        return Objects.hash(eventId, aggregateKey, type, aclDiff);
     }
 }

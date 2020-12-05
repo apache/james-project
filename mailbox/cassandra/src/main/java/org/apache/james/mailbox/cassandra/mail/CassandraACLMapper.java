@@ -32,7 +32,6 @@ import org.apache.james.eventsourcing.Subscriber;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
-import org.apache.james.mailbox.cassandra.mail.eventsourcing.acl.ACLReseted;
 import org.apache.james.mailbox.cassandra.mail.eventsourcing.acl.ACLUpdated;
 import org.apache.james.mailbox.cassandra.mail.eventsourcing.acl.AclV2DAOSubscriber;
 import org.apache.james.mailbox.cassandra.mail.eventsourcing.acl.DeleteMailboxCommand;
@@ -133,9 +132,9 @@ public class CassandraACLMapper {
         public Mono<ACLDiff> setACL(CassandraId cassandraId, MailboxACL mailboxACL) {
             return Mono.from(eventSourcingSystem.dispatch(new SetACLCommand(new MailboxAggregateId(cassandraId), mailboxACL)))
                 .flatMapIterable(events -> events)
-                .filter(ACLReseted.class::isInstance)
-                .map(ACLReseted.class::cast)
-                .map(ACLReseted::getAclDiff)
+                .filter(ACLUpdated.class::isInstance)
+                .map(ACLUpdated.class::cast)
+                .map(ACLUpdated::getAclDiff)
                 .next()
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new MailboxException("Unable to set ACL"))));
         }

@@ -801,7 +801,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             CassandraACLDAOV1 aclDAOV1 = new CassandraACLDAOV1(cassandraCluster.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION, CassandraConsistenciesConfiguration.DEFAULT);
             CassandraACLDAOV2 aclDAOv2 = new CassandraACLDAOV2(cassandraCluster.getConf());
             JsonEventSerializer jsonEventSerializer = JsonEventSerializer
-                .forModules(ACLModule.ACL_RESET, ACLModule.ACL_UPDATE)
+                .forModules(ACLModule.ACL_UPDATE)
                 .withoutNestedType();
             CassandraUserMailboxRightsDAO usersRightDAO = new CassandraUserMailboxRightsDAO(cassandraCluster.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
             CassandraEventStore eventStore = new CassandraEventStore(new EventStoreDao(cassandraCluster.getConf(), jsonEventSerializer, CassandraConsistenciesConfiguration.DEFAULT));

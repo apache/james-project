@@ -24,16 +24,7 @@ import org.apache.james.json.DTOModule;
 
 public interface ACLModule {
 
-    String RESET_TYPE_NAME = "acl-reseted";
     String UPDATE_TYPE_NAME = "acl-updated";
-
-    EventDTOModule<ACLReseted, ACLResetedDTO> ACL_RESET =
-        new DTOModule.Builder<>(ACLReseted.class)
-            .convertToDTO(ACLResetedDTO.class)
-            .toDomainObjectConverter(ACLResetedDTO::toEvent)
-            .toDTOConverter(ACLResetedDTO::from)
-            .typeName(RESET_TYPE_NAME)
-            .withFactory(EventDTOModule::new);
 
     EventDTOModule<ACLUpdated, ACLUpdatedDTO> ACL_UPDATE =
         new DTOModule.Builder<>(ACLUpdated.class)

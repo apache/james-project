@@ -23,6 +23,8 @@ import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.Subscriber;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV2;
 
+import reactor.core.publisher.Flux;
+
 public class AclV2DAOSubscriber implements Subscriber {
     private final CassandraACLDAOV2 acldaov2;
 
@@ -32,15 +34,14 @@ public class AclV2DAOSubscriber implements Subscriber {
 
     @Override
     public void handle(Event event) {
-        if (event instanceof ACLReseted) {
-            ACLReseted aclReseted = (ACLReseted) event;
-            acldaov2.setACL(aclReseted.mailboxId(), aclReseted.getAclDiff().getNewACL())
-                .block();
-        }
         if (event instanceof ACLUpdated) {
             ACLUpdated aclUpdated = (ACLUpdated) event;
-            acldaov2.updateACL(aclUpdated.mailboxId(), aclUpdated.getCommand())
-                .block();
+
+            Flux.fromStream(
+                aclUpdated.getAclDiff()
+                    .commands())
+                .flatMap(command -> acldaov2.updateACL(aclUpdated.mailboxId(), command))
+                .blockLast();
         }
     }
 }

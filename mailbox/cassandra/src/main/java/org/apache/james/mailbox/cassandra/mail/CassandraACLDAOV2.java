@@ -36,7 +36,6 @@ import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
 import org.apache.james.mailbox.cassandra.table.CassandraACLV2Table;
 import org.apache.james.mailbox.model.MailboxACL;
 
-import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
@@ -45,7 +44,6 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraACLDAOV2 {
@@ -124,13 +122,6 @@ public class CassandraACLDAOV2 {
             .reduce(Throwing.biFunction(MailboxACL::union));
     }
 
-    public Mono<Void> setACL(CassandraId cassandraId, MailboxACL mailboxACL) {
-        return delete(cassandraId)
-                .then(Flux.fromIterable(mailboxACL.getEntries().entrySet())
-                    .concatMap(entry -> doSetACL(cassandraId, mailboxACL))
-                    .then());
-    }
-
     public Mono<Void> updateACL(CassandraId cassandraId, MailboxACL.ACLCommand command) {
         ImmutableSet<String> rightStrings = asStringSet(command.getRights());
         switch (command.getEditMode()) {
@@ -160,17 +151,5 @@ public class CassandraACLDAOV2 {
             .map(MailboxACL.Right::asCharacter)
             .map(String::valueOf)
             .collect(Guavate.toImmutableSet());
-    }
-
-    public Mono<Void> doSetACL(CassandraId cassandraId, MailboxACL mailboxACL) {
-        BatchStatement batchStatement = new BatchStatement();
-        mailboxACL.getEntries().entrySet()
-            .stream().map(entry -> replaceRights.bind()
-            .setUUID(CassandraACLV2Table.ID, cassandraId.asUuid())
-            .setString(CassandraACLV2Table.KEY, entry.getKey().serialize())
-            .setSet(CassandraACLV2Table.RIGHTS, asStringSet(entry.getValue()), String.class))
-            .forEach(batchStatement::add);
-
-        return executor.executeVoid(batchStatement);
     }
 }

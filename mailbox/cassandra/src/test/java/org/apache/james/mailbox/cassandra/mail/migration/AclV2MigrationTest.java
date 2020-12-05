@@ -79,7 +79,7 @@ class AclV2MigrationTest {
         daoV1 = new CassandraACLDAOV1(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION, CassandraConsistenciesConfiguration.DEFAULT);
         daoV2 = new CassandraACLDAOV2(cassandra.getConf());
         JsonEventSerializer jsonEventSerializer = JsonEventSerializer
-            .forModules(ACLModule.ACL_RESET, ACLModule.ACL_UPDATE)
+            .forModules(ACLModule.ACL_UPDATE)
             .withoutNestedType();
         CassandraEventStore eventStore = new CassandraEventStore(new EventStoreDao(cassandra.getConf(), jsonEventSerializer, CassandraConsistenciesConfiguration.DEFAULT));
         CassandraUserMailboxRightsDAO usersRightDAO = new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);

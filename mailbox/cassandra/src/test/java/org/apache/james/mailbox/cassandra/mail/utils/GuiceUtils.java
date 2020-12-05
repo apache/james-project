@@ -38,7 +38,6 @@ import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV1;
 import org.apache.james.mailbox.cassandra.mail.eventsourcing.acl.ACLModule;
 import org.apache.james.mailbox.model.MessageId;
 
@@ -73,13 +72,10 @@ public class GuiceUtils {
                                         CassandraMessageId.Factory messageIdFactory,
                                         CassandraConfiguration configuration) {
         return Modules.combine(
-            binder -> binder.bind(CassandraACLDAO.class).to(CassandraACLDAOV1.class),
             binder -> binder.bind(MessageId.Factory.class).toInstance(messageIdFactory),
             binder -> binder.bind(BlobId.Factory.class).toInstance(new HashBlobId.Factory()),
             binder -> binder.bind(BlobStore.class).toProvider(() -> CassandraBlobStoreFactory.forTesting(session).passthrough()),
             binder -> binder.bind(Session.class).toInstance(session),
-            binder -> Multibinder.newSetBinder(binder, new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {})
-                .addBinding().toInstance(ACLModule.ACL_RESET),
             binder -> Multibinder.newSetBinder(binder, new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {})
                 .addBinding().toInstance(ACLModule.ACL_UPDATE),
             binder -> binder.bind(new TypeLiteral<Set<DTOModule<?, ? extends DTO>>>() {}).annotatedWith(Names.named(EventNestedTypes.EVENT_NESTED_TYPES_INJECTION_NAME))

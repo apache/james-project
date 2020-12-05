@@ -66,7 +66,7 @@ class CassandraACLMapperV2Test extends CassandraACLMapperContract {
         CassandraACLDAOV1 aclDAOV1 = new CassandraACLDAOV1(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION, CassandraConsistenciesConfiguration.DEFAULT);
         CassandraACLDAOV2 aclDAOv2 = new CassandraACLDAOV2(cassandra.getConf());
         JsonEventSerializer jsonEventSerializer = JsonEventSerializer
-            .forModules(ACLModule.ACL_RESET, ACLModule.ACL_UPDATE)
+            .forModules(ACLModule.ACL_UPDATE)
             .withoutNestedType();
         CassandraUserMailboxRightsDAO usersRightDAO = new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
         CassandraEventStore eventStore = new CassandraEventStore(new EventStoreDao(cassandra.getConf(), jsonEventSerializer, CassandraConsistenciesConfiguration.DEFAULT));
@@ -88,7 +88,7 @@ class CassandraACLMapperV2Test extends CassandraACLMapperContract {
             .registerScenario(awaitOn(barrier)
                 .thenExecuteNormally()
                 .times(2)
-                .whenQueryStartsWith("SELECT * FROM aclv2 WHERE id=:id;"));
+                .whenQueryStartsWith("SELECT * FROM eventStore WHERE aggregateId=:aggregateId;"));
 
         MailboxACL.EntryKey keyBob = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
         MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read);
@@ -116,7 +116,7 @@ class CassandraACLMapperV2Test extends CassandraACLMapperContract {
             .registerScenario(awaitOn(barrier)
                 .thenExecuteNormally()
                 .times(2)
-                .whenQueryStartsWith("SELECT * FROM aclv2 WHERE id=:id;"));
+                .whenQueryStartsWith("SELECT * FROM eventStore WHERE aggregateId=:aggregateId;"));
 
         MailboxACL.EntryKey keyBob = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
         MailboxACL.EntryKey keyAlice = new MailboxACL.EntryKey("alice", MailboxACL.NameType.user, false);

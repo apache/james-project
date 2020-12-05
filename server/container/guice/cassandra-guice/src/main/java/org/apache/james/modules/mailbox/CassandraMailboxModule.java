@@ -213,8 +213,6 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(MailboxManager.class).annotatedWith(Names.named(MAILBOXMANAGER_NAME)).to(MailboxManager.class);
 
         Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {})
-            .addBinding().toInstance(ACLModule.ACL_RESET);
-        Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {})
             .addBinding().toInstance(ACLModule.ACL_UPDATE);
     }
     

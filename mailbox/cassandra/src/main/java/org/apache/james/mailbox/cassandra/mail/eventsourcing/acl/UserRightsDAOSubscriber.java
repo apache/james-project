@@ -32,11 +32,6 @@ public class UserRightsDAOSubscriber implements Subscriber {
 
     @Override
     public void handle(Event event) {
-        if (event instanceof ACLReseted) {
-            ACLReseted aclReseted = (ACLReseted) event;
-            userRightsDAO.update(aclReseted.mailboxId(), aclReseted.getAclDiff())
-                .block();
-        }
         if (event instanceof ACLUpdated) {
             ACLUpdated aclUpdated = (ACLUpdated) event;
             userRightsDAO.update(aclUpdated.mailboxId(), aclUpdated.getAclDiff())

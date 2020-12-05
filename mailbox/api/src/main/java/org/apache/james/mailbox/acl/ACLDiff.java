@@ -70,6 +70,22 @@ public class ACLDiff {
             && !oldEntries.get(entry.getKey()).equals(entry.getValue());
     }
 
+    public Stream<MailboxACL.ACLCommand> commands() {
+        return Stream.concat(
+            addedEntries()
+                .map(entry -> MailboxACL.command()
+                    .mode(MailboxACL.EditMode.ADD)
+                    .key(entry.getKey())
+                    .rights(entry.getValue())
+                    .build()),
+            removedEntries()
+                .map(entry -> MailboxACL.command()
+                    .mode(MailboxACL.EditMode.REMOVE)
+                    .key(entry.getKey())
+                    .rights(entry.getValue())
+                    .build()));
+    }
+
     public MailboxACL getOldACL() {
         return oldACL;
     }
