@@ -31,7 +31,6 @@ import javax.inject.Inject;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
 import org.apache.james.mailbox.cassandra.table.CassandraACLV2Table;
@@ -49,7 +48,7 @@ import com.google.common.collect.ImmutableSet;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class CassandraACLDAOV2 implements CassandraACLDAO {
+public class CassandraACLDAOV2 {
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement insertRights;
     private final PreparedStatement removeRights;
@@ -125,26 +124,14 @@ public class CassandraACLDAOV2 implements CassandraACLDAO {
             .reduce(Throwing.biFunction(MailboxACL::union));
     }
 
-    public Mono<ACLDiff> updateACL(CassandraId cassandraId, MailboxACL.ACLCommand command) {
-        return getACL(cassandraId)
-            .switchIfEmpty(Mono.just(new MailboxACL()))
-            .flatMap(before -> doUpdateACL(cassandraId, command)
-                .then(getACL(cassandraId)
-                    .switchIfEmpty(Mono.just(new MailboxACL()))
-                    .map(after -> ACLDiff.computeDiff(before, after))));
-    }
-
-    public Mono<ACLDiff> setACL(CassandraId cassandraId, MailboxACL mailboxACL) {
-        return getACL(cassandraId)
-            .switchIfEmpty(Mono.just(MailboxACL.EMPTY))
-            .flatMap(oldACL -> delete(cassandraId)
+    public Mono<Void> setACL(CassandraId cassandraId, MailboxACL mailboxACL) {
+        return delete(cassandraId)
                 .then(Flux.fromIterable(mailboxACL.getEntries().entrySet())
                     .concatMap(entry -> doSetACL(cassandraId, mailboxACL))
-                    .then())
-                .thenReturn(ACLDiff.computeDiff(oldACL, mailboxACL)));
+                    .then());
     }
 
-    private Mono<Void> doUpdateACL(CassandraId cassandraId, MailboxACL.ACLCommand command) {
+    public Mono<Void> updateACL(CassandraId cassandraId, MailboxACL.ACLCommand command) {
         ImmutableSet<String> rightStrings = asStringSet(command.getRights());
         switch (command.getEditMode()) {
             case ADD:

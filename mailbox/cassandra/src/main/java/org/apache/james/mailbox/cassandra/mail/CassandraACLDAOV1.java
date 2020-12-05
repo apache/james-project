@@ -54,7 +54,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import reactor.core.publisher.Mono;
 
-public class CassandraACLDAOV1 implements CassandraACLDAO {
+public class CassandraACLDAOV1 {
     public static final int INITIAL_VALUE = 0;
     private static final Logger LOG = LoggerFactory.getLogger(CassandraACLDAOV1.class);
     private static final String OLD_VERSION = "oldVersion";
