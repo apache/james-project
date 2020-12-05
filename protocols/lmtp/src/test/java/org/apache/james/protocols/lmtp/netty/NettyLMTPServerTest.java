@@ -25,8 +25,8 @@ import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.lmtp.AbstractLMTPServerTest;
 import org.apache.james.protocols.netty.NettyServer;
 import org.jboss.netty.util.HashedWheelTimer;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 public class NettyLMTPServerTest extends AbstractLMTPServerTest {
 
@@ -35,12 +35,12 @@ public class NettyLMTPServerTest extends AbstractLMTPServerTest {
 
     private HashedWheelTimer hashedWheelTimer;
 
-    @Before
+    @BeforeEach
     public void setup() {
         hashedWheelTimer = new HashedWheelTimer();
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         hashedWheelTimer.stop();
     }

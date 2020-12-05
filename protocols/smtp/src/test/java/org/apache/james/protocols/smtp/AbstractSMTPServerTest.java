@@ -90,7 +90,7 @@ public abstract class AbstractSMTPServerTest {
     }
     
     @Test
-    void testDeliveryWith4SimultaneousThreads() throws Exception {
+    protected void testDeliveryWith4SimultaneousThreads() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         ProtocolServer server = null;
         try {
@@ -252,7 +252,7 @@ public abstract class AbstractSMTPServerTest {
     
     
     @Test
-    void testMailWithoutBrackets() throws Exception {
+    protected void testMailWithoutBrackets() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         
         ProtocolServer server = null;
@@ -327,7 +327,7 @@ public abstract class AbstractSMTPServerTest {
     
 
     @Test
-    void testRcptWithoutBrackets() throws Exception {
+    protected void testRcptWithoutBrackets() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         
         ProtocolServer server = null;
@@ -368,7 +368,7 @@ public abstract class AbstractSMTPServerTest {
     
     
     @Test
-    void testInvalidNoBracketsEnformance() throws Exception {
+    protected void testInvalidNoBracketsEnformance() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         
         ProtocolServer server = null;
@@ -411,7 +411,7 @@ public abstract class AbstractSMTPServerTest {
     
     
     @Test
-    void testHeloEnforcement() throws Exception {
+    protected void testHeloEnforcement() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         
         ProtocolServer server = null;
@@ -445,7 +445,7 @@ public abstract class AbstractSMTPServerTest {
     }
     
     @Test
-    void testHeloEnforcementDisabled() throws Exception {
+    protected void testHeloEnforcementDisabled() throws Exception {
         TestMessageHook hook = new TestMessageHook();
         
         ProtocolServer server = null;
