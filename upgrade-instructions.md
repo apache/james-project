@@ -23,6 +23,21 @@ Change list:
  - [Cassandra Schema update to V8](#cassandra-schema-update-to-v8)
  - [Cassandra Schema update to V9](#cassandra-schema-update-to-v9)
 
+### Cassandra Schema update to V10
+
+Date 05/12/2020
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3435
+
+Concerned product: Distributed James
+
+Handles Mailbox ACL transactionality with event-sourcing. We got read of SERIAL consistency upon reads thus unlocking a
+major performance enhancement.
+
+In order to benefit from this work, you need to [upgrade to the latest schema version](https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-webadmin.md#upgrading-to-the-latest-version).
+
+A James restart is advised after this migration in order to skip schema version reads.
+
 ### Cassandra Schema update to V9
 
 Date 20/10/2020
@@ -46,6 +61,8 @@ Concerned product: Distributed James
 Add UID_VALIDITY to mailboxPath table in order not to mandate mailbox table reads. This improves performance of the Cassandra mailbox.
 
 In order to benefit from this work, you need to [upgrade to the latest schema version](https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-webadmin.md#upgrading-to-the-latest-version).
+
+A James restart is advised after this migration in order to skip schema version reads.
 
 ### Swift support has been dropped
 
