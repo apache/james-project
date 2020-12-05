@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
-- Partial Support for JMAP RFC-8621: The current implementation status allow reading mailboxes, emails, vacation responses
+- JAMES-2884 Partial Support for JMAP RFC-8621: The current implementation status allow reading mailboxes, emails, vacation responses.
 - JAMES-3117 Add PeriodicalHealthChecks for periodical calling all health checks
 - JAMES-3143 WebAdmin endpoint to solve Cassandra message inconsistencies
 - JAMES-3138 Webadmin endpoint to recompute users current quotas on top of Guice products
@@ -16,19 +16,30 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - JAMES-3405 Expose metrics of Guice servers over HTTP - enables easy Prometheus metrics collection
 - JAMES-3407 Distributed server: Read-repairs for the mailbox entity
 - JAMES-3428 Distributed server: Read-repairs for the mailbox counters entity
+- JAMES-3139 Expose RabbitMQ channel & connection configuration
+- JAMES-3441 Make possible and document Distributed Server setup with specialized instances
+- JAMES-3337 Document the use of JWT
+- JAMES-3399 Allow JSON logging with logback - enables structure logging with FluentBit
+- JAMES-3396 WebAdmin should try to prevent RRT addresses redirection loops when possible
+- JAMES-3402 JMAP MDN messages should have a Date header
+- JAMES-3028 Distributed server: allow choosing whether blobs should be deduplicated
+- JAMES-3196 CanSendFromImpl: enable to send email from aliases for SMTP and JMAP
+- JAMES-3196 Add an IMAP SessionId to correlate logs
 
 ### Changed
 - Switch to Java 11 for build and run
 - JAMES-2760 mailqueue.size.metricsEnabled should be false by default
 - JAMES-3252 DomainList autoDetection should be turned off by default. Operators relying on implicit values for enabling DomainList autoDetection now needs to explicitly configure it.
-- JAMES-3295 Multiple IMAP performance enhancements for the Distributed Server. Some enhancement might transfer to other servers as well.
 - JAMES-3184 Throttling mechanism allow an admin to specify the throughput desired for a given WebAdmin task
 - JAMES-3224 Configuration for Cassandra ConsistencyLevel.{QUORUM, SERIAL} (for multi-dc configuration)
-- JAMES-3263 Optimize RecipientRewriteTable::getMappingsForType
 - JAMES-3176 Rewritte MDN parsing with Parboiled scala (avoid asm library dependency clash within the Distributed Server)
 - JAMES-3194 Rely on DTOConverter in TaskRoute
 - JAMES-3430 Restructure message properties storage within Cassandra Mailbox. See upgrade instructions.
 - JAMES-3435 Use EventSourcing to manage ACL - avoid SERIAL reads for ACL thus unlocking a performance enhancement for the Distributed James server. Read upgrade instructions.
+- JAMES-2124 Sorts module declarations in reactors (thanks to Jean Helou)
+- JAMES-3440 JMAP users can now avoid relying on ElasticSearch reads for basic listing operations thanks to the EmailQueryView 
+- JAMES-3252 DomainList autoDection should be turned off by 
+- JAMES-3192 Upgrade Apache configuration to 2.7
 
 ### Deprecated
 - HybridBlobStore. This will be removed after 3.6.0 release. Introduced to fasten small blob access, its usage could be
@@ -40,11 +51,57 @@ Use BlobStore cache instead.
 - JAMES-3212 JMAP Handle subcrible/unsubcrible child's folder when update mailbox
 - JAMES-3416 Fix ElasticSearch email address search
 - JAMES-1677 Upgrade default hasing algorithm to SHA-512
+- JAMES-3454 Use a callback mechanism to re-create RabbitMQ auto-delete queues upon reconnections
+- JAMES-3296 Recover email sent during RabbitMQ outages
+- JAMES-2046 SentDateComparator should fallback to Mimle4J parsers
+- JAMES-3416 ElasticSearch address indexing fixes
+- JAMES-3386 add test to ensure blank mailbox paths are not allowed in jmap draft
+- MAILBOX-392 WebAdmin documentation: creation of mailboxes with '&' is allowed
+- JAMES-3380 use non am/pm dependent hour format
+- JAMES-2220 JMAP Draft: Flags update should not fail when a user is missing its Outbox
+- JAMES-3364 DeletedMessageVault: deleting many messages dead-locks
+- JAMES-3361 JMAP Draft: sharee should not be able to modify mailbox rights
+- JAMES-3308 RabbitMQTerminationSubscriberTest should be thread safe
+- JAMES-3177 Applicable flags updates needs to be thread safe (IMAP SELECT)
+- JAMES-3309 Avoid a NPE in FetchProcessor when SelectedMailbox is unselected
+- JAMES-3300 Fix default Cassandra LDAP configuration
+- JAMES-3267 Stop forcefully delete ImapRequestFrameDecoder.decode temporary file
+- JAMES-3167 Reactify MailboxMapper - unlocks better concurrency management
+- JAMES-3170 Fix metric measurement upon reactor publisher replay
+- JAMES-3213 Source ReplyTo in ICALToJsonAttribute
+- JAMES-3204 Push limit to Cassandra backend when reading messages - before that message listing queries where always reading at least 5000 rows, and triggering other reads for these rows.
+- JAMES-3201 ReIndexing enhancements
+- JAMES-3179 Fix UpdatableTickingClock thread safety issue
 
 ### Removed
  - HybridBlobStore. This will be removed after 3.6.0 release. Introduced to fasten small blob access, its usage could be
  compared to a cache, but with a sub-optimal implementation (no eviction, default replication factor, no  circuit breaking).
  Use BlobStore cache instead.
+ 
+### Performance
+- JAMES-3295 Multiple IMAP performance enhancements for the Distributed Server. Some enhancement might transfer to other servers as well.
+  - JAMES-3295 Use MessageManager::listMessagesMetadata more widely (IMAP)
+  - JAMES-3265 IMAP FETCH reading lastUid and lastModseq should be optional
+  - JAMES-3265 CassandraMessageMapper should limit modseq allocation upon flags updates
+  - JAMES-3265 Impement a MessageMapper method to reset all recents
+- JAMES-3263 Optimize RecipientRewriteTable::getMappingsForType
+- JAMES-3458 Limit Cassandra statements when retrieving all quota limits
+- JAMES-2037 CassandraMessageMapper::listAllMessageUids should not rely on ComposedMessageIdWithMetaData
+- JAMES-3453 Specify explicitly lower safer defaults for Reactor flatMaps, filterWhens
+- JAMES-3444 Allow moving JMAP mailets in a local-delivery processor - this enables calling `RecipientIsLocal` only one time in the mailet processing pipeline.
+- JAMES-2037 Use Flux for MessageManager::search
+- JAMES-3409 Better denormalize mailboxes within the Distributed Server. This enables reading only one table of the projection instead of two. Read repairs are implemented for keeping eventual consistency checks. Read upgrade instructions.
+- JAMES-3433 Distributed Server: use caching blobstore only for frequently accessed data (callers can specify the level of performance they expect). This ensures the cache is read when it is useful.
+- JAMES-3408 Limit concurrency when retrieving mailbox counters
+- JAMES-3430 Restructure message properties storage within Cassandra Mailbox. See upgrade instructions.
+- JAMES-3277 SetMessagesUpdateProcessor should read less mailboxes - enhance performance for JMAP-draft and JMAP RFC-8621.
+- JAMES-3408 Enforce IMAP List not reading counters for Distributed James
+- JAMES-3377 Remove unused text criterion - newly indexed mails indexed in ElasticSearch will take less space
+- JAMES-3095 Avoid listing all subscriptions for each mailbox (IMAP)
+- JAMES-2629 Use a future supplier in CassandraAsyncExecutor
+- JAMES-2904 Avoid loading attachment when not needed (IMAP & JMAP) + attachment content streaming (JMAP)
+- JAMES-3155 Limit the number of flags updated at the same time
+- JAMES-3264: MAILBOX details are read 3 times upon indexing
 
 ## [3.5.0] - 2020-04-06
 
