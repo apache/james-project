@@ -4,7 +4,7 @@ Date: 2019-12-03
 
 ## Status
 
-Accepted (lazy consensus)
+Accepted (lazy consensus) & implemented
 
 Supercedes [3. Distributed WorkQueue](0003-distributed-workqueue.md)
 
@@ -27,3 +27,8 @@ By switching the task manager to a distributed implementation, we need to be abl
  * This solution is safer to use in production: if the active consumer dies, an other one is promoted instead.
  * This change needs RabbitMQ version to be at least 3.8.0.
  * The serial execution of tasks still does not leverage cluster scalability.
+ 
+## References
+
+* [JIRA ticket](https://issues.apache.org/jira/projects/JAMES/issues/JAMES-2813)
+* [PR discussing this ADR](https://github.com/apache/james-project/pull/259)

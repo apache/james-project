@@ -4,7 +4,7 @@ Date: 2019-10-09
 
 ## Status
 
-Proposed
+Rejected (leads to concurrency issues)
 
 Adoption needs to be backed by some performance tests.
 
@@ -57,3 +57,5 @@ Previous optimization proposal using blob existence checks before persist. This 
 https://github.com/linagora/james-project/pull/2011 (V2)
 
  - [JIRA](https://issues.apache.org/jira/browse/JAMES-2921)
+ 
+ - [PR discussing this ADR](https://github.com/apache/james-project/pull/170)

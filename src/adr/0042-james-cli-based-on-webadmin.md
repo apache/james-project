@@ -80,3 +80,6 @@ It aims at providing a more modern and more secure CLI, also bringing compatibil
 * [Picocli 2.0: Do More With Less](https://dzone.com/articles/whats-new-in-picocli-20)
 * [Picocli Homepage](https://picocli.info/)
 * [Native Image Maven Plugin](https://www.graalvm.org/reference-manual/native-image/NativeImageMavenPlugin/)
+
+* [JIRA](https://issues.apache.org/jira/browse/JAMES-3400)
+* [PR discussing this ADR](https://github.com/apache/james-project/pull/251)

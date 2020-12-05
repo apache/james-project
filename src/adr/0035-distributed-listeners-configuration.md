@@ -8,6 +8,8 @@ Proposed
 
 Supercedes [26. Removing a configured additional MailboxListener](0026-removing-configured-additional-mailboxListeners.md)
 
+Not implemented yet.
+
 ## Context
 
 James enables a user to register additional mailbox listeners.

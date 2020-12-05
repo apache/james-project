@@ -4,7 +4,7 @@ Date: 2020-04-12
 
 ## Status
 
-Accepted (lazy consensus)
+Accepted (lazy consensus) & implemented
 
 ## Context
 
@@ -42,3 +42,7 @@ asynchronously, via mailbox listeners so that it can be retried.
 
 Mailbox listener failures lead to eventBus retrying their execution, we need to ensure the result of the deletion to be 
 idempotent. 
+
+## References
+
+ - [JIRA](https://issues.apache.org/jira/browse/JAMES-3148)

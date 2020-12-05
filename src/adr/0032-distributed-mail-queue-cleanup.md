@@ -4,7 +4,7 @@ Date: 2020-04-13
 
 ## Status
 
-Proposed
+Accepted (lazy consensus) & implemented
 
 ## Context
 
@@ -51,3 +51,7 @@ cleanup upon dequeue/delete operations. The dequeuer/deleter then directly remov
  related data.
  - this will end up tumbstoning live slices potentially harming browse/delete/browse start updates performance.
  - this proposition don't leverage as efficiently timeWindowCompactionStrategy.
+
+## References
+
+* [JIRA](https://issues.apache.org/jira/browse/JAMES-3319)

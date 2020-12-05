@@ -36,3 +36,4 @@ JIRA tickets implementing that architecture decision should also link the relate
 ## References
 
  * [JAMES-2909](https://jira.apache.org/jira/browse/JAMES-2909)
+ * [PR discussing this ADR](https://github.com/apache/james-project/pull/166)

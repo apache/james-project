@@ -4,7 +4,7 @@ Date: 2020-05-05
 
 ## Status
 
-Accepted (lazy consensus)
+Accepted (lazy consensus) & implemented
 
 ## Context
 
@@ -61,3 +61,7 @@ The following features are implemented as Group mailbox listeners:
  - Quota indexing
  - Over Quota mailing
  - SpamAssassin Spam/Ham reporting
+ 
+## References
+
+* [JIRA](https://issues.apache.org/jira/browse/MAILBOX-364)

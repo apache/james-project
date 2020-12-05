@@ -4,7 +4,7 @@ Date: 2020-09-25
 
 ## Status
 
-Adopted (lazy consensus)
+Adopted (lazy consensus) & implemented
 
 Completes [20. Cassandra Mailbox object consistency](0020-cassandra-mailbox-object-consistency.md),
 [23. Cassandra Mailbox Counters inconsistencies](0023-cassandra-mailbox-counters-inconsistencies.md)
@@ -99,3 +99,6 @@ Materialized View Limitations:
     Mutations on a base table partition must happen sequentially per replica if the mutation touches
     a column in a view (this will improve after ticket CASSANDRA-10307)
 ```
+
+* [JIRA](https://issues.apache.org/jira/browse/JAMES-3407)
+* [PR discussing this ADR](https://github.com/apache/james-project/pull/248)

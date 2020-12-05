@@ -4,7 +4,7 @@ Date: 2019-10-09
 
 ## Status
 
-Accepted
+Accepted (lazy consensus) & implemented
 
 ## Context
 
@@ -55,3 +55,5 @@ As such, this changeset significantly increases the JMAP performance.
  - Similar decision had been taken at FastMail: https://fastmail.blog/2014/12/15/dec-15-putting-the-fast-in-fastmail-loading-your-mailbox-quickly/
 
  - [JIRA](https://issues.apache.org/jira/browse/JAMES-2919)
+ 
+ - [PR discussing this ADR](https://github.com/apache/james-project/pull/170)

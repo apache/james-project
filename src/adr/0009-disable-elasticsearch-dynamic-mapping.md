@@ -4,7 +4,7 @@ Date: 2019-10-10
 
 ## Status
 
-Accepted (lazy consensus)
+Accepted (lazy consensus) & implemented
 
 ## Context
 
@@ -34,3 +34,4 @@ Regarding performance:
 
  - [1]: https://github.com/linagora/james-project/pull/2726 JAMES-2078 Add an integration test to prove that dynamic mapping can lead to ignored header fields
  - [JIRA](https://issues.apache.org/jira/browse/JAMES-2078)
+ * [PR discussing this ADR](https://github.com/apache/james-project/pull/171)

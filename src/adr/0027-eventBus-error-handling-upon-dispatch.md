@@ -4,7 +4,7 @@ Date: 2020-04-03
 
 ## Status
 
-Accepted (lazy consensus)
+Accepted (lazy consensus) & implemented
 
 ## Context
 
@@ -33,3 +33,7 @@ re-dispatching of these events will be attempted.
 ## Consequence
 
 In distributed James Guice project an administrator have a way to be eventually consistent upon rabbitMQ failure.
+
+## References
+
+ - [JIRA](https://issues.apache.org/jira/browse/JAMES-3139)
