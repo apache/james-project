@@ -4,7 +4,7 @@ Date: 2020-04-03
 
 ## Status
 
-Accepted (lazy consensus)
+Accepted (lazy consensus) & implemented
 
 ## Context
 
@@ -45,3 +45,7 @@ This way, non-Cassandra implementation will also benefit from this task.
 This task is not concurrent-safe. Concurrent operations will result in an invalid quota to be persisted.
 
 However, as the source of truth is not altered, re-running this task will eventually return the correct result.
+
+## References
+
+ - [JIRA](https://issues.apache.org/jira/browse/JAMES-3138)

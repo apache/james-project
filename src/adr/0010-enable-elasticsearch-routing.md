@@ -4,7 +4,7 @@ Date: 2019-10-17
 
 ## Status
 
-Accepted (lazy consensus)
+Accepted (lazy consensus) & implemented
 
 Additional performance testing is required for adoption.
 
@@ -44,3 +44,4 @@ percentile reduction)
 
  - https://www.elastic.co/guide/en/elasticsearch/reference/6.3/mapping-routing-field.html
  - [JIRA](https://issues.apache.org/jira/browse/JAMES-2917)
+ - [PR discussing this ADR](https://github.com/apache/james-project/pull/171)

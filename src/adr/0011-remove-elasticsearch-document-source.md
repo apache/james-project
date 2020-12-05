@@ -36,3 +36,4 @@ Note please that `_source` allows admin flexibility like performing index level 
 
  - https://www.elastic.co/guide/en/elasticsearch/reference/6.3/mapping-source-field.html
  - [JIRA](https://issues.apache.org/jira/browse/JAMES-2906)
+ - [PR discussing this ADR](https://github.com/apache/james-project/pull/171)

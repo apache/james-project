@@ -4,7 +4,7 @@ Date: 2019-10-02
 
 ## Status
 
-Accepted (lazy consensus)
+Accepted (lazy consensus) & implemented
 
 ## Context
 
@@ -23,3 +23,7 @@ Create a distribution-aware implementation of `TaskManager`.
 
  * Split the `TaskManager` part dealing with the coordination (`Task` management and view) and the `Task` execution (located in `TaskManagerWorker`)
  * The distributed `TaskManager` will rely on RabbitMQ to coordinate and the event system to synchronize states
+ 
+## References
+
+* [JIRA ticket](https://issues.apache.org/jira/projects/JAMES/issues/JAMES-2813)

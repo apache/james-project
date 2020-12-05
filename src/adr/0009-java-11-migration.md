@@ -4,7 +4,7 @@ Date: 2019-10-24
 
 ## Status
 
-Proposed
+Accepted & implemented
 
 ## Context
 
@@ -22,3 +22,9 @@ of the languages and the platform.
 * It requires the upgrade of Spring to 4.3.x.
 * All docker images should be updated to adoptopenjdk 11.
 * The documentation should be updated accordingly.
+
+## References
+
+* [Mailing list thread](https://www.mail-archive.com/server-dev@james.apache.org/msg62611.html)
+* [Mailing list thread](https://www.mail-archive.com/server-dev@james.apache.org/msg61335.html)
+* [PR discussing this ADR](https://github.com/apache/james-project/pull/171)

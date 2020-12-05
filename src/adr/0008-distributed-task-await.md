@@ -4,7 +4,7 @@ Date: 2019-10-02
 
 ## Status
 
-Accepted (lazy consensus)
+Accepted (lazy consensus) & implemented
 
 ## Context
 
@@ -19,4 +19,8 @@ By switching the task manager to a distributed implementation, we need to be abl
  * `RabbitMQTaskManager` should broadcast termination `Event`s (`Completed`|`Failed`|`Canceled`)
  * `RabbitMQTaskManager.await` should: first, check the `Task`'s state; and if it's not terminated, listen to RabbitMQ
  * The await should have a timeout limit
+ 
+## References
+
+* [JIRA ticket](https://issues.apache.org/jira/projects/JAMES/issues/JAMES-2813)
 

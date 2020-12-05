@@ -4,7 +4,7 @@ Date: 2019-10-02
 
 ## Status
 
-Accepted (lazy consensus)
+Accepted (lazy consensus) & implemented
 
 Superceded by [16. Distributed WorkQueue](0016-distributed-workqueue.md)
 
@@ -25,4 +25,8 @@ By switching the task manager to a distributed implementation, we need to be abl
 
  * It's a temporary and not safe to use in production solution: if the node promoted to exclusive listener of the queue dies, no more tasks will be run
  * The serial execution of tasks does not leverage cluster scalability.
+ 
+## References
+
+* [JIRA ticket](https://issues.apache.org/jira/projects/JAMES/issues/JAMES-2813)
 

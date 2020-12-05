@@ -4,7 +4,7 @@ Date: 2019-10-02
 
 ## Status
 
-Accepted (lazy consensus)
+Accepted (lazy consensus) & implemented
 
 ## Context
 
@@ -22,4 +22,8 @@ We need a way for nodes to be signaled of any termination event so that we can n
  * `TerminationEvent`s will be broadcasted on an exchange which will be bound to all interested components later
  * `EventSourcingSystem.dipatch` should use `RabbitMQ` to dispatch `Event`s instead of triggering local `Listener`s
  * Any node can be notified when a `Task` emits a termination event
+ 
+## References
+
+* [JIRA ticket](https://issues.apache.org/jira/projects/JAMES/issues/JAMES-2813)
 

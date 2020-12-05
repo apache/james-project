@@ -60,3 +60,4 @@ tickets will encourage contributions on experimental and unsupported components.
 ## References
 
  - Mailing list discussion: https://www.mail-archive.com/server-dev@james.apache.org/msg66909.html
+ - [PR discussing this ADR](https://github.com/apache/james-project/pull/219)

@@ -4,7 +4,7 @@ Date: 2020-05-25
 
 ## Status
 
-Accepted (lazy consensus)
+Accepted (lazy consensus) & implemented
 
 ## Context
 
@@ -44,3 +44,9 @@ The implementation of the the distributed EventBus suffers from the following fl
 The following enhancement have furthermore been contributed:
 
  - [EventBus error handling upon dispatch](0027-eventBus-error-handling-upon-dispatch.md)
+
+## References
+
+* [JIRA 1](https://issues.apache.org/jira/browse/MAILBOX-367)
+* [JIRA 2](https://issues.apache.org/jira/browse/MAILBOX-368)
+* [JIRA 3](https://issues.apache.org/jira/browse/MAILBOX-371)

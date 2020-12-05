@@ -6,6 +6,8 @@ Date: 2020-03-17
 
 Proposed
 
+We rely on scala in parts of the code base.
+
 ## Context & Problem Statement
 
 James is written in Java for a very long time. In recent years, Java modernized a lot after a decade of slow progress.
@@ -159,3 +161,7 @@ Cons:
 * Needs work to master
 * Can be slow to build
 * 3.0 will probably require code changes
+
+## References
+
+* [Mailing list thread](https://www.mail-archive.com/server-dev@james.apache.org/msg66100.html)

@@ -6,6 +6,8 @@ Date: 2020-02-27
 
 Proposed
 
+Not implemented yet.
+
 ## Context
 
 Mailboxes ACLs are denormalized in Cassandra in order to:

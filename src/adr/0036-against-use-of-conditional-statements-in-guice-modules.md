@@ -4,7 +4,7 @@ Date: 2019-12-29
 
 ## Status
 
-Accepted (lazy consensus)
+Accepted (lazy consensus) & implemented
 
 ## Context
 
@@ -119,3 +119,7 @@ The following conditional statements in guice modules needs to be removed :
 We furthermore need to enable a module choice for LDAP on top of other existing products. We should remove LDAP variations
 for LDAP products. Corresponding docker image will be based on their non LDAP version, overriding the `usersrepository.xml`
 configuration file, be marked as deprecated and eventually removed.
+
+## References
+
+* [PR discussing this ADR](https://github.com/apache/james-project/pull/188)

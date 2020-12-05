@@ -4,7 +4,7 @@ Date: 2020-04-03
 
 ## Status
 
-Proposed
+Accepted (lazy consensus) & implemented
 
 Supercedes [14. Add storage policies for BlobStore](0014-blobstore-storage-policies.md)
 

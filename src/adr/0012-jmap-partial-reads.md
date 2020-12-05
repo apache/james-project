@@ -4,7 +4,7 @@ Date: 2019-10-09
 
 ## Status
 
-Accepted
+Accepted (lazy consensus) & implemented
 
 ## Context
 
@@ -47,3 +47,4 @@ We went from:
 
  - /get method: https://tools.ietf.org/html/rfc8620#section-5.1
  - [JIRA](https://issues.apache.org/jira/browse/JAMES-2919)
+ * [PR discussing this ADR](https://github.com/apache/james-project/pull/170)

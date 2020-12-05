@@ -4,7 +4,7 @@ Date: 2019-10-02
 
 ## Status
 
-Accepted (lazy consensus)
+Accepted (lazy consensus) & implemented
 
 ## Context
 
@@ -19,3 +19,7 @@ A `Task` could be run on any node of the cluster. To interrupt it we need to not
 ## Consequences
 
 * The task manager's event system should be bound to the RabbitMQ exchange which publish the `TerminationEvent`s
+ 
+## References
+
+* [JIRA ticket](https://issues.apache.org/jira/projects/JAMES/issues/JAMES-2813)

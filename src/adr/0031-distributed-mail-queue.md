@@ -4,7 +4,7 @@ Date: 2020-04-13
 
 ## Status
 
-Accepted (lazy consensus)
+Accepted (lazy consensus) & implemented
 
 ## Context
 
@@ -116,3 +116,7 @@ Distributed mail queue allows a better spreading of Mail processing workload. It
 management for all James servers.
 
 Yet some additional work is required to use it as a Mail Exchange scenario.
+
+## References
+
+* [JIRA](https://issues.apache.org/jira/browse/JAMES-2541)

@@ -4,9 +4,9 @@ Date: 2019-10-09
 
 ## Status
 
-Proposed
+Accepted
 
-Adoption needs to be backed by some performance tests, as well as data repartition between Cassandra and object storage shifts.
+Adoption had been backed by some performance tests, as well as data repartition between Cassandra and object storage shifts.
 
 ## Context
 
@@ -55,3 +55,5 @@ however we will benefits of the performance enhancements only for newly stored b
 ## References
 
  - [JIRA](https://issues.apache.org/jira/browse/JAMES-2921)
+ 
+ - [PR discussing this ADR](https://github.com/apache/james-project/pull/170)

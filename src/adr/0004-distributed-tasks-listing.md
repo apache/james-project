@@ -4,7 +4,7 @@ Date: 2019-10-02
 
 ## Status
 
-Accepted (lazy consensus)
+Accepted (lazy consensus) & implemented
 
 ## Context
 
@@ -18,3 +18,7 @@ By switching the task manager to a distributed implementation, we need to be abl
 
  * A Cassandra projection has to be done
  * The `EventSourcingSystem` should have a `Listener` updating the `Projection`
+ 
+## References
+
+* [JIRA ticket](https://issues.apache.org/jira/projects/JAMES/issues/JAMES-2813)

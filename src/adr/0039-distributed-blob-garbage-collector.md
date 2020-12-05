@@ -4,7 +4,9 @@ Date: 2020-02-18
 
 ## Status
 
-Proposed
+Proposed, not implemented yet.
+
+Work had been started on this topic.
 
 ## Context
 
@@ -58,6 +60,10 @@ store the blob for. This can make some components harder to implement as we will
 Since we will not build a distributed task scheduler. To increment the `reference generation` and launch periodically a
 `garbage collection iteration`, the scheduling will be done by an external scheduler (cron job, kubernetes cronjob ...)
  which will call a webadmin endpoint to launch this task periodically.
+ 
+## References
+
+
 
 ## Algorithm visualisation
 

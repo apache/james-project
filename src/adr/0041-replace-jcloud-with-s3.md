@@ -4,9 +4,9 @@ Date: 2020-02-11
 
 ## Status
 
-Proposed
+Accepted (lazy consensus) & implemented
 
-Adoption needs to be backed by some performance tests.
+Adoption had been backed by some performance tests.
 
 ## Context
 
@@ -41,3 +41,8 @@ our Swift code without dropping Swift support at the same time.
 configuration and how to handle existing data
 
 * We need to work on a new implementation of blob encryption.
+
+## References
+
+* [JAMES](https://issues.apache.org/jira/browse/JAMES-3028)
+* [Pull request tree](https://github.com/linagora/james-project/pull/3773)

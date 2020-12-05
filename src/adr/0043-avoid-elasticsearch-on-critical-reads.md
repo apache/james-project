@@ -4,7 +4,7 @@ Date: 2020-11-11
 
 ## Status
 
-Accepted (lazy consensus).
+Accepted (lazy consensus) & implemented
 
 Scope: Distributed James
 
@@ -168,3 +168,8 @@ COLUMN receivedAt
 ```
 
 Note that to handle position & limit, we need to fetch `position + limit` ordered items then removing `position` firsts items.
+
+## References
+
+* [JIRA](https://issues.apache.org/jira/browse/JAMES-3440)
+* [PR discussing this ADR](https://github.com/apache/james-project/pull/259)

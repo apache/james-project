@@ -4,7 +4,7 @@ Date: 2019-10-02
 
 ## Status
 
-Accepted (lazy consensus)
+Accepted (lazy consensus) & implemented
 
 ## Context
 
@@ -27,3 +27,7 @@ At this point in time a `Task` can contain any arbitrary code. It's not an eleme
  * Every `Task`s should be serializable.
  * Every `Task`s should provide a `Factory` which would be responsible to deserialize the task and instantiate it.
  * Every `Factory` should be registered through a Guice module to be created for each project containing a `Factory`
+ 
+## References
+
+* [JIRA ticket](https://issues.apache.org/jira/projects/JAMES/issues/JAMES-2813)

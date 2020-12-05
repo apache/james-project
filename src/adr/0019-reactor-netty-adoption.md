@@ -4,7 +4,7 @@ Date: 2020-02-28
 
 ## Status
 
-Accepted (lazy consensus)
+Accepted (lazy consensus) & implemented
 
 ## Context
 
