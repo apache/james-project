@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.decode;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -54,8 +56,6 @@ import org.apache.james.mailbox.MessageUid;
 public abstract class ImapRequestLineReader {
 
     private static final int QUOTED_BUFFER_INITIAL_CAPACITY = 64;
-
-    private static final Charset US_ASCII = Charset.forName("US-ASCII");
 
     protected boolean nextSeen = false;
 

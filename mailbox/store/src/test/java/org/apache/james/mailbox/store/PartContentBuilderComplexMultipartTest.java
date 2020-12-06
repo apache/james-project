@@ -24,7 +24,6 @@ import static org.assertj.core.api.Fail.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -215,7 +214,7 @@ class PartContentBuilderComplexMultipartTest {
     }
 
     private void to(int[] path) throws Exception {
-        InputStream in = new ByteArrayInputStream(Charset.forName("us-ascii")
+        InputStream in = new ByteArrayInputStream(StandardCharsets.US_ASCII
                 .encode(MULTIPART_MIXED).array());
         builder.parse(in);
         for (int aPath : path) {

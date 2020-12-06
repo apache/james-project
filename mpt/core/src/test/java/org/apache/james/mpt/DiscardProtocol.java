@@ -19,13 +19,14 @@
 
 package org.apache.james.mpt;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -38,9 +39,6 @@ import org.slf4j.LoggerFactory;
  * Simple <a href='http://tools.ietf.org/html/rfc863'>RFC 863</a> implementation.
  */
 public class DiscardProtocol {
-
-    private static final Charset ASCII = Charset.forName("US-ASCII");
-    
     private static final int SOCKET_CONNECTION_WAIT_MILLIS = 30;
     
     private static final int IDLE_TIMEOUT = 120000;
@@ -259,7 +257,7 @@ public class DiscardProtocol {
          */
         private void decant() {
             buffer.flip();
-            final CharBuffer decoded = ASCII.decode(buffer);
+            final CharBuffer decoded = US_ASCII.decode(buffer);
             out.append(decoded);
             buffer.clear();
         }

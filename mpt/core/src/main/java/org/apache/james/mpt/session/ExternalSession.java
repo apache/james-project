@@ -19,10 +19,11 @@
 
 package org.apache.james.mpt.session;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -42,8 +43,6 @@ public final class ExternalSession implements Session {
 
     private final ByteBuffer readBuffer;
 
-    private final Charset ascii;
-
     private final ByteBuffer lineEndBuffer;
 
     private boolean first = true;
@@ -59,7 +58,6 @@ public final class ExternalSession implements Session {
         this.socket = socket;
         this.monitor = monitor;
         readBuffer = ByteBuffer.allocateDirect(2048);
-        ascii = Charset.forName("US-ASCII");
         lineEndBuffer = ByteBuffer.wrap(CRLF);
         this.shabang = shabang;
     }
@@ -161,7 +159,7 @@ public final class ExternalSession implements Session {
     public void writeLine(String line) throws Exception {
         monitor.note("-> " + line);
         monitor.debug("[Writing line]");
-        ByteBuffer writeBuffer = ascii.encode(line);
+        ByteBuffer writeBuffer = US_ASCII.encode(line);
         while (writeBuffer.hasRemaining()) {
             socket.write(writeBuffer);
         }
@@ -187,7 +185,7 @@ public final class ExternalSession implements Session {
         final String TAB = " ";
 
         return "External ( " + "socket = " + this.socket + TAB + "monitor = " + this.monitor + TAB
-                + "readBuffer = " + this.readBuffer + TAB + "ascii = " + this.ascii + TAB + "lineEndBuffer = "
+                + "readBuffer = " + this.readBuffer + TAB + "lineEndBuffer = "
                 + this.lineEndBuffer + TAB + "first = " + this.first + TAB + "shabang = " + this.shabang + TAB + " )";
     }
 

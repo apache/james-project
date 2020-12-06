@@ -19,18 +19,18 @@
 
 package org.apache.james.mpt.helper;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.nio.charset.Charset;
 
 import org.apache.james.mpt.api.Continuation;
 
 public class ByteBufferOutputStream extends OutputStream {
 
     private final ByteBuffer buffer = ByteBuffer.allocate(160384);
-    private final Charset ascii = Charset.forName("ASCII");
     private final Continuation continuation;
     private boolean matchPlus = false;
     private boolean matchCR = false;
@@ -41,7 +41,7 @@ public class ByteBufferOutputStream extends OutputStream {
     }
 
     public void write(String message) throws IOException {
-        ascii.newEncoder().encode(CharBuffer.wrap(message), buffer, true);
+        US_ASCII.newEncoder().encode(CharBuffer.wrap(message), buffer, true);
     }
 
     @Override
@@ -85,7 +85,7 @@ public class ByteBufferOutputStream extends OutputStream {
             limit = 0;
         }
         readOnlyBuffer.limit(limit);
-        String result = ascii.decode(readOnlyBuffer).toString();
+        String result = US_ASCII.decode(readOnlyBuffer).toString();
         buffer.compact();
         return result;
     }

@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -101,7 +100,7 @@ class PartContentBuilderMultipartAlternativeTest {
     }
 
     private String fullContent(String mail, int position) throws Exception {
-        InputStream in = new ByteArrayInputStream(Charset.forName("us-ascii")
+        InputStream in = new ByteArrayInputStream(StandardCharsets.US_ASCII
                 .encode(mail).array());
         builder.parse(in);
         builder.to(position);
@@ -109,7 +108,7 @@ class PartContentBuilderMultipartAlternativeTest {
     }
 
     private String bodyContent(String mail, int position) throws Exception {
-        InputStream in = new ByteArrayInputStream(Charset.forName("us-ascii")
+        InputStream in = new ByteArrayInputStream(StandardCharsets.US_ASCII
                 .encode(mail).array());
         builder.parse(in);
         builder.to(position);
@@ -126,7 +125,7 @@ class PartContentBuilderMultipartAlternativeTest {
     }
 
     private List<Header> headers(String mail, int position) throws Exception {
-        InputStream in = new ByteArrayInputStream(Charset.forName("us-ascii")
+        InputStream in = new ByteArrayInputStream(StandardCharsets.US_ASCII
                 .encode(mail).array());
         builder.parse(in);
         builder.to(position);
