@@ -52,7 +52,7 @@ public class TransactionalMailboxMapper implements MailboxMapper {
 
     @Override
     public Mono<Void> delete(Mailbox mailbox) {
-        return wrapped.executeReactiveVoid(wrapped.delete(mailbox));
+        return wrapped.executeReactive(wrapped.delete(mailbox));
     }
 
     @Override
