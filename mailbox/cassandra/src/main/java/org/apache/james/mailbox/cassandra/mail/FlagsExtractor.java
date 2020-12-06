@@ -25,14 +25,7 @@ import org.apache.james.mailbox.cassandra.table.Flag;
 import com.datastax.driver.core.Row;
 
 public class FlagsExtractor {
-
-    private final Row row;
-
-    public FlagsExtractor(Row row) {
-        this.row = row;
-    }
-
-    public Flags getFlags() {
+    public static Flags getFlags(Row row) {
         Flags flags = new Flags();
         for (String flag : Flag.ALL) {
             if (row.getBool(flag)) {
@@ -44,7 +37,7 @@ public class FlagsExtractor {
         return flags;
     }
 
-    public Flags getApplicableFlags() {
+    public static Flags getApplicableFlags(Row row) {
         Flags flags = new Flags();
         row.getSet(Flag.USER_FLAGS, String.class)
             .forEach(flags::add);

@@ -80,7 +80,7 @@ public class CassandraApplicableFlagDAO {
         return cassandraAsyncExecutor.executeSingleRow(
             select.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid()))
-            .map(row -> new FlagsExtractor(row).getApplicableFlags());
+            .map(FlagsExtractor::getApplicableFlags);
     }
 
     public Mono<Void> updateApplicableFlags(CassandraId cassandraId, Set<String> toBeAdded) {
