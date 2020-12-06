@@ -101,9 +101,29 @@
                     <reuseForks>true</reuseForks>
                     <!-- Fail tests longer than 20 minutes, prevent form random locking tests -->
                     <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
-                    <groups combine.self="override">BasicFeature</groups>
+                    <groups combine.self="override">BasicFeature&amp;!unstable</groups>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>unstable-tests</id>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-surefire-plugin</artifactId>
+                            <version>2.22.2</version>
+                            <configuration>
+                                <excludedGroups></excludedGroups>
+                                <groups combine.self="override">BasicFeature&amp;unstable</groups>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+    </profiles>
 </project>

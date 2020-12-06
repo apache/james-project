@@ -31,4 +31,12 @@
     <packaging>jar</packaging>
 
     <name>Apache James :: Server :: DNS Service :: API</name>
+    <dependencies>
+        <dependency>
+            <!-- Added because of https://issues.apache.org/jira/browse/SUREFIRE-1266 -->
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-testing</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>

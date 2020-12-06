@@ -52,6 +52,12 @@
             <artifactId>james-server-guice-configuration</artifactId>
         </dependency>
         <dependency>
+            <!-- Added because of https://issues.apache.org/jira/browse/SUREFIRE-1266 -->
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-testing</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
         </dependency>

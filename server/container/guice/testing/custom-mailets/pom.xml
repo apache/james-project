@@ -45,6 +45,12 @@
             <artifactId>james-server-guice-custom-mailets-dependency</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <!-- Added because of https://issues.apache.org/jira/browse/SUREFIRE-1266 -->
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-testing</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
