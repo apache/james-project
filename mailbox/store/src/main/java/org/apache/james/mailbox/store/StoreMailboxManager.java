@@ -85,7 +85,6 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
-import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
 import org.apache.james.util.FunctionalUtils;
@@ -376,29 +375,24 @@ public class StoreMailboxManager implements MailboxManager {
         locker.executeWithLock(mailboxPath, () ->
             block(mapper.pathExists(mailboxPath)
                 .filter(FunctionalUtils.identityPredicate().negate())
-                .flatMap(any -> {
-                    try {
-                        mapper.execute(Mapper.toTransaction(() ->
-                            block(mapper.create(mailboxPath, UidValidity.generate())
-                                .doOnNext(mailbox -> mailboxIds.add(mailbox.getMailboxId()))
-                                .flatMap(mailbox ->
-                                    // notify listeners
-                                    eventBus.dispatch(EventFactory.mailboxAdded()
-                                            .randomEventId()
-                                            .mailboxSession(mailboxSession)
-                                            .mailbox(mailbox)
-                                            .build(),
-                                        new MailboxIdRegistrationKey(mailbox.getMailboxId()))))));
-                    } catch (Exception e) {
+                .then(mapper.executeReactive(mapper.create(mailboxPath, UidValidity.generate())
+                    .doOnNext(mailbox -> mailboxIds.add(mailbox.getMailboxId()))
+                    .flatMap(mailbox ->
+                        // notify listeners
+                        eventBus.dispatch(EventFactory.mailboxAdded()
+                                .randomEventId()
+                                .mailboxSession(mailboxSession)
+                                .mailbox(mailbox)
+                                .build(),
+                            new MailboxIdRegistrationKey(mailbox.getMailboxId()))))
+                    .onErrorResume(e -> {
                         if (e instanceof MailboxExistsException) {
                             LOGGER.info("{} mailbox was created concurrently", mailboxPath.asString());
                         } else if (e instanceof MailboxException) {
                             return Mono.error(e);
                         }
-                    }
-
-                    return Mono.empty();
-                })
+                        return Mono.empty();
+                    }))
                 .then()), MailboxPathLocker.LockType.Write);
 
         return mailboxIds;
