@@ -199,7 +199,7 @@ public class StoreMailboxManager implements MailboxManager {
     /**
      * Return the {@link MessageSearchIndex} used by this {@link MailboxManager}
      */
-    public MessageSearchIndex getMessageSearchIndex() {
+    protected MessageSearchIndex getMessageSearchIndex() {
         return index;
     }
 
@@ -210,7 +210,7 @@ public class StoreMailboxManager implements MailboxManager {
         return mailboxSessionMapperFactory;
     }
 
-    public MailboxPathLocker getLocker() {
+    protected MailboxPathLocker getLocker() {
         return locker;
     }
 
@@ -218,11 +218,11 @@ public class StoreMailboxManager implements MailboxManager {
         return storeRightManager;
     }
 
-    public MessageParser getMessageParser() {
+    protected MessageParser getMessageParser() {
         return messageParser;
     }
 
-    public PreDeletionHooks getPreDeletionHooks() {
+    protected PreDeletionHooks getPreDeletionHooks() {
         return preDeletionHooks;
     }
 
