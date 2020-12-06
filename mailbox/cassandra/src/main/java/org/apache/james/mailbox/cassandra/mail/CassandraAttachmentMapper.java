@@ -69,15 +69,6 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public void endRequest() {
-    }
-
-    @Override
-    public <T> T execute(Transaction<T> transaction) throws MailboxException {
-        return transaction.run();
-    }
-
-    @Override
     public AttachmentMetadata getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException {
         Preconditions.checkArgument(attachmentId != null);
         return getAttachmentInternal(attachmentId)

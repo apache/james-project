@@ -111,16 +111,6 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public void endRequest() {
-        // Do nothing
-    }
-
-    @Override
-    public <T> T execute(Transaction<T> transaction) throws MailboxException {
-        return transaction.run();
-    }
-
-    @Override
     public List<MessageAttachmentMetadata> storeAttachmentsForMessage(Collection<ParsedAttachment> parsedAttachments, MessageId ownerMessageId) throws MailboxException {
         return parsedAttachments.stream()
             .map(Throwing.<ParsedAttachment, MessageAttachmentMetadata>function(

@@ -71,10 +71,4 @@ public class InMemorySubscriptionMapper extends NonTransactionalMapper implement
             subscriptionsByUser.clear();
         }
     }
-
-    @Override
-    public void endRequest() {
-        // nothing to do
-    }
-
 }

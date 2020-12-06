@@ -35,7 +35,6 @@ public class InMemoryModSeqProvider implements ModSeqProvider {
     @Override
     public ModSeq nextModSeq(Mailbox mailbox) {
         return ModSeq.of(nextModSeq((InMemoryId) mailbox.getMailboxId()));
-
     }
 
     @Override

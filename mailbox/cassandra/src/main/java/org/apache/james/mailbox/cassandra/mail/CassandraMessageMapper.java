@@ -294,11 +294,6 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     @Override
-    public void endRequest() {
-        // Do nothing
-    }
-
-    @Override
     public ModSeq getHighestModSeq(Mailbox mailbox) throws MailboxException {
         return modSeqProvider.highestModSeq(mailbox);
     }
@@ -414,11 +409,6 @@ public class CassandraMessageMapper implements MessageMapper {
                 return Mono.empty();
             })
             .thenReturn(result);
-    }
-
-    @Override
-    public <T> T execute(Transaction<T> transaction) throws MailboxException {
-        return transaction.run();
     }
 
     @Override

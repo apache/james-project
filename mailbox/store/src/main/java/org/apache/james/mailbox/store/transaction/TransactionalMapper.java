@@ -47,7 +47,7 @@ public abstract class TransactionalMapper implements Mapper {
     public final <T> Mono<T> executeReactive(Mono<T> transaction) {
         return Mono.fromRunnable(Throwing.runnable(this::begin).sneakyThrow())
             .then(transaction)
-            .doOnNext(Throwing.consumer(ignored -> commit()).sneakyThrow())
+            .doOnSuccess(Throwing.<T>consumer(ignored -> commit()).sneakyThrow())
             .doOnError(MailboxException.class, Throwing.consumer(e -> rollback()).sneakyThrow());
     }
 

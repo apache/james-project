@@ -91,12 +91,6 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
             }
         }
     }
-
-    @Override
-    public void endRequest() {
-        // nothing to do
-    }
-    
     
     /**
      * Read the subscriptions for a particular user

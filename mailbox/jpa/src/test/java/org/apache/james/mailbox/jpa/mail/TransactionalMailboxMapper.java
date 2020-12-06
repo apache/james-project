@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.jpa.mail;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.model.Mailbox;
@@ -39,16 +38,6 @@ public class TransactionalMailboxMapper implements MailboxMapper {
 
     public TransactionalMailboxMapper(JPAMailboxMapper wrapped) {
         this.wrapped = wrapped;
-    }
-
-    @Override
-    public void endRequest() {
-        throw new NotImplementedException("not implemented");
-    }
-
-    @Override
-    public <T> T execute(Transaction<T> transaction) {
-        throw new NotImplementedException("not implemented");
     }
 
     @Override

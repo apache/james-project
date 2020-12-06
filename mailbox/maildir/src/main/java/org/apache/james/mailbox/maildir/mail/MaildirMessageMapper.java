@@ -341,12 +341,6 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
             .computeApplicableFlags();
     }
 
-    @Override
-    public void endRequest() {
-        // not used
-
-    }
-
     private List<MailboxMessage> findMessageInMailboxWithUID(Mailbox mailbox, MessageUid from)
             throws MailboxException {
         MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);

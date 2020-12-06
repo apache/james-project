@@ -280,11 +280,6 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
                .flatMapIterable(mailboxes -> mailboxes.collect(Guavate.toImmutableList()));
     }
 
-    @Override
-    public void endRequest() {
-
-    }
-
     private List<Mailbox> visitUsersForMailboxList(File domain, File[] users) throws MailboxException {
         ImmutableList.Builder<Mailbox> mailboxList = ImmutableList.builder();
 
