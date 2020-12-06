@@ -63,6 +63,4 @@
     </bean>
     <alias name="jvm-locker" alias="maildir-locker"/>
 
-    <bean id="maildir-mailbox-id-deserializer" class="org.apache.james.mailbox.maildir.MaildirMailboxIdDeserializer"/>
-
 </beans>
