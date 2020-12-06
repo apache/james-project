@@ -87,8 +87,6 @@
         <property name="showSql" value="false"/>
     </bean>
 
-    <bean id="jpa-mailbox-id-deserializer" class="org.apache.james.mailbox.jpa.JPAMailboxIdDeserializer"/>
-
     <bean id="jpa-per-user-max-quota-dao" class="org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaDAO">
         <constructor-arg index="0" ref="entityManagerFactory"/>
     </bean>
