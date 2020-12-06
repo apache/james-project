@@ -51,13 +51,6 @@ public abstract class TransactionalMapper implements Mapper {
             .doOnError(MailboxException.class, Throwing.consumer(e -> rollback()).sneakyThrow());
     }
 
-    public final Mono<Void> executeReactiveVoid(Mono<Void> transaction) {
-        return Mono.fromRunnable(Throwing.runnable(this::begin).sneakyThrow())
-                .then(transaction)
-                .thenEmpty(Mono.fromRunnable(Throwing.runnable(this::commit).sneakyThrow()))
-                .doOnError(MailboxException.class, Throwing.consumer(e -> rollback()).sneakyThrow());
-    }
-
     /**
      * Begin transaction
      */
