@@ -34,8 +34,8 @@ pipeline {
         // ... setup any environment variables ...
         MVN_LOCAL_REPO_OPT = '-Dmaven.repo.local=.repository'
         MVN_TEST_FAIL_IGNORE = '-Dmaven.test.failure.ignore=true'
-        CI=true
-        LC_CTYPE = 'en_US.UTF-8'        
+        CI = true
+        LC_CTYPE = 'en_US.UTF-8'
     }
 
     tools {
@@ -49,12 +49,12 @@ pipeline {
         timeout(time: 4, unit: 'HOURS')
         // When we have test-fails e.g. we don't need to run the remaining steps
         skipStagesAfterUnstable()
-         buildDiscarder(
+        buildDiscarder(
                 logRotator(artifactNumToKeepStr: '5', numToKeepStr: '10')
         )
         disableConcurrentBuilds()
     }
-    
+
     triggers {
         issueCommentTrigger('.*test this please.*')
     }
@@ -88,11 +88,26 @@ pipeline {
             }
         }
 
-        stage('Tests') {
+        stage('Stable Tests') {
             steps {
                 echo 'Running tests'
-                // all tests is very very long (10 hours on Apache Jenkins)
-                sh 'mvn -B -e test'
+                // all tests run is very very long (10 hours on Apache Jenkins)
+                sh 'mvn -B -e -fae test '
+                }
+            post {
+                always {
+                    junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: true)
+                    junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
+                }
+            }
+        }
+
+        stage('Unstable Tests') {
+            steps {
+                echo 'Running unstable tests'
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    sh 'mvn -B -e -fae test -Punstable-tests'
+                }
             }
             post {
                 always {
@@ -109,14 +124,13 @@ pipeline {
                 sh 'mvn -B -e deploy -Pdeploy -DskipTests'
             }
         }
-    }
-
-    // Do any post build stuff ... such as sending emails depending on the overall build result.
+   }
+// Do any post build stuff ... such as sending emails depending on the overall build result.
     post {
         // If this build failed, send an email to the list.
         failure {
             script {
-                if(env.BRANCH_NAME == "master") {
+                if (env.BRANCH_NAME == "master") {
                     emailext(
                             subject: "[BUILD-FAILURE]: Job '${env.JOB_NAME} [${env.BRANCH_NAME}] [${env.BUILD_NUMBER}]'",
                             body: """
@@ -133,7 +147,7 @@ Check console output at "<a href="${env.BUILD_URL}">${env.JOB_NAME} [${env.BRANC
         // If this build didn't fail, but there were failing tests, send an email to the list.
         unstable {
             script {
-                if(env.BRANCH_NAME == "master") {
+                if (env.BRANCH_NAME == "master") {
                     emailext(
                             subject: "[BUILD-UNSTABLE]: Job '${env.JOB_NAME} [${env.BRANCH_NAME}] [${env.BUILD_NUMBER}]'",
                             body: """
@@ -154,7 +168,7 @@ Check console output at "<a href="${env.BUILD_URL}">${env.JOB_NAME} [${env.BRANC
             deleteDir()
             script {
                 if (env.BRANCH_NAME == "master" && (currentBuild.previousBuild != null) && (currentBuild.previousBuild.result != 'SUCCESS')) {
-                    emailext (
+                    emailext(
                             subject: "[BUILD-STABLE]: Job '${env.JOB_NAME} [${env.BRANCH_NAME}] [${env.BUILD_NUMBER}]'",
                             body: """
 BUILD-STABLE: Job '${env.JOB_NAME} [${env.BRANCH_NAME}] [${env.BUILD_NUMBER}]':
@@ -167,5 +181,4 @@ Is back to normal.
             }
         }
     }
-
 }

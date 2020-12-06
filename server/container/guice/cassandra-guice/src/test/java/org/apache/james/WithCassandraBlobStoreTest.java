@@ -19,6 +19,8 @@
 
 package org.apache.james;
 
+import org.apache.james.junit.categories.Unstable;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class WithCassandraBlobStoreTest implements MailsShouldBeWellReceived {
@@ -26,4 +28,15 @@ class WithCassandraBlobStoreTest implements MailsShouldBeWellReceived {
     static JamesServerExtension jamesServerExtension = WithCassandraBlobStoreImmutableTest.baseExtensionBuilder()
         .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
         .build();
+
+    @Override
+    @Tag(Unstable.TAG)
+    public void mailsShouldBeWellReceived(GuiceJamesServer server) throws Exception {
+        MailsShouldBeWellReceived.super.mailsShouldBeWellReceived(server);
+    }
+    @Override
+    @Tag(Unstable.TAG)
+    public void mailsShouldBeWellReceivedByBothRecipient(GuiceJamesServer server) throws Exception {
+        MailsShouldBeWellReceived.super.mailsShouldBeWellReceivedByBothRecipient(server);
+    }
 }
