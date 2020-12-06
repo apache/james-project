@@ -299,7 +299,7 @@ public class StoreMailboxManager implements MailboxManager {
         return createMessageManager(mailboxRow, session);
     }
 
-    private boolean assertUserHasAccessTo(Mailbox mailbox, MailboxSession session) throws MailboxException {
+    private boolean assertUserHasAccessTo(Mailbox mailbox, MailboxSession session) {
         return belongsToCurrentUser(mailbox, session) || userHasLookupRightsOn(mailbox, session);
     }
 
@@ -307,7 +307,7 @@ public class StoreMailboxManager implements MailboxManager {
         return mailbox.generateAssociatedPath().belongsTo(session);
     }
 
-    private boolean userHasLookupRightsOn(Mailbox mailbox, MailboxSession session) throws MailboxException {
+    private boolean userHasLookupRightsOn(Mailbox mailbox, MailboxSession session) {
         return storeRightManager.hasRight(mailbox, Right.Lookup, session);
     }
 
@@ -372,11 +372,11 @@ public class StoreMailboxManager implements MailboxManager {
 
     private List<MailboxId> performConcurrentMailboxCreation(MailboxSession mailboxSession, MailboxPath mailboxPath) throws MailboxException {
         List<MailboxId> mailboxIds = new ArrayList<>();
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
         locker.executeWithLock(mailboxPath, () ->
-            block(mailboxExists(mailboxPath, mailboxSession)
+            block(mapper.pathExists(mailboxPath)
                 .filter(FunctionalUtils.identityPredicate().negate())
-                .map(Throwing.<Boolean, MailboxMapper>function(ignored -> mailboxSessionMapperFactory.getMailboxMapper(mailboxSession)).sneakyThrow())
-                .flatMap(mapper -> {
+                .flatMap(any -> {
                     try {
                         mapper.execute(Mapper.toTransaction(() ->
                             block(mapper.create(mailboxPath, UidValidity.generate())
