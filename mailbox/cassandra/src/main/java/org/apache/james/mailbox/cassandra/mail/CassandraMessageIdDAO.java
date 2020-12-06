@@ -335,7 +335,7 @@ public class CassandraMessageIdDAO {
                         CassandraId.of(row.getUUID(MAILBOX_ID)),
                         messageIdFactory.of(row.getUUID(MESSAGE_ID)),
                         MessageUid.of(row.getLong(IMAP_UID))))
-                .flags(new FlagsExtractor(row).getFlags())
+                .flags(FlagsExtractor.getFlags(row))
                 .modSeq(ModSeq.of(row.getLong(MOD_SEQ)))
                 .build();
     }
