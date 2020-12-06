@@ -18,7 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.search;
 
-import java.nio.charset.Charset;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -52,18 +53,15 @@ public class SearchUtil {
     private static final char CLOSE_SQUARE_BRACKED = ']';
     private static final char COLON = ':';
     
-    private static final Charset UTF8 = Charset.forName("UTF8");
-
-    
     /**
      * Return the DISPLAY ADDRESS for the given {@link Mailbox}. 
      * 
      * See rfc5957 3. DISPLAY Sort Value for an Address for the details
-     * 
+     *
      *     For the purposes of the sort criteria defined in this document, the
      *     sort value for an [IMAP] address structure is defined as follows:
      * <p>
-     *      o If the address structure's [IMAP] addr-name is non-NIL, apply the 
+     *      o If the address structure's [IMAP] addr-name is non-NIL, apply the
      *        procedure from [RFC5255], Section 4.6.  (That is, decode any
      *        RFC2047] encoded-words and convert the resulting character string
      *        into a charset valid for the currently active [RFC4790] collation,
@@ -234,7 +232,7 @@ public class SearchUtil {
             //    Convert all tabs and continuations to space.  Convert all
             //    multiple spaces to a single space.
             String decodedSubject = MimeUtil.unfold(DecoderUtil.decodeEncodedWords(subject, DecodeMonitor.SILENT));
-            decodedSubject = new String(decodedSubject.getBytes(UTF8), UTF8);
+            decodedSubject = new String(decodedSubject.getBytes(UTF_8), UTF_8);
 
             // replace all tabs with spaces and replace multiple spaces with one space
             decodedSubject = decodedSubject.replaceAll("\t", " ").replaceAll("( ){2,}", " ");

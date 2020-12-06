@@ -20,7 +20,7 @@
 package org.apache.james.imap.processor;
 
 import java.io.Closeable;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -71,7 +71,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                     responder.respond(new AuthenticateResponse());
                     session.pushLineHandler((requestSession, data) -> {
                         // cut of the CRLF
-                        String initialClientResponse = new String(data, 0, data.length - 2, Charset.forName("US-ASCII"));
+                        String initialClientResponse = new String(data, 0, data.length - 2, StandardCharsets.US_ASCII);
 
                         doPlainAuth(initialClientResponse, requestSession, request, responder);
 

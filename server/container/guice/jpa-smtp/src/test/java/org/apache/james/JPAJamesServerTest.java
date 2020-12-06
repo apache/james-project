@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import javax.persistence.EntityManagerFactory;
 
@@ -91,7 +91,7 @@ public class JPAJamesServerTest {
         ByteBuffer byteBuffer = ByteBuffer.allocate(1000);
         socketChannel.read(byteBuffer);
         byte[] bytes = byteBuffer.array();
-        return new String(bytes, Charset.forName("UTF-8"));
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
 }

@@ -23,14 +23,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
+import java.nio.charset.StandardCharsets;
 
 
 public class ByteBufferInputStream extends InputStream {
     private final ByteBuffer buffer = ByteBuffer.allocate(160384);
 
-    private final CharsetEncoder encoder = Charset.forName("ASCII").newEncoder();
+    private final CharsetEncoder encoder = StandardCharsets.US_ASCII.newEncoder();
 
     private boolean readLast = true;
 

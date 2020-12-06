@@ -21,7 +21,7 @@ package org.apache.james.mailbox.store.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -64,7 +64,7 @@ class SearchUtilsRFC822Test {
         builder.header("To", FROM_ADDRESS);
         builder.header("Subject", "A " + SUBJECT_PART + " Multipart Mail");
         builder.header("Date", "Thu, 14 Feb 2008 12:00:00 +0000 (GMT)");
-        builder.body(Charset.forName("us-ascii").encode(BODY).array());
+        builder.body(StandardCharsets.US_ASCII.encode(BODY).array());
         row = builder.build();
         
         Iterator<MailboxMessage> messages = null;

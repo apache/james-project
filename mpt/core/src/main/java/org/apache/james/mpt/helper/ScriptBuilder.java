@@ -19,6 +19,8 @@
 
 package org.apache.james.mpt.helper;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
@@ -27,7 +29,6 @@ import java.nio.CharBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Locale;
 
@@ -1098,8 +1099,6 @@ public class ScriptBuilder {
 
     public static final class Client {
 
-        private static final Charset ASCII = Charset.forName("us-ascii");
-
         private final Out out;
 
         private final ReadableByteChannel source;
@@ -1218,7 +1217,7 @@ public class ScriptBuilder {
 
         public void write(String phrase) throws Exception {
             out.print(phrase);
-            final ByteBuffer buffer = ASCII.encode(phrase);
+            final ByteBuffer buffer = US_ASCII.encode(phrase);
             writeRemaining(buffer);
         }
 
