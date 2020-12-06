@@ -68,25 +68,12 @@ class StoreMailboxMessageResultIteratorTest {
         }
 
         @Override
-        public void endRequest() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public <T> T execute(Transaction<T> transaction) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
         public MailboxCounters getMailboxCounters(Mailbox mailbox) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange set,
-                                                              org.apache.james.mailbox.store.mail.MessageMapper.FetchType type, int limit)
-                throws MailboxException {
-            
+        public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange set, FetchType type, int limit) {
             List<MailboxMessage> messages = new ArrayList<>();
             for (MessageUid uid: Iterables.limit(set, limit)) {
                 if (messageRange.includes(uid)) {

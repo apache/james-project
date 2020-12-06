@@ -21,6 +21,8 @@ package org.apache.james.mailbox.store.transaction;
 
 import org.apache.james.mailbox.exception.MailboxException;
 
+import reactor.core.publisher.Mono;
+
 /**
  * Mapper which execute units of work in a {@link Transaction}
  */
@@ -29,12 +31,20 @@ public interface Mapper {
     /**
      * IMAP Request was complete. Cleanup all Request scoped stuff
      */
-    void endRequest();
+    default void endRequest() {
+
+    }
     
     /**
      * Execute the given Transaction
      */
-    <T> T execute(Transaction<T> transaction) throws MailboxException;
+    default <T> T execute(Transaction<T> transaction) throws MailboxException {
+        return transaction.run();
+    }
+
+    default <T> Mono<T> executeReactive(Mono<T> transaction) {
+        return transaction;
+    }
 
     /**
      * Unit of work executed in a Transaction

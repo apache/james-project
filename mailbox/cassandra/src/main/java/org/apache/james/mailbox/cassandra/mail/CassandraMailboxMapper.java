@@ -32,7 +32,6 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesService;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.Mailbox;
@@ -329,11 +328,6 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public <T> T execute(Transaction<T> transaction) throws MailboxException {
-        return transaction.run();
-    }
-
-    @Override
     public Mono<ACLDiff> updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
         return cassandraACLMapper.updateACL(cassandraId, mailboxACLCommand);
@@ -343,11 +337,6 @@ public class CassandraMailboxMapper implements MailboxMapper {
     public Mono<ACLDiff> setACL(Mailbox mailbox, MailboxACL mailboxACL) {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
         return cassandraACLMapper.setACL(cassandraId, mailboxACL);
-    }
-
-    @Override
-    public void endRequest() {
-        // Do nothing
     }
 
     private Mono<Mailbox> toMailboxWithAcl(Mailbox mailbox) {

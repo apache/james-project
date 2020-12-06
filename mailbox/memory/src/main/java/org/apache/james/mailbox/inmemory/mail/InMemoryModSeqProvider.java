@@ -34,18 +34,18 @@ public class InMemoryModSeqProvider implements ModSeqProvider {
 
     @Override
     public ModSeq nextModSeq(Mailbox mailbox) {
-        return ModSeq.of(nextModSeq((InMemoryId) mailbox.getMailboxId()));
+        return ModSeq.first();
 
     }
 
     @Override
     public ModSeq nextModSeq(MailboxId mailboxId) {
-        return ModSeq.of(nextModSeq((InMemoryId) mailboxId));
+        return ModSeq.first();
     }
 
     @Override
     public ModSeq highestModSeq(Mailbox mailbox) {
-        return ModSeq.of(getHighest((InMemoryId) mailbox.getMailboxId()).get());
+        return ModSeq.first();
     }
 
     @Override

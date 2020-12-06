@@ -80,10 +80,4 @@ public class CassandraSubscriptionMapper extends NonTransactionalMapper implemen
             .map((row) -> new Subscription(Username.of(row.getString(USER)), row.getString(MAILBOX)))
             .collect(Collectors.toList());
     }
-
-    @Override
-    public void endRequest() {
-        // nothing to do
-    }
-
 }

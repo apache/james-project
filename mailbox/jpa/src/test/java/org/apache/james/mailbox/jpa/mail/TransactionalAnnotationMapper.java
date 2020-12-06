@@ -22,7 +22,6 @@ package org.apache.james.mailbox.jpa.mail;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
@@ -35,16 +34,6 @@ public class TransactionalAnnotationMapper implements AnnotationMapper {
 
     public TransactionalAnnotationMapper(JPAAnnotationMapper wrapped) {
         this.wrapped = wrapped;
-    }
-
-    @Override
-    public void endRequest() {
-        throw new NotImplementedException("not implemented");
-    }
-
-    @Override
-    public <T> T execute(Transaction<T> transaction) {
-        throw new NotImplementedException("not implemented");
     }
 
     @Override

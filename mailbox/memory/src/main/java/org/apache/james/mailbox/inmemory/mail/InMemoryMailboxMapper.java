@@ -25,7 +25,6 @@ import java.util.function.Function;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
@@ -114,11 +113,6 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public void endRequest() {
-        // Do nothing
-    }
-
-    @Override
     public Mono<Boolean> hasChildren(Mailbox mailbox, char delimiter) {
         String mailboxName = mailbox.getName() + delimiter;
         return Mono.fromCallable(mailboxesByPath::values)
@@ -136,11 +130,6 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     public Flux<Mailbox> list() {
         return Mono.fromCallable(mailboxesByPath::values)
             .flatMapIterable(Function.identity());
-    }
-
-    @Override
-    public <T> T execute(Transaction<T> transaction) throws MailboxException {
-        return transaction.run();
     }
 
     @Override

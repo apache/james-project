@@ -170,8 +170,4 @@ public class CassandraAnnotationMapper extends NonTransactionalMapper implements
             .map(this::toAnnotation)
             .filter(annotation -> key.isParentOrIsEqual(annotation.getKey()));
     }
-
-    @Override
-    public void endRequest() {
-    }
 }

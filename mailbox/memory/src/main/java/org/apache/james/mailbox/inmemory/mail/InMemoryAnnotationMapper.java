@@ -26,7 +26,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Predicate;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
@@ -44,16 +43,6 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
 
     public InMemoryAnnotationMapper() {
         mailboxesAnnotations = HashBasedTable.create();
-    }
-
-    @Override
-    public void endRequest() {
-
-    }
-
-    @Override
-    public <T> T execute(Transaction<T> transaction) throws MailboxException {
-        return transaction.run();
     }
 
     private List<MailboxAnnotation> retrieveAllAnnotations(InMemoryId mailboxId) {
