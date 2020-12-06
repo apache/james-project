@@ -3097,6 +3097,7 @@
                         <reuseForks>true</reuseForks>
                         <!-- Fail tests longer than 20 minutes, prevent form random locking tests -->
                         <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
+                        <excludedGroups>unstable</excludedGroups>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -3518,6 +3519,24 @@
             </build>
         </profile>
         <profile>
+            <id>unstable-tests</id>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-surefire-plugin</artifactId>
+                            <version>2.22.2</version>
+                            <configuration>
+                                <excludedGroups></excludedGroups>
+                                <groups>unstable</groups>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+        <profile>
             <id>sortPom</id>
             <build>
                 <plugins>
@@ -3544,6 +3563,7 @@
                 </plugins>
             </build>
         </profile>
+
         <profile>
             <id>partial-build</id>
             <build>

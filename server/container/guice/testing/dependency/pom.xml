@@ -30,4 +30,13 @@
 
     <name>Apache James :: Server :: Guice :: Mailet :: Custom testing mailets :: dependency</name>
     <description>Dependency not part of James classpath that custom mailets can depends on</description>
+
+    <dependencies>
+        <dependency>
+            <!-- Added because of https://issues.apache.org/jira/browse/SUREFIRE-1266 -->
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-testing</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>
