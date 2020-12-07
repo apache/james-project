@@ -35,7 +35,7 @@ public abstract class SmtpStarttlsCommandTest {
     private SimpleScriptedTestProtocol scriptedTest;
 
     @BeforeEach
-    public void setUp(SmtpHostSystem hostSystem) throws Exception {
+    void setUp(SmtpHostSystem hostSystem) throws Exception {
         this.hostSystem = hostSystem;
         String scriptDir = "/org/apache/james/smtp/scripts/";
         scriptedTest = new SimpleScriptedTestProtocol(scriptDir, hostSystem)
