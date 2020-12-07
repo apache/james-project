@@ -8,7 +8,7 @@ Accepted (lazy consensus)
 
 Not implemented yet.
 
-Superceded by [34. Distributed Mailbox Listener Configuration](0035-distributed-listeners-configuration.md)
+Superseded by [35. Distributed Mailbox Listener Configuration](0035-distributed-listeners-configuration.md)
 
 ## Context
 
