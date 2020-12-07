@@ -21,14 +21,17 @@ package org.apache.mailet;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.james.core.MailAddress;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
@@ -74,12 +77,8 @@ public class PerRecipientHeaders implements Serializable {
     }
 
     public static class Header implements Serializable {
-        private final String name;
-        private final String value;
 
-        public static Builder builder() {
-            return new Builder();
-        }
+        public static final String SEPARATOR = ": ";
 
         public static class Builder {
             private String name;
@@ -102,8 +101,31 @@ public class PerRecipientHeaders implements Serializable {
             }
         }
 
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        public static Header fromString(String value) {
+            Preconditions.checkArgument(value.contains(SEPARATOR), "Header is string form needs to contain ': ' separator");
+
+            List<String> parts = Splitter.on(SEPARATOR).splitToList(value);
+
+            return new Header(
+                parts.get(0),
+                Joiner.on(SEPARATOR)
+                    .join(parts.stream()
+                        .skip(1)
+                        .collect(Guavate.toImmutableList())));
+        }
+
+        private final String name;
+        private final String value;
+
         @VisibleForTesting
         Header(String name, String value) {
+            Preconditions.checkArgument(!name.contains(":"), "Header name should not contain separator");
+            Preconditions.checkArgument(!name.contains("\n"), "Header name should not contain line break");
+
             this.name = name;
             this.value = value;
         }
@@ -114,6 +136,10 @@ public class PerRecipientHeaders implements Serializable {
 
         public String getValue() {
             return value;
+        }
+
+        public String asString() {
+            return name + SEPARATOR + value;
         }
 
         @Override
