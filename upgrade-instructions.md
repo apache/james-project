@@ -22,6 +22,27 @@ Change list:
  - [Swift support has been dropped](#swift-support-has-been-dropped)
  - [Cassandra Schema update to V8](#cassandra-schema-update-to-v8)
  - [Cassandra Schema update to V9](#cassandra-schema-update-to-v9)
+ - [Cassandra Schema update to V10](#cassandra-schema-update-to-v10)
+ - [JMS mail queue no longer relies on java serialization](#jms-mail-queue-no-longer-relies-on-java-serialization)
+
+### JMS mail queue no longer relies on java serialization
+
+Date: 07/12/2020
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-2578
+
+Concerned products: Spring server, JPA Guice servers, Cassandra Guice server (without rabbitMQ)
+
+Java serialization is unsafe and leads to countless vulnerability issues. We removed the remaining usages as part of the
+JMS and ActiveMQ mail queues.
+
+In order to do so, we introduced a breaking change in the message format.
+
+Upgrades should be done with an empty mail queue. To do so:
+ - Switch off incoming SMTP + JMAP traffic (external load balancing or restarting with dis-activated SMTP service)
+ - Flush your MailQueues
+ - Await the mail processing to finish, monitoring the size of your mail queue
+ - Upgrade, then restart SMTP + JMAP traffic
 
 ### Cassandra Schema update to V10
 
