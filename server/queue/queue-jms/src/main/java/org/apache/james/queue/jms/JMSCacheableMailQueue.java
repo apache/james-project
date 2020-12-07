@@ -20,7 +20,6 @@ package org.apache.james.queue.jms;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.Instant;
@@ -359,7 +358,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
         props.putAll(mail.attributes()
             .collect(Guavate.toImmutableMap(
                 attribute -> attribute.getName().asString(),
-                attribute -> SerializationUtil.serialize((Serializable) attribute.getValue().value()))));
+                attribute -> attribute.getValue().toJson().toString())));
 
         ImmutableList<String> attributeNames = mail.attributeNames()
             .map(AttributeName::asString)
@@ -453,7 +452,11 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
         Object attrValue = Throwing.function(message::getObjectProperty).apply(name);
 
         if (attrValue instanceof String) {
-            return Stream.of(new Attribute(AttributeName.of(name), AttributeValue.ofAny(SerializationUtil.deserialize((String) attrValue))));
+            try {
+                return Stream.of(new Attribute(AttributeName.of(name), AttributeValue.fromJsonString((String) attrValue)));
+            } catch (IOException e) {
+                LOGGER.error("Error deserializing mail attribute {} with value {}", name, attrValue, e);
+            }
         } else {
             LOGGER.error("Not supported mail attribute {} of type {} for mail {}", name, attrValue, name);
         }
