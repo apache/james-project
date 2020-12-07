@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class Iterators {
 
@@ -33,6 +34,7 @@ public class Iterators {
     }
 
     public static <T> Flux<T> toFlux(Iterator<T> iterator) {
-        return Flux.fromStream(toStream(iterator));
+        return Mono.fromCallable(() -> toStream(iterator))
+            .flatMapMany(Flux::fromStream);
     }
 }
