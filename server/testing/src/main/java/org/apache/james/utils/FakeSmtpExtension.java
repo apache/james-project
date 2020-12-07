@@ -67,7 +67,7 @@ public class FakeSmtpExtension implements
         return withSmtpPort(SMTP_PORT);
     }
 
-    private static  GenericContainer<?> fakeSmtpContainer() {
+    private static GenericContainer<?> fakeSmtpContainer() {
         return new GenericContainer<>(Images.FAKE_SMTP)
             .waitingFor(new HostPortWaitStrategy()
                 .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND)
