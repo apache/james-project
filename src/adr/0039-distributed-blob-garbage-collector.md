@@ -61,10 +61,6 @@ Since we will not build a distributed task scheduler. To increment the `referenc
 `garbage collection iteration`, the scheduling will be done by an external scheduler (cron job, kubernetes cronjob ...)
  which will call a webadmin endpoint to launch this task periodically.
  
-## References
-
-
-
 ## Algorithm visualisation
 
 ### Generation 1 and Iteration 1
