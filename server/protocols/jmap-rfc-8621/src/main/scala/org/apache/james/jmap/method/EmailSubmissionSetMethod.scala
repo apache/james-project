@@ -29,7 +29,7 @@ import javax.mail.Address
 import javax.mail.Message.RecipientType
 import javax.mail.internet.{InternetAddress, MimeMessage}
 import org.apache.james.core.{MailAddress, Username}
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
 import org.apache.james.jmap.core.{ClientId, Id, Invocation, Properties, ServerId, SetError, State}
@@ -77,7 +77,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
                                          val metricFactory: MetricFactory,
                                          val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[EmailSubmissionSetRequest] with Startable {
   override val methodName: MethodName = MethodName("EmailSubmission/set")
-  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(EMAIL_SUBMISSION)
+  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, EMAIL_SUBMISSION)
   var queue: MailQueue = _
 
   sealed trait CreationResult {

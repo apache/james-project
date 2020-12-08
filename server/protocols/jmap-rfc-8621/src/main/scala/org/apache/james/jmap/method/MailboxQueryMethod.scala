@@ -20,7 +20,7 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_MAIL}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{CanCalculateChanges, ErrorCode, Invocation, Limit, Position, QueryState}
 import org.apache.james.jmap.json.{MailboxQuerySerializer, ResponseSerializer}
@@ -36,7 +36,7 @@ class MailboxQueryMethod @Inject()(systemMailboxesProvider: SystemMailboxesProvi
                                    val metricFactory: MetricFactory,
                                    val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[MailboxQueryRequest] {
   override val methodName: MethodName = MethodName("Mailbox/query")
-  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_MAIL)
+  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxQueryRequest): SMono[InvocationWithContext] = {
     processRequest(mailboxSession, invocation.invocation, request)

@@ -21,7 +21,7 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.core._
@@ -38,7 +38,7 @@ class IdentityGetMethod @Inject() (identityFactory: IdentityFactory,
                                   val metricFactory: MetricFactory,
                                   val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[IdentityGetRequest] {
   override val methodName: MethodName = MethodName("Identity/get")
-  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(EMAIL_SUBMISSION)
+  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, EMAIL_SUBMISSION)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: IdentityGetRequest): SMono[InvocationWithContext] = {
     val requestedProperties: Properties = request.properties.getOrElse(Identity.allProperties)

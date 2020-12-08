@@ -25,7 +25,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.JMAPConfiguration
 import org.apache.james.jmap.api.projections.EmailQueryView
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_MAIL}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.Limit.Limit
 import org.apache.james.jmap.core.Position.Position
@@ -53,7 +53,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
                                   val configuration: JMAPConfiguration,
                                   val emailQueryView: EmailQueryView) extends MethodRequiringAccountId[EmailQueryRequest] {
   override val methodName: MethodName = MethodName("Email/query")
-  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_MAIL)
+  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailQueryRequest): SMono[InvocationWithContext] = {
     processRequest(mailboxSession, invocation.invocation, request, capabilities)

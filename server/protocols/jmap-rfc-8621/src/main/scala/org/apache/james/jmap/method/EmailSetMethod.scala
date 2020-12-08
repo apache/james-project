@@ -20,7 +20,7 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_MAIL}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, State}
 import org.apache.james.jmap.json.{EmailSetSerializer, ResponseSerializer}
@@ -41,7 +41,7 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
                                deletePerformer: EmailSetDeletePerformer,
                                updatePerformer: EmailSetUpdatePerformer) extends MethodRequiringAccountId[EmailSetRequest] {
   override val methodName: MethodName = MethodName("Email/set")
-  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_MAIL)
+  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailSetRequest): SMono[InvocationWithContext] = {
     for {

@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.api.vacation.{VacationPatch, VacationRepository}
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_VACATION_RESPONSE}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Invocation, State}
@@ -74,7 +74,7 @@ class VacationResponseSetMethod @Inject()(vacationRepository: VacationRepository
                                           val metricFactory: MetricFactory,
                                           val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[VacationResponseSetRequest] {
   override val methodName: MethodName = MethodName("VacationResponse/set")
-  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_VACATION_RESPONSE)
+  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_VACATION_RESPONSE)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: VacationResponseSetRequest): SMono[InvocationWithContext] = {
     update(mailboxSession, request)
