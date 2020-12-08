@@ -100,6 +100,17 @@ public interface MailboxChangeRepositoryContract {
     }
 
     @Test
+    default void getChangesShouldReturnCurrentStateWhenNoNewerState() {
+        MailboxChangeRepository repository = mailboxChangeRepository();
+
+        MailboxChange oldState = MailboxChange.of(ACCOUNT_ID, STATE_0, DATE, ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
+        repository.save(oldState);
+
+        assertThat(repository.getSinceState(ACCOUNT_ID, STATE_0, Optional.empty()).block().getNewState())
+            .isEqualTo(oldState.getState());
+    }
+
+    @Test
     default void getChangesShouldLimitChanges() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 

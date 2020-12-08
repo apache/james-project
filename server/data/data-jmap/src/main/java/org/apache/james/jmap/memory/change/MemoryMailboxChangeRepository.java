@@ -65,7 +65,7 @@ public class MemoryMailboxChangeRepository implements MailboxChangeRepository {
             .flatMapMany(currentState -> Flux.fromIterable(mailboxChangeMap.get(accountId))
                 .filter(change -> change.getDate().isAfter(currentState.getDate()))
                 .sort(Comparator.comparing(MailboxChange::getDate)))
-            .collect(new MailboxChangeCollector(maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
+            .collect(new MailboxChangeCollector(state, maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
     }
 
     private Mono<MailboxChange> findByState(AccountId accountId, State state) {

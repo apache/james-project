@@ -40,14 +40,16 @@ public class MailboxChanges {
 
         public static class MailboxChangeCollector implements Collector<MailboxChange, MailboxChangesBuilder, MailboxChanges> {
             private final MailboxChange.Limit limit;
+            private final MailboxChange.State state;
 
-            public MailboxChangeCollector(MailboxChange.Limit limit) {
+            public MailboxChangeCollector(MailboxChange.State state, MailboxChange.Limit limit) {
                 this.limit = limit;
+                this.state = state;
             }
 
             @Override
             public Supplier<MailboxChangesBuilder> supplier() {
-                return () -> new MailboxChangesBuilder(limit);
+                return () -> new MailboxChangesBuilder(state, limit);
             }
 
             public BiConsumer<MailboxChangesBuilder, MailboxChange> accumulator() {
@@ -78,8 +80,9 @@ public class MailboxChanges {
         private Set<MailboxId> updated;
         private Set<MailboxId> destroyed;
 
-        public MailboxChangesBuilder(MailboxChange.Limit limit) {
+        public MailboxChangesBuilder(MailboxChange.State state, MailboxChange.Limit limit) {
             this.limit = limit;
+            this.state = state;
             this.hasMoreChanges = false;
             this.canAddMoreItem = true;
             this.created = new HashSet<>();
@@ -130,10 +133,6 @@ public class MailboxChanges {
         this.created = created;
         this.updated = updated;
         this.destroyed = destroyed;
-    }
-
-    public MailboxChangesBuilder build(MailboxChange.Limit limit) {
-        return new MailboxChangesBuilder(limit);
     }
 
     public MailboxChange.State getNewState() {
