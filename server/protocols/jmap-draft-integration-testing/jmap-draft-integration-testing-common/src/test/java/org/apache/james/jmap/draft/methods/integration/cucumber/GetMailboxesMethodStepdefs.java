@@ -30,9 +30,12 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxPath;
 
+import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import cucumber.runtime.java.guice.ScenarioScoped;
@@ -49,6 +52,12 @@ public class GetMailboxesMethodStepdefs {
         this.userStepdefs = userStepdefs;
         this.httpClient = httpClient;
         this.mainStepdefs = mainStepdefs;
+    }
+
+    @Given("^the user has a mailbox \"([^\"]*)\"$")
+    public void hasMailbox(String mailbox) {
+        mainStepdefs.mailboxProbe.createMailbox(MailboxPath.forUser(
+            Username.of(userStepdefs.getConnectedUser()), mailbox));
     }
 
     @When("^\"([^\"]*)\" lists mailboxes$")

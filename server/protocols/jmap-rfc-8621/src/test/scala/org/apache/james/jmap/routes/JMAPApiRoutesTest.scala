@@ -37,19 +37,18 @@ import org.apache.james.domainlist.memory.MemoryDomainList
 import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.MethodName
-import org.apache.james.jmap.core.{JmapRfc8621Configuration, RequestLevelErrorType}
-import org.apache.james.jmap.http.{Authenticator, BasicAuthenticationStrategy, MailboxesProvisioner, UserProvisioning}
+import org.apache.james.jmap.core.RequestLevelErrorType
+import org.apache.james.jmap.http.{Authenticator, BasicAuthenticationStrategy, UserProvisioning}
 import org.apache.james.jmap.method.{CoreEchoMethod, Method}
 import org.apache.james.jmap.routes.JMAPApiRoutesTest._
 import org.apache.james.jmap.{JMAPConfiguration, JMAPRoutesHandler, JMAPServer, Version, VersionParser}
 import org.apache.james.mailbox.extension.PreDeletionHook
 import org.apache.james.mailbox.inmemory.{InMemoryMailboxManager, MemoryMailboxManagerProvider}
-import org.apache.james.mailbox.store.StoreSubscriptionManager
 import org.apache.james.metrics.tests.RecordingMetricFactory
 import org.apache.james.user.memory.MemoryUsersRepository
 import org.hamcrest.Matchers.equalTo
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{doReturn, doThrow, mock, when}
+import org.mockito.Mockito.{doReturn, mock, when}
 import org.scalatest.BeforeAndAfter
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -74,12 +73,9 @@ object JMAPApiRoutesTest {
   private val AUTHENTICATOR: Authenticator = Authenticator.of(new RecordingMetricFactory, authenticationStrategy)
 
   private val userProvisionner: UserProvisioning = new UserProvisioning(usersRepository, new RecordingMetricFactory)
-  private val subscriptionManager: StoreSubscriptionManager = new StoreSubscriptionManager(mailboxManager.getMapperFactory)
-  private val mailboxesProvisioner: MailboxesProvisioner = new MailboxesProvisioner(mailboxManager, subscriptionManager, new RecordingMetricFactory)
-  private val sessionSupplier: SessionSupplier = new SessionSupplier(JmapRfc8621Configuration(JmapRfc8621Configuration.LOCALHOST_URL_PREFIX))
   private val JMAP_METHODS: Set[Method] = Set(new CoreEchoMethod)
 
-  private val JMAP_API_ROUTE: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, userProvisionner, mailboxesProvisioner, JMAP_METHODS)
+  private val JMAP_API_ROUTE: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, userProvisionner, JMAP_METHODS)
   private val ROUTES_HANDLER: ImmutableSet[JMAPRoutesHandler] = ImmutableSet.of(new JMAPRoutesHandler(Version.RFC8621, JMAP_API_ROUTE))
 
   private val userBase64String: String = Base64.getEncoder.encodeToString("user1:password".getBytes(StandardCharsets.UTF_8))
@@ -443,7 +439,7 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
     when(mockCoreEchoMethod.requiredCapabilities).thenReturn(Set(JMAP_CORE))
 
     val methods: Set[Method] = Set(mockCoreEchoMethod)
-    val apiRoute: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, userProvisionner, mailboxesProvisioner, methods)
+    val apiRoute: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, userProvisionner, methods)
     val routesHandler: ImmutableSet[JMAPRoutesHandler] = ImmutableSet.of(new JMAPRoutesHandler(Version.RFC8621, apiRoute))
 
     val versionParser: VersionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT)

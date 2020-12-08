@@ -63,17 +63,15 @@ public class JMAPApiRoutesTest {
     private RequestHandler requestHandler;
     private Authenticator mockedAuthFilter;
     private UserProvisioner mockedUserProvisionner;
-    private DefaultMailboxesProvisioner mockedMailboxesProvisionner;
 
     @Before
     public void setup() throws Exception {
         requestHandler = mock(RequestHandler.class);
         mockedAuthFilter = mock(Authenticator.class);
         mockedUserProvisionner = mock(UserProvisioner.class);
-        mockedMailboxesProvisionner = mock(DefaultMailboxesProvisioner.class);
 
         JMAPApiRoutes jmapApiRoutes = new JMAPApiRoutes(requestHandler, new RecordingMetricFactory(),
-            mockedAuthFilter, mockedUserProvisionner, mockedMailboxesProvisionner);
+            mockedAuthFilter, mockedUserProvisionner);
 
         JMAPRoute postApiRoute = jmapApiRoutes.routes()
             .filter(jmapRoute -> jmapRoute.getEndpoint().getMethod().equals(HttpMethod.POST))
@@ -96,8 +94,6 @@ public class JMAPApiRoutesTest {
         doReturn(Mono.just(MailboxSessionUtil.create(Username.of("bob"))))
             .when(mockedAuthFilter).authenticate(any());
         when(mockedUserProvisionner.provisionUser(any()))
-            .thenReturn(Mono.empty());
-        when(mockedMailboxesProvisionner.createMailboxesIfNeeded(any()))
             .thenReturn(Mono.empty());
     }
 

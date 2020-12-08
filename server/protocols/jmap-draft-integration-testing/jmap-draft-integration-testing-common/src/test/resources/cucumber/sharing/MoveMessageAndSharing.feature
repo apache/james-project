@@ -24,8 +24,10 @@ Feature: Move message and sharing
     Given a domain named "domain.tld"
     And some users "alice@domain.tld", "bob@domain.tld"
     And "alice@domain.tld" has a mailbox "shared"
+    And "alice@domain.tld" has a mailbox "INBOX"
     And "alice@domain.tld" shares her mailbox "shared" with "bob@domain.tld" with "aeilrwt" rights
     And "bob@domain.tld" has a mailbox "bobMailbox"
+    And "bob@domain.tld" has a mailbox "INBOX"
 
   Scenario: Move message should update the total and the unread counts when asked by sharer
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox

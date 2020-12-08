@@ -37,6 +37,7 @@ import org.apache.james.jmap.draft.model.MailboxProperty;
 import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.mailbox.Mailbox;
 import org.apache.james.jmap.draft.utils.quotas.QuotaLoaderWithDefaultPreloaded;
+import org.apache.james.jmap.http.DefaultMailboxesProvisioner;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
@@ -70,15 +71,17 @@ public class GetMailboxesMethod implements Method {
     private final MetricFactory metricFactory;
     private final QuotaRootResolver quotaRootResolver;
     private final QuotaManager quotaManager;
+    private final DefaultMailboxesProvisioner provisioner;
 
     @Inject
     @VisibleForTesting
-    public GetMailboxesMethod(MailboxManager mailboxManager, QuotaRootResolver quotaRootResolver, QuotaManager quotaManager, MailboxFactory mailboxFactory, MetricFactory metricFactory) {
+    public GetMailboxesMethod(MailboxManager mailboxManager, QuotaRootResolver quotaRootResolver, QuotaManager quotaManager, MailboxFactory mailboxFactory, MetricFactory metricFactory, DefaultMailboxesProvisioner provisioner) {
         this.mailboxManager = mailboxManager;
         this.mailboxFactory = mailboxFactory;
         this.metricFactory = metricFactory;
         this.quotaRootResolver = quotaRootResolver;
         this.quotaManager = quotaManager;
+        this.provisioner = provisioner;
     }
 
     @Override
@@ -110,12 +113,13 @@ public class GetMailboxesMethod implements Method {
     }
 
     private Flux<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, GetMailboxesRequest mailboxesRequest) {
-        return Flux.from(getMailboxesResponse(mailboxesRequest, mailboxSession)
-            .map(response -> JmapResponse.builder().methodCallId(methodCallId)
-                .response(response)
-                .properties(mailboxesRequest.getProperties().map(this::ensureContainsId))
-                .responseName(RESPONSE_NAME)
-                .build()));
+        return provisioner.createMailboxesIfNeeded(mailboxSession)
+            .thenMany(Flux.from(getMailboxesResponse(mailboxesRequest, mailboxSession)
+                .map(response -> JmapResponse.builder().methodCallId(methodCallId)
+                    .response(response)
+                    .properties(mailboxesRequest.getProperties().map(this::ensureContainsId))
+                    .responseName(RESPONSE_NAME)
+                    .build())));
     }
 
     private Set<MailboxProperty> ensureContainsId(Set<MailboxProperty> input) {

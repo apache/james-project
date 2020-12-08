@@ -25,6 +25,7 @@ import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JM
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, Properties}
+import org.apache.james.jmap.http.MailboxesProvisioner
 import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
 import org.apache.james.jmap.mail.{Mailbox, MailboxFactory, MailboxGet, MailboxGetRequest, MailboxGetResponse, NotFound, PersonalNamespace, Subscriptions}
@@ -66,6 +67,7 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
                                   quotaFactory : QuotaLoaderWithPreloadedDefaultFactory,
                                   mailboxIdFactory: MailboxId.Factory,
                                   mailboxFactory: MailboxFactory,
+                                  provisioner: MailboxesProvisioner,
                                   val metricFactory: MetricFactory,
                                   val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[MailboxGetRequest] {
   override val methodName: MethodName = MethodName("Mailbox/get")
@@ -98,16 +100,17 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
   private def getMailboxes(capabilities: Set[CapabilityIdentifier],
                            mailboxGetRequest: MailboxGetRequest,
                            mailboxSession: MailboxSession): SFlux[MailboxGetResults] =
-
-    mailboxGetRequest.ids match {
-      case None => getAllMailboxes(capabilities, mailboxSession)
-        .map(MailboxGetResults.found)
-      case Some(ids) => SFlux.fromIterable(ids.value)
-        .flatMap(id => Try(mailboxIdFactory.fromString(id.value))
-          .fold(e => SMono.just(MailboxGetResults.notFound(id)),
-            mailboxId => getMailboxResultById(capabilities, mailboxId, mailboxSession)),
-          maxConcurrency = 5)
-    }
+    provisioner.createMailboxesIfNeeded(mailboxSession)
+      .thenMany(
+        mailboxGetRequest.ids match {
+          case None => getAllMailboxes(capabilities, mailboxSession)
+            .map(MailboxGetResults.found)
+          case Some(ids) => SFlux.fromIterable(ids.value)
+            .flatMap(id => Try(mailboxIdFactory.fromString(id.value))
+              .fold(e => SMono.just(MailboxGetResults.notFound(id)),
+                mailboxId => getMailboxResultById(capabilities, mailboxId, mailboxSession)),
+              maxConcurrency = 5)
+        })
 
   private def getMailboxResultById(capabilities: Set[CapabilityIdentifier],
                                    mailboxId: MailboxId,

@@ -98,6 +98,7 @@ public abstract class SendMDNMethodTest {
         dataProbe.addUser(HOMER.asString(), PASSWORD);
         dataProbe.addUser(BART.asString(), BOB_PASSWORD);
         mailboxProbe.createMailbox("#private", HOMER.asString(), DefaultMailboxes.INBOX);
+        mailboxProbe.createMailbox("#private", HOMER.asString(), DefaultMailboxes.OUTBOX);
         homerAccessToken = authenticateJamesUser(baseUri(jmapServer), HOMER, PASSWORD);
         bartAccessToken = authenticateJamesUser(baseUri(jmapServer), BART, BOB_PASSWORD);
     }

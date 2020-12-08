@@ -67,15 +67,13 @@ public class JMAPApiRoutes implements JMAPRoutes {
     private final MetricFactory metricFactory;
     private final Authenticator authenticator;
     private final UserProvisioner userProvisioner;
-    private final DefaultMailboxesProvisioner defaultMailboxesProvisioner;
 
     @Inject
-    public JMAPApiRoutes(RequestHandler requestHandler, MetricFactory metricFactory, @Named(InjectionKeys.DRAFT) Authenticator authenticator, UserProvisioner userProvisioner, DefaultMailboxesProvisioner defaultMailboxesProvisioner) {
+    public JMAPApiRoutes(RequestHandler requestHandler, MetricFactory metricFactory, @Named(InjectionKeys.DRAFT) Authenticator authenticator, UserProvisioner userProvisioner) {
         this.requestHandler = requestHandler;
         this.metricFactory = metricFactory;
         this.authenticator = authenticator;
         this.userProvisioner = userProvisioner;
-        this.defaultMailboxesProvisioner = defaultMailboxesProvisioner;
         this.objectMapper = new ObjectMapper();
         objectMapper.configure(Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true);
     }
@@ -96,9 +94,7 @@ public class JMAPApiRoutes implements JMAPRoutes {
 
     private Mono<Void> post(HttpServerRequest request, HttpServerResponse response) {
         return authenticator.authenticate(request)
-            .flatMap(session -> Flux.merge(
-                userProvisioner.provisionUser(session),
-                defaultMailboxesProvisioner.createMailboxesIfNeeded(session))
+            .flatMap(session -> userProvisioner.provisionUser(session)
                 .then(Mono.from(metricFactory.decoratePublisherWithTimerMetric("JMAP-request",
                     post(request, response, session))))
                 .subscriberContext(jmapAuthContext(session)))

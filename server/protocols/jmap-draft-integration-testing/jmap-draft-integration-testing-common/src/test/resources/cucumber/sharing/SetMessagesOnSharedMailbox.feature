@@ -24,6 +24,7 @@ Feature: SetMessages method on shared folders
     Given a domain named "domain.tld"
     And some users "alice@domain.tld", "bob@domain.tld"
     And "bob@domain.tld" has a mailbox "shared"
+    And "bob@domain.tld" has a mailbox "Outbox"
     And "alice@domain.tld" has a mailbox "INBOX"
     And "bob@domain.tld" has a message "mBob" in "shared" mailbox with two attachments in text
     And "alice@domain.tld" has a message "mAlice" in "INBOX" mailbox with two attachments in text

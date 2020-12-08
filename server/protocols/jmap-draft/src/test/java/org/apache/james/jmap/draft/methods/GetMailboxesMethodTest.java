@@ -37,7 +37,10 @@ import org.apache.james.jmap.draft.model.MailboxFactory;
 import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.Number;
 import org.apache.james.jmap.draft.model.mailbox.Mailbox;
+import org.apache.james.jmap.draft.model.mailbox.MailboxNamespace;
 import org.apache.james.jmap.draft.model.mailbox.SortOrder;
+import org.apache.james.jmap.http.DefaultMailboxesProvisioner;
+import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
@@ -46,10 +49,12 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mime4j.dom.Message;
 import org.assertj.core.groups.Tuple;
@@ -72,6 +77,7 @@ public class GetMailboxesMethodTest {
 
     private QuotaRootResolver quotaRootResolver;
     private QuotaManager quotaManager;
+    private DefaultMailboxesProvisioner provisioner;
 
     @Before
     public void setup() throws Exception {
@@ -80,8 +86,9 @@ public class GetMailboxesMethodTest {
         quotaRootResolver = mailboxManager.getQuotaComponents().getQuotaRootResolver();
         quotaManager = mailboxManager.getQuotaComponents().getQuotaManager();
         mailboxFactory = new MailboxFactory(mailboxManager, quotaManager, quotaRootResolver);
+        provisioner = new DefaultMailboxesProvisioner(mailboxManager, new StoreSubscriptionManager(mailboxManager.getMapperFactory()), new DefaultMetricFactory());
 
-        getMailboxesMethod = new GetMailboxesMethod(mailboxManager, quotaRootResolver, quotaManager,  mailboxFactory, new DefaultMetricFactory());
+        getMailboxesMethod = new GetMailboxesMethod(mailboxManager, quotaRootResolver, quotaManager,  mailboxFactory, new DefaultMetricFactory(), provisioner);
     }
 
     @Test
@@ -99,6 +106,7 @@ public class GetMailboxesMethodTest {
                 .hasOnlyElementsOfType(GetMailboxesResponse.class)
                 .extracting(GetMailboxesResponse.class::cast)
                 .flatExtracting(GetMailboxesResponse::getList)
+                .filteredOn(mailbox -> !DefaultMailboxes.DEFAULT_MAILBOXES.contains(mailbox.getName()))
                 .isEmpty();
     }
 
@@ -111,7 +119,7 @@ public class GetMailboxesMethodTest {
             .thenThrow(new MailboxException());
         when(mockedMailboxManager.search(any(), any()))
             .thenReturn(Flux.empty());
-        GetMailboxesMethod testee = new GetMailboxesMethod(mockedMailboxManager, quotaRootResolver, quotaManager, mailboxFactory, new DefaultMetricFactory());
+        GetMailboxesMethod testee = new GetMailboxesMethod(mockedMailboxManager, quotaRootResolver, quotaManager, mailboxFactory, new DefaultMetricFactory(), provisioner);
 
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
@@ -155,6 +163,7 @@ public class GetMailboxesMethodTest {
                 .hasOnlyElementsOfType(GetMailboxesResponse.class)
                 .extracting(GetMailboxesResponse.class::cast)
                 .flatExtracting(GetMailboxesResponse::getList)
+                .filteredOn(mailbox -> !DefaultMailboxes.DEFAULT_MAILBOXES.contains(mailbox.getName()))
                 .extracting(Mailbox::getId, Mailbox::getName, Mailbox::getUnreadMessages)
                 .containsOnly(Tuple.tuple(InMemoryId.of(1), mailboxPath.getName(), Number.fromLong(2L)));
     }
@@ -180,6 +189,7 @@ public class GetMailboxesMethodTest {
                 .hasOnlyElementsOfType(GetMailboxesResponse.class)
                 .extracting(GetMailboxesResponse.class::cast)
                 .flatExtracting(GetMailboxesResponse::getList)
+                .filteredOn(mailbox -> !DefaultMailboxes.DEFAULT_MAILBOXES.contains(mailbox.getName()))
                 .extracting(Mailbox::getId, Mailbox::getName)
                 .containsOnly(Tuple.tuple(InMemoryId.of(1), mailboxPathToReturn.getName()));
     }
@@ -201,6 +211,7 @@ public class GetMailboxesMethodTest {
                 .hasOnlyElementsOfType(GetMailboxesResponse.class)
                 .extracting(GetMailboxesResponse.class::cast)
                 .flatExtracting(GetMailboxesResponse::getList)
+                .filteredOn(mailbox -> mailbox.getName().equalsIgnoreCase("INBOX"))
                 .extracting(Mailbox::getSortOrder)
                 .containsOnly(SortOrder.of(10));
     }
@@ -222,6 +233,7 @@ public class GetMailboxesMethodTest {
                 .hasOnlyElementsOfType(GetMailboxesResponse.class)
                 .extracting(GetMailboxesResponse.class::cast)
                 .flatExtracting(GetMailboxesResponse::getList)
+                .filteredOn(mailbox -> !DefaultMailboxes.DEFAULT_MAILBOXES.contains(mailbox.getName()))
                 .extracting(Mailbox::getSortOrder)
                 .containsOnly(SortOrder.of(1000));
     }
@@ -243,6 +255,7 @@ public class GetMailboxesMethodTest {
                 .hasOnlyElementsOfType(GetMailboxesResponse.class)
                 .extracting(GetMailboxesResponse.class::cast)
                 .flatExtracting(GetMailboxesResponse::getList)
+                .filteredOn(mailbox -> mailbox.getName().equalsIgnoreCase("INBOX"))
                 .extracting(Mailbox::getSortOrder)
                 .containsOnly(SortOrder.of(10));
     }
@@ -331,6 +344,7 @@ public class GetMailboxesMethodTest {
                 .hasOnlyElementsOfType(GetMailboxesResponse.class)
                 .extracting(GetMailboxesResponse.class::cast)
                 .flatExtracting(GetMailboxesResponse::getList)
+                .filteredOn(mailbox -> !DefaultMailboxes.DEFAULT_MAILBOXES.contains(mailbox.getName()))
                 .extracting(Mailbox::getTotalMessages)
                 .containsExactly(Number.fromLong(2L));
     }
@@ -370,6 +384,7 @@ public class GetMailboxesMethodTest {
                 .hasOnlyElementsOfType(GetMailboxesResponse.class)
                 .extracting(GetMailboxesResponse.class::cast)
                 .flatExtracting(GetMailboxesResponse::getList)
+                .filteredOn(mailbox -> !DefaultMailboxes.DEFAULT_MAILBOXES.contains(mailbox.getName()))
                 .extracting(Mailbox::getUnreadMessages)
                 .containsExactly(Number.fromLong(2L));
     }
@@ -437,6 +452,8 @@ public class GetMailboxesMethodTest {
             .hasOnlyElementsOfType(GetMailboxesResponse.class)
             .extracting(GetMailboxesResponse.class::cast)
             .flatExtracting(GetMailboxesResponse::getList)
+            .filteredOn(mailbox -> MailboxConstants.INBOX.equals(mailbox.getName()))
+            .filteredOn(mailbox -> !mailbox.getNamespace().equals(MailboxNamespace.personal()))
             .extracting(Mailbox::getName, Mailbox::getRole)
             .containsOnly(Tuple.tuple("INBOX", Optional.empty()));
     }
