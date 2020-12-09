@@ -39,6 +39,7 @@ import org.apache.james.dlp.api.DLPConfigurationStore;
 import org.apache.james.dlp.eventsourcing.EventSourcingDLPConfigurationStore;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStore;
 import org.apache.james.webadmin.WebAdminServer;
@@ -89,8 +90,10 @@ class DLPConfigurationRoutesTest {
         Mockito.when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("localhost"));
 
         MemoryDomainList domainList = new MemoryDomainList(dnsService);
-        domainList.setAutoDetectIP(false);
-        domainList.setAutoDetect(false);
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(false)
+            .autoDetectIp(false)
+            .build());
         domainList.addDomain(SENDER_DOMAIN);
         domainList.addDomain(SENDER_DOMAIN_2);
 

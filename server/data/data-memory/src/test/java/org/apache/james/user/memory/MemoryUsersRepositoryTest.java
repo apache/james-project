@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.lib.UsersRepositoryContract;
@@ -67,8 +68,10 @@ class MemoryUsersRepositoryTest {
             MemoryDomainList domainList = new MemoryDomainList(new InMemoryDNSService()
                 .registerMxRecord(LOCALHOST, LOCALHOST_ADDRESS)
                 .registerMxRecord(LOCALHOST_ADDRESS, LOCALHOST_ADDRESS));
-            domainList.setAutoDetect(false);
-            domainList.setAutoDetectIP(false);
+            domainList.configure(DomainListConfiguration.builder()
+                .autoDetect(false)
+                .autoDetectIp(false)
+                .build());
             domainList.addDomain(Domain.of("domain.tld"));
 
             MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
@@ -82,8 +85,10 @@ class MemoryUsersRepositoryTest {
             MemoryDomainList domainList = new MemoryDomainList(new InMemoryDNSService()
                 .registerMxRecord(LOCALHOST, LOCALHOST_ADDRESS)
                 .registerMxRecord(LOCALHOST_ADDRESS, LOCALHOST_ADDRESS));
-            domainList.setAutoDetect(false);
-            domainList.setAutoDetectIP(false);
+            domainList.configure(DomainListConfiguration.builder()
+                .autoDetect(false)
+                .autoDetectIp(false)
+                .build());
 
             MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 

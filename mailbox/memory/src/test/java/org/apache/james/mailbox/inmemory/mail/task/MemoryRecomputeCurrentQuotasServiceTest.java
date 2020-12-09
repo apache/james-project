@@ -22,6 +22,7 @@ package org.apache.james.mailbox.inmemory.mail.task;
 import static org.mockito.Mockito.mock;
 
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SessionProvider;
@@ -41,10 +42,13 @@ class MemoryRecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasS
     RecomputeCurrentQuotasService testee;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         DNSService dnsService = mock(DNSService.class);
         MemoryDomainList memoryDomainList = new MemoryDomainList(dnsService);
-        memoryDomainList.setAutoDetect(false);
+        memoryDomainList.configure(DomainListConfiguration.builder()
+            .autoDetect(false)
+            .autoDetectIp(false)
+            .build());
         usersRepository = MemoryUsersRepository.withoutVirtualHosting(memoryDomainList);
 
         resources = InMemoryIntegrationResources.defaultResources();

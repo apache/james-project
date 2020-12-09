@@ -92,7 +92,10 @@ class DomainsRoutesTest {
             when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("localhost"));
 
             MemoryDomainList domainList = new MemoryDomainList(dnsService);
-            domainList.setAutoDetectIP(false);
+            domainList.configure(DomainListConfiguration.builder()
+                .autoDetect(false)
+                .autoDetectIp(false)
+                .build());
             createServer(domainList);
         }
 

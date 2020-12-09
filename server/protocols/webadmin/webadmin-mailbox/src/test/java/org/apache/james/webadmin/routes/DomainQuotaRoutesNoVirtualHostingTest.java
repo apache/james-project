@@ -23,6 +23,7 @@ import static io.restassured.RestAssured.given;
 
 import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.user.memory.MemoryUsersRepository;
@@ -53,7 +54,10 @@ class DomainQuotaRoutesNoVirtualHostingTest {
     void setUp() throws Exception {
         InMemoryPerUserMaxQuotaManager maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
         MemoryDomainList memoryDomainList = new MemoryDomainList(new InMemoryDNSService());
-        memoryDomainList.setAutoDetect(false);
+        memoryDomainList.configure(DomainListConfiguration.builder()
+            .autoDetect(false)
+            .autoDetectIp(false)
+            .build());
         memoryDomainList.addDomain(Domain.of(FOUND_LOCAL));
         DomainQuotaService domainQuotaService = new DomainQuotaService(maxQuotaManager);
         QuotaModule quotaModule = new QuotaModule();
