@@ -17,23 +17,23 @@ First step is to implement Mailbox/changes.
 
 ## Decision
 
-We will implement a mechanism to record all the changes happen to Mailbox objects in the form of a list of **mailboxId**. When an event such as  
+We will implement a mechanism to record all the changes happening to Mailbox objects in the form of a list of **mailboxId**. When an event such as  
 created/updated/destroyed occur, or when message is appended to a mailbox we will store their **mailboxIds** along with a **state** object
 in a Cassandra table.  
 
 Each state will have a list of changes, and all the **mailboxId** will be stored as separated lists corresponding to the change which they represent: **created**, **updated**, **destroyed**.
-For the case when message are appended to a mailbox, it will be counted as an updated event and that mailboxId should be store in **updated** list. 
+For the case when messages are appended to a mailbox, it will be counted as an updated event and that mailboxId should be stored in **updated** list. 
 
-Leveraging the **MailboxChanges** table, We can now fetch all the changes that have occured since a particular **state**.
+Leveraging the **MailboxChanges** table, we can now fetch all the changes that have occurred since a particular **state**.
 
 States are stored in Cassandra as time based UUID (**TimeUUID**). This ensures that no conflicting changes will happen in the case when two or more events occur at the same point in time.
 **TimeUUID** also allows **state** to be sorted in chronological order.
 
 Components that need to be implemented:
 
-- MailboxChangesRepository: Allow storing and fetching the **state** along with the lists of **mailboxId** in **MailboxChanges** table.
-- MailboxChangeListener: Listen to changes and trigger the record creation in **MailboxChanges** table.
-- MailboxChangeMethod: Handle the **state** property, allowing client to fetch the changes since a particular state. 
+- MailboxChangesRepository: Allows storing and fetching the **state** along with the lists of **mailboxId** in **MailboxChanges** table.
+- MailboxChangeListener: Listens to changes and triggers the record creation in **MailboxChanges** table.
+- MailboxChangeMethod: Handles the **state** property, allowing client to fetch the changes since a particular state. 
 - MailboxSetMethod/MailboxGetMethod needs to query the MailboxChangesRepository for their states properties.
  
 ## Example of a Mailbox/changes request/response
@@ -67,7 +67,7 @@ Components that need to be implemented:
 ## Consequences
 
 - Due to the limitation of the event listening mechanism of the listeners, we can only store one change (one **mailboxId**) for each state instead of many.  
-However, by keeping the data type of changes as separeted lists, we will be more open for future improvements.        
+However, by keeping the data type of changes as separated lists, we will be more opened for future improvements.        
 - Changes can only be fetched in a linear fashion from oldest to newest, as opposed to how it should prioritize newer changes first according to the spec.
 
 ## Cassandra table structure
