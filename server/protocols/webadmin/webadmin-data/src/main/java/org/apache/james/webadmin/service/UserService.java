@@ -26,6 +26,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
+import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
@@ -62,14 +63,6 @@ public class UserService {
 
     public void upsertUser(Username username, char[] password) throws UsersRepositoryException {
         User user = usersRepository.getUserByName(username);
-        upsert(user, username, password);
-    }
-
-    public boolean userExists(Username username) throws UsersRepositoryException {
-        return usersRepository.contains(username);
-    }
-
-    private void upsert(User user, Username username, char[] password) throws UsersRepositoryException {
         if (user == null) {
             usersRepository.addUser(username, new String(password));
         } else {
@@ -77,4 +70,18 @@ public class UserService {
             usersRepository.updateUser(user);
         }
     }
+
+    public boolean userExists(Username username) throws UsersRepositoryException {
+        return usersRepository.contains(username);
+    }
+
+    public void insertUser(Username username, char[] password) throws UsersRepositoryException, AlreadyExistInUsersRepositoryException {
+        User user = usersRepository.getUserByName(username);
+        if (user == null) {
+            usersRepository.addUser(username, new String(password));
+        } else {
+            throw new AlreadyExistInUsersRepositoryException("User " + username + " already exists.");
+        }
+    }
+
 }

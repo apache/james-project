@@ -37,6 +37,7 @@ import org.apache.james.core.Username;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Constants;
@@ -76,6 +77,7 @@ public class UserRoutes implements Routes {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserRoutes.class);
 
     public static final String USERS = "/users";
+    private static final String FORCE_PARAM = "force";
 
     private final UserService userService;
     private final JsonTransformer jsonTransformer;
@@ -150,11 +152,18 @@ public class UserRoutes implements Routes {
     @ApiOperation(value = "Creating an user")
     @ApiImplicitParams({
             @ApiImplicitParam(required = true, dataType = "string", name = "username", paramType = "path"),
-            @ApiImplicitParam(required = true, dataTypeClass = AddUserRequest.class, paramType = "body")
+            @ApiImplicitParam(required = true, dataTypeClass = AddUserRequest.class, paramType = "body"),
+            @ApiImplicitParam(
+                    paramType = "query parameter",
+                    dataType = "String",
+                    allowEmptyValue = true,
+                    example = "?force",
+                    value = "If present, it allows to overwrite a user password. Otherwise modification of already existing users are rejected.")
     })
     @ApiResponses(value = {
             @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. New user is added."),
             @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid input user."),
+            @ApiResponse(code = HttpStatus.CONFLICT_409, message = "User already exist."),
             @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
                 message = "Internal server error - Something went bad on the server side.")
     })
@@ -222,9 +231,12 @@ public class UserRoutes implements Routes {
     private HaltException upsertUser(Request request, Response response) throws JsonExtractException {
         Username username = extractUsername(request);
         try {
-            userService.upsertUser(username,
-                jsonExtractor.parse(request.body()).getPassword());
-
+            boolean isForced = request.queryParams().contains(FORCE_PARAM);
+            if (isForced) {
+                userService.upsertUser(username, jsonExtractor.parse(request.body()).getPassword());
+            } else {
+                userService.insertUser(username, jsonExtractor.parse(request.body()).getPassword());
+            }
             return halt(HttpStatus.NO_CONTENT_204);
         } catch (InvalidUsernameException e) {
             LOGGER.info("Invalid username", e);
@@ -234,6 +246,14 @@ public class UserRoutes implements Routes {
                 .message("Username supplied is invalid")
                 .cause(e)
                 .haltError();
+        } catch (AlreadyExistInUsersRepositoryException e) {
+            LOGGER.info(e.getMessage());
+            throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.CONFLICT_409)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("User already exists")
+                    .cause(e)
+                    .haltError();
         } catch (UsersRepositoryException e) {
             String errorMessage = String.format("Error while upserting user '%s'", username);
             LOGGER.info(errorMessage, e);
@@ -278,4 +298,5 @@ public class UserRoutes implements Routes {
     private Username extractUsername(Request request) {
         return Username.of(request.params(USER_NAME));
     }
+
 }

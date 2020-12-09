@@ -438,6 +438,7 @@ class UserRoutesTest {
                 doThrow(new UsersRepositoryException("message")).when(usersRepository).updateUser(any());
 
                 given()
+                    .queryParam("force")
                     .body("{\"password\":\"password\"}")
                 .when()
                     .put(USERNAME_WITH_DOMAIN.asString())
@@ -497,6 +498,7 @@ class UserRoutesTest {
                 doThrow(new RuntimeException()).when(usersRepository).updateUser(any());
 
                 given()
+                    .queryParam("force")
                     .body("{\"password\":\"password\"}")
                 .when()
                     .put(USERNAME_WITH_DOMAIN.asString())
@@ -542,7 +544,7 @@ class UserRoutesTest {
         }
 
         @Test
-        void puttingWithDomainPartInUsernameTwoTimesShouldBeAllowed() {
+        void puttingWithDomainPartInUsernameTwoTimesShouldNotBeAllowed() {
             // Given
             with()
                 .body("{\"password\":\"password\"}")
@@ -554,7 +556,7 @@ class UserRoutesTest {
             .when()
                 .put(USERNAME_WITH_DOMAIN.asString())
             .then()
-                .statusCode(HttpStatus.NO_CONTENT_204);
+                .statusCode(HttpStatus.CONFLICT_409);
 
             // Then
             List<Map<String, String>> users =
@@ -614,6 +616,38 @@ class UserRoutesTest {
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is("Username supplied is invalid"))
                 .body("details", is("Given Username needs to contain a @domainpart"));
+        }
+
+        @Test
+        void putWithDomainPartInUsernameWithExistingUsernameAndNonForceParamShouldNotBeAllowed() {
+            given()
+                .body("{\"password\":\"password\"}")
+                .put(USERNAME_WITH_DOMAIN.asString());
+
+            given()
+                .body("{\"password\":\"password\"}")
+            .when()
+                .put(USERNAME_WITH_DOMAIN.asString())
+            .then()
+                .statusCode(HttpStatus.CONFLICT_409)
+                .body("statusCode", is(HttpStatus.CONFLICT_409))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("User already exists"));
+        }
+
+        @Test
+        void putWithDomainPartInUsernameWithExistingUsernameAndForceParamShouldBeAllowed() {
+            given()
+                .body("{\"password\":\"password\"}")
+                .put(USERNAME_WITH_DOMAIN.asString());
+
+            given()
+                .body("{\"password\":\"password\"}")
+                .queryParam("force")
+            .when()
+                .put(USERNAME_WITH_DOMAIN.asString())
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -731,7 +765,7 @@ class UserRoutesTest {
         }
 
         @Test
-        void puttingWithoutDomainPartInUsernameTwoTimesShouldBeAllowed() {
+        void puttingWithoutDomainPartInUsernameTwoTimesShouldNotBeAllowed() {
             // Given
             with()
                 .body("{\"password\":\"password\"}")
@@ -743,7 +777,7 @@ class UserRoutesTest {
             .when()
                 .put(USERNAME_WITHOUT_DOMAIN.asString())
             .then()
-                .statusCode(HttpStatus.NO_CONTENT_204);
+                .statusCode(HttpStatus.CONFLICT_409);
 
             // Then
             List<Map<String, String>> users =
@@ -789,6 +823,38 @@ class UserRoutesTest {
                     .getList(".");
 
             assertThat(users).containsExactly(ImmutableMap.of("username", USERNAME_WITHOUT_DOMAIN.asString()));
+        }
+
+        @Test
+        void putWithoutDomainPartInUsernameWithExistingUsernameAndNonForceParamShouldNotBeAllowed() {
+            given()
+                .body("{\"password\":\"password\"}")
+                .put(USERNAME_WITHOUT_DOMAIN.asString());
+
+            given()
+                .body("{\"password\":\"password\"}")
+            .when()
+                .put(USERNAME_WITHOUT_DOMAIN.asString())
+            .then()
+                .statusCode(HttpStatus.CONFLICT_409)
+                .body("statusCode", is(HttpStatus.CONFLICT_409))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("User already exists"));
+        }
+
+        @Test
+        void putWithoutDomainPartInUsernameWithExistingUsernameAndForceParamShouldBeAllowed() {
+            given()
+                .body("{\"password\":\"password\"}")
+                .put(USERNAME_WITHOUT_DOMAIN.asString());
+
+            given()
+                .body("{\"password\":\"password\"}")
+                .queryParam("force")
+            .when()
+                .put(USERNAME_WITHOUT_DOMAIN.asString())
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
