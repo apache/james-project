@@ -24,6 +24,7 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
@@ -42,6 +43,9 @@ import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -65,6 +69,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
     private final DNSService dns;
     private final EnvDetector envDetector;
+    private LoadingCache<Domain, Boolean> cache;
     private DomainListConfiguration configuration;
     private Domain defaultDomain;
 
@@ -86,6 +91,15 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
     public void configure(DomainListConfiguration domainListConfiguration) throws ConfigurationException {
         this.configuration = domainListConfiguration;
+
+        this.cache = CacheBuilder.newBuilder()
+            .expireAfterAccess(configuration.getCacheExpiracy())
+            .build(new CacheLoader<>() {
+                @Override
+                public Boolean load(Domain key) throws DomainListException {
+                    return containsDomainInternal(key);
+                }
+            });
 
         configureDefaultDomain(domainListConfiguration.getDefaultDomain());
 
@@ -153,15 +167,33 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
     @Override
     public boolean containsDomain(Domain domain) throws DomainListException {
-        boolean internalAnswer = containsDomainInternal(domain);
-        return internalAnswer || getDomains().contains(domain);
+        if (configuration.isCacheEnabled()) {
+            try {
+                boolean internalAnswer = cache.get(domain);
+                return internalAnswer || getDomains().contains(domain);
+            } catch (ExecutionException e) {
+                if (e.getCause() instanceof DomainListException) {
+                    throw (DomainListException) e.getCause();
+                }
+                throw new RuntimeException(e);
+            }
+        } else {
+            boolean internalAnswer = containsDomainInternal(domain);
+            return internalAnswer || getDomains().contains(domain);
+        }
     }
 
     @Override
     public ImmutableList<Domain> getDomains() throws DomainListException {
-        ImmutableSet<Domain> allDomains = getDomainsWithType().values()
+        Multimap<DomainType, Domain> domainsWithType = getDomainsWithType();
+        ImmutableSet<Domain> allDomains = domainsWithType.values()
             .stream()
             .collect(Guavate.toImmutableSet());
+
+        if (configuration.isCacheEnabled()) {
+            domainsWithType.get(DomainType.Internal)
+                .forEach(domain -> cache.put(domain, true));
+        }
 
         if (LOGGER.isDebugEnabled()) {
             for (Domain domain : allDomains) {
@@ -192,7 +224,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     }
 
     private ImmutableList<Domain> detectIps(Collection<Domain> domains) {
-        if (configuration.isAutoDetect() ) {
+        if (configuration.isAutoDetectIp()) {
             return getDomainsIpStream(domains, dns, LOGGER)
                 .collect(Guavate.toImmutableList());
         }
@@ -200,7 +232,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     }
 
     private ImmutableList<Domain> detectDomains() {
-        if (configuration.isAutoDetect() ) {
+        if (configuration.isAutoDetect()) {
             String hostName;
             try {
                 hostName = dns.getHostName(dns.getLocalHost());

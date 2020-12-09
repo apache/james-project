@@ -106,7 +106,7 @@ class DomainsRoutesTest {
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
-                .body(".", hasSize(0));
+                .body(".", contains("localhost"));
         }
 
         @Test
@@ -143,7 +143,7 @@ class DomainsRoutesTest {
             .then()
                 .contentType(ContentType.JSON)
                 .statusCode(HttpStatus.OK_200)
-                .body(".", contains(DOMAIN));
+                .body(".", containsInAnyOrder(DOMAIN, "localhost"));
         }
 
         @Test
@@ -251,7 +251,7 @@ class DomainsRoutesTest {
             .then()
                 .contentType(ContentType.JSON)
                 .statusCode(HttpStatus.OK_200)
-                .body(".", hasSize(0));
+                .body(".", contains("localhost"));
         }
 
         @Test

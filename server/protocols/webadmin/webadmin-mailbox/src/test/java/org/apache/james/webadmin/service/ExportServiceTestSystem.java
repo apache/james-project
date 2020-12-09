@@ -33,6 +33,7 @@ import org.apache.james.blob.memory.MemoryBlobStoreFactory;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.MailboxSession;
@@ -87,6 +88,7 @@ public class ExportServiceTestSystem {
 
     private MemoryUsersRepository createUsersRepository(DNSService dnsService) throws Exception {
         MemoryDomainList domainList = new MemoryDomainList(dnsService);
+        domainList.configure(DomainListConfiguration.DEFAULT);
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 
         domainList.addDomain(DOMAIN);

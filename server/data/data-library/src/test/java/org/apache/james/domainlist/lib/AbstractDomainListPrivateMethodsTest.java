@@ -82,6 +82,10 @@ class AbstractDomainListPrivateMethodsTest {
 
     @Test
     void setDefaultDomainShouldSetFromConfigurationWhenDifferentFromLocalhost() throws Exception {
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(true)
+            .autoDetectIp(true)
+            .build());
         String expectedDefaultDomain = "myDomain.org";
 
         domainList.configureDefaultDomain(Domain.of(expectedDefaultDomain));
@@ -91,6 +95,10 @@ class AbstractDomainListPrivateMethodsTest {
 
     @Test
     void setDefaultDomainShouldSetFromHostnameWhenEqualsToLocalhost() throws Exception {
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(true)
+            .autoDetectIp(true)
+            .build());
         Domain expectedDefaultDomain = Domain.of(InetAddress.getLocalHost().getHostName());
         domainList.configureDefaultDomain(Domain.LOCALHOST);
 
@@ -99,6 +107,11 @@ class AbstractDomainListPrivateMethodsTest {
 
     @Test
     void setDefaultDomainShouldCreateFromHostnameWhenEqualsToLocalhost() throws Exception {
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(true)
+            .autoDetectIp(true)
+            .build());
+
         Domain expectedDefaultDomain = Domain.of(InetAddress.getLocalHost().getHostName());
         domainList.configureDefaultDomain(expectedDefaultDomain);
 
@@ -107,6 +120,11 @@ class AbstractDomainListPrivateMethodsTest {
 
     @Test
     void setDefaultDomainShouldNotCreateTwiceWhenCallingTwoTimes() throws Exception {
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(true)
+            .autoDetectIp(true)
+            .build());
+
         Domain expectedDefaultDomain = Domain.of(InetAddress.getLocalHost().getHostName());
         domainList.configureDefaultDomain(expectedDefaultDomain);
         domainList.configureDefaultDomain(expectedDefaultDomain);
@@ -116,6 +134,11 @@ class AbstractDomainListPrivateMethodsTest {
 
     @Test
     void setDefaultDomainShouldAddDomainWhenNotContained() throws Exception {
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(true)
+            .autoDetectIp(true)
+            .build());
+
         Domain expectedDefaultDomain = Domain.of("myDomain.org");
 
         domainList.configureDefaultDomain(expectedDefaultDomain);
@@ -125,6 +148,11 @@ class AbstractDomainListPrivateMethodsTest {
 
     @Test
     void setDefaultDomainShouldNotFailWhenDomainContained() throws Exception {
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(true)
+            .autoDetectIp(true)
+            .build());
+
         Domain expectedDefaultDomain = Domain.of("myDomain.org");
 
         domainList.addDomain(expectedDefaultDomain);
@@ -250,6 +278,11 @@ class AbstractDomainListPrivateMethodsTest {
 
     @Test
     void containsDomainShouldReturnDetectedIp() throws Exception {
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(true)
+            .autoDetectIp(true)
+            .build());
+
         String detected = "detected.tld";
         String detectedIp = "148.25.32.1";
         when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("127.0.0.1"));
@@ -335,6 +368,11 @@ class AbstractDomainListPrivateMethodsTest {
 
     @Test
     void removeDomainShouldThrowWhenRemovingAutoDetectedIps() throws Exception {
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(true)
+            .autoDetectIp(true)
+            .build());
+
         String detected = "detected.tld";
         String detectedIp = "148.25.32.1";
         when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("127.0.0.1"));
@@ -349,6 +387,11 @@ class AbstractDomainListPrivateMethodsTest {
 
     @Test
     void removeDomainShouldThrowWhenRemovingDefaultDomain() throws Exception {
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(true)
+            .autoDetectIp(true)
+            .build());
+
         Domain defaultDomain = Domain.of("default.tld");
         domainList.configureDefaultDomain(defaultDomain);
 

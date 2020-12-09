@@ -50,13 +50,15 @@ public interface DomainListContract {
         domainList().addDomain(DOMAIN_3);
         domainList().addDomain(DOMAIN_4);
         domainList().addDomain(DOMAIN_5);
-        assertThat(domainList().getDomains()).containsOnly(DOMAIN_3, DOMAIN_4, DOMAIN_5);
+        assertThat(domainList().getDomains()).containsOnly(DOMAIN_3, DOMAIN_4, DOMAIN_5,
+            Domain.LOCALHOST /*default domain*/);
     }
 
     @Test
     default void domainsShouldBeListedInLowerCase() throws DomainListException {
         domainList().addDomain(DOMAIN_UPPER_5);
-        assertThat(domainList().getDomains()).containsOnly(DOMAIN_5);
+        assertThat(domainList().getDomains()).containsOnly(DOMAIN_5,
+            Domain.LOCALHOST /*default domain*/);
     }
 
     @Test
@@ -73,14 +75,14 @@ public interface DomainListContract {
 
     @Test
     default void listDomainsShouldReturnNullWhenThereIsNoDomains() throws DomainListException {
-        assertThat(domainList().getDomains()).isEmpty();
+        assertThat(domainList().getDomains()).containsOnly(Domain.LOCALHOST /*default domain*/);
     }
 
     @Test
     default void testAddRemoveContainsSameDomain() throws DomainListException {
         domainList().addDomain(DOMAIN_1);
         domainList().removeDomain(DOMAIN_1);
-        assertThat(domainList().getDomains()).isEmpty();
+        assertThat(domainList().getDomains()).containsOnly(Domain.LOCALHOST /*default domain*/);
     }
 
     @Test
@@ -102,7 +104,8 @@ public interface DomainListContract {
         } catch (DomainListException e) {
             LOGGER.info("Ignored error", e);
         }
-        assertThat(domainList().getDomains()).containsOnly(DOMAIN_1);
+        assertThat(domainList().getDomains()).containsOnly(DOMAIN_1,
+            Domain.LOCALHOST /*default domain*/);
     }
 
     @Test

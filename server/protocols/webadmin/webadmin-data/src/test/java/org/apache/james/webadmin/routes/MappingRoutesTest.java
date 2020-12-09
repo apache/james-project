@@ -28,8 +28,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -63,11 +62,12 @@ class MappingRoutesTest {
     private MemoryRecipientRewriteTable recipientRewriteTable;
 
     @BeforeEach
-    void setUp() throws DomainListException {
+    void setUp() throws Exception {
         JsonTransformer jsonTransformer = new JsonTransformer();
         recipientRewriteTable = new MemoryRecipientRewriteTable();
         DNSService dnsService = mock(DNSService.class);
-        DomainList domainList = new MemoryDomainList(dnsService);
+        MemoryDomainList domainList = new MemoryDomainList(dnsService);
+        domainList.configure(DomainListConfiguration.DEFAULT);
         domainList.addDomain(Domain.of("domain.tld"));
         domainList.addDomain(Domain.of("aliasdomain.tld"));
         domainList.addDomain(Domain.of("domain.mapping.tld"));

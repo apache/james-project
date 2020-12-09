@@ -93,7 +93,7 @@ class XMLDomainListTest {
             .addConfiguredDomains(Domain.of("domain1."))
             .defaultDomain(DEFAULT_DOMAIN));
 
-        assertThat(dom.getDomains()).hasSize(3);
+        assertThat(dom.getDomains()).contains(Domain.of("local"));
     }
 
     @Test

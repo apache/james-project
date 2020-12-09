@@ -220,7 +220,6 @@ public class SMTPServerTest {
             .autoDetectIp(false)
             .build());
 
-        domainList.addDomain(Domain.LOCALHOST);
         domainList.addDomain(Domain.of(LOCAL_DOMAIN));
         domainList.addDomain(Domain.of("examplebis.local"));
         usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);

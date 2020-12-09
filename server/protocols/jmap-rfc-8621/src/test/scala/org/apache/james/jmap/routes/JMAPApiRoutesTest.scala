@@ -33,6 +33,7 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.dnsservice.api.DNSService
+import org.apache.james.domainlist.lib.DomainListConfiguration
 import org.apache.james.domainlist.memory.MemoryDomainList
 import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
@@ -63,6 +64,7 @@ object JMAPApiRoutesTest {
   private val empty_set: ImmutableSet[PreDeletionHook] = ImmutableSet.of()
   private val dnsService = mock(classOf[DNSService])
   private val domainList = new MemoryDomainList(dnsService)
+  domainList.configure(DomainListConfiguration.DEFAULT)
   domainList.addDomain(Domain.of("james.org"))
 
   private val usersRepository = MemoryUsersRepository.withoutVirtualHosting(domainList)

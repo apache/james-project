@@ -45,7 +45,11 @@ class JPADomainListTest implements DomainListContract {
     public void tearDown() throws Exception {
         DomainList domainList = createDomainList();
         for (Domain domain: domainList.getDomains()) {
-            domainList.removeDomain(domain);
+            try {
+                domainList.removeDomain(domain);
+            } catch (Exception e) {
+                // silent: exception arise where clearing auto detected domains
+            }
         }
     }
 

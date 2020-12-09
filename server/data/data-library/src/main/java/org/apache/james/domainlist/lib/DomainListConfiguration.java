@@ -19,6 +19,7 @@
 
 package org.apache.james.domainlist.lib;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -29,6 +30,7 @@ import java.util.function.Predicate;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
+import org.apache.james.util.DurationParser;
 import org.apache.james.util.StreamUtils;
 
 import com.github.steveash.guavate.Guavate;
@@ -39,6 +41,8 @@ public class DomainListConfiguration {
         private Optional<Boolean> autoDetectIp;
         private Optional<Boolean> autoDetect;
         private Optional<Domain> defaultDomain;
+        private Optional<Boolean> cacheEnabled;
+        private Optional<Duration> cacheExpiracy;
         private ImmutableList.Builder<Domain> configuredDomains;
 
         public Builder() {
@@ -46,6 +50,8 @@ public class DomainListConfiguration {
             autoDetect = Optional.empty();
             defaultDomain = Optional.empty();
             configuredDomains = ImmutableList.builder();
+            cacheEnabled = Optional.empty();
+            cacheExpiracy = Optional.empty();
         }
 
         public Builder defaultDomain(Domain defaultDomain) {
@@ -63,6 +69,16 @@ public class DomainListConfiguration {
             return this;
         }
 
+        public Builder cacheEnabled(boolean cacheEnabled) {
+            this.cacheEnabled = Optional.of(cacheEnabled);
+            return this;
+        }
+
+        public Builder cacheExpiracy(Duration cacheExpiracy) {
+            this.cacheExpiracy = Optional.of(cacheExpiracy);
+            return this;
+        }
+
         public Builder defaultDomain(Optional<Domain> defaultDomain) {
             this.defaultDomain = defaultDomain;
             return this;
@@ -70,6 +86,16 @@ public class DomainListConfiguration {
 
         public Builder autoDetect(Optional<Boolean> autoDetect) {
             this.autoDetect = autoDetect;
+            return this;
+        }
+
+        public Builder cacheEnabled(Optional<Boolean> cacheEnabled) {
+            this.cacheEnabled = cacheEnabled;
+            return this;
+        }
+
+        public Builder cacheExpiracy(Optional<Duration> cacheExpiracy) {
+            this.cacheExpiracy = cacheExpiracy;
             return this;
         }
 
@@ -97,16 +123,21 @@ public class DomainListConfiguration {
                 autoDetectIp.orElse(false),
                 autoDetect.orElse(false),
                 defaultDomain.orElse(Domain.LOCALHOST),
-                configuredDomains.build());
+                configuredDomains.build(),
+                cacheEnabled.orElse(false),
+                cacheExpiracy.orElse(DEFAULT_EXPIRACY));
         }
     }
 
+    public static final Duration DEFAULT_EXPIRACY = Duration.ofSeconds(10);
     public static DomainListConfiguration DEFAULT = builder().build();
 
     public static final String CONFIGURE_AUTODETECT = "autodetect";
     public static final String CONFIGURE_AUTODETECT_IP = "autodetectIP";
     public static final String CONFIGURE_DEFAULT_DOMAIN = "defaultDomain";
     public static final String CONFIGURE_DOMAIN_NAMES = "domainnames.domainname";
+    public static final String ENABLE_READ_CACHE = "read.cache.enable";
+    public static final String READ_CACHE_EXPIRACY = "read.cache.expiracy";
 
     public static Builder builder() {
         return new Builder();
@@ -124,6 +155,9 @@ public class DomainListConfiguration {
             .defaultDomain(Optional.ofNullable(config.getString(CONFIGURE_DEFAULT_DOMAIN, null))
                 .map(Domain::of))
             .addConfiguredDomains(configuredDomains)
+            .cacheEnabled(Optional.ofNullable(config.getBoolean(ENABLE_READ_CACHE, null)))
+            .cacheExpiracy(Optional.ofNullable(config.getString(READ_CACHE_EXPIRACY, null))
+                .map(DurationParser::parse))
             .build();
     }
 
@@ -131,12 +165,16 @@ public class DomainListConfiguration {
     private final boolean autoDetect;
     private final Domain defaultDomain;
     private final List<Domain> configuredDomains;
+    private final boolean cacheEnabled;
+    private final Duration cacheExpiracy;
 
-    public DomainListConfiguration(boolean autoDetectIp, boolean autoDetect, Domain defaultDomain, List<Domain> configuredDomains) {
+    public DomainListConfiguration(boolean autoDetectIp, boolean autoDetect, Domain defaultDomain, List<Domain> configuredDomains, boolean cacheEnabled, Duration cacheExpiracy) {
         this.autoDetectIp = autoDetectIp;
         this.autoDetect = autoDetect;
         this.defaultDomain = defaultDomain;
         this.configuredDomains = configuredDomains;
+        this.cacheEnabled = cacheEnabled;
+        this.cacheExpiracy = cacheExpiracy;
     }
 
     public boolean isAutoDetectIp() {
@@ -153,6 +191,14 @@ public class DomainListConfiguration {
 
     public List<Domain> getConfiguredDomains() {
         return configuredDomains;
+    }
+
+    public boolean isCacheEnabled() {
+        return cacheEnabled;
+    }
+
+    public Duration getCacheExpiracy() {
+        return cacheExpiracy;
     }
 
     @Override

@@ -83,8 +83,7 @@ public class JamesMailetContextTest {
     @SuppressWarnings("unchecked")
     public void setUp() throws Exception {
         domainList = spy(new MemoryDomainList(DNS_SERVICE));
-        domainList.configure(DomainListConfiguration.builder()
-            .build());
+        domainList.configure(DomainListConfiguration.DEFAULT);
 
         usersRepository = spy(MemoryUsersRepository.withVirtualHosting(domainList));
         recipientRewriteTable = spy(new MemoryRecipientRewriteTable());

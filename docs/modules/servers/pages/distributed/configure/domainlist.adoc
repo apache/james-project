@@ -27,6 +27,18 @@ The automatic IP detection is to support RFC 2821, Sec 4.1.3, address literals. 
 |defaultDomain
 |Set the default domain which will be used if an email is send to a recipient without a domain part.
 If no defaultdomain is set the first domain of the DomainList gets used. If the default is not yet contained by the Domain List, the domain will be created upon start.
+
+|read.cache.enable
+|Experimental. Boolean, defaults to false.
+Whether or not to cache domainlist.contains calls. Enable a faster execution however writes will take time
+to propagate.
+
+|read.cache.expiracy
+|Experimental. String (duration), defaults to 10 seconds (10s). Supported units are ms, s, m, h, d, w, month, y.
+Expiracy of the cache. Longer means less reads are performed to the backend but writes will take longer to propagate.
+Low values (a few seconds) are advised.
+
+
 |===
 
 To override autodetected domainnames simply add explicit domainname elements.
