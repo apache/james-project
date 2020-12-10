@@ -18,14 +18,25 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp.hook;
 
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.SMTPSession;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Implement this interfaces to hook in the MAIL Command
  */
 public interface RcptHook extends Hook {
+    /**
+     * @return RCPT parameters supported by this hook
+     */
+    default Set<String> supportedParameters() {
+        return ImmutableSet.of();
+    }
     
     /**
      * Return the HookResult after run the hook
@@ -49,6 +60,10 @@ public interface RcptHook extends Hook {
      */
     default HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
         return doRcpt(session, sender.asOptional().orElse(null), rcpt);
+    }
+
+    default HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt, Map<String, String> parameters) {
+        return doRcpt(session, sender, rcpt);
     }
 
 }
