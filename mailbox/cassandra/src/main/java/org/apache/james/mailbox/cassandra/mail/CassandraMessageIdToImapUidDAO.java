@@ -41,6 +41,7 @@ import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.MOD_SE
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.TABLE_NAME;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
@@ -62,12 +63,28 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraMessageIdToImapUidDAO {
+    public enum ReadConsistency {
+        STRONG(CassandraConsistenciesConfiguration::getLightweightTransaction),
+        WEAK(CassandraConsistenciesConfiguration::getRegular);
+
+        private final Function<CassandraConsistenciesConfiguration, ConsistencyLevel> consistencyLevelChoice;
+
+
+        ReadConsistency(Function<CassandraConsistenciesConfiguration, ConsistencyLevel> consistencyLevelChoice) {
+            this.consistencyLevelChoice = consistencyLevelChoice;
+        }
+
+        public ConsistencyLevel choose(CassandraConsistenciesConfiguration configuration) {
+            return consistencyLevelChoice.apply(configuration);
+        }
+    }
 
     private static final String MOD_SEQ_CONDITION = "modSeqCondition";
 
@@ -79,13 +96,13 @@ public class CassandraMessageIdToImapUidDAO {
     private final PreparedStatement selectAll;
     private final PreparedStatement select;
     private final PreparedStatement listStatement;
-    private final ConsistencyLevel consistencyLevel;
+    private final CassandraConsistenciesConfiguration consistenciesConfiguration;
 
     @Inject
     public CassandraMessageIdToImapUidDAO(Session session, CassandraConsistenciesConfiguration consistenciesConfiguration,
                                           CassandraMessageId.Factory messageIdFactory) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
-        this.consistencyLevel = consistenciesConfiguration.getLightweightTransaction();
+        this.consistenciesConfiguration = consistenciesConfiguration;
         this.messageIdFactory = messageIdFactory;
         this.delete = prepareDelete(session);
         this.insert = prepareInsert(session);
@@ -196,11 +213,16 @@ public class CassandraMessageIdToImapUidDAO {
                 .setLong(MOD_SEQ_CONDITION, oldModSeq.asLong()));
     }
 
-    public Flux<ComposedMessageIdWithMetaData> retrieve(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
+    public Flux<ComposedMessageIdWithMetaData> retrieve(CassandraMessageId messageId, Optional<CassandraId> mailboxId, ReadConsistency readConsistency) {
         return cassandraAsyncExecutor.executeRows(
                     selectStatement(messageId, mailboxId)
-                    .setConsistencyLevel(consistencyLevel))
+                    .setConsistencyLevel(readConsistency.choose(consistenciesConfiguration)))
                 .map(this::toComposedMessageIdWithMetadata);
+    }
+
+    @VisibleForTesting
+    public Flux<ComposedMessageIdWithMetaData> retrieve(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
+        return retrieve(messageId, mailboxId, ReadConsistency.STRONG);
     }
 
     public Flux<ComposedMessageIdWithMetaData> retrieveAllMessages() {

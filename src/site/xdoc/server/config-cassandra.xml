@@ -149,6 +149,13 @@
         <dt><strong>mailbox.blob.part.size</strong></dt>
         <dd>Optional. Defaults to 102400 (100KB).<br/> Controls the size of blob parts used to store messages.</dd>
 
+        <dt><strong>message.read.strong.consistency</strong></dt>
+        <dd>Optional. Boolean, defaults to true. Disabling should be considered experimental.
+            If enabled, regular consistency level is used for read transactions for message. This might result
+            in stale reads as the system.paxos table will not be checked for latest updates. Better performance are expected
+            by turning it off. Note that reads performed as part of write transactions are always performed with a strong
+            consistency.</dd>
+
         <dt><strong>Allows specifying the driver default consistency level.</strong></dt>
         <dt><strong>cassandra.consistency_level.regular</strong></dt>
         <dd>Optional. Defaults to QUORUM.<br/> <a href="https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlConfigConsistency.html">QUORUM, LOCAL_QUORUM, or EACH_QUORUM</a>.</dd>
