@@ -35,6 +35,7 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -159,7 +160,12 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
 
     @Override
     public List<String> getImplementedEsmtpFeatures(SMTPSession session) {
-        return ESMTP_FEATURES;
+        return ImmutableList.<String>builder()
+            .addAll(ESMTP_FEATURES)
+            .addAll(getHooks().stream()
+                .flatMap(heloHook -> heloHook.implementedEsmtpFeatures().stream())
+                .collect(Guavate.toImmutableList()))
+            .build();
     }
 
 }
