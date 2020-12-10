@@ -62,6 +62,17 @@ public interface RcptHook extends Hook {
         return doRcpt(session, sender.asOptional().orElse(null), rcpt);
     }
 
+    /**
+     * Return the HookResult after run the hook.
+     *
+     * This variation of doRcpt method allows access to RCPT extra parameters.
+     *
+     * @param session the SMTPSession
+     * @param sender the sender MailAddress
+     * @param rcpt the recipient MailAddress
+     * @param parameters parameters passed to the RCPT commands
+     * @return HookResult
+     */
     default HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt, Map<String, String> parameters) {
         return doRcpt(session, sender, rcpt);
     }
