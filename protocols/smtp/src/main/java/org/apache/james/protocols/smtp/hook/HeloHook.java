@@ -19,12 +19,22 @@
 
 package org.apache.james.protocols.smtp.hook;
 
+import java.util.Set;
+
 import org.apache.james.protocols.smtp.SMTPSession;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Implement this interfaces to hook in the HELO Command
  */
 public interface HeloHook extends Hook {
+    /**
+     * @return ESMTP extensions to be advertised as part of EHLO answers
+     */
+    default Set<String> implementedEsmtpFeatures() {
+        return ImmutableSet.of();
+    }
 
     /**
      * Return the HookResult after run the hook
