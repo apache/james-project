@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 import javax.inject.Inject;
@@ -44,6 +45,8 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -165,14 +168,17 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
             while (optionTokenizer.hasMoreElements()) {
                 String rcptOption = optionTokenizer.nextToken();
                 Pair<String, String> parameter = parseParameter(rcptOption);
-                // Unexpected option attached to the RCPT command
-                LOGGER.debug("RCPT command had unrecognized/unexpected option {} with value {}{}",
-                    parameter.getKey(), parameter.getValue(), getContext(session, recipientAddress, recipient));
 
-                return new SMTPResponse(
+                if (!supportedParameter(parameter.getKey())) {
+                    // Unexpected option attached to the RCPT command
+                    LOGGER.debug("RCPT command had unrecognized/unexpected option {} with value {}{}",
+                        parameter.getKey(), parameter.getValue(), getContext(session, recipientAddress, recipient));
+
+                    return new SMTPResponse(
                         SMTPRetCode.PARAMETER_NOT_IMPLEMENTED,
                         "Unrecognized or unsupported option: "
-                                + parameter.getKey());
+                            + parameter.getKey());
+                }
             }
             optionTokenizer = null;
         }
@@ -208,9 +214,19 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
     }
 
     @Override
-    protected HookResult callHook(RcptHook rawHook, SMTPSession session, String parameters) {
+    protected HookResult callHook(RcptHook rawHook, SMTPSession session, String parametersString) {
         MaybeSender sender = session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender());
-        return rawHook.doRcpt(session, sender, session.getAttachment(CURRENT_RECIPIENT, State.Transaction).orElse(MailAddress.nullSender()));
+        Map<String, String> parameters = parseParameters(parametersString);
+        MailAddress rcpt = session.getAttachment(CURRENT_RECIPIENT, State.Transaction).orElse(MailAddress.nullSender());
+
+        return rawHook.doRcpt(session, sender, rcpt, parameters);
+    }
+
+    private Map<String, String> parseParameters(String rcptOptions) {
+        return Splitter.on(' ').splitToList(rcptOptions)
+            .stream()
+            .map(this::parseParameter)
+            .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue));
     }
 
     private Pair<String, String> parseParameter(String rcptOption) {
@@ -222,6 +238,11 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
         } else {
             return Pair.of(rcptOption, "");
         }
+    }
+
+    private boolean supportedParameter(String parameterName) {
+        return getHooks().stream()
+            .anyMatch(rcptHook -> rcptHook.supportedParameters().contains(parameterName));
     }
 
     protected String getDefaultDomain() {
