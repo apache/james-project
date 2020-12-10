@@ -27,6 +27,7 @@ import java.util.StringTokenizer;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.metrics.api.MetricFactory;
@@ -163,21 +164,15 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
                     rcptOptionString, " ");
             while (optionTokenizer.hasMoreElements()) {
                 String rcptOption = optionTokenizer.nextToken();
-                int equalIndex = rcptOption.indexOf('=');
-                String rcptOptionName = rcptOption;
-                String rcptOptionValue = "";
-                if (equalIndex > 0) {
-                    rcptOptionName = rcptOption.substring(0, equalIndex)
-                            .toUpperCase(Locale.US);
-                    rcptOptionValue = rcptOption.substring(equalIndex + 1);
-                }
+                Pair<String, String> parameter = parseParameter(rcptOption);
                 // Unexpected option attached to the RCPT command
-                LOGGER.debug("RCPT command had unrecognized/unexpected option {} with value {}{}", rcptOptionName, rcptOptionValue, getContext(session, recipientAddress, recipient));
+                LOGGER.debug("RCPT command had unrecognized/unexpected option {} with value {}{}",
+                    parameter.getKey(), parameter.getValue(), getContext(session, recipientAddress, recipient));
 
                 return new SMTPResponse(
                         SMTPRetCode.PARAMETER_NOT_IMPLEMENTED,
                         "Unrecognized or unsupported option: "
-                                + rcptOptionName);
+                                + parameter.getKey());
             }
             optionTokenizer = null;
         }
@@ -216,6 +211,17 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
     protected HookResult callHook(RcptHook rawHook, SMTPSession session, String parameters) {
         MaybeSender sender = session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender());
         return rawHook.doRcpt(session, sender, session.getAttachment(CURRENT_RECIPIENT, State.Transaction).orElse(MailAddress.nullSender()));
+    }
+
+    private Pair<String, String> parseParameter(String rcptOption) {
+        int equalIndex = rcptOption.indexOf('=');
+        if (equalIndex > 0) {
+            return Pair.of(rcptOption.substring(0, equalIndex)
+                    .toUpperCase(Locale.US),
+                rcptOption.substring(equalIndex + 1));
+        } else {
+            return Pair.of(rcptOption, "");
+        }
     }
 
     protected String getDefaultDomain() {
