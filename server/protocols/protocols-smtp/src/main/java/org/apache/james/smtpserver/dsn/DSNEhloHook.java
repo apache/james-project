@@ -27,7 +27,7 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 
 import com.google.common.collect.ImmutableSet;
 
-public class DSNHeloHook implements HeloHook {
+public class DSNEhloHook implements HeloHook {
     @Override
     public Set<String> implementedEsmtpFeatures() {
         return ImmutableSet.of("DSN");
