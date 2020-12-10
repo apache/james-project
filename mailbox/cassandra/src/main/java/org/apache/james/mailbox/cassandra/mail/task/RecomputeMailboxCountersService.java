@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra.mail.task;
 
+import static org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO.ReadConsistency.STRONG;
+
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -241,7 +243,7 @@ public class RecomputeMailboxCountersService {
         }
         CassandraMessageId messageId = (CassandraMessageId) message.getComposedMessageId().getMessageId();
 
-        return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId))
+        return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId), STRONG)
             .doOnNext(trustedMessage -> {
                 if (!trustedMessage.equals(message)) {
                     LOGGER.warn("Possible denormalization issue on {}. " +

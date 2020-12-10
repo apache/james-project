@@ -237,13 +237,13 @@ public class DeleteMessageListener implements MailboxListener.GroupMailboxListen
     }
 
     private Mono<Boolean> isReferenced(CassandraMessageId id) {
-        return imapUidDAO.retrieve(id, ALL_MAILBOXES)
+        return imapUidDAO.retrieve(id, ALL_MAILBOXES, CassandraMessageIdToImapUidDAO.ReadConsistency.STRONG)
             .hasElements()
             .map(negate());
     }
 
     private Mono<Boolean> isReferenced(CassandraMessageId id, CassandraId excludedId) {
-        return imapUidDAO.retrieve(id, ALL_MAILBOXES)
+        return imapUidDAO.retrieve(id, ALL_MAILBOXES, CassandraMessageIdToImapUidDAO.ReadConsistency.STRONG)
             .filter(metadata -> !metadata.getComposedMessageId().getMailboxId().equals(excludedId))
             .hasElements()
             .map(negate());

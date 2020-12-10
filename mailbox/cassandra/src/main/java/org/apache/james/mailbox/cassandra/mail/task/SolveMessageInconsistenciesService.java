@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail.task;
 
+import static org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO.ReadConsistency.STRONG;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.time.Duration;
@@ -456,7 +457,7 @@ public class SolveMessageInconsistenciesService {
     }
 
     private Mono<Inconsistency> detectOutdatedMessageIdEntry(CassandraId mailboxId, CassandraMessageId messageId, ComposedMessageIdWithMetaData messageIdRecord) {
-        return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId))
+        return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId), STRONG)
             .filter(Predicate.not(Predicate.isEqual(messageIdRecord)))
             .<Inconsistency>map(upToDateMessageFromImapUid -> new OutdatedMessageIdEntry(messageIdRecord, upToDateMessageFromImapUid))
             .next()
@@ -464,7 +465,7 @@ public class SolveMessageInconsistenciesService {
     }
 
     private Mono<Inconsistency> detectOrphanImapUidEntry(ComposedMessageIdWithMetaData messageFromImapUid, CassandraId mailboxId, CassandraMessageId messageId) {
-        return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId))
+        return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId), STRONG)
             .next()
             .<Inconsistency>map(OrphanImapUidEntry::new)
             .switchIfEmpty(Mono.just(NO_INCONSISTENCY));
@@ -481,7 +482,7 @@ public class SolveMessageInconsistenciesService {
     }
 
     private Mono<Inconsistency> detectInconsistencyInMessageId(ComposedMessageIdWithMetaData message) {
-        return messageIdToImapUidDAO.retrieve((CassandraMessageId) message.getComposedMessageId().getMessageId(), Optional.of((CassandraId) message.getComposedMessageId().getMailboxId()))
+        return messageIdToImapUidDAO.retrieve((CassandraMessageId) message.getComposedMessageId().getMessageId(), Optional.of((CassandraId) message.getComposedMessageId().getMailboxId()), STRONG)
             .map(uidRecord -> NO_INCONSISTENCY)
             .next()
             .switchIfEmpty(detectOrphanMessageIdEntry(message))

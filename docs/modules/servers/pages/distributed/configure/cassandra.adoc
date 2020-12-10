@@ -185,4 +185,10 @@ Controls the number of messages to be retrieved in parallel.
 | Optional. Defaults to 102400 (100KB).
 Controls the size of blob parts used to store messages in the Cassandra blobStore.
 
+| message.read.strong.consistency
+| Optional. Boolean, defaults to true. Disabling should be considered experimental.
+If enabled, regular consistency level is used for read transactions for message. This might result
+in stale reads as the system.paxos table will not be checked for latest updates. Better performance are expected
+by turning it off. Note that reads performed as part of write transactions are always performed with a strong
+consistency.
 |===
