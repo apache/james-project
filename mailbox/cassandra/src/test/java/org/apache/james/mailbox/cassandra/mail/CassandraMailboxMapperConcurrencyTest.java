@@ -30,6 +30,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.core.Username;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
@@ -54,7 +55,8 @@ class CassandraMailboxMapperConcurrencyTest {
             CassandraBlobModule.MODULE,
             CassandraSchemaVersionModule.MODULE,
             CassandraMailboxModule.MODULE,
-            CassandraAclModule.MODULE));
+            CassandraAclModule.MODULE,
+            CassandraEventStoreModule.MODULE()));
 
     private CassandraMailboxMapper testee;
 
