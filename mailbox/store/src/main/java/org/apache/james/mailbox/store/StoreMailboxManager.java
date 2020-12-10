@@ -375,7 +375,7 @@ public class StoreMailboxManager implements MailboxManager {
         locker.executeWithLock(mailboxPath, () ->
             block(mapper.pathExists(mailboxPath)
                 .filter(FunctionalUtils.identityPredicate().negate())
-                .then(mapper.executeReactive(mapper.create(mailboxPath, UidValidity.generate())
+                .flatMap(any -> mapper.executeReactive(mapper.create(mailboxPath, UidValidity.generate())
                     .doOnNext(mailbox -> mailboxIds.add(mailbox.getMailboxId()))
                     .flatMap(mailbox ->
                         // notify listeners
