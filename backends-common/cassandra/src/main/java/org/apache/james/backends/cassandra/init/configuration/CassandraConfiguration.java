@@ -57,6 +57,7 @@ public class CassandraConfiguration {
     public static final String DEFAULT_CONSISTENCY_LEVEL_LIGHTWEIGHT_TRANSACTION = "SERIAL";
     public static final List<String> VALID_CONSISTENCY_LEVEL_REGULAR = ImmutableList.of("QUORUM", "LOCAL_QUORUM", "EACH_QUORUM");
     public static final List<String> VALID_CONSISTENCY_LEVEL_LIGHTWEIGHT_TRANSACTION = ImmutableList.of("SERIAL", "LOCAL_SERIAL");
+    public static final boolean DEFAULT_STRONG_CONSISTENCY = true;
 
     private static final String MAILBOX_READ_REPAIR = "mailbox.read.repair.chance";
     private static final String MAILBOX_MAX_COUNTERS_READ_REPAIR = "mailbox.counters.read.repair.chance.max";
@@ -72,7 +73,7 @@ public class CassandraConfiguration {
     private static final String BLOB_PART_SIZE = "mailbox.blob.part.size";
     private static final String ATTACHMENT_V2_MIGRATION_READ_TIMEOUT = "attachment.v2.migration.read.timeout";
     private static final String MESSAGE_ATTACHMENTID_READ_TIMEOUT = "message.attachmentids.read.timeout";
-    private static final String MESSAGE_READ_STRONG_MESSAGE_READ_STRONG_CONSISTENCY = "message.read.strong.consistency";
+    private static final String MESSAGE_READ_STRONG_CONSISTENCY = "message.read.strong.consistency";
     private static final String CONSISTENCY_LEVEL_REGULAR = "cassandra.consistency_level.regular";
     private static final String CONSISTENCY_LEVEL_LIGHTWEIGHT_TRANSACTION = "cassandra.consistency_level.lightweight_transaction";
 
@@ -313,7 +314,7 @@ public class CassandraConfiguration {
                 mailboxReadRepair.orElse(DEFAULT_MAILBOX_READ_REPAIR),
                 mailboxCountersReadRepairMax.orElse(DEFAULT_MAX_MAILBOX_COUNTERS_READ_REPAIR_CHANCE),
                 mailboxCountersReadRepairChanceOneHundred.orElse(DEFAULT_ONE_HUNDRED_MAILBOX_COUNTERS_READ_REPAIR_CHANCE),
-                messageReadStrongConsistency.orElse(true));
+                messageReadStrongConsistency.orElse(DEFAULT_STRONG_CONSISTENCY));
         }
     }
 
@@ -356,7 +357,7 @@ public class CassandraConfiguration {
             .mailboxCountersReadRepairChanceOneHundred(Optional.ofNullable(
                 propertiesConfiguration.getFloat(MAILBOX_ONE_HUNDRED_COUNTERS_READ_REPAIR, null)))
             .messageReadStrongConsistency(Optional.ofNullable(
-                propertiesConfiguration.getBoolean(MESSAGE_READ_STRONG_MESSAGE_READ_STRONG_CONSISTENCY, null)))
+                propertiesConfiguration.getBoolean(MESSAGE_READ_STRONG_CONSISTENCY, null)))
             .build();
     }
 
@@ -492,6 +493,7 @@ public class CassandraConfiguration {
                 && Objects.equals(this.blobPartSize, that.blobPartSize)
                 && Objects.equals(this.attachmentV2MigrationReadTimeout, that.attachmentV2MigrationReadTimeout)
                 && Objects.equals(this.messageAttachmentIdsReadTimeout, that.messageAttachmentIdsReadTimeout)
+                && Objects.equals(this.messageReadStrongConsistency, that.messageReadStrongConsistency)
                 && Objects.equals(this.consistencyLevelRegular, that.consistencyLevelRegular)
                 && Objects.equals(this.consistencyLevelLightweightTransaction, that.consistencyLevelLightweightTransaction);
         }
@@ -504,7 +506,8 @@ public class CassandraConfiguration {
             flagsUpdateMessageMaxRetry, modSeqMaxRetry, uidMaxRetry, fetchNextPageInAdvanceRow,
             mailboxCountersReadRepairChanceOneHundred, mailboxCountersReadRepairChanceMax,
             blobPartSize, attachmentV2MigrationReadTimeout, messageAttachmentIdsReadTimeout,
-            consistencyLevelRegular, consistencyLevelLightweightTransaction, mailboxReadRepair);
+            consistencyLevelRegular, consistencyLevelLightweightTransaction, mailboxReadRepair,
+            messageReadStrongConsistency);
     }
 
     @Override
@@ -524,6 +527,7 @@ public class CassandraConfiguration {
             .add("blobPartSize", blobPartSize)
             .add("attachmentV2MigrationReadTimeout", attachmentV2MigrationReadTimeout)
             .add("messageAttachmentIdsReadTimeout", messageAttachmentIdsReadTimeout)
+            .add("messageReadStrongConsistency", messageReadStrongConsistency)
             .add("consistencyLevelRegular", consistencyLevelRegular)
             .add("consistencyLevelLightweightTransaction", consistencyLevelLightweightTransaction)
             .toString();
