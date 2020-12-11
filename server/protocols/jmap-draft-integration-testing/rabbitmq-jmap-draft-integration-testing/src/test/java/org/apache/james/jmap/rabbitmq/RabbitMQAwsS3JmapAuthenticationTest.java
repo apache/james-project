@@ -25,9 +25,12 @@ import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
 import org.apache.james.jmap.JMAPAuthenticationTest;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.Rule;
+import org.junit.experimental.categories.Category;
 
+@Category(Unstable.class)
 public class RabbitMQAwsS3JmapAuthenticationTest extends JMAPAuthenticationTest {
 
     @Rule

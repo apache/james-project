@@ -25,8 +25,11 @@ import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.draft.methods.integration.SetMailboxesMethodTest;
+import org.apache.james.junit.categories.Unstable;
 import org.junit.Rule;
+import org.junit.experimental.categories.Category;
 
+@Category(Unstable.class)
 public class RabbitMQAwsS3SetMailboxesMethodTest extends SetMailboxesMethodTest {
     @Rule
     public DockerCassandraRule cassandra = new DockerCassandraRule();

@@ -26,6 +26,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.core.Username;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.model.MailboxId;
@@ -37,6 +38,7 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -422,6 +424,8 @@ class CassandraMailboxManagerConsistencyTest {
             }
 
             @Test
+            @Tag(Unstable.TAG)
+            //see https://builds.apache.org/blue/organizations/jenkins/james%2FApacheJames/detail/PR-268/32/tests
             void deleteMailboxByPathShouldBeConsistentWhenMailboxPathDaoFails(CassandraCluster cassandra) throws Exception {
                 MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
                     .get();
