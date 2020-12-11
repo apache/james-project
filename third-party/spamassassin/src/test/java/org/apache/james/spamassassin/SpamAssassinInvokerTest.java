@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.Username;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.spamassassin.SpamAssassinExtension.SpamAssassin;
 import org.apache.james.util.MimeMessageUtil;
@@ -33,10 +34,12 @@ import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(SpamAssassinExtension.class)
+@Tag(Unstable.TAG)
 public class SpamAssassinInvokerTest {
 
     public static final Username USERNAME = Username.of("any@james");

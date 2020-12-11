@@ -25,6 +25,7 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.MetricFactoryContract;
@@ -33,6 +34,7 @@ import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Mono;
@@ -126,6 +128,7 @@ class RecordingMetricFactoryTest implements MetricFactoryContract {
     }
 
     @Test
+    @Tag(Unstable.TAG)
     void decoratePublisherWithTimerMetricShouldRecordANewValueForEachRetry() {
         Duration duration = Duration.ofMillis(100);
         Mono.from(testee.decoratePublisherWithTimerMetric("any", Mono.delay(duration)))
@@ -139,6 +142,7 @@ class RecordingMetricFactoryTest implements MetricFactoryContract {
     }
 
     @Test
+    @Tag(Unstable.TAG)
     void decoratePublisherWithTimerMetricLogP99ShouldRecordANewValueForEachRetry() {
         Duration duration = Duration.ofMillis(100);
         Mono.from(testee.decoratePublisherWithTimerMetricLogP99("any", Mono.delay(duration)))

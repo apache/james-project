@@ -36,6 +36,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.search.FlagTerm;
 
 import org.apache.james.core.Domain;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
@@ -49,6 +50,7 @@ import org.apache.james.utils.TestIMAPClient;
 import org.apache.mailet.base.test.FakeMail;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
@@ -82,6 +84,10 @@ interface MailsShouldBeWellReceived {
     }
 
     @Test
+    @Tag(Unstable.TAG)
+    /*
+    Condition with lambda expression in org.apache.james.MailsShouldBeWellReceived that uses org.apache.james.GuiceJamesServer was not fulfilled within 10 seconds.
+     */
     default void mailsContentWithUnicodeCharactersShouldBeKeptUnChanged(GuiceJamesServer server) throws Exception {
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)

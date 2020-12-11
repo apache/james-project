@@ -44,6 +44,7 @@ import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
 import org.apache.james.eventsourcing.eventstore.cassandra.EventStoreDao;
 import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.eventsourcing.acl.ACLModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
@@ -59,10 +60,7 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.Wildcard;
 import org.apache.james.mailbox.store.MailboxReactorUtils;
 import org.assertj.core.api.SoftAssertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.fge.lambdas.Throwing;
@@ -616,6 +614,14 @@ class CassandraMailboxMapperTest {
         }
 
         @Test
+        /*
+        https://builds.apache.org/blue/organizations/jenkins/james%2FApacheJames/detail/PR-268/38/tests
+        Expected size:<1> but was:<2> in:
+        <[Mailbox{id=44ec7c50-405c-11eb-bd9e-f9735674a69e, namespace=#private, user=Username{localPart=user, domainPart=Optional.empty}, name=INBOX},
+            Mailbox{id=4282f660-405c-11eb-bd9e-f9735674a69e, namespace=#private, user=Username{localPart=user, domainPart=Optional.empty}, name=name}]>
+        at CassandraMailboxMapperTest$ConsistencyTest.lambda$createAfterPreviousDeleteOnFailedCreateShouldCreateAMailbox$34(CassandraMailboxMapperTest$ConsistencyTest.java:628)
+         */
+        @Tag(Unstable.TAG)
         void createAfterPreviousDeleteOnFailedCreateShouldCreateAMailbox(CassandraCluster cassandra) {
             cassandra.getConf()
                 .registerScenario(fail()

@@ -25,8 +25,10 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.jmap.rfc8621.contract.EmailQueryMethodContract;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -48,4 +50,17 @@ public class MemoryEmailQueryMethodTest implements EmailQueryMethodContract {
     @Disabled("JAMES-3377 Not supported for in-memory test" +
         "In memory do not attempt message parsing a performs a full match on the raw message content")
     public void emailQueryFilterByTextShouldIgnoreAttachmentContent(GuiceJamesServer server) {}
+
+    @Override
+    @Tag(Unstable.TAG)
+    public void shouldListMailsReceivedBeforeADate(GuiceJamesServer server) {
+        EmailQueryMethodContract.super.shouldListMailsReceivedBeforeADate(server);
+    }
+
+    @Override
+    @Tag(Unstable.TAG)
+    public void shouldListMailsReceivedAfterADate(GuiceJamesServer server) {
+        EmailQueryMethodContract.super.shouldListMailsReceivedAfterADate(server);
+    }
+
 }
