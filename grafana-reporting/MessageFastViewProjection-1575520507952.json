@@ -2,7 +2,7 @@
   "__inputs": [
     {
       "name": "DS_JAMES_ES",
-      "label": "james es",
+      "label": "James Elasticsearch",
       "description": "",
       "type": "datasource",
       "pluginId": "elasticsearch",
@@ -396,7 +396,7 @@
   "refresh": false,
   "schemaVersion": 16,
   "style": "dark",
-  "tags": [],
+  "tags": ["James"],
   "templating": {
     "list": []
   },

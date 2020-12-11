@@ -1,8 +1,8 @@
 {
   "__inputs": [
     {
-      "name": "DS_ELASTICSEARCH",
-      "label": "ElasticSearch",
+      "name": "DS_JAMES_ES",
+      "label": "James Elasticsearch",
       "description": "",
       "type": "datasource",
       "pluginId": "elasticsearch",
@@ -47,7 +47,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
           "id": 8,
           "legend": {
@@ -140,7 +140,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
           "id": 7,
           "legend": {
@@ -253,7 +253,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
           "id": 2,
           "legend": {
@@ -366,7 +366,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
           "id": 6,
           "legend": {
@@ -491,7 +491,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
           "id": 10,
           "legend": {
@@ -604,7 +604,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
           "id": 11,
           "legend": {
@@ -717,7 +717,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
           "id": 16,
           "legend": {
@@ -830,7 +830,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
           "id": 21,
           "legend": {
@@ -955,7 +955,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
           "id": 13,
           "legend": {
@@ -1068,7 +1068,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
           "id": 14,
           "legend": {
@@ -1181,7 +1181,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
           "id": 15,
           "legend": {
@@ -1294,7 +1294,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
           "id": 20,
           "legend": {
@@ -1419,7 +1419,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
           "id": 9,
           "legend": {
@@ -1532,7 +1532,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
           "id": 17,
           "legend": {
@@ -1645,7 +1645,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
           "id": 18,
           "legend": {
@@ -1758,7 +1758,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
           "id": 19,
           "legend": {
@@ -1883,7 +1883,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
           "id": 22,
           "legend": {
@@ -1996,7 +1996,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
           "id": 23,
           "legend": {
@@ -2109,7 +2109,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_ELASTICSEARCH}",
+          "datasource": "${DS_JAMES_ES}",
           "fill": 1,
           "id": 24,
           "legend": {
@@ -2230,7 +2230,7 @@
   ],
   "schemaVersion": 14,
   "style": "dark",
-  "tags": [],
+  "tags": ["James"],
   "templating": {
     "list": []
   },
