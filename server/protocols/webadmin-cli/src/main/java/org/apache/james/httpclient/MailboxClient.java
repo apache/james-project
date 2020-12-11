@@ -37,4 +37,7 @@ public interface MailboxClient {
     @RequestLine("DELETE /{usernameToBeUsed}/mailboxes/{mailboxNameToBeDeleted}")
     Response deleteAMailbox(@Param("usernameToBeUsed") String userName, @Param("mailboxNameToBeDeleted") String mailboxName);
 
+    @RequestLine("DELETE /{usernameToBeUsed}/mailboxes")
+    Response deleteAllMailboxes(@Param("usernameToBeUsed") String userName);
+
 }

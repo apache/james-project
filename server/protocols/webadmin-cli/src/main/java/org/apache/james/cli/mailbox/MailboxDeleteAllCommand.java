@@ -19,43 +19,45 @@
 
 package org.apache.james.cli.mailbox;
 
-import java.io.PrintStream;
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
 import org.apache.james.httpclient.MailboxClient;
 
+import feign.Response;
 import picocli.CommandLine;
 
 @CommandLine.Command(
-    name = "mailbox",
-    description = "Manage Mailboxes",
-    subcommands = {
-        MailboxCreateCommand.class,
-        MailboxExistCommand.class,
-        MailboxListCommand.class,
-        MailboxDeleteCommand.class,
-        MailboxDeleteAllCommand.class
-    })
-public class MailboxCommand implements Callable<Integer> {
+        name = "deleteAll",
+        description = "Delete all mailboxes of a user")
+public class MailboxDeleteAllCommand implements Callable<Integer> {
 
-    protected final WebAdminCli webAdminCli;
-    protected final PrintStream out;
-    protected final PrintStream err;
+    public static final int DELETED_CODE = 204;
+    public static final int NOT_FOUND_CODE = 404;
 
-    public MailboxCommand(PrintStream out, WebAdminCli webAdminCli, PrintStream err) {
-        this.out = out;
-        this.webAdminCli = webAdminCli;
-        this.err = err;
-    }
+    @CommandLine.ParentCommand MailboxCommand mailboxCommand;
+
+    @CommandLine.Parameters(description = "Username")
+    String userName;
 
     @Override
     public Integer call() {
-        return WebAdminCli.CLI_FINISHED_SUCCEED;
-    }
-
-    public MailboxClient fullyQualifiedURL(String partOfUrl) {
-        return webAdminCli.feignClientFactory(err).target(MailboxClient.class, webAdminCli.jamesUrl + partOfUrl);
+        try {
+            MailboxClient mailboxClient = mailboxCommand.fullyQualifiedURL("/users");
+            Response rs = mailboxClient.deleteAllMailboxes(userName);
+            if (rs.status() == DELETED_CODE) {
+                mailboxCommand.out.println("The user do not have mailboxes anymore.");
+                return WebAdminCli.CLI_FINISHED_SUCCEED;
+            } else if (rs.status() == NOT_FOUND_CODE) {
+                mailboxCommand.err.println("The user name does not exist.");
+                return WebAdminCli.CLI_FINISHED_FAILED;
+            }
+            return WebAdminCli.CLI_FINISHED_FAILED;
+        } catch (Exception e) {
+            e.printStackTrace(mailboxCommand.err);
+            return WebAdminCli.CLI_FINISHED_FAILED;
+        }
     }
 
 }
+

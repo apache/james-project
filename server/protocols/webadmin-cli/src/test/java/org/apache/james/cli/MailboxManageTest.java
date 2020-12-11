@@ -33,6 +33,7 @@ import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -49,6 +50,13 @@ public class MailboxManageTest {
     private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
     private final ByteArrayOutputStream errorStreamCaptor = new ByteArrayOutputStream();
     private DataProbeImpl dataProbe;
+    private Port port;
+
+    @BeforeEach
+    void setUp(GuiceJamesServer server) {
+        port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
+        dataProbe = server.getProbe(DataProbeImpl.class);
+    }
 
     @Test
     void mailboxCreateWithExistedUsernameAndValidMailboxNameShouldSucceed() throws Exception {
@@ -263,6 +271,38 @@ public class MailboxManageTest {
 
         assertThat(exitCode).isEqualTo(1);
         assertThat(errorStreamCaptor.toString()).contains("Attempt to delete an invalid mailbox");
+    }
+
+    @Test
+    void mailboxDeleteAllWithExistingUserShouldDeleteAllMailboxes() throws Exception {
+        dataProbe.fluent().addDomain("linagora.com")
+                .addUser("hqtran@linagora.com", "123456");
+
+        WebAdminCli.executeFluent(new PrintStream(new ByteArrayOutputStream()), new PrintStream(new ByteArrayOutputStream()),
+                "--url", "http://127.0.0.1:" + port.getValue(), "mailbox", "create", "hqtran@linagora.com", "INBOX.1");
+
+        WebAdminCli.executeFluent(new PrintStream(new ByteArrayOutputStream()), new PrintStream(new ByteArrayOutputStream()),
+                "--url", "http://127.0.0.1:" + port.getValue(), "mailbox", "create", "hqtran@linagora.com", "DRAFT");
+
+        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
+                "--url", "http://127.0.0.1:" + port.getValue(), "mailbox", "deleteAll", "hqtran@linagora.com");
+
+        WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
+                "--url", "http://127.0.0.1:" + port.getValue(), "mailbox", "list", "hqtran@linagora.com");
+
+        assertThat(exitCode).isEqualTo(0);
+        assertThat(outputStreamCaptor.toString().trim()).isEqualTo("The user do not have mailboxes anymore.");
+    }
+
+    @Test
+    void mailboxDeleteAllWithNonExistingUsernameShouldFail() throws Exception {
+        dataProbe.fluent().addDomain("linagora.com");
+
+        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
+                "--url", "http://127.0.0.1:" + port.getValue(), "mailbox", "deleteAll", "hqtran@linagora.com");
+
+        assertThat(exitCode).isEqualTo(1);
+        assertThat(errorStreamCaptor.toString()).contains("The user name does not exist.");
     }
 
 }
