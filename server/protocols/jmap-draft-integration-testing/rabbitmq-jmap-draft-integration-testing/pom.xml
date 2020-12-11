@@ -165,6 +165,7 @@
                     <!-- Fail tests longer than 20 minutes, prevent form random locking tests -->
                     <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
                     <groups combine.self="override">org.apache.james.junit.categories.BasicFeature,org.apache.james.jmap.categories.EnableCucumber</groups>
+                    <excludedGroups>org.apache.james.junit.categories.Unstable</excludedGroups>
                 </configuration>
             </plugin>
         </plugins>
@@ -181,7 +182,7 @@
                             <version>2.22.2</version>
                             <configuration>
                                 <excludedGroups></excludedGroups>
-                                <groups combine.self="override">unstable</groups>
+                                <groups combine.self="override">org.apache.james.junit.categories.Unstable</groups>
                             </configuration>
                         </plugin>
                     </plugins>

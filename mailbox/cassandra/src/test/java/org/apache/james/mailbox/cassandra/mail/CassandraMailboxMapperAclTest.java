@@ -24,11 +24,14 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMapperACLTest;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraMailboxMapperAclTest extends MailboxMapperACLTest {
@@ -47,5 +50,11 @@ class CassandraMailboxMapperAclTest extends MailboxMapperACLTest {
     protected MailboxMapper createMailboxMapper() {
         return GuiceUtils.testInjector(cassandraCluster.getCassandraCluster())
             .getInstance(CassandraMailboxMapper.class);
+    }
+    @Test
+    @Override
+    @Tag(Unstable.TAG)
+    protected void updateAclShouldCombineStoredAclWhenAdd() {
+        super.updateAclShouldCombineStoredAclWhenAdd();
     }
 }

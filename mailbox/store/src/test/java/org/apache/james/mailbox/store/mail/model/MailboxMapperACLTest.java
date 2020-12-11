@@ -156,7 +156,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    void updateAclShouldCombineStoredAclWhenAdd() {
+    protected void updateAclShouldCombineStoredAclWhenAdd() {
         EntryKey key = EntryKey.createUserEntryKey(USER);
         Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
         Rfc4314Rights newRights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
