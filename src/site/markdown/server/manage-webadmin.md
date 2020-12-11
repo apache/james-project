@@ -299,8 +299,8 @@ Response codes:
 ## Administrating users
 
    - [Create a user](#Create_a_user)
-   - [Testing a user existence](#Testing_a_user_existence)
    - [Updating a user password](#Updating_a_user_password)
+   - [Testing a user existence](#Testing_a_user_existence)
    - [Deleting a user](#Deleting_a_user)
    - [Retrieving the user list](#Retrieving_the_user_list)
    - [Retrieving the list of allowed `From` headers for a given user](Retrieving_the_list_of_allowed_From_headers_for_a_given_user)
@@ -320,10 +320,27 @@ Response codes:
 
  - 204: The user was successfully created
  - 400: The user name or the payload is invalid
+ - 409: The user name already exists
 
-Note: if the user exists already, its password will be updated.
+Note: If the user exists already, its password cannot be updated using this. 
+If you want to update a user's password, please have a look at [Update a user password](#Updating_a_user_password).
 
-###Testing a user existence
+### Updating a user password
+
+```
+curl -XPUT http://ip:port/users/usernameToBeUsed?force \
+  -d '{"password":"passwordToBeUsed"}' \ 
+  -H "Content-Type: application/json"
+```
+
+Response codes:
+
+- 204: The user's password was successfully updated
+- 400: The user name or the payload is invalid
+
+This also can be used to create a new user.
+
+### Testing a user existence
 
 ```
 curl -XHEAD http://ip:port/users/usernameToBeUsed

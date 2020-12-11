@@ -62,6 +62,7 @@ Note: the command line before ENTITY will be documented as {cli}.
    - [Get the list of domains](#get-the-list-of-domains)
 - [Manage Users](#manage-users) 
    - [Create a user](#create-a-user)
+   - [Update a user password](#update-a-user-password)  
    - [Test a user existence](#test-a-user-existence)
    - [Delete a user](#delete-a-user)
    - [Get users list](#get-users-list)
@@ -141,7 +142,21 @@ Enter value for --password (Password):
 ```
 Resource name <username> representing valid users, hence it should match the criteria at [User Repositories documentation](https://james.apache.org/server/config-users.html)
 
-Note: if the user exists already, its password will be updated.
+Note: If the user exists already, its password cannot be updated using this.
+If you want to update a user's password, please have a look at [Update a user password](#update-a-user-password).
+
+### Update a user password
+
+```
+{cli} user create --force <username> --password
+```
+Then the Command Line will prompt users to enter password (password will not be printed on the screen for security):
+```
+Enter value for --password (Password):
+```
+Resource name <username> representing valid users, hence it should match the criteria at [User Repositories documentation](https://james.apache.org/server/config-users.html)
+
+Note: This also can be used to create a new user.
 
 ### Test a user existence
 
