@@ -29,6 +29,9 @@ import com.google.common.collect.ImmutableSet;
  * Implement this interfaces to hook in the HELO Command
  */
 public interface HeloHook extends Hook {
+    /**
+     * @return ESMTP extensions to be advertised as part of EHLO answers
+     */
     default Set<String> implementedEsmtpFeatures() {
         return ImmutableSet.of();
     }
