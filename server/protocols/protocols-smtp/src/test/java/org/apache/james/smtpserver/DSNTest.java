@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.mailet.DsnParameters.Notify.DELAY;
 import static org.apache.mailet.DsnParameters.Notify.FAILURE;
 import static org.apache.mailet.DsnParameters.Notify.SUCCESS;
@@ -25,13 +26,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Base64;
 import java.util.EnumSet;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.api.DomainList;
@@ -79,6 +83,8 @@ import com.google.inject.TypeLiteral;
 
 public class DSNTest {
     public static final String LOCAL_DOMAIN = "example.local";
+    public static final Username BOB = Username.of("bob@localhost");
+    public static final String PASSWORD = "bobpwd";
 
     protected HashedWheelTimer hashedWheelTimer;
     protected MemoryDomainList domainList;
@@ -97,6 +103,7 @@ public class DSNTest {
     public void setUp() throws Exception {
         domainList = new MemoryDomainList(new InMemoryDNSService()
             .registerMxRecord(Domain.LOCALHOST.asString(), "127.0.0.1")
+            .registerMxRecord(Domain.LOCALHOST.asString(), "127.0.0.1")
             .registerMxRecord(LOCAL_DOMAIN, "127.0.0.1")
             .registerMxRecord("examplebis.local", "127.0.0.1")
             .registerMxRecord("127.0.0.1", "127.0.0.1"));
@@ -107,6 +114,7 @@ public class DSNTest {
         domainList.addDomain(Domain.of(LOCAL_DOMAIN));
         domainList.addDomain(Domain.of("examplebis.local"));
         usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
+        usersRepository.addUser(BOB, PASSWORD);
 
         createMailRepositoryStore();
 
@@ -186,13 +194,21 @@ public class DSNTest {
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-
-        smtpProtocol.sendCommand("EHLO test");
+        authenticate(smtpProtocol);
+        smtpProtocol.sendCommand("EHLO localhost");
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(smtpProtocol.getReplyCode()).isEqualTo(250);
             softly.assertThat(smtpProtocol.getReplyString()).contains("250 DSN");
         });
+    }
+
+    private void authenticate(SMTPClient smtpProtocol) throws IOException {
+        smtpProtocol.sendCommand("AUTH PLAIN");
+        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + BOB.asString() + "\0" + PASSWORD + "\0").getBytes(UTF_8)));
+        assertThat(smtpProtocol.getReplyCode())
+            .as("authenticated")
+            .isEqualTo(235);
     }
 
     @Test
@@ -204,9 +220,10 @@ public class DSNTest {
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        authenticate(smtpProtocol);
 
-        smtpProtocol.sendCommand("EHLO test");
-        smtpProtocol.sendCommand("MAIL FROM: <mail@localhost> RET=HDRS ENVID=QQ314159");
+        smtpProtocol.sendCommand("EHLO localhost");
+        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> RET=HDRS ENVID=QQ314159");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost> NOTIFY=SUCCESS,FAILURE,DELAY ORCPT=rfc822;orcpt@localhost");
         smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
@@ -230,9 +247,10 @@ public class DSNTest {
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        authenticate(smtpProtocol);
 
-        smtpProtocol.sendCommand("EHLO test");
-        smtpProtocol.sendCommand("MAIL FROM: <mail@localhost> RET=HDRS ENVID=QQ314159");
+        smtpProtocol.sendCommand("EHLO localhost");
+        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> RET=HDRS ENVID=QQ314159");
         smtpProtocol.sendCommand("RCPT TO:<rcpt1@localhost> NOTIFY=SUCCESS,FAILURE,DELAY ORCPT=rfc822;orcpt1@localhost");
         smtpProtocol.sendCommand("RCPT TO:<rcpt2@localhost> NOTIFY=SUCCESS,FAILURE,DELAY ORCPT=rfc822;orcpt2@localhost");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost>");
@@ -261,9 +279,10 @@ public class DSNTest {
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        authenticate(smtpProtocol);
 
-        smtpProtocol.sendCommand("EHLO test");
-        smtpProtocol.sendCommand("MAIL FROM: <mail@localhost> RET=HDRS ENVID=QQ314159");
+        smtpProtocol.sendCommand("EHLO localhost");
+        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> RET=HDRS ENVID=QQ314159");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost> ORCPT=rfc822;orcpt@localhost");
         smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
@@ -286,9 +305,10 @@ public class DSNTest {
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        authenticate(smtpProtocol);
 
-        smtpProtocol.sendCommand("EHLO test");
-        smtpProtocol.sendCommand("MAIL FROM: <mail@localhost> RET=HDRS ENVID=QQ314159");
+        smtpProtocol.sendCommand("EHLO localhost");
+        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> RET=HDRS ENVID=QQ314159");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost> NOTIFY=SUCCESS,FAILURE,DELAY");
         smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
@@ -311,9 +331,10 @@ public class DSNTest {
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        authenticate(smtpProtocol);
 
-        smtpProtocol.sendCommand("EHLO test");
-        smtpProtocol.sendCommand("MAIL FROM: <mail@localhost> ENVID=QQ314159");
+        smtpProtocol.sendCommand("EHLO localhost");
+        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> ENVID=QQ314159");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost> NOTIFY=SUCCESS,FAILURE,DELAY ORCPT=rfc822;orcpt@localhost");
         smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
@@ -336,9 +357,10 @@ public class DSNTest {
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        authenticate(smtpProtocol);
 
-        smtpProtocol.sendCommand("EHLO test");
-        smtpProtocol.sendCommand("MAIL FROM: <mail@localhost> RET=HDRS");
+        smtpProtocol.sendCommand("EHLO localhost");
+        smtpProtocol.sendCommand("MAIL FROM: <bob@localhost> RET=HDRS");
         smtpProtocol.sendCommand("RCPT TO:<rcpt@localhost> NOTIFY=SUCCESS,FAILURE,DELAY ORCPT=rfc822;orcpt@localhost");
         smtpProtocol.sendShortMessageData("Subject: test mail\r\n\r\nTest body testSimpleMailSendWithDSN\r\n.\r\n");
 
