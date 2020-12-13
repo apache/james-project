@@ -99,7 +99,7 @@ public class MailImpl implements Disposable, Mail {
             .name(deriveNewName(mail.getName()))
             .sender(mail.getMaybeSender())
             .addRecipients(mail.getRecipients())
-            .mimeMessage(new MimeMessageCopyOnWriteProxy(mail.getMessage()))
+            .mimeMessage(MimeMessageCopyOnWriteProxy.fromMimeMessage(mail.getMessage()))
             .remoteHost(mail.getRemoteHost())
             .remoteAddr(mail.getRemoteAddr())
             .lastUpdated(mail.getLastUpdated())
@@ -510,7 +510,7 @@ public class MailImpl implements Disposable, Mail {
             if (message instanceof MimeMessageCopyOnWriteProxy) {
                 this.message = (MimeMessageCopyOnWriteProxy) message;
             } else {
-                this.message = new MimeMessageCopyOnWriteProxy(message);
+                this.message = MimeMessageCopyOnWriteProxy.fromMimeMessage(message);
             }
         }
     }

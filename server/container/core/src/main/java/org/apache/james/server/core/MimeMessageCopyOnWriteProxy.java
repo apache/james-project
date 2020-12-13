@@ -24,6 +24,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Function;
 
 import javax.activation.DataHandler;
 import javax.mail.Address;
@@ -41,17 +43,40 @@ import javax.mail.search.SearchTerm;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 
+import com.google.common.base.Preconditions;
+
 /**
  * This object wraps a "possibly shared" MimeMessage tracking copies and
  * automatically cloning it (if shared) when a write operation is invoked.
  */
 public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposable {
+    @FunctionalInterface
+    interface Read<T> {
+        T read(MimeMessage message) throws MessagingException;
+    }
+
+    @FunctionalInterface
+    interface ReadIO<T> {
+        T read(MimeMessage message) throws MessagingException, IOException;
+    }
+
+    @FunctionalInterface
+    interface Write {
+        void write(MimeMessage message) throws MessagingException;
+    }
+
+    @FunctionalInterface
+    interface WriteIO {
+        void write(MimeMessage message) throws MessagingException, IOException;
+    }
 
     /**
      * Used internally to track the reference count It is important that this is
      * static otherwise it will keep a reference to the parent object.
      */
     protected static class MessageReferenceTracker {
+
+        private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
         /**
          * reference counter
@@ -67,68 +92,162 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
             wrapped = ref;
         }
 
-        protected synchronized void incrementReferenceCount() {
-            referenceCount++;
-        }
-
-        protected synchronized void decrementReferenceCount() {
-            referenceCount--;
-            if (referenceCount <= 0) {
-                LifecycleUtil.dispose(wrapped);
-                wrapped = null;
+        protected void dispose() {
+            ReentrantReadWriteLock.WriteLock lock = this.lock.writeLock();
+            lock.lock();
+            try {
+                referenceCount--;
+                if (referenceCount <= 0) {
+                    LifecycleUtil.dispose(wrapped);
+                    wrapped = null;
+                }
+            } finally {
+                lock.unlock();
             }
         }
 
-        protected synchronized int getReferenceCount() {
-            return referenceCount;
+        protected void incrementReferences() {
+            ReentrantReadWriteLock.WriteLock lock = this.lock.writeLock();
+            lock.lock();
+            try {
+                referenceCount++;
+            } finally {
+                lock.unlock();
+            }
         }
 
-        public synchronized MimeMessage getWrapped() {
+        protected <T> T wrapRead(Read<T> op) throws MessagingException {
+            ReentrantReadWriteLock.ReadLock lock = this.lock.readLock();
+            lock.lock();
+            try {
+                Preconditions.checkState(referenceCount > 0, "Attempt to read a disposed message");
+                return op.read(wrapped);
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        protected <T> T wrapReadIO(ReadIO<T> op) throws MessagingException, IOException {
+            ReentrantReadWriteLock.ReadLock lock = this.lock.readLock();
+            lock.lock();
+            try {
+                Preconditions.checkState(referenceCount > 0, "Attempt to read a disposed message");
+                return op.read(wrapped);
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        protected <T> T wrapReadNoException(Function<MimeMessage, T> op) {
+            ReentrantReadWriteLock.ReadLock lock = this.lock.readLock();
+            lock.lock();
+            try {
+                Preconditions.checkState(referenceCount > 0, "Attempt to read a disposed message");
+                return op.apply(wrapped);
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        protected MessageReferenceTracker wrapWrite(Write op) throws MessagingException {
+            ReentrantReadWriteLock.WriteLock lock = this.lock.writeLock();
+            lock.lock();
+            try {
+                Preconditions.checkState(referenceCount > 0, "Attempt to write a disposed message");
+                if (referenceCount > 1) {
+                    referenceCount--;
+                    MessageReferenceTracker newRef = new MessageReferenceTracker(new MimeMessageWrapper(wrapped));
+                    newRef.wrapWrite(op);
+                    return newRef;
+                } else {
+                    op.write(wrapped);
+                    return this;
+                }
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        protected MessageReferenceTracker wrapWriteIO(WriteIO op) throws MessagingException, IOException {
+            ReentrantReadWriteLock.WriteLock lock = this.lock.writeLock();
+            lock.lock();
+            try {
+                Preconditions.checkState(referenceCount > 0, "Attempt to write a disposed message");
+                if (referenceCount > 1) {
+                    referenceCount--;
+                    MessageReferenceTracker newRef = new MessageReferenceTracker(new MimeMessageWrapper(wrapped));
+                    newRef.wrapWriteIO(op);
+                    return newRef;
+                } else {
+                    op.write(wrapped);
+                    return this;
+                }
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        private MimeMessage getWrapped() {
             return wrapped;
         }
 
+        protected MessageReferenceTracker newRef() {
+            ReentrantReadWriteLock.WriteLock lock = this.lock.writeLock();
+            lock.lock();
+            try {
+                if (referenceCount > 0) {
+                    referenceCount++;
+                    // Still valid
+                    return this;
+                }
+                throw new IllegalStateException("Message was disposed so new refs cannot be obtained");
+            } finally {
+                lock.unlock();
+            }
+        }
     }
+
+    /**
+     * @return a MimeMessageCopyOnWriteProxy wrapping the message. We consider 'message' as an external reference and
+     * will avoid mutate it, rather cloning the email.
+     *
+     * Please note however that modifying 'message' itself will not lead to a correct reference tracking management
+     * unless it is a MimeMessageCopyOnWriteProxy
+     */
+    public static MimeMessageCopyOnWriteProxy fromMimeMessage(MimeMessage message) {
+        return new MimeMessageCopyOnWriteProxy(message, true);
+    }
+
+    /**
+     * @return a MimeMessageCopyOnWriteProxy wrapping the message. We do not consider 'message' as an external reference
+     * and will mutate it, rather than cloning the email.
+     *
+     * Please note however that modifying 'message' itself will not lead to a correct reference tracking management
+     * unless it is a MimeMessageCopyOnWriteProxy
+     */
+    public static MimeMessageCopyOnWriteProxy fromMimeMessageNoExternalReference(MimeMessage message) {
+        return new MimeMessageCopyOnWriteProxy(message, false);
+    }
+
+    private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
     protected MessageReferenceTracker refCount;
 
-    public MimeMessageCopyOnWriteProxy(MimeMessage original) throws MessagingException {
-        this(original, false);
-    }
-
-    public MimeMessageCopyOnWriteProxy(MimeMessageSource original) throws MessagingException {
-        this(new MimeMessageWrapper(original), true);
-    }
-
-    /**
-     * Private constructor providing an external reference counter.
-     */
-    private MimeMessageCopyOnWriteProxy(MimeMessage original, boolean writeable) {
+    public MimeMessageCopyOnWriteProxy(MimeMessage original, boolean originalIsAReference) {
         super(Session.getDefaultInstance(System.getProperties(), null));
 
         if (original instanceof MimeMessageCopyOnWriteProxy) {
-            refCount = ((MimeMessageCopyOnWriteProxy) original).refCount;
+            refCount = ((MimeMessageCopyOnWriteProxy) original).newRef();
         } else {
             refCount = new MessageReferenceTracker(original);
-        }
-
-        if (!writeable) {
-            refCount.incrementReferenceCount();
+            if (originalIsAReference) {
+                refCount.incrementReferences(); // We consider 'original' to be a reference too
+            }
         }
     }
 
-    /**
-     * Check the number of references over the MimeMessage and clone it if
-     * needed before returning the reference
-     * 
-     * @throws MessagingException
-     *             exception
-     */
-    protected synchronized MimeMessage getWrappedMessageForWriting() throws MessagingException {
-        if (refCount.getReferenceCount() > 1) {
-            refCount.decrementReferenceCount();
-            refCount = new MessageReferenceTracker(new MimeMessageWrapper(refCount.getWrapped()));
-        }
-        return refCount.getWrapped();
+    public MimeMessageCopyOnWriteProxy(MimeMessageSource original) {
+        this(new MimeMessageWrapper(original), false);
     }
 
     /**
@@ -136,21 +255,37 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
      * 
      * @return wrapped return the wrapped mimeMessage
      */
-    public synchronized MimeMessage getWrappedMessage() {
+    public MimeMessage getWrappedMessage() {
         return refCount.getWrapped();
     }
 
+    public MessageReferenceTracker newRef() {
+        ReentrantReadWriteLock.WriteLock lock = readWriteLock.writeLock();
+        lock.lock();
+        try {
+            return refCount.newRef();
+        } finally {
+            lock.unlock();
+        }
+    }
+
     @Override
-    public synchronized void dispose() {
-        if (refCount != null) {
-            refCount.decrementReferenceCount();
-            refCount = null;
+    public void dispose() {
+        ReentrantReadWriteLock.WriteLock lock = readWriteLock.writeLock();
+        lock.lock();
+        try {
+            if (refCount != null) {
+                refCount.dispose();
+                refCount = null;
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     public void writeTo(OutputStream os) throws IOException, MessagingException {
-        getWrappedMessage().writeTo(os);
+        wrapWriteIO(message -> message.writeTo(os));
     }
 
     /**
@@ -158,7 +293,7 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
      */
     @Override
     public void writeTo(OutputStream os, String[] ignoreList) throws IOException, MessagingException {
-        getWrappedMessage().writeTo(os, ignoreList);
+        wrapWriteIO(message -> message.writeTo(os, ignoreList));
     }
 
     /*
@@ -167,312 +302,324 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
 
     @Override
     public Address[] getFrom() throws MessagingException {
-        return getWrappedMessage().getFrom();
+        return wrapRead(MimeMessage::getFrom);
     }
 
     @Override
     public Address[] getRecipients(Message.RecipientType type) throws MessagingException {
-        return getWrappedMessage().getRecipients(type);
+        return wrapRead(message -> message.getRecipients(type));
     }
 
     @Override
     public Address[] getAllRecipients() throws MessagingException {
-        return getWrappedMessage().getAllRecipients();
+        return wrapRead(MimeMessage::getFrom);
     }
 
     @Override
     public Address[] getReplyTo() throws MessagingException {
-        return getWrappedMessage().getReplyTo();
+        return wrapRead(MimeMessage::getFrom);
     }
 
     @Override
     public String getSubject() throws MessagingException {
-        return getWrappedMessage().getSubject();
+        ReentrantReadWriteLock.ReadLock lock = readWriteLock.readLock();
+        lock.lock();
+        try {
+            return wrapRead(MimeMessage::getSubject);
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
     public Date getSentDate() throws MessagingException {
-        return getWrappedMessage().getSentDate();
+        return wrapRead(MimeMessage::getSentDate);
     }
 
     @Override
     public Date getReceivedDate() throws MessagingException {
-        return getWrappedMessage().getReceivedDate();
+        return wrapRead(MimeMessage::getReceivedDate);
     }
 
     @Override
     public int getSize() throws MessagingException {
-        return getWrappedMessage().getSize();
+        return wrapRead(MimeMessage::getSize);
     }
 
     @Override
     public int getLineCount() throws MessagingException {
-        return getWrappedMessage().getLineCount();
+        return wrapRead(MimeMessage::getLineCount);
     }
 
     @Override
     public String getContentType() throws MessagingException {
-        return getWrappedMessage().getContentType();
+        return wrapRead(MimeMessage::getContentType);
     }
 
     @Override
     public boolean isMimeType(String mimeType) throws MessagingException {
-        return getWrappedMessage().isMimeType(mimeType);
+        return wrapRead(message -> message.isMimeType(mimeType));
     }
 
     @Override
     public String getDisposition() throws MessagingException {
-        return getWrappedMessage().getDisposition();
+        return wrapRead(MimeMessage::getDisposition);
     }
 
     @Override
     public String getEncoding() throws MessagingException {
-        return getWrappedMessage().getEncoding();
+        return wrapRead(MimeMessage::getEncoding);
     }
 
     @Override
     public String getContentID() throws MessagingException {
-        return getWrappedMessage().getContentID();
+        return wrapRead(MimeMessage::getContentID);
     }
 
     @Override
     public String getContentMD5() throws MessagingException {
-        return getWrappedMessage().getContentMD5();
+        return wrapRead(MimeMessage::getContentMD5);
     }
 
     @Override
     public String getDescription() throws MessagingException {
-        return getWrappedMessage().getDescription();
+        return wrapRead(MimeMessage::getDescription);
     }
 
     @Override
     public String[] getContentLanguage() throws MessagingException {
-        return getWrappedMessage().getContentLanguage();
+        return wrapRead(MimeMessage::getContentLanguage);
     }
 
     @Override
     public String getMessageID() throws MessagingException {
-        return getWrappedMessage().getMessageID();
+        return wrapRead(MimeMessage::getMessageID);
     }
 
     @Override
     public String getFileName() throws MessagingException {
-        return getWrappedMessage().getFileName();
+        return wrapRead(MimeMessage::getFileName);
     }
 
     @Override
     public InputStream getInputStream() throws IOException, MessagingException {
-        return getWrappedMessage().getInputStream();
+        return wrapReadIO(MimeMessage::getInputStream);
     }
 
     @Override
     public DataHandler getDataHandler() throws MessagingException {
-        return getWrappedMessage().getDataHandler();
+        return wrapRead(MimeMessage::getDataHandler);
     }
 
     @Override
     public Object getContent() throws IOException, MessagingException {
-        return getWrappedMessage().getContent();
+        return wrapReadIO(MimeMessage::getContent);
     }
 
     @Override
     public String[] getHeader(String name) throws MessagingException {
-        return getWrappedMessage().getHeader(name);
+        return wrapRead(message -> message.getHeader(name));
     }
 
     @Override
     public String getHeader(String name, String delimiter) throws MessagingException {
-        return getWrappedMessage().getHeader(name, delimiter);
+        return wrapRead(message -> message.getHeader(name, delimiter));
     }
 
     @Override
     public Enumeration<Header> getAllHeaders() throws MessagingException {
-        return getWrappedMessage().getAllHeaders();
+        return wrapRead(MimeMessage::getAllHeaders);
     }
 
     @Override
     public Enumeration<Header> getMatchingHeaders(String[] names) throws MessagingException {
-        return getWrappedMessage().getMatchingHeaders(names);
+        return wrapRead(message -> message.getMatchingHeaders(names));
     }
 
     @Override
     public Enumeration<Header> getNonMatchingHeaders(String[] names) throws MessagingException {
-        return getWrappedMessage().getNonMatchingHeaders(names);
+        return wrapRead(message -> message.getNonMatchingHeaders(names));
     }
 
     @Override
     public Enumeration<String> getAllHeaderLines() throws MessagingException {
-        return getWrappedMessage().getAllHeaderLines();
+        return wrapRead(MimeMessage::getAllHeaderLines);
     }
 
     @Override
     public Enumeration<String> getMatchingHeaderLines(String[] names) throws MessagingException {
-        return getWrappedMessage().getMatchingHeaderLines(names);
+        return wrapRead(message -> message.getMatchingHeaderLines(names));
     }
 
     @Override
     public Enumeration<String> getNonMatchingHeaderLines(String[] names) throws MessagingException {
-        return getWrappedMessage().getNonMatchingHeaderLines(names);
+        return wrapRead(message -> message.getNonMatchingHeaderLines(names));
     }
 
     @Override
     public Flags getFlags() throws MessagingException {
-        return getWrappedMessage().getFlags();
+        return wrapRead(MimeMessage::getFlags);
     }
 
     @Override
     public boolean isSet(Flags.Flag flag) throws MessagingException {
-        return getWrappedMessage().isSet(flag);
+        return wrapRead(message -> message.isSet(flag));
     }
 
     @Override
     public Address getSender() throws MessagingException {
-        return getWrappedMessage().getSender();
+        return wrapRead(MimeMessage::getSender);
     }
 
     @Override
     public boolean match(SearchTerm arg0) throws MessagingException {
-        return getWrappedMessage().match(arg0);
+        return wrapRead(message -> message.match(arg0));
     }
 
     @Override
     public InputStream getRawInputStream() throws MessagingException {
-        return getWrappedMessage().getRawInputStream();
+        return wrapRead(MimeMessage::getRawInputStream);
     }
 
     @Override
     public Folder getFolder() {
-        return getWrappedMessage().getFolder();
+        return wrapReadNoException(MimeMessage::getFolder);
     }
 
     @Override
     public int getMessageNumber() {
-        return getWrappedMessage().getMessageNumber();
+        return wrapReadNoException(MimeMessage::getMessageNumber);
     }
 
     @Override
     public boolean isExpunged() {
-        return getWrappedMessage().isExpunged();
+        return wrapReadNoException(MimeMessage::isExpunged);
     }
 
     @Override
     public boolean equals(Object arg0) {
-        return getWrappedMessage().equals(arg0);
+        return wrapReadNoException(arg0::equals);
     }
 
     @Override
     public int hashCode() {
-        return getWrappedMessage().hashCode();
+        return wrapReadNoException(MimeMessage::hashCode);
     }
 
     @Override
     public String toString() {
-        return getWrappedMessage().toString();
+        return wrapReadNoException(MimeMessage::toString);
     }
 
     @Override
     public void setFrom(Address address) throws MessagingException {
-        getWrappedMessageForWriting().setFrom(address);
+        wrapWrite(message -> message.setFrom(address));
     }
 
     @Override
     public void setFrom() throws MessagingException {
-        getWrappedMessageForWriting().setFrom();
+        wrapWrite(MimeMessage::setFrom);
     }
 
     @Override
     public void addFrom(Address[] addresses) throws MessagingException {
-        getWrappedMessageForWriting().addFrom(addresses);
+        wrapWrite(message -> message.addFrom(addresses));
     }
 
     @Override
     public void setRecipients(Message.RecipientType type, Address[] addresses) throws MessagingException {
-        getWrappedMessageForWriting().setRecipients(type, addresses);
+        wrapWrite(message -> message.setRecipients(type, addresses));
     }
 
     @Override
     public void addRecipients(Message.RecipientType type, Address[] addresses) throws MessagingException {
-        getWrappedMessageForWriting().addRecipients(type, addresses);
+        wrapWrite(message -> message.addRecipients(type, addresses));
     }
 
     @Override
     public void setReplyTo(Address[] addresses) throws MessagingException {
-        getWrappedMessageForWriting().setReplyTo(addresses);
+        wrapWrite(message -> message.setReplyTo(addresses));
     }
 
     @Override
     public void setSubject(String subject) throws MessagingException {
-        getWrappedMessageForWriting().setSubject(subject);
+        ReentrantReadWriteLock.WriteLock lock = readWriteLock.writeLock();
+        lock.lock();
+        try {
+            wrapWrite(message -> message.setSubject(subject));
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
     public void setSubject(String subject, String charset) throws MessagingException {
-        getWrappedMessageForWriting().setSubject(subject, charset);
+        wrapWrite(message -> message.setSubject(subject, charset));
     }
 
     @Override
     public void setSentDate(Date d) throws MessagingException {
-        getWrappedMessageForWriting().setSentDate(d);
+        wrapWrite(message -> message.setSentDate(d));
     }
 
     @Override
     public void setDisposition(String disposition) throws MessagingException {
-        getWrappedMessageForWriting().setDisposition(disposition);
+        wrapWrite(message -> message.setDisposition(disposition));
     }
 
     @Override
     public void setContentID(String cid) throws MessagingException {
-        getWrappedMessageForWriting().setContentID(cid);
+        wrapWrite(message -> message.setContentID(cid));
     }
 
     @Override
     public void setContentMD5(String md5) throws MessagingException {
-        getWrappedMessageForWriting().setContentMD5(md5);
+        wrapWrite(message -> message.setContentMD5(md5));
     }
 
     @Override
     public void setDescription(String description) throws MessagingException {
-        getWrappedMessageForWriting().setDescription(description);
+        wrapWrite(message -> message.setDescription(description));
     }
 
     @Override
     public void setDescription(String description, String charset) throws MessagingException {
-        getWrappedMessageForWriting().setDescription(description, charset);
+        wrapWrite(message -> message.setDescription(description, charset));
     }
 
     @Override
     public void setContentLanguage(String[] languages) throws MessagingException {
-        getWrappedMessageForWriting().setContentLanguage(languages);
+        wrapWrite(message -> message.setContentLanguage(languages));
     }
 
     @Override
     public void setFileName(String filename) throws MessagingException {
-        getWrappedMessageForWriting().setFileName(filename);
+        wrapWrite(message -> message.setFileName(filename));
     }
 
     @Override
     public void setDataHandler(DataHandler dh) throws MessagingException {
-        getWrappedMessageForWriting().setDataHandler(dh);
+        wrapWrite(message -> message.setDataHandler(dh));
     }
 
     @Override
     public void setContent(Object o, String type) throws MessagingException {
-        getWrappedMessageForWriting().setContent(o, type);
+        wrapWrite(message -> message.setContent(o, type));
     }
 
     @Override
     public void setText(String text) throws MessagingException {
-        getWrappedMessageForWriting().setText(text);
+        wrapWrite(message -> message.setText(text));
     }
 
     @Override
     public void setText(String text, String charset) throws MessagingException {
-        getWrappedMessageForWriting().setText(text, charset);
+        wrapWrite(message -> message.setText(text, charset));
     }
 
     @Override
     public void setContent(Multipart mp) throws MessagingException {
-        getWrappedMessageForWriting().setContent(mp);
+        wrapWrite(message -> message.setContent(mp));
     }
 
     /**
@@ -480,37 +627,37 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
      */
     @Override
     public Message reply(boolean replyToAll) throws MessagingException {
-        return getWrappedMessage().reply(replyToAll);
+        return wrapRead(message -> message.reply(replyToAll));
     }
 
     @Override
     public void setHeader(String name, String value) throws MessagingException {
-        getWrappedMessageForWriting().setHeader(name, value);
+        wrapWrite(message -> message.setHeader(name, value));
     }
 
     @Override
     public void addHeader(String name, String value) throws MessagingException {
-        getWrappedMessageForWriting().addHeader(name, value);
+        wrapWrite(message -> message.addHeader(name, value));
     }
 
     @Override
     public void removeHeader(String name) throws MessagingException {
-        getWrappedMessageForWriting().removeHeader(name);
+        wrapWrite(message -> message.removeHeader(name));
     }
 
     @Override
     public void addHeaderLine(String line) throws MessagingException {
-        getWrappedMessageForWriting().addHeaderLine(line);
+        wrapWrite(message -> message.addHeaderLine(line));
     }
 
     @Override
     public void setFlags(Flags flag, boolean set) throws MessagingException {
-        getWrappedMessageForWriting().setFlags(flag, set);
+        wrapWrite(message -> message.setFlags(flags, set));
     }
 
     @Override
     public void saveChanges() throws MessagingException {
-        getWrappedMessageForWriting().saveChanges();
+        wrapWrite(MimeMessage::saveChanges);
     }
 
     /*
@@ -519,30 +666,30 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
 
     @Override
     public void addRecipients(Message.RecipientType type, String addresses) throws MessagingException {
-        getWrappedMessageForWriting().addRecipients(type, addresses);
+        wrapWrite(message -> message.addRecipients(type, addresses));
     }
 
     @Override
     public void setRecipients(Message.RecipientType type, String addresses) throws MessagingException {
-        getWrappedMessageForWriting().setRecipients(type, addresses);
+        wrapWrite(message -> message.setRecipients(type, addresses));
     }
 
     @Override
     public void setSender(Address arg0) throws MessagingException {
-        getWrappedMessageForWriting().setSender(arg0);
+        wrapWrite(message -> message.setSender(arg0));
     }
 
     public void addRecipient(RecipientType arg0, Address arg1) throws MessagingException {
-        getWrappedMessageForWriting().addRecipient(arg0, arg1);
+        wrapWrite(message -> message.addRecipient(arg0, arg1));
     }
 
     @Override
     public void setFlag(Flag arg0, boolean arg1) throws MessagingException {
-        getWrappedMessageForWriting().setFlag(arg0, arg1);
+        wrapWrite(message -> message.setFlag(arg0, arg1));
     }
 
     public long getMessageSize() throws MessagingException {
-        return MimeMessageUtil.getMessageSize(getWrappedMessage());
+        return wrapRead(MimeMessageUtil::getMessageSize);
     }
 
     /**
@@ -550,7 +697,56 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
      */
     @Override
     public void setText(String text, String charset, String subtype) throws MessagingException {
-        getWrappedMessage().setText(text, charset, subtype);
+        wrapWrite(message -> message.setText(text, charset, subtype));
     }
 
+    private void wrapWrite(Write op) throws MessagingException {
+        ReentrantReadWriteLock.WriteLock lock = readWriteLock.writeLock();
+        lock.lock();
+        try {
+            refCount = refCount.wrapWrite(op);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private void wrapWriteIO(WriteIO op) throws MessagingException, IOException {
+        ReentrantReadWriteLock.WriteLock lock = readWriteLock.writeLock();
+        lock.lock();
+        try {
+            refCount = refCount.wrapWriteIO(op);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private <T> T wrapRead(Read<T> op) throws MessagingException {
+        ReentrantReadWriteLock.ReadLock lock = readWriteLock.readLock();
+        lock.lock();
+        try {
+            return refCount.wrapRead(op);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private <T> T wrapReadIO(ReadIO<T> op) throws MessagingException, IOException {
+        ReentrantReadWriteLock.ReadLock lock = readWriteLock.readLock();
+        lock.lock();
+        try {
+            return refCount.wrapReadIO(op);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private <T> T wrapReadNoException(Function<MimeMessage, T> op) {
+        ReentrantReadWriteLock.ReadLock lock = readWriteLock.readLock();
+        lock.lock();
+        try {
+            return refCount.wrapReadNoException(op);
+        } finally {
+            lock.unlock();
+        }
+    }
 }

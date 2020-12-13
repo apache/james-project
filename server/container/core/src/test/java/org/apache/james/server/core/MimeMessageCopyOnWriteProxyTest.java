@@ -33,7 +33,6 @@ import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.mailet.Mail;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
@@ -231,7 +230,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
                 new SharedByteArrayInputStream(("Return-path: return@test.com\r\n" + "Content-Transfer-Encoding: plain\r\n" + "Subject: test\r\n\r\n" + "Body Text testNPE1\r\n")
                         .getBytes())));
 
-        MimeMessageCopyOnWriteProxy mw2 = new MimeMessageCopyOnWriteProxy(mw);
+        MimeMessageCopyOnWriteProxy mw2 = MimeMessageCopyOnWriteProxy.fromMimeMessage(mw);
         LifecycleUtil.dispose(mw2);
         mw2 = null;
         System.gc();
@@ -241,7 +240,6 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         LifecycleUtil.dispose(mw);
     }
 
-    @Disabled("JAMES-3477 MimeMessageCopyOnWriteProxy is not thread safe")
     @Test
     void testNPE2() throws MessagingException, InterruptedException, ExecutionException {
         MimeMessageCopyOnWriteProxy mw = new MimeMessageCopyOnWriteProxy(new MimeMessageInputStreamSource("test",
@@ -251,13 +249,13 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         ConcurrentTestRunner
                 .builder()
                 .operation((threadNumber, step) -> {
-                    switch (step % 3) {
+                    switch ((step + threadNumber) % 3) {
                         case 0:
-                            mw.setSubject(String.valueOf(threadNumber) + "-" + step);
+                            mw.setSubject(threadNumber + "-" + step);
                             break;
                         case 1:
-                            MimeMessageCopyOnWriteProxy mw2 = new MimeMessageCopyOnWriteProxy(mw);
-                            mw2.setSubject(String.valueOf(threadNumber) + "-" + step);
+                            MimeMessageCopyOnWriteProxy mw2 = MimeMessageCopyOnWriteProxy.fromMimeMessage(mw);
+                            mw2.setSubject(threadNumber + "-" + step);
                             LifecycleUtil.dispose(mw2);
                             break;
                         case 2:
@@ -266,7 +264,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
                     }
                 })
                 .threadCount(8)
-                .operationCount(1000)
+                .operationCount(10000)
                 .runSuccessfullyWithin(Duration.ofMinutes(1));
     }
 
@@ -278,7 +276,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
     void testMessageCloningViaCoW3() throws Exception {
         MimeMessage mmorig = getSimpleMessage();
 
-        MimeMessage mm = new MimeMessageCopyOnWriteProxy(mmorig);
+        MimeMessage mm = MimeMessageCopyOnWriteProxy.fromMimeMessage(mmorig);
 
         LifecycleUtil.dispose(mmorig);
         mmorig = null;
