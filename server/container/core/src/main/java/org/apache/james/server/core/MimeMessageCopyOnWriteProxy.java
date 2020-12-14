@@ -82,7 +82,7 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
         /**
          * reference counter
          */
-        private int referenceCount = 1;
+        private volatile int referenceCount = 1;
 
         /**
          * The mime message in memory
