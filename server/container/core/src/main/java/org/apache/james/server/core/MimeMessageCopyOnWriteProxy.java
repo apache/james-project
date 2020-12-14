@@ -75,7 +75,7 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
      * Used internally to track the reference count It is important that this is
      * static otherwise it will keep a reference to the parent object.
      */
-    protected static class MessageReferenceTracker {
+    private static class MessageReferenceTracker {
 
         private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
@@ -89,11 +89,11 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
          */
         private MimeMessage wrapped = null;
 
-        public MessageReferenceTracker(MimeMessage ref) {
+        private MessageReferenceTracker(MimeMessage ref) {
             wrapped = ref;
         }
 
-        protected void dispose() {
+        private void dispose() {
             ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
             writeLock.lock();
             try {
@@ -107,7 +107,7 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
             }
         }
 
-        protected void incrementReferences() {
+        private void incrementReferences() {
             ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
             writeLock.lock();
             try {
@@ -117,7 +117,7 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
             }
         }
 
-        protected <T> T wrapRead(Read<T> op) throws MessagingException {
+        private <T> T wrapRead(Read<T> op) throws MessagingException {
             ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
             readLock.lock();
             try {
@@ -128,7 +128,7 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
             }
         }
 
-        protected <T> T wrapReadIO(ReadIO<T> op) throws MessagingException, IOException {
+        private <T> T wrapReadIO(ReadIO<T> op) throws MessagingException, IOException {
             ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
             readLock.lock();
             try {
@@ -139,7 +139,7 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
             }
         }
 
-        protected <T> T wrapReadNoException(Function<MimeMessage, T> op) {
+        private <T> T wrapReadNoException(Function<MimeMessage, T> op) {
             ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
             readLock.lock();
             try {
@@ -150,7 +150,7 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
             }
         }
 
-        protected MessageReferenceTracker wrapWrite(Write op) throws MessagingException {
+        private MessageReferenceTracker wrapWrite(Write op) throws MessagingException {
             ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
             writeLock.lock();
             try {
@@ -169,7 +169,7 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
             }
         }
 
-        protected MessageReferenceTracker wrapWriteIO(WriteIO op) throws MessagingException, IOException {
+        private MessageReferenceTracker wrapWriteIO(WriteIO op) throws MessagingException, IOException {
             ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
             writeLock.lock();
             try {
@@ -192,7 +192,7 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
             return wrapped;
         }
 
-        protected MessageReferenceTracker newRef() {
+        private MessageReferenceTracker newRef() {
             ReentrantReadWriteLock.WriteLock lock = this.lock.writeLock();
             lock.lock();
             try {
