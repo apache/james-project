@@ -73,8 +73,6 @@ Note: the command line before ENTITY will be documented as {cli}.
    - [Delete a mailbox and its children](#delete-a-mailbox-and-its-children)
    - [Delete all mailboxes of a user](#delete-all-mailboxes-of-a-user)
    - [Get mailboxes list](#get-mailboxes-list)
-   - [Reindex a user mailboxes](#reindex-a-user-mailboxes)
-   - [Reindex all users mailboxes](#reindex-all-users-mailboxes)
 - [Manage Domain Mappings](#manage-domain-mappings)
    - [Listing all domain mappings](#listing-all-domain-mappings)
    - [Listing all destination domains for a source domain](#listing-all-destination-domains-for-a-source-domain)
@@ -236,24 +234,6 @@ Resource name usernameToBeUsed should be an existing user
 ```
 
 Resource name usernameToBeUsed should be an existing user
-
-### Reindex a user mailboxes
-
-```
-{cli} mailbox reindex <usernameToBeUsed>
-```
-
-Will schedule a task for reIndexing all the mails in “usernameToBeUsed” mailboxes.
-
-Resource name usernameToBeUsed should be an existing user
-
-### Reindex all users mailboxes
-
-```
-{cli} mailbox reindexAll
-```
-
-Will schedule a task for reIndexing all the mails stored on this James server.
 
 ## Manage Domain Mappings
 

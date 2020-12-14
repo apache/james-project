@@ -50,7 +50,7 @@ public class MailboxCreateCommand implements Callable<Integer> {
             MailboxClient mailboxClient = mailboxCommand.fullyQualifiedURL("/users");
             Response rs = mailboxClient.createAMailbox(userName, mailboxName);
             if (rs.status() == CREATED_CODE) {
-                mailboxCommand.out.println("The mailbox now exists on the server.");
+                mailboxCommand.out.println("The mailbox was created successfully.");
                 return WebAdminCli.CLI_FINISHED_SUCCEED;
             } else if (rs.status() == BAD_REQUEST_CODE) {
                 mailboxCommand.err.println(rs.body());

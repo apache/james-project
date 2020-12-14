@@ -70,7 +70,7 @@ public class MailboxManageTest {
             "--url", "http://127.0.0.1:" + port.getValue(), "mailbox", "exist", "hqtran@linagora.com", "INBOX");
 
         assertThat(exitCode).isEqualTo(0);
-        assertThat(outputStreamCaptor.toString().trim()).isEqualTo("The mailbox now exists on the server.\n" +
+        assertThat(outputStreamCaptor.toString().trim()).isEqualTo("The mailbox was created successfully.\n" +
             "The mailbox exists.");
     }
 
@@ -108,7 +108,7 @@ public class MailboxManageTest {
 
         assertThat(exitCode).isEqualTo(0);
         assertThat(exitCode2).isEqualTo(0);
-        assertThat(outputStreamCaptor.toString().trim()).isEqualTo("The mailbox now exists on the server.");
+        assertThat(outputStreamCaptor.toString().trim()).isEqualTo("The mailbox was created successfully.");
     }
 
     @Test
@@ -235,7 +235,8 @@ public class MailboxManageTest {
                 "--url", "http://127.0.0.1:" + port.getValue(), "mailbox", "list", "hqtran@linagora.com");
 
         assertThat(exitCode).isEqualTo(0);
-        assertThat(outputStreamCaptor.toString().trim()).isEqualTo("The mailbox now does not exist on the server.");
+        // The outputStreamCaptor should capture the result of delete command and the result of list command(which is nothing)
+        assertThat(outputStreamCaptor.toString()).isEqualTo("The mailbox now does not exist on the server.\n");
     }
 
     @Test
@@ -291,7 +292,8 @@ public class MailboxManageTest {
                 "--url", "http://127.0.0.1:" + port.getValue(), "mailbox", "list", "hqtran@linagora.com");
 
         assertThat(exitCode).isEqualTo(0);
-        assertThat(outputStreamCaptor.toString().trim()).isEqualTo("The user do not have mailboxes anymore.");
+        // The outputStreamCaptor should capture the result of deleteAll command and the result of list command(which is nothing)
+        assertThat(outputStreamCaptor.toString()).isEqualTo("The user do not have mailboxes anymore.\n");
     }
 
     @Test
