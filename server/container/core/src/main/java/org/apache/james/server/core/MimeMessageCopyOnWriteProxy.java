@@ -193,8 +193,8 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
         }
 
         private MessageReferenceTracker newRef() {
-            ReentrantReadWriteLock.WriteLock lock = this.lock.writeLock();
-            lock.lock();
+            ReentrantReadWriteLock.WriteLock writeLock = this.lock.writeLock();
+            writeLock.lock();
             try {
                 if (referenceCount > 0) {
                     referenceCount++;
@@ -203,7 +203,7 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
                 }
                 throw new IllegalStateException("Message was disposed so new refs cannot be obtained");
             } finally {
-                lock.unlock();
+                writeLock.unlock();
             }
         }
     }
@@ -232,9 +232,9 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
 
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
-    protected MessageReferenceTracker refCount;
+    private MessageReferenceTracker refCount;
 
-    public MimeMessageCopyOnWriteProxy(MimeMessage original, boolean originalIsAReference) {
+    private MimeMessageCopyOnWriteProxy(MimeMessage original, boolean originalIsAReference) {
         super(Session.getDefaultInstance(System.getProperties(), null));
 
         if (original instanceof MimeMessageCopyOnWriteProxy) {
@@ -333,13 +333,7 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
 
     @Override
     public String getSubject() throws MessagingException {
-        ReentrantReadWriteLock.ReadLock lock = readWriteLock.readLock();
-        lock.lock();
-        try {
-            return wrapRead(MimeMessage::getSubject);
-        } finally {
-            lock.unlock();
-        }
+        return wrapRead(MimeMessage::getSubject);
     }
 
     @Override
@@ -554,13 +548,7 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
 
     @Override
     public void setSubject(String subject) throws MessagingException {
-        ReentrantReadWriteLock.WriteLock lock = readWriteLock.writeLock();
-        lock.lock();
-        try {
-            wrapWrite(message -> message.setSubject(subject));
-        } finally {
-            lock.unlock();
-        }
+        wrapWrite(message -> message.setSubject(subject));
     }
 
     @Override
