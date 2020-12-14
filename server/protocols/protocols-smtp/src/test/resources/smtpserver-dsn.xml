@@ -39,7 +39,7 @@
         <addressBracketsEnforcement>true</addressBracketsEnforcement>
         <smtpGreeting>Apache JAMES awesome SMTP Server</smtpGreeting>
         <handlerchain>
-            <handler class="org.apache.james.smtpserver.dsn.DSNHeloHook"/>
+            <handler class="org.apache.james.smtpserver.dsn.DSNEhloHook"/>
             <handler class="org.apache.james.smtpserver.dsn.DSNMailParameterHook"/>
             <handler class="org.apache.james.smtpserver.dsn.DSNRcptParameterHook"/>
             <handler class="org.apache.james.smtpserver.dsn.DSNMessageHook"/>
