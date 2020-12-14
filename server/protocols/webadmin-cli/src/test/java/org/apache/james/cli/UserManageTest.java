@@ -33,6 +33,7 @@ import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -49,11 +50,16 @@ public class UserManageTest {
     private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
     private final ByteArrayOutputStream errorStreamCaptor = new ByteArrayOutputStream();
     private DataProbeImpl dataProbe;
+    private Port port;
+
+    @BeforeEach
+    void setUp(GuiceJamesServer server) {
+        port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
+        dataProbe = server.getProbe(DataProbeImpl.class);
+    }
 
     @Test
-    void userListShouldBeEmptyWhenNoUsers(GuiceJamesServer server) {
-        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
-
+    void userListShouldBeEmptyWhenNoUsers() {
         int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
             "--url", "http://127.0.0.1:" + port.getValue(), "user", "list");
 
@@ -62,9 +68,7 @@ public class UserManageTest {
     }
 
     @Test
-    void userListShouldShowTwoAddedUser(GuiceJamesServer server) throws Exception {
-        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
-        dataProbe = server.getProbe(DataProbeImpl.class);
+    void userListShouldShowTwoAddedUser() throws Exception {
         dataProbe.fluent().addDomain("linagora.com")
             .addUser("hqtran@linagora.com", "123456")
             .addUser("testing@linagora.com", "123456");
@@ -77,9 +81,7 @@ public class UserManageTest {
     }
 
     @Test
-    void userCreateShouldAddValidUserSucceed(GuiceJamesServer server) throws Exception {
-        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
-        dataProbe = server.getProbe(DataProbeImpl.class);
+    void userCreateWithoutForceShouldAddValidUserSucceed() throws Exception {
         dataProbe.fluent().addDomain("linagora.com");
 
         int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
@@ -91,27 +93,49 @@ public class UserManageTest {
     }
 
     @Test
-    void userCreateShouldFailWithInvalidUsername(GuiceJamesServer server) throws Exception {
-        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
-        dataProbe = server.getProbe(DataProbeImpl.class);
-        dataProbe.fluent().addDomain("linagora.com");
-
+    void userCreateShouldFailWithInvalidUsername() throws Exception {
         int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
-            "--url", "http://127.0.0.1:" + port.getValue(), "user", "create", "hq/tran@linagora.com", "--password", "123456");
+            "--url", "http://127.0.0.1:" + port.getValue(), "user", "create", "hqtran@linagora.com", "--password", "123456");
 
         int exitCode1 = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
-            "--url", "http://127.0.0.1:" + port.getValue(), "user", "create", "hqtran@google.com", "--password", "123456");
+            "--url", "http://127.0.0.1:" + port.getValue(), "user", "create", "--force", "hqtran@linagora.com", "--password", "123456");
 
         assertThat(exitCode).isEqualTo(1);
         assertThat(exitCode1).isEqualTo(1);
-        assertThat(outputStreamCaptor.toString().trim()).isEqualTo("The user name or the payload is invalid");
+        assertThat(errorStreamCaptor.toString().trim()).isEqualTo("The user name or the payload is invalid\nThe user name or the payload is invalid");
         assertThat(dataProbe.listUsers()).isEmpty();
     }
 
     @Test
-    void userDeleteWithAddedUserShouldSucceed(GuiceJamesServer server) throws Exception {
-        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
-        dataProbe = server.getProbe(DataProbeImpl.class);
+    void userCreateWithoutForceShouldNotAllowUpdateAUserPassword() throws Exception {
+        dataProbe.fluent().addDomain("linagora.com");
+
+        WebAdminCli.executeFluent(new PrintStream(new ByteArrayOutputStream()), new PrintStream(new ByteArrayOutputStream()),
+            "--url", "http://127.0.0.1:" + port.getValue(), "user", "create", "hqtran@linagora.com", "--password", "123456");
+
+        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
+            "--url", "http://127.0.0.1:" + port.getValue(), "user", "create", "hqtran@linagora.com", "--password", "123457");
+
+        assertThat(exitCode).isEqualTo(1);
+        assertThat(errorStreamCaptor.toString().trim()).isEqualTo("The user already exists");
+    }
+
+    @Test
+    void userCreateWithForceShouldAllowUpdateAUserPassword() throws Exception {
+        dataProbe.fluent().addDomain("linagora.com");
+
+        WebAdminCli.executeFluent(new PrintStream(new ByteArrayOutputStream()), new PrintStream(new ByteArrayOutputStream()),
+            "--url", "http://127.0.0.1:" + port.getValue(), "user", "create", "hqtran@linagora.com", "--password", "123456");
+
+        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
+            "--url", "http://127.0.0.1:" + port.getValue(), "user", "create", "--force", "hqtran@linagora.com", "--password", "123457");
+
+        assertThat(exitCode).isEqualTo(0);
+        assertThat(outputStreamCaptor.toString().trim()).isEqualTo("The user's password was successfully updated");
+    }
+
+    @Test
+    void userDeleteWithAddedUserShouldSucceed() throws Exception {
         dataProbe.fluent().addDomain("linagora.com")
             .addUser("hqtran@linagora.com", "123456");
 
@@ -123,10 +147,7 @@ public class UserManageTest {
     }
 
     @Test
-    void userDeleteWithNonExistingUserShouldSucceed(GuiceJamesServer server) throws Exception {
-        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
-        dataProbe = server.getProbe(DataProbeImpl.class);
-
+    void userDeleteWithNonExistingUserShouldSucceed() throws Exception {
         int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
             "--url", "http://127.0.0.1:" + port.getValue(), "user", "delete", "hqtran@linagora.com");
 
@@ -135,9 +156,7 @@ public class UserManageTest {
     }
 
     @Test
-    void userExistCommandWithNonExistingUserShouldFail(GuiceJamesServer server) {
-        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
-
+    void userExistCommandWithNonExistingUserShouldFail() {
         int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
             "--url", "http://127.0.0.1:" + port.getValue(), "user", "exist", "hqtran@linagora.com");
 
@@ -146,9 +165,7 @@ public class UserManageTest {
     }
 
     @Test
-    void userExistCommandWithInvalidUserNameShouldFail(GuiceJamesServer server) {
-        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
-
+    void userExistCommandWithInvalidUserNameShouldFail() {
         int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
             "--url", "http://127.0.0.1:" + port.getValue(), "user", "exist", "hqtran@@linagora.com");
 
@@ -165,9 +182,7 @@ public class UserManageTest {
     }
 
     @Test
-    void userExistCommandWithAddedUserShouldSucceed(GuiceJamesServer server) throws Exception {
-        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
-        dataProbe = server.getProbe(DataProbeImpl.class);
+    void userExistCommandWithAddedUserShouldSucceed() throws Exception {
         dataProbe.fluent().addDomain("linagora.com")
             .addUser("hqtran@linagora.com", "123456");
 
@@ -177,4 +192,5 @@ public class UserManageTest {
         assertThat(exitCode).isEqualTo(0);
         assertThat(outputStreamCaptor.toString().trim()).isEqualTo("hqtran@linagora.com exists");
     }
+
 }
