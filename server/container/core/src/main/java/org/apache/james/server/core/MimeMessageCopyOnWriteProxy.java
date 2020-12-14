@@ -94,8 +94,8 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
         }
 
         protected void dispose() {
-            ReentrantReadWriteLock.WriteLock lock = this.lock.writeLock();
-            lock.lock();
+            ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
+            writeLock.lock();
             try {
                 referenceCount--;
                 if (referenceCount <= 0) {
@@ -103,56 +103,56 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
                     wrapped = null;
                 }
             } finally {
-                lock.unlock();
+                writeLock.unlock();
             }
         }
 
         protected void incrementReferences() {
-            ReentrantReadWriteLock.WriteLock lock = this.lock.writeLock();
-            lock.lock();
+            ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
+            writeLock.lock();
             try {
                 referenceCount++;
             } finally {
-                lock.unlock();
+                writeLock.unlock();
             }
         }
 
         protected <T> T wrapRead(Read<T> op) throws MessagingException {
-            ReentrantReadWriteLock.ReadLock lock = this.lock.readLock();
-            lock.lock();
+            ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
+            readLock.lock();
             try {
                 Preconditions.checkState(referenceCount > 0, "Attempt to read a disposed message");
                 return op.read(wrapped);
             } finally {
-                lock.unlock();
+                readLock.unlock();
             }
         }
 
         protected <T> T wrapReadIO(ReadIO<T> op) throws MessagingException, IOException {
-            ReentrantReadWriteLock.ReadLock lock = this.lock.readLock();
-            lock.lock();
+            ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
+            readLock.lock();
             try {
                 Preconditions.checkState(referenceCount > 0, "Attempt to read a disposed message");
                 return op.read(wrapped);
             } finally {
-                lock.unlock();
+                readLock.unlock();
             }
         }
 
         protected <T> T wrapReadNoException(Function<MimeMessage, T> op) {
-            ReentrantReadWriteLock.ReadLock lock = this.lock.readLock();
-            lock.lock();
+            ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
+            readLock.lock();
             try {
                 Preconditions.checkState(referenceCount > 0, "Attempt to read a disposed message");
                 return op.apply(wrapped);
             } finally {
-                lock.unlock();
+                readLock.unlock();
             }
         }
 
         protected MessageReferenceTracker wrapWrite(Write op) throws MessagingException {
-            ReentrantReadWriteLock.WriteLock lock = this.lock.writeLock();
-            lock.lock();
+            ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
+            writeLock.lock();
             try {
                 Preconditions.checkState(referenceCount > 0, "Attempt to write a disposed message");
                 if (referenceCount > 1) {
@@ -165,13 +165,13 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
                     return this;
                 }
             } finally {
-                lock.unlock();
+                writeLock.unlock();
             }
         }
 
         protected MessageReferenceTracker wrapWriteIO(WriteIO op) throws MessagingException, IOException {
-            ReentrantReadWriteLock.WriteLock lock = this.lock.writeLock();
-            lock.lock();
+            ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
+            writeLock.lock();
             try {
                 Preconditions.checkState(referenceCount > 0, "Attempt to write a disposed message");
                 if (referenceCount > 1) {
@@ -184,7 +184,7 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
                     return this;
                 }
             } finally {
-                lock.unlock();
+                writeLock.unlock();
             }
         }
 
@@ -261,26 +261,26 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
     }
 
     public MessageReferenceTracker newRef() {
-        ReentrantReadWriteLock.WriteLock lock = readWriteLock.writeLock();
-        lock.lock();
+        ReentrantReadWriteLock.WriteLock writeLock = readWriteLock.writeLock();
+        writeLock.lock();
         try {
             return refCount.newRef();
         } finally {
-            lock.unlock();
+            writeLock.unlock();
         }
     }
 
     @Override
     public void dispose() {
-        ReentrantReadWriteLock.WriteLock lock = readWriteLock.writeLock();
-        lock.lock();
+        ReentrantReadWriteLock.WriteLock writeLock = readWriteLock.writeLock();
+        writeLock.lock();
         try {
             if (refCount != null) {
                 refCount.dispose();
                 refCount = null;
             }
         } finally {
-            lock.unlock();
+            writeLock.unlock();
         }
     }
 
@@ -712,52 +712,52 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
     }
 
     private void wrapWrite(Write op) throws MessagingException {
-        ReentrantReadWriteLock.WriteLock lock = readWriteLock.writeLock();
-        lock.lock();
+        ReentrantReadWriteLock.WriteLock writeLock = readWriteLock.writeLock();
+        writeLock.lock();
         try {
             refCount = refCount.wrapWrite(op);
         } finally {
-            lock.unlock();
+            writeLock.unlock();
         }
     }
 
     private void wrapWriteIO(WriteIO op) throws MessagingException, IOException {
-        ReentrantReadWriteLock.WriteLock lock = readWriteLock.writeLock();
-        lock.lock();
+        ReentrantReadWriteLock.WriteLock writeLock = readWriteLock.writeLock();
+        writeLock.lock();
         try {
             refCount = refCount.wrapWriteIO(op);
         } finally {
-            lock.unlock();
+            writeLock.unlock();
         }
     }
 
     private <T> T wrapRead(Read<T> op) throws MessagingException {
-        ReentrantReadWriteLock.ReadLock lock = readWriteLock.readLock();
-        lock.lock();
+        ReentrantReadWriteLock.ReadLock readLock = readWriteLock.readLock();
+        readLock.lock();
         try {
             return refCount.wrapRead(op);
         } finally {
-            lock.unlock();
+            readLock.unlock();
         }
     }
 
     private <T> T wrapReadIO(ReadIO<T> op) throws MessagingException, IOException {
-        ReentrantReadWriteLock.ReadLock lock = readWriteLock.readLock();
-        lock.lock();
+        ReentrantReadWriteLock.ReadLock readLock = readWriteLock.readLock();
+        readLock.lock();
         try {
             return refCount.wrapReadIO(op);
         } finally {
-            lock.unlock();
+            readLock.unlock();
         }
     }
 
     private <T> T wrapReadNoException(Function<MimeMessage, T> op) {
-        ReentrantReadWriteLock.ReadLock lock = readWriteLock.readLock();
-        lock.lock();
+        ReentrantReadWriteLock.ReadLock readLock = readWriteLock.readLock();
+        readLock.lock();
         try {
             return refCount.wrapReadNoException(op);
         } finally {
-            lock.unlock();
+            readLock.unlock();
         }
     }
 }
