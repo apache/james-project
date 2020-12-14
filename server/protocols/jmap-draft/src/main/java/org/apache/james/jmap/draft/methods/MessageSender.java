@@ -72,14 +72,7 @@ public class MessageSender {
 
     private static MimeMessage toMimeMessage(String name, InputStream inputStream) throws MessagingException {
         MimeMessageSource source = new MimeMessageInputStreamSource(name, inputStream);
-        // if MimeMessageCopyOnWriteProxy throws an error in the constructor we
-        // have to manually care disposing our source.
-        try {
-            return new MimeMessageCopyOnWriteProxy(source);
-        } catch (MessagingException e) {
-            LifecycleUtil.dispose(source);
-            throw e;
-        }
+        return new MimeMessageCopyOnWriteProxy(source);
     }
 
     public void sendMessage(MessageId messageId,
