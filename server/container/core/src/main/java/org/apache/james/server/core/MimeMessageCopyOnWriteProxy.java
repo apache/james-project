@@ -110,11 +110,8 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
         private void incrementReferences() {
             ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
             writeLock.lock();
-            try {
-                referenceCount++;
-            } finally {
-                writeLock.unlock();
-            }
+            referenceCount++;
+            writeLock.unlock();
         }
 
         private <T> T wrapRead(Read<T> op) throws MessagingException {
