@@ -27,6 +27,8 @@ import java.io.InputStream;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.github.fge.lambdas.Throwing;
+
 /**
  * Provide an {@link InputStream} over an {@link MimeMessage}
  */
@@ -46,28 +48,27 @@ public class MimeMessageInputStream extends InputStream {
      * @throws MessagingException
      */
     public MimeMessageInputStream(MimeMessage message, boolean tryCast) throws MessagingException {
-        MimeMessage m = message;
-
-        // check if we need to use the wrapped message
-        if (tryCast && m instanceof MimeMessageCopyOnWriteProxy) {
-            m = ((MimeMessageCopyOnWriteProxy) m).getWrappedMessage();
-        }
-
         // check if we can use optimized operations
-        if (tryCast && m instanceof MimeMessageWrapper) {
-            in = ((MimeMessageWrapper) m).getMessageInputStream();
+        if (tryCast && message instanceof MimeMessageCopyOnWriteProxy) {
+            MimeMessageCopyOnWriteProxy proy = (MimeMessageCopyOnWriteProxy) message;
+            in = proy.getWrappedInputStream(tryCast)
+                .orElseGet(Throwing.supplier(() -> copy(message)).sneakyThrow());
+        } else if (tryCast && message instanceof MimeMessageWrapper) {
+            MimeMessageWrapper messageWrapper = (MimeMessageWrapper) message;
+            in = messageWrapper.getMessageInputStream();
         } else {
-
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            try {
-                message.writeTo(out);
-                in = new ByteArrayInputStream(out.toByteArray());
-            } catch (IOException e1) {
-                throw new MessagingException("Unable to read message " + message, e1);
-            }
-
+            in = copy(message);
         }
+    }
 
+    private InputStream copy(MimeMessage message) throws MessagingException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            message.writeTo(out);
+            return new ByteArrayInputStream(out.toByteArray());
+        } catch (IOException e1) {
+            throw new MessagingException("Unable to read message " + message, e1);
+        }
     }
 
     /**

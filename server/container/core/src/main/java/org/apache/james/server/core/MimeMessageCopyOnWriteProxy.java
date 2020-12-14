@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.Optional;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
@@ -303,6 +304,16 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
     @Override
     public Address[] getFrom() throws MessagingException {
         return wrapRead(MimeMessage::getFrom);
+    }
+
+    public Optional<InputStream> getWrappedInputStream(boolean tryCast) throws MessagingException {
+        return wrapRead(message -> {
+            if (tryCast && message instanceof MimeMessageWrapper) {
+                MimeMessageWrapper messageWrapper = (MimeMessageWrapper) message;
+                return Optional.ofNullable(messageWrapper.getMessageInputStream());
+            }
+            return Optional.empty();
+        });
     }
 
     @Override
