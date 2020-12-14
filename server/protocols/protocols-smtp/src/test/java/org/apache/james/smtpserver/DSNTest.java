@@ -39,6 +39,7 @@ import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
@@ -107,10 +108,8 @@ public class DSNTest {
             .registerMxRecord(LOCAL_DOMAIN, "127.0.0.1")
             .registerMxRecord("examplebis.local", "127.0.0.1")
             .registerMxRecord("127.0.0.1", "127.0.0.1"));
-        domainList.setAutoDetect(false);
-        domainList.setAutoDetectIP(false);
+        domainList.configure(DomainListConfiguration.DEFAULT);
 
-        domainList.addDomain(Domain.LOCALHOST);
         domainList.addDomain(Domain.of(LOCAL_DOMAIN));
         domainList.addDomain(Domain.of("examplebis.local"));
         usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
