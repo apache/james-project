@@ -30,6 +30,7 @@ import eu.timepit.refined.refineV
 import eu.timepit.refined.string.Uuid
 import org.apache.james.core.Username
 import org.apache.james.jmap.api.change.MailboxChanges
+import org.apache.james.jmap.api.change.MailboxChange.{State => JavaState}
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.State.INSTANCE
@@ -79,11 +80,13 @@ final case class Account private(accountId: AccountId,
 object State {
   type UUIDString = String Refined Uuid
 
-  val INSTANCE: State = fromString("2c9f1b12-b35a-43e6-9af2-0106fb53a943")
+  val INSTANCE: State = fromJava(JavaState.INITIAL)
 
   def fromString(value: UUIDString): State = State(UUID.fromString(value.value))
 
-  def fromMailboxChanges(mailboxChanges: MailboxChanges): State = State(mailboxChanges.getNewState.getValue)
+  def fromMailboxChanges(mailboxChanges: MailboxChanges): State = fromJava(mailboxChanges.getNewState)
+
+  def fromJava(javaState: JavaState): State = State(javaState.getValue)
 }
 
 case class State(value: UUID)

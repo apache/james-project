@@ -39,8 +39,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MemoryMailboxChangeRepository implements MailboxChangeRepository {
-
     public static final Limit DEFAULT_NUMBER_OF_CHANGES = Limit.of(5);
+
     private final Multimap<AccountId, MailboxChange> mailboxChangeMap;
 
     public MemoryMailboxChangeRepository() {
@@ -60,6 +60,11 @@ public class MemoryMailboxChangeRepository implements MailboxChangeRepository {
         Preconditions.checkNotNull(accountId);
         Preconditions.checkNotNull(state);
         maxChanges.ifPresent(limit -> Preconditions.checkArgument(limit.getValue() > 0, "maxChanges must be a positive integer"));
+        if (state.equals(State.INITIAL)) {
+            return Flux.fromIterable(mailboxChangeMap.get(accountId))
+                .sort(Comparator.comparing(MailboxChange::getDate))
+                .collect(new MailboxChangeCollector(state, maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
+        }
 
         return findByState(accountId, state)
             .flatMapMany(currentState -> Flux.fromIterable(mailboxChangeMap.get(accountId))

@@ -128,6 +128,42 @@ public interface MailboxChangeRepositoryContract {
     }
 
     @Test
+    default void getChangesShouldReturnAllFromInitial() {
+        MailboxChangeRepository repository = mailboxChangeRepository();
+
+        MailboxChange oldState = MailboxChange.of(ACCOUNT_ID, STATE_0, DATE.minusHours(3), ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange change1 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(2), ImmutableList.of(TestId.of(2)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange change2 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(1), ImmutableList.of(TestId.of(3)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange change3 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE, ImmutableList.of(TestId.of(4)), ImmutableList.of(), ImmutableList.of());
+        repository.save(oldState);
+        repository.save(change1);
+        repository.save(change2);
+        repository.save(change3);
+
+        assertThat(repository.getSinceState(ACCOUNT_ID, State.INITIAL, Optional.of(Limit.of(3))).block().getCreated())
+            .containsExactlyInAnyOrder(TestId.of(1), TestId.of(2), TestId.of(3));
+    }
+
+    @Test
+    default void getChangesFromInitialShouldReturnNewState() {
+        MailboxChangeRepository repository = mailboxChangeRepository();
+
+        MailboxChange oldState = MailboxChange.of(ACCOUNT_ID, STATE_0, DATE.minusHours(3), ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange change1 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(2), ImmutableList.of(TestId.of(2)), ImmutableList.of(), ImmutableList.of());
+        State state2 = State.of(UUID.randomUUID());
+        MailboxChange change2 = MailboxChange.of(ACCOUNT_ID, state2, DATE.minusHours(1), ImmutableList.of(TestId.of(3)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange change3 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE, ImmutableList.of(TestId.of(4)), ImmutableList.of(), ImmutableList.of());
+        repository.save(oldState);
+        repository.save(change1);
+        repository.save(change2);
+        repository.save(change3);
+
+
+        assertThat(repository.getSinceState(ACCOUNT_ID, State.INITIAL, Optional.of(Limit.of(3))).block().getNewState())
+            .isEqualTo(state2);
+    }
+
+    @Test
     default void getChangesShouldLimitChangesWhenMaxChangesOmitted() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 

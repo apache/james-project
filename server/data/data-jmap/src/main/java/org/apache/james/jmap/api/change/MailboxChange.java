@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableList;
 public class MailboxChange {
 
     public static class State {
+        public static State INITIAL = of(UUID.fromString("2c9f1b12-b35a-43e6-9af2-0106fb53a943"));
 
         public static State of(UUID value) {
             return new State(value);
