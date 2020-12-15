@@ -21,10 +21,12 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
+import org.apache.james.jmap.api.change.MailboxChangeRepository
+import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.State.INSTANCE
-import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, Properties}
+import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, Properties, State}
 import org.apache.james.jmap.http.MailboxesProvisioner
 import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
@@ -54,9 +56,9 @@ object MailboxGetResults {
 case class MailboxGetResults(mailboxes: Set[Mailbox], notFound: NotFound) {
   def merge(other: MailboxGetResults): MailboxGetResults = MailboxGetResults(this.mailboxes ++ other.mailboxes, this.notFound.merge(other.notFound))
 
-  def asResponse(accountId: AccountId): MailboxGetResponse = MailboxGetResponse(
+  def asResponse(accountId: AccountId, state: State): MailboxGetResponse = MailboxGetResponse(
     accountId = accountId,
-    state = INSTANCE,
+    state = state,
     list = mailboxes.toList.sortBy(_.sortOrder),
     notFound = notFound)
 }
@@ -68,6 +70,7 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
                                   mailboxIdFactory: MailboxId.Factory,
                                   mailboxFactory: MailboxFactory,
                                   provisioner: MailboxesProvisioner,
+                                  mailboxChangeRepository: MailboxChangeRepository,
                                   val metricFactory: MetricFactory,
                                   val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[MailboxGetRequest] {
   override val methodName: MethodName = MethodName("Mailbox/get")
@@ -78,7 +81,8 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
     (requestedProperties -- Mailbox.allProperties match {
       case invalidProperties if invalidProperties.isEmpty() => getMailboxes(capabilities, request, mailboxSession)
         .reduce(MailboxGetResults.empty(), MailboxGetResults.merge)
-        .map(mailboxes => mailboxes.asResponse(request.accountId))
+        .flatMap(mailboxes => SMono(mailboxChangeRepository.getLatestState(JavaAccountId.fromUsername(mailboxSession.getUser)))
+          .map(state => mailboxes.asResponse(request.accountId, State.fromJava(state))))
         .map(mailboxGetResponse => Invocation(
           methodName = methodName,
           arguments = Arguments(serializer.serialize(mailboxGetResponse, requestedProperties, capabilities).as[JsObject]),

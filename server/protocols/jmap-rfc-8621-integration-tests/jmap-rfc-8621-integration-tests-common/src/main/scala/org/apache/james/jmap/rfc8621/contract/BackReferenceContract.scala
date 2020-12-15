@@ -89,7 +89,9 @@ trait BackReferenceContract {
       .body()
       .asString()
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state", "methodResponses[1][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -114,7 +116,6 @@ trait BackReferenceContract {
          |            "Mailbox/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {"id": "1"},
          |                    {"id": "5"},
@@ -168,7 +169,9 @@ trait BackReferenceContract {
       .body()
       .asString()
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -176,7 +179,6 @@ trait BackReferenceContract {
          |            "Mailbox/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {"id": "1"},
          |                    {"id": "5"},
@@ -238,7 +240,9 @@ trait BackReferenceContract {
       .body()
       .asString()
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -246,7 +250,6 @@ trait BackReferenceContract {
          |            "Mailbox/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {"id": "1"},
          |                    {"id": "5"},
@@ -308,7 +311,9 @@ trait BackReferenceContract {
       .body()
       .asString()
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -316,7 +321,6 @@ trait BackReferenceContract {
          |            "Mailbox/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {"id": "1"},
          |                    {"id": "5"},
@@ -378,7 +382,9 @@ trait BackReferenceContract {
       .body()
       .asString()
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -386,7 +392,6 @@ trait BackReferenceContract {
          |            "Mailbox/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {"id": "1"},
          |                    {"id": "5"},
