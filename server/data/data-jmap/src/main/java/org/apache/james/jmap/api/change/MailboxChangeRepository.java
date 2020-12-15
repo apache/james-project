@@ -32,4 +32,6 @@ public interface MailboxChangeRepository {
     Mono<Void> save(MailboxChange change);
 
     Mono<MailboxChanges> getSinceState(AccountId accountId, State state, Optional<Limit> maxIdsToReturn);
+
+    Mono<State> getLatestState(AccountId accountId);
 }

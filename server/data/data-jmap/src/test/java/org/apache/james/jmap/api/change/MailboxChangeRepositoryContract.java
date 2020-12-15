@@ -56,6 +56,29 @@ public interface MailboxChangeRepositoryContract {
     }
 
     @Test
+    default void getLatestStateShouldReturnInitialWhenEmpty() {
+        MailboxChangeRepository repository = mailboxChangeRepository();
+
+        assertThat(repository.getLatestState(ACCOUNT_ID).block())
+            .isEqualTo(State.INITIAL);
+    }
+
+    @Test
+    default void getLatestStateShouldReturnLastPersistedState() {
+        MailboxChangeRepository repository = mailboxChangeRepository();
+
+        MailboxChange change1 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(2), ImmutableList.of(TestId.of(2)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange change2 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(1), ImmutableList.of(TestId.of(3)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange change3 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE, ImmutableList.of(TestId.of(4)), ImmutableList.of(), ImmutableList.of());
+        repository.save(change1);
+        repository.save(change2);
+        repository.save(change3);
+
+        assertThat(repository.getLatestState(ACCOUNT_ID).block())
+            .isEqualTo(change3.getState());
+    }
+
+    @Test
     default void saveChangeShouldFailWhenNoAccountId() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 

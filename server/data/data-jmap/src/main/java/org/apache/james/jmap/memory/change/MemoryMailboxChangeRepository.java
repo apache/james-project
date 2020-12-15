@@ -79,4 +79,12 @@ public class MemoryMailboxChangeRepository implements MailboxChangeRepository {
             .switchIfEmpty(Mono.error(new ChangeNotFoundException(state, String.format("State '%s' could not be found", state.getValue()))))
             .single();
     }
+
+    @Override
+    public Mono<State> getLatestState(AccountId accountId) {
+        return Flux.fromIterable(mailboxChangeMap.get(accountId))
+            .sort(Comparator.comparing(MailboxChange::getDate))
+            .map(MailboxChange::getState)
+            .last(State.INITIAL);
+    }
 }

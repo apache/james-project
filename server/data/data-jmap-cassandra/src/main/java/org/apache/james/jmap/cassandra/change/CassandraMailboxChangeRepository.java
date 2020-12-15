@@ -39,4 +39,9 @@ public class CassandraMailboxChangeRepository implements MailboxChangeRepository
     public Mono<MailboxChanges> getSinceState(AccountId accountId, MailboxChange.State state, Optional<MailboxChange.Limit> maxIdsToReturn) {
         return Mono.empty();
     }
+
+    @Override
+    public Mono<MailboxChange.State> getLatestState(AccountId accountId) {
+        return Mono.just(MailboxChange.State.INITIAL);
+    }
 }
