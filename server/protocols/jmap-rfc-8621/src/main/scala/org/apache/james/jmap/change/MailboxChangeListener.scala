@@ -21,21 +21,29 @@ package org.apache.james.jmap.change
 
 import javax.inject.Inject
 import org.apache.james.jmap.api.change.{MailboxChange, MailboxChangeRepository}
-import org.apache.james.mailbox.events.MailboxListener.ReactiveGroupMailboxListener
+import org.apache.james.mailbox.MailboxManager
+import org.apache.james.mailbox.events.MailboxListener.{MailboxEvent, ReactiveGroupMailboxListener}
 import org.apache.james.mailbox.events.{Event, Group}
 import org.reactivestreams.Publisher
-import reactor.core.scala.publisher.SMono
+import reactor.core.scala.publisher.{SFlux, SMono}
+
+import scala.jdk.CollectionConverters._
 
 case class MailboxChangeListenerGroup() extends Group {}
 
-case class MailboxChangeListener @Inject() (mailboxChangeRepository: MailboxChangeRepository) extends ReactiveGroupMailboxListener {
+case class MailboxChangeListener @Inject() (mailboxChangeRepository: MailboxChangeRepository,
+                                            mailboxManager: MailboxManager) extends ReactiveGroupMailboxListener {
 
-  override def reactiveEvent(event: Event): Publisher[Void] =
-    MailboxChange.fromEvent(event)
-      .map(mailboxChangeRepository.save(_))
+  override def reactiveEvent(event: Event): Publisher[Void] = {
+    MailboxChange.fromEvent(event, mailboxManager)
+      .map(changes => SFlux.fromIterable(changes.asScala)
+        .map(change => mailboxChangeRepository.save(change))
+        .`then`()
+        .`then`(SMono.empty[Void]).asJava)
       .orElse(SMono.empty[Void].asJava)
+  }
 
   override def getDefaultGroup: Group = MailboxChangeListenerGroup()
 
-  override def isHandling(event: Event): Boolean = MailboxChange.fromEvent(event).isPresent
+  override def isHandling(event: Event): Boolean = event.isInstanceOf[MailboxEvent]
 }

@@ -49,7 +49,7 @@ public interface MailboxChangeRepositoryContract {
     default void saveChangeShouldSuccess() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 
-        MailboxChange change = MailboxChange.of(ACCOUNT_ID, STATE_0, DATE, ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange change = MailboxChange.created(ACCOUNT_ID, STATE_0, DATE, ImmutableList.of(TestId.of(1))).build();
 
         assertThatCode(() -> repository.save(change).block())
             .doesNotThrowAnyException();
@@ -67,9 +67,9 @@ public interface MailboxChangeRepositoryContract {
     default void getLatestStateShouldReturnLastPersistedState() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 
-        MailboxChange change1 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(2), ImmutableList.of(TestId.of(2)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change2 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(1), ImmutableList.of(TestId.of(3)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change3 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE, ImmutableList.of(TestId.of(4)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE.minusHours(2)).created(ImmutableList.of(TestId.of(2))).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE.minusHours(1)).created(ImmutableList.of(TestId.of(3))).build();
+        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE).created(ImmutableList.of(TestId.of(4))).build();
         repository.save(change1).block();
         repository.save(change2).block();
         repository.save(change3).block();
@@ -82,7 +82,7 @@ public interface MailboxChangeRepositoryContract {
     default void saveChangeShouldFailWhenNoAccountId() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 
-        MailboxChange change = MailboxChange.of(null, STATE_0, DATE, ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange change = MailboxChange.created(null, STATE_0, DATE, ImmutableList.of(TestId.of(1))).build();
 
         assertThatThrownBy(() -> repository.save(change).block())
             .isInstanceOf(NullPointerException.class);
@@ -92,7 +92,7 @@ public interface MailboxChangeRepositoryContract {
     default void saveChangeShouldFailWhenNoState() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 
-        MailboxChange change = MailboxChange.of(ACCOUNT_ID, null, DATE, ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange change = MailboxChange.created(ACCOUNT_ID, null, DATE, ImmutableList.of(TestId.of(1))).build();
 
         assertThatThrownBy(() -> repository.save(change).block())
             .isInstanceOf(NullPointerException.class);
@@ -102,8 +102,8 @@ public interface MailboxChangeRepositoryContract {
     default void getChangesShouldSuccess() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 
-        MailboxChange oldState = MailboxChange.of(ACCOUNT_ID, STATE_0, DATE.minusHours(1), ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE, ImmutableList.of(), ImmutableList.of(TestId.of(1)), ImmutableList.of());
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(STATE_0).date(DATE.minusHours(1)).created(ImmutableList.of(TestId.of(1))).build();
+        MailboxChange change = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE).updated(ImmutableList.of(TestId.of(1))).build();
         repository.save(oldState).block();
         repository.save(change).block();
 
@@ -115,7 +115,7 @@ public interface MailboxChangeRepositoryContract {
     default void getChangesShouldReturnEmptyWhenNoNewerState() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 
-        MailboxChange oldState = MailboxChange.of(ACCOUNT_ID, STATE_0, DATE, ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(STATE_0).date(DATE).created(ImmutableList.of(TestId.of(1))).build();
         repository.save(oldState).block();
 
         assertThat(repository.getSinceState(ACCOUNT_ID, STATE_0, Optional.empty()).block().getAllChanges())
@@ -126,7 +126,7 @@ public interface MailboxChangeRepositoryContract {
     default void getChangesShouldReturnCurrentStateWhenNoNewerState() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 
-        MailboxChange oldState = MailboxChange.of(ACCOUNT_ID, STATE_0, DATE, ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(STATE_0).date(DATE).created(ImmutableList.of(TestId.of(1))).build();
         repository.save(oldState).block();
 
         assertThat(repository.getSinceState(ACCOUNT_ID, STATE_0, Optional.empty()).block().getNewState())
@@ -137,10 +137,10 @@ public interface MailboxChangeRepositoryContract {
     default void getChangesShouldLimitChanges() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 
-        MailboxChange oldState = MailboxChange.of(ACCOUNT_ID, STATE_0, DATE.minusHours(3), ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change1 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(2), ImmutableList.of(TestId.of(2)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change2 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(1), ImmutableList.of(TestId.of(3)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change3 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE, ImmutableList.of(TestId.of(4)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(STATE_0).date(DATE.minusHours(3)).created(ImmutableList.of(TestId.of(1))).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE.minusHours(2)).created(ImmutableList.of(TestId.of(2))).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE.minusHours(1)).created(ImmutableList.of(TestId.of(3))).build();
+        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE).created(ImmutableList.of(TestId.of(4))).build();
         repository.save(oldState).block();
         repository.save(change1).block();
         repository.save(change2).block();
@@ -154,10 +154,10 @@ public interface MailboxChangeRepositoryContract {
     default void getChangesShouldReturnAllFromInitial() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 
-        MailboxChange oldState = MailboxChange.of(ACCOUNT_ID, STATE_0, DATE.minusHours(3), ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change1 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(2), ImmutableList.of(TestId.of(2)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change2 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(1), ImmutableList.of(TestId.of(3)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change3 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE, ImmutableList.of(TestId.of(4)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(STATE_0).date(DATE.minusHours(3)).created(ImmutableList.of(TestId.of(1))).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE.minusHours(2)).created(ImmutableList.of(TestId.of(2))).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE.minusHours(1)).created(ImmutableList.of(TestId.of(3))).build();
+        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE).created(ImmutableList.of(TestId.of(4))).build();
         repository.save(oldState).block();
         repository.save(change1).block();
         repository.save(change2).block();
@@ -171,11 +171,11 @@ public interface MailboxChangeRepositoryContract {
     default void getChangesFromInitialShouldReturnNewState() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 
-        MailboxChange oldState = MailboxChange.of(ACCOUNT_ID, STATE_0, DATE.minusHours(3), ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change1 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(2), ImmutableList.of(TestId.of(2)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(STATE_0).date(DATE.minusHours(3)).created(ImmutableList.of(TestId.of(1))).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE.minusHours(2)).created(ImmutableList.of(TestId.of(2))).build();
         State state2 = State.of(UUID.randomUUID());
-        MailboxChange change2 = MailboxChange.of(ACCOUNT_ID, state2, DATE.minusHours(1), ImmutableList.of(TestId.of(3)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change3 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE, ImmutableList.of(TestId.of(4)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(state2).date(DATE.minusHours(1)).created(ImmutableList.of(TestId.of(3))).build();
+        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE).created(ImmutableList.of(TestId.of(4))).build();
         repository.save(oldState).block();
         repository.save(change1).block();
         repository.save(change2).block();
@@ -190,9 +190,9 @@ public interface MailboxChangeRepositoryContract {
     default void getChangesShouldLimitChangesWhenMaxChangesOmitted() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 
-        MailboxChange oldState = MailboxChange.of(ACCOUNT_ID, STATE_0, DATE.minusHours(2), ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change1 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(1), ImmutableList.of(TestId.of(2), TestId.of(3), TestId.of(4), TestId.of(5), TestId.of(6)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change2 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE, ImmutableList.of(TestId.of(7)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange oldState = MailboxChange.created(ACCOUNT_ID, STATE_0, DATE.minusHours(2), ImmutableList.of(TestId.of(1))).build();
+        MailboxChange change1 = MailboxChange.created(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(1), ImmutableList.of(TestId.of(2), TestId.of(3), TestId.of(4), TestId.of(5), TestId.of(6))).build();
+        MailboxChange change2 = MailboxChange.created(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE, ImmutableList.of(TestId.of(7))).build();
 
         repository.save(oldState).block();
         repository.save(change1).block();
@@ -206,9 +206,9 @@ public interface MailboxChangeRepositoryContract {
     default void getChangesShouldNotReturnMoreThanMaxChanges() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 
-        MailboxChange oldState = MailboxChange.of(ACCOUNT_ID, STATE_0, DATE.minusHours(2), ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change1 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(1), ImmutableList.of(TestId.of(2), TestId.of(3)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change2 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE, ImmutableList.of(TestId.of(4), TestId.of(5)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(STATE_0).date(DATE.minusHours(2)).created(ImmutableList.of(TestId.of(1))).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE.minusHours(1)).created(ImmutableList.of(TestId.of(2), TestId.of(3))).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE).created(ImmutableList.of(TestId.of(4), TestId.of(5))).build();
         repository.save(oldState).block();
         repository.save(change1).block();
         repository.save(change2).block();
@@ -221,8 +221,8 @@ public interface MailboxChangeRepositoryContract {
     default void getChangesShouldReturnEmptyWhenNumberOfChangesExceedMaxChanges() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 
-        MailboxChange oldState = MailboxChange.of(ACCOUNT_ID, STATE_0, DATE.minusHours(2), ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change1 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(1), ImmutableList.of(TestId.of(2), TestId.of(3)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(STATE_0).date(DATE.minusHours(2)).created(ImmutableList.of(TestId.of(1))).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE.minusHours(1)).created(ImmutableList.of(TestId.of(2), TestId.of(3))).build();
         repository.save(oldState).block();
         repository.save(change1).block();
 
@@ -234,9 +234,9 @@ public interface MailboxChangeRepositoryContract {
     default void getChangesShouldReturnNewState() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 
-        MailboxChange oldState = MailboxChange.of(ACCOUNT_ID, STATE_0, DATE.minusHours(2), ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change1 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(1), ImmutableList.of(TestId.of(2), TestId.of(3)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change2 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE, ImmutableList.of(), ImmutableList.of(TestId.of(2), TestId.of(3)), ImmutableList.of());
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(STATE_0).date(DATE.minusHours(2)).created(ImmutableList.of(TestId.of(1))).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE.minusHours(1)).created(ImmutableList.of(TestId.of(2), TestId.of(3))).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE).updated(ImmutableList.of(TestId.of(2), TestId.of(3))).build();
         repository.save(oldState).block();
         repository.save(change1).block();
         repository.save(change2).block();
@@ -249,9 +249,9 @@ public interface MailboxChangeRepositoryContract {
     default void hasMoreChangesShouldBeTrueWhenMoreChanges() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 
-        MailboxChange oldState = MailboxChange.of(ACCOUNT_ID, STATE_0, DATE.minusHours(2), ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change1 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(1), ImmutableList.of(TestId.of(2), TestId.of(3)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change2 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE, ImmutableList.of(), ImmutableList.of(TestId.of(2), TestId.of(3)), ImmutableList.of());
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(STATE_0).date(DATE.minusHours(2)).created(ImmutableList.of(TestId.of(1))).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE.minusHours(1)).created(ImmutableList.of(TestId.of(2), TestId.of(3))).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE).updated(ImmutableList.of(TestId.of(2), TestId.of(3))).build();
         repository.save(oldState).block();
         repository.save(change1).block();
         repository.save(change2).block();
@@ -264,9 +264,9 @@ public interface MailboxChangeRepositoryContract {
     default void hasMoreChangesShouldBeFalseWhenNoMoreChanges() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 
-        MailboxChange oldState = MailboxChange.of(ACCOUNT_ID, STATE_0, DATE.minusHours(2), ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change1 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(1), ImmutableList.of(TestId.of(2), TestId.of(3)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change2 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE, ImmutableList.of(), ImmutableList.of(TestId.of(2), TestId.of(3)), ImmutableList.of());
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(STATE_0).date(DATE.minusHours(2)).created(ImmutableList.of(TestId.of(1))).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE.minusHours(1)).created(ImmutableList.of(TestId.of(2), TestId.of(3))).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE).updated(ImmutableList.of(TestId.of(2), TestId.of(3))).build();
         repository.save(oldState).block();
         repository.save(change1).block();
         repository.save(change2).block();
@@ -279,10 +279,23 @@ public interface MailboxChangeRepositoryContract {
     default void changesShouldBeStoredInTheirRespectiveType() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 
-        MailboxChange oldState = MailboxChange.of(ACCOUNT_ID, STATE_0, DATE.minusHours(3), ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change1 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(2), ImmutableList.of(TestId.of(2), TestId.of(3), TestId.of(4), TestId.of(5)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change2 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(1), ImmutableList.of(TestId.of(6), TestId.of(7)), ImmutableList.of(TestId.of(2), TestId.of(3)), ImmutableList.of(TestId.of(4)));
-        MailboxChange change3 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE, ImmutableList.of(TestId.of(8)), ImmutableList.of(TestId.of(6), TestId.of(7)), ImmutableList.of(TestId.of(5)));
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(STATE_0).date(DATE.minusHours(3)).created(ImmutableList.of(TestId.of(1))).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE.minusHours(2)).created(ImmutableList.of(TestId.of(2), TestId.of(3), TestId.of(4), TestId.of(5))).build();
+        MailboxChange change2 = MailboxChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(1))
+            .created(ImmutableList.of(TestId.of(6), TestId.of(7)))
+            .updated(ImmutableList.of(TestId.of(2), TestId.of(3)))
+            .destroyed(ImmutableList.of(TestId.of(4))).build();
+        MailboxChange change3 = MailboxChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE)
+            .created(ImmutableList.of(TestId.of(8)))
+            .updated(ImmutableList.of(TestId.of(6), TestId.of(7)))
+            .destroyed(ImmutableList.of(TestId.of(5))).build();
+
         repository.save(oldState).block();
         repository.save(change1).block();
         repository.save(change2).block();
@@ -301,9 +314,15 @@ public interface MailboxChangeRepositoryContract {
     default void getChangesShouldIgnoreDuplicatedValues() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 
-        MailboxChange oldState = MailboxChange.of(ACCOUNT_ID, STATE_0, DATE.minusHours(2), ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change1 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(1), ImmutableList.of(), ImmutableList.of(TestId.of(1), TestId.of(2)), ImmutableList.of());
-        MailboxChange change2 = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE, ImmutableList.of(TestId.of(3)), ImmutableList.of(TestId.of(1), TestId.of(2)), ImmutableList.of());
+        MailboxChange oldState = MailboxChange.created(ACCOUNT_ID, STATE_0, DATE.minusHours(2), ImmutableList.of(TestId.of(1))).build();
+        MailboxChange change1 = MailboxChange.updated(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE.minusHours(1), ImmutableList.of(TestId.of(1), TestId.of(2))).build();
+        MailboxChange change2 = MailboxChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE)
+            .created(ImmutableList.of(TestId.of(3)))
+            .updated(ImmutableList.of(TestId.of(1), TestId.of(2)))
+            .build();
 
         repository.save(oldState).block();
         repository.save(change1).block();
@@ -317,11 +336,32 @@ public interface MailboxChangeRepositoryContract {
     }
 
     @Test
+    default void getChangesShouldReturnDelegatedChanges() {
+        MailboxChangeRepository repository = mailboxChangeRepository();
+
+        MailboxChange oldState = MailboxChange.created(ACCOUNT_ID, STATE_0, DATE.minusHours(2), ImmutableList.of(TestId.of(1))).build();
+        MailboxChange change1 = MailboxChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(1))
+            .updated(ImmutableList.of(TestId.of(1)))
+            .delegated()
+            .build();
+
+        repository.save(oldState);
+        repository.save(change1);
+
+        assertThat(repository.getSinceState(ACCOUNT_ID, STATE_0, Optional.empty()).block().getUpdated())
+            .containsExactly(TestId.of(1));
+
+    }
+
+    @Test
     default void getChangesShouldFailWhenInvalidMaxChanges() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 
-        MailboxChange currentState = MailboxChange.of(ACCOUNT_ID, STATE_0, DATE, ImmutableList.of(TestId.of(1)), ImmutableList.of(), ImmutableList.of());
-        MailboxChange change = MailboxChange.of(ACCOUNT_ID, State.of(UUID.randomUUID()), DATE, ImmutableList.of(TestId.of(2)), ImmutableList.of(), ImmutableList.of());
+        MailboxChange currentState = MailboxChange.builder().accountId(ACCOUNT_ID).state(STATE_0).date(DATE).created(ImmutableList.of(TestId.of(1))).build();
+        MailboxChange change = MailboxChange.builder().accountId(ACCOUNT_ID).state(State.of(UUID.randomUUID())).date(DATE).created(ImmutableList.of(TestId.of(2))).build();
         repository.save(currentState).block();
         repository.save(change).block();
 
