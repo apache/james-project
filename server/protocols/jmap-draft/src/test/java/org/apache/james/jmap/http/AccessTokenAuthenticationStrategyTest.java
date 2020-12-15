@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 import org.apache.james.jmap.draft.crypto.AccessTokenManagerImpl;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.mailbox.MailboxManager;
@@ -79,7 +80,7 @@ public class AccessTokenAuthenticationStrategyTest {
     }
 
     @Test
-    public void createMailboxSessionShouldReturnEmptyWhenAuthHeaderIsInvalid() {
+    public void createMailboxSessionShouldThrowWhenAuthHeaderIsInvalid() {
         Username username = Username.of("123456789");
         MailboxSession fakeMailboxSession = mock(MailboxSession.class);
 
@@ -89,14 +90,12 @@ public class AccessTokenAuthenticationStrategyTest {
         UUID authHeader = UUID.randomUUID();
         AccessToken accessToken = AccessToken.fromString(authHeader.toString());
         when(mockedAccessTokenManager.getUsernameFromToken(accessToken))
-                .thenReturn(Mono.just(username));
+            .thenReturn(Mono.error(new InvalidAccessToken(accessToken)));
         when(mockedHeaders.get(AUTHORIZATION_HEADERS))
             .thenReturn(authHeader.toString());
-        when(mockedAccessTokenManager.isValid(accessToken))
-            .thenReturn(Mono.just(false));
 
-        assertThat(testee.createMailboxSession(mockedRequest).blockOptional())
-            .isEmpty();
+        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).blockOptional())
+            .isInstanceOf(UnauthorizedException.class);
     }
 
     @Test
@@ -125,8 +124,6 @@ public class AccessTokenAuthenticationStrategyTest {
             .thenReturn(Mono.just(username));
         when(mockedHeaders.get(AUTHORIZATION_HEADERS))
             .thenReturn(authHeader.toString());
-        when(mockedAccessTokenManager.isValid(accessToken))
-            .thenReturn(Mono.just(true));
 
 
         MailboxSession result = testee.createMailboxSession(mockedRequest).block();

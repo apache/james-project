@@ -49,7 +49,6 @@ public class AccessTokenAuthenticationStrategy implements AuthenticationStrategy
         return Mono.fromCallable(() -> authHeaders(httpRequest))
             .filter(tokenString -> !tokenString.startsWith("Bearer"))
             .map(AccessToken::fromString)
-            .filterWhen(accessTokenManager::isValid)
             .flatMap(item -> Mono.from(accessTokenManager.getUsernameFromToken(item)))
             .map(mailboxManager::createSystemSession)
             .onErrorResume(InvalidAccessToken.class, error -> Mono.error(new UnauthorizedException("Invalid access token", error)))
