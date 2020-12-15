@@ -46,41 +46,22 @@ class MailboxChangesMethod @Inject()(mailboxSerializer: MailboxSerializer,
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxChangesRequest): SMono[InvocationWithContext] =
-
-    // Support for LTT.RS. This should be removed as soon as Mailbox/get returns the correct state
-    if (request.sinceState.equals(State.INSTANCE)) {
-      val response: MailboxChangesResponse = MailboxChangesResponse(
+    SMono.fromPublisher(mailboxChangeRepository.getSinceState(JavaAccountId.fromUsername(mailboxSession.getUser), JavaState.of(request.sinceState.value), request.maxChanged.toJava))
+      .map(mailboxChanges => MailboxChangesResponse(
         accountId = request.accountId,
-        oldState = State.INSTANCE,
-        newState = State.INSTANCE,
-        hasMoreChanges = HasMoreChanges(false),
+        oldState = request.sinceState,
+        newState = State.fromMailboxChanges(mailboxChanges),
+        hasMoreChanges = HasMoreChanges.fromMailboxChanges(mailboxChanges),
         updatedProperties = Some(Properties()),
-        created = Set(),
-        updated = Set(),
-        destroyed = Set())
-      SMono.just(InvocationWithContext(invocation = Invocation(
-        methodName = methodName,
-        arguments = Arguments(mailboxSerializer.serializeChanges(response)),
-        methodCallId = invocation.invocation.methodCallId
-      ), processingContext = invocation.processingContext))
-    } else {
-      SMono.fromPublisher(mailboxChangeRepository.getSinceState(JavaAccountId.fromUsername(mailboxSession.getUser), JavaState.of(request.sinceState.value), request.maxChanged.toJava))
-        .map(mailboxChanges => MailboxChangesResponse(
-          accountId = request.accountId,
-          oldState = request.sinceState,
-          newState = State.fromMailboxChanges(mailboxChanges),
-          hasMoreChanges = HasMoreChanges.fromMailboxChanges(mailboxChanges),
-          updatedProperties = Some(Properties()),
-          created = mailboxChanges.getCreated.asScala.toSet,
-          updated = mailboxChanges.getUpdated.asScala.toSet,
-          destroyed = mailboxChanges.getDestroyed.asScala.toSet))
-        .map(response => InvocationWithContext(
-          invocation = Invocation(
-            methodName = methodName,
-            arguments = Arguments(mailboxSerializer.serializeChanges(response)),
-            methodCallId = invocation.invocation.methodCallId),
-          processingContext = invocation.processingContext))
-    }
+        created = mailboxChanges.getCreated.asScala.toSet,
+        updated = mailboxChanges.getUpdated.asScala.toSet,
+        destroyed = mailboxChanges.getDestroyed.asScala.toSet))
+      .map(response => InvocationWithContext(
+        invocation = Invocation(
+          methodName = methodName,
+          arguments = Arguments(mailboxSerializer.serializeChanges(response)),
+          methodCallId = invocation.invocation.methodCallId),
+        processingContext = invocation.processingContext))
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, MailboxChangesRequest] =
     mailboxSerializer.deserializeMailboxChangesRequest(invocation.arguments.value) match {
