@@ -21,41 +21,22 @@ package org.apache.james.mpt.smtp;
 
 import static org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType.SMTP_GLOBAL_SERVER;
 
-import org.apache.james.backends.cassandra.DockerCassandraExtension;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.blob.objectstorage.aws.DockerAwsS3Container;
-import org.apache.james.blob.objectstorage.aws.DockerAwsS3Extension;
+import org.apache.james.CassandraRabbitMQJamesServerFixture;
+import org.apache.james.JamesServerExtension;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
-import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
-import org.junit.Rule;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TestRule;
 
 public class AwsS3RabbitMQForwardSmtpTest implements ForwardSmtpTest {
-
+    @Order(1)
     @RegisterExtension
-    public static DockerCassandraExtension cassandraServer = new DockerCassandraExtension();
+    static JamesServerExtension testExtension = CassandraRabbitMQJamesServerFixture.baseExtensionBuilder()
+            .extension(new AwsS3BlobStoreExtension())
+            .extension(new InMemoryDnsExtension())
+            .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
+            .build();
 
+    @Order(2)
     @RegisterExtension
-    public AwsS3BlobStoreExtension dockerAwsS3TestRule = new AwsS3BlobStoreExtension();
-
-    @RegisterExtension
-    public SmtpTestExtension cassandraRabbitMQAwsS3SmtpTestRule =
-            CassandraRabbitMQAwsS3SmtpTestRuleFactory.createExtension(SMTP_GLOBAL_SERVER, () -> cassandraServer.getDockerCassandra().getHost(), dockerAwsS3TestRule);
-
-    private SmtpHostSystem hostSystem;
-
-    @BeforeEach
-    void setup(SmtpHostSystem hostSystem) {
-        this.hostSystem = hostSystem;
-    }
-
-
-    @Override
-    public SmtpHostSystem hostSystem() {
-        return hostSystem;
-    }
-
+    static SmtpTestExtension smtpTestExtension = new SmtpTestExtension(SMTP_GLOBAL_SERVER, testExtension);
 }

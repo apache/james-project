@@ -21,29 +21,46 @@ package org.apache.james.mpt.smtp;
 
 import static org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType.SMTP_GLOBAL_SERVER;
 
-import org.apache.james.backends.cassandra.DockerCassandraExtension;
+import org.apache.james.CassandraExtension;
+import org.apache.james.CassandraJamesServerMain;
+import org.apache.james.DockerElasticSearchExtension;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.SearchConfiguration;
+import org.apache.james.TestingDistributedJamesServerBuilder;
+import org.apache.james.backends.cassandra.DockerCassandra;
+import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class CassandraForwardSmtpTest implements ForwardSmtpTest {
 
-    @RegisterExtension
-    public static DockerCassandraExtension cassandraServer = new DockerCassandraExtension();
 
-    @RegisterExtension
-    public SmtpTestExtension smtpTestExtension =
-            CassandraSmtpTestRuleFactory.createExtension(SMTP_GLOBAL_SERVER, () -> cassandraServer.getDockerCassandra().getHost());
+    private static final CassandraExtension cassandraExtension = new CassandraExtension();
 
-    private SmtpHostSystem hostSystem;
-
-    @BeforeEach
-    void setup(SmtpHostSystem hostSystem) {
-        this.hostSystem = hostSystem;
+    @BeforeAll
+    static void setUp() {
+        Thread.currentThread().setContextClassLoader(CassandraForwardSmtpTest.class.getClassLoader());
     }
+    @Order(1)
+    @RegisterExtension
+    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
+            .extension(new DockerElasticSearchExtension())
+            .extension(cassandraExtension)
+            .extension(new InMemoryDnsExtension())
+            .server(CassandraJamesServerMain::createServer)
+            .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
+                    .toInstance(DockerCassandra.configurationBuilder(cassandraExtension.getCassandra().getHost())
+                            .username(DockerCassandra.CASSANDRA_TESTING_USER)
+                            .password(DockerCassandra.CASSANDRA_TESTING_PASSWORD)
+                            .build()))
+            .build();
 
-    @Override
-    public SmtpHostSystem hostSystem() {
-        return hostSystem;
-    }
+
+    @Order(2)
+    @RegisterExtension
+    static SmtpTestExtension smtpTestExtension = new SmtpTestExtension(SMTP_GLOBAL_SERVER, testExtension);
+
 
 }

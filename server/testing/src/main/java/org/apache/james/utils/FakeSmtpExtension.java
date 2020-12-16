@@ -76,11 +76,11 @@ public class FakeSmtpExtension implements
     }
 
     private final GenericContainer<?> container;
-    private final FakeSmtp fakeSmtp;
+    private final FakeSmtpExtension.FakeSmtp fakeSmtp;
 
     private FakeSmtpExtension(GenericContainer<?> container) {
         this.container = container;
-        this.fakeSmtp = new FakeSmtp(container);
+        this.fakeSmtp = new FakeSmtpExtension.FakeSmtp(container);
     }
 
     @Override
