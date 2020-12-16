@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.apache.james.transport.mailets.remote.delivery.Bouncer.DELIVERY_ERROR;
+import static org.apache.mailet.DsnParameters.Ret.HDRS;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -42,6 +43,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.dnsservice.api.DNSService;
@@ -63,6 +65,7 @@ import org.apache.james.transport.util.SenderUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.james.transport.util.TosUtils;
 import org.apache.mailet.AttributeUtils;
+import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.GenericMailet;
@@ -384,9 +387,25 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         multipart.addBodyPart(createTextMsg(originalMail));
         multipart.addBodyPart(createDSN(originalMail));
         if (!getInitParameters().getAttachmentType().equals(TypeCode.NONE)) {
-            multipart.addBodyPart(createAttachedOriginal(originalMail, getInitParameters().getAttachmentType()));
+            multipart.addBodyPart(createAttachedOriginal(originalMail, getAttachmentType(originalMail)));
         }
         return multipart;
+    }
+
+    private TypeCode getAttachmentType(Mail originalMail) {
+        return originalMail.dsnParameters()
+            .flatMap(DsnParameters::getRetParameter)
+            .map(ret -> {
+                switch (ret) {
+                    case HDRS:
+                        return TypeCode.HEADS;
+                    case FULL:
+                        return TypeCode.MESSAGE;
+                    default:
+                        throw new NotImplementedException("Unknown RET parameter: " + ret);
+                }
+            })
+            .orElse(getInitParameters().getAttachmentType());
     }
 
     private MimeBodyPart createTextMsg(Mail originalMail) throws MessagingException {
