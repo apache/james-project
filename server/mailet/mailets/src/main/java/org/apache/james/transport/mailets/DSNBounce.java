@@ -118,11 +118,11 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     private static final Logger LOGGER = LoggerFactory.getLogger(DSNBounce.class);
 
     enum Action {
-        DELIVERED("delivered"),
-        DELAYED("delayed"),
-        FAILED("failed"),
-        EXPANDED("expanded"),
-        RELAYED("relayed");
+        DELIVERED("delivered", false),
+        DELAYED("delayed", true),
+        FAILED("failed", true),
+        EXPANDED("expanded", false),
+        RELAYED("relayed", false);
 
         public static Optional<Action> parse(String serialized) {
             return Stream.of(Action.values())
@@ -131,13 +131,19 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         }
 
         private final String value;
+        private final boolean shouldIncludeDiagnosticCode;
 
-        Action(String value) {
+        Action(String value, boolean shouldIncludeDiagnosticCode) {
             this.value = value;
+            this.shouldIncludeDiagnosticCode = shouldIncludeDiagnosticCode;
         }
 
         public String asString() {
             return value;
+        }
+
+        public boolean shouldIncludeDiagnosticCode() {
+            return shouldIncludeDiagnosticCode;
         }
     }
 
@@ -452,7 +458,9 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         buffer.append("Final-Recipient: rfc822; " + mailAddress.toString()).append(LINE_BREAK);
         buffer.append("Action: ").append(action.asString()).append(LINE_BREAK);
         buffer.append("Status: " + deliveryError).append(LINE_BREAK);
-        buffer.append("Diagnostic-Code: " + getDiagnosticType(deliveryError) + "; " + deliveryError).append(LINE_BREAK);
+        if (action.shouldIncludeDiagnosticCode()) {
+            buffer.append("Diagnostic-Code: " + getDiagnosticType(deliveryError) + "; " + deliveryError).append(LINE_BREAK);
+        }
         buffer.append("Last-Attempt-Date: " + dateFormatter.format(ZonedDateTime.ofInstant(lastUpdated.toInstant(), ZoneId.systemDefault())))
             .append(LINE_BREAK);
     }
