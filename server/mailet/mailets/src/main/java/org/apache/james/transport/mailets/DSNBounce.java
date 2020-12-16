@@ -109,7 +109,7 @@ import com.google.common.collect.ImmutableSet;
  * </code>
  * </pre>
  *
- * @see org.apache.james.transport.mailets.AbstractNotify
+ * @see RedirectNotify
  */
 
 public class DSNBounce extends GenericMailet implements RedirectNotify {
