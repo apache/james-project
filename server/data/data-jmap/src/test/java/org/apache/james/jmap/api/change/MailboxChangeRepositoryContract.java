@@ -351,7 +351,7 @@ public interface MailboxChangeRepositoryContract {
         repository.save(oldState);
         repository.save(change1);
 
-        assertThat(repository.getSinceState(ACCOUNT_ID, STATE_0, Optional.empty()).block().getUpdated())
+        assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, STATE_0, Optional.empty()).block().getUpdated())
             .containsExactly(TestId.of(1));
 
     }

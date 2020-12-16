@@ -22,6 +22,7 @@ package org.apache.james.jmap.cassandra.change;
 import java.util.Optional;
 
 import org.apache.james.jmap.api.change.MailboxChange;
+import org.apache.james.jmap.api.change.MailboxChange.Limit;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.api.change.MailboxChanges;
 import org.apache.james.jmap.api.model.AccountId;
@@ -36,7 +37,12 @@ public class CassandraMailboxChangeRepository implements MailboxChangeRepository
     }
 
     @Override
-    public Mono<MailboxChanges> getSinceState(AccountId accountId, MailboxChange.State state, Optional<MailboxChange.Limit> maxIdsToReturn) {
+    public Mono<MailboxChanges> getSinceState(AccountId accountId, MailboxChange.State state, Optional<Limit> maxChanges) {
+        return Mono.empty();
+    }
+
+    @Override
+    public Mono<MailboxChanges> getSinceStateWithDelegation(AccountId accountId, MailboxChange.State state, Optional<Limit> maxChanges) {
         return Mono.empty();
     }
 

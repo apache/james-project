@@ -21,6 +21,7 @@ package org.apache.james.jmap.memory.change;
 
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.apache.james.jmap.api.change.MailboxChange;
 import org.apache.james.jmap.api.change.MailboxChange.Limit;
@@ -57,6 +58,25 @@ public class MemoryMailboxChangeRepository implements MailboxChangeRepository {
 
     @Override
     public Mono<MailboxChanges> getSinceState(AccountId accountId, State state, Optional<Limit> maxChanges) {
+        Preconditions.checkNotNull(accountId);
+        Preconditions.checkNotNull(state);
+        maxChanges.ifPresent(limit -> Preconditions.checkArgument(limit.getValue() > 0, "maxChanges must be a positive integer"));
+        if (state.equals(State.INITIAL)) {
+            return Flux.fromIterable(mailboxChangeMap.get(accountId))
+                .sort(Comparator.comparing(MailboxChange::getDate))
+                .collect(new MailboxChangeCollector(state, maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
+        }
+
+        return findByState(accountId, state)
+            .flatMapMany(currentState -> Flux.fromIterable(mailboxChangeMap.get(accountId))
+                .filter(change -> change.getDate().isAfter(currentState.getDate()))
+                .filter(Predicate.not(MailboxChange::isDelegated))
+                .sort(Comparator.comparing(MailboxChange::getDate)))
+            .collect(new MailboxChangeCollector(state, maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
+    }
+
+    @Override
+    public Mono<MailboxChanges> getSinceStateWithDelegation(AccountId accountId, State state, Optional<Limit> maxChanges) {
         Preconditions.checkNotNull(accountId);
         Preconditions.checkNotNull(state);
         maxChanges.ifPresent(limit -> Preconditions.checkArgument(limit.getValue() > 0, "maxChanges must be a positive integer"));

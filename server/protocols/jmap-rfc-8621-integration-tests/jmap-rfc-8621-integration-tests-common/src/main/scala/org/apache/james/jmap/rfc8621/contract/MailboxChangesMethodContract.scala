@@ -489,7 +489,7 @@ trait MailboxChangesMethodContract {
 
       val request =
         s"""{
-           |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+           |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares"],
            |  "methodCalls": [[
            |    "Mailbox/changes",
            |    {
@@ -553,7 +553,7 @@ trait MailboxChangesMethodContract {
 
       val request =
         s"""{
-           |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+           |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares"],
            |  "methodCalls": [[
            |    "Mailbox/changes",
            |    {
@@ -624,7 +624,7 @@ trait MailboxChangesMethodContract {
 
       val request =
         s"""{
-           |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+           |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares"],
            |  "methodCalls": [[
            |    "Mailbox/changes",
            |    {
@@ -694,7 +694,7 @@ trait MailboxChangesMethodContract {
 
       val request =
         s"""{
-           |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+           |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares"],
            |  "methodCalls": [[
            |    "Mailbox/changes",
            |    {
@@ -765,7 +765,7 @@ trait MailboxChangesMethodContract {
 
       val request =
         s"""{
-           |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+           |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares"],
            |  "methodCalls": [[
            |    "Mailbox/changes",
            |    {
@@ -810,6 +810,77 @@ trait MailboxChangesMethodContract {
     }
 
     @Test
+    def mailboxChangesShouldNotReturnUpdatedChangesWhenMissingSharesCapability(server: GuiceJamesServer): Unit = {
+      val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
+
+      provisionSystemMailboxes(server)
+
+      val path = MailboxPath.forUser(BOB, "mailbox1")
+      val mailboxId: String = mailboxProbe
+        .createMailbox(path)
+        .serialize
+
+      server.getProbe(classOf[ACLProbeImpl])
+        .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+
+      val message: Message = Message.Builder
+        .of
+        .setSubject("test")
+        .setBody("testmail", StandardCharsets.UTF_8)
+        .build
+      val messageId: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
+
+      val oldState: State = storeReferenceState(server, ANDRE)
+
+      destroyEmail(messageId)
+
+      val request =
+        s"""{
+           |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+           |  "methodCalls": [[
+           |    "Mailbox/changes",
+           |    {
+           |      "accountId": "$ANDRE_ACCOUNT_ID",
+           |      "sinceState": "${oldState.getValue}"
+           |    },
+           |    "c1"]]
+           |}""".stripMargin
+
+      val response = `given`(
+        baseRequestSpecBuilder(server)
+          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+          .setBody(request)
+          .build, new ResponseSpecBuilder().build)
+        .post
+        .`then`
+          .statusCode(SC_OK)
+          .contentType(JSON)
+          .extract
+          .body
+          .asString
+
+      assertThatJson(response)
+        .whenIgnoringPaths("methodResponses[0][1].newState")
+        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .isEqualTo(
+          s"""{
+             |    "sessionState": "${SESSION_STATE.value}",
+             |    "methodResponses": [
+             |      [ "Mailbox/changes", {
+             |        "accountId": "$ANDRE_ACCOUNT_ID",
+             |        "oldState": "${oldState.getValue}",
+             |        "hasMoreChanges": false,
+             |        "updatedProperties": [],
+             |        "created": [],
+             |        "updated": [],
+             |        "destroyed": []
+             |      }, "c1"]
+             |    ]
+             |}""".stripMargin)
+    }
+
+    @Test
     @Disabled("Not implemented yet")
     def mailboxChangesShouldReturnUpdatedChangesWhenDestroyDelegatedMailbox(server: GuiceJamesServer): Unit = {
       val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
@@ -830,7 +901,7 @@ trait MailboxChangesMethodContract {
 
       val request =
         s"""{
-           |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+           |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares"],
            |  "methodCalls": [[
            |    "Mailbox/changes",
            |    {

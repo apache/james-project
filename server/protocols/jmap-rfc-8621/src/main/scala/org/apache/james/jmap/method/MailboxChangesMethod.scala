@@ -26,7 +26,7 @@ import org.apache.james.jmap.api.change.MailboxChangeRepository
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{Invocation, Properties, State}
+import org.apache.james.jmap.core.{CapabilityIdentifier, Invocation, Properties, State}
 import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{HasMoreChanges, MailboxChangesRequest, MailboxChangesResponse}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -46,7 +46,12 @@ class MailboxChangesMethod @Inject()(mailboxSerializer: MailboxSerializer,
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxChangesRequest): SMono[InvocationWithContext] =
-    SMono.fromPublisher(mailboxChangeRepository.getSinceState(JavaAccountId.fromUsername(mailboxSession.getUser), JavaState.of(request.sinceState.value), request.maxChanged.toJava))
+    SMono.fromPublisher(
+      if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
+        mailboxChangeRepository.getSinceStateWithDelegation(JavaAccountId.fromUsername(mailboxSession.getUser), JavaState.of(request.sinceState.value), request.maxChanged.toJava)
+      } else {
+        mailboxChangeRepository.getSinceState(JavaAccountId.fromUsername(mailboxSession.getUser), JavaState.of(request.sinceState.value), request.maxChanged.toJava)
+      })
       .map(mailboxChanges => MailboxChangesResponse(
         accountId = request.accountId,
         oldState = request.sinceState,
