@@ -33,6 +33,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -105,6 +106,7 @@ import com.google.common.collect.ImmutableSet;
  *   &lt;messageString&gt;<i>the message sent in the bounce, the first occurrence of the pattern [machine] is replaced with the name of the executing machine, default=Hi. This is the James mail server at [machine] ... </i>&lt;/messageString&gt;
  *   &lt;passThrough&gt;<i>true or false, default=true</i>&lt;/passThrough&gt;
  *   &lt;debug&gt;<i>true or false, default=false</i>&lt;/debug&gt;
+ *   &lt;action&gt;<i>failed, delayed, delivered, expanded or relayed, default=failed</i>&lt;/action&gt;
  * &lt;/mailet&gt;
  * </code>
  * </pre>
@@ -115,7 +117,31 @@ import com.google.common.collect.ImmutableSet;
 public class DSNBounce extends GenericMailet implements RedirectNotify {
     private static final Logger LOGGER = LoggerFactory.getLogger(DSNBounce.class);
 
-    private static final ImmutableSet<String> CONFIGURABLE_PARAMETERS = ImmutableSet.of("debug", "passThrough", "messageString", "attachment", "sender", "prefix");
+    enum Action {
+        DELIVERED("delivered"),
+        DELAYED("delayed"),
+        FAILED("failed"),
+        EXPANDED("expanded"),
+        RELAYED("relayed");
+
+        public static Optional<Action> parse(String serialized) {
+            return Stream.of(Action.values())
+                .filter(value -> value.asString().equalsIgnoreCase(serialized))
+                .findFirst();
+        }
+
+        private final String value;
+
+        Action(String value) {
+            this.value = value;
+        }
+
+        public String asString() {
+            return value;
+        }
+    }
+
+    private static final ImmutableSet<String> CONFIGURABLE_PARAMETERS = ImmutableSet.of("debug", "passThrough", "messageString", "attachment", "sender", "prefix", "action");
     private static final List<MailAddress> RECIPIENT_MAIL_ADDRESSES = ImmutableList.of(SpecialAddress.REVERSE_PATH);
     private static final List<InternetAddress> TO_INTERNET_ADDRESSES = ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress());
 
@@ -127,6 +153,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     private final DNSService dns;
     private final DateTimeFormatter dateFormatter;
     private String messageString = null;
+    private Action action = null;
 
     @Inject
     public DSNBounce(DNSService dns) {
@@ -155,6 +182,10 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         }
         messageString = getInitParameter("messageString",
                 "Hi. This is the James mail server at [machine].\nI'm afraid I wasn't able to deliver your message to the following addresses.\nThis is a permanent error; I've given up. Sorry it didn't work out.  Below\nI include the list of recipients and the reason why I was unable to deliver\nyour message.\n");
+        action = Optional.ofNullable(getInitParameter("action", null))
+            .map(configuredValue -> Action.parse(configuredValue)
+                .orElseThrow(() -> new IllegalArgumentException("Action '" + configuredValue + "' is not supported")))
+            .orElse(Action.FAILED);
     }
 
     @Override
@@ -419,7 +450,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     private void appendRecipient(StringBuffer buffer, MailAddress mailAddress, String deliveryError, Date lastUpdated) {
         buffer.append(LINE_BREAK);
         buffer.append("Final-Recipient: rfc822; " + mailAddress.toString()).append(LINE_BREAK);
-        buffer.append("Action: failed").append(LINE_BREAK);
+        buffer.append("Action: ").append(action.asString()).append(LINE_BREAK);
         buffer.append("Status: " + deliveryError).append(LINE_BREAK);
         buffer.append("Diagnostic-Code: " + getDiagnosticType(deliveryError) + "; " + deliveryError).append(LINE_BREAK);
         buffer.append("Last-Attempt-Date: " + dateFormatter.format(ZonedDateTime.ofInstant(lastUpdated.toInstant(), ZoneId.systemDefault())))

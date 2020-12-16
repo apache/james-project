@@ -87,7 +87,7 @@ public class DSNBounceTest {
 
     @Test
     void getAllowedInitParametersShouldReturnTheParameters() {
-        assertThat(dsnBounce.getAllowedInitParameters()).containsOnly("debug", "passThrough", "messageString", "attachment", "sender", "prefix");
+        assertThat(dsnBounce.getAllowedInitParameters()).containsOnly("debug", "passThrough", "messageString", "attachment", "sender", "prefix", "action");
     }
 
     @Test
