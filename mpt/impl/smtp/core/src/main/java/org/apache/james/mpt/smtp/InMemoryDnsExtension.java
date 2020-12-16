@@ -19,24 +19,37 @@
 
 package org.apache.james.mpt.smtp;
 
-import static org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType.SMTP_GLOBAL_SERVER;
+import java.util.Optional;
 
-import org.apache.james.CassandraRabbitMQJamesServerFixture;
-import org.apache.james.JamesServerExtension;
-import org.apache.james.modules.AwsS3BlobStoreExtension;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.apache.james.GuiceModuleTestExtension;
+import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.dnsservice.api.InMemoryDNSService;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolutionException;
 
-public class AwsS3RabbitMQForwardSmtpTest implements ForwardSmtpTest {
-    @Order(1)
-    @RegisterExtension
-    static JamesServerExtension testExtension = CassandraRabbitMQJamesServerFixture.baseExtensionBuilder()
-            .extension(new AwsS3BlobStoreExtension())
-            .extension(new InMemoryDnsExtension())
-            .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
-            .build();
+import com.google.inject.Module;
 
-    @Order(2)
-    @RegisterExtension
-    static SmtpTestExtension smtpTestExtension = new SmtpTestExtension(SMTP_GLOBAL_SERVER, testExtension);
+public class InMemoryDnsExtension implements GuiceModuleTestExtension {
+    private InMemoryDNSService inMemoryDns;
+
+    @Override
+    public Module getModule() {
+        return binder -> binder.bind(DNSService.class).toInstance(inMemoryDns);
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext extensionContext) throws Exception {
+        inMemoryDns = new InMemoryDNSService();
+    }
+
+    @Override
+    public Optional<Class<?>> supportedParameterClass() {
+        return Optional.of(InMemoryDNSService.class);
+    }
+
+    @Override
+    public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return inMemoryDns;
+    }
 }

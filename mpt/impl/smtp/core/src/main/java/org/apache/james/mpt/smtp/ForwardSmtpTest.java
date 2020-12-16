@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.equalTo;
 
 import java.util.Locale;
 
+import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
 import org.apache.james.utils.FakeSmtpExtension;
 import org.awaitility.Awaitility;
@@ -41,30 +42,30 @@ public interface ForwardSmtpTest {
     String PASSWORD = "secret";
     Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
     ConditionFactory calmlyAwait = Awaitility.with()
-        .pollInterval(slowPacedPollInterval)
-        .await();
+            .pollInterval(slowPacedPollInterval)
+            .await();
 
     @RegisterExtension
     FakeSmtpExtension fakeSmtp = FakeSmtpExtension.withDefaultPort();
 
-    SmtpHostSystem hostSystem();
-
     @Test
-    default void forwardingAnEmailShouldWork(FakeSmtpExtension.FakeSmtp fakeSmtp) throws Exception {
-        SimpleScriptedTestProtocol scriptedTest = new SimpleScriptedTestProtocol("/org/apache/james/smtp/scripts/", hostSystem())
-                .withLocale(Locale.US)
-                .withUser(USER_AT_DOMAIN, PASSWORD);
+    default void forwardingAnEmailShouldWork(SmtpHostSystem hostSystem,
+                                             FakeSmtpExtension.FakeSmtp fakeSmtp,
+                                             InMemoryDNSService dnsService) throws Exception {
+        SimpleScriptedTestProtocol scriptedTest =
+                new SimpleScriptedTestProtocol("/org/apache/james/smtp/scripts/", hostSystem)
+                        .withLocale(Locale.US)
+                        .withUser(USER_AT_DOMAIN, PASSWORD);
 
-        hostSystem().getInMemoryDnsService()
-                .registerMxRecord("yopmail.com", fakeSmtp.getContainerIp());
-        hostSystem().addAddressMapping(USER, DOMAIN, "ray@yopmail.com");
+        dnsService.registerMxRecord("yopmail.com", fakeSmtp.getContainerIp());
+        hostSystem.addAddressMapping(USER, DOMAIN, "ray@yopmail.com");
 
         scriptedTest.run("helo");
 
         calmlyAwait.atMost(TWO_MINUTES).untilAsserted(() ->
-            fakeSmtp.assertEmailReceived(response -> response
-                .body("[0].from", equalTo("matthieu@yopmail.com"))
-                .body("[0].subject", equalTo("test"))
-                .body("[0].text", equalTo("content"))));
+                fakeSmtp.assertEmailReceived(response -> response
+                        .body("[0].from", equalTo("matthieu@yopmail.com"))
+                        .body("[0].subject", equalTo("test"))
+                        .body("[0].text", equalTo("content"))));
     }
 }

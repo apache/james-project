@@ -21,19 +21,18 @@ package org.apache.james.mpt.smtp;
 
 import static org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType.SMTP_START_TLS_SERVER;
 
-import org.apache.james.backends.cassandra.DockerCassandraExtension;
+import org.apache.james.CassandraRabbitMQJamesServerFixture;
+import org.apache.james.JamesServerExtension;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class AwsS3RabbitMQSmtpStarttlsCommandTest extends SmtpStarttlsCommandTest {
-
     @RegisterExtension
-    public static DockerCassandraExtension cassandraServer = new DockerCassandraExtension();
-
+    static JamesServerExtension testExtension = CassandraRabbitMQJamesServerFixture.baseExtensionBuilder()
+            .extension(new AwsS3BlobStoreExtension())
+            .extension(new InMemoryDnsExtension())
+            .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
+            .build();
     @RegisterExtension
-    public AwsS3BlobStoreExtension dockerAwsS3TestRule = new AwsS3BlobStoreExtension();
-
-    @RegisterExtension
-    public SmtpTestExtension cassandraRabbitMQAwsS3SmtpTestRule =
-            CassandraRabbitMQAwsS3SmtpTestRuleFactory.createExtension(SMTP_START_TLS_SERVER, () -> cassandraServer.getDockerCassandra().getHost(), dockerAwsS3TestRule);
+    static SmtpTestExtension smtpTestExtension = new SmtpTestExtension(SMTP_START_TLS_SERVER, testExtension);
 }

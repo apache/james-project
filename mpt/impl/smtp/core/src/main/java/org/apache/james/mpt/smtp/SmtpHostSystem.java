@@ -19,13 +19,10 @@
 
 package org.apache.james.mpt.smtp;
 
-import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.mpt.api.HostSystem;
 
 public interface SmtpHostSystem extends HostSystem {
 
     void addAddressMapping(String user, String domain, String address) throws Exception;
-
-    InMemoryDNSService getInMemoryDnsService();
 
 }
