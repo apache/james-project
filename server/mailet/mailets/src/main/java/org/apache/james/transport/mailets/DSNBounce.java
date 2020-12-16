@@ -19,6 +19,8 @@
 
 package org.apache.james.transport.mailets;
 
+import static org.apache.james.transport.mailets.remote.delivery.Bouncer.DELIVERY_ERROR;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
@@ -59,7 +61,6 @@ import org.apache.james.transport.util.ReplyToUtils;
 import org.apache.james.transport.util.SenderUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.james.transport.util.TosUtils;
-import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.DateFormats;
@@ -122,7 +123,6 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     private static final Pattern DIAG_PATTERN = Patterns.compilePatternUncheckedException("^\\d{3}\\s.*$");
     private static final String MACHINE_PATTERN = "[machine]";
     private static final String LINE_BREAK = "\n";
-    private static final AttributeName DELIVERY_ERROR = AttributeName.of("delivery-error");
 
     private final DNSService dns;
     private final DateTimeFormatter dateFormatter;
