@@ -78,9 +78,10 @@ import com.google.common.collect.ImmutableSet;
 
 /**
  * <p>
- * Generates a Delivery Status Notification (DSN) Note that this is different
- * than a mail-client's reply, which would use the Reply-To or From header.
- * </p>
+ * Generates a Delivery Status Notification (DSN) as per RFC-3464 An Extensible Message Format for Delivery Status
+ * Notifications (https://tools.ietf.org/html/rfc3464).</p>
+ *
+ * <p>Note that this is different than a mail-client's reply, which would use the Reply-To or From header.</p>
  * <p>
  * Bounced messages are attached in their entirety (headers and content) and the
  * resulting MIME part type is "message/rfc822".<br>
