@@ -45,6 +45,7 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Attribute;
+import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.MailAddressFixture;
@@ -388,6 +389,193 @@ public class DSNBounceTest {
     }
 
     @Nested
+    class Attachments {
+        @Test
+        void serviceShouldNotAttachTheOriginalMailWhenAttachmentIsEqualToNoneAndDsnRet() throws Exception {
+            FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("attachment", "none")
+                .build();
+            dsnBounce.init(mailetConfig);
+
+            MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+            FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(senderMailAddress)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setText("My content"))
+                .recipient("recipient@domain.com")
+                .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+                .build();
+            mail.setDsnParameters(DsnParameters.builder().ret(DsnParameters.Ret.FULL).build().get());
+
+            dsnBounce.service(mail);
+
+            List<SentMail> sentMails = fakeMailContext.getSentMails();
+            assertThat(sentMails).hasSize(1);
+            SentMail sentMail = sentMails.get(0);
+            assertThat(sentMail.getSender()).isNull();
+            assertThat(sentMail.getRecipients()).containsOnly(senderMailAddress);
+            MimeMessage sentMessage = sentMail.getMsg();
+            MimeMultipart content = (MimeMultipart) sentMessage.getContent();
+            assertThat(content.getCount()).isEqualTo(2);
+        }
+
+        @Test
+        void serviceShouldAttachTheOriginalMailWhenAttachmentIsEqualToAll() throws Exception {
+            FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("attachment", "all")
+                .build();
+            dsnBounce.init(mailetConfig);
+
+            MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+            MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+                .setText("My content")
+                .build();
+            FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(senderMailAddress)
+                .recipient("recipient@domain.com")
+                .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+                .mimeMessage(mimeMessage)
+                .build();
+            MimeMessage mimeMessageCopy = new MimeMessage(mimeMessage);
+
+            dsnBounce.service(mail);
+
+            List<SentMail> sentMails = fakeMailContext.getSentMails();
+            assertThat(sentMails).hasSize(1);
+            SentMail sentMail = sentMails.get(0);
+            assertThat(sentMail.getSender()).isNull();
+            assertThat(sentMail.getRecipients()).containsOnly(senderMailAddress);
+            MimeMessage sentMessage = sentMail.getMsg();
+            MimeMultipart content = (MimeMultipart) sentMessage.getContent();
+
+            assertThat(sentMail.getMsg().getContentType()).startsWith("multipart/report;");
+            assertThat(MimeMessageUtil.asString((MimeMessage) content.getBodyPart(2).getContent()))
+                .isEqualTo(MimeMessageUtil.asString(mimeMessageCopy));
+        }
+
+        @Test
+        void serviceShouldAttachTheOriginalMailHeadersOnlyWhenAttachmentIsEqualToHeads() throws Exception {
+            FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("attachment", "heads")
+                .build();
+            dsnBounce.init(mailetConfig);
+
+            MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+            FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(senderMailAddress)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setText("My content")
+                    .addHeader("myHeader", "myValue")
+                    .setSubject("mySubject"))
+                .recipient("recipient@domain.com")
+                .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+                .build();
+
+            dsnBounce.service(mail);
+
+            List<SentMail> sentMails = fakeMailContext.getSentMails();
+            assertThat(sentMails).hasSize(1);
+            SentMail sentMail = sentMails.get(0);
+            assertThat(sentMail.getSender()).isNull();
+            assertThat(sentMail.getRecipients()).containsOnly(senderMailAddress);
+            MimeMessage sentMessage = sentMail.getMsg();
+            MimeMultipart content = (MimeMultipart) sentMessage.getContent();
+            BodyPart bodyPart = content.getBodyPart(2);
+            SharedByteArrayInputStream actualContent = (SharedByteArrayInputStream) bodyPart.getContent();
+            assertThat(IOUtils.toString(actualContent, StandardCharsets.UTF_8))
+                .contains("Subject: mySubject")
+                .contains("myHeader: myValue");
+            assertThat(bodyPart.getContentType()).isEqualTo("text/rfc822-headers; name=mySubject");
+        }
+
+        @Test
+        void serviceShouldAttachTheOriginalMailWhenRequestedByTheSMTPClient() throws Exception {
+            FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("attachment", "heads")
+                .build();
+            dsnBounce.init(mailetConfig);
+
+            MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+            MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+                .setText("My content")
+                .build();
+            FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(senderMailAddress)
+                .recipient("recipient@domain.com")
+                .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+                .mimeMessage(mimeMessage)
+                .build();
+            mail.setDsnParameters(DsnParameters.builder().ret(DsnParameters.Ret.FULL).build().get());
+            MimeMessage mimeMessageCopy = new MimeMessage(mimeMessage);
+
+            dsnBounce.service(mail);
+
+            List<SentMail> sentMails = fakeMailContext.getSentMails();
+            assertThat(sentMails).hasSize(1);
+            SentMail sentMail = sentMails.get(0);
+            assertThat(sentMail.getSender()).isNull();
+            assertThat(sentMail.getRecipients()).containsOnly(senderMailAddress);
+            MimeMessage sentMessage = sentMail.getMsg();
+            MimeMultipart content = (MimeMultipart) sentMessage.getContent();
+
+            assertThat(sentMail.getMsg().getContentType()).startsWith("multipart/report;");
+            assertThat(MimeMessageUtil.asString((MimeMessage) content.getBodyPart(2).getContent()))
+                .isEqualTo(MimeMessageUtil.asString(mimeMessageCopy));
+        }
+
+        @Test
+        void serviceShouldAttachTheOriginalHeadersWhenRequestedByTheSMTPClient() throws Exception {
+            FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("attachment", "all")
+                .build();
+            dsnBounce.init(mailetConfig);
+
+            MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+            FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(senderMailAddress)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setText("My content")
+                    .addHeader("myHeader", "myValue")
+                    .setSubject("mySubject"))
+                .recipient("recipient@domain.com")
+                .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+                .build();
+            mail.setDsnParameters(DsnParameters.builder().ret(DsnParameters.Ret.HDRS).build().get());
+
+            dsnBounce.service(mail);
+
+            List<SentMail> sentMails = fakeMailContext.getSentMails();
+            assertThat(sentMails).hasSize(1);
+            SentMail sentMail = sentMails.get(0);
+            assertThat(sentMail.getSender()).isNull();
+            assertThat(sentMail.getRecipients()).containsOnly(senderMailAddress);
+            MimeMessage sentMessage = sentMail.getMsg();
+            MimeMultipart content = (MimeMultipart) sentMessage.getContent();
+            BodyPart bodyPart = content.getBodyPart(2);
+            SharedByteArrayInputStream actualContent = (SharedByteArrayInputStream) bodyPart.getContent();
+            assertThat(IOUtils.toString(actualContent, StandardCharsets.UTF_8))
+                .contains("Subject: mySubject")
+                .contains("myHeader: myValue");
+            assertThat(bodyPart.getContentType()).isEqualTo("text/rfc822-headers; name=mySubject");
+        }
+    }
+
+    @Nested
     class FailedAction {
         @Test
         void serviceShouldSendMultipartMailToTheSender() throws Exception {
@@ -538,13 +726,17 @@ public class DSNBounceTest {
             SharedByteArrayInputStream actualContent = (SharedByteArrayInputStream) content.getBodyPart(1).getContent();
             assertThat(IOUtils.toString(actualContent, StandardCharsets.UTF_8)).isEqualTo(expectedContent);
         }
+    }
 
+    @Nested
+    class DeliveredAction {
         @Test
-        void serviceShouldNotAttachTheOriginalMailWhenAttachmentIsEqualToNone() throws Exception {
+        void serviceShouldSendMultipartMailToTheSender() throws Exception {
             FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
-                .setProperty("attachment", "none")
+                .setProperty("action", "delivered")
+                .setProperty("messageString", "Hi. Your mail was successfully delivered")
                 .build();
             dsnBounce.init(mailetConfig);
 
@@ -566,53 +758,57 @@ public class DSNBounceTest {
             assertThat(sentMail.getSender()).isNull();
             assertThat(sentMail.getRecipients()).containsOnly(senderMailAddress);
             MimeMessage sentMessage = sentMail.getMsg();
-            MimeMultipart content = (MimeMultipart) sentMessage.getContent();
-            assertThat(content.getCount()).isEqualTo(2);
+            assertThat(sentMessage.getContentType()).contains("multipart/report;");
+            assertThat(sentMessage.getContentType()).contains("report-type=delivery-status");
         }
 
         @Test
-        void serviceShouldAttachTheOriginalMailWhenAttachmentIsEqualToAll() throws Exception {
+        void serviceShouldSendMultipartMailContainingTextPart() throws Exception {
             FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
-                .setProperty("attachment", "all")
+                .setProperty("action", "delivered")
+                .setProperty("messageString", "Hi. Your mail was successfully delivered at [machine].\n")
                 .build();
             dsnBounce.init(mailetConfig);
 
             MailAddress senderMailAddress = new MailAddress("sender@domain.com");
-            MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
-                .setText("My content")
-                .build();
             FakeMail mail = FakeMail.builder()
                 .name(MAILET_NAME)
                 .sender(senderMailAddress)
+                .attribute(DELIVERY_ERROR_ATTRIBUTE)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setText("My content"))
                 .recipient("recipient@domain.com")
                 .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
-                .mimeMessage(mimeMessage)
                 .build();
-            MimeMessage mimeMessageCopy = new MimeMessage(mimeMessage);
 
             dsnBounce.service(mail);
+
+            String hostname = InetAddress.getLocalHost().getHostName();
+            String expectedContent = "Hi. Your mail was successfully delivered at " + hostname + ".\n" +
+                "\n" +
+                "Delivered recipient(s):\n" +
+                "recipient@domain.com\n" +
+                "\n";
 
             List<SentMail> sentMails = fakeMailContext.getSentMails();
             assertThat(sentMails).hasSize(1);
             SentMail sentMail = sentMails.get(0);
-            assertThat(sentMail.getSender()).isNull();
-            assertThat(sentMail.getRecipients()).containsOnly(senderMailAddress);
             MimeMessage sentMessage = sentMail.getMsg();
             MimeMultipart content = (MimeMultipart) sentMessage.getContent();
-
-            assertThat(sentMail.getMsg().getContentType()).startsWith("multipart/report;");
-            assertThat(MimeMessageUtil.asString((MimeMessage) content.getBodyPart(2).getContent()))
-                .isEqualTo(MimeMessageUtil.asString(mimeMessageCopy));
+            BodyPart bodyPart = content.getBodyPart(0);
+            assertThat(bodyPart.getContentType()).isEqualTo("text/plain; charset=us-ascii");
+            assertThat(bodyPart.getContent()).isEqualTo(expectedContent);
         }
 
         @Test
-        void serviceShouldAttachTheOriginalMailHeadersOnlyWhenAttachmentIsEqualToHeads() throws Exception {
+        void serviceShouldSendMultipartMailContainingDSNPart() throws Exception {
             FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
                 .mailetContext(fakeMailContext)
-                .setProperty("attachment", "heads")
+                .setProperty("action", "delivered")
+                .setProperty("messageString", "Hi. Your mail was successfully delivered")
                 .build();
             dsnBounce.init(mailetConfig);
 
@@ -621,9 +817,50 @@ public class DSNBounceTest {
                 .name(MAILET_NAME)
                 .sender(senderMailAddress)
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                    .setText("My content")
-                    .addHeader("myHeader", "myValue")
-                    .setSubject("mySubject"))
+                    .setText("My content"))
+                .recipient("recipient@domain.com")
+                .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+                .remoteAddr("remoteHost")
+                .build();
+
+            dsnBounce.service(mail);
+
+            String expectedContent = "Reporting-MTA: dns; myhost\n" +
+                "Received-From-MTA: dns; 111.222.333.444\n" +
+                "\n" +
+                "Final-Recipient: rfc822; recipient@domain.com\n" +
+                "Action: delivered\n" +
+                "Status: unknown\n" +
+                "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 XXXXX (UTC)\n";
+
+            List<SentMail> sentMails = fakeMailContext.getSentMails();
+            assertThat(sentMails).hasSize(1);
+            SentMail sentMail = sentMails.get(0);
+            MimeMessage sentMessage = sentMail.getMsg();
+            MimeMultipart content = (MimeMultipart) sentMessage.getContent();
+            SharedByteArrayInputStream actualContent = (SharedByteArrayInputStream) content.getBodyPart(1).getContent();
+            assertThat(IOUtils.toString(actualContent, StandardCharsets.UTF_8)).isEqualTo(expectedContent);
+        }
+    }
+
+    @Nested
+    class DelayedAction {
+        @Test
+        void serviceShouldSendMultipartMailToTheSender() throws Exception {
+            FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("action", "delayed")
+                .setProperty("messageString", "Hi. Your mail was delayed at [machine]\n")
+                .build();
+            dsnBounce.init(mailetConfig);
+
+            MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+            FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(senderMailAddress)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setText("My content"))
                 .recipient("recipient@domain.com")
                 .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
                 .build();
@@ -636,13 +873,364 @@ public class DSNBounceTest {
             assertThat(sentMail.getSender()).isNull();
             assertThat(sentMail.getRecipients()).containsOnly(senderMailAddress);
             MimeMessage sentMessage = sentMail.getMsg();
-            MimeMultipart content = (MimeMultipart) sentMessage.getContent();
-            BodyPart bodyPart = content.getBodyPart(2);
-            SharedByteArrayInputStream actualContent = (SharedByteArrayInputStream) bodyPart.getContent();
-            assertThat(IOUtils.toString(actualContent, StandardCharsets.UTF_8))
-                .contains("Subject: mySubject")
-                .contains("myHeader: myValue");
-            assertThat(bodyPart.getContentType()).isEqualTo("text/rfc822-headers; name=mySubject");
+            assertThat(sentMessage.getContentType()).contains("multipart/report;");
+            assertThat(sentMessage.getContentType()).contains("report-type=delivery-status");
         }
+
+        @Test
+        void serviceShouldSendMultipartMailContainingTextPart() throws Exception {
+            FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("action", "delayed")
+                .setProperty("messageString", "Hi. Your mail was delayed at [machine].\n")
+                .build();
+            dsnBounce.init(mailetConfig);
+
+            MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+            FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(senderMailAddress)
+                .attribute(DELIVERY_ERROR_ATTRIBUTE)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setText("My content"))
+                .recipient("recipient@domain.com")
+                .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+                .build();
+
+            dsnBounce.service(mail);
+
+            String hostname = InetAddress.getLocalHost().getHostName();
+            String expectedContent = "Hi. Your mail was delayed at " + hostname + ".\n" +
+                "\n" +
+                "Delayed recipient(s):\n" +
+                "recipient@domain.com\n" +
+                "\n" +
+                "Error message:\n" +
+                "Delivery error\n\n";
+
+            List<SentMail> sentMails = fakeMailContext.getSentMails();
+            assertThat(sentMails).hasSize(1);
+            SentMail sentMail = sentMails.get(0);
+            MimeMessage sentMessage = sentMail.getMsg();
+            MimeMultipart content = (MimeMultipart) sentMessage.getContent();
+            BodyPart bodyPart = content.getBodyPart(0);
+            assertThat(bodyPart.getContentType()).isEqualTo("text/plain; charset=us-ascii");
+            assertThat(bodyPart.getContent()).isEqualTo(expectedContent);
+        }
+
+        @Test
+        void serviceShouldSendMultipartMailContainingDSNPart() throws Exception {
+            FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("action", "delayed")
+                .setProperty("messageString", "Hi. Your mail was delayed at [machine]\n")
+                .build();
+            dsnBounce.init(mailetConfig);
+
+            MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+            FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(senderMailAddress)
+                .attribute(DELIVERY_ERROR_ATTRIBUTE)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setText("My content"))
+                .recipient("recipient@domain.com")
+                .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+                .remoteAddr("remoteHost")
+                .build();
+
+            dsnBounce.service(mail);
+
+            String expectedContent = "Reporting-MTA: dns; myhost\n" +
+                "Received-From-MTA: dns; 111.222.333.444\n" +
+                "\n" +
+                "Final-Recipient: rfc822; recipient@domain.com\n" +
+                "Action: delayed\n" +
+                "Status: Delivery error\n" +
+                "Diagnostic-Code: X-James; Delivery error\n" +
+                "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 XXXXX (UTC)\n";
+
+            List<SentMail> sentMails = fakeMailContext.getSentMails();
+            assertThat(sentMails).hasSize(1);
+            SentMail sentMail = sentMails.get(0);
+            MimeMessage sentMessage = sentMail.getMsg();
+            MimeMultipart content = (MimeMultipart) sentMessage.getContent();
+            SharedByteArrayInputStream actualContent = (SharedByteArrayInputStream) content.getBodyPart(1).getContent();
+            assertThat(IOUtils.toString(actualContent, StandardCharsets.UTF_8)).isEqualTo(expectedContent);
+        }
+    }
+
+    @Nested
+    class RelayedAction {
+        @Test
+        void serviceShouldSendMultipartMailToTheSender() throws Exception {
+            FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("action", "relayed")
+                .setProperty("messageString", "Hi. Your mail was relayed at [machine]\n")
+                .build();
+            dsnBounce.init(mailetConfig);
+
+            MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+            FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(senderMailAddress)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setText("My content"))
+                .recipient("recipient@domain.com")
+                .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+                .build();
+
+            dsnBounce.service(mail);
+
+            List<SentMail> sentMails = fakeMailContext.getSentMails();
+            assertThat(sentMails).hasSize(1);
+            SentMail sentMail = sentMails.get(0);
+            assertThat(sentMail.getSender()).isNull();
+            assertThat(sentMail.getRecipients()).containsOnly(senderMailAddress);
+            MimeMessage sentMessage = sentMail.getMsg();
+            assertThat(sentMessage.getContentType()).contains("multipart/report;");
+            assertThat(sentMessage.getContentType()).contains("report-type=delivery-status");
+        }
+
+        @Test
+        void serviceShouldSendMultipartMailContainingTextPart() throws Exception {
+            FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("action", "relayed")
+                .setProperty("messageString", "Hi. Your mail was relayed at [machine].\n")
+                .build();
+            dsnBounce.init(mailetConfig);
+
+            MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+            FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(senderMailAddress)
+                .attribute(DELIVERY_ERROR_ATTRIBUTE)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setText("My content"))
+                .recipient("recipient@domain.com")
+                .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+                .build();
+
+            dsnBounce.service(mail);
+
+            String hostname = InetAddress.getLocalHost().getHostName();
+            String expectedContent = "Hi. Your mail was relayed at " + hostname + ".\n" +
+                "\n" +
+                "Relayed recipient(s):\n" +
+                "recipient@domain.com\n" +
+                "\n";
+
+            List<SentMail> sentMails = fakeMailContext.getSentMails();
+            assertThat(sentMails).hasSize(1);
+            SentMail sentMail = sentMails.get(0);
+            MimeMessage sentMessage = sentMail.getMsg();
+            MimeMultipart content = (MimeMultipart) sentMessage.getContent();
+            BodyPart bodyPart = content.getBodyPart(0);
+            assertThat(bodyPart.getContentType()).isEqualTo("text/plain; charset=us-ascii");
+            assertThat(bodyPart.getContent()).isEqualTo(expectedContent);
+        }
+
+        @Test
+        void serviceShouldSendMultipartMailContainingDSNPart() throws Exception {
+            FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("action", "relayed")
+                .setProperty("messageString", "Hi. Your mail was delayed at [machine]\n")
+                .build();
+            dsnBounce.init(mailetConfig);
+
+            MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+            FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(senderMailAddress)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setText("My content"))
+                .recipient("recipient@domain.com")
+                .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+                .remoteAddr("remoteHost")
+                .build();
+
+            dsnBounce.service(mail);
+
+            String expectedContent = "Reporting-MTA: dns; myhost\n" +
+                "Received-From-MTA: dns; 111.222.333.444\n" +
+                "\n" +
+                "Final-Recipient: rfc822; recipient@domain.com\n" +
+                "Action: relayed\n" +
+                "Status: unknown\n" +
+                "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 XXXXX (UTC)\n";
+
+            List<SentMail> sentMails = fakeMailContext.getSentMails();
+            assertThat(sentMails).hasSize(1);
+            SentMail sentMail = sentMails.get(0);
+            MimeMessage sentMessage = sentMail.getMsg();
+            MimeMultipart content = (MimeMultipart) sentMessage.getContent();
+            SharedByteArrayInputStream actualContent = (SharedByteArrayInputStream) content.getBodyPart(1).getContent();
+            assertThat(IOUtils.toString(actualContent, StandardCharsets.UTF_8)).isEqualTo(expectedContent);
+        }
+    }
+
+    @Nested
+    class ExpandedAction {
+        @Test
+        void serviceShouldSendMultipartMailToTheSender() throws Exception {
+            FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("action", "expanded")
+                .setProperty("messageString", "Hi. Your mail was expanded at [machine]\n")
+                .build();
+            dsnBounce.init(mailetConfig);
+
+            MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+            FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(senderMailAddress)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setText("My content"))
+                .recipient("recipient@domain.com")
+                .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+                .build();
+
+            dsnBounce.service(mail);
+
+            List<SentMail> sentMails = fakeMailContext.getSentMails();
+            assertThat(sentMails).hasSize(1);
+            SentMail sentMail = sentMails.get(0);
+            assertThat(sentMail.getSender()).isNull();
+            assertThat(sentMail.getRecipients()).containsOnly(senderMailAddress);
+            MimeMessage sentMessage = sentMail.getMsg();
+            assertThat(sentMessage.getContentType()).contains("multipart/report;");
+            assertThat(sentMessage.getContentType()).contains("report-type=delivery-status");
+        }
+
+        @Test
+        void serviceShouldSendMultipartMailContainingTextPart() throws Exception {
+            FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("action", "expanded")
+                .setProperty("messageString", "Hi. Your mail was expanded at [machine].\n")
+                .build();
+            dsnBounce.init(mailetConfig);
+
+            MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+            FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(senderMailAddress)
+                .attribute(DELIVERY_ERROR_ATTRIBUTE)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setText("My content"))
+                .recipient("recipient@domain.com")
+                .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+                .build();
+
+            dsnBounce.service(mail);
+
+            String hostname = InetAddress.getLocalHost().getHostName();
+            String expectedContent = "Hi. Your mail was expanded at " + hostname + ".\n" +
+                "\n" +
+                "Expanded recipient(s):\n" +
+                "recipient@domain.com\n" +
+                "\n";
+
+            List<SentMail> sentMails = fakeMailContext.getSentMails();
+            assertThat(sentMails).hasSize(1);
+            SentMail sentMail = sentMails.get(0);
+            MimeMessage sentMessage = sentMail.getMsg();
+            MimeMultipart content = (MimeMultipart) sentMessage.getContent();
+            BodyPart bodyPart = content.getBodyPart(0);
+            assertThat(bodyPart.getContentType()).isEqualTo("text/plain; charset=us-ascii");
+            assertThat(bodyPart.getContent()).isEqualTo(expectedContent);
+        }
+
+        @Test
+        void serviceShouldSendMultipartMailContainingDSNPart() throws Exception {
+            FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("action", "expanded")
+                .setProperty("messageString", "Hi. Your mail was expanded at [machine]\n")
+                .build();
+            dsnBounce.init(mailetConfig);
+
+            MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+            FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(senderMailAddress)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setText("My content"))
+                .recipient("recipient@domain.com")
+                .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+                .remoteAddr("remoteHost")
+                .build();
+
+            dsnBounce.service(mail);
+
+            String expectedContent = "Reporting-MTA: dns; myhost\n" +
+                "Received-From-MTA: dns; 111.222.333.444\n" +
+                "\n" +
+                "Final-Recipient: rfc822; recipient@domain.com\n" +
+                "Action: expanded\n" +
+                "Status: unknown\n" +
+                "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 XXXXX (UTC)\n";
+
+            List<SentMail> sentMails = fakeMailContext.getSentMails();
+            assertThat(sentMails).hasSize(1);
+            SentMail sentMail = sentMails.get(0);
+            MimeMessage sentMessage = sentMail.getMsg();
+            MimeMultipart content = (MimeMultipart) sentMessage.getContent();
+            SharedByteArrayInputStream actualContent = (SharedByteArrayInputStream) content.getBodyPart(1).getContent();
+            assertThat(IOUtils.toString(actualContent, StandardCharsets.UTF_8)).isEqualTo(expectedContent);
+        }
+    }
+
+    @Test
+    void envIdShouldBePositioned() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .mailetName(MAILET_NAME)
+            .mailetContext(fakeMailContext)
+            .build();
+        dsnBounce.init(mailetConfig);
+
+        MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+        FakeMail mail = FakeMail.builder()
+            .name(MAILET_NAME)
+            .sender(senderMailAddress)
+            .attribute(DELIVERY_ERROR_ATTRIBUTE)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setText("My content"))
+            .recipient("recipient@domain.com")
+            .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+            .remoteAddr("remoteHost")
+            .build();
+        mail.setDsnParameters(DsnParameters.builder().envId(DsnParameters.EnvId.of("xyz")).build().get());
+
+        dsnBounce.service(mail);
+
+        String expectedContent = "Reporting-MTA: dns; myhost\n" +
+            "Received-From-MTA: dns; 111.222.333.444\n" +
+            "Original-Envelope-Id: xyz\n" +
+            "\n" +
+            "Final-Recipient: rfc822; recipient@domain.com\n" +
+            "Action: failed\n" +
+            "Status: Delivery error\n" +
+            "Diagnostic-Code: X-James; Delivery error\n" +
+            "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 XXXXX (UTC)\n";
+
+        List<SentMail> sentMails = fakeMailContext.getSentMails();
+        assertThat(sentMails).hasSize(1);
+        SentMail sentMail = sentMails.get(0);
+        MimeMessage sentMessage = sentMail.getMsg();
+        MimeMultipart content = (MimeMultipart) sentMessage.getContent();
+        SharedByteArrayInputStream actualContent = (SharedByteArrayInputStream) content.getBodyPart(1).getContent();
+        assertThat(IOUtils.toString(actualContent, StandardCharsets.UTF_8)).isEqualTo(expectedContent);
     }
 }
