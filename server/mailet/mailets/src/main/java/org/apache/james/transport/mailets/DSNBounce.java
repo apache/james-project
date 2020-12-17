@@ -20,7 +20,6 @@
 package org.apache.james.transport.mailets;
 
 import static org.apache.james.transport.mailets.remote.delivery.Bouncer.DELIVERY_ERROR;
-import static org.apache.mailet.DsnParameters.Ret.HDRS;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -145,7 +144,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
             return value;
         }
 
-        public boolean shouldIncludeDiagnosticCode() {
+        public boolean shouldIncludeDiagnostic() {
             return shouldIncludeDiagnosticCode;
         }
     }
@@ -418,9 +417,11 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
                 .map(MailAddress::asString)
                 .collect(Collectors.joining(", ")));
         builder.append(LINE_BREAK).append(LINE_BREAK);
-        builder.append("Error message:").append(LINE_BREAK);
-        builder.append(AttributeUtils.getValueAndCastFromMail(originalMail, DELIVERY_ERROR, String.class).orElse("")).append(LINE_BREAK);
-        builder.append(LINE_BREAK);
+        if (action.shouldIncludeDiagnostic()) {
+            builder.append("Error message:").append(LINE_BREAK);
+            builder.append(AttributeUtils.getValueAndCastFromMail(originalMail, DELIVERY_ERROR, String.class).orElse("")).append(LINE_BREAK);
+            builder.append(LINE_BREAK);
+        }
 
         MimeBodyPart bodyPart = new MimeBodyPart();
         bodyPart.setText(builder.toString());
@@ -477,7 +478,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         buffer.append("Final-Recipient: rfc822; " + mailAddress.toString()).append(LINE_BREAK);
         buffer.append("Action: ").append(action.asString()).append(LINE_BREAK);
         buffer.append("Status: " + deliveryError).append(LINE_BREAK);
-        if (action.shouldIncludeDiagnosticCode()) {
+        if (action.shouldIncludeDiagnostic()) {
             buffer.append("Diagnostic-Code: " + getDiagnosticType(deliveryError) + "; " + deliveryError).append(LINE_BREAK);
         }
         buffer.append("Last-Attempt-Date: " + dateFormatter.format(ZonedDateTime.ofInstant(lastUpdated.toInstant(), ZoneId.systemDefault())))
