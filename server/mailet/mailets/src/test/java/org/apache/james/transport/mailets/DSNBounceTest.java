@@ -91,7 +91,7 @@ public class DSNBounceTest {
 
         @Test
         void getAllowedInitParametersShouldReturnTheParameters() {
-            assertThat(dsnBounce.getAllowedInitParameters()).containsOnly("debug", "passThrough", "messageString", "attachment", "sender", "prefix", "action");
+            assertThat(dsnBounce.getAllowedInitParameters()).containsOnly("debug", "passThrough", "messageString", "attachment", "sender", "prefix", "action", "defaultStatus");
         }
 
         @Test
@@ -1265,6 +1265,48 @@ public class DSNBounceTest {
             "Action: failed\n" +
             "Status: Delivery error\n" +
             "Diagnostic-Code: X-James; Delivery error\n" +
+            "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 XXXXX (UTC)\n";
+
+        List<SentMail> sentMails = fakeMailContext.getSentMails();
+        assertThat(sentMails).hasSize(1);
+        SentMail sentMail = sentMails.get(0);
+        MimeMessage sentMessage = sentMail.getMsg();
+        MimeMultipart content = (MimeMultipart) sentMessage.getContent();
+        SharedByteArrayInputStream actualContent = (SharedByteArrayInputStream) content.getBodyPart(1).getContent();
+        assertThat(IOUtils.toString(actualContent, StandardCharsets.UTF_8)).isEqualTo(expectedContent);
+    }
+
+    @Test
+    void defaultStatusShouldBeUsedWhenNone() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .mailetName(MAILET_NAME)
+            .mailetContext(fakeMailContext)
+            .setProperty("defaultStatus", "4.0.0")
+            .build();
+        dsnBounce.init(mailetConfig);
+
+        MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+        FakeMail mail = FakeMail.builder()
+            .name(MAILET_NAME)
+            .sender(senderMailAddress)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setText("My content"))
+            .recipient("recipient@domain.com")
+            .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+            .remoteAddr("remoteHost")
+            .build();
+        mail.setDsnParameters(DsnParameters.builder().envId(DsnParameters.EnvId.of("xyz")).build().get());
+
+        dsnBounce.service(mail);
+
+        String expectedContent = "Reporting-MTA: dns; myhost\n" +
+            "Received-From-MTA: dns; 111.222.333.444\n" +
+            "Original-Envelope-Id: xyz\n" +
+            "\n" +
+            "Final-Recipient: rfc822; recipient@domain.com\n" +
+            "Action: failed\n" +
+            "Status: 4.0.0\n" +
+            "Diagnostic-Code: X-James; 4.0.0\n" +
             "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 XXXXX (UTC)\n";
 
         List<SentMail> sentMails = fakeMailContext.getSentMails();

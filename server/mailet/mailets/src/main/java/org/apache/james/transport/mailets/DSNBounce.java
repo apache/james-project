@@ -110,9 +110,16 @@ import com.google.common.collect.ImmutableSet;
  *   &lt;passThrough&gt;<i>true or false, default=true</i>&lt;/passThrough&gt;
  *   &lt;debug&gt;<i>true or false, default=false</i>&lt;/debug&gt;
  *   &lt;action&gt;<i>failed, delayed, delivered, expanded or relayed, default=failed</i>&lt;/action&gt;
+ *   &lt;defaultStatus&gt;<i>failed, delayed, delivered, expanded or relayed, default=unknown</i>&lt;/defaultStatus&gt;  &lt;!-- See https://tools.ietf.org/html/rfc3463 --&gt;
  * &lt;/mailet&gt;
  * </code>
  * </pre>
+ *
+ * Possible values for defaultStatus (X being a digit):
+ *  - General structure is X.XXX.XXX
+ *  - 2.XXX.XXX indicates success and is suitable for relayed, delivered and expanded actions. 2.0.0 provides no further information.
+ *  - 4.XXX.XXX indicates transient failures and is suitable for delayed action. 4.0.0 provides no further information.
+ *  - 5.XXX.XXX indicates permanent failures and is suitable for failed. 5.0.0 provides no further information.
  *
  * @see RedirectNotify
  */
@@ -150,7 +157,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         }
     }
 
-    private static final ImmutableSet<String> CONFIGURABLE_PARAMETERS = ImmutableSet.of("debug", "passThrough", "messageString", "attachment", "sender", "prefix", "action");
+    private static final ImmutableSet<String> CONFIGURABLE_PARAMETERS = ImmutableSet.of("debug", "passThrough", "messageString", "attachment", "sender", "prefix", "action", "defaultStatus");
     private static final List<MailAddress> RECIPIENT_MAIL_ADDRESSES = ImmutableList.of(SpecialAddress.REVERSE_PATH);
     private static final List<InternetAddress> TO_INTERNET_ADDRESSES = ImmutableList.of(SpecialAddress.REVERSE_PATH.toInternetAddress());
 
@@ -163,6 +170,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     private final DateTimeFormatter dateFormatter;
     private String messageString = null;
     private Action action = null;
+    private String defaultStatus;
 
     @Inject
     public DSNBounce(DNSService dns) {
@@ -195,6 +203,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
             .map(configuredValue -> Action.parse(configuredValue)
                 .orElseThrow(() -> new IllegalArgumentException("Action '" + configuredValue + "' is not supported")))
             .orElse(Action.FAILED);
+        defaultStatus = getInitParameter("defaultStatus", "unknown");
     }
 
     @Override
@@ -497,7 +506,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     private String getDeliveryError(Mail originalMail) {
         return AttributeUtils
             .getValueAndCastFromMail(originalMail, DELIVERY_ERROR, String.class)
-            .orElse("unknown");
+            .orElse(defaultStatus);
     }
 
     private String getDiagnosticType(String diagnosticCode) {
