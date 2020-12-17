@@ -154,7 +154,7 @@ trait MailboxChangesMethodContract {
 
     val oldState: State = storeReferenceState(server, BOB)
 
-    renameMailbox(mailboxId, "mailbox11")
+    JmapRequests.renameMailbox(mailboxId, "mailbox11")
 
     val request =
       s"""{
@@ -284,7 +284,7 @@ trait MailboxChangesMethodContract {
 
     val oldState: State = storeReferenceState(server, BOB)
 
-    markEmailAsSeen(messageId)
+    JmapRequests.markEmailAsSeen(messageId)
 
     val request =
       s"""{
@@ -352,7 +352,7 @@ trait MailboxChangesMethodContract {
 
     val oldState: State = storeReferenceState(server, BOB)
 
-    markEmailAsNotSeen(messageId)
+    JmapRequests.markEmailAsNotSeen(messageId)
 
     val request =
       s"""{
@@ -418,7 +418,7 @@ trait MailboxChangesMethodContract {
 
     val oldState: State = storeReferenceState(server, BOB)
 
-    destroyEmail(messageId)
+    JmapRequests.destroyEmail(messageId)
 
     val request =
       s"""{
@@ -551,7 +551,7 @@ trait MailboxChangesMethodContract {
 
       val oldState: State = storeReferenceState(server, ANDRE)
 
-      renameMailbox(mailboxId, "mailbox11")
+      JmapRequests.renameMailbox(mailboxId, "mailbox11")
 
       val request =
         s"""{
@@ -622,7 +622,7 @@ trait MailboxChangesMethodContract {
 
       val oldState: State = storeReferenceState(server, ANDRE)
 
-      markEmailAsSeen(messageId)
+      JmapRequests.markEmailAsSeen(messageId)
 
       val request =
         s"""{
@@ -692,7 +692,7 @@ trait MailboxChangesMethodContract {
 
       val oldState: State = storeReferenceState(server, ANDRE)
 
-      markEmailAsNotSeen(messageId)
+      JmapRequests.markEmailAsNotSeen(messageId)
 
       val request =
         s"""{
@@ -763,7 +763,7 @@ trait MailboxChangesMethodContract {
 
       val oldState: State = storeReferenceState(server, ANDRE)
 
-      destroyEmail(messageId)
+      JmapRequests.destroyEmail(messageId)
 
       val request =
         s"""{
@@ -834,7 +834,7 @@ trait MailboxChangesMethodContract {
 
       val oldState: State = storeReferenceState(server, ANDRE)
 
-      destroyEmail(messageId)
+      JmapRequests.destroyEmail(messageId)
 
       val request =
         s"""{
@@ -899,7 +899,7 @@ trait MailboxChangesMethodContract {
 
       val oldState: State = storeReferenceState(server, ANDRE)
 
-      destroyMailbox(mailboxId)
+      JmapRequests.destroyMailbox(mailboxId)
 
       val request =
         s"""{
@@ -1032,7 +1032,7 @@ trait MailboxChangesMethodContract {
     val mailboxId2: String = mailboxProbe
       .createMailbox(path2)
       .serialize
-    renameMailbox(mailboxId2, "mailbox22")
+    JmapRequests.renameMailbox(mailboxId2, "mailbox22")
 
     server.getProbe(classOf[MailboxProbeImpl])
       .deleteMailbox(path1.getNamespace, BOB.asString(), path1.getName)
@@ -1414,136 +1414,6 @@ trait MailboxChangesMethodContract {
            |      }, "c1"]
            |    ]
            |}""".stripMargin)
-  }
-
-  private def renameMailbox(mailboxId: String, name: String): Unit = {
-    val request =
-      s"""
-         |{
-         |  "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
-         |  "methodCalls": [[
-         |    "Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "update": {
-         |        "$mailboxId": {
-         |          "name": "$name"
-         |        }
-         |      }
-         |    }, "c1"]
-         |  ]
-         |}
-         |""".stripMargin
-
-    `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
-    .when
-      .post
-    .`then`
-      .log().ifValidationFails()
-      .statusCode(SC_OK)
-      .contentType(JSON)
-  }
-
-  private def destroyMailbox(mailboxId: String): Unit = {
-    val request =
-      s"""
-         |{
-         |  "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
-         |  "methodCalls": [[
-         |    "Mailbox/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "destroy": ["$mailboxId"]
-         |    }, "c1"]
-         |  ]
-         |}
-         |""".stripMargin
-
-    `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
-    .when
-      .post
-    .`then`
-      .log().ifValidationFails()
-      .statusCode(SC_OK)
-      .contentType(JSON)
-  }
-
-  private def markEmailAsSeen(messageId: MessageId): Unit = {
-    val request = String.format(
-      s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-         |  "methodCalls": [
-         |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "update": {
-         |        "${messageId.serialize}": {
-         |          "keywords": {
-         |             "$$seen": true
-         |          }
-         |        }
-         |      }
-         |    }, "c1"]]
-         |}""".stripMargin)
-
-    `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
-    .when
-      .post
-    .`then`
-      .log().ifValidationFails()
-      .statusCode(SC_OK)
-      .contentType(JSON)
-  }
-
-  private def markEmailAsNotSeen(messageId: MessageId): Unit = {
-    val request = String.format(
-      s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-         |  "methodCalls": [
-         |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "update": {
-         |        "${messageId.serialize}": {
-         |          "keywords/$$seen": null
-         |        }
-         |      }
-         |    }, "c1"]]
-         |}""".stripMargin)
-
-    `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
-    .when
-      .post
-    .`then`
-      .log().ifValidationFails()
-      .statusCode(SC_OK)
-      .contentType(JSON)
-  }
-
-  private def destroyEmail(messageId: MessageId): Unit = {
-    val request = String.format(
-      s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-         |  "methodCalls": [
-         |    ["Email/set", {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "destroy": ["${messageId.serialize}"]
-         |    }, "c1"]]
-         |}""".stripMargin)
-
-    `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
-    .when
-      .post
-    .`then`
-      .log().ifValidationFails()
-      .statusCode(SC_OK)
-      .contentType(JSON)
   }
 
   private def storeReferenceState(server: GuiceJamesServer, username: Username): State = {
