@@ -453,6 +453,12 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         buffer.append("Received-From-MTA: dns; " + originalMail.getRemoteHost())
             .append(LINE_BREAK);
 
+        originalMail.dsnParameters()
+            .flatMap(DsnParameters::getEnvIdParameter)
+            .ifPresent(envId -> buffer.append("Original-Envelope-Id: ")
+                .append(envId.asString())
+                .append(LINE_BREAK));
+
         for (MailAddress rec : originalMail.getRecipients()) {
             appendRecipient(buffer, rec, getDeliveryError(originalMail), originalMail.getLastUpdated());
         }
