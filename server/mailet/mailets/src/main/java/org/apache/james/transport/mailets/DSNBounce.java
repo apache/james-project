@@ -412,6 +412,8 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         StringBuilder builder = new StringBuilder();
 
         builder.append(bounceMessage()).append(LINE_BREAK);
+        Optional.ofNullable(originalMail.getMessage().getSubject())
+            .ifPresent(subject -> builder.append("Original email subject: ").append(subject).append(LINE_BREAK).append(LINE_BREAK));
         builder.append(action.asString()).append(" recipient(s):").append(LINE_BREAK);
         builder.append(originalMail.getRecipients()
                 .stream()

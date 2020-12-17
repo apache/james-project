@@ -648,6 +648,48 @@ public class DSNBounceTest {
         }
 
         @Test
+        void originalSubjectShouldBeCarriedOver() throws Exception {
+            FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .build();
+            dsnBounce.init(mailetConfig);
+
+            MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+            FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(senderMailAddress)
+                .attribute(DELIVERY_ERROR_ATTRIBUTE)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setSubject("Banana power!")
+                    .setText("My content"))
+                .recipient("recipient@domain.com")
+                .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+                .build();
+
+            dsnBounce.service(mail);
+
+            String hostname = InetAddress.getLocalHost().getHostName();
+            String expectedContent = "Hi. This is the James mail server at " + hostname + ".\nI'm afraid I wasn't able to deliver your message to the following addresses.\nThis is a permanent error; I've given up. Sorry it didn't work out.  Below\nI include the list of recipients and the reason why I was unable to deliver\nyour message.\n\n" +
+                "Original email subject: Banana power!\n\n" +
+                "Failed recipient(s):\n" +
+                "recipient@domain.com\n" +
+                "\n" +
+                "Error message:\n" +
+                "Delivery error\n" +
+                "\n";
+
+            List<SentMail> sentMails = fakeMailContext.getSentMails();
+            assertThat(sentMails).hasSize(1);
+            SentMail sentMail = sentMails.get(0);
+            MimeMessage sentMessage = sentMail.getMsg();
+            MimeMultipart content = (MimeMultipart) sentMessage.getContent();
+            BodyPart bodyPart = content.getBodyPart(0);
+            assertThat(bodyPart.getContentType()).isEqualTo("text/plain; charset=us-ascii");
+            assertThat(bodyPart.getContent()).isEqualTo(expectedContent);
+        }
+
+        @Test
         void serviceShouldSendMultipartMailContainingTextPartWhenCustomMessageIsConfigured() throws Exception {
             FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)
