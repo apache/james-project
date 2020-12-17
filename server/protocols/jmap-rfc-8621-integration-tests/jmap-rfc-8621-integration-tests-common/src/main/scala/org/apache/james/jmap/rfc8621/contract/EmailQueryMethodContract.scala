@@ -251,7 +251,9 @@ trait EmailQueryMethodContract {
       .getMailboxId("#private", BOB.asString(), "myMailbox")
       .serialize
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -259,7 +261,6 @@ trait EmailQueryMethodContract {
          |            "Mailbox/set",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "newState": "${INSTANCE.value}",
          |                "created": {
          |                    "C42": {
          |                        "id": "${mailboxId}",
@@ -348,7 +349,9 @@ trait EmailQueryMethodContract {
       .getMailboxId("#private", BOB.asString(), "myMailbox")
       .serialize
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[0][1].oldState")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -356,7 +359,6 @@ trait EmailQueryMethodContract {
          |            "Mailbox/set",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "newState": "${INSTANCE.value}",
          |                "created": {
          |                    "C42": {
          |                        "id": "${mailboxId}",

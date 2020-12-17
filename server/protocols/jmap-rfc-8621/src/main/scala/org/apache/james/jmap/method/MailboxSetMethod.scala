@@ -21,6 +21,8 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
+import org.apache.james.jmap.api.change.MailboxChangeRepository
+import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{Invocation, SetError, State}
@@ -46,16 +48,20 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
                                  createPerformer: MailboxSetCreatePerformer,
                                  deletePerformer: MailboxSetDeletePerformer,
                                  updatePerformer: MailboxSetUpdatePerformer,
+                                 mailboxChangeRepository: MailboxChangeRepository,
                                  val metricFactory: MetricFactory,
                                  val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[MailboxSetRequest] {
   override val methodName: MethodName = MethodName("Mailbox/set")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxSetRequest): SMono[InvocationWithContext] = for {
-    creationResultsWithUpdatedProcessingContext <- createPerformer.createMailboxes(mailboxSession, request, invocation.processingContext)
+    oldState <- SMono(mailboxChangeRepository.getLatestState(JavaAccountId.fromUsername(mailboxSession.getUser))).map(State.fromJava)
+    creationResults <- createPerformer.createMailboxes(mailboxSession, request, invocation.processingContext)
     deletionResults <- deletePerformer.deleteMailboxes(mailboxSession, request)
     updateResults <- updatePerformer.updateMailboxes(mailboxSession, request, capabilities)
-  } yield InvocationWithContext(createResponse(capabilities, invocation.invocation, request, creationResultsWithUpdatedProcessingContext._1, deletionResults, updateResults), creationResultsWithUpdatedProcessingContext._2)
+    newState <- SMono(mailboxChangeRepository.getLatestState(JavaAccountId.fromUsername(mailboxSession.getUser))).map(State.fromJava)
+    response = createResponse(capabilities, invocation.invocation, request, creationResults._1, deletionResults, updateResults, oldState, newState)
+  } yield InvocationWithContext(response, creationResults._2)
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, MailboxSetRequest] =
     serializer.deserializeMailboxSetRequest(invocation.arguments.value) match {
@@ -68,11 +74,13 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
                              mailboxSetRequest: MailboxSetRequest,
                              creationResults: MailboxCreationResults,
                              deletionResults: MailboxDeletionResults,
-                             updateResults: MailboxUpdateResults): Invocation = {
+                             updateResults: MailboxUpdateResults,
+                             oldState: State,
+                             newState: State): Invocation = {
     val response = MailboxSetResponse(
       mailboxSetRequest.accountId,
-      oldState = None,
-      newState = State.INSTANCE,
+      oldState = Some(oldState),
+      newState = newState,
       destroyed = Some(deletionResults.destroyed).filter(_.nonEmpty),
       created = Some(creationResults.retrieveCreated).filter(_.nonEmpty),
       notCreated = Some(creationResults.retrieveErrors).filter(_.nonEmpty),
@@ -84,5 +92,4 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
       Arguments(serializer.serialize(response, capabilities).as[JsObject]),
       invocation.methodCallId)
   }
-
 }
