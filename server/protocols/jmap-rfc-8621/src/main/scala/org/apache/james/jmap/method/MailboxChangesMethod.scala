@@ -46,12 +46,14 @@ class MailboxChangesMethod @Inject()(mailboxSerializer: MailboxSerializer,
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxChangesRequest): SMono[InvocationWithContext] =
-    SMono.fromPublisher(
+    SMono.fromPublisher({
+      val accountId: JavaAccountId = JavaAccountId.fromUsername(mailboxSession.getUser)
+      val state: JavaState = JavaState.of(request.sinceState.value)
       if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
-        mailboxChangeRepository.getSinceStateWithDelegation(JavaAccountId.fromUsername(mailboxSession.getUser), JavaState.of(request.sinceState.value), request.maxChanged.toJava)
+        mailboxChangeRepository.getSinceStateWithDelegation(accountId, state, request.maxChanged.toJava)
       } else {
-        mailboxChangeRepository.getSinceState(JavaAccountId.fromUsername(mailboxSession.getUser), JavaState.of(request.sinceState.value), request.maxChanged.toJava)
-      })
+        mailboxChangeRepository.getSinceState(accountId, state, request.maxChanged.toJava)
+      }})
       .map(mailboxChanges => MailboxChangesResponse(
         accountId = request.accountId,
         oldState = request.sinceState,

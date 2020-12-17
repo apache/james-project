@@ -25,6 +25,7 @@ import javax.inject.Singleton;
 
 import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthorizator;
+import org.apache.james.jmap.api.change.MailboxChange.State;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.memory.change.MemoryMailboxChangeRepository;
 import org.apache.james.mailbox.AttachmentContentLoader;
@@ -95,6 +96,7 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(UidProvider.class).to(InMemoryUidProvider.class);
         bind(MailboxId.Factory.class).to(InMemoryId.Factory.class);
         bind(MessageId.Factory.class).to(InMemoryMessageId.Factory.class);
+        bind(State.Factory.class).to(State.DefaultFactory.class);
 
         bind(BlobManager.class).to(StoreBlobManager.class);
         bind(SubscriptionManager.class).to(StoreSubscriptionManager.class);

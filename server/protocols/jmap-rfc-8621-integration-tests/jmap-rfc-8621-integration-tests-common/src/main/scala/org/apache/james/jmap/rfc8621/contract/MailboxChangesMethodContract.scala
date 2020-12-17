@@ -63,6 +63,8 @@ case class TestId(value: Long) extends MailboxId {
 
 trait MailboxChangesMethodContract {
 
+  def stateFactory: State.Factory
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DataProbeImpl])
@@ -506,12 +508,12 @@ trait MailboxChangesMethodContract {
           .setBody(request)
           .build, new ResponseSpecBuilder().build)
         .post
-        .`then`
-          .statusCode(SC_OK)
-          .contentType(JSON)
-          .extract
-          .body
-          .asString
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
@@ -570,12 +572,12 @@ trait MailboxChangesMethodContract {
           .setBody(request)
           .build, new ResponseSpecBuilder().build)
         .post
-        .`then`
-          .statusCode(SC_OK)
-          .contentType(JSON)
-          .extract
-          .body
-          .asString
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
@@ -641,12 +643,12 @@ trait MailboxChangesMethodContract {
           .setBody(request)
           .build, new ResponseSpecBuilder().build)
         .post
-        .`then`
-          .statusCode(SC_OK)
-          .contentType(JSON)
-          .extract
-          .body
-          .asString
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
@@ -711,12 +713,12 @@ trait MailboxChangesMethodContract {
           .setBody(request)
           .build, new ResponseSpecBuilder().build)
         .post
-        .`then`
-          .statusCode(SC_OK)
-          .contentType(JSON)
-          .extract
-          .body
-          .asString
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
@@ -782,12 +784,12 @@ trait MailboxChangesMethodContract {
           .setBody(request)
           .build, new ResponseSpecBuilder().build)
         .post
-        .`then`
-          .statusCode(SC_OK)
-          .contentType(JSON)
-          .extract
-          .body
-          .asString
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
@@ -853,12 +855,12 @@ trait MailboxChangesMethodContract {
           .setBody(request)
           .build, new ResponseSpecBuilder().build)
         .post
-        .`then`
-          .statusCode(SC_OK)
-          .contentType(JSON)
-          .extract
-          .body
-          .asString
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
@@ -918,12 +920,12 @@ trait MailboxChangesMethodContract {
           .setBody(request)
           .build, new ResponseSpecBuilder().build)
         .post
-        .`then`
-          .statusCode(SC_OK)
-          .contentType(JSON)
-          .extract
-          .body
-          .asString
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
 
       assertThatJson(response)
         .whenIgnoringPaths("methodResponses[0][1].newState")
@@ -1545,9 +1547,10 @@ trait MailboxChangesMethodContract {
   }
 
   private def storeReferenceState(server: GuiceJamesServer, username: Username): State = {
-    val state: State = State.of(UUID.randomUUID())
+    val state: State = stateFactory.generate()
     val jmapGuiceProbe: JmapGuiceProbe = server.getProbe(classOf[JmapGuiceProbe])
-    jmapGuiceProbe.saveMailboxChange(MailboxChange.updated(AccountId.fromUsername(username), state, ZonedDateTime.now(), List(TestId.of(0)).asJava).build)
+
+    jmapGuiceProbe.saveMailboxChange(MailboxChange.builder.accountId(AccountId.fromUsername(username)).state(state).date(ZonedDateTime.now()).updated(List(TestId.of(0)).asJava).build)
 
     state
   }
