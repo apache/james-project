@@ -29,6 +29,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -120,11 +121,11 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     private static final Logger LOGGER = LoggerFactory.getLogger(DSNBounce.class);
 
     enum Action {
-        DELIVERED("delivered", false),
-        DELAYED("delayed", true),
-        FAILED("failed", true),
-        EXPANDED("expanded", false),
-        RELAYED("relayed", false);
+        DELIVERED("Delivered", false),
+        DELAYED("Delayed", true),
+        FAILED("Failed", true),
+        EXPANDED("Expanded", false),
+        RELAYED("Relayed", false);
 
         public static Optional<Action> parse(String serialized) {
             return Stream.of(Action.values())
@@ -411,7 +412,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
         StringBuilder builder = new StringBuilder();
 
         builder.append(bounceMessage()).append(LINE_BREAK);
-        builder.append("Failed recipient(s):").append(LINE_BREAK);
+        builder.append(action.asString()).append(" recipient(s):").append(LINE_BREAK);
         builder.append(originalMail.getRecipients()
                 .stream()
                 .map(MailAddress::asString)
@@ -476,7 +477,7 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     private void appendRecipient(StringBuffer buffer, MailAddress mailAddress, String deliveryError, Date lastUpdated) {
         buffer.append(LINE_BREAK);
         buffer.append("Final-Recipient: rfc822; " + mailAddress.toString()).append(LINE_BREAK);
-        buffer.append("Action: ").append(action.asString()).append(LINE_BREAK);
+        buffer.append("Action: ").append(action.asString().toLowerCase(Locale.US)).append(LINE_BREAK);
         buffer.append("Status: " + deliveryError).append(LINE_BREAK);
         if (action.shouldIncludeDiagnostic()) {
             buffer.append("Diagnostic-Code: " + getDiagnosticType(deliveryError) + "; " + deliveryError).append(LINE_BREAK);
