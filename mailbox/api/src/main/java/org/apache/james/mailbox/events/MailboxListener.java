@@ -34,6 +34,7 @@ import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.acl.ACLDiff;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
@@ -308,13 +309,15 @@ public interface MailboxListener {
      * Indicates that mailbox has been deleted.
      */
     class MailboxDeletion extends MailboxEvent {
+        private final MailboxACL mailboxACL;
         private final QuotaRoot quotaRoot;
         private final QuotaCountUsage deletedMessageCount;
         private final QuotaSizeUsage totalDeletedSize;
 
-        public MailboxDeletion(MailboxSession.SessionId sessionId, Username username, MailboxPath path, QuotaRoot quotaRoot, QuotaCountUsage deletedMessageCount, QuotaSizeUsage totalDeletedSize,
+        public MailboxDeletion(MailboxSession.SessionId sessionId, Username username, MailboxPath path, MailboxACL mailboxACL, QuotaRoot quotaRoot, QuotaCountUsage deletedMessageCount, QuotaSizeUsage totalDeletedSize,
                                MailboxId mailboxId, EventId eventId) {
             super(sessionId, username, path, mailboxId, eventId);
+            this.mailboxACL = mailboxACL;
             this.quotaRoot = quotaRoot;
             this.deletedMessageCount = deletedMessageCount;
             this.totalDeletedSize = totalDeletedSize;
@@ -323,6 +326,10 @@ public interface MailboxListener {
         @Override
         public boolean isNoop() {
             return false;
+        }
+
+        public MailboxACL getMailboxACL() {
+            return mailboxACL;
         }
 
         public QuotaRoot getQuotaRoot() {
@@ -346,6 +353,7 @@ public interface MailboxListener {
                     && Objects.equals(this.sessionId, that.sessionId)
                     && Objects.equals(this.username, that.username)
                     && Objects.equals(this.path, that.path)
+                    && Objects.equals(this.mailboxACL, that.mailboxACL)
                     && Objects.equals(this.mailboxId, that.mailboxId)
                     && Objects.equals(this.quotaRoot, that.quotaRoot)
                     && Objects.equals(this.deletedMessageCount, that.deletedMessageCount)
@@ -356,7 +364,7 @@ public interface MailboxListener {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(eventId, sessionId, username, path, mailboxId, quotaRoot, deletedMessageCount, totalDeletedSize);
+            return Objects.hash(eventId, sessionId, username, path, mailboxACL, mailboxId, quotaRoot, deletedMessageCount, totalDeletedSize);
         }
     }
 

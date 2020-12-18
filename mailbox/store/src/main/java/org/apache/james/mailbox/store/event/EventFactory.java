@@ -36,6 +36,7 @@ import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.events.MessageMoveEvent;
 import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -85,6 +86,11 @@ public class EventFactory {
     @FunctionalInterface
     public interface RequirePath<T> {
         T mailboxPath(MailboxPath path);
+    }
+
+    @FunctionalInterface
+    public interface RequireMailboxACL<T> {
+        T mailboxACL(MailboxACL mailboxACL);
     }
 
     @FunctionalInterface
@@ -294,6 +300,7 @@ public class EventFactory {
     public static class MailboxDeletionFinalStage {
         private final Event.EventId eventId;
         private final MailboxPath path;
+        private final MailboxACL mailboxACL;
         private final MailboxId mailboxId;
         private final Username username;
         private final MailboxSession.SessionId sessionId;
@@ -301,9 +308,10 @@ public class EventFactory {
         private final QuotaCountUsage deletedMessageCount;
         private final QuotaSizeUsage totalDeletedSize;
 
-        MailboxDeletionFinalStage(Event.EventId eventId, MailboxPath path, MailboxId mailboxId, Username username, MailboxSession.SessionId sessionId, QuotaRoot quotaRoot, QuotaCountUsage deletedMessageCount, QuotaSizeUsage totalDeletedSize) {
+        MailboxDeletionFinalStage(Event.EventId eventId, MailboxPath path, MailboxACL mailboxACL, MailboxId mailboxId, Username username, MailboxSession.SessionId sessionId, QuotaRoot quotaRoot, QuotaCountUsage deletedMessageCount, QuotaSizeUsage totalDeletedSize) {
             this.eventId = eventId;
             this.path = path;
+            this.mailboxACL = mailboxACL;
             this.mailboxId = mailboxId;
             this.username = username;
             this.sessionId = sessionId;
@@ -321,7 +329,7 @@ public class EventFactory {
             Preconditions.checkNotNull(deletedMessageCount);
             Preconditions.checkNotNull(totalDeletedSize);
 
-            return new MailboxListener.MailboxDeletion(sessionId, username, path, quotaRoot, deletedMessageCount, totalDeletedSize, mailboxId, eventId);
+            return new MailboxListener.MailboxDeletion(sessionId, username, path, mailboxACL, quotaRoot, deletedMessageCount, totalDeletedSize, mailboxId, eventId);
         }
     }
 
@@ -421,9 +429,9 @@ public class EventFactory {
         return eventId -> user -> sessionId -> mailboxId -> oldPath -> newPath -> new MailboxRenamedFinalStage(eventId, oldPath, mailboxId, user, sessionId, newPath);
     }
 
-    public static  RequireMailboxEvent<RequireQuotaRoot<RequireQuotaCountValue<RequireQuotaSizeValue<MailboxDeletionFinalStage>>>> mailboxDeleted() {
-        return eventId -> user -> sessionId -> mailboxId -> path -> quotaRoot -> quotaCount -> quotaSize -> new MailboxDeletionFinalStage(
-            eventId, path, mailboxId, user, sessionId, quotaRoot, quotaCount, quotaSize);
+    public static  RequireMailboxEvent<RequireQuotaRoot<RequireMailboxACL<RequireQuotaCountValue<RequireQuotaSizeValue<MailboxDeletionFinalStage>>>>> mailboxDeleted() {
+        return eventId -> user -> sessionId -> mailboxId -> path -> quotaRoot -> mailboxACL -> quotaCount -> quotaSize -> new MailboxDeletionFinalStage(
+            eventId, path, mailboxACL, mailboxId, user, sessionId, quotaRoot, quotaCount, quotaSize);
     }
 
     public static RequireMailboxEvent<MailboxAddedFinalStage> mailboxAdded() {

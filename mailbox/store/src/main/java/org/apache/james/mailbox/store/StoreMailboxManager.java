@@ -451,6 +451,7 @@ public class StoreMailboxManager implements MailboxManager {
                             .mailboxSession(session)
                             .mailbox(mailbox)
                             .quotaRoot(quotaRootWithMessageCount.getT1())
+                            .mailboxACL(mailbox.getACL())
                             .quotaCount(QuotaCountUsage.count(quotaRootWithMessageCount.getT2()))
                             .quotaSize(QuotaSizeUsage.size(totalSize))
                             .build(),

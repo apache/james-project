@@ -247,12 +247,29 @@ public class MailboxChange {
             if (event instanceof MailboxDeletion) {
                 MailboxDeletion mailboxDeletion = (MailboxDeletion) event;
 
-                return ImmutableList.of(MailboxChange.builder()
+                MailboxChange ownerChange = MailboxChange.builder()
                     .accountId(AccountId.fromUsername(mailboxDeletion.getUsername()))
                     .state(stateFactory.generate())
                     .date(now)
                     .destroyed(ImmutableList.of(mailboxDeletion.getMailboxId()))
-                    .build());
+                    .build();
+
+                Stream<MailboxChange> shareeChanges = mailboxDeletion.getMailboxACL()
+                    .getEntries().keySet()
+                    .stream()
+                    .filter(rfc4314Rights -> !rfc4314Rights.isNegative())
+                    .filter(rfc4314Rights -> rfc4314Rights.getNameType().equals(MailboxACL.NameType.user))
+                    .map(MailboxACL.EntryKey::getName)
+                    .map(name -> MailboxChange.builder()
+                        .accountId(AccountId.fromString(name))
+                        .state(stateFactory.generate())
+                        .date(now)
+                        .destroyed(ImmutableList.of(mailboxDeletion.getMailboxId()))
+                        .delegated()
+                        .build());
+
+                return Stream.concat(Stream.of(ownerChange), shareeChanges)
+                    .collect(Guavate.toImmutableList());
             }
             if (event instanceof Added) {
                 Added messageAdded = (Added) event;

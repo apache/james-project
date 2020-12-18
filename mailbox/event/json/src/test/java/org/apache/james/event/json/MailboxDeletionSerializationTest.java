@@ -29,12 +29,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -55,46 +57,114 @@ class MailboxDeletionSerializationTest {
         SESSION_ID,
         USERNAME,
         MAILBOX_PATH,
+        new MailboxACL(Pair.of(MailboxACL.EntryKey.createUserEntryKey(USERNAME), new MailboxACL.Rfc4314Rights(MailboxACL.Right.allRights))),
         QUOTA_ROOT,
         DELETED_MESSAGE_COUNT,
         TOTAL_DELETED_SIZE,
         MAILBOX_ID,
         EVENT_ID);
 
-    private static final String DEFAULT_EVEN_JSON =
+    private static final MailboxListener.MailboxDeletion EMPTY_ACL_MAILBOX_DELETION_EVENT = new MailboxListener.MailboxDeletion(
+        SESSION_ID,
+        USERNAME,
+        MAILBOX_PATH,
+        new MailboxACL(),
+        QUOTA_ROOT,
+        DELETED_MESSAGE_COUNT,
+        TOTAL_DELETED_SIZE,
+        MAILBOX_ID,
+        EVENT_ID);
+
+    private static final String DEFAULT_EVENT_JSON =
         "{" +
-        "  \"MailboxDeletion\":{" +
-        "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
-        "    \"sessionId\":3652," +
-        "    \"user\":\"user\"," +
-        "    \"path\":{" +
-        "      \"namespace\":\"#private\"," +
-        "      \"user\":\"user\"," +
-        "      \"name\":\"mailboxName\"" +
-        "    }," +
-        "    \"quotaRoot\":\"#private&user@domain\"," +
-        "    \"deletedMessageCount\":60," +
-        "    \"totalDeletedSize\":100," +
-        "    \"mailboxId\":\"789\"" +
-        "  }" +
-        "}";
+            "  \"MailboxDeletion\":{" +
+            "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
+            "    \"mailboxACL\":{" +
+            "      \"entries\": {" +
+            "        \"user\":\"aeiklprstwx\"" +
+            "       }" +
+            "    }," +
+            "    \"sessionId\":3652," +
+            "    \"user\":\"user\"," +
+            "    \"path\":{" +
+            "      \"namespace\":\"#private\"," +
+            "      \"user\":\"user\"," +
+            "      \"name\":\"mailboxName\"" +
+            "    }," +
+            "    \"quotaRoot\":\"#private&user@domain\"," +
+            "    \"deletedMessageCount\":60," +
+            "    \"totalDeletedSize\":100," +
+            "    \"mailboxId\":\"789\"" +
+            "  }" +
+            "}";
+
+    private static final String EVENT_WITH_EMPTY_ACL_JSON =
+        "{" +
+            "  \"MailboxDeletion\":{" +
+            "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
+            "    \"mailboxACL\":{" +
+            "      \"entries\": {}" +
+            "    }," +
+            "    \"sessionId\":3652," +
+            "    \"user\":\"user\"," +
+            "    \"path\":{" +
+            "      \"namespace\":\"#private\"," +
+            "      \"user\":\"user\"," +
+            "      \"name\":\"mailboxName\"" +
+            "    }," +
+            "    \"quotaRoot\":\"#private&user@domain\"," +
+            "    \"deletedMessageCount\":60," +
+            "    \"totalDeletedSize\":100," +
+            "    \"mailboxId\":\"789\"" +
+            "  }" +
+            "}";
+
+    private static final String LEGACY_EVENT_JSON =
+        "{" +
+            "  \"MailboxDeletion\":{" +
+            "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
+            "    \"sessionId\":3652," +
+            "    \"user\":\"user\"," +
+            "    \"path\":{" +
+            "      \"namespace\":\"#private\"," +
+            "      \"user\":\"user\"," +
+            "      \"name\":\"mailboxName\"" +
+            "    }," +
+            "    \"quotaRoot\":\"#private&user@domain\"," +
+            "    \"deletedMessageCount\":60," +
+            "    \"totalDeletedSize\":100," +
+            "    \"mailboxId\":\"789\"" +
+            "  }" +
+            "}";
 
     @Test
-    void mailboxAddedShouldBeWellSerialized() {
+    void mailboxDeletionShouldBeWellSerialized() {
         assertThatJson(EVENT_SERIALIZER.toJson(DEFAULT_MAILBOX_DELETION_EVENT))
-            .isEqualTo(DEFAULT_EVEN_JSON);
+            .isEqualTo(DEFAULT_EVENT_JSON);
     }
 
     @Test
-    void mailboxAddedShouldBeWellDeSerialized() {
-        assertThat(EVENT_SERIALIZER.fromJson(DEFAULT_EVEN_JSON).get())
+    void mailboxDeletionShouldBeWellDeSerialized() {
+        assertThat(EVENT_SERIALIZER.fromJson(DEFAULT_EVENT_JSON).get())
             .isEqualTo(DEFAULT_MAILBOX_DELETION_EVENT);
+    }
+
+    @Test
+    void mailboxDeletionWithEmptyACLShouldBeWellSerialized() {
+        assertThatJson(EVENT_SERIALIZER.toJson(EMPTY_ACL_MAILBOX_DELETION_EVENT))
+            .isEqualTo(EVENT_WITH_EMPTY_ACL_JSON);
+    }
+
+    @Test
+    void legacyMailboxDeletionShouldBeWellDeSerialized() {
+        assertThat(EVENT_SERIALIZER.fromJson(LEGACY_EVENT_JSON).get())
+            .isEqualTo(EMPTY_ACL_MAILBOX_DELETION_EVENT);
     }
 
     @Nested
     class DeserializationErrors {
         @Test
-        void mailboxAddedShouldThrowWhenMissingSessionId() {
+        void mailboxDeletionShouldThrowWhenMissingSessionId() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxDeletion\":{" +
@@ -115,7 +185,7 @@ class MailboxDeletionSerializationTest {
         }
 
         @Test
-        void mailboxAddedShouldThrowWhenMissingEventId() {
+        void mailboxDeletionShouldThrowWhenMissingEventId() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxDeletion\":{" +
@@ -136,7 +206,7 @@ class MailboxDeletionSerializationTest {
         }
 
         @Test
-        void mailboxAddedShouldThrowWhenMissingUser() {
+        void mailboxDeletionShouldThrowWhenMissingUser() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxDeletion\":{" +
@@ -157,7 +227,7 @@ class MailboxDeletionSerializationTest {
         }
 
         @Test
-        void mailboxAddedShouldThrowWhenMissingQuotaRoot() {
+        void mailboxDeletionShouldThrowWhenMissingQuotaRoot() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxDeletion\":{" +
@@ -178,7 +248,7 @@ class MailboxDeletionSerializationTest {
         }
 
         @Test
-        void mailboxAddedShouldThrowWhenMissingQuotaCount() {
+        void mailboxDeletionShouldThrowWhenMissingQuotaCount() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxDeletion\":{" +
@@ -199,7 +269,7 @@ class MailboxDeletionSerializationTest {
         }
 
         @Test
-        void mailboxAddedShouldThrowWhenMissingQuotaSize() {
+        void mailboxDeletionShouldThrowWhenMissingQuotaSize() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxDeletion\":{" +
@@ -220,7 +290,7 @@ class MailboxDeletionSerializationTest {
         }
 
         @Test
-        void mailboxAddedShouldThrowWhenMissingMailboxId() {
+        void mailboxDeletionShouldThrowWhenMissingMailboxId() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxDeletion\":{" +
@@ -241,7 +311,7 @@ class MailboxDeletionSerializationTest {
         }
 
         @Test
-        void mailboxAddedShouldThrowWhenMissingPath() {
+        void mailboxDeletionShouldThrowWhenMissingPath() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxDeletion\":{" +

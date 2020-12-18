@@ -25,7 +25,7 @@ import java.util.{TreeMap => JavaTreeMap}
 import javax.inject.Inject
 import julienrf.json.derived
 import org.apache.james.core.Username
-import org.apache.james.core.quota.{QuotaCountLimit, QuotaCountUsage, QuotaLimitValue, QuotaSizeLimit, QuotaSizeUsage, QuotaUsageValue}
+import org.apache.james.core.quota.{QuotaCountLimit, QuotaCountUsage, QuotaSizeLimit, QuotaSizeUsage}
 import org.apache.james.event.json.DTOs.SystemFlag.SystemFlag
 import org.apache.james.event.json.DTOs._
 import org.apache.james.mailbox.MailboxSession.SessionId
@@ -52,9 +52,9 @@ private object DTO {
     override def toJava: JavaEvent = new JavaMailboxAdded(sessionId, user, mailboxPath.toJava, mailboxId, eventId)
   }
 
-  case class MailboxDeletion(eventId: EventId, sessionId: SessionId, user: Username, path: MailboxPath, quotaRoot: QuotaRoot,
+  case class MailboxDeletion(eventId: EventId, sessionId: SessionId, user: Username, path: MailboxPath, mailboxACL: Option[MailboxACL], quotaRoot: QuotaRoot,
                              deletedMessageCount: QuotaCountUsage, totalDeletedSize: QuotaSizeUsage, mailboxId: MailboxId) extends Event {
-    override def toJava: JavaEvent = new JavaMailboxDeletion(sessionId, user, path.toJava, quotaRoot, deletedMessageCount,
+    override def toJava: JavaEvent = new JavaMailboxDeletion(sessionId, user, path.toJava, mailboxACL.map(mailboxACL => mailboxACL.toJava).getOrElse(new JavaMailboxACL()), quotaRoot, deletedMessageCount,
       totalDeletedSize, mailboxId, eventId)
   }
 
@@ -136,6 +136,7 @@ private object ScalaConverter {
     user = event.getUsername,
     quotaRoot = event.getQuotaRoot,
     path = MailboxPath.fromJava(event.getMailboxPath),
+    mailboxACL = MailboxACL.fromJava(event.getMailboxACL),
     deletedMessageCount = event.getDeletedMessageCount,
     totalDeletedSize = event.getTotalDeletedSize,
     mailboxId = event.getMailboxId)
@@ -217,6 +218,7 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   implicit val sessionIdWrites: Writes[SessionId] = value => JsNumber(value.getValue)
   implicit val aclEntryKeyWrites: Writes[JavaMailboxACL.EntryKey] = value => JsString(value.serialize())
   implicit val aclRightsWrites: Writes[JavaMailboxACL.Rfc4314Rights] = value => JsString(value.serialize())
+  implicit val mailboxACLWrites: Writes[MailboxACL] = Json.writes[MailboxACL]
   implicit val aclDiffWrites: Writes[ACLDiff] = Json.writes[ACLDiff]
   implicit val messageIdWrites: Writes[MessageId] = value => JsString(value.serialize())
   implicit val messageUidWrites: Writes[MessageUid] = value => JsNumber(value.asLong())
@@ -333,6 +335,7 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   implicit val quotaCReads: Reads[DTOs.Quota[QuotaCountLimit, QuotaCountUsage]] = Json.reads[DTOs.Quota[QuotaCountLimit, QuotaCountUsage]]
   implicit val quotaSReads: Reads[DTOs.Quota[QuotaSizeLimit, QuotaSizeUsage]] = Json.reads[DTOs.Quota[QuotaSizeLimit, QuotaSizeUsage]]
   implicit val mailboxPathReads: Reads[DTOs.MailboxPath] = Json.reads[DTOs.MailboxPath]
+  implicit val mailboxACLReads: Reads[DTOs.MailboxACL] = Json.reads[DTOs.MailboxACL]
   implicit val messageMetaDataReads: Reads[DTOs.MessageMetaData] = Json.reads[DTOs.MessageMetaData]
   implicit val updatedFlagsReads: Reads[DTOs.UpdatedFlags] = Json.reads[DTOs.UpdatedFlags]
 

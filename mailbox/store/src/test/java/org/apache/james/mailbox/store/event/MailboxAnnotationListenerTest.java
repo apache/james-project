@@ -39,6 +39,7 @@ import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxId;
@@ -88,6 +89,7 @@ class MailboxAnnotationListenerTest {
             .mailboxId(mailboxId)
             .mailboxPath(MailboxPath.forUser(USER, "name"))
             .quotaRoot(QuotaRoot.quotaRoot("root", Optional.empty()))
+            .mailboxACL(new MailboxACL())
             .quotaCount(QuotaCountUsage.count(123))
             .quotaSize(QuotaSizeUsage.size(456))
             .build();

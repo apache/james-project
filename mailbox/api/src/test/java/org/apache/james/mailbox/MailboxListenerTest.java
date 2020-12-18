@@ -128,7 +128,7 @@ class MailboxListenerTest {
 
     @Test
     void removedShouldNotBeNoop() {
-        MailboxListener.MailboxDeletion deletion = new MailboxListener.MailboxDeletion(SESSION_ID, BOB, PATH, QUOTA_ROOT,
+        MailboxListener.MailboxDeletion deletion = new MailboxListener.MailboxDeletion(SESSION_ID, BOB, PATH, new MailboxACL(), QUOTA_ROOT,
             QUOTA_COUNT, QUOTA_SIZE, MAILBOX_ID, Event.EventId.random());
 
         assertThat(deletion.isNoop()).isFalse();

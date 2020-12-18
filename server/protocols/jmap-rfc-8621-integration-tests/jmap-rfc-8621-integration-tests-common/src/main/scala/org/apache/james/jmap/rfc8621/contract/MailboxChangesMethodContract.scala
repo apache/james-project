@@ -48,7 +48,7 @@ import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.{BeforeEach, Disabled, Nested, Test}
+import org.junit.jupiter.api.{BeforeEach, Nested, Test}
 import play.api.libs.json.{JsString, Json}
 
 import scala.jdk.CollectionConverters._
@@ -883,7 +883,6 @@ trait MailboxChangesMethodContract {
     }
 
     @Test
-    @Disabled("Not implemented yet")
     def mailboxChangesShouldReturnUpdatedChangesWhenDestroyDelegatedMailbox(server: GuiceJamesServer): Unit = {
       val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
