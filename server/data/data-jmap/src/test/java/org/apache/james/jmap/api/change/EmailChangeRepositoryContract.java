@@ -28,7 +28,6 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.apache.james.jmap.api.change.State;
 import org.apache.james.jmap.api.exception.ChangeNotFoundException;
 import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.mailbox.model.TestMessageId;
@@ -523,7 +522,7 @@ public interface EmailChangeRepositoryContract {
             .date(DATE)
             .isDelegated(false)
             .created(TestMessageId.of(8))
-            .updated(TestMessageId.of(6), TestMessageId.of(7))
+            .updated(TestMessageId.of(6), TestMessageId.of(7), TestMessageId.of(1))
             .destroyed(TestMessageId.of(5))
             .build();
         repository.save(oldState).block();
@@ -535,7 +534,7 @@ public interface EmailChangeRepositoryContract {
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(emailChanges.getCreated()).containsExactlyInAnyOrder(TestMessageId.of(2), TestMessageId.of(3), TestMessageId.of(4), TestMessageId.of(5), TestMessageId.of(6), TestMessageId.of(7), TestMessageId.of(8));
-            softly.assertThat(emailChanges.getUpdated()).containsExactlyInAnyOrder(TestMessageId.of(2), TestMessageId.of(3), TestMessageId.of(6), TestMessageId.of(7));
+            softly.assertThat(emailChanges.getUpdated()).containsExactlyInAnyOrder(TestMessageId.of(1));
             softly.assertThat(emailChanges.getDestroyed()).containsExactlyInAnyOrder(TestMessageId.of(4), TestMessageId.of(5));
         });
     }

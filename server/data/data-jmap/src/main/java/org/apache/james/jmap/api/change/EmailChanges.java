@@ -32,6 +32,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.model.MessageId;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 public class EmailChanges {
@@ -99,7 +100,9 @@ public class EmailChanges {
             Set<MessageId> updatedTemp = new HashSet<>(updated);
             Set<MessageId> destroyedTemp = new HashSet<>(destroyed);
             createdTemp.addAll(change.getCreated());
-            updatedTemp.addAll(change.getUpdated());
+            updatedTemp.addAll(
+                Sets.difference(ImmutableSet.copyOf(change.getUpdated()),
+                createdTemp));
             destroyedTemp.addAll(change.getDestroyed());
 
             if (createdTemp.size() + updatedTemp.size() + destroyedTemp.size() > limit.getValue()) {
@@ -109,9 +112,9 @@ public class EmailChanges {
             }
 
             state = change.getState();
-            this.created.addAll(change.getCreated());
-            this.updated.addAll(change.getUpdated());
-            this.destroyed.addAll(change.getDestroyed());
+            created = createdTemp;
+            updated = updatedTemp;
+            destroyed = destroyedTemp;
 
             return this;
         }
