@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.api.change.MailboxChangeRepository
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{Invocation, SetError, State}
 import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
@@ -55,11 +55,11 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxSetRequest): SMono[InvocationWithContext] = for {
-    oldState <- SMono(mailboxChangeRepository.getLatestState(JavaAccountId.fromUsername(mailboxSession.getUser))).map(State.fromJava)
+    oldState <- retrieveState(capabilities, mailboxSession)
     creationResults <- createPerformer.createMailboxes(mailboxSession, request, invocation.processingContext)
     deletionResults <- deletePerformer.deleteMailboxes(mailboxSession, request)
     updateResults <- updatePerformer.updateMailboxes(mailboxSession, request, capabilities)
-    newState <- SMono(mailboxChangeRepository.getLatestState(JavaAccountId.fromUsername(mailboxSession.getUser))).map(State.fromJava)
+    newState <- retrieveState(capabilities, mailboxSession)
     response = createResponse(capabilities, invocation.invocation, request, creationResults._1, deletionResults, updateResults, oldState, newState)
   } yield InvocationWithContext(response, creationResults._2)
 
@@ -92,4 +92,13 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
       Arguments(serializer.serialize(response, capabilities).as[JsObject]),
       invocation.methodCallId)
   }
+
+  private def retrieveState(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[State] =
+    if (capabilities.contains(JAMES_SHARES)) {
+      SMono(mailboxChangeRepository.getLatestStateWithDelegation(JavaAccountId.fromUsername(mailboxSession.getUser)))
+        .map(State.fromJava)
+    } else {
+      SMono(mailboxChangeRepository.getLatestState(JavaAccountId.fromUsername(mailboxSession.getUser)))
+        .map(State.fromJava)
+    }
 }

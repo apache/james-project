@@ -35,6 +35,7 @@ import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.draft.MessageIdProbe
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, BOB, BOB_PASSWORD, CEDRIC, DAVID, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.MailboxGetMethodContract.ARGUMENTS
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.{EntryKey, Right}
@@ -45,7 +46,7 @@ import org.apache.james.util.concurrency.ConcurrentTestRunner
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.{Assertions, SoftAssertions}
-import org.hamcrest.Matchers.{equalTo, hasSize}
+import org.hamcrest.Matchers.{equalTo, hasSize, not}
 import org.junit.jupiter.api.{BeforeEach, Disabled, RepeatedTest, Tag, Test}
 
 trait MailboxSetMethodContract {
@@ -7739,5 +7740,101 @@ trait MailboxSetMethodContract {
            |  "updated": ["${mailboxId.serialize}"],
            |  "destroyed": []
            |}""".stripMargin)
+  }
+
+  @Test
+  def stateShouldNotTakeIntoAccountDelegationWhenNoCapability(server: GuiceJamesServer): Unit = {
+    val state: String = `with`()
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
+           |  "methodCalls": [[
+           |      "Mailbox/get",
+           |      {
+           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+           |      },
+           |      "c1"]]
+           |}""".stripMargin)
+      .post
+      .`then`()
+      .extract()
+      .jsonPath()
+      .get("methodResponses[0][1].state")
+
+    val sharedMailboxName = "AndreShared"
+    val andreMailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(andreMailboxPath)
+      .serialize
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |      "Mailbox/set",
+               |           {
+               |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+               |           }, "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .body("methodResponses[0][1].oldState", equalTo(state))
+  }
+
+  @Test
+  def stateShouldTakeIntoAccountDelegationWhenCapability(server: GuiceJamesServer): Unit = {
+    val state: String = `with`()
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares"],
+           |  "methodCalls": [[
+           |      "Mailbox/get",
+           |      {
+           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+           |      },
+           |      "c1"]]
+           |}""".stripMargin)
+      .post
+      .`then`()
+      .extract()
+      .jsonPath()
+      .get("methodResponses[0][1].state")
+
+    val sharedMailboxName = "AndreShared"
+    val andreMailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(andreMailboxPath)
+      .serialize
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [[
+               |      "Mailbox/set",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .body("methodResponses[0][1].oldState", not(equalTo(state)))
   }
 }

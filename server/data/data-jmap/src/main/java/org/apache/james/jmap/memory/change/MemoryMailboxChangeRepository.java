@@ -103,6 +103,15 @@ public class MemoryMailboxChangeRepository implements MailboxChangeRepository {
     @Override
     public Mono<State> getLatestState(AccountId accountId) {
         return Flux.fromIterable(mailboxChangeMap.get(accountId))
+            .filter(change -> !change.isDelegated())
+            .sort(Comparator.comparing(MailboxChange::getDate))
+            .map(MailboxChange::getState)
+            .last(State.INITIAL);
+    }
+
+    @Override
+    public Mono<State> getLatestStateWithDelegation(AccountId accountId) {
+        return Flux.fromIterable(mailboxChangeMap.get(accountId))
             .sort(Comparator.comparing(MailboxChange::getDate))
             .map(MailboxChange::getState)
             .last(State.INITIAL);

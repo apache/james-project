@@ -23,9 +23,8 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.api.change.MailboxChangeRepository
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, Properties, State}
 import org.apache.james.jmap.http.MailboxesProvisioner
 import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
@@ -81,8 +80,8 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
     (requestedProperties -- Mailbox.allProperties match {
       case invalidProperties if invalidProperties.isEmpty() => getMailboxes(capabilities, request, mailboxSession)
         .reduce(MailboxGetResults.empty(), MailboxGetResults.merge)
-        .flatMap(mailboxes => SMono(mailboxChangeRepository.getLatestState(JavaAccountId.fromUsername(mailboxSession.getUser)))
-          .map(state => mailboxes.asResponse(request.accountId, State.fromJava(state))))
+        .flatMap(mailboxes => retrieveState(capabilities, mailboxSession)
+          .map(state => mailboxes.asResponse(request.accountId, state)))
         .map(mailboxGetResponse => Invocation(
           methodName = methodName,
           arguments = Arguments(serializer.serialize(mailboxGetResponse, requestedProperties, capabilities).as[JsObject]),
@@ -94,6 +93,15 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
     }).map(InvocationWithContext(_, invocation.processingContext))
 
   }
+
+  private def retrieveState(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[State] =
+    if (capabilities.contains(JAMES_SHARES)) {
+      SMono(mailboxChangeRepository.getLatestStateWithDelegation(JavaAccountId.fromUsername(mailboxSession.getUser)))
+        .map(State.fromJava)
+    } else {
+      SMono(mailboxChangeRepository.getLatestState(JavaAccountId.fromUsername(mailboxSession.getUser)))
+        .map(State.fromJava)
+    }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, MailboxGetRequest] =
     serializer.deserializeMailboxGetRequest(invocation.arguments.value) match {

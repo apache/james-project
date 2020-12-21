@@ -36,4 +36,6 @@ public interface MailboxChangeRepository {
     Mono<MailboxChanges> getSinceStateWithDelegation(AccountId accountId, State state, Optional<Limit> maxChanges);
 
     Mono<State> getLatestState(AccountId accountId);
+
+    Mono<State> getLatestStateWithDelegation(AccountId accountId);
 }

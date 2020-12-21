@@ -81,6 +81,74 @@ public interface MailboxChangeRepositoryContract {
     }
 
     @Test
+    default void getLatestStateShouldNotReturnDelegated() {
+        MailboxChangeRepository repository = mailboxChangeRepository();
+        State.Factory stateFactory = stateFactory();
+
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).created(ImmutableList.of(TestId.of(2))).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).created(ImmutableList.of(TestId.of(3))).build();
+        MailboxChange change3 = MailboxChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(stateFactory.generate())
+            .date(DATE)
+            .created(ImmutableList.of(TestId.of(4)))
+            .delegated()
+            .build();
+        repository.save(change1).block();
+        repository.save(change2).block();
+        repository.save(change3).block();
+
+        assertThat(repository.getLatestState(ACCOUNT_ID).block())
+            .isEqualTo(change2.getState());
+    }
+
+    @Test
+    default void getLatestStateWithDelegationShouldReturnInitialWhenEmpty() {
+        MailboxChangeRepository repository = mailboxChangeRepository();
+
+        assertThat(repository.getLatestStateWithDelegation(ACCOUNT_ID).block())
+            .isEqualTo(State.INITIAL);
+    }
+
+    @Test
+    default void getLatestStateWithDelegationShouldReturnLastPersistedState() {
+        MailboxChangeRepository repository = mailboxChangeRepository();
+        State.Factory stateFactory = stateFactory();
+
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).created(ImmutableList.of(TestId.of(2))).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).created(ImmutableList.of(TestId.of(3))).build();
+        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).created(ImmutableList.of(TestId.of(4))).build();
+        repository.save(change1).block();
+        repository.save(change2).block();
+        repository.save(change3).block();
+
+        assertThat(repository.getLatestStateWithDelegation(ACCOUNT_ID).block())
+            .isEqualTo(change3.getState());
+    }
+
+    @Test
+    default void getLatestStateWithDelegationShouldReturnDelegated() {
+        MailboxChangeRepository repository = mailboxChangeRepository();
+        State.Factory stateFactory = stateFactory();
+
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).created(ImmutableList.of(TestId.of(2))).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).created(ImmutableList.of(TestId.of(3))).build();
+        MailboxChange change3 = MailboxChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(stateFactory.generate())
+            .date(DATE)
+            .created(ImmutableList.of(TestId.of(4)))
+            .delegated()
+            .build();
+        repository.save(change1).block();
+        repository.save(change2).block();
+        repository.save(change3).block();
+
+        assertThat(repository.getLatestStateWithDelegation(ACCOUNT_ID).block())
+            .isEqualTo(change3.getState());
+    }
+
+    @Test
     default void saveChangeShouldFailWhenNoAccountId() {
         MailboxChangeRepository repository = mailboxChangeRepository();
         State.Factory stateFactory = stateFactory();

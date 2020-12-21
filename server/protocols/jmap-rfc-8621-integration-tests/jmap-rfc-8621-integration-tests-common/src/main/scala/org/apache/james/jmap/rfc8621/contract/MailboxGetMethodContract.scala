@@ -1592,4 +1592,101 @@ trait MailboxGetMethodContract {
            |  "destroyed": []
            |}""".stripMargin)
   }
+
+  @Test
+  def stateShouldNotTakeIntoAccountDelegationWhenNoCapability(server: GuiceJamesServer): Unit = {
+    val state: String = `with`()
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
+           |  "methodCalls": [[
+           |      "Mailbox/get",
+           |      {
+           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+           |      },
+           |      "c1"]]
+           |}""".stripMargin)
+      .post
+      .`then`()
+      .extract()
+      .jsonPath()
+      .get("methodResponses[0][1].state")
+
+    val sharedMailboxName = "AndreShared"
+    val andreMailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(andreMailboxPath)
+      .serialize
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .body(s"$ARGUMENTS.state", equalTo(state))
+  }
+
+  @Test
+  def stateShouldTakeIntoAccountDelegationWhenCapability(server: GuiceJamesServer): Unit = {
+    val state: String = `with`()
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares"],
+           |  "methodCalls": [[
+           |      "Mailbox/get",
+           |      {
+           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+           |      },
+           |      "c1"]]
+           |}""".stripMargin)
+      .post
+      .`then`()
+      .extract()
+      .jsonPath()
+      .get("methodResponses[0][1].state")
+
+    val sharedMailboxName = "AndreShared"
+    val andreMailboxPath = MailboxPath.forUser(ANDRE, sharedMailboxName)
+    server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(andreMailboxPath)
+      .serialize
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andreMailboxPath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup))
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .body(s"$ARGUMENTS.state", not(equalTo(state)))
+  }
 }
