@@ -17,43 +17,23 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.cassandra.change;
+package org.apache.james.jmap.api.change;
 
-import java.util.Optional;
+import com.google.common.base.Preconditions;
 
-import org.apache.james.jmap.api.change.Limit;
-import org.apache.james.jmap.api.change.MailboxChange;
-import org.apache.james.jmap.api.change.MailboxChangeRepository;
-import org.apache.james.jmap.api.change.MailboxChanges;
-import org.apache.james.jmap.api.change.State;
-import org.apache.james.jmap.api.model.AccountId;
-
-import reactor.core.publisher.Mono;
-
-public class CassandraMailboxChangeRepository implements MailboxChangeRepository {
-
-    @Override
-    public Mono<Void> save(MailboxChange change) {
-        return Mono.empty();
+public class Limit {
+    public static Limit of(int value) {
+        Preconditions.checkArgument(value > 0, "'limit' needs to be strictly positive");
+        return new Limit(value);
     }
 
-    @Override
-    public Mono<MailboxChanges> getSinceState(AccountId accountId, State state, Optional<Limit> maxChanges) {
-        return Mono.empty();
+    private final int value;
+
+    private Limit(int value) {
+        this.value = value;
     }
 
-    @Override
-    public Mono<MailboxChanges> getSinceStateWithDelegation(AccountId accountId, State state, Optional<Limit> maxChanges) {
-        return Mono.empty();
-    }
-
-    @Override
-    public Mono<State> getLatestState(AccountId accountId) {
-        return Mono.just(State.INITIAL);
-    }
-
-    @Override
-    public Mono<State> getLatestStateWithDelegation(AccountId accountId) {
-        return Mono.just(State.INITIAL);
+    public int getValue() {
+        return value;
     }
 }

@@ -24,7 +24,7 @@ import static org.apache.james.MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
-import org.apache.james.jmap.api.change.MailboxChange;
+import org.apache.james.jmap.api.change.State;
 import org.apache.james.jmap.rfc8621.contract.MailboxChangesMethodContract;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -38,7 +38,7 @@ public class MemoryMailboxChangesMethodTest implements MailboxChangesMethodContr
         .build();
 
     @Override
-    public MailboxChange.State.Factory stateFactory() {
-        return new MailboxChange.State.DefaultFactory();
+    public State.Factory stateFactory() {
+        return new State.DefaultFactory();
     }
 }

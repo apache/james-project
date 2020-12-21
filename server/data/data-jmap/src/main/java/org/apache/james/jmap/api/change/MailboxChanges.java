@@ -39,10 +39,10 @@ public class MailboxChanges {
     public static class MailboxChangesBuilder {
 
         public static class MailboxChangeCollector implements Collector<MailboxChange, MailboxChangesBuilder, MailboxChanges> {
-            private final MailboxChange.Limit limit;
-            private final MailboxChange.State state;
+            private final Limit limit;
+            private final State state;
 
-            public MailboxChangeCollector(MailboxChange.State state, MailboxChange.Limit limit) {
+            public MailboxChangeCollector(State state, Limit limit) {
                 this.limit = limit;
                 this.state = state;
             }
@@ -72,15 +72,15 @@ public class MailboxChanges {
             }
         }
 
-        private MailboxChange.State state;
+        private State state;
         private boolean hasMoreChanges;
         private boolean canAddMoreItem;
-        private MailboxChange.Limit limit;
+        private Limit limit;
         private Set<MailboxId> created;
         private Set<MailboxId> updated;
         private Set<MailboxId> destroyed;
 
-        public MailboxChangesBuilder(MailboxChange.State state, MailboxChange.Limit limit) {
+        public MailboxChangesBuilder(State state, Limit limit) {
             this.limit = limit;
             this.state = state;
             this.hasMoreChanges = false;
@@ -121,13 +121,13 @@ public class MailboxChanges {
         }
     }
 
-    private MailboxChange.State newState;
+    private State newState;
     private final boolean hasMoreChanges;
     private final Set<MailboxId> created;
     private final Set<MailboxId> updated;
     private final Set<MailboxId> destroyed;
 
-    private MailboxChanges(MailboxChange.State newState, boolean hasMoreChanges, Set<MailboxId> created, Set<MailboxId> updated, Set<MailboxId> destroyed) {
+    private MailboxChanges(State newState, boolean hasMoreChanges, Set<MailboxId> created, Set<MailboxId> updated, Set<MailboxId> destroyed) {
         this.newState = newState;
         this.hasMoreChanges = hasMoreChanges;
         this.created = created;
@@ -135,7 +135,7 @@ public class MailboxChanges {
         this.destroyed = destroyed;
     }
 
-    public MailboxChange.State getNewState() {
+    public State getNewState() {
         return newState;
     }
 

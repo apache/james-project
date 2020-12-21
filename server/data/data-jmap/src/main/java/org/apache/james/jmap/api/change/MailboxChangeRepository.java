@@ -21,8 +21,6 @@ package org.apache.james.jmap.api.change;
 
 import java.util.Optional;
 
-import org.apache.james.jmap.api.change.MailboxChange.Limit;
-import org.apache.james.jmap.api.change.MailboxChange.State;
 import org.apache.james.jmap.api.model.AccountId;
 
 import reactor.core.publisher.Mono;

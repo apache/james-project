@@ -22,8 +22,7 @@ package org.apache.james.jmap.change
 import java.time.{Clock, ZonedDateTime}
 
 import javax.mail.Flags
-import org.apache.james.jmap.api.change.MailboxChange.State
-import org.apache.james.jmap.api.change.{MailboxChange, MailboxChangeRepository}
+import org.apache.james.jmap.api.change.{MailboxChange, MailboxChangeRepository, State}
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.change.MailboxChangeListenerTest.ACCOUNT_ID
 import org.apache.james.jmap.memory.change.MemoryMailboxChangeRepository

@@ -23,7 +23,7 @@ import eu.timepit.refined._
 import eu.timepit.refined.collection.NonEmpty
 import javax.inject.Inject
 import org.apache.james.core.{Domain, Username}
-import org.apache.james.jmap.api.change.MailboxChange.Limit
+import org.apache.james.jmap.api.change.Limit
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.{ClientId, Properties, SetError, State}
 import org.apache.james.jmap.mail.MailboxGet.{UnparsedMailboxId, UnparsedMailboxIdConstraint}

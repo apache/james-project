@@ -22,7 +22,7 @@ package org.apache.james.jmap.mail
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
-import org.apache.james.jmap.api.change.MailboxChange.Limit
+import org.apache.james.jmap.api.change.Limit
 import org.apache.james.jmap.api.change.MailboxChanges
 import org.apache.james.jmap.core.{AccountId, Properties, State}
 import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId

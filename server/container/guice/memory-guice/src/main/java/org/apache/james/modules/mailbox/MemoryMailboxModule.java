@@ -25,8 +25,8 @@ import javax.inject.Singleton;
 
 import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthorizator;
-import org.apache.james.jmap.api.change.MailboxChange.State;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
+import org.apache.james.jmap.api.change.State;
 import org.apache.james.jmap.memory.change.MemoryMailboxChangeRepository;
 import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.AttachmentManager;

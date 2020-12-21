@@ -19,17 +19,17 @@
 
 package org.apache.james.jmap.api.exception;
 
-import org.apache.james.jmap.api.change.MailboxChange;
+import org.apache.james.jmap.api.change.State;
 
 public class ChangeNotFoundException extends RuntimeException {
-    private final MailboxChange.State state;
+    private final State state;
 
-    public ChangeNotFoundException(MailboxChange.State state, String msg) {
+    public ChangeNotFoundException(State state, String msg) {
         super(msg);
         this.state = state;
     }
 
-    public MailboxChange.State getState() {
+    public State getState() {
         return state;
     }
 }

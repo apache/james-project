@@ -27,8 +27,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-import org.apache.james.jmap.api.change.MailboxChange.Limit;
-import org.apache.james.jmap.api.change.MailboxChange.State;
 import org.apache.james.jmap.api.exception.ChangeNotFoundException;
 import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.mailbox.model.TestId;

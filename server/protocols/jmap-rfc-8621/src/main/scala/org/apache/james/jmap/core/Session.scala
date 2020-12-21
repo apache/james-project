@@ -25,12 +25,10 @@ import java.util.UUID
 
 import com.google.common.hash.Hashing
 import eu.timepit.refined.api.Refined
-import eu.timepit.refined.auto._
 import eu.timepit.refined.refineV
 import eu.timepit.refined.string.Uuid
 import org.apache.james.core.Username
-import org.apache.james.jmap.api.change.MailboxChanges
-import org.apache.james.jmap.api.change.MailboxChange.{State => JavaState}
+import org.apache.james.jmap.api.change.{MailboxChanges, State => JavaState}
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.State.INSTANCE

@@ -17,43 +17,29 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.cassandra.change;
+package org.apache.james.jmap.api.change;
 
-import java.util.Optional;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.jmap.api.change.Limit;
-import org.apache.james.jmap.api.change.MailboxChange;
-import org.apache.james.jmap.api.change.MailboxChangeRepository;
-import org.apache.james.jmap.api.change.MailboxChanges;
-import org.apache.james.jmap.api.change.State;
-import org.apache.james.jmap.api.model.AccountId;
+import org.junit.jupiter.api.Test;
 
-import reactor.core.publisher.Mono;
-
-public class CassandraMailboxChangeRepository implements MailboxChangeRepository {
-
-    @Override
-    public Mono<Void> save(MailboxChange change) {
-        return Mono.empty();
+class LimitTest {
+    @Test
+    void ofShouldThrowWhenNegative() {
+        assertThatThrownBy(() -> Limit.of(-1))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Override
-    public Mono<MailboxChanges> getSinceState(AccountId accountId, State state, Optional<Limit> maxChanges) {
-        return Mono.empty();
+    @Test
+    void ofShouldThrowWhenZero() {
+        assertThatThrownBy(() -> Limit.of(0))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Override
-    public Mono<MailboxChanges> getSinceStateWithDelegation(AccountId accountId, State state, Optional<Limit> maxChanges) {
-        return Mono.empty();
-    }
-
-    @Override
-    public Mono<State> getLatestState(AccountId accountId) {
-        return Mono.just(State.INITIAL);
-    }
-
-    @Override
-    public Mono<State> getLatestStateWithDelegation(AccountId accountId) {
-        return Mono.just(State.INITIAL);
+    @Test
+    void getValueShouldReturnSuppliedValue() {
+        assertThat(Limit.of(36).getValue())
+            .isEqualTo(36);
     }
 }

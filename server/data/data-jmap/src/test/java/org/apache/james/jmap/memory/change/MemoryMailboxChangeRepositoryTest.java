@@ -19,19 +19,19 @@
 
 package org.apache.james.jmap.memory.change;
 
-import org.apache.james.jmap.api.change.MailboxChange;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.api.change.MailboxChangeRepositoryContract;
+import org.apache.james.jmap.api.change.State;
 import org.junit.jupiter.api.BeforeEach;
 
 public class MemoryMailboxChangeRepositoryTest implements MailboxChangeRepositoryContract {
     MailboxChangeRepository mailboxChangeRepository;
-    MailboxChange.State.Factory stateFactory;
+    State.Factory stateFactory;
 
     @BeforeEach
     void setup() {
         mailboxChangeRepository = new MemoryMailboxChangeRepository();
-        stateFactory = new MailboxChange.State.DefaultFactory();
+        stateFactory = new State.DefaultFactory();
     }
 
     @Override
@@ -40,7 +40,7 @@ public class MemoryMailboxChangeRepositoryTest implements MailboxChangeRepositor
     }
 
     @Override
-    public MailboxChange.State.Factory stateFactory() {
+    public State.Factory stateFactory() {
         return stateFactory;
     }
 }

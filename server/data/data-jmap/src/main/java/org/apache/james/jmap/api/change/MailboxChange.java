@@ -22,9 +22,7 @@ package org.apache.james.jmap.api.change;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -51,69 +49,6 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class MailboxChange {
-
-    public static class State {
-        public static State INITIAL = of(UUID.fromString("2c9f1b12-b35a-43e6-9af2-0106fb53a943"));
-
-        public interface Factory {
-            State generate();
-        }
-
-        public static class DefaultFactory implements Factory {
-
-            @Override
-            public State generate() {
-                return of(UUID.randomUUID());
-            }
-        }
-
-        public static State of(UUID value) {
-            return new State(value);
-        }
-
-        private final UUID value;
-
-        private State(UUID value) {
-            this.value = value;
-        }
-
-        public UUID getValue() {
-            return value;
-        }
-
-        @Override
-        public final boolean equals(Object o) {
-            if (o instanceof State) {
-                State state = (State) o;
-
-                return Objects.equals(this.value, state.value);
-            }
-            return false;
-        }
-
-        @Override
-        public final int hashCode() {
-            return Objects.hash(value);
-        }
-    }
-
-    public static class Limit {
-
-        public static Limit of(int value) {
-            return new Limit(value);
-        }
-
-        private final int value;
-
-        private Limit(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
-    }
-
     @FunctionalInterface
     public interface RequiredAccountId {
         RequiredState accountId(AccountId accountId);
