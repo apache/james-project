@@ -32,6 +32,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.model.MailboxId;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 public class MailboxChanges {
@@ -95,12 +96,24 @@ public class MailboxChanges {
                 return this;
             }
 
-            Set<MailboxId> createdTemp = new HashSet<>(created);
-            Set<MailboxId> updatedTemp = new HashSet<>(updated);
             Set<MailboxId> destroyedTemp = new HashSet<>(destroyed);
-            createdTemp.addAll(change.getCreated());
-            updatedTemp.addAll(change.getUpdated());
-            destroyedTemp.addAll(change.getDestroyed());
+
+            Set<MailboxId> createdTemp = Sets.difference(
+                ImmutableSet.<MailboxId>builder()
+                    .addAll(created)
+                    .addAll(change.getCreated())
+                    .build(),
+                ImmutableSet.copyOf(change.getDestroyed()));
+            Set<MailboxId> updatedTemp = Sets.difference(
+                ImmutableSet.<MailboxId>builder()
+                    .addAll(updated)
+                    .addAll(Sets.difference(ImmutableSet.copyOf(change.getUpdated()),
+                        createdTemp))
+                    .build(),
+                ImmutableSet.copyOf(change.getDestroyed()));
+            destroyedTemp.addAll(Sets.difference(
+                ImmutableSet.copyOf(change.getDestroyed()),
+                created));
 
             if (createdTemp.size() + updatedTemp.size() + destroyedTemp.size() > limit.getValue()) {
                 hasMoreChanges = true;
@@ -109,9 +122,9 @@ public class MailboxChanges {
             }
 
             state = change.getState();
-            this.created.addAll(change.getCreated());
-            this.updated.addAll(change.getUpdated());
-            this.destroyed.addAll(change.getDestroyed());
+            created = createdTemp;
+            updated = updatedTemp;
+            destroyed = destroyedTemp;
 
             return this;
         }

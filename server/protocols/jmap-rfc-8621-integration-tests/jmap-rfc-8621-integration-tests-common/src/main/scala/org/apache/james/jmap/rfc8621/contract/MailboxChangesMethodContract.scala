@@ -1013,6 +1013,80 @@ trait MailboxChangesMethodContract {
 
     provisionSystemMailboxes(server)
 
+    val path1 = MailboxPath.forUser(BOB, "mailbox1")
+    val mailboxId1: String = mailboxProbe
+      .createMailbox(path1)
+      .serialize
+    val path2 = MailboxPath.forUser(BOB, "mailbox2")
+    val mailboxId2: String = mailboxProbe
+      .createMailbox(path2)
+      .serialize
+    val path3 = MailboxPath.forUser(BOB, "mailbox3")
+    val oldState: State = server.getProbe(classOf[JmapGuiceProbe]).latestState(AccountId.fromUsername(BOB))
+
+    val mailboxId3: String = mailboxProbe
+      .createMailbox(path3)
+      .serialize
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    mailboxProbe.appendMessage(BOB.asString(), path1, AppendCommand.from(message))
+
+    server.getProbe(classOf[MailboxProbeImpl])
+      .deleteMailbox(path1.getNamespace, BOB.asString(), path2.getName)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Mailbox/changes",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "sinceState": "${oldState.getValue}"
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].newState")
+      .withOptions(new Options(IGNORING_ARRAY_ORDER))
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |      [ "Mailbox/changes", {
+           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "oldState": "${oldState.getValue}",
+           |        "hasMoreChanges": false,
+           |        "updatedProperties": [],
+           |        "created": ["$mailboxId3"],
+           |        "updated": ["$mailboxId1"],
+           |        "destroyed": ["$mailboxId2"]
+           |      }, "c1"]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def returnedIdsShouldNotReturnDuplicatesAccrossCreatedUpdatedOrDestroyed(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
+
+    provisionSystemMailboxes(server)
+
     val oldState: State = storeReferenceState(server, BOB)
 
     val path1 = MailboxPath.forUser(BOB, "mailbox1")
@@ -1072,9 +1146,9 @@ trait MailboxChangesMethodContract {
            |        "oldState": "${oldState.getValue}",
            |        "hasMoreChanges": false,
            |        "updatedProperties": [],
-           |        "created": ["$mailboxId1", "$mailboxId2"],
-           |        "updated": ["$mailboxId1", "$mailboxId2"],
-           |        "destroyed": ["$mailboxId1"]
+           |        "created": ["$mailboxId2"],
+           |        "updated": [],
+           |        "destroyed": []
            |      }, "c1"]
            |    ]
            |}""".stripMargin)

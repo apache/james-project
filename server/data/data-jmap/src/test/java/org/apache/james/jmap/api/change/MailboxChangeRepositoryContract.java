@@ -353,14 +353,24 @@ public interface MailboxChangeRepositoryContract {
         State.Factory stateFactory = stateFactory();
         State referenceState = stateFactory.generate();
 
-        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(3)).created(ImmutableList.of(TestId.of(1))).build();
-        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).created(ImmutableList.of(TestId.of(2), TestId.of(3), TestId.of(4), TestId.of(5))).build();
+        MailboxChange oldState = MailboxChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(referenceState)
+            .date(DATE.minusHours(3))
+            .created(ImmutableList.of(TestId.of(1), TestId.of(9), TestId.of(10)))
+            .build();
+        MailboxChange change1 = MailboxChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(stateFactory.generate())
+            .date(DATE.minusHours(2))
+            .created(ImmutableList.of(TestId.of(2), TestId.of(3), TestId.of(4), TestId.of(5)))
+            .build();
         MailboxChange change2 = MailboxChange.builder()
             .accountId(ACCOUNT_ID)
             .state(stateFactory.generate())
             .date(DATE.minusHours(1))
             .created(ImmutableList.of(TestId.of(6), TestId.of(7)))
-            .updated(ImmutableList.of(TestId.of(2), TestId.of(3)))
+            .updated(ImmutableList.of(TestId.of(2), TestId.of(3), TestId.of(9)))
             .destroyed(ImmutableList.of(TestId.of(4))).build();
         MailboxChange change3 = MailboxChange.builder()
             .accountId(ACCOUNT_ID)
@@ -368,7 +378,7 @@ public interface MailboxChangeRepositoryContract {
             .date(DATE)
             .created(ImmutableList.of(TestId.of(8)))
             .updated(ImmutableList.of(TestId.of(6), TestId.of(7)))
-            .destroyed(ImmutableList.of(TestId.of(5))).build();
+            .destroyed(ImmutableList.of(TestId.of(5), TestId.of(10))).build();
 
         repository.save(oldState).block();
         repository.save(change1).block();
@@ -378,9 +388,9 @@ public interface MailboxChangeRepositoryContract {
         MailboxChanges mailboxChanges = repository.getSinceState(ACCOUNT_ID, referenceState, Optional.of(Limit.of(20))).block();
 
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(mailboxChanges.getCreated()).containsExactlyInAnyOrder(TestId.of(2), TestId.of(3), TestId.of(4), TestId.of(5), TestId.of(6), TestId.of(7), TestId.of(8));
-            softly.assertThat(mailboxChanges.getUpdated()).containsExactlyInAnyOrder(TestId.of(2), TestId.of(3), TestId.of(6), TestId.of(7));
-            softly.assertThat(mailboxChanges.getDestroyed()).containsExactlyInAnyOrder(TestId.of(4), TestId.of(5));
+            softly.assertThat(mailboxChanges.getCreated()).containsExactlyInAnyOrder(TestId.of(2), TestId.of(3), TestId.of(6), TestId.of(7), TestId.of(8));
+            softly.assertThat(mailboxChanges.getUpdated()).containsExactlyInAnyOrder(TestId.of(9));
+            softly.assertThat(mailboxChanges.getDestroyed()).containsExactlyInAnyOrder(TestId.of(10));
         });
     }
 

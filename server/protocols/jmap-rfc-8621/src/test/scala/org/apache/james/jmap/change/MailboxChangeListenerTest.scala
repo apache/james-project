@@ -101,12 +101,10 @@ class MailboxChangeListenerTest {
 
   @Test
   def updateMailboxACLShouldStoreUpdatedEvent(): Unit = {
-    val state = stateFactory.generate()
-    repository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).created(List[MailboxId](TestId.of(0)).asJava).build).block()
-
     val mailboxSession = MailboxSessionUtil.create(BOB)
     val path = MailboxPath.inbox(BOB)
     val inboxId: MailboxId = mailboxManager.createMailbox(MailboxPath.inbox(BOB), mailboxSession).get
+    val state: State = repository.getLatestState(ACCOUNT_ID).block()
 
     mailboxManager.applyRightsCommand(path, MailboxACL.command().forUser(ALICE).rights(MailboxACL.Right.Read).asAddition(), mailboxSession)
 

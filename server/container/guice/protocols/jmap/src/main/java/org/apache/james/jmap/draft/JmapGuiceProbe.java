@@ -27,6 +27,7 @@ import org.apache.james.core.Username;
 import org.apache.james.jmap.JMAPServer;
 import org.apache.james.jmap.api.change.MailboxChange;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
+import org.apache.james.jmap.api.change.State;
 import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.api.vacation.Vacation;
@@ -93,5 +94,9 @@ public class JmapGuiceProbe implements GuiceProbe {
 
     public void saveMailboxChange(MailboxChange change) {
         mailboxChangeRepository.save(change).block();
+    }
+
+    public State latestState(AccountId accountId) {
+        return mailboxChangeRepository.getLatestState(accountId).block();
     }
 }
