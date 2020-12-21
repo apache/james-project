@@ -99,6 +99,39 @@ public interface EmailChangeRepositoryContract {
     }
 
     @Test
+    default void getLatestStateShouldReturnLastNonDelegatedPersistedState() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+        EmailChange change1 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(2))
+            .isDelegated(false)
+            .created(TestMessageId.of(2))
+            .build();
+        EmailChange change2 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(1))
+            .isDelegated(false)
+            .created(TestMessageId.of(3))
+            .build();
+        EmailChange change3 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE)
+            .isDelegated(true)
+            .created(TestMessageId.of(4))
+            .build();
+        repository.save(change1).block();
+        repository.save(change2).block();
+        repository.save(change3).block();
+
+        assertThat(repository.getLatestState(ACCOUNT_ID).block())
+            .isEqualTo(change2.getState());
+    }
+
+    @Test
     default void getChangesShouldSuccess() {
         EmailChangeRepository repository = emailChangeRepository();
 
@@ -540,6 +573,50 @@ public interface EmailChangeRepositoryContract {
     }
 
     @Test
+    default void changesShouldNotReturnDelegatedChanges() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+
+        EmailChange oldState = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(STATE_0)
+            .date(DATE.minusHours(3))
+            .isDelegated(false)
+            .created(TestMessageId.of(1))
+            .build();
+        EmailChange change1 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(2))
+            .isDelegated(false)
+            .created(TestMessageId.of(2), TestMessageId.of(3), TestMessageId.of(4), TestMessageId.of(5))
+            .build();
+        EmailChange change2 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(1))
+            .isDelegated(true)
+            .created(TestMessageId.of(6), TestMessageId.of(7))
+            .build();
+        EmailChange change3 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE)
+            .isDelegated(false)
+            .created(TestMessageId.of(8))
+            .build();
+        repository.save(oldState).block();
+        repository.save(change1).block();
+        repository.save(change2).block();
+        repository.save(change3).block();
+
+        EmailChanges emailChanges = repository.getSinceState(ACCOUNT_ID, STATE_0, Optional.of(Limit.of(20))).block();
+
+        assertThat(emailChanges.getCreated())
+            .containsExactlyInAnyOrder(TestMessageId.of(2), TestMessageId.of(3), TestMessageId.of(4), TestMessageId.of(5), TestMessageId.of(8));
+    }
+
+    @Test
     default void getChangesShouldIgnoreDuplicatedValues() {
         EmailChangeRepository repository = emailChangeRepository();
 
@@ -581,6 +658,566 @@ public interface EmailChangeRepositoryContract {
         EmailChangeRepository repository = emailChangeRepository();
 
         assertThatThrownBy(() -> repository.getSinceState(ACCOUNT_ID, STATE_0, Optional.empty()).block())
+            .isInstanceOf(ChangeNotFoundException.class);
+    }
+
+    @Test
+    default void getLatestStateWithDelegationShouldReturnInitialWhenEmpty() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+        assertThat(repository.getLatestStateWithDelegation(ACCOUNT_ID).block())
+            .isEqualTo(State.INITIAL);
+    }
+
+    @Test
+    default void getLatestStateWithDelegationShouldReturnLastPersistedState() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+        EmailChange change1 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(2))
+            .isDelegated(false)
+            .created(TestMessageId.of(2))
+            .build();
+        EmailChange change2 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(1))
+            .isDelegated(false)
+            .created(TestMessageId.of(3))
+            .build();
+        EmailChange change3 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE)
+            .isDelegated(false)
+            .created(TestMessageId.of(4))
+            .build();
+        repository.save(change1).block();
+        repository.save(change2).block();
+        repository.save(change3).block();
+
+        assertThat(repository.getLatestStateWithDelegation(ACCOUNT_ID).block())
+            .isEqualTo(change3.getState());
+    }
+
+    @Test
+    default void getLatestStateWithDelegationShouldReturnLastDelegatedPersistedState() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+        EmailChange change1 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(2))
+            .isDelegated(false)
+            .created(TestMessageId.of(2))
+            .build();
+        EmailChange change2 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(1))
+            .isDelegated(false)
+            .created(TestMessageId.of(3))
+            .build();
+        EmailChange change3 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE)
+            .isDelegated(true)
+            .created(TestMessageId.of(4))
+            .build();
+        repository.save(change1).block();
+        repository.save(change2).block();
+        repository.save(change3).block();
+
+        assertThat(repository.getLatestStateWithDelegation(ACCOUNT_ID).block())
+            .isEqualTo(change3.getState());
+    }
+
+    @Test
+    default void getSinceStateWithDelegationShouldSuccess() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+        EmailChange oldState = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(STATE_0)
+            .date(DATE.minusHours(1))
+            .isDelegated(false)
+            .created(TestMessageId.of(1))
+            .build();
+        EmailChange change = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE)
+            .isDelegated(false)
+            .updated(TestMessageId.of(1))
+            .build();
+        repository.save(oldState).block();
+        repository.save(change).block();
+
+        assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, STATE_0, Optional.empty()).block().getAllChanges())
+            .hasSameElementsAs(change.getUpdated());
+    }
+
+    @Test
+    default void getSinceStateWithDelegationShouldReturnEmptyWhenNoNewerState() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+        EmailChange oldState = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(STATE_0)
+            .date(DATE.minusHours(1))
+            .isDelegated(false)
+            .created(TestMessageId.of(1))
+            .build();
+        repository.save(oldState).block();
+
+        assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, STATE_0, Optional.empty()).block().getAllChanges())
+            .isEmpty();
+    }
+
+    @Test
+    default void getSinceStateWithDelegationShouldReturnCurrentStateWhenNoNewerState() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+        EmailChange oldState = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(STATE_0)
+            .date(DATE.minusHours(1))
+            .isDelegated(false)
+            .created(TestMessageId.of(1))
+            .build();
+        repository.save(oldState).block();
+
+        assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, STATE_0, Optional.empty()).block().getNewState())
+            .isEqualTo(oldState.getState());
+    }
+
+    @Test
+    default void getSinceStateWithDelegationShouldLimitChanges() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+        EmailChange oldState = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(STATE_0)
+            .date(DATE.minusHours(3))
+            .isDelegated(false)
+            .created(TestMessageId.of(1))
+            .build();
+        EmailChange change1 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(2))
+            .isDelegated(false)
+            .created(TestMessageId.of(2))
+            .build();
+        EmailChange change2 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(1))
+            .isDelegated(false)
+            .created(TestMessageId.of(3))
+            .build();
+        EmailChange change3 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE)
+            .isDelegated(false)
+            .created(TestMessageId.of(4))
+            .build();
+        EmailChange change4 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.plusHours(1))
+            .isDelegated(false)
+            .created(TestMessageId.of(5))
+            .build();
+        repository.save(oldState).block();
+        repository.save(change1).block();
+        repository.save(change2).block();
+        repository.save(change3).block();
+        repository.save(change4).block();
+
+        assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, STATE_0, Optional.of(Limit.of(3))).block().getCreated())
+            .containsExactlyInAnyOrder(TestMessageId.of(2), TestMessageId.of(3), TestMessageId.of(4));
+    }
+
+    @Test
+    default void getSinceStateWithDelegationShouldReturnAllFromInitial() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+        EmailChange oldState = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(STATE_0)
+            .date(DATE.minusHours(3))
+            .isDelegated(false)
+            .created(TestMessageId.of(1))
+            .build();
+        EmailChange change1 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(2))
+            .isDelegated(false)
+            .created(TestMessageId.of(2))
+            .build();
+        EmailChange change2 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(1))
+            .isDelegated(false)
+            .created(TestMessageId.of(3))
+            .build();
+        EmailChange change3 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE)
+            .isDelegated(false)
+            .created(TestMessageId.of(4))
+            .build();
+        repository.save(oldState).block();
+        repository.save(change1).block();
+        repository.save(change2).block();
+        repository.save(change3).block();
+
+        assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, State.INITIAL, Optional.of(Limit.of(3))).block().getCreated())
+            .containsExactlyInAnyOrder(TestMessageId.of(1), TestMessageId.of(2), TestMessageId.of(3));
+    }
+
+    @Test
+    default void getSinceStateWithDelegationShouldLimitChangesWhenMaxChangesOmitted() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+        EmailChange oldState = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(STATE_0)
+            .date(DATE.minusHours(2))
+            .isDelegated(false)
+            .created(TestMessageId.of(1))
+            .build();
+        EmailChange change1 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(1))
+            .isDelegated(false)
+            .created(TestMessageId.of(2), TestMessageId.of(3), TestMessageId.of(4), TestMessageId.of(5), TestMessageId.of(6))
+            .build();
+        EmailChange change2 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE)
+            .isDelegated(false)
+            .created(TestMessageId.of(7))
+            .build();
+
+        repository.save(oldState).block();
+        repository.save(change1).block();
+        repository.save(change2).block();
+
+        assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, STATE_0, Optional.empty()).block().getAllChanges())
+            .hasSameElementsAs(change1.getCreated());
+    }
+
+    @Test
+    default void getSinceStateWithDelegationShouldNotReturnMoreThanMaxChanges() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+        EmailChange oldState = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(STATE_0)
+            .date(DATE.minusHours(2))
+            .isDelegated(false)
+            .created(TestMessageId.of(1))
+            .build();
+        EmailChange change1 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(1))
+            .isDelegated(false)
+            .created(TestMessageId.of(2), TestMessageId.of(3))
+            .build();
+        EmailChange change2 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE)
+            .isDelegated(false)
+            .created(TestMessageId.of(4), TestMessageId.of(5))
+            .build();
+        repository.save(oldState).block();
+        repository.save(change1).block();
+        repository.save(change2).block();
+
+        assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, STATE_0, Optional.of(Limit.of(3))).block().getAllChanges())
+            .hasSameElementsAs(change1.getCreated());
+    }
+
+    @Test
+    default void getSinceStateWithDelegationShouldReturnEmptyWhenNumberOfChangesExceedMaxChanges() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+        EmailChange oldState = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(STATE_0)
+            .date(DATE.minusHours(2))
+            .isDelegated(false)
+            .created(TestMessageId.of(1))
+            .build();
+        EmailChange change1 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(1))
+            .isDelegated(false)
+            .created(TestMessageId.of(2), TestMessageId.of(3))
+            .build();
+        EmailChange change2 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE)
+            .isDelegated(false)
+            .created(TestMessageId.of(4), TestMessageId.of(5))
+            .build();
+        repository.save(oldState).block();
+        repository.save(change1).block();
+
+        assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, STATE_0, Optional.of(Limit.of(1))).block().getAllChanges())
+            .isEmpty();
+    }
+
+    @Test
+    default void getSinceStateWithDelegationShouldReturnNewState() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+        EmailChange oldState = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(STATE_0)
+            .date(DATE.minusHours(2))
+            .isDelegated(false)
+            .created(TestMessageId.of(1))
+            .build();
+        EmailChange change1 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(1))
+            .isDelegated(false)
+            .created(TestMessageId.of(2), TestMessageId.of(3))
+            .build();
+        EmailChange change2 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE)
+            .isDelegated(false)
+            .updated(TestMessageId.of(2), TestMessageId.of(3))
+            .build();
+        repository.save(oldState).block();
+        repository.save(change1).block();
+        repository.save(change2).block();
+
+        assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, STATE_0, Optional.empty()).block().getNewState())
+            .isEqualTo(change2.getState());
+    }
+
+    @Test
+    default void getSinceStateWithDelegationHasMoreChangesShouldBeTrueWhenMoreChanges() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+        EmailChange oldState = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(STATE_0)
+            .date(DATE.minusHours(2))
+            .isDelegated(false)
+            .created(TestMessageId.of(1))
+            .build();
+        EmailChange change1 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(1))
+            .isDelegated(false)
+            .created(TestMessageId.of(2), TestMessageId.of(3))
+            .build();
+        EmailChange change2 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE)
+            .isDelegated(false)
+            .updated(TestMessageId.of(2), TestMessageId.of(3))
+            .build();
+        repository.save(oldState).block();
+        repository.save(change1).block();
+        repository.save(change2).block();
+
+        assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, STATE_0, Optional.of(Limit.of(1))).block().hasMoreChanges())
+            .isTrue();
+    }
+
+    @Test
+    default void getSinceStateWithDelegationHasMoreChangesShouldBeFalseWhenNoMoreChanges() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+        EmailChange oldState = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(STATE_0)
+            .date(DATE.minusHours(2))
+            .isDelegated(false)
+            .created(TestMessageId.of(1))
+            .build();
+        EmailChange change1 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(1))
+            .isDelegated(false)
+            .created(TestMessageId.of(2), TestMessageId.of(3))
+            .build();
+        EmailChange change2 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE)
+            .isDelegated(false)
+            .updated(TestMessageId.of(2), TestMessageId.of(3))
+            .build();
+        repository.save(oldState).block();
+        repository.save(change1).block();
+        repository.save(change2).block();
+
+        assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, STATE_0, Optional.of(Limit.of(4))).block().hasMoreChanges())
+            .isFalse();
+    }
+
+    @Test
+    default void getSinceStateWithDelegationShouldReturnChangesInTheirRespectiveType() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+        EmailChange oldState = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(STATE_0)
+            .date(DATE.minusHours(3))
+            .isDelegated(false)
+            .created(TestMessageId.of(1), TestMessageId.of(9), TestMessageId.of(10))
+            .build();
+        EmailChange change1 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(2))
+            .isDelegated(false)
+            .created(TestMessageId.of(2), TestMessageId.of(3), TestMessageId.of(4), TestMessageId.of(5))
+            .build();
+        EmailChange change2 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(1))
+            .isDelegated(false)
+            .created(TestMessageId.of(6), TestMessageId.of(7))
+            .updated(TestMessageId.of(2), TestMessageId.of(3), TestMessageId.of(10))
+            .destroyed(TestMessageId.of(4), TestMessageId.of(9))
+            .build();
+        EmailChange change3 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE)
+            .isDelegated(false)
+            .created(TestMessageId.of(8))
+            .updated(TestMessageId.of(6), TestMessageId.of(7), TestMessageId.of(1))
+            .destroyed(TestMessageId.of(5), TestMessageId.of(10))
+            .build();
+        repository.save(oldState).block();
+        repository.save(change1).block();
+        repository.save(change2).block();
+        repository.save(change3).block();
+
+        EmailChanges emailChanges = repository.getSinceState(ACCOUNT_ID, STATE_0, Optional.of(Limit.of(20))).block();
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(emailChanges.getCreated()).containsExactlyInAnyOrder(TestMessageId.of(2), TestMessageId.of(3), TestMessageId.of(6), TestMessageId.of(7), TestMessageId.of(8));
+            softly.assertThat(emailChanges.getUpdated()).containsExactlyInAnyOrder(TestMessageId.of(1));
+            softly.assertThat(emailChanges.getDestroyed()).containsExactlyInAnyOrder(TestMessageId.of(9), TestMessageId.of(10));
+        });
+    }
+
+    @Test
+    default void getSinceStateWithDelegationShouldReturnDelegatedChanges() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+
+        EmailChange oldState = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(STATE_0)
+            .date(DATE.minusHours(3))
+            .isDelegated(false)
+            .created(TestMessageId.of(1))
+            .build();
+        EmailChange change1 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(2))
+            .isDelegated(false)
+            .created(TestMessageId.of(2), TestMessageId.of(3), TestMessageId.of(4), TestMessageId.of(5))
+            .build();
+        EmailChange change2 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(1))
+            .isDelegated(true)
+            .created(TestMessageId.of(6), TestMessageId.of(7))
+            .build();
+        EmailChange change3 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE)
+            .isDelegated(false)
+            .created(TestMessageId.of(8))
+            .build();
+        repository.save(oldState).block();
+        repository.save(change1).block();
+        repository.save(change2).block();
+        repository.save(change3).block();
+
+        EmailChanges emailChanges = repository.getSinceStateWithDelegation(ACCOUNT_ID, STATE_0, Optional.of(Limit.of(20))).block();
+
+        assertThat(emailChanges.getCreated())
+            .containsExactlyInAnyOrder(TestMessageId.of(2), TestMessageId.of(3), TestMessageId.of(4), TestMessageId.of(5), TestMessageId.of(6), TestMessageId.of(7), TestMessageId.of(8));
+    }
+
+    @Test
+    default void getSinceStateWithDelegationShouldIgnoreDuplicatedValues() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+        EmailChange oldState = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(STATE_0)
+            .date(DATE.minusHours(2))
+            .isDelegated(false)
+            .created(TestMessageId.of(1))
+            .build();
+        EmailChange change1 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE.minusHours(1))
+            .isDelegated(false)
+            .updated(TestMessageId.of(1), TestMessageId.of(2))
+            .build();
+        EmailChange change2 = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(State.of(UUID.randomUUID()))
+            .date(DATE)
+            .isDelegated(false)
+            .updated(TestMessageId.of(1), TestMessageId.of(2))
+            .created(TestMessageId.of(3))
+            .build();
+        repository.save(oldState).block();
+        repository.save(change1).block();
+        repository.save(change2).block();
+
+        EmailChanges emailChanges = repository.getSinceStateWithDelegation(ACCOUNT_ID, STATE_0, Optional.of(Limit.of(3))).block();
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(emailChanges.getUpdated()).containsExactly(TestMessageId.of(1), TestMessageId.of(2));
+            softly.assertThat(emailChanges.getCreated()).containsExactly(TestMessageId.of(3));
+        });
+    }
+
+    @Test
+    default void getSinceStateWithDelegationShouldFailWhenSinceStateNotFound() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+        assertThatThrownBy(() -> repository.getSinceStateWithDelegation(ACCOUNT_ID, STATE_0, Optional.empty()).block())
             .isInstanceOf(ChangeNotFoundException.class);
     }
 }
