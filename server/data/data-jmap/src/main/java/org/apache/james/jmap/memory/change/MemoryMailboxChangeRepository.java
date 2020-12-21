@@ -35,6 +35,7 @@ import org.apache.james.jmap.api.model.AccountId;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -45,7 +46,7 @@ public class MemoryMailboxChangeRepository implements MailboxChangeRepository {
     private final Multimap<AccountId, MailboxChange> mailboxChangeMap;
 
     public MemoryMailboxChangeRepository() {
-        this.mailboxChangeMap = ArrayListMultimap.create();
+        this.mailboxChangeMap = Multimaps.synchronizedListMultimap(ArrayListMultimap.create());
     }
 
     @Override
