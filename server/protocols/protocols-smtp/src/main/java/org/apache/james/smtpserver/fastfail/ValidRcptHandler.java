@@ -73,7 +73,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
                 return supportsRecipientRewriteTable && isRedirected(recipient, username.asString());
             }
         } catch (UsersRepositoryException e) {
-            LOGGER.info("Unable to access UsersRepository", e);
+            LOGGER.error("Unable to access UsersRepository", e);
             return false;
         }
     }
@@ -90,7 +90,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
         } catch (ErrorMappingException e) {
             return true;
         } catch (RecipientRewriteTableException e) {
-            LOGGER.info("Unable to access RecipientRewriteTable", e);
+            LOGGER.error("Unable to access RecipientRewriteTable", e);
             return false;
         }
         return false;
