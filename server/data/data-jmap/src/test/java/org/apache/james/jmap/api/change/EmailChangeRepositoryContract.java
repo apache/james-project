@@ -498,7 +498,7 @@ public interface EmailChangeRepositoryContract {
             .state(STATE_0)
             .date(DATE.minusHours(3))
             .isDelegated(false)
-            .created(TestMessageId.of(1))
+            .created(TestMessageId.of(1), TestMessageId.of(9), TestMessageId.of(10))
             .build();
         EmailChange change1 = EmailChange.builder()
             .accountId(ACCOUNT_ID)
@@ -513,8 +513,8 @@ public interface EmailChangeRepositoryContract {
             .date(DATE.minusHours(1))
             .isDelegated(false)
             .created(TestMessageId.of(6), TestMessageId.of(7))
-            .updated(TestMessageId.of(2), TestMessageId.of(3))
-            .destroyed(TestMessageId.of(4))
+            .updated(TestMessageId.of(2), TestMessageId.of(3), TestMessageId.of(10))
+            .destroyed(TestMessageId.of(4), TestMessageId.of(9))
             .build();
         EmailChange change3 = EmailChange.builder()
             .accountId(ACCOUNT_ID)
@@ -523,7 +523,7 @@ public interface EmailChangeRepositoryContract {
             .isDelegated(false)
             .created(TestMessageId.of(8))
             .updated(TestMessageId.of(6), TestMessageId.of(7), TestMessageId.of(1))
-            .destroyed(TestMessageId.of(5))
+            .destroyed(TestMessageId.of(5), TestMessageId.of(10))
             .build();
         repository.save(oldState).block();
         repository.save(change1).block();
@@ -533,9 +533,9 @@ public interface EmailChangeRepositoryContract {
         EmailChanges emailChanges = repository.getSinceState(ACCOUNT_ID, STATE_0, Optional.of(Limit.of(20))).block();
 
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(emailChanges.getCreated()).containsExactlyInAnyOrder(TestMessageId.of(2), TestMessageId.of(3), TestMessageId.of(4), TestMessageId.of(5), TestMessageId.of(6), TestMessageId.of(7), TestMessageId.of(8));
+            softly.assertThat(emailChanges.getCreated()).containsExactlyInAnyOrder(TestMessageId.of(2), TestMessageId.of(3), TestMessageId.of(6), TestMessageId.of(7), TestMessageId.of(8));
             softly.assertThat(emailChanges.getUpdated()).containsExactlyInAnyOrder(TestMessageId.of(1));
-            softly.assertThat(emailChanges.getDestroyed()).containsExactlyInAnyOrder(TestMessageId.of(4), TestMessageId.of(5));
+            softly.assertThat(emailChanges.getDestroyed()).containsExactlyInAnyOrder(TestMessageId.of(9), TestMessageId.of(10));
         });
     }
 

@@ -96,14 +96,24 @@ public class EmailChanges {
                 return this;
             }
 
-            Set<MessageId> createdTemp = new HashSet<>(created);
-            Set<MessageId> updatedTemp = new HashSet<>(updated);
             Set<MessageId> destroyedTemp = new HashSet<>(destroyed);
-            createdTemp.addAll(change.getCreated());
-            updatedTemp.addAll(
-                Sets.difference(ImmutableSet.copyOf(change.getUpdated()),
-                createdTemp));
-            destroyedTemp.addAll(change.getDestroyed());
+
+            Set<MessageId> createdTemp = Sets.difference(
+                ImmutableSet.<MessageId>builder()
+                    .addAll(created)
+                    .addAll(change.getCreated())
+                    .build(),
+                ImmutableSet.copyOf(change.getDestroyed()));
+            Set<MessageId> updatedTemp = Sets.difference(
+                ImmutableSet.<MessageId>builder()
+                    .addAll(updated)
+                    .addAll(Sets.difference(ImmutableSet.copyOf(change.getUpdated()),
+                        createdTemp))
+                    .build(),
+                ImmutableSet.copyOf(change.getDestroyed()));
+            destroyedTemp.addAll(Sets.difference(
+                ImmutableSet.copyOf(change.getDestroyed()),
+                created));
 
             if (createdTemp.size() + updatedTemp.size() + destroyedTemp.size() > limit.getValue()) {
                 hasMoreChanges = true;
