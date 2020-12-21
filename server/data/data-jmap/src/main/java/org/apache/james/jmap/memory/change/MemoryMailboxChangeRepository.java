@@ -51,9 +51,6 @@ public class MemoryMailboxChangeRepository implements MailboxChangeRepository {
 
     @Override
     public Mono<Void> save(MailboxChange change) {
-        Preconditions.checkNotNull(change.getAccountId());
-        Preconditions.checkNotNull(change.getState());
-
         return Mono.just(mailboxChangeMap.put(change.getAccountId(), change)).then();
     }
 

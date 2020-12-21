@@ -22,6 +22,7 @@ package org.apache.james.jmap.api.change;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -46,6 +47,8 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class MailboxChange {
@@ -74,6 +77,10 @@ public class MailboxChange {
         private Optional<List<MailboxId>> destroyed;
 
         private Builder(AccountId accountId, State state, ZonedDateTime date) {
+            Preconditions.checkNotNull(accountId, "'accountId' cannot be null");
+            Preconditions.checkNotNull(state, "'state' cannot be null");
+            Preconditions.checkNotNull(date, "'date' cannot be null");
+
             this.accountId = accountId;
             this.state = state;
             this.date = date;
@@ -338,5 +345,38 @@ public class MailboxChange {
 
     public List<MailboxId> getDestroyed() {
         return destroyed;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof MailboxChange) {
+            MailboxChange that = (MailboxChange) o;
+            return Objects.equals(accountId, that.accountId)
+                && Objects.equals(state, that.state)
+                && Objects.equals(date, that.date)
+                && Objects.equals(delegated, that.delegated)
+                && Objects.equals(created, that.created)
+                && Objects.equals(updated, that.updated)
+                && Objects.equals(destroyed, that.destroyed);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(accountId, state, date, delegated, created, updated, destroyed);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("accountId", accountId)
+            .add("state", state)
+            .add("date", date)
+            .add("isDelegated", delegated)
+            .add("created", created)
+            .add("updated", updated)
+            .add("destroyed", destroyed)
+            .toString();
     }
 }

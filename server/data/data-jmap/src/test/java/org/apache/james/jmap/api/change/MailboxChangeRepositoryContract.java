@@ -147,27 +147,6 @@ public interface MailboxChangeRepositoryContract {
     }
 
     @Test
-    default void saveChangeShouldFailWhenNoAccountId() {
-        MailboxChangeRepository repository = mailboxChangeRepository();
-        State.Factory stateFactory = stateFactory();
-
-        MailboxChange change = MailboxChange.builder().accountId(null).state(stateFactory.generate()).date(DATE).created(ImmutableList.of(TestId.of(1))).build();
-
-        assertThatThrownBy(() -> repository.save(change).block())
-            .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    default void saveChangeShouldFailWhenNoState() {
-        MailboxChangeRepository repository = mailboxChangeRepository();
-
-        MailboxChange change = MailboxChange.builder().accountId(ACCOUNT_ID).state(null).date(DATE).created(ImmutableList.of(TestId.of(1))).build();
-
-        assertThatThrownBy(() -> repository.save(change).block())
-            .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
     default void getChangesShouldSuccess() {
         MailboxChangeRepository repository = mailboxChangeRepository();
         State.Factory stateFactory = stateFactory();
