@@ -1,14 +1,6 @@
 {
   "attachments": [
     {
-      "mediaType":"text",
-      "subtype":"plain",
-      "fileName":null,
-      "fileExtension":null,
-      "contentDisposition":null,
-      "textContent":"This mail have a non textual attachment !\r\n"
-    },
-    {
       "mediaType":"application",
       "subtype":"vnd.oasis.opendocument.text",
       "fileName":"toto.odt","fileExtension":"odt",

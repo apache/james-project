@@ -78,38 +78,6 @@
   "sentDate": "2015-06-10T10:45:27+02:00",
   "attachments": [
     {
-      "textContent": "Forward as attachment !\n\n\n",
-      "mediaType": "text",
-      "subtype": "plain",
-      "fileName": null,
-      "fileExtension": null,
-      "contentDisposition": null
-    },
-    {
-      "textContent": null,
-      "mediaType": null,
-      "subtype": null,
-      "fileName": null,
-      "fileExtension": null,
-      "contentDisposition": null
-    },
-    {
-      "textContent": null,
-      "mediaType": null,
-      "subtype": null,
-      "fileName": null,
-      "fileExtension": null,
-      "contentDisposition": null
-    },
-    {
-      "textContent": "Textual content of one attachment ( mail signature )\n",
-      "mediaType": "text",
-      "subtype": "plain",
-      "fileName": null,
-      "fileExtension": null,
-      "contentDisposition": null
-    },
-    {
       "textContent": null,
       "mediaType": "application",
       "subtype": "vnd.oasis.opendocument.spreadsheet",

@@ -1273,6 +1273,21 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
+    void searchWithTextAttachmentShouldNotMatchMessageBody() throws Exception {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Attachment));
+        myFolderMessageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(ClassLoader.getSystemResourceAsStream("eml/emailWithTextAttachment.eml")),
+            session).getId();
+        await();
+
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.attachmentContains("message"));
+
+        assertThat(messageSearchIndex.search(session, mailbox2, searchQuery).toStream())
+            .isEmpty();
+    }
+
+    @Test
     void searchWithPDFAttachmentShouldReturnMailsWhenAttachmentContentMatches() throws Exception {
         assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Attachment));
         byte[] attachmentContent = ClassLoaderUtils.getSystemResourceAsByteArray("eml/attachment.pdf");

@@ -303,7 +303,8 @@ public class MimePart {
     @JsonIgnore
     public Stream<MimePart> getAttachmentsStream() {
         return attachments.stream()
-                .flatMap((mimePart) -> Stream.concat(Stream.of(mimePart), mimePart.getAttachmentsStream()));
+                .flatMap(mimePart -> Stream.concat(Stream.of(mimePart), mimePart.getAttachmentsStream()))
+                .filter(mimePart -> mimePart.contentDisposition.isPresent());
     }
 
 }
