@@ -77,6 +77,7 @@ public class MailboxChanges {
         private boolean hasMoreChanges;
         private boolean canAddMoreItem;
         private Limit limit;
+        private boolean isCountChangeOnly;
         private Set<MailboxId> created;
         private Set<MailboxId> updated;
         private Set<MailboxId> destroyed;
@@ -85,6 +86,7 @@ public class MailboxChanges {
             this.limit = limit;
             this.state = state;
             this.hasMoreChanges = false;
+            this.isCountChangeOnly = false;
             this.canAddMoreItem = true;
             this.created = new HashSet<>();
             this.updated = new HashSet<>();
@@ -121,6 +123,11 @@ public class MailboxChanges {
                 return this;
             }
 
+            if (created.isEmpty() && updated.isEmpty() && destroyed.isEmpty()) {
+                isCountChangeOnly = change.isCountChange();
+            } else {
+                isCountChangeOnly = isCountChangeOnly && change.isCountChange();
+            }
             state = change.getState();
             created = createdTemp;
             updated = updatedTemp;
@@ -130,19 +137,21 @@ public class MailboxChanges {
         }
 
         public MailboxChanges build() {
-            return new MailboxChanges(state, hasMoreChanges, created, updated, destroyed);
+            return new MailboxChanges(state, hasMoreChanges, isCountChangeOnly, created, updated, destroyed);
         }
     }
 
     private State newState;
     private final boolean hasMoreChanges;
+    private final boolean isCountChangesOnly;
     private final Set<MailboxId> created;
     private final Set<MailboxId> updated;
     private final Set<MailboxId> destroyed;
 
-    private MailboxChanges(State newState, boolean hasMoreChanges, Set<MailboxId> created, Set<MailboxId> updated, Set<MailboxId> destroyed) {
+    private MailboxChanges(State newState, boolean hasMoreChanges, boolean isCountChangesOnly, Set<MailboxId> created, Set<MailboxId> updated, Set<MailboxId> destroyed) {
         this.newState = newState;
         this.hasMoreChanges = hasMoreChanges;
+        this.isCountChangesOnly = isCountChangesOnly;
         this.created = created;
         this.updated = updated;
         this.destroyed = destroyed;
@@ -154,6 +163,10 @@ public class MailboxChanges {
 
     public boolean hasMoreChanges() {
         return hasMoreChanges;
+    }
+
+    public boolean isCountChangesOnly() {
+        return isCountChangesOnly;
     }
 
     public Set<MailboxId> getCreated() {

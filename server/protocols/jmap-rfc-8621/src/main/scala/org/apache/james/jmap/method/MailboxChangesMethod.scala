@@ -29,6 +29,7 @@ import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{CapabilityIdentifier, Invocation, Properties, State}
 import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{HasMoreChanges, MailboxChangesRequest, MailboxChangesResponse}
+import org.apache.james.jmap.method.MailboxChangesMethod.updatedProperties
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
@@ -37,6 +38,10 @@ import reactor.core.scala.publisher.SMono
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
+
+object MailboxChangesMethod {
+  val updatedProperties: Properties = Properties("totalEmails", "unreadEmails", "totalThreads", "unreadThreads")
+}
 
 class MailboxChangesMethod @Inject()(mailboxSerializer: MailboxSerializer,
                                      val metricFactory: MetricFactory,
@@ -59,7 +64,7 @@ class MailboxChangesMethod @Inject()(mailboxSerializer: MailboxSerializer,
         oldState = request.sinceState,
         newState = State.fromMailboxChanges(mailboxChanges),
         hasMoreChanges = HasMoreChanges.fromMailboxChanges(mailboxChanges),
-        updatedProperties = Some(Properties()),
+        updatedProperties = if (mailboxChanges.isCountChangesOnly) Some(updatedProperties) else None,
         created = mailboxChanges.getCreated.asScala.toSet,
         updated = mailboxChanges.getUpdated.asScala.toSet,
         destroyed = mailboxChanges.getDestroyed.asScala.toSet))

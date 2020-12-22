@@ -35,7 +35,6 @@ import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.draft.MessageIdProbe
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, BOB, BOB_PASSWORD, CEDRIC, DAVID, DOMAIN, authScheme, baseRequestSpecBuilder}
-import org.apache.james.jmap.rfc8621.contract.MailboxGetMethodContract.ARGUMENTS
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.{EntryKey, Right}
@@ -7674,7 +7673,7 @@ trait MailboxSetMethodContract {
         s"""{
            |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
            |  "hasMoreChanges": false,
-           |  "updatedProperties": [],
+           |  "updatedProperties": null,
            |  "created": [],
            |  "updated": [],
            |  "destroyed": []
@@ -7735,7 +7734,7 @@ trait MailboxSetMethodContract {
         s"""{
            |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
            |  "hasMoreChanges": false,
-           |  "updatedProperties": [],
+           |  "updatedProperties": null,
            |  "created": [],
            |  "updated": ["${mailboxId.serialize}"],
            |  "destroyed": []
