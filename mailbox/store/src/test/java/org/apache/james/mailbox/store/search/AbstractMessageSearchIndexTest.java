@@ -1268,38 +1268,6 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    protected void sortOnDisplayFromShouldWork() throws Exception {
-        SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
-        SearchQuery searchQuery = SearchQuery.builder()
-            .andCriteria(SearchQuery.uid(numericRanges))
-            .sorts(new Sort(SortClause.DisplayFrom))
-            .build();
-
-        assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
-            .containsExactly(m4.getUid(), m3.getUid(), m5.getUid(), m2.getUid());
-        // 2 : Tellier Benoit (JIRA)
-        // 3 : efij
-        // 4 : abcd
-        // 5 : Eric Charles (JIRA)
-    }
-
-    @Test
-    void sortOnDisplayToShouldWork() throws Exception {
-        SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
-        SearchQuery searchQuery = SearchQuery.builder()
-            .andCriteria(SearchQuery.uid(numericRanges))
-            .sorts(new Sort(SortClause.DisplayTo))
-            .build();
-
-        assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
-            .containsExactly(m3.getUid(), m2.getUid(), m4.getUid(), m5.getUid());
-        // 2 : abc
-        // 3 : aaa
-        // 4 : server
-        // 5 : zzz
-    }
-
-    @Test
     void sortOnSentDateShouldWork() throws Exception {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = SearchQuery.builder()

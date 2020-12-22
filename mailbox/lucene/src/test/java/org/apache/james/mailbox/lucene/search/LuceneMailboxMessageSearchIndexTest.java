@@ -550,38 +550,6 @@ class LuceneMailboxMessageSearchIndexTest {
     }
     
     @Test
-    void sortOnDisplayToShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = SearchQuery.allSortedWith(new Sort(SortClause.DisplayTo, Order.NATURAL));
-
-        Stream<MessageUid> result = index.search(session, mailbox, query).toStream();
-        assertThat(result).containsExactly(uid4, uid1, uid3);
-    }
-    
-    @Test
-    void reverseSortOnDisplayToShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = SearchQuery.allSortedWith(new Sort(SortClause.DisplayTo, Order.REVERSE));
-
-        Stream<MessageUid> result = index.search(session, mailbox, query).toStream();
-        assertThat(result).containsExactly(uid3, uid1, uid4);
-    }
-    
-    @Test
-    void sortOnDisplayFromShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = SearchQuery.allSortedWith(new Sort(SortClause.DisplayFrom, Order.NATURAL));
-
-        Stream<MessageUid> result = index.search(session, mailbox, query).toStream();
-        assertThat(result).containsExactly(uid3, uid4, uid1);
-    }
-    
-    @Test
-    void reverseSortOnDisplayFromShouldReturnWellOrderedResults() throws Exception {
-        SearchQuery query = SearchQuery.allSortedWith(new Sort(SortClause.DisplayFrom, Order.REVERSE));
-
-        Stream<MessageUid> result = index.search(session, mailbox, query).toStream();
-        assertThat(result).containsExactly(uid1, uid4, uid3);
-    }
-    
-    @Test
     void sortOnArrivalDateShouldReturnWellOrderedResults() throws Exception {
         SearchQuery query = SearchQuery.allSortedWith(new Sort(SortClause.Arrival, Order.NATURAL));
 

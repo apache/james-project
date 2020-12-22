@@ -105,18 +105,6 @@ class CombinedComparatorTest {
     }
 
     @Test
-    void createShouldConvertDisplayTo() {
-        assertThat(CombinedComparator.create(ImmutableList.of(new Sort(SortClause.DisplayTo))).getComparators())
-            .containsOnly(HeaderDisplayComparator.TO_COMPARATOR);
-    }
-
-    @Test
-    void createShouldConvertDisplayFrom() {
-        assertThat(CombinedComparator.create(ImmutableList.of(new Sort(SortClause.DisplayFrom))).getComparators())
-            .containsOnly(HeaderDisplayComparator.FROM_COMPARATOR);
-    }
-
-    @Test
     void createShouldConvertId() {
         assertThat(CombinedComparator.create(ImmutableList.of(new Sort(SortClause.Id))).getComparators())
             .containsOnly(MessageComparators.MESSAGE_ID_COMPARATOR);

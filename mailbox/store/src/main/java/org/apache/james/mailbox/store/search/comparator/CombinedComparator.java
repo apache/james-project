@@ -66,10 +66,6 @@ public class CombinedComparator implements Comparator<MailboxMessage> {
                 return MessageComparators.UID_COMPARATOR;
             case SentDate:
                 return SentDateComparator.SENTDATE;
-            case DisplayFrom:
-                return HeaderDisplayComparator.FROM_COMPARATOR;
-            case DisplayTo:
-                return HeaderDisplayComparator.TO_COMPARATOR;
             case Id:
                 return MessageComparators.MESSAGE_ID_COMPARATOR;
             default:

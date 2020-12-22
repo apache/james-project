@@ -1036,16 +1036,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                     return UID_SORT_REVERSE;
                 }
                 return UID_SORT;
-            case DisplayFrom:
-                if (reverse) {
-                    return FIRST_FROM_MAILBOX_DISPLAY_SORT_REVERSE;
-                }
-                return FIRST_FROM_MAILBOX_DISPLAY_SORT;
-            case DisplayTo:
-                if (reverse) {
-                    return FIRST_TO_MAILBOX_DISPLAY_SORT_REVERSE;
-                }
-                return FIRST_TO_MAILBOX_DISPLAY_SORT;
             default:
                 return null;
         }
