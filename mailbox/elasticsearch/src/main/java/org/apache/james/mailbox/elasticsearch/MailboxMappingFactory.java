@@ -159,7 +159,6 @@ public class MailboxMappingFactory {
                         .endObject()
 
                         .startObject(FROM)
-                            .field(TYPE, NESTED)
                             .startObject(PROPERTIES)
                                 .startObject(EMailer.NAME)
                                     .field(TYPE, TEXT)
@@ -210,7 +209,6 @@ public class MailboxMappingFactory {
                         .endObject()
 
                         .startObject(TO)
-                            .field(TYPE, NESTED)
                             .startObject(PROPERTIES)
                                 .startObject(EMailer.NAME)
                                     .field(TYPE, TEXT)
@@ -237,7 +235,6 @@ public class MailboxMappingFactory {
                         .endObject()
 
                         .startObject(CC)
-                            .field(TYPE, NESTED)
                             .startObject(PROPERTIES)
                                 .startObject(EMailer.NAME)
                                     .field(TYPE, TEXT)
@@ -264,7 +261,6 @@ public class MailboxMappingFactory {
                         .endObject()
 
                         .startObject(BCC)
-                            .field(TYPE, NESTED)
                             .startObject(PROPERTIES)
                                 .startObject(EMailer.NAME)
                                     .field(TYPE, TEXT)

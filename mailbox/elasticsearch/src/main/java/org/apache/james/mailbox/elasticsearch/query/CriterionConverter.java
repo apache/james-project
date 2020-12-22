@@ -278,12 +278,10 @@ public class CriterionConverter {
     }
 
     private QueryBuilder manageAddressFields(String headerName, String value) {
-        return nestedQuery(getFieldNameFromHeaderName(headerName),
-            boolQuery()
-                .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.NAME, value))
-                .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS, value))
-                .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS + "." + RAW, value)),
-            ScoreMode.Avg);
+        return boolQuery()
+            .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.NAME, value))
+            .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS, value))
+            .should(matchQuery(getFieldNameFromHeaderName(headerName) + "." + JsonMessageConstants.EMailer.ADDRESS + "." + RAW, value));
     }
 
     private String getFieldNameFromHeaderName(String headerName) {

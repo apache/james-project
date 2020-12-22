@@ -23,7 +23,6 @@ import org.apache.james.backends.es.NodeMappingFactory;
 import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.elasticsearch.search.sort.FieldSortBuilder;
-import org.elasticsearch.search.sort.NestedSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortMode;
 import org.elasticsearch.search.sort.SortOrder;
@@ -44,13 +43,13 @@ public class SortConverter {
                 return SortBuilders.fieldSort(JsonMessageConstants.DATE);
             case MailboxCc :
                 return SortBuilders.fieldSort(JsonMessageConstants.CC + PATH_SEPARATOR + JsonMessageConstants.EMailer.ADDRESS
-                    + PATH_SEPARATOR + NodeMappingFactory.RAW).setNestedSort(new NestedSortBuilder(JsonMessageConstants.CC));
+                    + PATH_SEPARATOR + NodeMappingFactory.RAW);
             case MailboxFrom :
                 return SortBuilders.fieldSort(JsonMessageConstants.FROM + PATH_SEPARATOR + JsonMessageConstants.EMailer.ADDRESS
-                    + PATH_SEPARATOR + NodeMappingFactory.RAW).setNestedSort(new NestedSortBuilder(JsonMessageConstants.FROM));
+                    + PATH_SEPARATOR + NodeMappingFactory.RAW);
             case MailboxTo :
                 return SortBuilders.fieldSort(JsonMessageConstants.TO + PATH_SEPARATOR + JsonMessageConstants.EMailer.ADDRESS
-                    + PATH_SEPARATOR + NodeMappingFactory.RAW).setNestedSort(new NestedSortBuilder(JsonMessageConstants.TO));
+                    + PATH_SEPARATOR + NodeMappingFactory.RAW);
             case BaseSubject :
                 return SortBuilders.fieldSort(JsonMessageConstants.SUBJECT + PATH_SEPARATOR + NodeMappingFactory.RAW);
             case Size :
@@ -61,10 +60,10 @@ public class SortConverter {
                 return SortBuilders.fieldSort(JsonMessageConstants.UID);
             case DisplayFrom:
                 return SortBuilders.fieldSort(JsonMessageConstants.FROM + PATH_SEPARATOR + JsonMessageConstants.EMailer.NAME
-                    + PATH_SEPARATOR + NodeMappingFactory.RAW).setNestedSort(new NestedSortBuilder(JsonMessageConstants.FROM));
+                    + PATH_SEPARATOR + NodeMappingFactory.RAW);
             case DisplayTo:
                 return SortBuilders.fieldSort(JsonMessageConstants.TO + PATH_SEPARATOR + JsonMessageConstants.EMailer.NAME
-                    + PATH_SEPARATOR + NodeMappingFactory.RAW).setNestedSort(new NestedSortBuilder(JsonMessageConstants.TO));
+                    + PATH_SEPARATOR + NodeMappingFactory.RAW);
             case Id:
                 return SortBuilders.fieldSort(JsonMessageConstants.MESSAGE_ID);
             default:
