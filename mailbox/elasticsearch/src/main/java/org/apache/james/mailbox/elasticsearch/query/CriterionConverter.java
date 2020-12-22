@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.elasticsearch.query;
 
 import static org.apache.james.backends.es.NodeMappingFactory.RAW;
-import static org.apache.james.backends.es.NodeMappingFactory.SPLIT_EMAIL;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
@@ -150,19 +149,10 @@ public class CriterionConverter {
         case BODY:
             return boolQuery()
                     .should(matchQuery(JsonMessageConstants.TEXT_BODY, textCriterion.getOperator().getValue()))
-                    .should(matchQuery(JsonMessageConstants.TEXT_BODY + "." + SPLIT_EMAIL,
-                        textCriterion.getOperator().getValue()))
-                    .should(matchQuery(JsonMessageConstants.HTML_BODY + "." + SPLIT_EMAIL,
-                        textCriterion.getOperator().getValue()))
                     .should(matchQuery(JsonMessageConstants.HTML_BODY, textCriterion.getOperator().getValue()));
         case FULL:
             return boolQuery()
                     .should(matchQuery(JsonMessageConstants.TEXT_BODY, textCriterion.getOperator().getValue()))
-                    .should(matchQuery(JsonMessageConstants.TEXT_BODY + "." + SPLIT_EMAIL,
-                        textCriterion.getOperator().getValue()))
-                    .should(matchQuery(JsonMessageConstants.HTML_BODY + "." + SPLIT_EMAIL,
-                        textCriterion.getOperator().getValue()))
-                    .should(matchQuery(JsonMessageConstants.HTML_BODY, textCriterion.getOperator().getValue()))
                     .should(matchQuery(JsonMessageConstants.HTML_BODY, textCriterion.getOperator().getValue()))
                     .should(matchQuery(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT,
                         textCriterion.getOperator().getValue()));

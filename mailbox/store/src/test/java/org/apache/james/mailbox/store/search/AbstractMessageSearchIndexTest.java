@@ -37,6 +37,7 @@ import javax.mail.Flags;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -59,10 +60,12 @@ import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.message.BodyPartBuilder;
 import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.mime4j.message.SingleBodyBuilder;
+import org.apache.james.mime4j.stream.RawField;
 import org.apache.james.util.ClassLoaderUtils;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -466,12 +469,94 @@ public abstract class AbstractMessageSearchIndexTest {
             SearchQuery.address(AddressType.To, emailToSearch),
             SearchQuery.address(AddressType.Cc, emailToSearch),
             SearchQuery.address(AddressType.Bcc, emailToSearch),
-            SearchQuery.headerContains("Subject", emailToSearch),
-            SearchQuery.attachmentContains(emailToSearch),
-            SearchQuery.bodyContains(emailToSearch))));
+            SearchQuery.headerContains("Subject", emailToSearch))));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
             .containsOnly(m11.getUid());
+    }
+
+    @Test
+    void textShouldMatchFullEmailAddress() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        ComposedMessageId messageId1 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                Message.Builder
+                    .of()
+                    .setSubject("test")
+                    .setBody("benwa@apache.org email address do not exist", StandardCharsets.UTF_8)
+                    .build()),
+            session).getId();
+
+        await();
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("benwa@apache.org")), session)).toStream())
+            .containsOnly(messageId1.getUid());
+    }
+
+    @Test
+    void textShouldMatchEmailAddressLocalPart() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        ComposedMessageId messageId1 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                Message.Builder
+                    .of()
+                    .setSubject("test")
+                    .setBody("benwa@apache.org email address do not exist", StandardCharsets.UTF_8)
+                    .build()),
+            session).getId();
+
+        await();
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("benwa")), session)).toStream())
+            .containsOnly(messageId1.getUid());
+    }
+
+    @Test
+    public void textShouldMatchEmailAddressDomainPart() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        ComposedMessageId messageId1 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                Message.Builder
+                    .of()
+                    .setSubject("test")
+                    .setBody("benwa@mydomain.org email address do not exist", StandardCharsets.UTF_8)
+                    .build()),
+            session).getId();
+
+        await();
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("mydomain.org")), session)).toStream())
+            .containsOnly(messageId1.getUid());
+    }
+
+    @Test
+    public void textShouldNotMatchOtherAddressesOfTheSameDomain() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                Message.Builder
+                    .of()
+                    .setSubject("test")
+                    .setBody("benwa@apache.org email address do not exist", StandardCharsets.UTF_8)
+                    .build()),
+            session).getId();
+        
+        await();
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("alice@apache.org")), session)).toStream())
+            .isEmpty();
     }
 
     @Test

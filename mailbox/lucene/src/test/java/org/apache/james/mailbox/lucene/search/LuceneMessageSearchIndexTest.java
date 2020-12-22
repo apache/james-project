@@ -19,14 +19,28 @@
 
 package org.apache.james.mailbox.lucene.search;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.nio.charset.StandardCharsets;
+
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
+import org.apache.james.mime4j.dom.Message;
 import org.apache.lucene.store.RAMDirectory;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
+
+import reactor.core.publisher.Flux;
 
 class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
 
@@ -118,6 +132,12 @@ class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
     @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
     public void mailsContainsShouldIncludeMailHavingAttachmentsMatchingTheRequest() {
+    }
+
+    @Disabled("Domain part search is not supported by Lucene")
+    @Test
+    @Override
+    public void textShouldMatchEmailAddressDomainPart() throws Exception {
     }
 
     @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")

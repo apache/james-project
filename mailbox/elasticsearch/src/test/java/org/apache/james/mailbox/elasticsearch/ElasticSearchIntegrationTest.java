@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.elasticsearch;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -28,6 +29,7 @@ import java.time.ZoneId;
 import org.apache.james.backends.es.DockerElasticSearchExtension;
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.ReactorElasticSearchClient;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
@@ -36,6 +38,7 @@ import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
 import org.apache.james.mailbox.elasticsearch.query.CriterionConverter;
 import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -56,6 +59,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 
@@ -266,7 +270,6 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
     @Test
     void addressMatchesShouldBeExact() throws Exception {
-        // results should not include the domain part nor the local part but the full email address
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
@@ -296,90 +299,10 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .containsOnly(messageId2.getUid());
     }
 
+    @Disabled("MAILBOX-403 Relaxed the matching constraints for email addresses in text bodies to reduce ElasticSearch disk space usage")
     @Test
-    void textShouldMatchFullEmailAddress() throws Exception {
-        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
-        MailboxSession session = MailboxSessionUtil.create(USERNAME);
-        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+    public void textShouldNotMatchOtherAddressesOfTheSameDomain() throws Exception {
 
-
-        ComposedMessageId messageId1 = messageManager.appendMessage(
-            MessageManager.AppendCommand.builder().build(
-                Message.Builder
-                    .of()
-                    .setSubject("test")
-                    .setBody("benwa@apache.org email address do not exist", StandardCharsets.UTF_8)
-                    .build()),
-            session).getId();
-
-        elasticSearch.awaitForElasticSearch();
-
-        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("benwa@apache.org")), session)).toStream())
-            .containsOnly(messageId1.getUid());
-    }
-
-    @Test
-    void textShouldMatchEmailAddressLocalPart() throws Exception {
-        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
-        MailboxSession session = MailboxSessionUtil.create(USERNAME);
-        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
-
-        ComposedMessageId messageId1 = messageManager.appendMessage(
-            MessageManager.AppendCommand.builder().build(
-                Message.Builder
-                    .of()
-                    .setSubject("test")
-                    .setBody("benwa@apache.org email address do not exist", StandardCharsets.UTF_8)
-                    .build()),
-            session).getId();
-
-        elasticSearch.awaitForElasticSearch();
-
-        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("benwa")), session)).toStream())
-            .containsOnly(messageId1.getUid());
-    }
-
-    @Test
-    void textShouldMatchEmailAddressDomainPart() throws Exception {
-        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
-        MailboxSession session = MailboxSessionUtil.create(USERNAME);
-        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
-
-        ComposedMessageId messageId1 = messageManager.appendMessage(
-            MessageManager.AppendCommand.builder().build(
-                Message.Builder
-                    .of()
-                    .setSubject("test")
-                    .setBody("benwa@apache.org email address do not exist", StandardCharsets.UTF_8)
-                    .build()),
-            session).getId();
-
-        elasticSearch.awaitForElasticSearch();
-
-        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("apache.org")), session)).toStream())
-            .containsOnly(messageId1.getUid());
-    }
-
-    @Test
-    void textShouldNotMatchOtherAddressesOfTheSameDomain() throws Exception {
-        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
-        MailboxSession session = MailboxSessionUtil.create(USERNAME);
-        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
-
-        messageManager.appendMessage(
-            MessageManager.AppendCommand.builder().build(
-                Message.Builder
-                    .of()
-                    .setSubject("test")
-                    .setBody("benwa@apache.org email address do not exist", StandardCharsets.UTF_8)
-                    .build()),
-            session).getId();
-
-
-        elasticSearch.awaitForElasticSearch();
-
-        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("alice@apache.org")), session)).toStream())
-            .isEmpty();
     }
 
     @Disabled("MAILBOX-401 '-' causes address matching to fail")

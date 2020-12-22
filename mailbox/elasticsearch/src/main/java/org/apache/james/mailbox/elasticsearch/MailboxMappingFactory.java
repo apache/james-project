@@ -34,7 +34,6 @@ import static org.apache.james.backends.es.NodeMappingFactory.RAW;
 import static org.apache.james.backends.es.NodeMappingFactory.REQUIRED;
 import static org.apache.james.backends.es.NodeMappingFactory.ROUTING;
 import static org.apache.james.backends.es.NodeMappingFactory.SEARCH_ANALYZER;
-import static org.apache.james.backends.es.NodeMappingFactory.SPLIT_EMAIL;
 import static org.apache.james.backends.es.NodeMappingFactory.TYPE;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.ATTACHMENTS;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.BCC;
@@ -297,26 +296,12 @@ public class MailboxMappingFactory {
 
                         .startObject(TEXT_BODY)
                             .field(TYPE, TEXT)
-                            .field(ANALYZER, KEEP_MAIL_AND_URL)
-                            .startObject(FIELDS)
-                                .startObject(SPLIT_EMAIL)
-                                    .field(TYPE, TEXT)
-                                    .field(ANALYZER, STANDARD)
-                                    .field(SEARCH_ANALYZER, KEEP_MAIL_AND_URL)
-                                .endObject()
-                            .endObject()
+                            .field(ANALYZER, STANDARD)
                         .endObject()
 
                         .startObject(HTML_BODY)
                             .field(TYPE, TEXT)
-                            .field(ANALYZER, KEEP_MAIL_AND_URL)
-                            .startObject(FIELDS)
-                                .startObject(SPLIT_EMAIL)
-                                    .field(TYPE, TEXT)
-                                    .field(ANALYZER, STANDARD)
-                                    .field(SEARCH_ANALYZER, KEEP_MAIL_AND_URL)
-                                .endObject()
-                            .endObject()
+                            .field(ANALYZER, STANDARD)
                         .endObject()
 
                         .startObject(HAS_ATTACHMENT)

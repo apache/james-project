@@ -47,7 +47,6 @@ public class NodeMappingFactory {
     public static final String NESTED = "nested";
     public static final String FIELDS = "fields";
     public static final String RAW = "raw";
-    public static final String SPLIT_EMAIL = "splitEmail";
     public static final String ANALYZER = "analyzer";
     public static final String NORMALIZER = "normalizer";
     public static final String SEARCH_ANALYZER = "search_analyzer";
