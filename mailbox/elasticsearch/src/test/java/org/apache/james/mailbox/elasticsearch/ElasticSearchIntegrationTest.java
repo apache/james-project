@@ -296,6 +296,92 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .containsOnly(messageId2.getUid());
     }
 
+    @Test
+    void textShouldMatchFullEmailAddress() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+
+        ComposedMessageId messageId1 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                Message.Builder
+                    .of()
+                    .setSubject("test")
+                    .setBody("benwa@apache.org email address do not exist", StandardCharsets.UTF_8)
+                    .build()),
+            session).getId();
+
+        elasticSearch.awaitForElasticSearch();
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("benwa@apache.org")), session)).toStream())
+            .containsOnly(messageId1.getUid());
+    }
+
+    @Test
+    void textShouldMatchEmailAddressLocalPart() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        ComposedMessageId messageId1 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                Message.Builder
+                    .of()
+                    .setSubject("test")
+                    .setBody("benwa@apache.org email address do not exist", StandardCharsets.UTF_8)
+                    .build()),
+            session).getId();
+
+        elasticSearch.awaitForElasticSearch();
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("benwa")), session)).toStream())
+            .containsOnly(messageId1.getUid());
+    }
+
+    @Test
+    void textShouldMatchEmailAddressDomainPart() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        ComposedMessageId messageId1 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                Message.Builder
+                    .of()
+                    .setSubject("test")
+                    .setBody("benwa@apache.org email address do not exist", StandardCharsets.UTF_8)
+                    .build()),
+            session).getId();
+
+        elasticSearch.awaitForElasticSearch();
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("apache.org")), session)).toStream())
+            .containsOnly(messageId1.getUid());
+    }
+
+    @Test
+    void textShouldNotMatchOtherAddressesOfTheSameDomain() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                Message.Builder
+                    .of()
+                    .setSubject("test")
+                    .setBody("benwa@apache.org email address do not exist", StandardCharsets.UTF_8)
+                    .build()),
+            session).getId();
+
+
+        elasticSearch.awaitForElasticSearch();
+
+        assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("alice@apache.org")), session)).toStream())
+            .isEmpty();
+    }
+
     @Disabled("MAILBOX-401 '-' causes address matching to fail")
     @Test
     void localPartShouldBeMatchedWhenHyphen() throws Exception {
