@@ -51,6 +51,14 @@ import com.google.common.base.Preconditions;
  * automatically cloning it (if shared) when a write operation is invoked.
  */
 public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposable {
+
+    /**
+     * System property which tells JAMES if it should disable copy on write behaviour
+     * and always copy instead. Default is copy on write.
+     */
+    public static final String DISABLE_COPY_ON_WRITE = "james.message.disablecopyonwrite";
+    private final boolean copyOnWriteEnabled;
+
     @FunctionalInterface
     interface Read<T> {
         T read(MimeMessage message) throws MessagingException;
@@ -208,56 +216,71 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
     /**
      * @return a MimeMessageCopyOnWriteProxy wrapping the message. We consider 'message' as an external reference and
      * will avoid mutate it, rather cloning the email.
-     *
+     * <p>
      * Please note however that modifying 'message' itself will not lead to a correct reference tracking management
      * unless it is a MimeMessageCopyOnWriteProxy
      */
-    public static MimeMessageCopyOnWriteProxy fromMimeMessage(MimeMessage message) {
+    public static MimeMessageCopyOnWriteProxy fromMimeMessage(MimeMessage message) throws MessagingException {
         return new MimeMessageCopyOnWriteProxy(message, true);
     }
 
     /**
      * @return a MimeMessageCopyOnWriteProxy wrapping the message. We do not consider 'message' as an external reference
      * and will mutate it, rather than cloning the email.
-     *
+     * <p>
      * Please note however that modifying 'message' itself will not lead to a correct reference tracking management
      * unless it is a MimeMessageCopyOnWriteProxy
      */
-    public static MimeMessageCopyOnWriteProxy fromMimeMessageNoExternalReference(MimeMessage message) {
+    public static MimeMessageCopyOnWriteProxy fromMimeMessageNoExternalReference(MimeMessage message) throws MessagingException {
         return new MimeMessageCopyOnWriteProxy(message, false);
     }
 
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
     private MessageReferenceTracker refCount;
+    private MimeMessageWrapper wrapped;
 
-    private MimeMessageCopyOnWriteProxy(MimeMessage original, boolean originalIsAReference) {
+    private MimeMessageCopyOnWriteProxy(MimeMessage original, boolean originalIsAReference) throws MessagingException {
         super(Session.getDefaultInstance(System.getProperties(), null));
-
-        if (original instanceof MimeMessageCopyOnWriteProxy) {
-            refCount = ((MimeMessageCopyOnWriteProxy) original).newRef();
-        } else {
-            refCount = new MessageReferenceTracker(original);
-            if (originalIsAReference) {
-                refCount.incrementReferences(); // We consider 'original' to be a reference too
+        copyOnWriteEnabled = System.getProperty(DISABLE_COPY_ON_WRITE) == null;
+        if (copyOnWriteEnabled) {
+            wrapped = null;
+            if (original instanceof MimeMessageCopyOnWriteProxy) {
+                refCount = ((MimeMessageCopyOnWriteProxy) original).newRef();
+            } else {
+                refCount = new MessageReferenceTracker(original);
+                if (originalIsAReference) {
+                    refCount.incrementReferences(); // We consider 'original' to be a reference too
+                }
             }
+        } else {
+            if (original instanceof MimeMessageCopyOnWriteProxy) {
+                wrapped = new MimeMessageWrapper(((MimeMessageCopyOnWriteProxy) original).getWrappedMessage());
+            } else {
+                wrapped = new MimeMessageWrapper(original);
+            }
+            refCount = null;
         }
     }
 
-    public MimeMessageCopyOnWriteProxy(MimeMessageSource original) {
+    public MimeMessageCopyOnWriteProxy(MimeMessageSource original) throws MessagingException {
         this(new MimeMessageWrapper(original), false);
     }
 
     /**
      * Return wrapped mimeMessage
-     * 
+     *
      * @return wrapped return the wrapped mimeMessage
      */
     public MimeMessage getWrappedMessage() {
-        return refCount.getWrapped();
+        if (copyOnWriteEnabled) {
+            return refCount.getWrapped();
+        } else {
+            return wrapped;
+        }
     }
 
-    public MessageReferenceTracker newRef() {
+    private MessageReferenceTracker newRef() {
         ReentrantReadWriteLock.WriteLock writeLock = readWriteLock.writeLock();
         writeLock.lock();
         try {
@@ -269,15 +292,20 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
 
     @Override
     public void dispose() {
-        ReentrantReadWriteLock.WriteLock writeLock = readWriteLock.writeLock();
-        writeLock.lock();
-        try {
-            if (refCount != null) {
-                refCount.dispose();
-                refCount = null;
+        wrapped = null;
+        if (copyOnWriteEnabled) {
+            ReentrantReadWriteLock.WriteLock writeLock = readWriteLock.writeLock();
+            writeLock.lock();
+            try {
+
+                if (refCount != null) {
+                    refCount.dispose();
+                    refCount = null;
+                }
+
+            } finally {
+                writeLock.unlock();
             }
-        } finally {
-            writeLock.unlock();
         }
     }
 
@@ -697,52 +725,72 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
     }
 
     private void wrapWrite(Write op) throws MessagingException {
-        ReentrantReadWriteLock.WriteLock writeLock = readWriteLock.writeLock();
-        writeLock.lock();
-        try {
-            refCount = refCount.wrapWrite(op);
-        } finally {
-            writeLock.unlock();
+        if (copyOnWriteEnabled) {
+            ReentrantReadWriteLock.WriteLock writeLock = readWriteLock.writeLock();
+            writeLock.lock();
+            try {
+                refCount = refCount.wrapWrite(op);
+            } finally {
+                writeLock.unlock();
+            }
+        } else {
+            op.write(wrapped);
         }
     }
 
     private void wrapWriteIO(WriteIO op) throws MessagingException, IOException {
-        ReentrantReadWriteLock.WriteLock writeLock = readWriteLock.writeLock();
-        writeLock.lock();
-        try {
-            refCount = refCount.wrapWriteIO(op);
-        } finally {
-            writeLock.unlock();
+        if (copyOnWriteEnabled) {
+            ReentrantReadWriteLock.WriteLock writeLock = readWriteLock.writeLock();
+            writeLock.lock();
+            try {
+                refCount = refCount.wrapWriteIO(op);
+            } finally {
+                writeLock.unlock();
+            }
+        } else {
+            op.write(wrapped);
         }
     }
 
     private <T> T wrapRead(Read<T> op) throws MessagingException {
-        ReentrantReadWriteLock.ReadLock readLock = readWriteLock.readLock();
-        readLock.lock();
-        try {
-            return refCount.wrapRead(op);
-        } finally {
-            readLock.unlock();
+        if (copyOnWriteEnabled) {
+            ReentrantReadWriteLock.ReadLock readLock = readWriteLock.readLock();
+            readLock.lock();
+            try {
+                return refCount.wrapRead(op);
+            } finally {
+                readLock.unlock();
+            }
+        } else {
+            return op.read(wrapped);
         }
     }
 
     private <T> T wrapReadIO(ReadIO<T> op) throws MessagingException, IOException {
-        ReentrantReadWriteLock.ReadLock readLock = readWriteLock.readLock();
-        readLock.lock();
-        try {
-            return refCount.wrapReadIO(op);
-        } finally {
-            readLock.unlock();
+        if (copyOnWriteEnabled) {
+            ReentrantReadWriteLock.ReadLock readLock = readWriteLock.readLock();
+            readLock.lock();
+            try {
+                return refCount.wrapReadIO(op);
+            } finally {
+                readLock.unlock();
+            }
+        } else {
+            return op.read(wrapped);
         }
     }
 
     private <T> T wrapReadNoException(Function<MimeMessage, T> op) {
-        ReentrantReadWriteLock.ReadLock readLock = readWriteLock.readLock();
-        readLock.lock();
-        try {
-            return refCount.wrapReadNoException(op);
-        } finally {
-            readLock.unlock();
+        if (copyOnWriteEnabled) {
+            ReentrantReadWriteLock.ReadLock readLock = readWriteLock.readLock();
+            readLock.lock();
+            try {
+                return refCount.wrapReadNoException(op);
+            } finally {
+                readLock.unlock();
+            }
+        } else {
+            return op.apply(wrapped);
         }
     }
 }
