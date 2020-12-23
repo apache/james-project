@@ -27,5 +27,5 @@ public interface Images {
     String NGINX = "nginx:1.15.1";
     String TIKA = "apache/tika:1.24";
     String SPAMASSASSIN = "dinkel/spamassassin:3.4.0";
-    String MOCK_SMTP_SERVER = "linagora/mock-smtp-server:0.1";
+    String MOCK_SMTP_SERVER = "linagora/mock-smtp-server:0.2";
 }
