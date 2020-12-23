@@ -97,7 +97,11 @@ public class MailboxChange {
         }
 
         public Builder delegated() {
-            this.delegated = true;
+            return delegated(true);
+        }
+
+        public Builder delegated(boolean delegated) {
+            this.delegated = delegated;
             return this;
         }
 
