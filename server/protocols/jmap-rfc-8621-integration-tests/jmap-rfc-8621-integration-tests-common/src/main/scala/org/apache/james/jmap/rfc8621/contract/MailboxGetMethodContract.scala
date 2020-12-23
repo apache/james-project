@@ -33,7 +33,6 @@ import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.core.quota.{QuotaCountLimit, QuotaSizeLimit}
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
-import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
@@ -1586,7 +1585,7 @@ trait MailboxGetMethodContract {
         s"""{
            |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
            |  "hasMoreChanges": false,
-           |  "updatedProperties": [],
+           |  "updatedProperties": null,
            |  "created": [],
            |  "updated": [],
            |  "destroyed": []

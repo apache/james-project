@@ -154,7 +154,16 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
     mapWrites[MailboxId, MailboxUpdateResponse](_.serialize(), mailboxSetUpdateResponseWrites)
 
   private implicit val mailboxSetResponseWrites: Writes[MailboxSetResponse] = Json.writes[MailboxSetResponse]
-  private implicit val changesResponseWrites: OWrites[MailboxChangesResponse] = Json.writes[MailboxChangesResponse]
+  private implicit val changesResponseWrites: Writes[MailboxChangesResponse] = response =>
+    Json.obj(
+      "accountId" -> response.accountId,
+      "oldState" -> response.oldState,
+      "newState" -> response.newState,
+      "hasMoreChanges" -> response.hasMoreChanges,
+      "updatedProperties" -> response.updatedProperties,
+      "created" -> response.created,
+      "updated" -> response.updated,
+      "destroyed" -> response.destroyed)
 
   def serializeChanges(changesResponse: MailboxChangesResponse): JsObject = Json.toJson(changesResponse).as[JsObject]
 

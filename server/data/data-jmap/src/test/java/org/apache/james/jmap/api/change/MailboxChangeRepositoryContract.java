@@ -449,7 +449,95 @@ public interface MailboxChangeRepositoryContract {
 
         assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, referenceState, Optional.empty()).block().getUpdated())
             .containsExactly(TestId.of(1));
+    }
 
+    @Test
+    default void isCountChangeOnlyShouldBeFalseWhenNoChanges() {
+        MailboxChangeRepository repository = mailboxChangeRepository();
+
+        assertThat(repository.getSinceState(ACCOUNT_ID, State.INITIAL, Optional.empty()).block().isCountChangesOnly())
+            .isFalse();
+    }
+
+    @Test
+    default void isCountChangeOnlyShouldBeFalseWhenAllNonCountChanges() {
+        MailboxChangeRepository repository = mailboxChangeRepository();
+        State.Factory stateFactory = stateFactory();
+
+        MailboxChange change1 = MailboxChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(stateFactory.generate())
+            .date(DATE.minusHours(1))
+            .isCountChange(false)
+            .created(ImmutableList.of(TestId.of(1)))
+            .build();
+        MailboxChange change2 = MailboxChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(stateFactory.generate())
+            .date(DATE)
+            .isCountChange(false)
+            .created(ImmutableList.of(TestId.of(2)))
+            .build();
+
+        repository.save(change1);
+        repository.save(change2);
+
+        assertThat(repository.getSinceState(ACCOUNT_ID, State.INITIAL, Optional.empty()).block().isCountChangesOnly())
+            .isFalse();
+    }
+
+    @Test
+    default void isCountChangeOnlyShouldBeFalseWhenMixedChanges() {
+        MailboxChangeRepository repository = mailboxChangeRepository();
+        State.Factory stateFactory = stateFactory();
+
+        MailboxChange change1 = MailboxChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(stateFactory.generate())
+            .date(DATE.minusHours(1))
+            .isCountChange(false)
+            .created(ImmutableList.of(TestId.of(1)))
+            .build();
+        MailboxChange change2 = MailboxChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(stateFactory.generate())
+            .date(DATE)
+            .isCountChange(false)
+            .updated(ImmutableList.of(TestId.of(2)))
+            .build();
+
+        repository.save(change1);
+        repository.save(change2);
+
+        assertThat(repository.getSinceState(ACCOUNT_ID, State.INITIAL, Optional.empty()).block().isCountChangesOnly())
+            .isFalse();
+    }
+
+    @Test
+    default void isCountChangeOnlyShouldBeTrueWhenAllCountChanges() {
+        MailboxChangeRepository repository = mailboxChangeRepository();
+        State.Factory stateFactory = stateFactory();
+
+        MailboxChange change1 = MailboxChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(stateFactory.generate())
+            .date(DATE.minusHours(1))
+            .isCountChange(true)
+            .updated(ImmutableList.of(TestId.of(1)))
+            .build();
+        MailboxChange change2 = MailboxChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(stateFactory.generate())
+            .date(DATE)
+            .isCountChange(true)
+            .updated(ImmutableList.of(TestId.of(2)))
+            .build();
+
+        repository.save(change1);
+        repository.save(change2);
+
+        assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, State.INITIAL, Optional.empty()).block().isCountChangesOnly())
+            .isTrue();
     }
 
     @Test

@@ -133,6 +133,7 @@ trait MailboxChangesMethodContract {
             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
             |        "oldState": "${oldState.getValue}",
             |        "hasMoreChanges": false,
+            |        "updatedProperties":null,
             |        "created": ["$mailboxId1", "$mailboxId2", "$mailboxId3"],
             |        "updated": [],
             |        "destroyed": []
@@ -190,6 +191,7 @@ trait MailboxChangesMethodContract {
            |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
            |        "oldState": "${oldState.getValue}",
            |        "hasMoreChanges": false,
+           |        "updatedProperties":null,
            |        "created": [],
            |        "updated": ["$mailboxId"],
            |        "destroyed": []
@@ -588,6 +590,7 @@ trait MailboxChangesMethodContract {
              |        "accountId": "$ANDRE_ACCOUNT_ID",
              |        "oldState": "${oldState.getValue}",
              |        "hasMoreChanges": false,
+             |        "updatedProperties":null,
              |        "created": [],
              |        "updated": ["$mailboxId"],
              |        "destroyed": []
@@ -870,6 +873,7 @@ trait MailboxChangesMethodContract {
              |        "accountId": "$ANDRE_ACCOUNT_ID",
              |        "oldState": "${oldState.getValue}",
              |        "hasMoreChanges": false,
+             |        "updatedProperties":null,
              |        "created": [],
              |        "updated": [],
              |        "destroyed": []
@@ -933,6 +937,7 @@ trait MailboxChangesMethodContract {
              |        "accountId": "$ANDRE_ACCOUNT_ID",
              |        "oldState": "${oldState.getValue}",
              |        "hasMoreChanges": false,
+             |        "updatedProperties": null,
              |        "created": [],
              |        "updated": [],
              |        "destroyed": ["$mailboxId"]
@@ -993,6 +998,7 @@ trait MailboxChangesMethodContract {
            |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
            |        "oldState": "${oldState.getValue}",
            |        "hasMoreChanges": false,
+           |        "updatedProperties":null,
            |        "created": [],
            |        "updated": [],
            |        "destroyed": ["$mailboxId"]
@@ -1066,6 +1072,7 @@ trait MailboxChangesMethodContract {
            |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
            |        "oldState": "${oldState.getValue}",
            |        "hasMoreChanges": false,
+           |        "updatedProperties": null,
            |        "created": ["$mailboxId3"],
            |        "updated": ["$mailboxId1"],
            |        "destroyed": ["$mailboxId2"]
@@ -1138,6 +1145,7 @@ trait MailboxChangesMethodContract {
            |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
            |        "oldState": "${oldState.getValue}",
            |        "hasMoreChanges": false,
+           |        "updatedProperties":null,
            |        "created": ["$mailboxId2"],
            |        "updated": [],
            |        "destroyed": []
@@ -1212,6 +1220,7 @@ trait MailboxChangesMethodContract {
            |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
            |        "oldState": "${oldState.getValue}",
            |        "hasMoreChanges": true,
+           |        "updatedProperties":null,
            |        "created": ["$mailboxId1", "$mailboxId2", "$mailboxId3", "$mailboxId4", "$mailboxId5"],
            |        "updated": [],
            |        "destroyed": []
@@ -1346,6 +1355,7 @@ trait MailboxChangesMethodContract {
            |        "oldState": "${oldState.getValue}",
            |        "newState": "${oldState.getValue}",
            |        "hasMoreChanges": false,
+           |        "updatedProperties":null,
            |        "created": [],
            |        "updated": [],
            |        "destroyed": []
@@ -1470,6 +1480,7 @@ trait MailboxChangesMethodContract {
            |        "oldState": "$newState",
            |        "newState": "$newState",
            |        "hasMoreChanges": false,
+           |        "updatedProperties":null,
            |        "created": [],
            |        "updated": [],
            |        "destroyed": []
@@ -1587,9 +1598,9 @@ trait MailboxChangesMethodContract {
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
-      .when
+    .when
       .post
-      .`then`
+    .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
       .extract
@@ -1607,10 +1618,211 @@ trait MailboxChangesMethodContract {
            |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
            |        "oldState": "${oldState.getValue}",
            |        "hasMoreChanges": false,
+           |        "updatedProperties":null,
            |        "created": ["$mailboxId2"],
            |        "updated": ["$mailboxId1"],
            |        "destroyed": []
            |      }, "c1"]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def mailboxChangesShouldSupportBackReferenceWithUpdatedProperties(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
+
+    provisionSystemMailboxes(server)
+
+    val path = MailboxPath.forUser(BOB, "mailbox1")
+    val mailboxId: String = mailboxProbe
+      .createMailbox(path)
+      .serialize
+
+    val oldState: State = storeReferenceState(server, BOB)
+
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
+    val messageId2: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
+
+    JmapRequests.destroyEmail(messageId2)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Mailbox/changes", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "sinceState": "${oldState.getValue}"
+         |    }, "c1"],
+         |    ["Mailbox/get", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "#properties": {
+         |        "resultOf": "c1",
+         |        "name": "Mailbox/changes",
+         |        "path": "updatedProperties"
+         |      },
+         |      "#ids": {
+         |        "resultOf": "c1",
+         |        "name": "Mailbox/changes",
+         |        "path": "/updated"
+         |      }
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[1][1].state")
+      .withOptions(new Options(IGNORING_ARRAY_ORDER))
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |      [ "Mailbox/changes", {
+           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "oldState": "${oldState.getValue}",
+           |        "hasMoreChanges": false,
+           |        "updatedProperties": ["totalEmails", "unreadEmails", "totalThreads", "unreadThreads"],
+           |        "created": [],
+           |        "updated": ["$mailboxId"],
+           |        "destroyed": []
+           |      }, "c1"],
+           |      ["Mailbox/get", {
+           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "notFound": [],
+           |        "list": [
+           |          {
+           |            "id": "$mailboxId",
+           |            "totalEmails": 1,
+           |            "unreadEmails": 1,
+           |            "totalThreads": 1,
+           |            "unreadThreads": 1
+           |          }
+           |        ]
+           |      }, "c2"]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def mailboxChangesShouldSupportBackReferenceWithNullUpdatedProperties(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
+
+    provisionSystemMailboxes(server)
+
+    val path1 = MailboxPath.forUser(BOB, "mailbox1")
+    val mailboxId1: String = mailboxProbe
+      .createMailbox(path1)
+      .serialize
+
+    val oldState: State = storeReferenceState(server, BOB)
+
+    val path2 = MailboxPath.forUser(BOB, "mailbox2")
+    val mailboxId2: String = mailboxProbe
+      .createMailbox(path2)
+      .serialize
+
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    mailboxProbe.appendMessage(BOB.asString(), path1, AppendCommand.from(message)).getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Mailbox/changes", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "sinceState": "${oldState.getValue}"
+         |    }, "c1"],
+         |    ["Mailbox/get", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "#properties": {
+         |        "resultOf": "c1",
+         |        "name": "Mailbox/changes",
+         |        "path": "updatedProperties"
+         |      },
+         |      "#ids": {
+         |        "resultOf": "c1",
+         |        "name": "Mailbox/changes",
+         |        "path": "/updated"
+         |      }
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].newState", "methodResponses[1][1].state")
+      .withOptions(new Options(IGNORING_ARRAY_ORDER))
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |      [ "Mailbox/changes", {
+           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "oldState": "${oldState.getValue}",
+           |        "hasMoreChanges": false,
+           |        "updatedProperties": null,
+           |        "created": ["$mailboxId2"],
+           |        "updated": ["$mailboxId1"],
+           |        "destroyed": []
+           |      }, "c1"],
+           |      ["Mailbox/get", {
+           |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |        "notFound": [],
+           |        "list": [
+           |          {
+           |            "id": "$mailboxId1",
+           |            "name": "mailbox1",
+           |            "sortOrder": 1000,
+           |            "totalEmails": 1,
+           |            "unreadEmails": 1,
+           |            "totalThreads": 1,
+           |            "unreadThreads": 1,
+           |            "myRights": {
+           |              "mayReadItems": true,
+           |              "mayAddItems": true,
+           |              "mayRemoveItems": true,
+           |              "maySetSeen": true,
+           |              "maySetKeywords": true,
+           |              "mayCreateChild": true,
+           |              "mayRename": true,
+           |              "mayDelete": true,
+           |              "maySubmit": true
+           |            },
+           |            "isSubscribed": false
+           |          }
+           |        ]
+           |      }, "c2"]
            |    ]
            |}""".stripMargin)
   }
