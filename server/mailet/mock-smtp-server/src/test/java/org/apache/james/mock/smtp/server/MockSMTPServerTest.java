@@ -122,9 +122,9 @@ class MockSMTPServerTest {
             Awaitility.await().atMost(Duration.TEN_SECONDS)
                 .untilAsserted(() -> {
                     List<Mail> mails = mailRepository.list();
-                    Mail.Envelope expectedEnvelope = new Mail.Envelope(
+                    Mail.Envelope expectedEnvelope = Mail.Envelope.ofAddresses(
                         new MailAddress(BOB),
-                        ImmutableList.of(new MailAddress(ALICE), new MailAddress(JACK)));
+                        new MailAddress(ALICE), new MailAddress(JACK));
                     assertThat(mails)
                         .hasSize(1)
                         .allSatisfy(Throwing.consumer(assertedMail -> {

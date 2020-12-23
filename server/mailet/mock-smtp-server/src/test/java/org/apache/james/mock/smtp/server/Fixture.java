@@ -43,13 +43,30 @@ public interface Fixture {
         static {
             try {
                 MAIL_1 = new Mail(
-                new Mail.Envelope(
-                    new MailAddress(BOB), new MailAddress(ALICE), new MailAddress(JACK)),
-                "bob to alice and jack");
+                    Mail.Envelope.builder()
+                        .from(new MailAddress(BOB))
+                        .addRecipientMailAddress(new MailAddress(ALICE))
+                        .addRecipient(Mail.Recipient.builder()
+                            .address(new MailAddress(JACK))
+                            .addParameter(Mail.Parameter.builder()
+                                .name("param1")
+                                .value("value1")
+                                .build())
+                            .addParameter(Mail.Parameter.builder()
+                                .name("param2")
+                                .value("value2")
+                                .build())
+                            .build())
+                        .addMailParameter(Mail.Parameter.builder()
+                            .name("param3")
+                            .value("value3")
+                            .build())
+                        .build(),
+                    "bob to alice and jack");
 
                 MAIL_2 = new Mail(
-                new Mail.Envelope(
-                    new MailAddress(ALICE), new MailAddress(BOB)),
+                    Mail.Envelope.ofAddresses(
+                        new MailAddress(ALICE), new MailAddress(BOB)),
                 "alice to bob");
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -119,10 +136,46 @@ public interface Fixture {
         BEHAVIOR_COMPULSORY_FIELDS);
     MockSmtpBehaviors BEHAVIORS = new MockSmtpBehaviors(BEHAVIOR_LIST);
 
-    String JSON_MAILS_LIST = "[" +
-        "  {\"from\":\"bob@james.org\",\"recipients\":[\"alice@james.org\", \"jack@james.org\"],\"message\":\"bob to alice and jack\"}," +
-        "  {\"from\":\"alice@james.org\",\"recipients\":[\"bob@james.org\"],\"message\":\"alice to bob\"}" +
-        "]";
+    String JSON_MAILS_LIST = "[{" +
+        "  \"from\": \"bob@james.org\"," +
+        "  \"recipients\": [{" +
+        "    \"address\": \"alice@james.org\"," +
+        "    \"parameters\": []" +
+        "  }, {" +
+        "    \"address\": \"jack@james.org\"," +
+        "    \"parameters\": []" +
+        "  }]," +
+        "  \"mailParameters\": []," +
+        "  \"message\": \"bob to alice and jack\"" +
+        "}, {" +
+        "  \"from\": \"alice@james.org\"," +
+        "  \"recipients\": [{" +
+        "    \"address\": \"bob@james.org\"," +
+        "    \"parameters\": []" +
+        "  }]," +
+        "  \"mailParameters\": []," +
+        "  \"message\": \"alice to bob\"" +
+        "}]";
 
-    String JSON_MAIL = "[{\"from\":\"bob@james.org\",\"recipients\":[\"alice@james.org\", \"jack@james.org\"],\"message\":\"bob to alice and jack\"}]";
+    String JSON_MAIL = "[{" +
+        "    \"from\": \"bob@james.org\"," +
+        "    \"mailParameters\": [{" +
+        "        \"name\": \"param3\"," +
+        "        \"value\": \"value3\"" +
+        "    }]," +
+        "    \"message\": \"bob to alice and jack\"," +
+        "    \"recipients\": [{" +
+        "        \"address\": \"alice@james.org\"," +
+        "        \"parameters\": []" +
+        "    }, {" +
+        "        \"address\": \"jack@james.org\"," +
+        "        \"parameters\": [{" +
+        "            \"name\": \"param1\"," +
+        "            \"value\": \"value1\"" +
+        "        }, {" +
+        "            \"name\": \"param2\"," +
+        "            \"value\": \"value2\"" +
+        "        }]" +
+        "    }]" +
+        "}]";
 }

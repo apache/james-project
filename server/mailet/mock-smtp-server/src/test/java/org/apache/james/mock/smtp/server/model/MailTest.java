@@ -41,7 +41,7 @@ class MailTest {
     void setUp() throws Exception {
         bob = new MailAddress("bob@domain.tld");
         alice = new MailAddress("alice@domain.tld");
-        envelope = new Mail.Envelope(alice, ImmutableList.of(bob));
+        envelope = Mail.Envelope.ofAddresses(alice, bob);
     }
 
     @Nested
@@ -50,25 +50,6 @@ class MailTest {
         void shouldMatchBeanContract() {
            EqualsVerifier.forClass(Mail.Envelope.class)
                .verify();
-        }
-
-        @Test
-        void constructorShouldThrowWhenNullFrom() {
-            assertThatThrownBy(() -> new Mail.Envelope(null, ImmutableList.of(bob)))
-                .isInstanceOf(NullPointerException.class);
-        }
-
-        @Test
-        void constructorShouldThrowWhenNullRecipients() {
-            List<MailAddress> nullList = null;
-            assertThatThrownBy(() -> new Mail.Envelope(bob, nullList))
-                .isInstanceOf(NullPointerException.class);
-        }
-
-        @Test
-        void constructorShouldThrowWhenEmptyRecipients() {
-            assertThatThrownBy(() -> new Mail.Envelope(bob, ImmutableList.of()))
-                .isInstanceOf(IllegalArgumentException.class);
         }
     }
 

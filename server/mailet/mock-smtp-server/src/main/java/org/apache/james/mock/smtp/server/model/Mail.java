@@ -20,20 +20,178 @@
 package org.apache.james.mock.smtp.server.model;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.apache.james.core.MailAddress;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 @JsonDeserialize(builder = Mail.Builder.class)
 public class Mail {
+    @JsonDeserialize(builder = Parameter.Builder.class)
+    public static class Parameter {
+        @JsonPOJOBuilder(withPrefix = "")
+        public static class Builder {
+            private String name;
+            private String value;
+
+            public Builder() {
+
+            }
+
+            public Builder name(String name) {
+                this.name = name;
+                return this;
+            }
+
+            public Builder value(String value) {
+                this.value = value;
+                return this;
+            }
+
+            public Parameter build() {
+                Preconditions.checkState(name != null, "'name' field cannot be omitted");
+                Preconditions.checkState(value != null, "'value' field cannot be omitted");
+
+                return new Parameter(name, value);
+            }
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        private final String name;
+        private final String value;
+
+        private Parameter(String name, String value) {
+            this.name = name;
+            this.value = value;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof Parameter) {
+                Parameter that = (Parameter) o;
+
+                return Objects.equals(this.name, that.name)
+                    && Objects.equals(this.value, that.value);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(name, value);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("name", name)
+                .add("value", value)
+                .toString();
+        }
+    }
+
+    @JsonDeserialize(builder = Recipient.Builder.class)
+    public static class Recipient {
+        @JsonPOJOBuilder(withPrefix = "")
+        public static class Builder {
+            private MailAddress address;
+            private ImmutableList.Builder<Parameter> parameters;
+
+            public Builder() {
+                parameters = new ImmutableList.Builder<>();
+            }
+
+            public Builder address(MailAddress address) {
+                this.address = address;
+                return this;
+            }
+
+            public Builder addParameter(Parameter parameter) {
+                this.parameters.add(parameter);
+                return this;
+            }
+
+            public Builder parameters(Collection<Parameter> parameters) {
+                this.parameters.addAll(parameters);
+                return this;
+            }
+
+            public Recipient build() {
+                Preconditions.checkState(address != null, "'address' field cannot be omitted");
+
+                return new Recipient(address, parameters.build());
+            }
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        public static Recipient of(MailAddress address) {
+            return new Recipient(address, ImmutableList.of());
+        }
+
+        private final MailAddress address;
+        private final List<Parameter> parameters;
+
+        private Recipient(MailAddress address, List<Parameter> parameters) {
+            this.address = address;
+            this.parameters = parameters;
+        }
+
+        public MailAddress getAddress() {
+            return address;
+        }
+
+        public List<Parameter> getParameters() {
+            return parameters;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof Recipient) {
+                Recipient that = (Recipient) o;
+
+                return Objects.equals(this.address, that.address)
+                    && Objects.equals(this.parameters, that.parameters);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(address, parameters);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("address", address)
+                .add("parameters", parameters)
+                .toString();
+        }
+    }
 
     @JsonDeserialize(builder = Mail.Envelope.Builder.class)
     public static class Envelope {
@@ -41,10 +199,12 @@ public class Mail {
         @JsonPOJOBuilder(withPrefix = "")
         public static class Builder {
             private MailAddress from;
-            private ImmutableList.Builder<MailAddress> recipients;
+            private ImmutableList.Builder<Recipient> recipients;
+            private ImmutableList.Builder<Parameter> mailParameters;
 
             public Builder() {
                 recipients = new ImmutableList.Builder<>();
+                mailParameters = new ImmutableList.Builder<>();
             }
 
             public Builder from(MailAddress from) {
@@ -52,29 +212,56 @@ public class Mail {
                 return this;
             }
 
-            public Builder addRecipient(MailAddress recipient) {
+            public Builder addRecipientMailAddress(MailAddress mailAddress) {
+                this.recipients.add(Recipient.of(mailAddress));
+                return this;
+            }
+
+            public Builder addMailParameter(Parameter parameter) {
+                this.mailParameters.add(parameter);
+                return this;
+            }
+
+            public Builder mailParameters(Collection<Parameter> parameters) {
+                this.mailParameters.addAll(parameters);
+                return this;
+            }
+
+            public Builder addRecipient(Recipient recipient) {
                 this.recipients.add(recipient);
                 return this;
             }
 
-            public Builder recipients(List<MailAddress> recipients) {
+            public Builder recipients(List<Recipient> recipients) {
                 this.recipients.addAll(recipients);
                 return this;
             }
 
             public Envelope build() {
-                return new Envelope(from, recipients.build());
+                return new Envelope(from, recipients.build(), mailParameters.build());
             }
         }
 
-        private final MailAddress from;
-        private final List<MailAddress> recipients;
-
-        public Envelope(MailAddress from, MailAddress... recipients) {
-            this(from, ImmutableList.copyOf(Arrays.asList(recipients)));
+        public static Builder builder() {
+            return new Builder();
         }
 
-        public Envelope(MailAddress from, List<MailAddress> recipients) {
+        public static Envelope ofAddresses(MailAddress from, MailAddress... recipients) {
+            return new Envelope(from, Stream.of(recipients)
+                .map(Recipient::of)
+                .collect(Guavate.toImmutableList()), ImmutableList.of());
+        }
+
+        public static Envelope of(MailAddress from, Recipient... recipients) {
+            return new Envelope(from, ImmutableList.copyOf(Arrays.asList(recipients)), ImmutableList.of());
+        }
+
+        private final MailAddress from;
+        private final List<Recipient> recipients;
+        private final List<Parameter> mailParameters;
+
+        private Envelope(MailAddress from, List<Recipient> recipients, List<Parameter> mailParameters) {
+            this.mailParameters = mailParameters;
             Preconditions.checkNotNull(from);
             Preconditions.checkNotNull(recipients);
             Preconditions.checkArgument(!recipients.isEmpty(), "'recipients' field should not be empty");
@@ -87,8 +274,12 @@ public class Mail {
             return from;
         }
 
-        public List<MailAddress> getRecipients() {
+        public List<Recipient> getRecipients() {
             return recipients;
+        }
+
+        public List<Parameter> getMailParameters() {
+            return mailParameters;
         }
 
         @Override
@@ -97,14 +288,15 @@ public class Mail {
                 Envelope envelope = (Envelope) o;
 
                 return Objects.equals(this.from, envelope.from)
-                    && Objects.equals(this.recipients, envelope.recipients);
+                    && Objects.equals(this.recipients, envelope.recipients)
+                    && Objects.equals(this.mailParameters, envelope.mailParameters);
             }
             return false;
         }
 
         @Override
         public final int hashCode() {
-            return Objects.hash(from, recipients);
+            return Objects.hash(from, recipients, mailParameters);
         }
 
         @Override
@@ -112,6 +304,7 @@ public class Mail {
             return MoreObjects.toStringHelper(this)
                 .add("from", from)
                 .add("recipients", recipients)
+                .add("mailParameters", mailParameters)
                 .toString();
         }
     }

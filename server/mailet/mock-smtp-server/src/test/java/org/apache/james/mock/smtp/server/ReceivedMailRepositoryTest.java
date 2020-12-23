@@ -49,14 +49,14 @@ class ReceivedMailRepositoryTest {
             .setText("any text")
             .build();
         mail = new Mail(
-            new Mail.Envelope(
+            Mail.Envelope.ofAddresses(
                 new MailAddress(BOB),
-                ImmutableList.of(new MailAddress(ALICE), new MailAddress(JACK))),
+                new MailAddress(ALICE), new MailAddress(JACK)),
                 MimeMessageUtil.asString(message));
         mail2 = new Mail(
-            new Mail.Envelope(
+            Mail.Envelope.ofAddresses(
                 new MailAddress(ALICE),
-                ImmutableList.of(new MailAddress(BOB), new MailAddress(JACK))),
+                new MailAddress(BOB), new MailAddress(JACK)),
                 MimeMessageUtil.asString(message));
     }
 

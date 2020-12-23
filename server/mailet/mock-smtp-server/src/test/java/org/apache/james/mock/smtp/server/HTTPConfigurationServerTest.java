@@ -177,7 +177,7 @@ class HTTPConfigurationServerTest {
             mailRepository.store(MailsFixutre.MAIL_1);
 
             String response = when()
-                    .get()
+                    .get().prettyPeek()
                 .then()
                     .contentType(ContentType.JSON)
                     .extract()
@@ -194,7 +194,7 @@ class HTTPConfigurationServerTest {
             mailRepository.store(MailsFixutre.MAIL_2);
 
             String response = when()
-                    .get()
+                    .get().prettyPeek()
                 .then()
                     .contentType(ContentType.JSON)
                     .extract()
@@ -202,7 +202,35 @@ class HTTPConfigurationServerTest {
 
             assertThatJson(response)
                 .withOptions(new Options(Option.TREATING_NULL_AS_ABSENT, Option.IGNORING_ARRAY_ORDER))
-                .isEqualTo(JSON_MAILS_LIST);
+                .isEqualTo("[{" +
+                    "    \"from\": \"bob@james.org\"," +
+                    "    \"mailParameters\": [{" +
+                    "        \"name\": \"param3\"," +
+                    "        \"value\": \"value3\"" +
+                    "    }]," +
+                    "    \"message\": \"bob to alice and jack\"," +
+                    "    \"recipients\": [{" +
+                    "        \"address\": \"alice@james.org\"," +
+                    "        \"parameters\": []" +
+                    "    }, {" +
+                    "        \"address\": \"jack@james.org\"," +
+                    "        \"parameters\": [{" +
+                    "            \"name\": \"param1\"," +
+                    "            \"value\": \"value1\"" +
+                    "        }, {" +
+                    "            \"name\": \"param2\"," +
+                    "            \"value\": \"value2\"" +
+                    "        }]" +
+                    "    }]" +
+                    "}, {" +
+                    "    \"from\": \"alice@james.org\"," +
+                    "    \"mailParameters\": []," +
+                    "    \"message\": \"alice to bob\"," +
+                    "    \"recipients\": [{" +
+                    "        \"address\": \"bob@james.org\"," +
+                    "        \"parameters\": []" +
+                    "    }]" +
+                    "}]");
         }
 
         @Test
