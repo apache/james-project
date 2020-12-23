@@ -539,8 +539,8 @@ public interface MailboxChangeRepositoryContract {
             .created(ImmutableList.of(id2))
             .build();
 
-        repository.save(change1);
-        repository.save(change2);
+        repository.save(change1).block();
+        repository.save(change2).block();
 
         assertThat(repository.getSinceState(ACCOUNT_ID, State.INITIAL, Optional.empty()).block().isCountChangesOnly())
             .isFalse();
@@ -568,8 +568,8 @@ public interface MailboxChangeRepositoryContract {
             .updated(ImmutableList.of(id2))
             .build();
 
-        repository.save(change1);
-        repository.save(change2);
+        repository.save(change1).block();
+        repository.save(change2).block();
 
         assertThat(repository.getSinceState(ACCOUNT_ID, State.INITIAL, Optional.empty()).block().isCountChangesOnly())
             .isFalse();
@@ -597,8 +597,8 @@ public interface MailboxChangeRepositoryContract {
             .updated(ImmutableList.of(id2))
             .build();
 
-        repository.save(change1);
-        repository.save(change2);
+        repository.save(change1).block();
+        repository.save(change2).block();
 
         assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, State.INITIAL, Optional.empty()).block().isCountChangesOnly())
             .isTrue();
