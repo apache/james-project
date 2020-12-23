@@ -29,7 +29,7 @@ import java.util.Optional;
 
 import org.apache.james.jmap.api.exception.ChangeNotFoundException;
 import org.apache.james.jmap.api.model.AccountId;
-import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.MailboxId;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
@@ -43,12 +43,15 @@ public interface MailboxChangeRepositoryContract {
 
     MailboxChangeRepository mailboxChangeRepository();
 
+    MailboxId generateNewMailboxId();
+
     @Test
     default void saveChangeShouldSuccess() {
         MailboxChangeRepository repository = mailboxChangeRepository();
         State state = stateFactory().generate();
 
-        MailboxChange change = MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(DATE).isCountChange(false).created(ImmutableList.of(TestId.of(1))).build();
+        MailboxId id1 = generateNewMailboxId();
+        MailboxChange change = MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(DATE).isCountChange(false).created(ImmutableList.of(id1)).build();
 
         assertThatCode(() -> repository.save(change).block())
             .doesNotThrowAnyException();
@@ -66,10 +69,12 @@ public interface MailboxChangeRepositoryContract {
     default void getLatestStateShouldReturnLastPersistedState() {
         MailboxChangeRepository repository = mailboxChangeRepository();
         State.Factory stateFactory = stateFactory();
-
-        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(TestId.of(2))).build();
-        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(TestId.of(3))).build();
-        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).created(ImmutableList.of(TestId.of(4))).build();
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
+        MailboxId id3 = generateNewMailboxId();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id1)).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(id2)).build();
+        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).created(ImmutableList.of(id3)).build();
         repository.save(change1).block();
         repository.save(change2).block();
         repository.save(change3).block();
@@ -83,14 +88,17 @@ public interface MailboxChangeRepositoryContract {
         MailboxChangeRepository repository = mailboxChangeRepository();
         State.Factory stateFactory = stateFactory();
 
-        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(TestId.of(2))).build();
-        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(TestId.of(3))).build();
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
+        MailboxId id3 = generateNewMailboxId();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id1)).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(id2)).build();
         MailboxChange change3 = MailboxChange.builder()
             .accountId(ACCOUNT_ID)
             .state(stateFactory.generate())
             .date(DATE)
             .isCountChange(false)
-            .created(ImmutableList.of(TestId.of(4)))
+            .created(ImmutableList.of(id3))
             .delegated()
             .build();
         repository.save(change1).block();
@@ -114,9 +122,12 @@ public interface MailboxChangeRepositoryContract {
         MailboxChangeRepository repository = mailboxChangeRepository();
         State.Factory stateFactory = stateFactory();
 
-        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(TestId.of(2))).build();
-        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(TestId.of(3))).build();
-        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).created(ImmutableList.of(TestId.of(4))).build();
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
+        MailboxId id3 = generateNewMailboxId();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id1)).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(id2)).build();
+        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).created(ImmutableList.of(id3)).build();
         repository.save(change1).block();
         repository.save(change2).block();
         repository.save(change3).block();
@@ -130,14 +141,17 @@ public interface MailboxChangeRepositoryContract {
         MailboxChangeRepository repository = mailboxChangeRepository();
         State.Factory stateFactory = stateFactory();
 
-        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(TestId.of(2))).build();
-        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(TestId.of(3))).build();
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
+        MailboxId id3 = generateNewMailboxId();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id1)).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(id2)).build();
         MailboxChange change3 = MailboxChange.builder()
             .accountId(ACCOUNT_ID)
             .state(stateFactory.generate())
             .date(DATE)
             .isCountChange(false)
-            .created(ImmutableList.of(TestId.of(4)))
+            .created(ImmutableList.of(id3))
             .delegated()
             .build();
         repository.save(change1).block();
@@ -154,10 +168,12 @@ public interface MailboxChangeRepositoryContract {
         State.Factory stateFactory = stateFactory();
         State referenceState = stateFactory.generate();
 
-        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(TestId.of(1))).build();
-        MailboxChange change = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).updated(ImmutableList.of(TestId.of(1))).build();
-        repository.save(oldState);
-        repository.save(change);
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(id1)).build();
+        MailboxChange change = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).updated(ImmutableList.of(id2)).build();
+        repository.save(oldState).block();
+        repository.save(change).block();
 
         assertThat(repository.getSinceState(ACCOUNT_ID, referenceState, Optional.empty()).block().getAllChanges())
             .hasSameElementsAs(change.getUpdated());
@@ -169,8 +185,9 @@ public interface MailboxChangeRepositoryContract {
         State.Factory stateFactory = stateFactory();
         State referenceState = stateFactory.generate();
 
-        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE).isCountChange(false).created(ImmutableList.of(TestId.of(1))).build();
-        repository.save(oldState);
+        MailboxId id1 = generateNewMailboxId();
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE).isCountChange(false).created(ImmutableList.of(id1)).build();
+        repository.save(oldState).block();
 
         assertThat(repository.getSinceState(ACCOUNT_ID, referenceState, Optional.empty()).block().getAllChanges())
             .isEmpty();
@@ -182,8 +199,9 @@ public interface MailboxChangeRepositoryContract {
         State.Factory stateFactory = stateFactory();
         State referenceState = stateFactory.generate();
 
-        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE).isCountChange(false).created(ImmutableList.of(TestId.of(1))).build();
-        repository.save(oldState);
+        MailboxId id1 = generateNewMailboxId();
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE).isCountChange(false).created(ImmutableList.of(id1)).build();
+        repository.save(oldState).block();
 
         assertThat(repository.getSinceState(ACCOUNT_ID, referenceState, Optional.empty()).block().getNewState())
             .isEqualTo(oldState.getState());
@@ -195,17 +213,21 @@ public interface MailboxChangeRepositoryContract {
         State.Factory stateFactory = stateFactory();
         State referenceState = stateFactory.generate();
 
-        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(3)).isCountChange(false).created(ImmutableList.of(TestId.of(1))).build();
-        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(TestId.of(2))).build();
-        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(TestId.of(3))).build();
-        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).created(ImmutableList.of(TestId.of(4))).build();
-        repository.save(oldState);
-        repository.save(change1);
-        repository.save(change2);
-        repository.save(change3);
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
+        MailboxId id3 = generateNewMailboxId();
+        MailboxId id4 = generateNewMailboxId();
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(3)).isCountChange(false).created(ImmutableList.of(id1)).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id2)).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(id3)).build();
+        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).created(ImmutableList.of(id4)).build();
+        repository.save(oldState).block();
+        repository.save(change1).block();
+        repository.save(change2).block();
+        repository.save(change3).block();
 
         assertThat(repository.getSinceState(ACCOUNT_ID, referenceState, Optional.of(Limit.of(3))).block().getCreated())
-            .containsExactlyInAnyOrder(TestId.of(2), TestId.of(3), TestId.of(4));
+            .containsExactlyInAnyOrder(id2, id3, id4);
     }
 
     @Test
@@ -214,17 +236,21 @@ public interface MailboxChangeRepositoryContract {
         State.Factory stateFactory = stateFactory();
         State referenceState = stateFactory.generate();
 
-        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(3)).isCountChange(false).created(ImmutableList.of(TestId.of(1))).build();
-        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(TestId.of(2))).build();
-        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(TestId.of(3))).build();
-        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).created(ImmutableList.of(TestId.of(4))).build();
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
+        MailboxId id3 = generateNewMailboxId();
+        MailboxId id4 = generateNewMailboxId();
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(3)).isCountChange(false).created(ImmutableList.of(id1)).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id2)).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(id3)).build();
+        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).created(ImmutableList.of(id4)).build();
         repository.save(oldState).block();
         repository.save(change1).block();
         repository.save(change2).block();
         repository.save(change3).block();
 
         assertThat(repository.getSinceState(ACCOUNT_ID, State.INITIAL, Optional.of(Limit.of(3))).block().getCreated())
-            .containsExactlyInAnyOrder(TestId.of(1), TestId.of(2), TestId.of(3));
+            .containsExactlyInAnyOrder(id1, id2, id3);
     }
 
     @Test
@@ -233,11 +259,17 @@ public interface MailboxChangeRepositoryContract {
         State.Factory stateFactory = stateFactory();
         State referenceState = stateFactory.generate();
 
-        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(3)).isCountChange(false).created(ImmutableList.of(TestId.of(1))).build();
-        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(TestId.of(2))).build();
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
+        MailboxId id3 = generateNewMailboxId();
+        MailboxId id4 = generateNewMailboxId();
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(3)).isCountChange(false).created(ImmutableList.of(id1)).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id2)).build();
+
         State state2 = stateFactory.generate();
-        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(state2).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(TestId.of(3))).build();
-        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).created(ImmutableList.of(TestId.of(4))).build();
+
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(state2).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(id3)).build();
+        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).created(ImmutableList.of(id4)).build();
         repository.save(oldState).block();
         repository.save(change1).block();
         repository.save(change2).block();
@@ -254,9 +286,16 @@ public interface MailboxChangeRepositoryContract {
         State.Factory stateFactory = stateFactory();
         State referenceState = stateFactory.generate();
 
-        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(TestId.of(1))).build();
-        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(TestId.of(2), TestId.of(3), TestId.of(4), TestId.of(5), TestId.of(6))).build();
-        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).created(ImmutableList.of(TestId.of(7))).build();
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
+        MailboxId id3 = generateNewMailboxId();
+        MailboxId id4 = generateNewMailboxId();
+        MailboxId id5 = generateNewMailboxId();
+        MailboxId id6 = generateNewMailboxId();
+        MailboxId id7 = generateNewMailboxId();
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id1)).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(id2, id3, id4, id5, id6)).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).created(ImmutableList.of(id7)).build();
 
         repository.save(oldState).block();
         repository.save(change1).block();
@@ -272,12 +311,17 @@ public interface MailboxChangeRepositoryContract {
         State.Factory stateFactory = stateFactory();
         State referenceState = stateFactory.generate();
 
-        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(TestId.of(1))).build();
-        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(TestId.of(2), TestId.of(3))).build();
-        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).created(ImmutableList.of(TestId.of(4), TestId.of(5))).build();
-        repository.save(oldState);
-        repository.save(change1);
-        repository.save(change2);
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
+        MailboxId id3 = generateNewMailboxId();
+        MailboxId id4 = generateNewMailboxId();
+        MailboxId id5 = generateNewMailboxId();
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id1)).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(id2, id3)).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).created(ImmutableList.of(id4, id5)).build();
+        repository.save(oldState).block();
+        repository.save(change1).block();
+        repository.save(change2).block();
 
         assertThat(repository.getSinceState(ACCOUNT_ID, referenceState, Optional.of(Limit.of(3))).block().getAllChanges())
             .hasSameElementsAs(change1.getCreated());
@@ -289,10 +333,13 @@ public interface MailboxChangeRepositoryContract {
         State.Factory stateFactory = stateFactory();
         State referenceState = stateFactory.generate();
 
-        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(TestId.of(1))).build();
-        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(TestId.of(2), TestId.of(3))).build();
-        repository.save(oldState);
-        repository.save(change1);
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
+        MailboxId id3 = generateNewMailboxId();
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id1)).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(id2, id3)).build();
+        repository.save(oldState).block();
+        repository.save(change1).block();
 
         assertThat(repository.getSinceState(ACCOUNT_ID, referenceState, Optional.of(Limit.of(1))).block().getAllChanges())
             .isEmpty();
@@ -304,12 +351,15 @@ public interface MailboxChangeRepositoryContract {
         State.Factory stateFactory = stateFactory();
         State referenceState = stateFactory.generate();
 
-        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(TestId.of(1))).build();
-        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(TestId.of(2), TestId.of(3))).build();
-        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).updated(ImmutableList.of(TestId.of(2), TestId.of(3))).build();
-        repository.save(oldState);
-        repository.save(change1);
-        repository.save(change2);
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
+        MailboxId id3 = generateNewMailboxId();
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id1)).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(id2, id3)).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).updated(ImmutableList.of(id2, id3)).build();
+        repository.save(oldState).block();
+        repository.save(change1).block();
+        repository.save(change2).block();
 
         assertThat(repository.getSinceState(ACCOUNT_ID, referenceState, Optional.empty()).block().getNewState())
             .isEqualTo(change2.getState());
@@ -321,12 +371,15 @@ public interface MailboxChangeRepositoryContract {
         State.Factory stateFactory = stateFactory();
         State referenceState = stateFactory.generate();
 
-        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(TestId.of(1))).build();
-        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(TestId.of(2), TestId.of(3))).build();
-        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).updated(ImmutableList.of(TestId.of(2), TestId.of(3))).build();
-        repository.save(oldState);
-        repository.save(change1);
-        repository.save(change2);
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
+        MailboxId id3 = generateNewMailboxId();
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id1)).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(id2, id3)).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).updated(ImmutableList.of(id2, id3)).build();
+        repository.save(oldState).block();
+        repository.save(change1).block();
+        repository.save(change2).block();
 
         assertThat(repository.getSinceState(ACCOUNT_ID, referenceState, Optional.of(Limit.of(1))).block().hasMoreChanges())
             .isTrue();
@@ -338,12 +391,15 @@ public interface MailboxChangeRepositoryContract {
         State.Factory stateFactory = stateFactory();
         State referenceState = stateFactory.generate();
 
-        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(TestId.of(1))).build();
-        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(TestId.of(2), TestId.of(3))).build();
-        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).updated(ImmutableList.of(TestId.of(2), TestId.of(3))).build();
-        repository.save(oldState);
-        repository.save(change1);
-        repository.save(change2);
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
+        MailboxId id3 = generateNewMailboxId();
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id1)).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(id2, id3)).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).updated(ImmutableList.of(id2, id3)).build();
+        repository.save(oldState).block();
+        repository.save(change1).block();
+        repository.save(change2).block();
 
         assertThat(repository.getSinceState(ACCOUNT_ID, referenceState, Optional.of(Limit.of(4))).block().hasMoreChanges())
             .isFalse();
@@ -355,36 +411,34 @@ public interface MailboxChangeRepositoryContract {
         State.Factory stateFactory = stateFactory();
         State referenceState = stateFactory.generate();
 
-        MailboxChange oldState = MailboxChange.builder()
-            .accountId(ACCOUNT_ID)
-            .state(referenceState)
-            .date(DATE.minusHours(3))
-            .isCountChange(false)
-            .created(ImmutableList.of(TestId.of(1), TestId.of(9), TestId.of(10)))
-            .build();
-        MailboxChange change1 = MailboxChange.builder()
-            .accountId(ACCOUNT_ID)
-            .state(stateFactory.generate())
-            .date(DATE.minusHours(2))
-            .isCountChange(false)
-            .created(ImmutableList.of(TestId.of(2), TestId.of(3), TestId.of(4), TestId.of(5)))
-            .build();
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
+        MailboxId id3 = generateNewMailboxId();
+        MailboxId id4 = generateNewMailboxId();
+        MailboxId id5 = generateNewMailboxId();
+        MailboxId id6 = generateNewMailboxId();
+        MailboxId id7 = generateNewMailboxId();
+        MailboxId id8 = generateNewMailboxId();
+        MailboxId id9 = generateNewMailboxId();
+        MailboxId id10 = generateNewMailboxId();
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(3)).isCountChange(false).created(ImmutableList.of(id1)).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id2, id3, id4, id5)).build();
         MailboxChange change2 = MailboxChange.builder()
             .accountId(ACCOUNT_ID)
             .state(stateFactory.generate())
             .date(DATE.minusHours(1))
             .isCountChange(false)
-            .created(ImmutableList.of(TestId.of(6), TestId.of(7)))
-            .updated(ImmutableList.of(TestId.of(2), TestId.of(3), TestId.of(9)))
-            .destroyed(ImmutableList.of(TestId.of(4))).build();
+            .created(ImmutableList.of(id6, id7))
+            .updated(ImmutableList.of(id2, id3, id9))
+            .destroyed(ImmutableList.of(id4)).build();
         MailboxChange change3 = MailboxChange.builder()
             .accountId(ACCOUNT_ID)
             .state(stateFactory.generate())
             .date(DATE)
             .isCountChange(false)
-            .created(ImmutableList.of(TestId.of(8)))
-            .updated(ImmutableList.of(TestId.of(6), TestId.of(7)))
-            .destroyed(ImmutableList.of(TestId.of(5), TestId.of(10))).build();
+            .created(ImmutableList.of(id8))
+            .updated(ImmutableList.of(id6, id7))
+            .destroyed(ImmutableList.of(id5, id10)).build();
 
         repository.save(oldState).block();
         repository.save(change1).block();
@@ -394,9 +448,9 @@ public interface MailboxChangeRepositoryContract {
         MailboxChanges mailboxChanges = repository.getSinceState(ACCOUNT_ID, referenceState, Optional.of(Limit.of(20))).block();
 
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(mailboxChanges.getCreated()).containsExactlyInAnyOrder(TestId.of(2), TestId.of(3), TestId.of(6), TestId.of(7), TestId.of(8));
-            softly.assertThat(mailboxChanges.getUpdated()).containsExactlyInAnyOrder(TestId.of(9));
-            softly.assertThat(mailboxChanges.getDestroyed()).containsExactlyInAnyOrder(TestId.of(10));
+            softly.assertThat(mailboxChanges.getCreated()).containsExactlyInAnyOrder(id2, id3, id6, id7, id8);
+            softly.assertThat(mailboxChanges.getUpdated()).containsExactlyInAnyOrder(id9);
+            softly.assertThat(mailboxChanges.getDestroyed()).containsExactlyInAnyOrder(id10);
         });
     }
 
@@ -406,15 +460,18 @@ public interface MailboxChangeRepositoryContract {
         State.Factory stateFactory = stateFactory();
         State referenceState = stateFactory.generate();
 
-        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(TestId.of(1))).build();
-        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).updated(ImmutableList.of(TestId.of(1), TestId.of(2))).build();
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
+        MailboxId id3 = generateNewMailboxId();
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id1)).build();
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).updated(ImmutableList.of(id1, id2)).build();
         MailboxChange change2 = MailboxChange.builder()
             .accountId(ACCOUNT_ID)
             .state(stateFactory.generate())
             .date(DATE)
             .isCountChange(false)
-            .created(ImmutableList.of(TestId.of(3)))
-            .updated(ImmutableList.of(TestId.of(1), TestId.of(2)))
+            .created(ImmutableList.of(id3))
+            .updated(ImmutableList.of(id1, id2))
             .build();
 
         repository.save(oldState).block();
@@ -423,8 +480,8 @@ public interface MailboxChangeRepositoryContract {
 
         MailboxChanges mailboxChanges = repository.getSinceState(ACCOUNT_ID, referenceState, Optional.of(Limit.of(3))).block();
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(mailboxChanges.getUpdated()).containsExactly(TestId.of(1), TestId.of(2));
-            softly.assertThat(mailboxChanges.getCreated()).containsExactly(TestId.of(3));
+            softly.assertThat(mailboxChanges.getUpdated()).containsExactlyInAnyOrder(id1, id2);
+            softly.assertThat(mailboxChanges.getCreated()).containsExactly(id3);
         });
     }
 
@@ -434,21 +491,22 @@ public interface MailboxChangeRepositoryContract {
         State.Factory stateFactory = stateFactory();
         State referenceState = stateFactory.generate();
 
-        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(TestId.of(1))).build();
+        MailboxId id1 = generateNewMailboxId();
+        MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id1)).build();
         MailboxChange change1 = MailboxChange.builder()
             .accountId(ACCOUNT_ID)
             .state(stateFactory.generate())
             .date(DATE.minusHours(1))
             .isCountChange(false)
-            .updated(ImmutableList.of(TestId.of(1)))
+            .updated(ImmutableList.of(id1))
             .delegated()
             .build();
 
-        repository.save(oldState);
-        repository.save(change1);
+        repository.save(oldState).block();
+        repository.save(change1).block();
 
         assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, referenceState, Optional.empty()).block().getUpdated())
-            .containsExactly(TestId.of(1));
+            .containsExactly(id1);
     }
 
     @Test
@@ -464,19 +522,21 @@ public interface MailboxChangeRepositoryContract {
         MailboxChangeRepository repository = mailboxChangeRepository();
         State.Factory stateFactory = stateFactory();
 
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
         MailboxChange change1 = MailboxChange.builder()
             .accountId(ACCOUNT_ID)
             .state(stateFactory.generate())
             .date(DATE.minusHours(1))
             .isCountChange(false)
-            .created(ImmutableList.of(TestId.of(1)))
+            .created(ImmutableList.of(id1))
             .build();
         MailboxChange change2 = MailboxChange.builder()
             .accountId(ACCOUNT_ID)
             .state(stateFactory.generate())
             .date(DATE)
             .isCountChange(false)
-            .created(ImmutableList.of(TestId.of(2)))
+            .created(ImmutableList.of(id2))
             .build();
 
         repository.save(change1);
@@ -491,19 +551,21 @@ public interface MailboxChangeRepositoryContract {
         MailboxChangeRepository repository = mailboxChangeRepository();
         State.Factory stateFactory = stateFactory();
 
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
         MailboxChange change1 = MailboxChange.builder()
             .accountId(ACCOUNT_ID)
             .state(stateFactory.generate())
             .date(DATE.minusHours(1))
             .isCountChange(false)
-            .created(ImmutableList.of(TestId.of(1)))
+            .created(ImmutableList.of(id1))
             .build();
         MailboxChange change2 = MailboxChange.builder()
             .accountId(ACCOUNT_ID)
             .state(stateFactory.generate())
             .date(DATE)
             .isCountChange(false)
-            .updated(ImmutableList.of(TestId.of(2)))
+            .updated(ImmutableList.of(id2))
             .build();
 
         repository.save(change1);
@@ -518,19 +580,21 @@ public interface MailboxChangeRepositoryContract {
         MailboxChangeRepository repository = mailboxChangeRepository();
         State.Factory stateFactory = stateFactory();
 
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
         MailboxChange change1 = MailboxChange.builder()
             .accountId(ACCOUNT_ID)
             .state(stateFactory.generate())
             .date(DATE.minusHours(1))
             .isCountChange(true)
-            .updated(ImmutableList.of(TestId.of(1)))
+            .updated(ImmutableList.of(id1))
             .build();
         MailboxChange change2 = MailboxChange.builder()
             .accountId(ACCOUNT_ID)
             .state(stateFactory.generate())
             .date(DATE)
             .isCountChange(true)
-            .updated(ImmutableList.of(TestId.of(2)))
+            .updated(ImmutableList.of(id2))
             .build();
 
         repository.save(change1);
@@ -546,10 +610,12 @@ public interface MailboxChangeRepositoryContract {
         State.Factory stateFactory = stateFactory();
         State referenceState = stateFactory.generate();
 
-        MailboxChange currentState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE).isCountChange(false).created(ImmutableList.of(TestId.of(1))).build();
-        MailboxChange change = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).created(ImmutableList.of(TestId.of(2))).build();
-        repository.save(currentState);
-        repository.save(change);
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
+        MailboxChange currentState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE).isCountChange(false).created(ImmutableList.of(id1)).build();
+        MailboxChange change = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).created(ImmutableList.of(id2)).build();
+        repository.save(currentState).block();
+        repository.save(change).block();
 
         assertThatThrownBy(() -> repository.getSinceState(ACCOUNT_ID, referenceState, Optional.of(Limit.of(-1))))
             .isInstanceOf(IllegalArgumentException.class);

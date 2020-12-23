@@ -19,14 +19,19 @@
 
 package org.apache.james.jmap.memory.change;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.api.change.MailboxChangeRepositoryContract;
 import org.apache.james.jmap.api.change.State;
+import org.apache.james.mailbox.model.MailboxId;
 import org.junit.jupiter.api.BeforeEach;
+import org.apache.james.mailbox.model.TestId;
 
 public class MemoryMailboxChangeRepositoryTest implements MailboxChangeRepositoryContract {
     MailboxChangeRepository mailboxChangeRepository;
     State.Factory stateFactory;
+    AtomicInteger idCounter = new AtomicInteger(1000);
 
     @BeforeEach
     void setup() {
@@ -42,5 +47,10 @@ public class MemoryMailboxChangeRepositoryTest implements MailboxChangeRepositor
     @Override
     public State.Factory stateFactory() {
         return stateFactory;
+    }
+
+    @Override
+    public MailboxId generateNewMailboxId() {
+        return TestId.of(idCounter.incrementAndGet());
     }
 }
