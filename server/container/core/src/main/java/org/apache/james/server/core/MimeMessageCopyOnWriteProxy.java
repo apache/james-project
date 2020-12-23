@@ -55,6 +55,11 @@ public class MimeMessageCopyOnWriteProxy extends MimeMessage implements Disposab
     /**
      * System property which tells JAMES if it should disable copy on write behaviour
      * and always copy instead. Default is copy on write.
+     * This is a temporary flag intended to let james developers easily benchmark two
+     * implementations of this proxy in the context of
+     * https://github.com/apache/james-project/pull/280
+     * This flag should not be used outside of benchmarks, and will be removed once the
+     * benchmarking is complete and a proper implementation is selected.
      */
     public static final String DISABLE_COPY_ON_WRITE = "james.message.disablecopyonwrite";
     private final boolean copyOnWriteEnabled;
