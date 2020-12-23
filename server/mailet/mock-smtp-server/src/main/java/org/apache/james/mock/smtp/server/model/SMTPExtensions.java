@@ -17,41 +17,44 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mock.smtp.server;
+package org.apache.james.mock.smtp.server.model;
 
-import org.apache.james.util.Port;
-import org.subethamail.smtp.server.SMTPServer;
+import java.util.List;
+import java.util.Objects;
 
-class MockSMTPServer {
-    private static final int RANDOM_PORT = 0;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.collect.ImmutableList;
 
-    public static MockSMTPServer onRandomPort(SMTPBehaviorRepository behaviorRepository, ReceivedMailRepository mailRepository) {
-        return new MockSMTPServer(behaviorRepository, mailRepository, RANDOM_PORT);
+public class SMTPExtensions {
+    public static SMTPExtensions of(SMTPExtension... extensions) {
+        return new SMTPExtensions(ImmutableList.copyOf(extensions));
     }
 
-    public static MockSMTPServer onPort(SMTPBehaviorRepository behaviorRepository, ReceivedMailRepository mailRepository, Port port) {
-        return new MockSMTPServer(behaviorRepository, mailRepository, port.getValue());
+    private final List<SMTPExtension> smtpExtensions;
+
+    @JsonCreator
+    private SMTPExtensions(List<SMTPExtension> smtpExtensions) {
+        this.smtpExtensions = ImmutableList.copyOf(smtpExtensions);
     }
 
-    private final SMTPServer server;
-
-    private MockSMTPServer(SMTPBehaviorRepository behaviorRepository, ReceivedMailRepository mailRepository, int port) {
-        this.server = new SMTPServer(ctx -> new MockMessageHandler(mailRepository, behaviorRepository));
-        this.server.setPort(port);
-        this.server.getCommandHandler().addCommand(new ExtendedEhloCommand(behaviorRepository));
+    @JsonValue
+    public List<SMTPExtension> getSmtpExtensions() {
+        return smtpExtensions;
     }
 
-    void start() {
-        if (!server.isRunning()) {
-           server.start();
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof SMTPExtensions) {
+            SMTPExtensions that = (SMTPExtensions) o;
+
+            return Objects.equals(this.smtpExtensions, that.smtpExtensions);
         }
+        return false;
     }
 
-    Port getPort() {
-        return Port.of(server.getPort());
-    }
-
-    void stop() {
-        server.stop();
+    @Override
+    public final int hashCode() {
+        return Objects.hash(smtpExtensions);
     }
 }

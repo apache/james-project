@@ -17,41 +17,45 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mock.smtp.server;
+package org.apache.james.mock.smtp.server.model;
 
-import org.apache.james.util.Port;
-import org.subethamail.smtp.server.SMTPServer;
+import java.util.Objects;
 
-class MockSMTPServer {
-    private static final int RANDOM_PORT = 0;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.base.Preconditions;
 
-    public static MockSMTPServer onRandomPort(SMTPBehaviorRepository behaviorRepository, ReceivedMailRepository mailRepository) {
-        return new MockSMTPServer(behaviorRepository, mailRepository, RANDOM_PORT);
+public class SMTPExtension {
+    public static SMTPExtension of(String name) {
+        return new SMTPExtension(name);
     }
 
-    public static MockSMTPServer onPort(SMTPBehaviorRepository behaviorRepository, ReceivedMailRepository mailRepository, Port port) {
-        return new MockSMTPServer(behaviorRepository, mailRepository, port.getValue());
+    private final String name;
+
+    @JsonCreator
+    private SMTPExtension(String name) {
+        Preconditions.checkNotNull(name);
+
+        this.name = name;
     }
 
-    private final SMTPServer server;
-
-    private MockSMTPServer(SMTPBehaviorRepository behaviorRepository, ReceivedMailRepository mailRepository, int port) {
-        this.server = new SMTPServer(ctx -> new MockMessageHandler(mailRepository, behaviorRepository));
-        this.server.setPort(port);
-        this.server.getCommandHandler().addCommand(new ExtendedEhloCommand(behaviorRepository));
+    @JsonValue
+    public String asString() {
+        return name;
     }
 
-    void start() {
-        if (!server.isRunning()) {
-           server.start();
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof SMTPExtension) {
+            SMTPExtension that = (SMTPExtension) o;
+
+            return Objects.equals(this.name, that.name);
         }
+        return false;
     }
 
-    Port getPort() {
-        return Port.of(server.getPort());
-    }
-
-    void stop() {
-        server.stop();
+    @Override
+    public final int hashCode() {
+        return Objects.hash(name);
     }
 }

@@ -39,6 +39,7 @@ import java.util.List;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.net.smtp.AuthenticatingSMTPClient;
 import org.apache.commons.net.smtp.SMTPConnectionClosedException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -47,6 +48,8 @@ import org.apache.james.mock.smtp.server.model.Mail;
 import org.apache.james.mock.smtp.server.model.MockSMTPBehavior;
 import org.apache.james.mock.smtp.server.model.Operator;
 import org.apache.james.mock.smtp.server.model.Response;
+import org.apache.james.mock.smtp.server.model.SMTPExtension;
+import org.apache.james.mock.smtp.server.model.SMTPExtensions;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.james.util.Port;
 import org.apache.james.utils.SMTPMessageSender;
@@ -132,6 +135,26 @@ class MockSMTPServerTest {
                             assertThat(assertedMail.getMessage()).contains(MimeMessageUtil.asString(message));
                         }));
                 });
+        }
+    }
+
+    @Nested
+    class ExtensionTests {
+        @Test
+        void extraExtensionsShouldBeExposed() throws Exception {
+            behaviorRepository.setSmtpExtensions(ImmutableList.of(SMTPExtension.of("DSN")));
+
+            AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
+
+            try {
+                smtpClient.connect("localhost", mockServer.getPort().getValue());
+                smtpClient.ehlo("localhost");
+
+                assertThat(smtpClient.getReplyString())
+                    .contains("250-DSN");
+            } finally {
+                smtpClient.disconnect();
+            }
         }
     }
 

@@ -26,12 +26,15 @@ import static io.netty.handler.codec.http.HttpResponseStatus.NO_CONTENT;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.mock.smtp.server.jackson.MailAddressModule;
 import org.apache.james.mock.smtp.server.model.Mails;
 import org.apache.james.mock.smtp.server.model.MockSMTPBehaviorInformation;
 import org.apache.james.mock.smtp.server.model.MockSmtpBehaviors;
+import org.apache.james.mock.smtp.server.model.SMTPExtension;
+import org.apache.james.mock.smtp.server.model.SMTPExtensions;
 import org.apache.james.util.Port;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -92,6 +95,7 @@ public class HTTPConfigurationServer {
     private static final Logger LOGGER = LoggerFactory.getLogger(HTTPConfigurationServer.class);
     private static final int RANDOM_PORT = 0;
     static final String SMTP_BEHAVIORS = "/smtpBehaviors";
+    static final String SMTP_EXTENSIONS = "/smtpExtensions";
     static final String VERSION = "/version";
     static final String SMTP_MAILS = "/smtpMails";
 
@@ -129,9 +133,12 @@ public class HTTPConfigurationServer {
                 .orElse(RANDOM_PORT))
             .route(routes -> routes
                 .get(SMTP_BEHAVIORS, this::getBehaviors)
+                .get(SMTP_EXTENSIONS, this::getExtensions)
                 .get(VERSION, this::getVersion)
                 .put(SMTP_BEHAVIORS, this::putBehaviors)
+                .put(SMTP_EXTENSIONS, this::putExtensions)
                 .delete(SMTP_BEHAVIORS, this::deleteBehaviors)
+                .delete(SMTP_EXTENSIONS, this::deleteExtensions)
                 .get(SMTP_MAILS, this::getMails)
                 .delete(SMTP_MAILS, this::deleteMails))
             .bindNow());
@@ -146,6 +153,19 @@ public class HTTPConfigurationServer {
             return res.status(OK)
                 .header(CONTENT_TYPE, APPLICATION_JSON)
                 .sendString(Mono.just(OBJECT_MAPPER.writeValueAsString(mockSmtpBehaviors)));
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Could not serialize JSON", e);
+            return res.status(INTERNAL_SERVER_ERROR).send();
+        }
+    }
+
+    private Publisher<Void> getExtensions(HttpServerRequest req, HttpServerResponse res) {
+        List<SMTPExtension> extensions = smtpBehaviorRepository.getSMTPExtensions();
+
+        try {
+            return res.status(OK)
+                .header(CONTENT_TYPE, APPLICATION_JSON)
+                .sendString(Mono.just(OBJECT_MAPPER.writeValueAsString(extensions)));
         } catch (JsonProcessingException e) {
             LOGGER.error("Could not serialize JSON", e);
             return res.status(INTERNAL_SERVER_ERROR).send();
@@ -171,8 +191,27 @@ public class HTTPConfigurationServer {
             });
     }
 
+    private Publisher<Void> putExtensions(HttpServerRequest req, HttpServerResponse res) {
+        return req.receive().aggregate().asInputStream()
+            .flatMap(inputStream -> {
+                try {
+                    List<SMTPExtension> extensions = OBJECT_MAPPER.readValue(inputStream, SMTPExtensions.class).getSmtpExtensions();
+                    smtpBehaviorRepository.setSmtpExtensions(extensions);
+                    return res.status(NO_CONTENT).send();
+                } catch (IOException e) {
+                    LOGGER.info("Bad request", e);
+                    return res.status(BAD_REQUEST).send();
+                }
+            });
+    }
+
     private Publisher<Void> deleteBehaviors(HttpServerRequest req, HttpServerResponse res) {
         smtpBehaviorRepository.clearBehaviors();
+        return res.status(NO_CONTENT).send();
+    }
+
+    private Publisher<Void> deleteExtensions(HttpServerRequest req, HttpServerResponse res) {
+        smtpBehaviorRepository.clearExtensions();
         return res.status(NO_CONTENT).send();
     }
 

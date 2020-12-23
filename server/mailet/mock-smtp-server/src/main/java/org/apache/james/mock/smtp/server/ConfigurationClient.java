@@ -29,6 +29,7 @@ import org.apache.james.mock.smtp.server.model.MockSmtpBehaviors;
 import org.apache.james.mock.smtp.server.model.Operator;
 import org.apache.james.mock.smtp.server.model.Response;
 import org.apache.james.mock.smtp.server.model.SMTPCommand;
+import org.apache.james.mock.smtp.server.model.SMTPExtensions;
 import org.apache.james.util.Host;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -183,6 +184,15 @@ public interface ConfigurationClient {
 
     @RequestLine("GET " + HTTPConfigurationServer.SMTP_BEHAVIORS)
     List<MockSMTPBehavior> listBehaviors();
+
+    @RequestLine("PUT " + HTTPConfigurationServer.SMTP_EXTENSIONS)
+    void setSMTPExtensions(SMTPExtensions extensions);
+
+    @RequestLine("DELETE " + HTTPConfigurationServer.SMTP_EXTENSIONS)
+    void clearSMTPExtensions();
+
+    @RequestLine("GET " + HTTPConfigurationServer.SMTP_EXTENSIONS)
+    SMTPExtensions listSMTPExtensions();
 
     @RequestLine("GET " + HTTPConfigurationServer.SMTP_MAILS)
     List<Mail> listMails();

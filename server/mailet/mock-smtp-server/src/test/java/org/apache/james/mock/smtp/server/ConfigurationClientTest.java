@@ -23,9 +23,12 @@ import static org.apache.james.mock.smtp.server.Fixture.BEHAVIOR_LIST;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mock.smtp.server.Fixture.MailsFixutre;
+import org.apache.james.mock.smtp.server.model.SMTPExtension;
+import org.apache.james.mock.smtp.server.model.SMTPExtensions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 class ConfigurationClientTest {
     private ConfigurationClient testee;
@@ -55,11 +58,46 @@ class ConfigurationClientTest {
     }
 
     @Test
+    void listSMTPExtensionsShouldReturnEmptyWhenNoSet() {
+        assertThat(testee.listSMTPExtensions().getSmtpExtensions())
+            .isEmpty();
+    }
+
+    @Test
     void listBehaviorsShouldReturnDefinedBehaviors() {
         behaviorRepository.setBehaviors(Fixture.BEHAVIORS);
 
         assertThat(testee.listBehaviors())
             .isEqualTo(Fixture.BEHAVIORS.getBehaviorList());
+    }
+
+    @Test
+    void listSMTPExtensionsShouldReturnDefinedExtensions() {
+        SMTPExtensions smtpExtensions = SMTPExtensions.of(SMTPExtension.of("DSN"), SMTPExtension.of("XYZ"));
+        testee.setSMTPExtensions(smtpExtensions);
+
+        assertThat(testee.listSMTPExtensions())
+            .isEqualTo(smtpExtensions);
+    }
+
+    @Test
+    void listSMTPExtensionsShouldOverwritePreviouslyDefinedExtensions() {
+        testee.setSMTPExtensions(SMTPExtensions.of(SMTPExtension.of("XYZ")));
+        testee.setSMTPExtensions(SMTPExtensions.of(SMTPExtension.of("DSN")));
+
+        assertThat(testee.listSMTPExtensions().getSmtpExtensions())
+            .isEqualTo(ImmutableList.of(SMTPExtension.of("DSN")));
+    }
+
+    @Test
+    void listSMTPExtensionsShouldNotReturnPreviouslyClearedExtensions() {
+        SMTPExtensions smtpExtensions = SMTPExtensions.of(SMTPExtension.of("DSN"), SMTPExtension.of("XYZ"));
+        testee.setSMTPExtensions(smtpExtensions);
+
+        testee.clearSMTPExtensions();
+
+        assertThat(testee.listSMTPExtensions().getSmtpExtensions())
+            .isEmpty();
     }
 
     @Test
