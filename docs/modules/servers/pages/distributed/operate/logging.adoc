@@ -13,7 +13,7 @@ http://james.apache.org/#second[community page])
 Cassandra timeouts). In such case we advise you to conduct a close
 review of performances at the tier level.
 
-Leveraging filters in Kibana discover view can help filtering out
+Leveraging filters in Kibana discover view can help to filter out
 ''already known'' frequently occurring logs.
 
 When reporting ERROR or WARNING logs, consider adding the full logs, and
@@ -31,7 +31,7 @@ link:http://logback.qos.ch/manual/configuration.html[here].
 == Structured logging
 
 === Pushing logs to ElasticSearch
-Distributed Server leverage the use of MDC in order to achieve structured logging,
+Distributed Server leverages the use of MDC in order to achieve structured logging,
 and better add context to the logged information. We furthermore ship
 link:https://github.com/linagora/logback-elasticsearch-appender[Logback Elasticsearch Appender]
 on the classpath to easily allow direct log indexation in
