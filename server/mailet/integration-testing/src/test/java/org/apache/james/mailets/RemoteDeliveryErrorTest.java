@@ -153,6 +153,9 @@ public class RemoteDeliveryErrorTest {
 
         mockSMTP1Configuration = configurationClient(mockSmtp);
         mockSMTP2Configuration = configurationClient(mockSmtp2);
+
+        assertThat(mockSMTP1Configuration.version()).isEqualTo("0.2");
+        assertThat(mockSMTP2Configuration.version()).isEqualTo("0.2");
     }
 
     @After

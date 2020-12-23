@@ -29,6 +29,7 @@ import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.mock.smtp.server.Fixture.JSON_BEHAVIORS;
 import static org.apache.james.mock.smtp.server.Fixture.JSON_MAIL;
 import static org.apache.james.mock.smtp.server.Fixture.JSON_MAILS_LIST;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.nio.charset.StandardCharsets;
@@ -76,6 +77,15 @@ class HTTPConfigurationServerTest {
             .then()
                 .contentType(ContentType.JSON)
                 .body(".", hasSize(0));
+        }
+
+        @Test
+        void shouldExposeVersion() {
+            given()
+                .basePath("/version")
+                .get()
+            .then()
+                .body(equalTo("0.2"));
         }
 
         @Test
@@ -177,7 +187,7 @@ class HTTPConfigurationServerTest {
             mailRepository.store(MailsFixutre.MAIL_1);
 
             String response = when()
-                    .get().prettyPeek()
+                    .get()
                 .then()
                     .contentType(ContentType.JSON)
                     .extract()
@@ -194,7 +204,7 @@ class HTTPConfigurationServerTest {
             mailRepository.store(MailsFixutre.MAIL_2);
 
             String response = when()
-                    .get().prettyPeek()
+                    .get()
                 .then()
                     .contentType(ContentType.JSON)
                     .extract()

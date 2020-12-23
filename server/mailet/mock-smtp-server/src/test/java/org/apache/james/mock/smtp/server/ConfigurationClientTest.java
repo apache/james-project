@@ -96,6 +96,15 @@ class ConfigurationClientTest {
     }
 
     @Test
+    void shouldReturnVersion() {
+        mailRepository.store(MailsFixutre.MAIL_1);
+        mailRepository.store(MailsFixutre.MAIL_2);
+
+        assertThat(testee.version())
+            .isEqualTo("0.2");
+    }
+
+    @Test
     void clearMailsRemoveAllStoredMails() {
         mailRepository.store(MailsFixutre.MAIL_1);
         mailRepository.store(MailsFixutre.MAIL_2);

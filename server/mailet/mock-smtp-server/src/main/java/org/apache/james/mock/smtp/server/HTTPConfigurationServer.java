@@ -92,6 +92,7 @@ public class HTTPConfigurationServer {
     private static final Logger LOGGER = LoggerFactory.getLogger(HTTPConfigurationServer.class);
     private static final int RANDOM_PORT = 0;
     static final String SMTP_BEHAVIORS = "/smtpBehaviors";
+    static final String VERSION = "/version";
     static final String SMTP_MAILS = "/smtpMails";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -128,6 +129,7 @@ public class HTTPConfigurationServer {
                 .orElse(RANDOM_PORT))
             .route(routes -> routes
                 .get(SMTP_BEHAVIORS, this::getBehaviors)
+                .get(VERSION, this::getVersion)
                 .put(SMTP_BEHAVIORS, this::putBehaviors)
                 .delete(SMTP_BEHAVIORS, this::deleteBehaviors)
                 .get(SMTP_MAILS, this::getMails)
@@ -148,6 +150,11 @@ public class HTTPConfigurationServer {
             LOGGER.error("Could not serialize JSON", e);
             return res.status(INTERNAL_SERVER_ERROR).send();
         }
+    }
+
+    private Publisher<Void> getVersion(HttpServerRequest req, HttpServerResponse res) {
+        return res.status(OK)
+            .sendString(Mono.just("0.2"));
     }
 
     private Publisher<Void> putBehaviors(HttpServerRequest req, HttpServerResponse res) {

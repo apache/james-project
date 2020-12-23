@@ -187,6 +187,9 @@ public interface ConfigurationClient {
     @RequestLine("GET " + HTTPConfigurationServer.SMTP_MAILS)
     List<Mail> listMails();
 
+    @RequestLine("GET " + HTTPConfigurationServer.VERSION)
+    String version();
+
     @RequestLine("DELETE " + HTTPConfigurationServer.SMTP_MAILS)
     void clearMails();
 
