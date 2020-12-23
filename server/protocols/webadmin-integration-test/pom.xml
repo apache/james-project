@@ -37,14 +37,4 @@
         <module>memory-webadmin-integration-test</module>
         <module>webadmin-integration-test-common</module>
     </modules>
-
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
 </project>
