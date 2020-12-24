@@ -159,6 +159,46 @@ class MockSMTPServerTest {
     }
 
     @Nested
+    class ESMTPParametersTest {
+        @Test
+        void mailFromParametersShouldBeRecognised() throws Exception {
+            AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
+
+            try {
+                smtpClient.connect("localhost", mockServer.getPort().getValue());
+                smtpClient.ehlo("localhost");
+                smtpClient.mail("<bob@james.org> RET=HDRS ENVID=gabouzomeuh");
+                smtpClient.rcpt("<alice@james.org>");
+                smtpClient.sendShortMessageData("A short message...");
+            } finally {
+                smtpClient.disconnect();
+            }
+
+            Mail.Envelope expectedEnvelope = Mail.Envelope.builder()
+                .addMailParameter(Mail.Parameter.builder()
+                    .name("RET")
+                    .value("HDRS")
+                    .build())
+                .addMailParameter(Mail.Parameter.builder()
+                    .name("ENVID")
+                    .value("gabouzomeuh")
+                    .build())
+                .from(new MailAddress(BOB))
+                .addRecipientMailAddress(new MailAddress(ALICE))
+                .build();
+
+            Awaitility.await().atMost(Duration.TEN_SECONDS)
+                .untilAsserted(() -> {
+                    List<Mail> mails = mailRepository.list();
+                    assertThat(mails)
+                        .hasSize(1)
+                        .allSatisfy(Throwing.consumer(assertedMail ->
+                            assertThat(assertedMail.getEnvelope()).isEqualTo(expectedEnvelope)));
+                });
+        }
+    }
+
+    @Nested
     class MailMockBehaviorTest {
         @Test
         void serverShouldReceiveMessageFromClient() {

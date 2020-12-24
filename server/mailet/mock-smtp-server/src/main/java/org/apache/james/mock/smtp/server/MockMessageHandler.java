@@ -22,6 +22,7 @@ package org.apache.james.mock.smtp.server;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Optional;
 
 import javax.mail.internet.AddressException;
@@ -29,6 +30,7 @@ import javax.mail.internet.AddressException;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.mock.smtp.server.model.Mail;
+import org.apache.james.mock.smtp.server.model.Mail.Parameter;
 import org.apache.james.mock.smtp.server.model.MockSMTPBehavior;
 import org.apache.james.mock.smtp.server.model.MockSMTPBehaviorInformation;
 import org.apache.james.mock.smtp.server.model.Response;
@@ -38,6 +40,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subethamail.smtp.MessageHandler;
 import org.subethamail.smtp.RejectException;
+
+import com.google.common.collect.ImmutableMap;
 
 public class MockMessageHandler implements MessageHandler {
 
@@ -116,6 +120,14 @@ public class MockMessageHandler implements MessageHandler {
 
         fromBehavior
             .orElseGet(() -> envelopeBuilder::from)
+            .behave(parse(from));
+    }
+
+    public void from(String from, Collection<Parameter> parameters) throws RejectException {
+        Optional<Behavior<MailAddress>> fromBehavior = firstMatchedBehavior(SMTPCommand.MAIL_FROM, from);
+
+        fromBehavior
+            .orElseGet(() -> mailAddress -> envelopeBuilder.from(mailAddress).mailParameters(parameters))
             .behave(parse(from));
     }
 

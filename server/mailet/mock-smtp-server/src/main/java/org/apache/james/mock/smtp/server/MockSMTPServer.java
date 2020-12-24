@@ -39,6 +39,7 @@ class MockSMTPServer {
         this.server = new SMTPServer(ctx -> new MockMessageHandler(mailRepository, behaviorRepository));
         this.server.setPort(port);
         this.server.getCommandHandler().addCommand(new ExtendedEhloCommand(behaviorRepository));
+        this.server.getCommandHandler().addCommand(new ExtendedMailFromCommand());
     }
 
     void start() {
