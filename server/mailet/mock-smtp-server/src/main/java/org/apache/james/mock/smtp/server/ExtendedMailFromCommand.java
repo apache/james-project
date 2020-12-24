@@ -20,7 +20,6 @@
 package org.apache.james.mock.smtp.server;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Locale;
 
 import org.apache.james.mock.smtp.server.model.Mail;
@@ -29,10 +28,6 @@ import org.subethamail.smtp.RejectException;
 import org.subethamail.smtp.server.BaseCommand;
 import org.subethamail.smtp.server.Session;
 import org.subethamail.smtp.util.EmailUtils;
-
-import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 
 public class ExtendedMailFromCommand extends BaseCommand {
     public ExtendedMailFromCommand() {
@@ -74,7 +69,7 @@ public class ExtendedMailFromCommand extends BaseCommand {
                 try {
                     sess.startMailTransaction();
                     MockMessageHandler messageHandler = (MockMessageHandler) sess.getMessageHandler();
-                    messageHandler.from(emailAddress, parameters(args));
+                    messageHandler.from(emailAddress, Mail.Parameter.fromArgLine(args));
                     sess.setDeclaredMessageSize(size);
                     sess.setHasMailFrom(true);
                     sess.sendResponse("250 Ok");
@@ -87,23 +82,5 @@ public class ExtendedMailFromCommand extends BaseCommand {
                 sess.sendResponse("553 <" + emailAddress + "> Invalid email address.");
             }
         }
-    }
-
-    private Collection<Mail.Parameter> parameters(String argLine) {
-        return Splitter.on(' ').splitToList(argLine)
-            .stream()
-            .filter(argString -> argString.contains("="))
-            .map(this::parameter)
-            .collect(Guavate.toImmutableList());
-    }
-
-    private Mail.Parameter parameter(String argString) {
-        Preconditions.checkArgument(argString.contains("="));
-        int index = argString.indexOf('=');
-
-        return Mail.Parameter.builder()
-            .name(argString.substring(0, index))
-            .value(argString.substring(index + 1))
-            .build();
     }
 }

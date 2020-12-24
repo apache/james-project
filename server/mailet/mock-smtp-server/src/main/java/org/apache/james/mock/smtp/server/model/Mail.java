@@ -33,6 +33,7 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 @JsonDeserialize(builder = Mail.Builder.class)
@@ -68,6 +69,24 @@ public class Mail {
 
         public static Builder builder() {
             return new Builder();
+        }
+
+        public static Collection<Mail.Parameter> fromArgLine(String argLine) {
+            return Splitter.on(' ').splitToList(argLine)
+                .stream()
+                .filter(argString -> argString.contains("="))
+                .map(Parameter::fromString)
+                .collect(Guavate.toImmutableList());
+        }
+
+        public static Parameter fromString(String argString) {
+            Preconditions.checkArgument(argString.contains("="));
+            int index = argString.indexOf('=');
+
+            return Mail.Parameter.builder()
+                .name(argString.substring(0, index))
+                .value(argString.substring(index + 1))
+                .build();
         }
 
         private final String name;

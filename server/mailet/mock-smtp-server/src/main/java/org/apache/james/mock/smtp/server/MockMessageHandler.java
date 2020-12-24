@@ -41,8 +41,6 @@ import org.slf4j.LoggerFactory;
 import org.subethamail.smtp.MessageHandler;
 import org.subethamail.smtp.RejectException;
 
-import com.google.common.collect.ImmutableMap;
-
 public class MockMessageHandler implements MessageHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MockMessageHandler.class);
@@ -137,6 +135,17 @@ public class MockMessageHandler implements MessageHandler {
 
         recipientBehavior
             .orElseGet(() -> envelopeBuilder::addRecipientMailAddress)
+            .behave(parse(recipient));
+    }
+
+    public void recipient(String recipient, Collection<Parameter> parameters) throws RejectException {
+        Optional<Behavior<MailAddress>> recipientBehavior = firstMatchedBehavior(SMTPCommand.RCPT_TO, recipient);
+
+        recipientBehavior
+            .orElseGet(() -> address -> envelopeBuilder.addRecipient(Mail.Recipient.builder()
+                .parameters(parameters)
+                .address(address)
+                .build()))
             .behave(parse(recipient));
     }
 

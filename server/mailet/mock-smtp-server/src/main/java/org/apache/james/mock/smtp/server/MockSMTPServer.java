@@ -40,6 +40,7 @@ class MockSMTPServer {
         this.server.setPort(port);
         this.server.getCommandHandler().addCommand(new ExtendedEhloCommand(behaviorRepository));
         this.server.getCommandHandler().addCommand(new ExtendedMailFromCommand());
+        this.server.getCommandHandler().addCommand(new ExtendedRcptToCommand());
     }
 
     void start() {

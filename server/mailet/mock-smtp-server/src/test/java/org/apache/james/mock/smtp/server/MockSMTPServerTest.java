@@ -49,7 +49,6 @@ import org.apache.james.mock.smtp.server.model.MockSMTPBehavior;
 import org.apache.james.mock.smtp.server.model.Operator;
 import org.apache.james.mock.smtp.server.model.Response;
 import org.apache.james.mock.smtp.server.model.SMTPExtension;
-import org.apache.james.mock.smtp.server.model.SMTPExtensions;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.james.util.Port;
 import org.apache.james.utils.SMTPMessageSender;
@@ -185,6 +184,57 @@ class MockSMTPServerTest {
                     .build())
                 .from(new MailAddress(BOB))
                 .addRecipientMailAddress(new MailAddress(ALICE))
+                .build();
+
+            Awaitility.await().atMost(Duration.TEN_SECONDS)
+                .untilAsserted(() -> {
+                    List<Mail> mails = mailRepository.list();
+                    assertThat(mails)
+                        .hasSize(1)
+                        .allSatisfy(Throwing.consumer(assertedMail ->
+                            assertThat(assertedMail.getEnvelope()).isEqualTo(expectedEnvelope)));
+                });
+        }
+
+        @Test
+        void rcptToParametersShouldBeRecognised() throws Exception {
+            AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
+
+            try {
+                smtpClient.connect("localhost", mockServer.getPort().getValue());
+                smtpClient.ehlo("localhost");
+                smtpClient.mail("<bob@james.org>");
+                smtpClient.rcpt("<alice@james.org> ORCPT=rfc822;alice@james.org NOTIFY=FAILURE,DELAY");
+                smtpClient.rcpt("<jack@james.org> ORCPT=rfc822;jack@james.org NOTIFY=NEVER");
+                smtpClient.sendShortMessageData("A short message...");
+            } finally {
+                smtpClient.disconnect();
+            }
+
+            Mail.Envelope expectedEnvelope = Mail.Envelope.builder()
+                .from(new MailAddress(BOB))
+                .addRecipient(Mail.Recipient.builder()
+                    .addParameter(Mail.Parameter.builder()
+                        .name("ORCPT")
+                        .value("rfc822;alice@james.org")
+                        .build())
+                    .addParameter(Mail.Parameter.builder()
+                        .name("NOTIFY")
+                        .value("FAILURE,DELAY")
+                        .build())
+                    .address(new MailAddress(ALICE))
+                    .build())
+                .addRecipient(Mail.Recipient.builder()
+                    .addParameter(Mail.Parameter.builder()
+                        .name("ORCPT")
+                        .value("rfc822;jack@james.org")
+                        .build())
+                    .addParameter(Mail.Parameter.builder()
+                        .name("NOTIFY")
+                        .value("NEVER")
+                        .build())
+                    .address(new MailAddress(JACK))
+                    .build())
                 .build();
 
             Awaitility.await().atMost(Duration.TEN_SECONDS)
