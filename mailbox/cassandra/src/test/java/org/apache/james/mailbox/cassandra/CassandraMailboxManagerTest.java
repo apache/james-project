@@ -76,6 +76,8 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.store.BatchSizes;
+import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.mail.MessageMapper;
@@ -845,5 +847,29 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 new HashBlobId.Factory(),
                 cassandra.getCassandraConsistenciesConfiguration());
         }
+    }
+
+    @Nested
+    class WithBatchSize extends MailboxManagerTest<CassandraMailboxManager> {
+        @Override
+        protected CassandraMailboxManager provideMailboxManager() {
+            CassandraMailboxManager mgt = CassandraMailboxManagerProvider.provideMailboxManager(
+                cassandra.getCassandraCluster(),
+                new PreDeletionHooks(preDeletionHooks(), new RecordingMetricFactory()),
+                CassandraConfiguration.DEFAULT_CONFIGURATION,
+                new MailboxManagerConfiguration(BatchSizes.uniqueBatchSize(5)));
+            return mgt;
+        }
+
+        @Override
+        protected SubscriptionManager provideSubscriptionManager() {
+            return new StoreSubscriptionManager(provideMailboxManager().getMapperFactory());
+        }
+
+        @Override
+        protected EventBus retrieveEventBus(CassandraMailboxManager mailboxManager) {
+            return mailboxManager.getEventBus();
+        }
+
     }
 }

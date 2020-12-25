@@ -71,6 +71,14 @@ public class CassandraMailboxManagerProvider {
     public static CassandraMailboxManager provideMailboxManager(CassandraCluster cassandra,
                                                                 PreDeletionHooks preDeletionHooks,
                                                                 CassandraConfiguration cassandraConfiguration) {
+        return provideMailboxManager(cassandra, preDeletionHooks, cassandraConfiguration,
+            MailboxManagerConfiguration.DEFAULT);
+    }
+
+    public static CassandraMailboxManager provideMailboxManager(CassandraCluster cassandra,
+                                                                PreDeletionHooks preDeletionHooks,
+                                                                CassandraConfiguration cassandraConfiguration,
+                                                                MailboxManagerConfiguration mailboxManagerConfiguration) {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
 
         CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
@@ -78,12 +86,14 @@ public class CassandraMailboxManagerProvider {
             messageIdFactory,
             cassandraConfiguration);
 
-        return provideMailboxManager(cassandra.getConf(), preDeletionHooks, mapperFactory, messageIdFactory);
+        return provideMailboxManager(cassandra.getConf(), preDeletionHooks, mapperFactory,
+            mailboxManagerConfiguration, messageIdFactory);
     }
 
     private static CassandraMailboxManager provideMailboxManager(Session session,
                                                                 PreDeletionHooks preDeletionHooks,
                                                                 CassandraMailboxSessionMapperFactory mapperFactory,
+                                                                MailboxManagerConfiguration mailboxManagerConfiguration,
                                                                 MessageId.Factory messageIdFactory) {
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
@@ -111,7 +121,7 @@ public class CassandraMailboxManagerProvider {
 
         CassandraMailboxManager manager = new CassandraMailboxManager(mapperFactory, sessionProvider, new NoMailboxPathLocker(),
             messageParser, messageIdFactory, eventBus, annotationManager, storeRightManager,
-            quotaComponents, index, MailboxManagerConfiguration.DEFAULT, preDeletionHooks);
+            quotaComponents, index, mailboxManagerConfiguration, preDeletionHooks);
 
         eventBus.register(quotaUpdater);
         eventBus.register(new MailboxAnnotationListener(mapperFactory, sessionProvider));
