@@ -31,7 +31,9 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageUidTable.
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.LongStream;
 
 import javax.inject.Inject;
 
@@ -48,6 +50,7 @@ import org.apache.james.mailbox.store.mail.UidProvider;
 import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
+import com.github.steveash.guavate.Guavate;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -89,7 +92,7 @@ public class CassandraUidProvider implements UidProvider {
 
     private PreparedStatement prepareInsert(Session session) {
         return session.prepare(insertInto(TABLE_NAME)
-            .value(NEXT_UID, MessageUid.MIN_VALUE.asLong())
+            .value(NEXT_UID, bindMarker(NEXT_UID))
             .value(MAILBOX_ID, bindMarker(MAILBOX_ID))
             .ifNotExists());
     }
@@ -102,12 +105,12 @@ public class CassandraUidProvider implements UidProvider {
     @Override
     public MessageUid nextUid(MailboxId mailboxId) throws MailboxException {
         CassandraId cassandraId = (CassandraId) mailboxId;
-        return nextUid(cassandraId)
+        return nextUids(cassandraId)
             .blockOptional()
             .orElseThrow(() -> new MailboxException("Error during Uid update"));
     }
 
-    public Mono<MessageUid> nextUid(CassandraId cassandraId) {
+    public Mono<MessageUid> nextUids(CassandraId cassandraId) {
         Mono<MessageUid> updateUid = findHighestUid(cassandraId)
             .flatMap(messageUid -> tryUpdateUid(cassandraId, messageUid));
 
@@ -117,6 +120,26 @@ public class CassandraUidProvider implements UidProvider {
             .switchIfEmpty(updateUid)
             .single()
             .retryWhen(Retry.backoff(maxUidRetries, firstBackoff).scheduler(Schedulers.elastic()));
+    }
+
+    public Mono<List<MessageUid>> nextUids(CassandraId cassandraId, int count) {
+        Mono<List<MessageUid>> updateUid = findHighestUid(cassandraId)
+            .flatMap(messageUid -> tryUpdateUid(cassandraId, messageUid, count)
+                .map(highest -> range(messageUid, highest)));
+
+        Duration firstBackoff = Duration.ofMillis(10);
+        return updateUid
+            .switchIfEmpty(tryInsert(cassandraId, count)
+                .map(highest -> range(MessageUid.MIN_VALUE, highest)))
+            .switchIfEmpty(updateUid)
+            .single()
+            .retryWhen(Retry.backoff(maxUidRetries, firstBackoff).scheduler(Schedulers.elastic()));
+    }
+
+    private List<MessageUid> range(MessageUid lowerExclusive, MessageUid higherInclusive) {
+        return LongStream.range(lowerExclusive.asLong() + 1, higherInclusive.asLong() + 1)
+            .mapToObj(MessageUid::of)
+            .collect(Guavate.toImmutableList());
     }
 
     @Override
@@ -134,7 +157,11 @@ public class CassandraUidProvider implements UidProvider {
     }
 
     private Mono<MessageUid> tryUpdateUid(CassandraId mailboxId, MessageUid uid) {
-        MessageUid nextUid = uid.next();
+        return tryUpdateUid(mailboxId, uid, 1);
+    }
+
+    private Mono<MessageUid> tryUpdateUid(CassandraId mailboxId, MessageUid uid, int count) {
+        MessageUid nextUid = uid.next(count);
         return executor.executeReturnApplied(
                 updateStatement.bind()
                         .setUUID(MAILBOX_ID, mailboxId.asUuid())
@@ -147,8 +174,18 @@ public class CassandraUidProvider implements UidProvider {
     private Mono<MessageUid> tryInsert(CassandraId mailboxId) {
         return executor.executeReturnApplied(
             insertStatement.bind()
+                .setLong(NEXT_UID, MessageUid.MIN_VALUE.asLong())
                 .setUUID(MAILBOX_ID, mailboxId.asUuid()))
             .map(success -> successToUid(MessageUid.MIN_VALUE, success))
+            .handle(publishIfPresent());
+    }
+
+    private Mono<MessageUid> tryInsert(CassandraId mailboxId, int count) {
+        return executor.executeReturnApplied(
+            insertStatement.bind()
+                .setLong(NEXT_UID, MessageUid.MIN_VALUE.next(count).asLong())
+                .setUUID(MAILBOX_ID, mailboxId.asUuid()))
+            .map(success -> successToUid(MessageUid.MIN_VALUE.next(count), success))
             .handle(publishIfPresent());
     }
 

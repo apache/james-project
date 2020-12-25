@@ -23,6 +23,7 @@ import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
@@ -88,6 +89,20 @@ public class CassandraIndexTableHandler {
             .then();
     }
 
+    public Mono<Void> updateIndexOnDeleteComposedId(CassandraId mailboxId, Collection<ComposedMessageIdWithMetaData> metaData) {
+        return Flux.mergeDelayError(Queues.XS_BUFFER_SIZE,
+                Flux.fromIterable(metaData)
+                    .flatMap(message -> updateFirstUnseenOnDelete(mailboxId, message.getFlags(), message.getComposedMessageId().getUid()), DEFAULT_CONCURRENCY),
+                Flux.fromIterable(metaData)
+                    .flatMap(message -> updateRecentOnDelete(mailboxId, message.getComposedMessageId().getUid(), message.getFlags()), DEFAULT_CONCURRENCY),
+                Flux.fromIterable(metaData)
+                    .flatMap(message -> updateDeletedMessageProjectionOnDelete(mailboxId, message.getComposedMessageId().getUid(), message.getFlags()), DEFAULT_CONCURRENCY),
+            decrementCountersOnDeleteFlags(mailboxId, metaData.stream()
+                .map(ComposedMessageIdWithMetaData::getFlags)
+                .collect(Guavate.toImmutableList())))
+            .then();
+    }
+
     private Mono<Void> updateRecentOnDelete(CassandraId mailboxId, MessageUid uid, Flags flags) {
         if (flags.contains(Flags.Flag.RECENT)) {
             return mailboxRecentDAO.removeFromRecent(mailboxId, uid);
@@ -113,6 +128,27 @@ public class CassandraIndexTableHandler {
                 addRecentOnSave(mailboxId, message),
                 incrementCountersOnSave(mailboxId, flags),
                 applicableFlagDAO.updateApplicableFlags(mailboxId, ImmutableSet.copyOf(flags.getUserFlags())))
+            .then();
+    }
+
+    public Mono<Void> updateIndexOnAdd(Collection<MailboxMessage> messages, CassandraId mailboxId) {
+        int lowConcurrency = 2;
+        ImmutableSet<String> userFlags = messages.stream()
+            .flatMap(message -> Stream.of(message.createFlags().getUserFlags()))
+            .collect(Guavate.toImmutableSet());
+        List<Flags> flags = messages.stream()
+            .flatMap(message -> Stream.of(message.createFlags()))
+            .collect(Guavate.toImmutableList());
+
+        return Flux.mergeDelayError(Queues.XS_BUFFER_SIZE,
+                Flux.fromIterable(messages)
+                    .flatMap(message -> checkDeletedOnAdd(mailboxId, message.createFlags(), message.getUid()), lowConcurrency),
+                Flux.fromIterable(messages)
+                    .flatMap(message -> updateFirstUnseenOnAdd(mailboxId, message.createFlags(), message.getUid()), lowConcurrency),
+                Flux.fromIterable(messages)
+                    .flatMap(message -> addRecentOnSave(mailboxId, message), lowConcurrency),
+                incrementCountersOnSave(mailboxId, flags),
+                applicableFlagDAO.updateApplicableFlags(mailboxId, userFlags))
             .then();
     }
 
@@ -161,14 +197,19 @@ public class CassandraIndexTableHandler {
     }
 
     private Mono<Void> decrementCountersOnDelete(CassandraId mailboxId, Collection<MessageMetaData> metaData) {
-        long unseenCount = metaData.stream()
+        return decrementCountersOnDeleteFlags(mailboxId, metaData.stream()
             .map(MessageMetaData::getFlags)
-            .filter(flags -> !flags.contains(Flags.Flag.SEEN))
+            .collect(Guavate.toImmutableList()));
+    }
+
+    private Mono<Void> decrementCountersOnDeleteFlags(CassandraId mailboxId, Collection<Flags> flags) {
+        long unseenCount = flags.stream()
+            .filter(flag -> !flag.contains(Flags.Flag.SEEN))
             .count();
 
         return mailboxCounterDAO.remove(MailboxCounters.builder()
             .mailboxId(mailboxId)
-            .count(metaData.size())
+            .count(flags.size())
             .unseen(unseenCount)
             .build());
     }
@@ -178,6 +219,18 @@ public class CassandraIndexTableHandler {
             return mailboxCounterDAO.incrementCount(mailboxId);
         }
         return mailboxCounterDAO.incrementUnseenAndCount(mailboxId);
+    }
+
+    private Mono<Void> incrementCountersOnSave(CassandraId mailboxId, Collection<Flags> flags) {
+        long unseenCount = flags.stream()
+            .filter(flag -> !flag.contains(Flags.Flag.SEEN))
+            .count();
+
+        return mailboxCounterDAO.add(MailboxCounters.builder()
+            .mailboxId(mailboxId)
+            .count(flags.size())
+            .unseen(unseenCount)
+            .build());
     }
 
     private Mono<Void> addRecentOnSave(CassandraId mailboxId, MailboxMessage message) {

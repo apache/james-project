@@ -99,4 +99,19 @@ class CassandraUidProviderTest {
 
         assertThat(messageUids).hasSize(nbEntries);
     }
+
+    @Test
+    void nextUidsShouldGenerateUniqueValuesWhenParallelCalls() throws ExecutionException, InterruptedException {
+        int threadCount = 10;
+        int nbOperations = 100;
+
+        ConcurrentSkipListSet<MessageUid> messageUids = new ConcurrentSkipListSet<>();
+        ConcurrentTestRunner.builder()
+                .operation((threadNumber, step) -> messageUids.addAll(uidProvider.nextUids((CassandraId) mailbox.getMailboxId(), 10).block()))
+            .threadCount(threadCount)
+            .operationCount(nbOperations / threadCount)
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
+
+        assertThat(messageUids).hasSize(nbOperations * 10);
+    }
 }

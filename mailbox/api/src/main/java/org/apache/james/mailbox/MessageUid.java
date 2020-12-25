@@ -72,7 +72,12 @@ public class MessageUid implements Comparable<MessageUid> {
     }
 
     public MessageUid next() {
-        return new MessageUid(uid + 1);
+        return next(1);
+    }
+
+    public MessageUid next(int count) {
+        Preconditions.checkArgument(count > 0);
+        return new MessageUid(uid + count);
     }
 
     public boolean isFirst() {

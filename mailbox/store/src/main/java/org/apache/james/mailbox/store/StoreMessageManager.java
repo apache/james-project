@@ -715,31 +715,42 @@ public class StoreMessageManager implements MessageManager {
     }
 
     private Iterator<MessageMetaData> copy(Iterator<MailboxMessage> originalRows, MailboxSession session) throws MailboxException {
+        int batchSize = batchSizes.getCopyBatchSize().orElse(1);
         final List<MessageMetaData> copiedRows = new ArrayList<>();
         final MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
 
+        Iterator<List<MailboxMessage>> groupedOriginalRows = com.google.common.collect.Iterators.partition(originalRows, batchSize);
+
         while (originalRows.hasNext()) {
-            final MailboxMessage originalMessage = originalRows.next();
+            List<MailboxMessage> originalMessages = groupedOriginalRows.next();
+
             new QuotaChecker(quotaManager, quotaRootResolver, mailbox)
-                .tryAddition(1, originalMessage.getFullContentOctets());
-            MessageMetaData data = messageMapper.execute(
-                () -> messageMapper.copy(getMailboxEntity(), originalMessage));
-            copiedRows.add(data);
+                .tryAddition(originalMessages.size(), originalMessages.stream()
+                    .mapToLong(MailboxMessage::getFullContentOctets)
+                    .sum());
+            List<MessageMetaData> data = messageMapper.execute(
+                () -> messageMapper.copy(getMailboxEntity(), originalMessages));
+            copiedRows.addAll(data);
         }
         return copiedRows.iterator();
     }
 
     private MoveResult move(Iterator<MailboxMessage> originalRows, MailboxSession session) throws MailboxException {
+        int batchSize = batchSizes.getMoveBatchSize().orElse(1);
         final List<MessageMetaData> movedRows = new ArrayList<>();
         final List<MessageMetaData> originalRowsCopy = new ArrayList<>();
         final MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
 
-        while (originalRows.hasNext()) {
-            final MailboxMessage originalMessage = originalRows.next();
-            originalRowsCopy.add(originalMessage.metaData());
-            MessageMetaData data = messageMapper.execute(
-                () -> messageMapper.move(getMailboxEntity(), originalMessage));
-            movedRows.add(data);
+        Iterator<List<MailboxMessage>> groupedOriginalRows = com.google.common.collect.Iterators.partition(originalRows, batchSize);
+
+        while (groupedOriginalRows.hasNext()) {
+            List<MailboxMessage> originalMessages = groupedOriginalRows.next();
+            originalRowsCopy.addAll(originalMessages.stream()
+                .map(MailboxMessage::metaData)
+                .collect(Guavate.toImmutableList()));
+            List<MessageMetaData> data = messageMapper.execute(
+                () -> messageMapper.move(getMailboxEntity(), originalMessages));
+            movedRows.addAll(data);
         }
         return new MoveResult(movedRows.iterator(), originalRowsCopy.iterator());
     }

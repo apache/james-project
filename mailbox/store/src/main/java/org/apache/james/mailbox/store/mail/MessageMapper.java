@@ -44,6 +44,8 @@ import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.util.streams.Iterators;
 
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
@@ -167,7 +169,13 @@ public interface MessageMapper extends Mapper {
      * @param mailbox the Mailbox to copy to
      * @param original the original to copy
      */
-    MessageMetaData copy(Mailbox mailbox,MailboxMessage original) throws MailboxException;
+    MessageMetaData copy(Mailbox mailbox, MailboxMessage original) throws MailboxException;
+
+    default List<MessageMetaData> copy(Mailbox mailbox, List<MailboxMessage> original) throws MailboxException {
+        return original.stream()
+            .map(Throwing.<MailboxMessage, MessageMetaData>function(message -> copy(mailbox, message)).sneakyThrow())
+            .collect(Guavate.toImmutableList());
+    }
     
     /**
      * Move the given {@link MailboxMessage} to a new mailbox and return the uid of the moved. Be aware that the given uid is just a suggestion for the uid of the moved
@@ -176,8 +184,14 @@ public interface MessageMapper extends Mapper {
      * @param mailbox the Mailbox to move to
      * @param original the original to move
      */
-    MessageMetaData move(Mailbox mailbox,MailboxMessage original) throws MailboxException;
-    
+    MessageMetaData move(Mailbox mailbox, MailboxMessage original) throws MailboxException;
+
+    default List<MessageMetaData> move(Mailbox mailbox, List<MailboxMessage> original) throws MailboxException {
+        return original.stream()
+            .map(Throwing.<MailboxMessage, MessageMetaData>function(message -> move(mailbox, message)).sneakyThrow())
+            .collect(Guavate.toImmutableList());
+    }
+
     
     /**
      * Return the last uid which were used for storing a MailboxMessage in the {@link Mailbox} or null if no
