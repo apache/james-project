@@ -21,6 +21,7 @@ package org.apache.james;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -97,6 +98,21 @@ public class PeriodicalHealthChecksTest {
     @AfterEach
     void tearDown() {
         testee.stop();
+    }
+
+    @Test
+    void healthChecksShouldBeConsideredFailedIfExceedingTimeout() {
+        testee = new PeriodicalHealthChecks(ImmutableSet.of(mockHealthCheck1, mockHealthCheck2),
+            scheduler,
+            new PeriodicalHealthChecksConfiguration(Duration.ofMillis(1)));
+
+        when(mockHealthCheck1.check()).thenReturn(Mono.just(Result.healthy(new ComponentName("mockHealthCheck1"))).delayElement(Duration.ofMillis(10)));
+        when(mockHealthCheck2.check()).thenReturn(Mono.just(Result.healthy(new ComponentName("mockHealthCheck2"))).delayElement(Duration.ofMillis(10)));
+
+        testee.start();
+
+        assertThatCode(() -> scheduler.advanceTimeBy(PERIOD))
+            .doesNotThrowAnyException();
     }
 
     @Test
