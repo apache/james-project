@@ -457,21 +457,21 @@ class SearchUtilsTest {
     void testShouldMatchUidRange() throws Exception {
         builder.setKey(1, MessageUid.of(1729));
         MailboxMessage row = builder.build();
-        assertThat(messageSearches.isMatch(SearchQuery.uid(range(MessageUid.of(1), MessageUid.of(1))), row, recent)).isFalse();
-        assertThat(messageSearches.isMatch(SearchQuery.uid(range(MessageUid.of(1728), MessageUid.of(1728))), row,
+        assertThat(messageSearches.isMatch(SearchQuery.uid(new SearchQuery.UidRange(MessageUid.of(1), MessageUid.of(1))), row, recent)).isFalse();
+        assertThat(messageSearches.isMatch(SearchQuery.uid(new SearchQuery.UidRange(MessageUid.of(1728), MessageUid.of(1728))), row,
                 recent)).isFalse();
-        assertThat(messageSearches.isMatch(SearchQuery.uid(range(MessageUid.of(1729), MessageUid.of(1729))), row,
+        assertThat(messageSearches.isMatch(SearchQuery.uid(new SearchQuery.UidRange(MessageUid.of(1729), MessageUid.of(1729))), row,
                 recent)).isTrue();
-        assertThat(messageSearches.isMatch(SearchQuery.uid(range(MessageUid.of(1730), MessageUid.of(1730))), row,
+        assertThat(messageSearches.isMatch(SearchQuery.uid(new SearchQuery.UidRange(MessageUid.of(1730), MessageUid.of(1730))), row,
                 recent)).isFalse();
-        assertThat(messageSearches.isMatch(SearchQuery.uid(range(MessageUid.of(1), MessageUid.of(1728))), row,
+        assertThat(messageSearches.isMatch(SearchQuery.uid(new SearchQuery.UidRange(MessageUid.of(1), MessageUid.of(1728))), row,
                 recent)).isFalse();
-        assertThat(messageSearches.isMatch(SearchQuery.uid(range(MessageUid.of(1), MessageUid.of(1729))), row,
+        assertThat(messageSearches.isMatch(SearchQuery.uid(new SearchQuery.UidRange(MessageUid.of(1), MessageUid.of(1729))), row,
                 recent)).isTrue();
-        assertThat(messageSearches.isMatch(SearchQuery.uid(range(MessageUid.of(1729), MessageUid.of(1800))), row,
+        assertThat(messageSearches.isMatch(SearchQuery.uid(new SearchQuery.UidRange(MessageUid.of(1729), MessageUid.of(1800))), row,
                 recent)).isTrue();
         assertThat(messageSearches.isMatch(SearchQuery
-                .uid(range(MessageUid.of(1730), MessageUid.MAX_VALUE)), row, recent)).isFalse();
+                .uid(new SearchQuery.UidRange(MessageUid.of(1730), MessageUid.MAX_VALUE)), row, recent)).isFalse();
         assertThat(messageSearches.isMatch(SearchQuery.uid(range(MessageUid.of(1730),
                 MessageUid.MAX_VALUE, MessageUid.of(1), MessageUid.of(1728))), row, recent)).isFalse();
         assertThat(messageSearches.isMatch(SearchQuery.uid(range(MessageUid.of(1730), MessageUid.MAX_VALUE,
@@ -749,10 +749,6 @@ class SearchUtilsTest {
                         .headerExists(DATE_FIELD)), row, recent)).isFalse();
         assertThat(messageSearches.isMatch(SearchQuery.and(SearchQuery.all(),
                 SearchQuery.all()), row, recent)).isTrue();
-    }
-    
-    SearchQuery.UidRange[] range(MessageUid low, MessageUid high) {
-        return new SearchQuery.UidRange[]{ new SearchQuery.UidRange(low, high) };
     }
 
     SearchQuery.UidRange[] range(MessageUid lowOne, MessageUid highOne,

@@ -1073,8 +1073,9 @@ public abstract class AbstractMessageSearchIndexTest {
 
     @Test
     void uidShouldreturnExistingUidsOnTheGivenRanges() throws Exception {
-        SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m4.getUid()), new SearchQuery.UidRange(m6.getUid(), m7.getUid())};
-        SearchQuery searchQuery = SearchQuery.of(SearchQuery.uid(numericRanges));
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.uid(
+            new SearchQuery.UidRange(m2.getUid(), m4.getUid()),
+            new SearchQuery.UidRange(m6.getUid(), m7.getUid())));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
             .containsOnly(m2.getUid(), m3.getUid(), m4.getUid(), m6.getUid(), m7.getUid());
@@ -1189,9 +1190,8 @@ public abstract class AbstractMessageSearchIndexTest {
 
     @Test
     protected void sortOnCcShouldWork() throws Exception {
-        SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = SearchQuery.builder()
-            .andCriteria(SearchQuery.uid(numericRanges))
+            .andCriteria(SearchQuery.uid(new SearchQuery.UidRange(m2.getUid(), m5.getUid())))
             .sorts(new Sort(SortClause.MailboxCc))
             .build();
 
@@ -1205,9 +1205,8 @@ public abstract class AbstractMessageSearchIndexTest {
 
     @Test
     protected void sortOnFromShouldWork() throws Exception {
-        SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = SearchQuery.builder()
-            .andCriteria(SearchQuery.uid(numericRanges))
+            .andCriteria(SearchQuery.uid(new SearchQuery.UidRange(m2.getUid(), m5.getUid())))
             .sorts(new Sort(SortClause.MailboxFrom))
             .build();
 
@@ -1221,9 +1220,8 @@ public abstract class AbstractMessageSearchIndexTest {
 
     @Test
     protected void sortOnToShouldWork() throws Exception {
-        SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = SearchQuery.builder()
-            .andCriteria(SearchQuery.uid(numericRanges))
+            .andCriteria(SearchQuery.uid(new SearchQuery.UidRange(m2.getUid(), m5.getUid())))
             .sorts(new Sort(SortClause.MailboxTo))
             .build();
 
@@ -1237,9 +1235,8 @@ public abstract class AbstractMessageSearchIndexTest {
 
     @Test
     void sortOnSubjectShouldWork() throws Exception {
-        SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = SearchQuery.builder()
-            .andCriteria(SearchQuery.uid(numericRanges))
+            .andCriteria(SearchQuery.uid(new SearchQuery.UidRange(m2.getUid(), m5.getUid())))
             .sorts(new Sort(SortClause.BaseSubject))
             .build();
 

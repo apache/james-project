@@ -419,7 +419,7 @@ class LuceneMailboxMessageSearchIndexTest {
     void uidSearchShouldMatch() throws Exception {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
-        SearchQuery query = SearchQuery.of(SearchQuery.uid(new SearchQuery.UidRange[] {new SearchQuery.UidRange(uid1)}));
+        SearchQuery query = SearchQuery.of(SearchQuery.uid(new SearchQuery.UidRange(uid1)));
         Stream<MessageUid> result = index.search(session, mailbox, query).toStream();
         assertThat(result).containsExactly(uid1);
     }
@@ -428,7 +428,7 @@ class LuceneMailboxMessageSearchIndexTest {
     void uidRangeSearchShouldMatch() throws Exception {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
-        SearchQuery query = SearchQuery.of(SearchQuery.uid(new SearchQuery.UidRange[] {new SearchQuery.UidRange(uid1), new SearchQuery.UidRange(uid3,uid4)}));
+        SearchQuery query = SearchQuery.of(SearchQuery.uid(new SearchQuery.UidRange(uid1), new SearchQuery.UidRange(uid3,uid4)));
         Stream<MessageUid> result = index.search(session, mailbox, query).toStream();
         assertThat(result).containsExactly(uid1, uid3, uid4);
     }
@@ -583,7 +583,7 @@ class LuceneMailboxMessageSearchIndexTest {
     
     @Test
     void notOperatorShouldReverseMatching() throws Exception {
-        SearchQuery query = SearchQuery.of(SearchQuery.not(SearchQuery.uid(new SearchQuery.UidRange[] { new SearchQuery.UidRange(uid1)})));
+        SearchQuery query = SearchQuery.of(SearchQuery.not(SearchQuery.uid(new SearchQuery.UidRange(uid1))));
 
         Stream<MessageUid> result = index.search(session, mailbox, query).toStream();
         assertThat(result).containsExactly(uid3, uid4);
