@@ -40,6 +40,8 @@ public class MultimailboxesSearchQuery {
     public interface Namespace {
         boolean keepAccessible(Mailbox mailbox);
 
+        boolean accessDelegatedMailboxes();
+
         MailboxQuery associatedMailboxSearchQuery();
     }
 
@@ -60,6 +62,11 @@ public class MultimailboxesSearchQuery {
             return MailboxQuery.privateMailboxesBuilder(session)
                 .matchesAllMailboxNames()
                 .build();
+        }
+
+        @Override
+        public boolean accessDelegatedMailboxes() {
+            return false;
         }
     }
 
@@ -82,6 +89,11 @@ public class MultimailboxesSearchQuery {
         @Override
         public boolean equals(Object obj) {
             return obj instanceof AccessibleNamespace;
+        }
+
+        @Override
+        public boolean accessDelegatedMailboxes() {
+            return true;
         }
     }
     

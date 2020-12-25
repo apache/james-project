@@ -29,6 +29,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.model.search.Wildcard;
 import org.apache.james.mailbox.store.transaction.Mapper;
 
 import reactor.core.publisher.Flux;
@@ -80,6 +81,17 @@ public interface MailboxMapper extends Mapper {
      * Return a List of {@link Mailbox} which name is like the given name
      */
     Flux<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query);
+
+    default Flux<MailboxId> userMailboxes(Username username) {
+        return findMailboxWithPathLike(
+            MailboxQuery.builder()
+                .privateNamespace()
+                .username(username)
+                .expression(Wildcard.INSTANCE)
+                .build()
+                .asUserBound())
+            .map(Mailbox::getMailboxId);
+    }
 
     /**
      * Return if the given {@link Mailbox} has children

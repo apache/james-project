@@ -688,6 +688,15 @@ public class StoreMailboxManager implements MailboxManager {
             .filter(Throwing.predicate(mailbox -> storeRightManager.hasRight(mailbox, right, session)));
     }
 
+    private Flux<MailboxId> accessibleMailboxIds(MultimailboxesSearchQuery.Namespace namespace, Right right, MailboxSession session) {
+        MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        Flux<MailboxId> baseMailboxes = mailboxMapper
+            .userMailboxes(session.getUser());
+        Flux<MailboxId> delegatedMailboxes = getDelegatedMailboxes(mailboxMapper, namespace, right, session);
+        return Flux.concat(baseMailboxes, delegatedMailboxes)
+            .distinct();
+    }
+
     static MailboxQuery.UserBound toSingleUserQuery(MailboxQuery mailboxQuery, MailboxSession mailboxSession) {
         return MailboxQuery.builder()
             .namespace(mailboxQuery.getNamespace().orElse(MailboxConstants.USER_NAMESPACE))
@@ -704,6 +713,15 @@ public class StoreMailboxManager implements MailboxManager {
             return Flux.empty();
         }
         return mailboxMapper.findNonPersonalMailboxes(session.getUser(), right);
+    }
+
+    private Flux<MailboxId> getDelegatedMailboxes(MailboxMapper mailboxMapper, MultimailboxesSearchQuery.Namespace namespace,
+                                                Right right, MailboxSession session) {
+        if (!namespace.accessDelegatedMailboxes()) {
+            return Flux.empty();
+        }
+        return mailboxMapper.findNonPersonalMailboxes(session.getUser(), right)
+            .map(Mailbox::getMailboxId);
     }
 
     private MailboxMetaData toMailboxMetadata(MailboxSession session, List<Mailbox> mailboxes, Mailbox mailbox, MailboxCounters counters) throws UnsupportedRightException {
@@ -732,20 +750,19 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public Flux<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, long limit) throws MailboxException {
-        return getInMailboxes(expression, session)
-            .filter(id -> !expression.getNotInMailboxes().contains(id.getMailboxId()))
-            .filter(mailbox -> expression.getNamespace().keepAccessible(mailbox))
-            .map(Mailbox::getMailboxId)
+        return getInMailboxIds(expression, session)
+            .filter(id -> !expression.getNotInMailboxes().contains(id))
             .collect(Guavate.toImmutableSet())
             .flatMapMany(Throwing.function(ids -> index.search(session, ids, expression.getSearchQuery(), limit)));
     }
 
-
-    private Flux<Mailbox> getInMailboxes(MultimailboxesSearchQuery expression, MailboxSession session) throws MailboxException {
+    private Flux<MailboxId> getInMailboxIds(MultimailboxesSearchQuery expression, MailboxSession session) throws MailboxException {
         if (expression.getInMailboxes().isEmpty()) {
-            return searchMailboxes(expression.getNamespace().associatedMailboxSearchQuery(), session, Right.Read);
+            return accessibleMailboxIds(expression.getNamespace(), Right.Read, session);
         } else {
-            return filterReadable(expression.getInMailboxes(), session);
+            return filterReadable(expression.getInMailboxes(), session)
+                .filter(mailbox -> expression.getNamespace().keepAccessible(mailbox))
+                .map(Mailbox::getMailboxId);
         }
     }
 
