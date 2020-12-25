@@ -2358,6 +2358,70 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void copyMessagesShouldUpdateMailboxCounts() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+
+            session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath inbox = MailboxPath.inbox(session);
+            MailboxId inboxId = mailboxManager.createMailbox(inbox, session).get();
+
+            MailboxPath otherMailbox = MailboxPath.forUser(USER_1, "otherMailbox");
+            MailboxId otherMailboxId = mailboxManager.createMailbox(otherMailbox, session).get();
+
+            MessageManager inboxMessageManager = mailboxManager.getMailbox(inbox, session);
+
+            ComposedMessageId composedMessageId1 = inboxMessageManager
+                .appendMessage(AppendCommand.from(message), session)
+                .getId();
+            MessageId messageId2 = inboxMessageManager
+                .appendMessage(AppendCommand.from(message), session)
+                .getId()
+                .getMessageId();
+
+            MessageId messageId1 = composedMessageId1.getMessageId();
+
+            mailboxManager.copyMessages(MessageRange.all(), inbox, otherMailbox, session);
+
+            assertThat(mailboxManager.getMailbox(inboxId, session).getMessageCount(session))
+                .isEqualTo(2);
+            assertThat(mailboxManager.getMailbox(otherMailboxId, session).getMessageCount(session))
+                .isEqualTo(2);
+        }
+
+        @Test
+        void moveMessagesShouldUpdateMailboxCounts() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+
+            session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath inbox = MailboxPath.inbox(session);
+            MailboxId inboxId = mailboxManager.createMailbox(inbox, session).get();
+
+            MailboxPath otherMailbox = MailboxPath.forUser(USER_1, "otherMailbox");
+            MailboxId otherMailboxId = mailboxManager.createMailbox(otherMailbox, session).get();
+
+            MessageManager inboxMessageManager = mailboxManager.getMailbox(inbox, session);
+
+            ComposedMessageId composedMessageId1 = inboxMessageManager
+                .appendMessage(AppendCommand.from(message), session)
+                .getId();
+            MessageId messageId2 = inboxMessageManager
+                .appendMessage(AppendCommand.from(message), session)
+                .getId()
+                .getMessageId();
+
+            MessageId messageId1 = composedMessageId1.getMessageId();
+
+            mailboxManager.moveMessages(MessageRange.all(), inbox, otherMailbox, session);
+
+            assertThat(mailboxManager.getMailbox(inboxId, session).getMessageCount(session))
+                .isEqualTo(0);
+            assertThat(mailboxManager.getMailbox(otherMailboxId, session).getMessageCount(session))
+                .isEqualTo(2);
+        }
+
+        @Test
         void copyMessagesShouldThrowWhenCopyingMessageFromMailboxNotBelongingToSameUser() throws Exception {
             MailboxSession sessionUser1 = mailboxManager.createSystemSession(USER_1);
             MailboxSession sessionUser2 = mailboxManager.createSystemSession(USER_2);
