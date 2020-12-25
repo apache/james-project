@@ -49,6 +49,7 @@ public class InMemoryListingTest extends Listing {
     @Test
     public void listShouldUTF7EscapeSpecialChar() throws Exception {
         system.createMailbox(MailboxPath.forUser(USER, "projects & abc"));
+        system.createMailbox(MailboxPath.forUser(USER, "mailbox #17"));
         system.createMailbox(MailboxPath.forUser(USER, "évaluations"));
 
         simpleScriptedTestProtocol

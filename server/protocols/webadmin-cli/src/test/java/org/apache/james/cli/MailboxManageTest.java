@@ -256,7 +256,7 @@ public class MailboxManageTest {
                 .addUser("hqtran@linagora.com", "123456");
 
         int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
-                "--url", "http://127.0.0.1:" + port.getValue(), "mailbox", "delete", "hqtran@linagora.com", "IN#BOX");
+                "--url", "http://127.0.0.1:" + port.getValue(), "mailbox", "delete", "hqtran@linagora.com", "#INBOX");
 
         assertThat(exitCode).isEqualTo(1);
         assertThat(errorStreamCaptor.toString()).contains("Attempt to delete an invalid mailbox");

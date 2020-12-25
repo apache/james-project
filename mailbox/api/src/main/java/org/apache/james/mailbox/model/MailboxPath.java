@@ -62,7 +62,7 @@ public class MailboxPath {
         return new MailboxPath(MailboxConstants.USER_NAMESPACE, username, mailboxName);
     }
 
-    private static final String INVALID_CHARS = "%*#";
+    private static final String INVALID_CHARS = "%*";
     private static final CharMatcher INVALID_CHARS_MATCHER = CharMatcher.anyOf(INVALID_CHARS);
     // This is the size that all mailbox backend should support
     public  static final int MAX_MAILBOX_NAME_LENGTH = 200;
@@ -176,7 +176,7 @@ public class MailboxPath {
                 String.format("'%s' has an empty part within its mailbox name considering %s as a delimiter", asString(), pathDelimiter));
         }
         if (nameContainsForbiddenCharacters()) {
-            throw new MailboxNameException(asString() + " contains one of the forbidden characters " + INVALID_CHARS);
+            throw new MailboxNameException(asString() + " contains one of the forbidden characters " + INVALID_CHARS + " or starts with #");
         }
         if (isMailboxNameTooLong()) {
             throw new TooLongMailboxNameException("Mailbox name exceeds maximum size of " + MAX_MAILBOX_NAME_LENGTH + " characters");
@@ -185,7 +185,8 @@ public class MailboxPath {
     }
 
     private boolean nameContainsForbiddenCharacters() {
-        return INVALID_CHARS_MATCHER.matchesAnyOf(name);
+        return INVALID_CHARS_MATCHER.matchesAnyOf(name)
+            || name.startsWith("#");
     }
 
     private boolean isMailboxNameTooLong() {

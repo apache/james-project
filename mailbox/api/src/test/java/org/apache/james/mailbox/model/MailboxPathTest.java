@@ -304,10 +304,17 @@ class MailboxPathTest {
     }
 
     @Test
-    void assertAcceptableShouldThrowOnSharp() {
-        assertThatThrownBy(() -> MailboxPath.forUser(USER, "a#b")
+    void assertAcceptableShouldThrowWhenStartsWithSharp() {
+        assertThatThrownBy(() -> MailboxPath.forUser(USER, "#ab")
                 .assertAcceptable('.'))
             .isInstanceOf(MailboxNameException.class);
+    }
+
+    @Test
+    void assertAcceptableShouldNotThrowWhenSharpInTheMiddle() {
+        assertThatCode(() -> MailboxPath.forUser(USER, "mailbox #17")
+                .assertAcceptable('.'))
+            .doesNotThrowAnyException();
     }
 
     @Test

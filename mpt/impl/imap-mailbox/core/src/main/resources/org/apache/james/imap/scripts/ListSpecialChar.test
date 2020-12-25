@@ -23,5 +23,6 @@ SUB {
 S: \* LIST \(\\HasNoChildren\) \"\.\" \"INBOX\"
 S: \* LIST \(\\HasNoChildren\) \"\.\" \"projects &- abc\"
 S: \* LIST \(\\HasNoChildren\) \"\.\" \"&AOk-valuations\"
+S: \* LIST \(\\HasNoChildren\) \"\.\" \"mailbox #17\"
 }
 S: a3 OK LIST completed.
