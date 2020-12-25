@@ -126,6 +126,7 @@ public class StoreMessageManager implements MessageManager {
      */
     protected static final Flags MINIMAL_PERMANET_FLAGS;
     private static final SearchQuery LIST_ALL_QUERY = SearchQuery.of(SearchQuery.all());
+    private static final SearchQuery LIST_FROM_ONE = SearchQuery.of(SearchQuery.uid(new SearchQuery.UidRange(MessageUid.MIN_VALUE, MessageUid.MAX_VALUE)));
 
     private static class MediaType {
         final String mediaType;
@@ -708,7 +709,7 @@ public class StoreMessageManager implements MessageManager {
 
     @Override
     public Flux<MessageUid> search(SearchQuery query, MailboxSession mailboxSession) throws MailboxException {
-        if (query.equals(LIST_ALL_QUERY)) {
+        if (query.equals(LIST_ALL_QUERY) || query.equals(LIST_FROM_ONE)) {
             return listAllMessageUids(mailboxSession);
         }
         return index.search(mailboxSession, getMailboxEntity(), query);
