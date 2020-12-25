@@ -29,7 +29,10 @@ import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
+import org.apache.james.jmap.api.change.State;
 import org.apache.james.jmap.cassandra.change.CassandraMailboxChangeRepository;
+import org.apache.james.jmap.cassandra.change.CassandraStateFactory;
+import org.apache.james.jmap.change.MailboxChangeListener;
 import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.Authenticator;
@@ -182,6 +185,7 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(StoreMailboxManager.class).to(CassandraMailboxManager.class);
         bind(MailboxChangeRepository.class).to(CassandraMailboxChangeRepository.class);
         bind(MailboxId.Factory.class).to(CassandraId.Factory.class);
+        bind(State.Factory.class).to(CassandraStateFactory.class);
         bind(MessageId.Factory.class).to(CassandraMessageId.Factory.class);
         bind(MessageIdManager.class).to(StoreMessageIdManager.class);
         bind(AttachmentManager.class).to(StoreAttachmentManager.class);
@@ -212,6 +216,7 @@ public class CassandraMailboxModule extends AbstractModule {
         Multibinder<MailboxListener.GroupMailboxListener> mailboxListeners = Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class);
         mailboxListeners.addBinding().to(MailboxAnnotationListener.class);
         mailboxListeners.addBinding().to(DeleteMessageListener.class);
+        mailboxListeners.addBinding().to(MailboxChangeListener.class);
 
         bind(MailboxManager.class).annotatedWith(Names.named(MAILBOXMANAGER_NAME)).to(MailboxManager.class);
 
