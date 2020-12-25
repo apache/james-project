@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
@@ -141,13 +142,17 @@ public class StoreMessageIdManager implements MessageIdManager {
     @Override
     public Set<MessageId> accessibleMessages(Collection<MessageId> messageIds, MailboxSession mailboxSession) throws MailboxException {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
-        List<MailboxMessage> messageList = messageIdMapper.find(messageIds, MessageMapper.FetchType.Metadata);
+        ImmutableList<ComposedMessageIdWithMetaData> idList = Flux.fromIterable(messageIds)
+            .flatMap(messageIdMapper::findMetadata, DEFAULT_CONCURRENCY)
+            .collect(Guavate.toImmutableList())
+            .block();
 
-        ImmutableSet<MailboxId> allowedMailboxIds = getAllowedMailboxIds(mailboxSession, messageList, Right.Read);
+        ImmutableSet<MailboxId> allowedMailboxIds = getAllowedMailboxIds(mailboxSession, idList.stream()
+            .map(id -> id.getComposedMessageId().getMailboxId()), Right.Read);
 
-        return messageList.stream()
-            .filter(message -> allowedMailboxIds.contains(message.getMailboxId()))
-            .map(MailboxMessage::getMessageId)
+        return idList.stream()
+            .filter(id -> allowedMailboxIds.contains(id.getComposedMessageId().getMailboxId()))
+            .map(id -> id.getComposedMessageId().getMessageId())
             .collect(Guavate.toImmutableSet());
     }
 
@@ -181,9 +186,8 @@ public class StoreMessageIdManager implements MessageIdManager {
             .flatMap(Function.identity(), DEFAULT_CONCURRENCY);
     }
 
-    private ImmutableSet<MailboxId> getAllowedMailboxIds(MailboxSession mailboxSession, List<MailboxMessage> messageList, Right... rights) throws MailboxException {
-        return MailboxReactorUtils.block(Flux.fromIterable(messageList)
-            .map(MailboxMessage::getMailboxId)
+    private ImmutableSet<MailboxId> getAllowedMailboxIds(MailboxSession mailboxSession, Stream<MailboxId> idList, Right... rights) throws MailboxException {
+        return MailboxReactorUtils.block(Flux.fromStream(idList)
             .distinct()
             .filterWhen(hasRightsOnMailboxReactive(mailboxSession, rights), DEFAULT_CONCURRENCY)
             .collect(Guavate.toImmutableSet()));
@@ -213,7 +217,9 @@ public class StoreMessageIdManager implements MessageIdManager {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
         List<MailboxMessage> messageList = messageIdMapper.find(messageIds, MessageMapper.FetchType.Metadata);
-        ImmutableSet<MailboxId> allowedMailboxIds = getAllowedMailboxIds(mailboxSession, messageList, Right.DeleteMessages);
+        ImmutableSet<MailboxId> allowedMailboxIds = getAllowedMailboxIds(mailboxSession, messageList
+            .stream()
+            .map(MailboxMessage::getMailboxId), Right.DeleteMessages);
 
         ImmutableSet<MessageId> accessibleMessages = messageList.stream()
             .filter(message -> allowedMailboxIds.contains(message.getMailboxId()))
