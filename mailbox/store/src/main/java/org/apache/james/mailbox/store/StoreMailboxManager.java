@@ -749,10 +749,6 @@ public class StoreMailboxManager implements MailboxManager {
         }
     }
 
-    private Flux<Mailbox> getAllReadableMailbox(MailboxQuery mailboxQuery, MailboxSession session) throws MailboxException {
-        return searchMailboxes(mailboxQuery, session, Right.Read);
-    }
-
     private Flux<Mailbox> filterReadable(ImmutableSet<MailboxId> inMailboxes, MailboxSession session) throws MailboxException {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         return Flux.fromIterable(inMailboxes)
