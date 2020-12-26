@@ -311,9 +311,9 @@ public class MimeMessageTest {
     public void testMessageCloningViaCoW() throws Exception {
         MimeMessage mmorig = getSimpleMessage();
 
-        MimeMessage mm = new MimeMessageCopyOnWriteProxy(mmorig);
+        MimeMessage mm = new MimeMessageWrapper(mmorig);
 
-        MimeMessage mm2 = new MimeMessageCopyOnWriteProxy(mm);
+        MimeMessage mm2 = new MimeMessageWrapper(mm);
 
         mm2.setHeader("Subject", "Modified");
 
@@ -336,9 +336,9 @@ public class MimeMessageTest {
     public void testMessageCloningViaCoW2() throws Exception {
         MimeMessage mmorig = getSimpleMessage();
 
-        MimeMessage mm = new MimeMessageCopyOnWriteProxy(mmorig);
+        MimeMessage mm = new MimeMessageWrapper(mmorig);
 
-        MimeMessage mm2 = new MimeMessageCopyOnWriteProxy(mm);
+        MimeMessage mm2 = new MimeMessageWrapper(mm);
 
         LifecycleUtil.dispose(mm);
         mm = null;
@@ -364,7 +364,7 @@ public class MimeMessageTest {
     public void testMessageCloningViaCoWSubjectLost() throws Exception {
         MimeMessage mmorig = getSimpleMessage();
 
-        MimeMessage mm = new MimeMessageCopyOnWriteProxy(mmorig);
+        MimeMessage mm = new MimeMessageWrapper(mmorig);
 
         mm.setHeader("X-Test", "foo");
         mm.saveChanges();

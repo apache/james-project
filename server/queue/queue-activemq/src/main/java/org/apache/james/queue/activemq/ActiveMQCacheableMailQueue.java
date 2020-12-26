@@ -47,9 +47,9 @@ import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.jms.JMSCacheableMailQueue;
 import org.apache.james.server.core.MailImpl;
-import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.server.core.MimeMessageSource;
+import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
@@ -140,7 +140,7 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue implements
             try {
                 BlobMessage blobMessage = (BlobMessage) message;
                 MimeMessageSource source = new MimeMessageBlobMessageSource(blobMessage);
-                return new MimeMessageCopyOnWriteProxy(source);
+                return new MimeMessageWrapper(source);
             
             } catch (JMSException e) {
                 throw new MailQueueException("Unable to populate MimeMessage for mail", e);

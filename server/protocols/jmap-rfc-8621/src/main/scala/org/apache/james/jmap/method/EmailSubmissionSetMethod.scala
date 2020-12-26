@@ -45,7 +45,7 @@ import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.queue.api.MailQueueFactory.SPOOL
 import org.apache.james.queue.api.{MailQueue, MailQueueFactory}
 import org.apache.james.rrt.api.CanSendFrom
-import org.apache.james.server.core.{MailImpl, MimeMessageCopyOnWriteProxy, MimeMessageInputStreamSource}
+import org.apache.james.server.core.{MailImpl, MimeMessageInputStreamSource, MimeMessageWrapper}
 import org.apache.mailet.{Attribute, AttributeName, AttributeValue}
 import org.reactivestreams.Publisher
 import org.slf4j.{Logger, LoggerFactory}
@@ -232,7 +232,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
     val source = new MimeMessageInputStreamSource(name, inputStream)
     // if MimeMessageCopyOnWriteProxy throws an error in the constructor we
     // have to manually care disposing our source.
-    Try(new MimeMessageCopyOnWriteProxy(source))
+    Try(new MimeMessageWrapper(source))
       .recover(e => {
         LifecycleUtil.dispose(source)
         throw e

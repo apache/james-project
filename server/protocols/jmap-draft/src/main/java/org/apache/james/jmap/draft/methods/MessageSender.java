@@ -33,9 +33,9 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.server.core.Envelope;
 import org.apache.james.server.core.MailImpl;
-import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.server.core.MimeMessageInputStreamSource;
 import org.apache.james.server.core.MimeMessageSource;
+import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.mailet.Mail;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -72,14 +72,8 @@ public class MessageSender {
 
     private static MimeMessage toMimeMessage(String name, InputStream inputStream) throws MessagingException {
         MimeMessageSource source = new MimeMessageInputStreamSource(name, inputStream);
-        // if MimeMessageCopyOnWriteProxy throws an error in the constructor we
-        // have to manually care disposing our source.
-        try {
-            return new MimeMessageCopyOnWriteProxy(source);
-        } catch (MessagingException e) {
-            LifecycleUtil.dispose(source);
-            throw e;
-        }
+
+        return new MimeMessageWrapper(source);
     }
 
     public void sendMessage(MessageId messageId,

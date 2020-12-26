@@ -31,7 +31,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.repository.api.StreamRepository;
-import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.server.core.MimeMessageUtil;
 import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.mailet.Mail;
@@ -148,17 +147,9 @@ final class MessageInputStream extends InputStream {
     private void writeStream(Mail mail, OutputStream out, boolean update) throws IOException, MessagingException {
         MimeMessage msg = mail.getMessage();
 
-        if (update) {
-
-            if (msg instanceof MimeMessageCopyOnWriteProxy) {
-                msg = ((MimeMessageCopyOnWriteProxy) msg).getWrappedMessage();
-            }
-
-            if (msg instanceof MimeMessageWrapper) {
-                MimeMessageWrapper wrapper = (MimeMessageWrapper) msg;
-                wrapper.loadMessage();
-
-            }
+        if (update && msg instanceof MimeMessageWrapper) {
+            MimeMessageWrapper wrapper = (MimeMessageWrapper) msg;
+            wrapper.loadMessage();
         }
 
         OutputStream bodyOut = null;
