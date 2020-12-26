@@ -23,8 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.mail.MessagingException;
 import javax.mail.util.SharedByteArrayInputStream;
@@ -39,10 +39,12 @@ import org.apache.james.lifecycle.api.Disposable;
  * Takes an input stream and creates a repeatable input stream source for a
  * MimeMessageWrapper. It does this by completely reading the input stream and
  * saving that to data to an {@link DeferredFileOutputStream} with its threshold set to 100kb
+ *
+ * This class is not thread safe!
  */
 public class MimeMessageInputStreamSource extends MimeMessageSource implements Disposable {
 
-    private final List<InputStream> streams = new ArrayList<>();
+    private final Set<InputStream> streams = new HashSet<>();
 
     /**
      * A temporary file used to hold the message stream
@@ -128,7 +130,7 @@ public class MimeMessageInputStreamSource extends MimeMessageSource implements D
      * @return a <code>BufferedInputStream</code> containing the data
      */
     @Override
-    public synchronized InputStream getInputStream() throws IOException {
+    public InputStream getInputStream() throws IOException {
         InputStream in;
         if (out.isInMemory()) {
             in = new SharedByteArrayInputStream(out.getData());

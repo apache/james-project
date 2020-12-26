@@ -99,7 +99,7 @@ public class MailImpl implements Disposable, Mail {
             .name(deriveNewName(mail.getName()))
             .sender(mail.getMaybeSender())
             .addRecipients(mail.getRecipients())
-            .mimeMessage(new MimeMessageCopyOnWriteProxy(mail.getMessage()))
+            .mimeMessage(new MimeMessageWrapper(mail.getMessage()))
             .remoteHost(mail.getRemoteHost())
             .remoteAddr(mail.getRemoteAddr())
             .lastUpdated(mail.getLastUpdated())
@@ -365,7 +365,7 @@ public class MailImpl implements Disposable, Mail {
     /**
      * The MimeMessage that holds the mail data.
      */
-    private MimeMessageCopyOnWriteProxy message;
+    private MimeMessageWrapper message;
     /**
      * The sender of this mail.
      */
@@ -495,11 +495,6 @@ public class MailImpl implements Disposable, Mail {
      */
     @Override
     public void setMessage(MimeMessage message) throws MessagingException {
-
-        // TODO: We should use the MimeMessageCopyOnWriteProxy
-        // everytime we set the MimeMessage. We should
-        // investigate if we should wrap it here
-
         if (this.message != message) {
             // If a setMessage is called on a Mail that already have a message
             // (discouraged) we have to make sure that the message we remove is
@@ -507,11 +502,7 @@ public class MailImpl implements Disposable, Mail {
             if (this.message != null) {
                 LifecycleUtil.dispose(this.message);
             }
-            if (message instanceof MimeMessageCopyOnWriteProxy) {
-                this.message = (MimeMessageCopyOnWriteProxy) message;
-            } else {
-                this.message = new MimeMessageCopyOnWriteProxy(message);
-            }
+            this.message = new MimeMessageWrapper(message);
         }
     }
 

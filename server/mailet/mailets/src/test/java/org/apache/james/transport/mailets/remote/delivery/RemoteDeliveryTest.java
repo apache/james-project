@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets.remote.delivery;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.mailet.base.MailAddressFixture.JAMES_APACHE_ORG;
 import static org.apache.mailet.base.MailAddressFixture.JAMES_APACHE_ORG_DOMAIN;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,6 +42,7 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
 import org.apache.james.transport.mailets.RemoteDelivery;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.Mail;
@@ -113,7 +115,11 @@ public class RemoteDeliveryTest {
         remoteDelivery.init(FakeMailetConfig.builder()
             .build());
 
-        Mail mail = FakeMail.builder().name(MAIL_NAME).recipients(MailAddressFixture.ANY_AT_JAMES).build();
+        Mail mail = FakeMail.builder()
+            .name(MAIL_NAME)
+            .recipients(MailAddressFixture.ANY_AT_JAMES)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
+            .build();
         remoteDelivery.service(mail);
 
 
@@ -135,6 +141,7 @@ public class RemoteDeliveryTest {
         Mail mail = FakeMail.builder()
             .name(MAIL_NAME)
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2, MailAddressFixture.OTHER_AT_JAMES)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
             .build();
         remoteDelivery.service(mail);
 
@@ -162,6 +169,7 @@ public class RemoteDeliveryTest {
         Mail mail = FakeMail.builder()
             .name(MAIL_NAME)
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2, MailAddressFixture.OTHER_AT_JAMES)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
             .build();
         remoteDelivery.service(mail);
 
@@ -181,7 +189,11 @@ public class RemoteDeliveryTest {
         remoteDelivery.init(FakeMailetConfig.builder()
             .build());
 
-        Mail mail = FakeMail.builder().name(MAIL_NAME).recipients(MailAddressFixture.ANY_AT_JAMES).build();
+        Mail mail = FakeMail.builder()
+            .name(MAIL_NAME)
+            .recipients(MailAddressFixture.ANY_AT_JAMES)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
+            .build();
         remoteDelivery.service(mail);
 
         assertThat(mail.getState()).isEqualTo(Mail.GHOST);
@@ -193,7 +205,11 @@ public class RemoteDeliveryTest {
             .setProperty(RemoteDeliveryConfiguration.USE_PRIORITY, "true")
             .build());
 
-        Mail mail = FakeMail.builder().name(MAIL_NAME).recipients(MailAddressFixture.ANY_AT_JAMES).build();
+        Mail mail = FakeMail.builder()
+            .name(MAIL_NAME)
+            .recipients(MailAddressFixture.ANY_AT_JAMES)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
+            .build();
         remoteDelivery.service(mail);
 
 

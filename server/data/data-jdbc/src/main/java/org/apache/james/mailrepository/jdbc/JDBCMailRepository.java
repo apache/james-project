@@ -45,7 +45,6 @@ import java.util.StringTokenizer;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 import javax.sql.DataSource;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
@@ -61,7 +60,6 @@ import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.repository.file.FilePersistentStreamRepository;
 import org.apache.james.server.core.MailImpl;
-import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.james.util.sql.SqlResources;
@@ -384,10 +382,7 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
             // Need to determine whether need to insert this record, or update
             // it.
 
-            // Determine whether the message body has changed, and possibly
-            // avoid
-            // updating the database.
-            boolean saveBody = saveBodyRequired(mc);
+            mc.getMessage().saveChanges();
             MessageInputStream is = new MessageInputStream(mc, sr, inMemorySizeLimit, true);
 
             // Begin a transaction
@@ -406,9 +401,7 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
                     updateMailAttributes(mc, conn);
                 }
 
-                if (saveBody) {
-                    updateMessageBody(mc, conn, is);
-                }
+                updateMessageBody(mc, conn, is);
 
             } else {
                 // Insert the record into the database
@@ -552,27 +545,6 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
         }
     }
 
-    private boolean saveBodyRequired(Mail mc) throws MessagingException {
-        boolean saveBody;
-        MimeMessage messageBody = mc.getMessage();
-        // if the message is a CopyOnWrite proxy we check the modified
-        // wrapped object.
-        if (messageBody instanceof MimeMessageCopyOnWriteProxy) {
-            MimeMessageCopyOnWriteProxy messageCow = (MimeMessageCopyOnWriteProxy) messageBody;
-            messageBody = messageCow.getWrappedMessage();
-        }
-        if (messageBody instanceof MimeMessageWrapper) {
-            MimeMessageWrapper message = (MimeMessageWrapper) messageBody;
-            saveBody = message.isModified();
-            if (saveBody) {
-                message.loadMessage();
-            }
-        } else {
-            saveBody = true;
-        }
-        return saveBody;
-    }
-
     @Override
     @SuppressWarnings("unchecked")
     public Mail retrieve(MailKey key) throws MessagingException {
@@ -668,7 +640,7 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
             mc.lastUpdated(rsMessage.getTimestamp(8));
 
             MimeMessageJDBCSource source = new MimeMessageJDBCSource(this, key.asString(), sr);
-            MimeMessageCopyOnWriteProxy message = new MimeMessageCopyOnWriteProxy(source);
+            MimeMessageWrapper message = new MimeMessageWrapper(source);
             mc.mimeMessage(message);
             return mc.build();
         } catch (SQLException sqle) {

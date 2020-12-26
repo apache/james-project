@@ -24,6 +24,7 @@ import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.mailet.base.MailAddressFixture.SENDER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.empty;
@@ -47,6 +48,7 @@ import org.apache.james.queue.memory.MemoryMailQueueFactory;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.task.TaskManager;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.ClearMailQueueTask;
@@ -83,6 +85,7 @@ class MailQueueRoutesTest {
     static final String FAKE_MAIL_NAME_1 = "fake mail name 1";
     static final String FAKE_MAIL_NAME_2 = "fake mail name 2";
     static final String FAKE_MAIL_NAME_3 = "fake mail name 3";
+    static final byte[] MESSAGE_BYTES = "header: value \r\n".getBytes(UTF_8);
 
     WebAdminServer webAdminServer;
     MemoryMailQueueFactory mailQueueFactory;
@@ -106,7 +109,7 @@ class MailQueueRoutesTest {
             .setAccept(ContentType.JSON)
             .setBasePath(MailQueueRoutes.BASE_URL)
             .setPort(server.getPort().getValue())
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
+            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(UTF_8)))
             .build();
     }
 
@@ -671,11 +674,13 @@ class MailQueueRoutesTest {
                 queue.enQueue(FakeMail.builder()
                     .name(FAKE_MAIL_NAME_1)
                     .sender(SENDER_1_JAMES_ORG)
+                    .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                     .build());
 
                 queue.enQueue(FakeMail.builder()
                     .name(FAKE_MAIL_NAME_2)
                     .sender(SENDER_2_JAMES_ORG)
+                    .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                     .build());
 
                 String taskId = with()
@@ -707,10 +712,12 @@ class MailQueueRoutesTest {
 
                 queue.enQueue(FakeMail.builder()
                     .name(FAKE_MAIL_NAME_1)
+                    .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                     .build());
 
                 queue.enQueue(FakeMail.builder()
                     .name(FAKE_MAIL_NAME_2)
+                    .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                     .build());
 
                 String taskId = with()
@@ -743,16 +750,19 @@ class MailQueueRoutesTest {
                 queue.enQueue(FakeMail.builder()
                     .name(FAKE_MAIL_NAME_1)
                     .recipient(RECIPIENT_JAMES_ORG)
+                    .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                     .build());
 
                 queue.enQueue(FakeMail.builder()
                     .name(FAKE_MAIL_NAME_2)
                     .recipient(RECIPIENT_JAMES_ORG)
+                    .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                     .build());
 
                 queue.enQueue(FakeMail.builder()
                     .name(FAKE_MAIL_NAME_2)
                     .recipient(RECIPIENT_1_JAMES_ORG)
+                    .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                     .build());
 
                 String taskId = with()
@@ -789,11 +799,13 @@ class MailQueueRoutesTest {
                 queue.enQueue(FakeMail.builder()
                     .name(FAKE_MAIL_NAME_1)
                     .sender(SENDER_1_JAMES_ORG)
+                    .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                     .build());
 
                 queue.enQueue(FakeMail.builder()
                     .name(FAKE_MAIL_NAME_2)
                     .sender(SENDER_2_JAMES_ORG)
+                    .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                     .build());
 
                 String taskId = with()
@@ -822,10 +834,12 @@ class MailQueueRoutesTest {
 
                 queue.enQueue(FakeMail.builder()
                     .name(FAKE_MAIL_NAME_1)
+                    .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                     .build());
 
                 queue.enQueue(FakeMail.builder()
                     .name(FAKE_MAIL_NAME_2)
+                    .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                     .build());
 
                 String taskId = with()
@@ -855,16 +869,19 @@ class MailQueueRoutesTest {
                 queue.enQueue(FakeMail.builder()
                     .name(FAKE_MAIL_NAME_1)
                     .recipient(RECIPIENT_JAMES_ORG)
+                    .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                     .build());
 
                 queue.enQueue(FakeMail.builder()
                     .name(FAKE_MAIL_NAME_2)
                     .recipient(RECIPIENT_1_JAMES_ORG)
+                    .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                     .build());
 
                 queue.enQueue(FakeMail.builder()
                     .name(FAKE_MAIL_NAME_3)
                     .recipient(RECIPIENT_2_JAMES_ORG)
+                    .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                     .build());
 
                 String taskId = with()
@@ -959,14 +976,17 @@ class MailQueueRoutesTest {
 
             queue.enQueue(FakeMail.builder()
                 .name(FAKE_MAIL_NAME_1)
+                .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                 .build());
 
             queue.enQueue(FakeMail.builder()
                 .name(FAKE_MAIL_NAME_2)
+                .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                 .build());
 
             queue.enQueue(FakeMail.builder()
                 .name(FAKE_MAIL_NAME_3)
+                .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                 .build());
 
             String taskId = with()
@@ -996,14 +1016,17 @@ class MailQueueRoutesTest {
 
             queue.enQueue(FakeMail.builder()
                 .name(FAKE_MAIL_NAME_1)
+                .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                 .build());
 
             queue.enQueue(FakeMail.builder()
                 .name(FAKE_MAIL_NAME_2)
+                .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                 .build());
 
             queue.enQueue(FakeMail.builder()
                 .name(FAKE_MAIL_NAME_3)
+                .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
                 .build());
 
             String taskId = with()

@@ -18,9 +18,11 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.lib;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 
@@ -38,6 +40,7 @@ import org.apache.james.mailetcontainer.api.mock.MockMatcher;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.Matcher;
@@ -269,12 +272,13 @@ public abstract class AbstractStateMailetProcessorTest {
 
     }
 
-    private MailImpl newMail() throws AddressException {
+    private MailImpl newMail() throws MessagingException {
         return MailImpl.builder()
             .name(MailImpl.getId())
             .sender("test@localhost")
             .addRecipient("test@localhost")
             .addRecipient("test2@localhost")
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("header: value\r\n".getBytes(UTF_8)))
             .build();
     }
 }
