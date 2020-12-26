@@ -143,7 +143,6 @@ class RecomputeUserFastViewProjectionItemsRequestToTaskTest {
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath("/bob/mailboxes")
-            .log(LogDetail.URI)
             .build();
     }
 

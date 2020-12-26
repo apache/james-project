@@ -121,7 +121,6 @@ class MailboxesExportRequestToTaskTest {
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath("users/" + BOB.asString() + "/mailboxes")
-            .log(LogDetail.URI)
             .build();
     }
 
