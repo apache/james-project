@@ -129,7 +129,6 @@ class RecomputeAllFastViewProjectionItemsRequestToTaskTest {
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(BASE_PATH)
-            .log(LogDetail.URI)
             .build();
     }
 
