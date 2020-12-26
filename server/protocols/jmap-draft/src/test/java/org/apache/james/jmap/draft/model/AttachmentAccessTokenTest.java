@@ -49,6 +49,13 @@ public class AttachmentAccessTokenTest {
     }
 
     @Test
+    public void extraSpacesShouldBeIgnored() {
+        AttachmentAccessToken attachmentAccessToken = new AttachmentAccessToken(USERNAME, BLOB_ID, EXPIRATION_DATE, SIGNATURE);
+        assertThat(AttachmentAccessToken.from(attachmentAccessToken.serialize() + " ", BLOB_ID))
+            .isEqualTo(attachmentAccessToken);
+    }
+
+    @Test
     public void fromShouldAcceptUsernamesWithUnderscores() {
         Username failingUsername = Username.of("bad_separator@usage.screwed");
         AttachmentAccessToken attachmentAccessToken = new AttachmentAccessToken(failingUsername.asString(), BLOB_ID, EXPIRATION_DATE, SIGNATURE);

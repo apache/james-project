@@ -86,7 +86,7 @@ public class AttachmentAccessToken implements SignedExpiringToken {
         }
 
         public Builder signature(String signature) {
-            this.signature = signature;
+            this.signature = signature.trim();
             return this;
         }
 
