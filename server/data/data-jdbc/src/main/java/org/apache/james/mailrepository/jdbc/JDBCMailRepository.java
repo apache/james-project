@@ -61,7 +61,6 @@ import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.repository.file.FilePersistentStreamRepository;
 import org.apache.james.server.core.MailImpl;
-import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.james.util.sql.SqlResources;
@@ -555,12 +554,7 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
     private boolean saveBodyRequired(Mail mc) throws MessagingException {
         boolean saveBody;
         MimeMessage messageBody = mc.getMessage();
-        // if the message is a CopyOnWrite proxy we check the modified
-        // wrapped object.
-        if (messageBody instanceof MimeMessageCopyOnWriteProxy) {
-            MimeMessageCopyOnWriteProxy messageCow = (MimeMessageCopyOnWriteProxy) messageBody;
-            messageBody = messageCow.getWrappedMessage();
-        }
+
         if (messageBody instanceof MimeMessageWrapper) {
             MimeMessageWrapper message = (MimeMessageWrapper) messageBody;
             saveBody = message.isModified();
@@ -668,7 +662,7 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
             mc.lastUpdated(rsMessage.getTimestamp(8));
 
             MimeMessageJDBCSource source = new MimeMessageJDBCSource(this, key.asString(), sr);
-            MimeMessageCopyOnWriteProxy message = new MimeMessageCopyOnWriteProxy(source);
+            MimeMessageWrapper message = new MimeMessageWrapper(source);
             mc.mimeMessage(message);
             return mc.build();
         } catch (SQLException sqle) {

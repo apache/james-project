@@ -67,7 +67,7 @@ import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.core.MailImpl;
-import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
+import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeUtils;
@@ -395,7 +395,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
      */
     protected MimeMessage mimeMessage(Message message) throws MessagingException, JMSException {
         if (message instanceof ObjectMessage) {
-            return new MimeMessageCopyOnWriteProxy(new MimeMessageObjectMessageSource((ObjectMessage) message));
+            return new MimeMessageWrapper(new MimeMessageObjectMessageSource((ObjectMessage) message));
         } else {
             throw new MailQueueException("Not supported JMS Message received " + message);
         }

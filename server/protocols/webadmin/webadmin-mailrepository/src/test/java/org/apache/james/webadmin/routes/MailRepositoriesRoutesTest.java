@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_FIELDS;
@@ -68,6 +69,7 @@ import org.apache.james.queue.memory.MemoryMailQueueFactory;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.util.ClassLoaderUtils;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -107,6 +109,7 @@ class MailRepositoriesRoutesTest {
     private static final MailQueueName CUSTOM_QUEUE = MailQueueName.of("customQueue");
     private static final String NAME_1 = "name1";
     private static final String NAME_2 = "name2";
+    private static final byte[] MESSAGE_BYTES = "header: value \r\n".getBytes(UTF_8);
     private WebAdminServer webAdminServer;
     private MemoryMailRepositoryStore mailRepositoryStore;
     private ManageableMailQueue spoolQueue;
@@ -1104,9 +1107,11 @@ class MailRepositoriesRoutesTest {
         MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
         mailRepository.store(FakeMail.builder()
             .name(NAME_2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
 
         String taskId = with()
@@ -1140,9 +1145,11 @@ class MailRepositoriesRoutesTest {
         String name2 = "name2";
         mailRepository.store(FakeMail.builder()
             .name(name1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
         mailRepository.store(FakeMail.builder()
             .name(name2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
 
         String transport = "transport";
@@ -1180,9 +1187,11 @@ class MailRepositoriesRoutesTest {
         String name2 = "name2";
         mailRepository.store(FakeMail.builder()
             .name(name1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
         mailRepository.store(FakeMail.builder()
             .name(name2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
 
         String transport = "transport";
@@ -1209,9 +1218,11 @@ class MailRepositoriesRoutesTest {
         String name2 = "name2";
         mailRepository.store(FakeMail.builder()
             .name(name1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
         mailRepository.store(FakeMail.builder()
             .name(name2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
 
         String transport = "transport";
@@ -1240,9 +1251,11 @@ class MailRepositoriesRoutesTest {
         String name2 = "name2";
         mailRepository1.store(FakeMail.builder()
             .name(name1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
         mailRepository2.store(FakeMail.builder()
             .name(name2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
 
         String transport = "transport";
@@ -1269,9 +1282,11 @@ class MailRepositoriesRoutesTest {
         MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
         mailRepository.store(FakeMail.builder()
             .name(NAME_2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
 
         String taskId = with()
@@ -1297,9 +1312,11 @@ class MailRepositoriesRoutesTest {
         MailRepository mailRepository2 = mailRepositoryStore.create(URL_MY_REPO_OTHER);
         mailRepository1.store(FakeMail.builder()
             .name(NAME_1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
         mailRepository2.store(FakeMail.builder()
             .name(NAME_2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
 
         String taskId = with()
@@ -1327,10 +1344,12 @@ class MailRepositoriesRoutesTest {
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
             .state(state1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
         mailRepository.store(FakeMail.builder()
             .name(NAME_2)
             .state(state2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
 
         String taskId = with()
@@ -1358,10 +1377,12 @@ class MailRepositoriesRoutesTest {
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
             .state(state1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
         mailRepository.store(FakeMail.builder()
             .name(NAME_2)
             .state(state2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
 
         String transport = "transport";
@@ -1388,9 +1409,11 @@ class MailRepositoriesRoutesTest {
         MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
         mailRepository.store(FakeMail.builder()
             .name(NAME_2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
 
         String taskId = with()
@@ -1471,9 +1494,11 @@ class MailRepositoriesRoutesTest {
         String name2 = "name2";
         mailRepository.store(FakeMail.builder()
             .name(name1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
         mailRepository.store(FakeMail.builder()
             .name(name2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
 
         String taskId = with()
@@ -1506,9 +1531,11 @@ class MailRepositoriesRoutesTest {
         String name2 = "name2";
         mailRepository.store(FakeMail.builder()
             .name(name1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
         mailRepository.store(FakeMail.builder()
             .name(name2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
 
         String transport = "transport";
@@ -1545,9 +1572,11 @@ class MailRepositoriesRoutesTest {
         String name2 = "name2";
         mailRepository.store(FakeMail.builder()
             .name(name1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
         mailRepository.store(FakeMail.builder()
             .name(name2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
 
         String transport = "transport";
@@ -1574,9 +1603,11 @@ class MailRepositoriesRoutesTest {
         String name2 = "name2";
         mailRepository.store(FakeMail.builder()
             .name(name1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
         mailRepository.store(FakeMail.builder()
             .name(name2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
 
         String transport = "transport";
@@ -1602,9 +1633,11 @@ class MailRepositoriesRoutesTest {
         MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
         mailRepository.store(FakeMail.builder()
             .name(NAME_2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
 
         String taskId = with()
@@ -1632,10 +1665,12 @@ class MailRepositoriesRoutesTest {
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
             .state(state1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
         mailRepository.store(FakeMail.builder()
             .name(NAME_2)
             .state(state2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
 
         String taskId = with()
@@ -1663,10 +1698,12 @@ class MailRepositoriesRoutesTest {
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
             .state(state1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
         mailRepository.store(FakeMail.builder()
             .name(NAME_2)
             .state(state2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
 
         String transport = "transport";
@@ -1693,9 +1730,11 @@ class MailRepositoriesRoutesTest {
         MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
         mailRepository.store(FakeMail.builder()
             .name(NAME_2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build());
 
         String taskId = with()

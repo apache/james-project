@@ -40,18 +40,12 @@ public class MimeMessageInputStream extends InputStream {
      *            the message to wrap
      * @param tryCast
      *            try to cast the {@link MimeMessage} to
-     *            {@link MimeMessageCopyOnWriteProxy} /
      *            {@link MimeMessageWrapper} to do some optimized processing if
      *            possible
      * @throws MessagingException
      */
     public MimeMessageInputStream(MimeMessage message, boolean tryCast) throws MessagingException {
         MimeMessage m = message;
-
-        // check if we need to use the wrapped message
-        if (tryCast && m instanceof MimeMessageCopyOnWriteProxy) {
-            m = ((MimeMessageCopyOnWriteProxy) m).getWrappedMessage();
-        }
 
         // check if we can use optimized operations
         if (tryCast && m instanceof MimeMessageWrapper) {

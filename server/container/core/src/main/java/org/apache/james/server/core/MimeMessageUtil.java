@@ -74,13 +74,8 @@ public class MimeMessageUtil {
      *             get thrown if an error detected while reading the message
      */
     public static void writeTo(MimeMessage message, OutputStream headerOs, OutputStream bodyOs, String[] ignoreList) throws IOException, MessagingException {
-        MimeMessage testMessage = message;
-        if (message instanceof MimeMessageCopyOnWriteProxy) {
-            MimeMessageCopyOnWriteProxy wr = (MimeMessageCopyOnWriteProxy) message;
-            testMessage = wr.getWrappedMessage();
-        }
-        if (testMessage instanceof MimeMessageWrapper) {
-            MimeMessageWrapper wrapper = (MimeMessageWrapper) testMessage;
+        if (message instanceof MimeMessageWrapper) {
+            MimeMessageWrapper wrapper = (MimeMessageWrapper) message;
             if (!wrapper.isModified()) {
                 wrapper.writeTo(headerOs, bodyOs, ignoreList);
                 return;
@@ -252,9 +247,6 @@ public class MimeMessageUtil {
 
         if (message instanceof MimeMessageWrapper) {
             MimeMessageWrapper wrapper = (MimeMessageWrapper) message;
-            size = wrapper.getMessageSize();
-        } else if (message instanceof MimeMessageCopyOnWriteProxy) {
-            MimeMessageCopyOnWriteProxy wrapper = (MimeMessageCopyOnWriteProxy) message;
             size = wrapper.getMessageSize();
         }
 

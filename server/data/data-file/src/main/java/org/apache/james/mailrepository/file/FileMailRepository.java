@@ -45,7 +45,6 @@ import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.repository.file.FilePersistentObjectRepository;
 import org.apache.james.repository.file.FilePersistentStreamRepository;
-import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
@@ -222,12 +221,7 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
         boolean saveStream = true;
 
         MimeMessage message = mc.getMessage();
-        // if the message is a Copy on Write proxy we check the wrapped message
-        // to optimize the behaviour in case of MimeMessageWrapper
-        if (message instanceof MimeMessageCopyOnWriteProxy) {
-            MimeMessageCopyOnWriteProxy messageCow = (MimeMessageCopyOnWriteProxy) message;
-            message = messageCow.getWrappedMessage();
-        }
+
         if (message instanceof MimeMessageWrapper) {
             MimeMessageWrapper wrapper = (MimeMessageWrapper) message;
             LOGGER.trace("Retrieving from: {}", wrapper.getSourceId());
@@ -288,7 +282,7 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
                 return null;
             }
             MimeMessageStreamRepositorySource source = new MimeMessageStreamRepositorySource(streamRepository, destination, key.asString());
-            mc.setMessage(new MimeMessageCopyOnWriteProxy(source));
+            mc.setMessage(new MimeMessageWrapper(source));
 
             return mc;
         } catch (Exception me) {

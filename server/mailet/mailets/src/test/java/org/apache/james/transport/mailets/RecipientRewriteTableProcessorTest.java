@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -68,11 +69,14 @@ class RecipientRewriteTableProcessorTest {
         virtualTableStore = mock(org.apache.james.rrt.api.RecipientRewriteTable.class);
         mailetContext = FakeMailContext.defaultContext();
         processor = new RecipientRewriteTableProcessor(virtualTableStore, domainList, mailetContext);
-        mail = FakeMail.builder().name("mail").sender(MailAddressFixture.ANY_AT_JAMES).build();
+        mail = FakeMail.builder().name("mail")
+            .sender(MailAddressFixture.ANY_AT_JAMES)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8)))
+            .build();
         mappings = MappingsImpl.builder()
                 .add(MailAddressFixture.ANY_AT_JAMES.toString())
                 .build();
-        message = MimeMessageUtil.defaultMimeMessage();
+        message = MimeMessageUtil.mimeMessageFromBytes("h: v\r\n".getBytes(UTF_8));
 
         nonDomainWithDefaultLocal = new MailAddress(NONEDOMAIN + "@" + MailAddressFixture.JAMES_LOCAL);
     }
