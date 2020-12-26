@@ -261,6 +261,26 @@ public class VacationMailetTest {
     }
 
     @Test
+    public void serviceShouldNotSendNotificationToEmptyReplyTo() throws Exception {
+        FakeMail mail = FakeMail.builder()
+            .name("name")
+            .fileName("noReplyTo.eml")
+            .recipient(originalRecipient)
+            .sender(new MailAddress("distant-noreply@apache.org"))
+            .build();
+
+        when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
+            .thenReturn(Mono.just(VACATION));
+        when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
+        when(notificationRegistry.isRegistered(any(), any())).thenReturn(Mono.just(false));
+        when(automaticallySentMailDetector.isAutomaticallySent(mail)).thenReturn(false);
+
+        testee.service(mail);
+
+        verifyNoMoreInteractions(mailetContext);
+    }
+
+    @Test
     public void serviceShouldNotPropagateExceptionIfSendFails() throws Exception {
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME)))
             .thenReturn(Mono.just(VACATION));

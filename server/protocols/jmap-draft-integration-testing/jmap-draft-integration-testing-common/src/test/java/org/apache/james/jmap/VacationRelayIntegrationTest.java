@@ -105,7 +105,7 @@ public abstract class VacationRelayIntegrationTest {
         smtpClient.helo(DOMAIN);
         smtpClient.setSender(externalMail);
         smtpClient.rcpt("<" + USER_WITH_DOMAIN + ">");
-        smtpClient.sendShortMessageData("content");
+        smtpClient.sendShortMessageData("Reply-To: <" + externalMail + ">\r\n\r\ncontent");
 
         calmlyAwait.atMost(1, TimeUnit.MINUTES)
             .untilAsserted(() ->

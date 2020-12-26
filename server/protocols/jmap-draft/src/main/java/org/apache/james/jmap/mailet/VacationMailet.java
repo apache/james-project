@@ -24,6 +24,7 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
@@ -70,10 +71,15 @@ public class VacationMailet extends GenericMailet {
             if (!mail.hasSender()) {
                 return;
             }
-            if (! automaticallySentMailDetector.isAutomaticallySent(mail)) {
+            if (!automaticallySentMailDetector.isAutomaticallySent(mail)
+                    && mail.getMessage().getReplyTo().length > 0) {
                 ZonedDateTime processingDate = zonedDateTimeProvider.get();
                 mail.getRecipients()
                     .forEach(mailAddress -> manageVacation(mailAddress, mail, processingDate));
+            }
+        } catch (AddressException e) {
+            if (!e.getMessage().equals("Empty address")) {
+                LOGGER.warn("Can not process vacation for one or more recipients in {}", mail.getRecipients(), e);
             }
         } catch (Throwable e) {
             LOGGER.warn("Can not process vacation for one or more recipients in {}", mail.getRecipients(), e);
