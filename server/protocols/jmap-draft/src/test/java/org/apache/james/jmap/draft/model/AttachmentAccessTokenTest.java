@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
+import org.apache.james.core.Username;
 import org.junit.Test;
 
 public class AttachmentAccessTokenTest {
@@ -38,6 +39,21 @@ public class AttachmentAccessTokenTest {
     public void getAsStringShouldNotContainBlobId() {
         assertThat(new AttachmentAccessToken(USERNAME, BLOB_ID, EXPIRATION_DATE, SIGNATURE).serialize())
             .isEqualTo(USERNAME + AttachmentAccessToken.SEPARATOR + EXPIRATION_DATE_STRING + AttachmentAccessToken.SEPARATOR + SIGNATURE);
+    }
+
+    @Test
+    public void fromShouldDeserializeAccessToken() {
+        AttachmentAccessToken attachmentAccessToken = new AttachmentAccessToken(USERNAME, BLOB_ID, EXPIRATION_DATE, SIGNATURE);
+        assertThat(AttachmentAccessToken.from(attachmentAccessToken.serialize(), BLOB_ID))
+            .isEqualTo(attachmentAccessToken);
+    }
+
+    @Test
+    public void fromShouldAcceptUsernamesWithUnderscores() {
+        Username failingUsername = Username.of("bad_separator@usage.screwed");
+        AttachmentAccessToken attachmentAccessToken = new AttachmentAccessToken(failingUsername.asString(), BLOB_ID, EXPIRATION_DATE, SIGNATURE);
+        assertThat(AttachmentAccessToken.from(attachmentAccessToken.serialize(), BLOB_ID))
+            .isEqualTo(attachmentAccessToken);
     }
 
     @Test
