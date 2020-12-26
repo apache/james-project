@@ -63,22 +63,17 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
     }
 
     @Override
-    protected boolean isValidRecipient(SMTPSession session, MailAddress recipient) {
-        try {
-            Username username = users.getUsername(recipient);
+    protected boolean isValidRecipient(SMTPSession session, MailAddress recipient) throws UsersRepositoryException, RecipientRewriteTableException {
+        Username username = users.getUsername(recipient);
 
-            if (users.contains(username)) {
-                return true;
-            } else {
-                return supportsRecipientRewriteTable && isRedirected(recipient, username.asString());
-            }
-        } catch (UsersRepositoryException e) {
-            LOGGER.error("Unable to access UsersRepository", e);
-            return false;
+        if (users.contains(username)) {
+            return true;
+        } else {
+            return supportsRecipientRewriteTable && isRedirected(recipient, username.asString());
         }
     }
 
-    private boolean isRedirected(MailAddress recipient, String username) {
+    private boolean isRedirected(MailAddress recipient, String username) throws RecipientRewriteTableException {
         LOGGER.debug("Unknown user {} check if it's an alias", username);
 
         try {
@@ -89,21 +84,13 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
             }
         } catch (ErrorMappingException e) {
             return true;
-        } catch (RecipientRewriteTableException e) {
-            LOGGER.error("Unable to access RecipientRewriteTable", e);
-            return false;
         }
         return false;
     }
 
     @Override
-    protected boolean isLocalDomain(SMTPSession session, Domain domain) {
-        try {
-            return domains.containsDomain(domain);
-        } catch (DomainListException e) {
-            LOGGER.error("Unable to get domains", e);
-            return false;
-        }
+    protected boolean isLocalDomain(SMTPSession session, Domain domain) throws DomainListException {
+        return domains.containsDomain(domain);
     }
 
     @Override

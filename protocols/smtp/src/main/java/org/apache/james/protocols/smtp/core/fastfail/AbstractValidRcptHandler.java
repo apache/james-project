@@ -39,13 +39,22 @@ public abstract class AbstractValidRcptHandler implements RcptHook {
 
     @Override
     public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
-        if (!isLocalDomain(session, rcpt.getDomain())) {
+        try {
+            if (!isLocalDomain(session, rcpt.getDomain())) {
+                return HookResult.DECLINED;
+            }
+            if (!isValidRecipient(session, rcpt)) {
+                return reject(rcpt);
+            }
             return HookResult.DECLINED;
+        } catch (Exception e) {
+            LOGGER.error("Encounter an error upon RCPT validation ({}), deny-soft", rcpt.asString(), e);
+            return HookResult.builder()
+                .hookReturnCode(HookReturnCode.denySoft())
+                .smtpReturnCode(SMTPRetCode.LOCAL_ERROR)
+                .smtpDescription(DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.UNDEFINED_STATUS) + " Unexpected error for " + rcpt.asString())
+                .build();
         }
-        if (!isValidRecipient(session, rcpt)) {
-            return reject(rcpt);
-        }
-        return HookResult.DECLINED;
     }
 
     public HookResult reject(MailAddress rcpt) {
@@ -53,17 +62,17 @@ public abstract class AbstractValidRcptHandler implements RcptHook {
         return HookResult.builder()
             .hookReturnCode(HookReturnCode.deny())
             .smtpReturnCode(SMTPRetCode.MAILBOX_PERM_UNAVAILABLE)
-            .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.ADDRESS_MAILBOX) + " Unknown user: " + rcpt.asString())
+            .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.ADDRESS_MAILBOX) + " Unknown user: " + rcpt.asString())
             .build();
     }
 
     /**
      * Return true if email for the given recipient should get accepted
      */
-    protected abstract boolean isValidRecipient(SMTPSession session, MailAddress recipient);
+    protected abstract boolean isValidRecipient(SMTPSession session, MailAddress recipient) throws Exception;
     
     /**
      * Return true if the domain is local
      */
-    protected abstract boolean isLocalDomain(SMTPSession session, Domain domain);
+    protected abstract boolean isLocalDomain(SMTPSession session, Domain domain) throws Exception;
 }
