@@ -343,9 +343,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
                 .flatMap(Optional::stream)
                 .count());
         } catch (NamingException e) {
-            LOGGER.error("Unable to retrieve user count from ldap", e);
             throw new UsersRepositoryException("Unable to retrieve user count from ldap", e);
-
         }
     }
 
@@ -354,9 +352,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         try {
           return Optional.ofNullable(searchAndBuildUser(name));
         } catch (NamingException e) {
-            LOGGER.error("Unable to retrieve user from ldap", e);
             throw new UsersRepositoryException("Unable to retrieve user from ldap", e);
-
         }
     }
 
