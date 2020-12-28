@@ -44,7 +44,6 @@ import org.apache.james.mailbox.events.MailboxListener.MailboxRenamed;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MailboxPath;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
@@ -165,7 +164,7 @@ public class MailboxChange {
                     .updated(ImmutableList.of(mailboxRenamed.getMailboxId()))
                     .build();
 
-                Stream<MailboxChange> shareeChanges = getSharees(mailboxRenamed.getNewPath(), mailboxRenamed.getUsername(), mailboxManager)
+                Stream<MailboxChange> shareeChanges = getSharees(mailboxRenamed.getMailboxId(), mailboxRenamed.getUsername(), mailboxManager)
                     .map(name -> MailboxChange.builder()
                         .accountId(AccountId.fromString(name))
                         .state(stateFactory.generate())
@@ -189,7 +188,7 @@ public class MailboxChange {
                     .updated(ImmutableList.of(mailboxACLUpdated.getMailboxId()))
                     .build();
 
-                Stream<MailboxChange> shareeChanges = getSharees(mailboxACLUpdated.getMailboxPath(), mailboxACLUpdated.getUsername(), mailboxManager)
+                Stream<MailboxChange> shareeChanges = getSharees(mailboxACLUpdated.getMailboxId(), mailboxACLUpdated.getUsername(), mailboxManager)
                     .map(name -> MailboxChange.builder()
                         .accountId(AccountId.fromString(name))
                         .state(stateFactory.generate())
@@ -242,7 +241,7 @@ public class MailboxChange {
                     .updated(ImmutableList.of(messageAdded.getMailboxId()))
                     .build();
 
-                Stream<MailboxChange> shareeChanges = getSharees(messageAdded.getMailboxPath(), messageAdded.getUsername(), mailboxManager)
+                Stream<MailboxChange> shareeChanges = getSharees(messageAdded.getMailboxId(), messageAdded.getUsername(), mailboxManager)
                     .map(name -> MailboxChange.builder()
                         .accountId(AccountId.fromString(name))
                         .state(stateFactory.generate())
@@ -269,7 +268,7 @@ public class MailboxChange {
                         .updated(ImmutableList.of(messageFlagUpdated.getMailboxId()))
                         .build();
 
-                    Stream<MailboxChange> shareeChanges = getSharees(messageFlagUpdated.getMailboxPath(), messageFlagUpdated.getUsername(), mailboxManager)
+                    Stream<MailboxChange> shareeChanges = getSharees(messageFlagUpdated.getMailboxId(), messageFlagUpdated.getUsername(), mailboxManager)
                         .map(name -> MailboxChange.builder()
                             .accountId(AccountId.fromString(name))
                             .state(stateFactory.generate())
@@ -293,7 +292,7 @@ public class MailboxChange {
                     .updated(ImmutableList.of(expunged.getMailboxId()))
                     .build();
 
-                Stream<MailboxChange> shareeChanges = getSharees(expunged.getMailboxPath(), expunged.getUsername(), mailboxManager)
+                Stream<MailboxChange> shareeChanges = getSharees(expunged.getMailboxId(), expunged.getUsername(), mailboxManager)
                     .map(name -> MailboxChange.builder()
                         .accountId(AccountId.fromString(name))
                         .state(stateFactory.generate())
@@ -311,10 +310,10 @@ public class MailboxChange {
         }
     }
 
-    private static Stream<String> getSharees(MailboxPath path, Username username, MailboxManager mailboxManager) {
+    private static Stream<String> getSharees(MailboxId mailboxId, Username username, MailboxManager mailboxManager) {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         try {
-            MailboxACL mailboxACL = mailboxManager.listRights(path, mailboxSession);
+            MailboxACL mailboxACL = mailboxManager.listRights(mailboxId, mailboxSession);
             return mailboxACL.getEntries().keySet()
                 .stream()
                 .filter(rfc4314Rights -> !rfc4314Rights.isNegative())

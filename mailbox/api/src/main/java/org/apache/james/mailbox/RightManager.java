@@ -85,6 +85,8 @@ public interface RightManager {
 
     MailboxACL listRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
+    MailboxACL listRights(MailboxId mailboxId, MailboxSession session) throws MailboxException;
+
     /**
      * Returns the rights applicable to the user who has sent the current
      * request on the mailbox designated by this mailboxPath.
