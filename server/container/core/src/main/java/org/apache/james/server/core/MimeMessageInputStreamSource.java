@@ -39,6 +39,8 @@ import org.apache.james.lifecycle.api.Disposable;
  * Takes an input stream and creates a repeatable input stream source for a
  * MimeMessageWrapper. It does this by completely reading the input stream and
  * saving that to data to an {@link DeferredFileOutputStream} with its threshold set to 100kb
+ *
+ * This class is not thread safe!
  */
 public class MimeMessageInputStreamSource extends MimeMessageSource implements Disposable {
 
@@ -128,7 +130,7 @@ public class MimeMessageInputStreamSource extends MimeMessageSource implements D
      * @return a <code>BufferedInputStream</code> containing the data
      */
     @Override
-    public synchronized InputStream getInputStream() throws IOException {
+    public InputStream getInputStream() throws IOException {
         InputStream in;
         if (out.isInMemory()) {
             in = new SharedByteArrayInputStream(out.getData());
