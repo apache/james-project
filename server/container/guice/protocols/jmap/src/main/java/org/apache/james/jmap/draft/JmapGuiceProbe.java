@@ -96,7 +96,11 @@ public class JmapGuiceProbe implements GuiceProbe {
         mailboxChangeRepository.save(change).block();
     }
 
-    public State latestState(AccountId accountId) {
+    public State getLastestState(AccountId accountId) {
         return mailboxChangeRepository.getLatestState(accountId).block();
+    }
+
+    public State getLastestStateWithDelegation(AccountId accountId) {
+        return mailboxChangeRepository.getLatestStateWithDelegation(accountId).block();
     }
 }
