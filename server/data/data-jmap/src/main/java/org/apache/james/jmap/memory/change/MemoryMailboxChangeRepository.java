@@ -61,6 +61,7 @@ public class MemoryMailboxChangeRepository implements MailboxChangeRepository {
 
         if (state.equals(State.INITIAL)) {
             return Flux.fromIterable(mailboxChangeMap.get(accountId))
+                .filter(Predicate.not(MailboxChange::isDelegated))
                 .sort(Comparator.comparing(MailboxChange::getDate))
                 .collect(new MailboxChangeCollector(state, maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
         }

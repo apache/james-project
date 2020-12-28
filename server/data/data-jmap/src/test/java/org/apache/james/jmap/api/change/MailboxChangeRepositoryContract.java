@@ -281,6 +281,54 @@ public interface MailboxChangeRepositoryContract {
     }
 
     @Test
+    default void getSinceStateFromInitialShouldNotIncludeDeletegatedChanges() {
+        MailboxChangeRepository repository = mailboxChangeRepository();
+        State.Factory stateFactory = stateFactory();
+        State referenceState = stateFactory.generate();
+
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
+        MailboxId id3 = generateNewMailboxId();
+        MailboxId id4 = generateNewMailboxId();
+
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(3)).isCountChange(false).created(ImmutableList.of(id1)).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id2)).build();
+        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).delegated(true).created(ImmutableList.of(id3)).build();
+        MailboxChange change4 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).delegated(true).created(ImmutableList.of(id4)).build();
+        repository.save(change1).block();
+        repository.save(change2).block();
+        repository.save(change3).block();
+        repository.save(change4).block();
+
+        assertThat(repository.getSinceState(ACCOUNT_ID, State.INITIAL, Optional.empty()).block().getCreated())
+            .containsExactlyInAnyOrder(id1, id2);
+    }
+
+    @Test
+    default void getSinceStateWithDelegationFromInitialShouldIncludeDeletegatedChanges() {
+        MailboxChangeRepository repository = mailboxChangeRepository();
+        State.Factory stateFactory = stateFactory();
+        State referenceState = stateFactory.generate();
+
+        MailboxId id1 = generateNewMailboxId();
+        MailboxId id2 = generateNewMailboxId();
+        MailboxId id3 = generateNewMailboxId();
+        MailboxId id4 = generateNewMailboxId();
+
+        MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(3)).isCountChange(false).created(ImmutableList.of(id1)).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id2)).build();
+        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).delegated(true).created(ImmutableList.of(id3)).build();
+        MailboxChange change4 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).delegated(true).created(ImmutableList.of(id4)).build();
+        repository.save(change1).block();
+        repository.save(change2).block();
+        repository.save(change3).block();
+        repository.save(change4).block();
+
+        assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, State.INITIAL, Optional.empty()).block().getCreated())
+            .containsExactlyInAnyOrder(id1, id2, id3, id4);
+    }
+
+    @Test
     default void getChangesShouldLimitChangesWhenMaxChangesOmitted() {
         MailboxChangeRepository repository = mailboxChangeRepository();
         State.Factory stateFactory = stateFactory();

@@ -26,8 +26,6 @@ import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.jmap.api.change.State;
 import org.apache.james.jmap.rfc8621.contract.MailboxChangesMethodContract;
-import org.apache.james.mailbox.inmemory.InMemoryId;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -43,10 +41,5 @@ public class MemoryMailboxChangesMethodTest implements MailboxChangesMethodContr
     @Override
     public State.Factory stateFactory() {
         return new State.DefaultFactory();
-    }
-
-    @Override
-    public MailboxId generateMailboxId() {
-        return InMemoryId.of(0);
     }
 }
