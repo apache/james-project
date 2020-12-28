@@ -32,8 +32,8 @@ class WebAdminUtilsTest {
     void serverShouldBeAbleToStartConcurrently() throws Exception {
         ConcurrentTestRunner.builder()
             .operation((a, b) -> {
-                WebAdminServer webAdminServer = WebAdminUtils.createWebAdminServer();
-                webAdminServer.start();
+                WebAdminServer webAdminServer = WebAdminUtils.createWebAdminServer()
+                    .start();
                 webAdminServer.destroy();
             })
             .threadCount(10)

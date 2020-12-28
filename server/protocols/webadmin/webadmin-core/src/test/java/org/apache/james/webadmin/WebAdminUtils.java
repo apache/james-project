@@ -42,31 +42,56 @@ import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
+import spark.Service;
 
 public class WebAdminUtils {
-    private static class ConcurrentSafeWebAdminServer extends WebAdminServer {
-        ConcurrentSafeWebAdminServer(WebAdminConfiguration configuration, List<Routes> routesList, AuthenticationFilter authenticationFilter, MetricFactory metricFactory) {
-            super(configuration, routesList, authenticationFilter, metricFactory, LoggingRequestFilter.create());
+    public interface Startable {
+        WebAdminServer start() ;
+    }
+
+    private static class ConcurrentSafeWebAdminServerFactory {
+
+        private final WebAdminConfiguration configuration;
+        private final List<Routes> privateRoutes;
+        private final AuthenticationFilter authenticationFilter;
+        private final MetricFactory metricFactory;
+
+        private ConcurrentSafeWebAdminServerFactory(WebAdminConfiguration configuration, List<Routes> privateRoutes, AuthenticationFilter authenticationFilter, MetricFactory metricFactory) {
+            this.configuration = configuration;
+            this.privateRoutes = privateRoutes;
+            this.authenticationFilter = authenticationFilter;
+            this.metricFactory = metricFactory;
         }
 
         /**
          * JVM-wide synchronized start method to avoid the all too common random port allocation conflict
          * that occurs when parallelly testing webadmin maven modules.
          */
-        @Override
-        public WebAdminServer start() {
-            Mono.fromRunnable(super::start)
-                .retryWhen(Retry.backoff(5, Duration.ofMillis(10)))
+        public Startable createServer() {
+            return () -> Mono.fromCallable(this::createServerSingleTry)
+                .retryWhen(Retry.backoff(10, Duration.ofMillis(10)))
                 .block();
-            return this;
+        }
+
+        public WebAdminServer createServerSingleTry() {
+            WebAdminServer webAdminServer = new WebAdminServer(configuration, privateRoutes, authenticationFilter, metricFactory, LoggingRequestFilter.create());
+            try {
+                return webAdminServer
+                    .start();
+            } catch (Exception e) {
+                webAdminServer.destroy();
+                throw e;
+            }
         }
     }
 
-    public static WebAdminServer createWebAdminServer(Routes... routes) {
-        return new ConcurrentSafeWebAdminServer(WebAdminConfiguration.TEST_CONFIGURATION,
-            ImmutableList.copyOf(routes),
-            new NoAuthenticationFilter(),
-            new RecordingMetricFactory());
+    public static Startable createWebAdminServer(Routes... routes) {
+        return new ConcurrentSafeWebAdminServerFactory(
+                WebAdminConfiguration.TEST_CONFIGURATION,
+                ImmutableList.copyOf(routes),
+                new NoAuthenticationFilter(),
+                new RecordingMetricFactory())
+            .createServer();
     }
 
     public static RequestSpecBuilder buildRequestSpecification(WebAdminServer webAdminServer) {

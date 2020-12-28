@@ -23,8 +23,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.CoreMatchers.is;
 
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.Port;
+import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
+import org.apache.james.webadmin.mdc.LoggingRequestFilter;
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
 
 import io.restassured.RestAssured;
 import spark.Service;
@@ -33,7 +38,12 @@ public class WebAdminServerTest {
 
     @Test
     public void getPortShouldThrowWhenNotConfigured() {
-        WebAdminServer server = WebAdminUtils.createWebAdminServer();
+        WebAdminServer server = new WebAdminServer(
+            WebAdminConfiguration.TEST_CONFIGURATION,
+            ImmutableList.of(),
+            new NoAuthenticationFilter(),
+            new RecordingMetricFactory(),
+            LoggingRequestFilter.create());
         assertThatThrownBy(server::getPort)
             .isInstanceOf(IllegalStateException.class);
     }
@@ -52,9 +62,9 @@ public class WebAdminServerTest {
         String firstAnswer = "1";
         String secondAnswer = "2";
         WebAdminServer server = WebAdminUtils.createWebAdminServer(
-            myPrivateRouteWithConstAnswer(firstAnswer),
-            myPrivateRouteWithConstAnswer(secondAnswer));
-        server.start();
+                myPrivateRouteWithConstAnswer(firstAnswer),
+                myPrivateRouteWithConstAnswer(secondAnswer))
+            .start();
 
         try {
             RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(server)
@@ -75,9 +85,9 @@ public class WebAdminServerTest {
         String firstAnswer = "1";
         String secondAnswer = "2";
         WebAdminServer server = WebAdminUtils.createWebAdminServer(
-            myPrivateRouteWithConstAnswer(firstAnswer),
-            myPublicRouteWithConstAnswer(secondAnswer));
-        server.start();
+                myPrivateRouteWithConstAnswer(firstAnswer),
+                myPublicRouteWithConstAnswer(secondAnswer))
+            .start();
 
         try {
             RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(server)
@@ -98,9 +108,9 @@ public class WebAdminServerTest {
         String firstAnswer = "1";
         String secondAnswer = "2";
         WebAdminServer server = WebAdminUtils.createWebAdminServer(
-            myPublicRouteWithConstAnswer(firstAnswer),
-            myPrivateRouteWithConstAnswer(secondAnswer));
-        server.start();
+                myPublicRouteWithConstAnswer(firstAnswer),
+                myPrivateRouteWithConstAnswer(secondAnswer))
+            .start();
 
         try {
             RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(server)
