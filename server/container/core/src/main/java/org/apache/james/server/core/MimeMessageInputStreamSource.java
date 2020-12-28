@@ -24,7 +24,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.mail.MessagingException;
 import javax.mail.util.SharedByteArrayInputStream;
@@ -44,7 +46,7 @@ import org.apache.james.lifecycle.api.Disposable;
  */
 public class MimeMessageInputStreamSource extends MimeMessageSource implements Disposable {
 
-    private final List<InputStream> streams = new ArrayList<>();
+    private final Set<InputStream> streams = new HashSet<>();
 
     /**
      * A temporary file used to hold the message stream
