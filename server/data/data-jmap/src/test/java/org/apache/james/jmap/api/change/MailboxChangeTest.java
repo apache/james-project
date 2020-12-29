@@ -46,7 +46,8 @@ class MailboxChangeTest {
             MailboxChange.builder()
                 .accountId(null)
                 .state(State.of(UUID.randomUUID()))
-                .date(DATE.minusHours(2)))
+                .date(DATE.minusHours(2))
+                .isCountChange(false))
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -56,8 +57,9 @@ class MailboxChangeTest {
             MailboxChange.builder()
                 .accountId(ACCOUNT_ID)
                 .state(null)
-                .date(DATE.minusHours(2)))
-            .isInstanceOf(NullPointerException.class);;
+                .date(DATE.minusHours(2))
+                .isCountChange(false))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
@@ -66,7 +68,8 @@ class MailboxChangeTest {
             MailboxChange.builder()
                 .accountId(ACCOUNT_ID)
                 .state(State.of(UUID.randomUUID()))
-                .date(null))
-            .isInstanceOf(NullPointerException.class);;
+                .date(null)
+                .isCountChange(false))
+            .isInstanceOf(NullPointerException.class);
     }
 }

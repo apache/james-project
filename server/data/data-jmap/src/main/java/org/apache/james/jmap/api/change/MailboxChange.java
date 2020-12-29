@@ -380,6 +380,7 @@ public class MailboxChange {
             return Objects.equals(accountId, that.accountId)
                 && Objects.equals(state, that.state)
                 && Objects.equals(date, that.date)
+                && Objects.equals(isCountChange, that.isCountChange)
                 && Objects.equals(delegated, that.delegated)
                 && Objects.equals(created, that.created)
                 && Objects.equals(updated, that.updated)
@@ -390,7 +391,7 @@ public class MailboxChange {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(accountId, state, date, delegated, created, updated, destroyed);
+        return Objects.hash(accountId, state, date, isCountChange, delegated, created, updated, destroyed);
     }
 
     @Override
@@ -399,6 +400,7 @@ public class MailboxChange {
             .add("accountId", accountId)
             .add("state", state)
             .add("date", date)
+            .add("isCountChange", isCountChange)
             .add("isDelegated", delegated)
             .add("created", created)
             .add("updated", updated)
