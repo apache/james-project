@@ -87,36 +87,37 @@ pipeline {
                 sh 'mvn -U -B -e clean install -DskipTests -T1C'
             }
         }
-
-        stage('Stable Tests') {
-            steps {
-                echo 'Running tests'
-                // all tests run is very very long (10 hours on Apache Jenkins)
-                sh 'mvn -B -e -fae test '
+        stage('Tests') {
+            parallel {
+                stage('Stable Tests') {
+                    steps {
+                        echo 'Running tests'
+                        sh 'mvn -B -e -fae test '
+                    }
+                    post {
+                        always {
+                            junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: true)
+                            junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
+                        }
+                    }
                 }
-            post {
-                always {
-                    junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: true)
-                    junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
+
+                stage('Unstable Tests') {
+                    steps {
+                        echo 'Running unstable tests'
+                        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                            sh 'mvn -B -e -fae test -Punstable-tests'
+                        }
+                    }
+                    post {
+                        always {
+                            junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: true)
+                            junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
+                        }
+                    }
                 }
             }
         }
-
-        stage('Unstable Tests') {
-            steps {
-                echo 'Running unstable tests'
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh 'mvn -B -e -fae test -Punstable-tests'
-                }
-            }
-            post {
-                always {
-                    junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: true)
-                    junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
-                }
-            }
-        }
-
         stage('Deploy') {
             when { branch 'master' }
             steps {
