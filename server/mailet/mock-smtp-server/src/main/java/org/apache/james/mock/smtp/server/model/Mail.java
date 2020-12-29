@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.james.core.MailAddress;
@@ -35,6 +36,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 @JsonDeserialize(builder = Mail.Builder.class)
 public class Mail {
@@ -218,12 +220,12 @@ public class Mail {
         @JsonPOJOBuilder(withPrefix = "")
         public static class Builder {
             private MailAddress from;
-            private ImmutableList.Builder<Recipient> recipients;
-            private ImmutableList.Builder<Parameter> mailParameters;
+            private ImmutableSet.Builder<Recipient> recipients;
+            private ImmutableSet.Builder<Parameter> mailParameters;
 
             public Builder() {
-                recipients = new ImmutableList.Builder<>();
-                mailParameters = new ImmutableList.Builder<>();
+                recipients = new ImmutableSet.Builder<>();
+                mailParameters = new ImmutableSet.Builder<>();
             }
 
             public Builder from(MailAddress from) {
@@ -268,18 +270,18 @@ public class Mail {
         public static Envelope ofAddresses(MailAddress from, MailAddress... recipients) {
             return new Envelope(from, Stream.of(recipients)
                 .map(Recipient::of)
-                .collect(Guavate.toImmutableList()), ImmutableList.of());
+                .collect(Guavate.toImmutableSet()), ImmutableSet.of());
         }
 
         public static Envelope of(MailAddress from, Recipient... recipients) {
-            return new Envelope(from, ImmutableList.copyOf(Arrays.asList(recipients)), ImmutableList.of());
+            return new Envelope(from, ImmutableSet.copyOf(Arrays.asList(recipients)), ImmutableSet.of());
         }
 
         private final MailAddress from;
-        private final List<Recipient> recipients;
-        private final List<Parameter> mailParameters;
+        private final Set<Recipient> recipients;
+        private final Set<Parameter> mailParameters;
 
-        private Envelope(MailAddress from, List<Recipient> recipients, List<Parameter> mailParameters) {
+        private Envelope(MailAddress from, Set<Recipient> recipients, Set<Parameter> mailParameters) {
             this.mailParameters = mailParameters;
             Preconditions.checkNotNull(from);
             Preconditions.checkNotNull(recipients);
@@ -293,11 +295,11 @@ public class Mail {
             return from;
         }
 
-        public List<Recipient> getRecipients() {
+        public Set<Recipient> getRecipients() {
             return recipients;
         }
 
-        public List<Parameter> getMailParameters() {
+        public Set<Parameter> getMailParameters() {
             return mailParameters;
         }
 
