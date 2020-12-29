@@ -19,15 +19,28 @@
 
 package org.apache.james.transport.mailets.remote.delivery;
 
+import static com.sun.mail.smtp.SMTPMessage.NOTIFY_DELAY;
+import static com.sun.mail.smtp.SMTPMessage.NOTIFY_FAILURE;
+import static com.sun.mail.smtp.SMTPMessage.NOTIFY_NEVER;
+import static com.sun.mail.smtp.SMTPMessage.NOTIFY_SUCCESS;
+import static com.sun.mail.smtp.SMTPMessage.RETURN_FULL;
+import static com.sun.mail.smtp.SMTPMessage.RETURN_HDRS;
+
 import java.io.IOException;
 import java.util.Collection;
+import java.util.EnumSet;
+import java.util.Optional;
 import java.util.Properties;
 
+import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.core.MailAddress;
+import org.apache.mailet.DsnParameters;
 import org.apache.mailet.HostAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
@@ -35,6 +48,8 @@ import org.apache.mailet.base.Converter7Bit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+import com.sun.mail.smtp.SMTPMessage;
 import com.sun.mail.smtp.SMTPTransport;
 
 @SuppressWarnings("deprecation")
@@ -68,13 +83,79 @@ public class MailDelivrerToHost {
             transport = (SMTPTransport) session.getTransport(outgoingMailServer);
             transport.setLocalHost(props.getProperty("mail.smtp.localhost", configuration.getHeloNameProvider().getHeloName()));
             connect(outgoingMailServer, transport);
-            transport.sendMessage(adaptToTransport(mail.getMessage(), transport), addr.toArray(InternetAddress[]::new));
+            if (mail.dsnParameters().isPresent()) {
+                sendDSNAwareEmail(mail, transport, addr);
+            } else {
+                transport.sendMessage(adaptToTransport(mail.getMessage(), transport), addr.toArray(InternetAddress[]::new));
+            }
             LOGGER.debug("Mail ({})  sent successfully to {} at {} from {} for {}", mail.getName(), outgoingMailServer.getHostName(),
                 outgoingMailServer.getHost(), props.get("mail.smtp.from"), mail.getRecipients());
         } finally {
             closeTransport(mail, outgoingMailServer, transport);
         }
         return ExecutionResult.success();
+    }
+    private void sendDSNAwareEmail(Mail mail, SMTPTransport transport, Collection<InternetAddress> addresses) {
+        addresses.forEach(Throwing.<InternetAddress>consumer(
+            address -> {
+                SMTPMessage smtpMessage = asSmtpMessage(mail, transport);
+                mail.dsnParameters()
+                    .flatMap(Throwing.<DsnParameters, Optional<DsnParameters.RecipientDsnParameters>>function(
+                        dsn -> Optional.ofNullable(dsn.getRcptParameters().get(new MailAddress(address.toString()))))
+                        .sneakyThrow())
+                    .flatMap(DsnParameters.RecipientDsnParameters::getNotifyParameter)
+                    .map(this::toJavaxNotify)
+                    .ifPresent(smtpMessage::setNotifyOptions);
+                InternetAddress[] rcpt = new InternetAddress[]{address};
+                transport.sendMessage(smtpMessage, rcpt);
+            }
+        ).sneakyThrow());
+    }
+
+    private SMTPMessage asSmtpMessage(Mail mail, SMTPTransport transport) throws MessagingException {
+        SMTPMessage smtpMessage = new SMTPMessage(adaptToTransport(mail.getMessage(), transport));
+        mail.dsnParameters().flatMap(DsnParameters::getRetParameter)
+            .map(this::toJavaxRet)
+            .ifPresent(smtpMessage::setReturnOption);
+        mail.dsnParameters().flatMap(DsnParameters::getEnvIdParameter)
+            .ifPresent(envId -> {
+                if (transport.supportsExtension("DSN")) {
+                    smtpMessage.setMailExtension("ENVID=" + envId.asString());
+                }
+            });
+        return smtpMessage;
+    }
+
+    private int toJavaxRet(DsnParameters.Ret ret) {
+        switch (ret) {
+            case FULL:
+                return RETURN_FULL;
+            case HDRS:
+                return RETURN_HDRS;
+            default:
+                throw new NotImplementedException(ret + " cannot be converted to javax.mail parameters");
+        }
+    }
+
+    private int toJavaxNotify(EnumSet<DsnParameters.Notify> notifies) {
+        return notifies.stream()
+            .mapToInt(this::toJavaxNotify)
+            .sum();
+    }
+
+    private int toJavaxNotify(DsnParameters.Notify notify) {
+        switch (notify) {
+            case NEVER:
+                return NOTIFY_NEVER;
+            case SUCCESS:
+                return NOTIFY_SUCCESS;
+            case FAILURE:
+                return NOTIFY_FAILURE;
+            case DELAY:
+                return NOTIFY_DELAY;
+            default:
+                throw new NotImplementedException(notify + " cannot be converted to javax.mail parameters");
+        }
     }
 
     private Properties getPropertiesForMail(Mail mail) {

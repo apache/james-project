@@ -210,6 +210,7 @@ public interface ConfigurationClient {
     default void cleanServer() {
         clearBehaviors();
         clearMails();
+        clearSMTPExtensions();
     }
 
     default BehaviorsParamsBuilder.CommandStep addNewBehavior() {
