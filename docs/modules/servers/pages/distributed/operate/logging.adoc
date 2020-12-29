@@ -115,6 +115,8 @@ Configuration for pushing log direct to ElasticSearch
 
 === Using FluentBit as a log forwarder
 
+==== Using Docker
+
 Distributed Server leverages the use of MDC in order to achieve structured logging, and better add context to the logged information. We furthermore ship json logs to file with RollingFileAppender on the classpath to easily allow FluentBit to directly tail the log file.
 Here is a sample conf/logback.xml configuration file for logback with the following pre-requisites:
 
@@ -152,18 +154,9 @@ Centralize logging third party like FluentBit can tail from logging’s file the
                 </encoder>
         </appender>
 
-        <root level="INFO"><appender-ref ref="LOG_FILE" />
+        <root level="INFO">
+            <appender-ref ref="LOG_FILE" />
         </root>
-
-        <root level="DEBUG"><appender-ref ref="LOG_FILE" />
-        </root>
-
-        <root level="WARN">
-                <appender-ref ref="LOG_FILE" />
-        </root>
-
-        <logger name="org.apache.james" level="INFO" />
-        <logger name="com.datastax.driver.core.QueryLogger.SLOW" level="DEBUG" />
 
 </configuration>
 ....
@@ -293,3 +286,49 @@ FluentBit Parser config:
   Decode_Field_As   escaped         log    do_next
   Decode_Field_As   json            log
 ....
+
+==== Using Kubernetes
+
+If using James in a Kubernetes environment, you can just append the logs to the console in a JSON formatted way 
+using Jackson to easily allow FluentBit to directly tail them.
+
+Here is a sample conf/logback.xml configuration file for achieving this:
+
+....
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+        <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+                <resetJUL>true</resetJUL>
+        </contextListener>
+
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+                    <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
+                        <timestampFormat>yyyy-MM-dd'T'HH:mm:ss.SSSX</timestampFormat>
+                        <timestampFormatTimezoneId>Etc/UTC</timestampFormatTimezoneId>
+
+                        <!-- Importance for handling multiple lines log -->
+                        <appendLineSeparator>true</appendLineSeparator>
+
+                        <jsonFormatter class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
+                            <prettyPrint>false</prettyPrint>
+                        </jsonFormatter>
+                    </layout>
+                </encoder>
+        </appender>
+
+        <root level="INFO">
+                <appender-ref ref="CONSOLE" />
+        </root>
+
+</configuration>
+....
+
+Regarding FluentBit on Kubernetes, you need to install it as a DaemonSet. Some official template exist 
+with FluentBit outputting logs to ElasticSearch. For more information on how to install it,
+with your cluster, you can look at this https://docs.fluentbit.io/manual/installation/kubernetes[documentation].
+
+As stated by the https://docs.fluentbit.io/manual/installation/kubernetes#details[detail] of the
+official documentation, FluentBit is configured to consume out of the box logs from containers
+on the same running node. So it should scrap your James logs without extra configuration.
