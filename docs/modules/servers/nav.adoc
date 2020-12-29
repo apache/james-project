@@ -52,6 +52,7 @@
 ***** xref:distributed/configure/remote-delivery-error-handling.adoc[About RemoteDelivery error handling]
 ***** xref:distributed/configure/collecting-contacts.adoc[Contact collection]
 ***** xref:distributed/configure/collecting-events.adoc[Event collection]
+***** xref:distributed/configure/dsn.adoc[ESMTP DSN support]
 *** xref:distributed/operate/index.adoc[Operate]
 **** xref:distributed/operate/guide.adoc[]
 **** xref:distributed/operate/logging.adoc[]

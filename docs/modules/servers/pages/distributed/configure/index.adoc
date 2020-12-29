@@ -60,3 +60,4 @@ By omitting these files, no extra behaviour is added.
 ** xref:distributed/configure/remote-delivery-error-handling.adoc[This page] proposes a simple strategy for RemoteDelivery error handling.
 ** xref:distributed/configure/collecting-contacts.adoc[This page] documents contact collection
 ** xref:distributed/configure/collecting-events.adoc[This page] documents event collection
+** xref:distributed/configure/dsn.adoc[this page] specified how to support SMTP Delivery Submission Notification (link:https://tools.ietf.org/html/rfc3461[RFC-3461])

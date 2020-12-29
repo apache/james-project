@@ -57,6 +57,29 @@ Example configuration:
 </handlerchain>
 ....
 
+== DSN hooks
+
+The Distributed server has optional support for DSN (link:https://tools.ietf.org/html/rfc3461[RFC-3461])
+
+Please read carefully xref:distributed/configure/dsn.adoc[this page].
+
+....
+<smtpserver enabled="true">
+    <...> <!-- The rest of your SMTP configuration, unchanged -->
+    <handlerchain>
+        <handler class="org.apache.james.smtpserver.dsn.DSNEhloHook"/>
+        <handler class="org.apache.james.smtpserver.dsn.DSNMailParameterHook"/>
+        <handler class="org.apache.james.smtpserver.dsn.DSNRcptParameterHook"/>
+        <handler class="org.apache.james.smtpserver.dsn.DSNMessageHook"/>
+        <...> <!-- other handlers, like: -->
+        <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/> <!-- for instance -->
+    </handlerchain>
+</smtpserver>
+....
+
+Note that a specific configuration of xref:distributed/configure/mailetcontainer.adoc[mailetcontainer.xml] is
+required as well to be spec compliant.
+
 == MailPriorityHandler
 
 This handler can add a hint to the mail which tells the MailQueue which email should get processed first.

@@ -1,0 +1,218 @@
+= Distributed James Server &mdash; Delivery Submission Notifications
+:navtitle: ESMTP DSN setup
+
+DSN introduced in link:https://tools.ietf.org/html/rfc3461[RFC-3461] allows a SMTP sender to demand status messages,
+defined in link:https://tools.ietf.org/html/rfc3464[RFC-3464] to be sent back to the `Return-Path` upon delivery
+progress.
+
+DSN support is not enabled by default, as it needs specific configuration of the
+xref:distributed/configure/mailetcontainer.adoc[mailetcontainer.xml] to be specification compliant.
+
+To enable it you need to:
+
+- Add DSN SMTP hooks as part of the SMTP server stack
+- Configure xref:distributed/configure/mailetcontainer.adoc[mailetcontainer.xml] to generate DSN bounces when needed
+
+== Enabling DSN in SMTP server stack
+
+For this simply add the `DSN hooks` in the handler chain in `smtpserver.xml` :
+
+....
+<smtpserver enabled="true">
+    <...> <!-- The rest of your SMTP configuration, unchanged -->
+    <handlerchain>
+        <handler class="org.apache.james.smtpserver.dsn.DSNEhloHook"/>
+        <handler class="org.apache.james.smtpserver.dsn.DSNMailParameterHook"/>
+        <handler class="org.apache.james.smtpserver.dsn.DSNRcptParameterHook"/>
+        <handler class="org.apache.james.smtpserver.dsn.DSNMessageHook"/>
+        <...> <!-- other handlers, like: -->
+        <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/> <!-- for instance -->
+    </handlerchain>
+</smtpserver>
+....
+
+== Enabling DSN generation as part of mail processing
+
+For the below conditions to be matched we assume you follow
+xref:distributed/configure/remote-delivery-error-handling.adoc[RemoteDelivery error handling for MXs], which is a
+requirement for detailed RemoteDelivery error and delay handling on top of the Distributed server.
+
+Here is a sample xref:distributed/configure/mailetcontainer.adoc[mailetcontainer.xml] achieving the following DSN generation:
+
+- Generate a generic `delivered` notification if LocalDelivery succeeded, if requested
+- Generate a generic `failed` notification in case of local errors, if requested
+- Generate a specific `failed` notification in case of a non existing local user, if requested
+- Generate a specific `failed` notification in case of an address rewriting loop, if requested
+- Generate a `failed` notification in case of remote permanent errors, if requested. We blame the remote server...
+- Generate a `delayed` notification in case of temporary remote errors we are about to retry, if requested. We blame the remote server...
+- Generate a `failed` notification in case of temporary remote errors we are not going to retry (failed too many time), if requested. We blame the remote server...
+
+....
+<mailetcontainer enableJmx="true">
+    <!-- Common processing settings are unchanged -->
+
+    <processors>
+        <processor state="root" enableJmx="true">\
+            <!-- Content of root processor is unchanged -->
+        </processor>
+
+        <processor state="transport" enableJmx="true">
+            <!-- transport processor unchanged -->
+        </processor>
+
+        <processor state="error" enableJmx="true">
+            <mailet match="DSNFailureRequested" class="DSNBounce">
+                <prefix>[FAILED]</prefix>
+                <passThrough>true</passThrough>
+                <messageString>Hi. This is the James mail server at [machine].
+I'm afraid I wasn't able to deliver your message to the following addresses.
+This is a permanent error; I've given up. Sorry it didn't work out.  Below
+I include the list of recipients, and the reason why I was unable to deliver
+your message.</messageString>
+                <action>failed</action>
+                <defaultStatus>5.0.0</defaultStatus>
+            </mailet>
+            <mailet match="All" class="ToRepository">
+                <repositoryPath>cassandra://var/mail/error/</repositoryPath>
+            </mailet>
+        </processor>
+
+        <processor state="local-delivery" enableJmx="true">
+            <!-- Your local-delivery pipeline -->
+            <mailet match="All" class="LocalDelivery">
+                <!-- Do not abort the pipeline yet -->
+                <consume>false</consume>
+            </mailet>
+            <!-- Tell the world we succeeded -->
+            <mailet match="DSNSuccessRequested" class="DSNBounce">
+                <prefix>[SUCCESS]</prefix>
+                <passThrough>true</passThrough>
+                <messageString>Hi. This is the James mail server at [machine].
+I successfully delivered your message to the following addresses.
+Note that it indicates your recipients received the message but do
+not imply they read it.</messageString>
+                <action>delivered</action>
+                <defaultStatus>2.0.0</defaultStatus>
+            </mailet>
+            <mailet match="All" class="Null"/> <!-- ignore people not having requesting a dsn success bounce -->
+        </processor>
+
+        <processor state="relay" enableJmx="true">
+            <!-- Perform at most 5 RemoteDelivery attempts -->
+            <mailet match="AtMost=5" class="RemoteDelivery">
+                <outgoingQueue>outgoing</outgoingQueue>
+                <maxRetries>0</maxRetries>
+                <maxDnsProblemRetries>0</maxDnsProblemRetries>
+                <deliveryThreads>10</deliveryThreads>
+                <sendpartial>true</sendpartial>
+                <!-- Use a custom processor for error handling -->
+                <bounceProcessor>remote-delivery-error</bounceProcessor>
+            </mailet>
+            <!-- When retries are exceeded, consider the mail as a permanent failure -->
+            <mailet match="DSNFailureRequested" class="DSNBounce">
+                <prefix>[FAILED]</prefix>
+                <passThrough>true</passThrough>
+                <messageString>Hi. This is the James mail server at [machine].
+I'm afraid I wasn't able to deliver your message to the following addresses.
+This is a permanent error; I've given up. Sorry it didn't work out.
+The remote server we should relay this mail to keep on failing.
+Below I include the list of recipients, and the reason why I was unable to deliver
+your message.</messageString>
+                <action>failed</action>
+                <defaultStatus>5.0.0</defaultStatus>
+            </mailet>
+            <mailet match="All" class="ToRepository">
+                <repositoryPath>cassandra://var/mail/error/remote-delivery/permanent/</repositoryPath>
+            </mailet>
+        </processor>
+
+        <processor state="remote-delivery-error" enableJmx="true">
+            <matcher name="dsn-permanent" match="org.apache.james.mailetcontainer.impl.matchers.And">
+                <matcher match="IsRemoteDeliveryPermanentError"/>
+                <matcher match="DSNFailureRequested"/>
+            </matcher>
+            <matcher name="dsn-temporary" match="org.apache.james.mailetcontainer.impl.matchers.And">
+                <matcher match="IsRemoteDeliveryTemporaryError"/>
+                <matcher match="DSNDelayRequested"/>
+            </matcher>
+
+            <mailet match="dsn-permanent" class="DSNBounce">
+                <prefix>[FAILED]</prefix>
+                <passThrough>true</passThrough>
+                <messageString>Hi. This is the James mail server at [machine].
+I'm afraid I wasn't able to deliver your message to the following addresses.
+This is a permanent error; I've given up. Sorry it didn't work out.
+The remote server we should relay this mail to returns a permanent error.
+Below I include the list of recipients, and the reason why I was unable to deliver
+your message.</messageString>
+                <action>failed</action>
+                <defaultStatus>5.0.0</defaultStatus>
+            </mailet>
+
+            <mailet match="dsn-temporary" class="DSNBounce">
+                <prefix>[DELAYED]</prefix>
+                <passThrough>true</passThrough>
+                <messageString>Hi. This is the James mail server at [machine].
+I'm afraid I wasn't able to deliver your message to the following addresses yet.
+This is a temporary error: I will keep on trying.
+Below I include the list of recipients, and the reason why I was unable to deliver
+your message.</messageString>
+                <action>delayed</action>
+                <defaultStatus>4.0.0</defaultStatus>
+            </mailet>
+
+            <!-- Error management for remote delivery error handling as described in remote-delivery-error-handling.adoc -->
+        </processor>
+
+        <processor state="local-address-error" enableJmx="true">
+            <mailet match="DSNFailureRequested" class="DSNBounce">
+                <prefix>[FAILED]</prefix>
+                <passThrough>true</passThrough>
+                <messageString>Hi. This is the James mail server at [machine].
+I'm afraid I wasn't able to deliver your message to the following addresses.
+This is a permanent error; I've given up. Sorry it didn't work out.
+The following addresses do not exist here. Sorry.</messageString>
+                <action>failed</action>
+                <defaultStatus>5.0.0</defaultStatus>
+            </mailet>
+            <mailet match="All" class="ToRepository">
+                <repositoryPath>cassandra://var/mail/address-error/</repositoryPath>
+            </mailet>
+        </processor>
+
+        <processor state="relay-denied" enableJmx="true">
+            <!-- This is an abuse, you likely do not want to be polite with these people. we just keep a copy for later audit & replay -->
+            <mailet match="All" class="ToRepository">
+                <repositoryPath>cassandra://var/mail/relay-denied/</repositoryPath>
+                <notice>Warning: You are sending an e-mail to a remote server. You must be authenticated to perform such an operation</notice>
+            </mailet>
+        </processor>
+
+        <processor state="rrt-error" enableJmx="false">
+            <mailet match="All" class="ToRepository">
+                <repositoryPath>cassandra://var/mail/rrt-error/</repositoryPath>
+                <passThrough>true</passThrough>
+            </mailet>
+            <mailet match="IsSenderInRRTLoop" class="Null"/>
+            <mailet match="DSNFailureRequested" class="DSNBounce">
+                <prefix>[FAILED]</prefix>
+                <passThrough>true</passThrough>
+                <messageString>Hi. This is the James mail server at [machine].
+I'm afraid I wasn't able to deliver your message to the following addresses.
+This is a permanent error; I've given up. Sorry it didn't work out.
+The following addresses is caught in a rewriting loop. An admin should come and fix it (you likely want to report it).
+Once resolved the admin should be able to resume the processing of your email.
+Below I include the list of recipients, and the reason why I was unable to deliver
+your message.</messageString>
+                <action>failed</action>
+                <defaultStatus>5.1.6/defaultStatus>
+            </mailet>
+        </processor>
+    </processors>
+</mailetcontainer>
+....
+
+== Limitations
+
+The out of the box tooling do not allow generating `relayed` DSN notification as RemoteDelivery misses a success
+callback.
