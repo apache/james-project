@@ -242,6 +242,54 @@ public class DSNRelayTest {
     }
 
     @Test
+    public void remoteDeliveryShouldDeliverSimilarDsnNotifyParametersTogether() throws Exception {
+        AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
+
+        try {
+            smtpClient.connect("localhost", jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue());
+            smtpClient.ehlo(DEFAULT_DOMAIN);
+            smtpClient.mail("<" + FROM + ">");
+            smtpClient.rcpt("<" + RECIPIENT + "> NOTIFY=FAILURE,DELAY");
+            smtpClient.rcpt("<" + RECIPIENT1 + "> NOTIFY=NEVER");
+            smtpClient.rcpt("<" + RECIPIENT2 + "> NOTIFY=FAILURE,DELAY");
+            smtpClient.sendShortMessageData("A short message...");
+        } finally {
+            smtpClient.disconnect();
+        }
+
+        calmlyAwait.atMost(TEN_SECONDS).untilAsserted(() -> assertThat(mockSMTPConfiguration.listMails())
+            .hasSize(2)
+            .extracting(Mail::getEnvelope)
+            .containsOnly(Mail.Envelope.builder()
+                .from(new MailAddress(FROM))
+                .addRecipient(Mail.Recipient.builder()
+                    .address(new MailAddress(RECIPIENT))
+                    .addParameter(Mail.Parameter.builder()
+                        .name("NOTIFY")
+                        .value("FAILURE,DELAY")
+                        .build())
+                    .build())
+                .addRecipient(Mail.Recipient.builder()
+                    .address(new MailAddress(RECIPIENT2))
+                    .addParameter(Mail.Parameter.builder()
+                        .name("NOTIFY")
+                        .value("FAILURE,DELAY")
+                        .build())
+                    .build())
+                .build(),
+            Mail.Envelope.builder()
+                .from(new MailAddress(FROM))
+                .addRecipient(Mail.Recipient.builder()
+                    .address(new MailAddress(RECIPIENT1))
+                    .addParameter(Mail.Parameter.builder()
+                        .name("NOTIFY")
+                        .value("NEVER")
+                        .build())
+                    .build())
+                .build()));
+    }
+
+    @Test
     public void remoteDeliveryShouldCarryOverDSNParametersWhenSingleRecipient() throws Exception {
         AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
 
