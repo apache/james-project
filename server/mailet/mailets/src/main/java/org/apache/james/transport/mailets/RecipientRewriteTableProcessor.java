@@ -31,6 +31,8 @@ import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
 
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.DomainList;
@@ -42,6 +44,8 @@ import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.MemoizedSupplier;
+import org.apache.mailet.DsnParameters;
+import org.apache.mailet.DsnParameters.RecipientDsnParameters;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
@@ -57,6 +61,44 @@ import com.google.common.collect.ImmutableSet;
 
 public class RecipientRewriteTableProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecipientRewriteTableProcessor.class);
+
+    private static class Decision {
+        private final MailAddress originalAddress;
+        private final RrtExecutionResult executionResult;
+
+        private Decision(MailAddress originalAddress, RrtExecutionResult executionResult) {
+            this.originalAddress = originalAddress;
+            this.executionResult = executionResult;
+        }
+
+        MailAddress originalAddress() {
+            return originalAddress;
+        }
+
+        RrtExecutionResult executionResult() {
+            return executionResult;
+        }
+
+        DsnParameters applyOnDsnParameters(DsnParameters dsnParameters) {
+            ImmutableMap<MailAddress, RecipientDsnParameters> rcptParameters = dsnParameters.getRcptParameters();
+
+            Optional<RecipientDsnParameters> originalRcptParameter = Optional.ofNullable(rcptParameters.get(originalAddress));
+
+            return originalRcptParameter.map(parameters -> {
+                Map<MailAddress, RecipientDsnParameters> newRcptParameters = executionResult.getNewRecipients().stream()
+                    .map(newRcpt -> Pair.of(newRcpt, parameters))
+                    .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue));
+                Map<MailAddress, RecipientDsnParameters> rcptParametersWithoutOriginal = rcptParameters.entrySet().stream()
+                    .filter(rcpt -> !rcpt.getKey().equals(originalAddress))
+                    .collect(Guavate.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
+
+                return dsnParameters.withRcptParameters(ImmutableMap.<MailAddress, RecipientDsnParameters>builder()
+                    .putAll(rcptParametersWithoutOriginal)
+                    .putAll(newRcptParameters)
+                    .build());
+            }).orElse(dsnParameters);
+        }
+    }
 
     private static class RrtExecutionResult {
         private static RrtExecutionResult empty() {
@@ -131,7 +173,25 @@ public class RecipientRewriteTableProcessor {
     }
 
     public void processMail(Mail mail) throws MessagingException {
-        RrtExecutionResult executionResults = executeRrtFor(mail);
+        List<Decision> decisions = executeRrtFor(mail);
+
+        applyDecisionsOnMailRecipients(mail, decisions);
+        applyDecisionOnDSNParameters(mail, decisions);
+    }
+
+    private void applyDecisionOnDSNParameters(Mail mail, List<Decision> decisions) {
+        mail.dsnParameters()
+            .map(dsnParameters -> decisions.stream()
+                .reduce(dsnParameters, (parameters, decision) -> decision.applyOnDsnParameters(parameters), (a, b) -> {
+                    throw new NotImplementedException("No combiner needed as we are not in a multi-threaded environment");
+                }))
+            .ifPresent(mail::setDsnParameters);
+    }
+
+    private void applyDecisionsOnMailRecipients(Mail mail, List<Decision> decisions) throws MessagingException {
+        RrtExecutionResult executionResults = decisions.stream()
+            .map(Decision::executionResult)
+            .reduce(RrtExecutionResult.empty(), RrtExecutionResult::merge);
 
         if (!executionResults.recipientWithError.isEmpty()) {
             MailImpl newMail = MailImpl.builder()
@@ -151,8 +211,8 @@ public class RecipientRewriteTableProcessor {
         mail.setRecipients(executionResults.newRecipients);
     }
 
-    private RrtExecutionResult executeRrtFor(Mail mail) {
-        Function<MailAddress, RrtExecutionResult> convertToMappingData = recipient -> {
+    private List<Decision> executeRrtFor(Mail mail) {
+        Function<MailAddress, Decision> convertToMappingData = recipient -> {
             Preconditions.checkNotNull(recipient);
 
             return executeRrtForRecipient(mail, recipient);
@@ -161,21 +221,21 @@ public class RecipientRewriteTableProcessor {
         return mail.getRecipients()
             .stream()
             .map(convertToMappingData)
-            .reduce(RrtExecutionResult.empty(), RrtExecutionResult::merge);
+            .collect(Guavate.toImmutableList());
     }
 
-    private RrtExecutionResult executeRrtForRecipient(Mail mail, MailAddress recipient) {
+    private Decision executeRrtForRecipient(Mail mail, MailAddress recipient) {
         try {
             Mappings mappings = virtualTableStore.getResolvedMappings(recipient.getLocalPart(), recipient.getDomain());
 
             if (mappings != null && !mappings.isEmpty()) {
                 List<MailAddress> newMailAddresses = handleMappings(mappings, mail, recipient);
-                return RrtExecutionResult.success(newMailAddresses);
+                return new Decision(recipient, RrtExecutionResult.success(newMailAddresses));
             }
-            return RrtExecutionResult.success(recipient);
+            return new Decision(recipient, RrtExecutionResult.success(recipient));
         } catch (ErrorMappingException | RecipientRewriteTableException e) {
             LOGGER.warn("Could not rewrite recipient {}", recipient, e);
-            return RrtExecutionResult.error(recipient);
+            return new Decision(recipient, RrtExecutionResult.error(recipient));
         }
     }
 

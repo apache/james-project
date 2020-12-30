@@ -29,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Duration.TEN_SECONDS;
 
 import org.apache.commons.net.smtp.AuthenticatingSMTPClient;
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
@@ -47,6 +48,7 @@ import org.apache.james.smtpserver.dsn.DSNEhloHook;
 import org.apache.james.smtpserver.dsn.DSNMailParameterHook;
 import org.apache.james.smtpserver.dsn.DSNMessageHook;
 import org.apache.james.smtpserver.dsn.DSNRcptParameterHook;
+import org.apache.james.transport.mailets.RecipientRewriteTable;
 import org.apache.james.transport.mailets.RemoteDelivery;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.util.Host;
@@ -327,6 +329,47 @@ public class DSNRelayTest {
     }
 
     @Test
+    public void dsnShouldBeCarriedAfterRRT() throws Exception {
+        DataProbeImpl dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(ANOTHER_DOMAIN);
+        dataProbe.addAddressMapping("touser", ANOTHER_DOMAIN, "touser-alias@other.com");
+
+        AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
+
+        try {
+            smtpClient.connect("localhost", jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue());
+            smtpClient.ehlo(DEFAULT_DOMAIN);
+            smtpClient.mail("<" + FROM + "> RET=HDRS ENVID=gabouzomeuh");
+            smtpClient.rcpt("<" + RECIPIENT + "> NOTIFY=FAILURE,DELAY");
+            smtpClient.sendShortMessageData("A short message...");
+        } finally {
+            smtpClient.disconnect();
+        }
+
+        calmlyAwait.atMost(TEN_SECONDS).untilAsserted(() -> assertThat(mockSMTPConfiguration.listMails())
+            .hasSize(1)
+            .extracting(Mail::getEnvelope)
+            .containsExactly(Mail.Envelope.builder()
+                .from(new MailAddress(FROM))
+                .addMailParameter(Mail.Parameter.builder()
+                    .name("RET")
+                    .value("HDRS")
+                    .build())
+                .addMailParameter(Mail.Parameter.builder()
+                    .name("ENVID")
+                    .value("gabouzomeuh")
+                    .build())
+                .addRecipient(Mail.Recipient.builder()
+                    .address(new MailAddress("touser-alias@other.com"))
+                    .addParameter(Mail.Parameter.builder()
+                        .name("NOTIFY")
+                        .value("FAILURE,DELAY")
+                        .build())
+                    .build())
+                .build()));
+    }
+
+    @Test
     public void remoteDeliveryShouldCarryOverDSNMailParameters() throws Exception {
         AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
 
@@ -363,7 +406,9 @@ public class DSNRelayTest {
     private ProcessorConfiguration.Builder directResolutionTransport() {
         return ProcessorConfiguration.transport()
             .addMailet(MailetConfiguration.BCC_STRIPPER)
-            .addMailet(MailetConfiguration.LOCAL_DELIVERY)
+            .addMailet(MailetConfiguration.builder()
+                .matcher(All.class)
+                .mailet(RecipientRewriteTable.class))
             .addMailet(MailetConfiguration.builder()
                 .mailet(RemoteDelivery.class)
                 .matcher(All.class)

@@ -424,6 +424,10 @@ public class DsnParameters {
         this.rcptParameters = rcptParameters;
     }
 
+    public DsnParameters withRcptParameters(Map<MailAddress, RecipientDsnParameters> rcptParameters) {
+        return new DsnParameters(envIdParameter, retParameter, ImmutableMap.copyOf(rcptParameters));
+    }
+
     public Optional<EnvId> getEnvIdParameter() {
         return envIdParameter;
     }
