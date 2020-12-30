@@ -466,9 +466,9 @@ class ElasticSearchListeningMessageSearchIndexTest {
         }
 
         @Test
-        void retrieveIndexedFlagsShouldPropagateExceptionWhenNotFound() {
-            assertThatThrownBy(() -> testee.retrieveIndexedFlags(mailbox, MESSAGE_UID_4).block())
-                .isInstanceOf(IndexNotFoundException.class);
+        void retrieveIndexedFlagsShouldReturnEmptyWhenNotFound() {
+            assertThat(testee.retrieveIndexedFlags(mailbox, MESSAGE_UID_4).blockOptional())
+                .isEmpty();
         }
     }
 }

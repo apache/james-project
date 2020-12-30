@@ -233,9 +233,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
         return elasticSearchIndexer.get(indexIdFor(mailbox.getMailboxId(), uid), routingKey)
             .filter(GetResponse::isExists)
             .map(GetResponse::getSourceAsMap)
-            .map(this::extractFlags)
-            .switchIfEmpty(Mono.error(() -> new IndexNotFoundException(
-                String.format("Index for message %s in mailbox %s not found", uid.toString(), mailbox.getMailboxId().serialize()))));
+            .map(this::extractFlags);
     }
 
     private Flags extractFlags(Map<String, Object> source) {

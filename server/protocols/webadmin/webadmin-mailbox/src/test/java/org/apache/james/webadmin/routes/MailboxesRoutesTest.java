@@ -535,8 +535,8 @@ class MailboxesRoutesTest {
                 .when()
                     .get(taskId + "/await");
 
-                assertThatThrownBy(() -> searchIndex.retrieveIndexedFlags(mailbox, uid).block())
-                    .isInstanceOf(IndexNotFoundException.class);
+                assertThat(searchIndex.retrieveIndexedFlags(mailbox, uid).blockOptional())
+                    .isEmpty();
             }
         }
 
@@ -956,8 +956,8 @@ class MailboxesRoutesTest {
                 .when()
                     .get(taskId + "/await");
 
-                assertThatThrownBy(() -> searchIndex.retrieveIndexedFlags(mailbox, uid).block())
-                    .isInstanceOf(IndexNotFoundException.class);
+                assertThat(searchIndex.retrieveIndexedFlags(mailbox, uid).blockOptional())
+                    .isEmpty();
             }
         }
 

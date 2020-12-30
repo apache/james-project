@@ -242,6 +242,37 @@ public class ReIndexerImplTest {
     }
 
     @Test
+    void deltaReindexShouldUpdateMissingMessages() throws Exception {
+        MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+        MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
+        ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
+            .appendMessage(
+                MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
+                systemSession).getId();
+        when(messageSearchIndex.retrieveIndexedFlags(any(), any())).thenReturn(Mono.empty());
+        when(messageSearchIndex.delete(any(), any(), any())).thenReturn(Mono.empty());
+
+        reIndexer.reIndex(mailboxId,
+            RunningOptions.builder()
+                .mode(RunningOptions.Mode.FIX_OUTDATED)
+                .build())
+            .run();
+        ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
+        ArgumentCaptor<Mailbox> mailboxCaptor = ArgumentCaptor.forClass(Mailbox.class);
+
+        verify(messageSearchIndex).retrieveIndexedFlags(any(), any());
+        verify(messageSearchIndex).delete(any(), any(), any());
+        verify(messageSearchIndex).add(any(MailboxSession.class), mailboxCaptor.capture(), messageCaptor.capture());
+        verifyNoMoreInteractions(messageSearchIndex);
+
+        assertThat(mailboxCaptor.getValue()).satisfies(mailbox -> assertThat(mailbox.getMailboxId()).isEqualTo(mailboxId));
+        assertThat(messageCaptor.getValue()).satisfies(message -> {
+            assertThat(message.getMailboxId()).isEqualTo(mailboxId);
+            assertThat(message.getUid()).isEqualTo(createdMessage.getUid());
+        });
+    }
+
+    @Test
     void mailboxIdReIndexShouldOnlyDropSearchIndexWhenEmptyMailbox() throws Exception {
         MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
         MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();

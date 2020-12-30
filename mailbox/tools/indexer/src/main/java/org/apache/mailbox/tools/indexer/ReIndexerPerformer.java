@@ -340,7 +340,8 @@ public class ReIndexerPerformer {
 
     private Mono<Boolean> isIndexUpToDate(Mailbox mailbox, MailboxMessage message) {
         return messageSearchIndex.retrieveIndexedFlags(mailbox, message.getUid())
-            .map(flags -> isIndexUpToDate(message, flags));
+            .map(flags -> isIndexUpToDate(message, flags))
+            .switchIfEmpty(Mono.just(false));
     }
 
     private boolean isIndexUpToDate(MailboxMessage message, Flags flags) {
