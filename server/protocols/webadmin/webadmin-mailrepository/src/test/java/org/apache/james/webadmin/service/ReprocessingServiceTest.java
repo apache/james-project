@@ -19,6 +19,7 @@
 
 package org.apache.james.webadmin.service;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
@@ -41,6 +42,7 @@ import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,6 +63,7 @@ class ReprocessingServiceTest {
     private static final MailQueueName SPOOL = MailQueueName.of("spool");
     private static final Consumer<MailKey> NOOP_CONSUMER = key -> { };
     private static final Optional<String> NO_TARGET_PROCESSOR = Optional.empty();
+    private static final byte[] MESSAGE_BYTES = "header: value \r\n".getBytes(UTF_8);
 
     private ReprocessingService reprocessingService;
     private MemoryMailRepositoryStore mailRepositoryStore;
@@ -82,14 +85,17 @@ class ReprocessingServiceTest {
 
         mail1 = FakeMail.builder()
             .name(NAME_1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build();
 
         mail2 = FakeMail.builder()
             .name(NAME_2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build();
 
         mail3 = FakeMail.builder()
             .name(NAME_3)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
             .build();
     }
 
