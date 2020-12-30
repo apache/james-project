@@ -329,7 +329,7 @@ public class ReIndexerPerformer {
                     if (upToDate) {
                         return Mono.just(Either.<Failure, Result>right(Result.COMPLETED));
                     }
-                    return correct(entry, message);
+                    return correct(entry);
                 }))
             .onErrorResume(e -> {
                 LOGGER.warn("ReIndexing failed for {} {}", entry.getMailbox().generateAssociatedPath(), entry.getUid(), e);
@@ -337,9 +337,10 @@ public class ReIndexerPerformer {
             });
     }
 
-    private Mono<Either<Failure, Result>> correct(ReIndexingEntry entry, MailboxMessage message) {
-        return messageSearchIndex.delete(entry.getMailboxSession(), entry.getMailbox().getMailboxId(), ImmutableList.of(message.getUid()))
-            .then(index(entry));
+    private Mono<Either<Failure, Result>> correct(ReIndexingEntry entry) {
+        // Leverage the fact that index does an upsert, removing pre-existing documents
+        // We do not need to delete the existing document before indexing it
+        return index(entry);
     }
 
     private Mono<Boolean> isIndexUpToDate(Mailbox mailbox, MailboxMessage message) {

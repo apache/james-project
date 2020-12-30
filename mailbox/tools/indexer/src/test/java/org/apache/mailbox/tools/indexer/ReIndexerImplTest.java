@@ -261,7 +261,6 @@ public class ReIndexerImplTest {
         ArgumentCaptor<Mailbox> mailboxCaptor = ArgumentCaptor.forClass(Mailbox.class);
 
         verify(messageSearchIndex).retrieveIndexedFlags(any(), any());
-        verify(messageSearchIndex).delete(any(), any(), any());
         verify(messageSearchIndex).add(any(MailboxSession.class), mailboxCaptor.capture(), messageCaptor.capture());
         verifyNoMoreInteractions(messageSearchIndex);
 
