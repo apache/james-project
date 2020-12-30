@@ -327,10 +327,14 @@ public class ReIndexerPerformer {
             .flatMap(message -> isIndexUpToDate(entry.getMailbox(), message)
                 .flatMap(upToDate -> {
                     if (upToDate) {
-                        return Mono.just(Either.right(Result.COMPLETED));
+                        return Mono.just(Either.<Failure, Result>right(Result.COMPLETED));
                     }
                     return correct(entry, message);
-                }));
+                }))
+            .onErrorResume(e -> {
+                LOGGER.warn("ReIndexing failed for {} {}", entry.getMailbox().generateAssociatedPath(), entry.getUid(), e);
+                return Mono.just(Either.left(new MessageFailure(entry.getMailbox().getMailboxId(), entry.getUid())));
+            });
     }
 
     private Mono<Either<Failure, Result>> correct(ReIndexingEntry entry, MailboxMessage message) {
