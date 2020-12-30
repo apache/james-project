@@ -104,7 +104,7 @@ import reactor.util.retry.Retry;
 import reactor.util.retry.RetryBackoffSpec;
 
 /**
- * This base class of an {@link MailboxManager} implementation provides a high-level api for writing your own
+ * This base class of an {@link MailboxManager} implementation provides JsonTaskAdditionalInformationSerializea high-level api for writing your own
  * {@link MailboxManager} implementation. If you plan to write your own {@link MailboxManager} its most times so easiest
  * to extend just this class or use it directly.
  * <p/>

@@ -1,0 +1,2 @@
+:uri-gitbox: https://gitbox.apache.org/repos/asf
+:uri-james-server-gitbox: https://gitbox.apache.org/repos/asf/james-project.git

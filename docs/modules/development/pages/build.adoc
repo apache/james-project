@@ -1,0 +1,179 @@
+= Building Apache James from source
+
+NOTE: This guide assumes knowledge with Java, a *nix shell (bash, fish, etc) and some familiarity with building and developing applications.
+
+The project uses https://gradle.org/[Gradle] build system.
+We used to use https://maven.apache.org/[Apache Maven] build system.
+Some projects might have not been migrated yet.
+
+== Building with Gradle
+
+This will show you how to clone and build Apache James.
+
+
+[source, subs="attributes"]
+----
+    # Clone the repository
+    git clone {uri-james-server-gitbox} james-project
+    cd james-project
+
+    # Run the build without the tests
+    ./gradlew clean build -x test
+
+    # Run the full build
+    ./gradlew clean build
+----
+
+=== Listing all projects
+
+The main James project is composed of a lot of sub-projects.
+Each sub-project focuses on a specific part of the application.
+Some projects are libraries - code meant to be reused as parts inside James or other projects.
+Some projects are applications - code meant to be executed as is.
+
+We leverage https://docs.gradle.org/current/userguide/multi_project_builds.html[Gradle Multi-Project] builds to organize them.
+
+To see all of them run `./gradlew projects` and you will get output like bellow:
+[source,shell]
+----
+------------------------------------------------------------
+Root project
+------------------------------------------------------------
+
+Root project 'james-project'
++--- Project ':apache-james-mailbox'
+|    +--- Project ':apache-james-mailbox:apache-james-mailbox-api' - Apache James :: Mailbox :: API
+|    +--- Project ':apache-james-mailbox:apache-james-mailbox-cassandra' - Apache James :: Mailbox :: Cassandra
+|    +--- Project ':apache-james-mailbox:apache-james-mailbox-deleted-messages-vault' - Apache James :: Mailbox :: Plugin :: Deleted Messages Vault
+|    +--- Project ':apache-james-mailbox:apache-james-mailbox-deleted-messages-vault-cassandra' - Apache James :: Mailbox :: Plugin :: Deleted Messages Vault :: Cassandra
+|    +--- Project ':apache-james-mailbox:apache-james-mailbox-elasticsearch' - Apache James :: Mailbox :: ElasticSearch
+|    +--- Project ':apache-james-mailbox:apache-james-mailbox-event-cassandra' - Apache James :: Mailbox :: Event :: In Cassandra implementation
+|    +--- Project ':apache-james-mailbox:apache-james-mailbox-event-json' - Apache James :: Mailbox :: Event :: JSON
+|    +--- Project ':apache-james-mailbox:apache-james-mailbox-event-memory' - Apache James :: Mailbox :: Event :: In VM implementation
+|    +--- Project ':apache-james-mailbox:apache-james-mailbox-event-rabbitmq' - Apache James :: Mailbox :: Event :: RabbitMQ implementation
+|    +--- Project ':apache-james-mailbox:apache-james-mailbox-jpa' - Apache James :: Mailbox :: JPA
+....[output AMENDED for brevity]
+\--- Project ':third-party'
+     +--- Project ':third-party:apache-james-linshare' - Apache James :: Third Party :: LinShare
+     \--- Project ':third-party:apache-james-spamassassin' - Apache James :: Third Party :: SpamAssassin
+
+To see a list of the tasks of a project, run gradlew <project-path>:tasks
+For example, try running gradlew :apache-james-mailbox:tasks
+----
+
+==== James tasks. Running tasks a single project
+
+Each project has a set of tasks associated with it.
+We run these tasks as part of the build process, and they compile java, scala, copy files, etc.
+Tasks are created by plugins or by us using.
+We are going to focus on executing tasks so for writing them, check out the https://docs.gradle.org/current/userguide/more_about_tasks.html#header[Gradle task authoring guide]
+
+You can list all tasks by running ` ./gradlew -q tasks --all` .
+
+===== Running a task specific to a project
+
+You can also run a task specific to a project.
+Let's build the James server app using `./gradlew :james-server:james-server-app:build` .
+
+In the above command we can identify the following:
+
+:james-server:james-server-app:: Is the path to the project we want. We will cal tasks from this project
+:build:: Is the path separatro `:` followed by the task name `build` which will build our application.
+
+In Gradle, each task depend on other tasks to do it's job and they form a direct acyclic graph or a DAG.
+When we ahs Gradle to `build` our java software it will do the following:
+
+* Build the DAG - the list of task it needs to execute.
+  It will start from the task(s) we ask it to execute and look for all dependent tasks.
+* Run the tasks in order, starting from the ones that have no other dependency.
+
+===== List all the tasks in a project
+
+To see all tasks specific to the project we can `./gradlew -q :james-server:james-server-app:tasks --all`.
+
+You should see something like this:
+[source,shell]
+----
+------------------------------------------------------------
+Tasks runnable from project :james-server:james-server-app - Apache James :: Server :: App
+------------------------------------------------------------
+
+Application tasks
+-----------------
+run - Runs this project as a JVM application
+
+Build tasks
+-----------
+assemble - Assembles the outputs of this project.
+build - Assembles and tests this project.
+buildDependents - Assembles and tests this project and all projects that depend on it.
+buildNeeded - Assembles and tests this project and all projects it depends on.
+classes - Assembles main classes.
+clean - Deletes the build directory.
+jar - Assembles a jar archive containing the main classes.
+sourcesJar - Assembles a jar archive containing the main sources.
+testClasses - Assembles test classes.
+
+Distribution tasks
+------------------
+assembleDist - Assembles the main distributions
+distTar - Bundles the project as a distribution.
+distZip - Bundles the project as a distribution.
+installDist - Installs the project as a distribution as-is.
+
+Documentation tasks
+-------------------
+javadoc - Generates Javadoc API documentation for the main source code.
+
+Help tasks
+----------
+[REDACTED for brevity]
+
+Publishing tasks
+----------------
+[REDACTED for brevity]
+
+Verification tasks
+------------------
+[REDACTED for brevity]
+
+Other tasks
+-----------
+[REDACTED for brevity]
+
+Rules
+-----
+Pattern: clean<TaskName>: Cleans the output files of a task.
+Pattern: build<ConfigurationName>: Assembles the artifacts of a configuration.
+Pattern: upload<ConfigurationName>: Assembles and uploads the artifacts belonging to a configuration.
+----
+
+
+== Automated builds
+
+We provide automated builds for the source code.
+Automated builds are a way to check that the application can be built and passes all the checks and tests we have in place.
+This is very useful when accepting contributions.
+See our contributors guide for more details **[insert link here]**
+
+The automated build status can be seen on https://builds.apache.org/[Apache Builds] .
+Please use our https://builds.apache.org/view/J/view/ApacheJamesProjects/[Jenkins view] for Apache James Project.
+
+You will have read-only access by default.
+You can do more if you authenticate with your Apache committer credentials.
+
+=== Using Jenkins
+
+The https://infra.apache.org/[Apache Infrastructure] team uses https://www.jenkins.io/[Jenkins] as a build and continuous integration server.
+
+We have created a https://www.jenkins.io/doc/book/pipeline/multibranch/[multi-branch pipeline] configuration item in Jenkins.
+This configuration item uses git (Github) integration to do the following:
+
+* Connect to the Git(Github) repository and clone it
+* Scan the repository for `Jenkinsfile`s and build all branches that have one
+* Setup a web-hook so we get notifications when someone commits changes on a branch or issues a pull-request.
+
+We handle build automation using the https://www.jenkins.io/doc/book/pipeline/jenkinsfile/[Jenkins Pipeline functionality].
+Look for one or more `Jenkinsfile`s inside the source code.
+It will contain all the build instructions we run during a build.
+
