@@ -151,6 +151,27 @@
 
             </subsection>
 
+            <subsection name="System properties">
+
+                <p>Some tuning can be done via system properties. This includes:</p>
+
+                <dl>
+                    <dt><strong>james.message.memory.threshold</strong></dt>
+                    <dd>(Optional). String (size, integer + size units, example: `12 KIB`, supported units are bytes KIB MIB GIB TIB). Defaults to 100KIB. <br/>
+                        This governs the threshold MimeMessageInputStreamSource relies on for storing MimeMessage content on disk. <br/>
+                        Below, data is stored in memory. Above data is stored on disk.
+                        Lower values will lead to longer processing time but will minimize heap memory usage. Modern SSD hardware
+                        should however support a high throughput. Higher values will lead to faster single mail processing at the cost
+                        of higher heap usage.
+                        </dd>
+
+                    <dt><strong>james.message.usememorycopy</strong></dt>
+                    <dd>Optional. Boolean. Defaults to false. Recommended value is true. <br/>
+                        Should MimeMessageWrapper use a copy of the message in memory?</dd>
+                </dl>
+
+            </subsection>
+
         </section>
 
     </body>

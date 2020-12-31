@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.mail.MessagingException;
 import javax.mail.util.SharedByteArrayInputStream;
@@ -34,6 +35,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.james.lifecycle.api.Disposable;
+import org.apache.james.util.SizeFormat;
 
 /**
  * Takes an input stream and creates a repeatable input stream source for a
@@ -41,6 +43,13 @@ import org.apache.james.lifecycle.api.Disposable;
  * saving that to data to an {@link DeferredFileOutputStream} with its threshold set to 100kb
  */
 public class MimeMessageInputStreamSource extends MimeMessageSource implements Disposable {
+
+    private static int threshold() {
+        return Optional.ofNullable(System.getProperty("james.message.memory.threshold"))
+            .map(SizeFormat::parseAsByteCount)
+            .map(Math::toIntExact)
+            .orElse(THRESHOLD);
+    }
 
     private final List<InputStream> streams = new ArrayList<>();
 
@@ -77,7 +86,7 @@ public class MimeMessageInputStreamSource extends MimeMessageSource implements D
         // We want to immediately read this into a temporary file
         // Create a temp file and channel the input stream into it
         try {
-            out = new DeferredFileOutputStream(THRESHOLD, "mimemessage-" + key, ".m64", TMPDIR);
+            out = new DeferredFileOutputStream(threshold(), "mimemessage-" + key, ".m64", TMPDIR);
             IOUtils.copy(in, out);
             sourceId = key;
         } catch (IOException ioe) {
