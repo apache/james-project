@@ -30,7 +30,7 @@ import reactor.core.scala.publisher.SMono
 
 
 class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
-                                     @Named("defaultBucket") defaultBucketName: BucketName,
+                                     @Named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER) defaultBucketName: BucketName,
                                      blobIdFactory: BlobId.Factory) extends BlobStore {
 
   override def save(bucketName: BucketName, data: Array[Byte], storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {

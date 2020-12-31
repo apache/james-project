@@ -19,8 +19,8 @@
 
 package org.apache.james.modules.mailbox;
 
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
@@ -29,7 +29,7 @@ public class CassandraBucketModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(BucketName.class)
-            .annotatedWith(Names.named(DeDuplicationBlobStore.DEFAULT_BUCKET()))
+            .annotatedWith(Names.named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER))
             .toInstance(BucketName.DEFAULT);
     }
 }

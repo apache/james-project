@@ -32,6 +32,7 @@ import javax.inject.Named;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
@@ -60,7 +61,7 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
     public CassandraBlobStoreDAO(CassandraDefaultBucketDAO defaultBucketDAO,
                                  CassandraBucketDAO bucketDAO,
                                  CassandraConfiguration cassandraConfiguration,
-                                 @Named("defaultBucket") BucketName defaultBucket) {
+                                 @Named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER) BucketName defaultBucket) {
         this.defaultBucketDAO = defaultBucketDAO;
         this.bucketDAO = bucketDAO;
         this.configuration = cassandraConfiguration;

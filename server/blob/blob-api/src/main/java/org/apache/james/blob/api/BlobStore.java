@@ -26,6 +26,7 @@ import org.reactivestreams.Publisher;
 import com.google.common.io.ByteSource;
 
 public interface BlobStore {
+    String DEFAULT_BUCKET_NAME_QUALIFIER = "defaultBucket";
 
     enum StoragePolicy {
         SIZE_BASED,

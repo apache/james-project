@@ -45,7 +45,7 @@ public class BlobMemoryModule extends AbstractModule {
         bind(BlobStoreDAO.class).to(MemoryBlobStoreDAO.class);
 
         bind(BucketName.class)
-            .annotatedWith(Names.named(DeDuplicationBlobStore.DEFAULT_BUCKET()))
+            .annotatedWith(Names.named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER))
             .toInstance(BucketName.DEFAULT);
     }
 }
