@@ -32,6 +32,7 @@ import org.apache.james.mailbox.model.{MessageId, MailboxACL => JavaMailboxACL, 
 import org.apache.james.mailbox.{FlagsBuilder, MessageUid, ModSeq}
 
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 
 object DTOs {
 
@@ -142,14 +143,16 @@ object DTOs {
   object UpdatedFlags {
     def toUpdatedFlags(javaUpdatedFlags: JavaUpdatedFlags): UpdatedFlags = UpdatedFlags(
       javaUpdatedFlags.getUid,
+      javaUpdatedFlags.getMessageId.toScala,
       javaUpdatedFlags.getModSeq,
       Flags.fromJavaFlags(javaUpdatedFlags.getOldFlags),
       Flags.fromJavaFlags(javaUpdatedFlags.getNewFlags))
   }
 
-  case class UpdatedFlags(uid: MessageUid, modSeq: ModSeq, oldFlags: Flags, newFlags: Flags) {
+  case class UpdatedFlags(uid: MessageUid, messageId: Option[MessageId], modSeq: ModSeq, oldFlags: Flags, newFlags: Flags) {
     def toJava: JavaUpdatedFlags = JavaUpdatedFlags.builder()
       .uid(uid)
+      .messageId(messageId.toJava)
       .modSeq(modSeq)
       .oldFlags(Flags.toJavaFlags(oldFlags))
       .newFlags(Flags.toJavaFlags(newFlags))

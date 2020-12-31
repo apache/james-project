@@ -39,7 +39,9 @@ import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -169,6 +171,76 @@ class FlagsUpdatedSerializationTest {
         void flagsUpdatedShouldBeWellDeSerialized() {
             assertThat(EVENT_SERIALIZER.fromJson(EVENT_JSON_WITH_EMPTY_UPDATED_FLAGS).get())
                 .isEqualTo(emptyUpdatedFlagsEvent);
+        }
+    }
+
+    @Nested
+    class WithMessageId {
+        private final MessageId messageId1 = TestMessageId.of(23456);
+        private final MessageId messageId2 = TestMessageId.of(78901);
+
+        private final UpdatedFlags updatedFlagsWithMessageId1 = UpdatedFlags.builder()
+            .uid(MESSAGE_UID_1)
+            .messageId(messageId1)
+            .modSeq(MOD_SEQ_1)
+            .oldFlags(OLD_FLAGS_1)
+            .newFlags(NEW_FLAGS_1)
+            .build();
+        private final UpdatedFlags updatedFlagsWithMessageId2 = UpdatedFlags.builder()
+            .uid(MESSAGE_UID_2)
+            .messageId(messageId2)
+            .modSeq(MOD_SEQ_2)
+            .oldFlags(OLD_FLAGS_2)
+            .newFlags(NEW_FLAGS_2)
+            .build();
+
+        private final List<UpdatedFlags> updatedFlagsListWithMessageIds = ImmutableList.of(updatedFlagsWithMessageId1, updatedFlagsWithMessageId2);
+
+        private final MailboxListener.FlagsUpdated eventWithMessageIds = new MailboxListener.FlagsUpdated(SESSION_ID, USERNAME,
+            MAILBOX_PATH, MAILBOX_ID, updatedFlagsListWithMessageIds, EVENT_ID);
+
+        private static final String EVENT_WITH_MESSAGE_IDS_JSON =
+            "{" +
+                "  \"FlagsUpdated\": {" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
+                "    \"path\": {" +
+                "      \"namespace\": \"#private\"," +
+                "      \"user\": \"user\"," +
+                "      \"name\": \"mailboxName\"" +
+                "    }," +
+                "    \"mailboxId\": \"18\"," +
+                "    \"sessionId\": 42," +
+                "    \"updatedFlags\": [" +
+                "      {" +
+                "        \"uid\": 123456," +
+                "        \"messageId\": \"23456\"," +
+                "        \"modSeq\": 35," +
+                "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
+                "      }," +
+                "      {" +
+                "        \"uid\": 654321," +
+                "        \"messageId\": \"78901\"," +
+                "        \"modSeq\": 36," +
+                "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
+                "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
+                "      }" +
+                "    ]," +
+                "    \"user\": \"user\"" +
+                "  }" +
+                "}";
+
+        @Test
+        void flagsUpdatedShouldBeWellSerialized() {
+            assertThatJson(EVENT_SERIALIZER.toJson(eventWithMessageIds))
+                .when(Option.IGNORING_ARRAY_ORDER)
+                .isEqualTo(EVENT_WITH_MESSAGE_IDS_JSON);
+        }
+
+        @Test
+        void flagsUpdatedShouldBeWellDeSerialized() {
+            assertThat(EVENT_SERIALIZER.fromJson(EVENT_WITH_MESSAGE_IDS_JSON).get())
+                .isEqualTo(eventWithMessageIds);
         }
     }
 

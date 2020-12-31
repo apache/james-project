@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.SortedMap;
 
 import org.apache.james.core.Username;
@@ -587,20 +588,30 @@ public interface MailboxListener {
      */
     class FlagsUpdated extends MessageEvent {
         private final List<MessageUid> uids;
+        private final List<MessageId> messageIds;
         private final List<UpdatedFlags> updatedFlags;
 
-        public FlagsUpdated(MailboxSession.SessionId sessionId, Username username, MailboxPath path, MailboxId mailboxId, List<UpdatedFlags> updatedFlags,
-                            EventId eventId) {
+        public FlagsUpdated(MailboxSession.SessionId sessionId, Username username, MailboxPath path,
+                            MailboxId mailboxId, List<UpdatedFlags> updatedFlags, EventId eventId) {
             super(sessionId, username, path, mailboxId, eventId);
             this.updatedFlags = ImmutableList.copyOf(updatedFlags);
             this.uids = updatedFlags.stream()
                 .map(UpdatedFlags::getUid)
+                .collect(Guavate.toImmutableList());
+            this.messageIds = updatedFlags.stream()
+                .map(UpdatedFlags::getMessageId)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .collect(Guavate.toImmutableList());
         }
 
         @Override
         public Collection<MessageUid> getUids() {
             return uids;
+        }
+
+        public Collection<MessageId> getMessageIds() {
+            return messageIds;
         }
 
         public List<UpdatedFlags> getUpdatedFlags() {
@@ -623,6 +634,7 @@ public interface MailboxListener {
                     && Objects.equals(this.path, that.path)
                     && Objects.equals(this.mailboxId, that.mailboxId)
                     && Objects.equals(this.uids, that.uids)
+                    && Objects.equals(this.messageIds, that.messageIds)
                     && Objects.equals(this.updatedFlags, that.updatedFlags);
             }
             return false;
@@ -630,7 +642,7 @@ public interface MailboxListener {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(eventId, sessionId, username, path, mailboxId, uids, updatedFlags);
+            return Objects.hash(eventId, sessionId, username, path, mailboxId, uids, messageIds, updatedFlags);
         }
     }
 

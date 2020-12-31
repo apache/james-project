@@ -43,6 +43,7 @@ public class UpdatedFlags {
 
     public static class Builder {
         private MessageUid uid;
+        private Optional<MessageId> messageId = Optional.empty();
         private Flags oldFlags;
         private Flags newFlags;
         private Optional<ModSeq> modSeq = Optional.empty();
@@ -52,6 +53,16 @@ public class UpdatedFlags {
 
         public Builder uid(MessageUid uid) {
             this.uid = uid;
+            return this;
+        }
+
+        public Builder messageId(MessageId messageId) {
+            this.messageId = Optional.of(messageId);
+            return this;
+        }
+
+        public Builder messageId(Optional<MessageId> messageId) {
+            this.messageId = messageId;
             return this;
         }
 
@@ -71,22 +82,27 @@ public class UpdatedFlags {
         }
 
         public UpdatedFlags build() {
-            Preconditions.checkState(uid != null);
-            Preconditions.checkState(newFlags != null);
-            Preconditions.checkState(oldFlags != null);
+            Preconditions.checkNotNull(uid);
+            Preconditions.checkNotNull(newFlags);
+            Preconditions.checkNotNull(oldFlags);
             Preconditions.checkState(modSeq.isPresent());
-            return new UpdatedFlags(uid, modSeq.get(), oldFlags, newFlags);
+            return new UpdatedFlags(uid, messageId, modSeq.get(), oldFlags, newFlags);
         }
     }
 
     private final MessageUid uid;
+    /**
+     * The usage of Optional here is for backward compatibility (to be able to still dequeue older events)
+     */
+    private final Optional<MessageId> messageId;
     private final Flags oldFlags;
     private final Flags newFlags;
     private final Flags modifiedFlags;
     private final ModSeq modSeq;
 
-    private UpdatedFlags(MessageUid uid, ModSeq modSeq, Flags oldFlags, Flags newFlags) {
+    private UpdatedFlags(MessageUid uid, Optional<MessageId> messageId, ModSeq modSeq, Flags oldFlags, Flags newFlags) {
        this.uid = uid;
+       this.messageId = messageId;
        this.modSeq = modSeq;
        this.oldFlags = oldFlags;
        this.newFlags = newFlags;
@@ -177,7 +193,13 @@ public class UpdatedFlags {
     public MessageUid getUid() {
         return uid;
     }
-   
+
+    /**
+     * Return the uid for the message whichs {@link Flags} was updated
+     */
+    public Optional<MessageId> getMessageId() {
+        return messageId;
+    }
 
     /**
      * Gets an iterator for the system flags changed.
@@ -238,6 +260,7 @@ public class UpdatedFlags {
         UpdatedFlags that = (UpdatedFlags) other;
 
         return Objects.equals(uid, that.uid) &&
+                Objects.equals(messageId, that.messageId) &&
                 Objects.equals(oldFlags, that.oldFlags) &&
                 Objects.equals(newFlags, that.newFlags) &&
                 Objects.equals(modSeq, that.modSeq);
@@ -245,7 +268,7 @@ public class UpdatedFlags {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(uid, oldFlags, newFlags, modSeq);
+        return Objects.hash(uid, messageId, oldFlags, newFlags, modSeq);
     }
     
     @Override
