@@ -19,13 +19,13 @@
 
 package org.apache.james.webadmin.mdc;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class RequestIdTest {
+class RequestIdTest {
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(RequestId.class).verify();
     }
 }

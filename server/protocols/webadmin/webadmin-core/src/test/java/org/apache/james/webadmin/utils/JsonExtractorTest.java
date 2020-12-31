@@ -22,64 +22,64 @@ package org.apache.james.webadmin.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 
-public class JsonExtractorTest {
+class JsonExtractorTest {
 
     private JsonExtractor<Request> jsonExtractor;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         jsonExtractor = new JsonExtractor<>(Request.class);
     }
 
     @Test
-    public void parseShouldThrowOnNullInput() throws Exception {
+    void parseShouldThrowOnNullInput() {
         assertThatThrownBy(() -> jsonExtractor.parse(null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void parseShouldThrowOnEmptyInput() throws Exception {
+    void parseShouldThrowOnEmptyInput() {
         assertThatThrownBy(() -> jsonExtractor.parse("")).isInstanceOf(JsonExtractException.class);
     }
 
     @Test
-    public void parseShouldThrowOnBrokenJson() throws Exception {
+    void parseShouldThrowOnBrokenJson() {
         assertThatThrownBy(() -> jsonExtractor.parse("{\"field1\":\"broken")).isInstanceOf(JsonExtractException.class);
     }
 
     @Test
-    public void parseShouldThrowOnEmptyJson() throws Exception {
+    void parseShouldThrowOnEmptyJson() {
         assertThatThrownBy(() -> jsonExtractor.parse("{}")).isInstanceOf(JsonExtractException.class);
     }
 
     @Test
-    public void parseShouldThrowOnMissingMandatoryField() throws Exception {
+    void parseShouldThrowOnMissingMandatoryField() {
         assertThatThrownBy(() -> jsonExtractor.parse("{\"field1\":\"any\"}")).isInstanceOf(JsonExtractException.class);
     }
 
     @Test
-    public void parseShouldThrowOnValidationProblemIllegalArgumentException() throws Exception {
+    void parseShouldThrowOnValidationProblemIllegalArgumentException() {
         assertThatThrownBy(() -> jsonExtractor.parse("{\"field1\":\"\",\"field2\":\"any\"}")).isInstanceOf(JsonExtractException.class);
     }
 
     @Test
-    public void parseShouldThrowOnValidationProblemNPE() throws Exception {
+    void parseShouldThrowOnValidationProblemNPE() {
         assertThatThrownBy(() -> jsonExtractor.parse("{\"field1\":null,\"field2\":\"any\"}")).isInstanceOf(JsonExtractException.class);
     }
 
     @Test
-    public void parseShouldThrowOnExtraFiled() throws Exception {
+    void parseShouldThrowOnExtraFiled() {
         assertThatThrownBy(() -> jsonExtractor.parse("{\"field1\":\"value\",\"field2\":\"any\",\"extra\":\"extra\"}")).isInstanceOf(JsonExtractException.class);
     }
 
     @Test
-    public void parseShouldInstantiateDestinationClass() throws Exception {
+    void parseShouldInstantiateDestinationClass() throws Exception {
         String field1 = "value1";
         String field2 = "value2";
         Request request = jsonExtractor.parse("{\"field1\":\"" + field1 + "\",\"field2\":\"" + field2 + "\"}");

@@ -20,50 +20,41 @@
 package org.apache.james.webadmin;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class TlsConfigurationTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
+class TlsConfigurationTest {
     @Test
-    public void buildShouldThrowWhenNotEnabled() {
-        expectedException.expect(IllegalStateException.class);
-
-        TlsConfiguration.builder().build();
+    void buildShouldThrowWhenNotEnabled() {
+        assertThatThrownBy(() -> TlsConfiguration.builder().build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void buildShouldThrowWhenEnableWithoutKeystore() {
-        expectedException.expect(IllegalStateException.class);
-
-        TlsConfiguration.builder().build();
+    void buildShouldThrowWhenEnableWithoutKeystore() {
+        assertThatThrownBy(() -> TlsConfiguration.builder().build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void selfSignedShouldThrowOnNullKeyStorePath() {
-        expectedException.expect(NullPointerException.class);
-
-        TlsConfiguration.builder()
-            .selfSigned(null, "abc");
+    void selfSignedShouldThrowOnNullKeyStorePath() {
+        assertThatThrownBy(() -> TlsConfiguration.builder()
+            .selfSigned(null, "abc"))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void selfSignedShouldThrowOnNullKeyStorePassword() {
-        expectedException.expect(NullPointerException.class);
-
-        TlsConfiguration.builder()
-            .selfSigned("abc", null);
+    void selfSignedShouldThrowOnNullKeyStorePassword() {
+        assertThatThrownBy(() -> TlsConfiguration.builder()
+            .selfSigned("abc", null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void buildShouldWorkOnSelfSignedHttps() {
+    void buildShouldWorkOnSelfSignedHttps() {
         assertThat(
             TlsConfiguration.builder()
                 .selfSigned("abcd", "efgh")
@@ -72,7 +63,7 @@ public class TlsConfigurationTest {
     }
 
     @Test
-    public void buildShouldWorkOnTrustedHttps() {
+    void buildShouldWorkOnTrustedHttps() {
         assertThat(
             TlsConfiguration.builder()
                 .raw("a", "b", "c", "d")
@@ -81,7 +72,7 @@ public class TlsConfigurationTest {
     }
 
     @Test
-    public void shouldRespectBeanContract() {
+    void shouldRespectBeanContract() {
         EqualsVerifier.forClass(TlsConfiguration.class).verify();
     }
 

@@ -27,15 +27,15 @@ import java.util.Optional;
 
 import org.apache.james.util.streams.Limit;
 import org.apache.james.util.streams.Offset;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import spark.HaltException;
 import spark.Request;
 
-public class ParametersExtractorTest {
+class ParametersExtractorTest {
 
     @Test
-    public void extractLimitShouldReturnUnlimitedWhenNotInParameters() {
+    void extractLimitShouldReturnUnlimitedWhenNotInParameters() {
         Request request = mock(Request.class);
         when(request.queryParams("limit"))
             .thenReturn(null);
@@ -46,7 +46,7 @@ public class ParametersExtractorTest {
     }
 
     @Test
-    public void extractLimitShouldReturnUnlimitedWhenPresentInParametersButEmpty() {
+    void extractLimitShouldReturnUnlimitedWhenPresentInParametersButEmpty() {
         Request request = mock(Request.class);
         when(request.queryParams("limit"))
             .thenReturn("");
@@ -57,7 +57,7 @@ public class ParametersExtractorTest {
     }
 
     @Test
-    public void extractLimitShouldReturnTheLimitWhenPresentInParameters() {
+    void extractLimitShouldReturnTheLimitWhenPresentInParameters() {
         Request request = mock(Request.class);
         when(request.queryParams("limit"))
             .thenReturn("123");
@@ -68,7 +68,7 @@ public class ParametersExtractorTest {
     }
 
     @Test
-    public void extractLimitShouldThrowWhenNegativeLimit() {
+    void extractLimitShouldThrowWhenNegativeLimit() {
         Request request = mock(Request.class);
         when(request.queryParams("limit"))
             .thenReturn("-123");
@@ -78,7 +78,7 @@ public class ParametersExtractorTest {
     }
 
     @Test
-    public void extractLimitShouldThrowWhenZeroLimit() {
+    void extractLimitShouldThrowWhenZeroLimit() {
         Request request = mock(Request.class);
         when(request.queryParams("limit"))
             .thenReturn("0");
@@ -88,7 +88,7 @@ public class ParametersExtractorTest {
     }
 
     @Test
-    public void extractOffsetShouldReturnNoneWhenNotInParameters() {
+    void extractOffsetShouldReturnNoneWhenNotInParameters() {
         Request request = mock(Request.class);
         when(request.queryParams("offset"))
             .thenReturn(null);
@@ -99,7 +99,7 @@ public class ParametersExtractorTest {
     }
 
     @Test
-    public void extractOffsetShouldReturnNoneWhenPresentInParametersButEmpty() {
+    void extractOffsetShouldReturnNoneWhenPresentInParametersButEmpty() {
         Request request = mock(Request.class);
         when(request.queryParams("offset"))
             .thenReturn("");
@@ -110,7 +110,7 @@ public class ParametersExtractorTest {
     }
 
     @Test
-    public void extractOffsetShouldReturnTheOffsetWhenPresentInParameters() {
+    void extractOffsetShouldReturnTheOffsetWhenPresentInParameters() {
         Request request = mock(Request.class);
         when(request.queryParams("offset"))
             .thenReturn("123");
@@ -121,7 +121,7 @@ public class ParametersExtractorTest {
     }
 
     @Test
-    public void extractOffsetShouldThrowWhenNegativeOffset() {
+    void extractOffsetShouldThrowWhenNegativeOffset() {
         Request request = mock(Request.class);
         when(request.queryParams("offset"))
             .thenReturn("-123");
@@ -131,7 +131,7 @@ public class ParametersExtractorTest {
     }
 
     @Test
-    public void extractOffsetShouldReturnNoneWhenZeroLimit() {
+    void extractOffsetShouldReturnNoneWhenZeroLimit() {
         Request request = mock(Request.class);
         when(request.queryParams("offset"))
             .thenReturn("0");
@@ -144,7 +144,7 @@ public class ParametersExtractorTest {
     
 
     @Test
-    public void extractPositiveDoubleShouldReturnEmptyWhenNotInParameters() {
+    void extractPositiveDoubleShouldReturnEmptyWhenNotInParameters() {
         String parameterName = "param";
         Request request = mock(Request.class);
         when(request.queryParams(parameterName))
@@ -156,7 +156,7 @@ public class ParametersExtractorTest {
     }
 
     @Test
-    public void extractPositiveDoubleShouldReturnNoneWhenPresentInParametersButEmpty() {
+    void extractPositiveDoubleShouldReturnNoneWhenPresentInParametersButEmpty() {
         String parameterName = "param";
         Request request = mock(Request.class);
         when(request.queryParams(parameterName))
@@ -168,7 +168,7 @@ public class ParametersExtractorTest {
     }
 
     @Test
-    public void extractPositiveDoubleShouldReturnTheDoubleWhenPresentInParameters() {
+    void extractPositiveDoubleShouldReturnTheDoubleWhenPresentInParameters() {
         String parameterName = "param";
         Request request = mock(Request.class);
         when(request.queryParams(parameterName))
@@ -180,7 +180,7 @@ public class ParametersExtractorTest {
     }
 
     @Test
-    public void extractPositiveDoubleShouldThrowWhenNegativePositiveDouble() {
+    void extractPositiveDoubleShouldThrowWhenNegativePositiveDouble() {
         String parameterName = "param";
         Request request = mock(Request.class);
         when(request.queryParams(parameterName))
@@ -193,7 +193,7 @@ public class ParametersExtractorTest {
     }
 
     @Test
-    public void extractPositiveDoubleShouldReturnZeroWhenZeroLimit() {
+    void extractPositiveDoubleShouldReturnZeroWhenZeroLimit() {
         String parameterName = "param";
         Request request = mock(Request.class);
         when(request.queryParams(parameterName))

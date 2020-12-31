@@ -42,14 +42,14 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.consumers.ConsumerChainer;
 import com.google.common.collect.ImmutableList;
 
-public class ReprocessingServiceTest {
+class ReprocessingServiceTest {
     private static final String MEMORY_PROTOCOL = "memory";
     private static final MailRepositoryPath PATH = MailRepositoryPath.from("path");
     private static final String NAME_1 = "key-1";
@@ -69,8 +69,8 @@ public class ReprocessingServiceTest {
     private FakeMail mail2;
     private FakeMail mail3;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         mailRepositoryStore = createMemoryMailRepositoryStore();
 
         queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
@@ -94,7 +94,7 @@ public class ReprocessingServiceTest {
     }
 
     @Test
-    public void reprocessingOneShouldEnqueueMail() throws Exception {
+    void reprocessingOneShouldEnqueueMail() throws Exception {
         MailRepository repository = mailRepositoryStore.select(MailRepositoryUrl.fromPathAndProtocol(PATH, MEMORY_PROTOCOL));
         repository.store(mail1);
         repository.store(mail2);
@@ -109,7 +109,7 @@ public class ReprocessingServiceTest {
     }
 
     @Test
-    public void reprocessingOneShouldRemoveMailFromRepository() throws Exception {
+    void reprocessingOneShouldRemoveMailFromRepository() throws Exception {
         MailRepository repository = mailRepositoryStore.select(MailRepositoryUrl.fromPathAndProtocol(PATH, MEMORY_PROTOCOL));
         repository.store(mail1);
         repository.store(mail2);
@@ -122,7 +122,7 @@ public class ReprocessingServiceTest {
     }
 
     @Test
-    public void reprocessingShouldEmptyRepository() throws Exception {
+    void reprocessingShouldEmptyRepository() throws Exception {
         MailRepository repository = mailRepositoryStore.select(MailRepositoryUrl.fromPathAndProtocol(PATH, MEMORY_PROTOCOL));
         repository.store(mail1);
         repository.store(mail2);
@@ -135,7 +135,7 @@ public class ReprocessingServiceTest {
     }
 
     @Test
-    public void reprocessingShouldEnqueueAllMails() throws Exception {
+    void reprocessingShouldEnqueueAllMails() throws Exception {
         MailRepository repository = mailRepositoryStore.select(MailRepositoryUrl.fromPathAndProtocol(PATH, MEMORY_PROTOCOL));
         repository.store(mail1);
         repository.store(mail2);
@@ -150,7 +150,7 @@ public class ReprocessingServiceTest {
     }
 
     @Test
-    public void reprocessingShouldNotFailOnConcurrentDeletion() throws Exception {
+    void reprocessingShouldNotFailOnConcurrentDeletion() throws Exception {
         MailRepository repository = mailRepositoryStore.select(MailRepositoryUrl.fromPathAndProtocol(PATH, MEMORY_PROTOCOL));
         repository.store(mail1);
         repository.store(mail2);

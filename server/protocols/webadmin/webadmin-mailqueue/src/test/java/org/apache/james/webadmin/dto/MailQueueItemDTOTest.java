@@ -28,31 +28,26 @@ import org.apache.james.queue.api.Mails;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.ManageableMailQueue.MailQueueItemView;
 import org.apache.mailet.base.test.FakeMail;
-import org.assertj.core.api.JUnitSoftAssertions;
-import org.junit.Rule;
-import org.junit.Test;
+import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.Test;
 
 import com.github.steveash.guavate.Guavate;
 
-public class MailQueueItemDTOTest {
-
-    @Rule
-    public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
-
+class MailQueueItemDTOTest {
     @Test
-    public void buildShouldThrowWhenNameIsNull() {
+    void buildShouldThrowWhenNameIsNull() {
         assertThatThrownBy(() -> MailQueueItemDTO.builder().build())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void buildShouldThrowWhenNameIsEmpty() {
+    void buildShouldThrowWhenNameIsEmpty() {
         assertThatThrownBy(() -> MailQueueItemDTO.builder().name("").build())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void fromShouldCreateTheRightObject() throws Exception {
+    void fromShouldCreateTheRightObject() throws Exception {
         FakeMail mail = Mails.defaultMail().name("name").build();
         ZonedDateTime date = ZonedDateTime.parse("2018-01-02T11:22:02Z");
         MailQueueItemView mailQueueItemView = new ManageableMailQueue.DefaultMailQueueItemView(mail, date);
@@ -61,9 +56,11 @@ public class MailQueueItemDTOTest {
                 .map(MailAddress::asString)
                 .collect(Guavate.toImmutableList());
 
-        softly.assertThat(mailQueueItemDTO.getName()).isEqualTo(mail.getName());
-        softly.assertThat(mailQueueItemDTO.getSender()).isEqualTo(mail.getMaybeSender().get().asString());
-        softly.assertThat(mailQueueItemDTO.getRecipients()).isEqualTo(expectedRecipients);
-        softly.assertThat(mailQueueItemDTO.getNextDelivery()).contains(date);
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(mailQueueItemDTO.getName()).isEqualTo(mail.getName());
+            softly.assertThat(mailQueueItemDTO.getSender()).isEqualTo(mail.getMaybeSender().get().asString());
+            softly.assertThat(mailQueueItemDTO.getRecipients()).isEqualTo(expectedRecipients);
+            softly.assertThat(mailQueueItemDTO.getNextDelivery()).contains(date);
+        });
     }
 }

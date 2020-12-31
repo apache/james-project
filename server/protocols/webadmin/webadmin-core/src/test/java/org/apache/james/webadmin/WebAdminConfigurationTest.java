@@ -20,29 +20,23 @@
 package org.apache.james.webadmin;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class WebAdminConfigurationTest {
-
-    public static final FixedPortSupplier PORT = new FixedPortSupplier(80);
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class WebAdminConfigurationTest {
+    static final FixedPortSupplier PORT = new FixedPortSupplier(80);
 
     @Test
-    public void buildShouldThrowWhenNoPortButEnabled() {
-        expectedException.expect(IllegalStateException.class);
-
-        WebAdminConfiguration.builder().enabled().build();
+    void buildShouldThrowWhenNoPortButEnabled() {
+        assertThatThrownBy(() -> WebAdminConfiguration.builder().enabled().build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void buildShouldWorkWithoutPortWhenDisabled() {
+    void buildShouldWorkWithoutPortWhenDisabled() {
         assertThat(WebAdminConfiguration.builder()
             .disabled()
             .build())
@@ -51,14 +45,13 @@ public class WebAdminConfigurationTest {
     }
 
     @Test
-    public void buildShouldFailOnNoEnable() {
-        expectedException.expect(IllegalStateException.class);
-
-        WebAdminConfiguration.builder().port(PORT).build();
+    void buildShouldFailOnNoEnable() {
+        assertThatThrownBy(() -> WebAdminConfiguration.builder().port(PORT).build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void builderShouldBuildWithRightPort() {
+    void builderShouldBuildWithRightPort() {
         assertThat(
             WebAdminConfiguration.builder()
                 .enabled()
@@ -70,7 +63,7 @@ public class WebAdminConfigurationTest {
 
 
     @Test
-    public void builderShouldBuildWithEnable() {
+    void builderShouldBuildWithEnable() {
         assertThat(
             WebAdminConfiguration.builder()
                 .enabled()
@@ -81,7 +74,7 @@ public class WebAdminConfigurationTest {
     }
 
     @Test
-    public void builderShouldAcceptHttps() {
+    void builderShouldAcceptHttps() {
         TlsConfiguration tlsConfiguration = TlsConfiguration.builder()
             .selfSigned("abcd", "efgh")
             .build();
@@ -97,7 +90,7 @@ public class WebAdminConfigurationTest {
     }
 
     @Test
-    public void builderShouldReturnTlsEnableWhenTlsConfiguration() {
+    void builderShouldReturnTlsEnableWhenTlsConfiguration() {
         TlsConfiguration tlsConfiguration = TlsConfiguration.builder()
             .selfSigned("abcd", "efgh")
             .build();
@@ -113,7 +106,7 @@ public class WebAdminConfigurationTest {
     }
 
     @Test
-    public void builderShouldReturnTlsDisableWhenNoTlsConfiguration() {
+    void builderShouldReturnTlsDisableWhenNoTlsConfiguration() {
         assertThat(
             WebAdminConfiguration.builder()
                 .enabled()
@@ -124,7 +117,7 @@ public class WebAdminConfigurationTest {
     }
 
     @Test
-    public void builderShouldCORSEnabled() {
+    void builderShouldCORSEnabled() {
         assertThat(
             WebAdminConfiguration.builder()
                 .enabled()
@@ -136,7 +129,7 @@ public class WebAdminConfigurationTest {
     }
 
     @Test
-    public void builderShouldAcceptAllOriginsByDefault() {
+    void builderShouldAcceptAllOriginsByDefault() {
         assertThat(
             WebAdminConfiguration.builder()
                 .enabled()
@@ -148,7 +141,7 @@ public class WebAdminConfigurationTest {
     }
 
     @Test
-    public void builderShouldCORSDisabled() {
+    void builderShouldCORSDisabled() {
         assertThat(
             WebAdminConfiguration.builder()
                 .enabled()
@@ -160,7 +153,7 @@ public class WebAdminConfigurationTest {
     }
 
     @Test
-    public void builderShouldCORSWithOrigin() {
+    void builderShouldCORSWithOrigin() {
         String origin = "linagora.com";
         assertThat(
             WebAdminConfiguration.builder()
@@ -174,7 +167,7 @@ public class WebAdminConfigurationTest {
     }
 
     @Test
-    public void builderShouldDefineHostWithDefault() {
+    void builderShouldDefineHostWithDefault() {
         assertThat(
             WebAdminConfiguration.builder()
                 .enabled()
@@ -185,7 +178,7 @@ public class WebAdminConfigurationTest {
     }
 
     @Test
-    public void builderShouldDefineHostWithSetting() {
+    void builderShouldDefineHostWithSetting() {
         String host = "any.host";
         assertThat(
             WebAdminConfiguration.builder()
@@ -198,8 +191,7 @@ public class WebAdminConfigurationTest {
     }
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(WebAdminConfiguration.class).verify();
     }
-
 }

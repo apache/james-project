@@ -21,14 +21,12 @@ package org.apache.james.webadmin;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class RandomPortSupplierTest {
-
+class RandomPortSupplierTest {
     @Test
-    public void toIntShouldReturnTwoTimeTheSameResult() {
+    void toIntShouldReturnTwoTimeTheSameResult() {
         RandomPortSupplier testee = new RandomPortSupplier();
         assertThat(testee.get().getValue()).isEqualTo(testee.get().getValue());
     }
-
 }

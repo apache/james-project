@@ -34,19 +34,19 @@ import static org.hamcrest.Matchers.equalTo;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.ErrorResponder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.restassured.RestAssured;
 
-public class ErrorRoutesTest {
+class ErrorRoutesTest {
     private static final String NOT_FOUND = "notFound";
 
     private WebAdminServer webAdminServer;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         webAdminServer = WebAdminUtils.createWebAdminServer(new ErrorRoutes())
             .start();
 
@@ -56,13 +56,13 @@ public class ErrorRoutesTest {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         webAdminServer.destroy();
     }
 
     @Test
-    public void defineInternalErrorShouldReturnInternalErrorJsonFormat() {
+    void defineInternalErrorShouldReturnInternalErrorJsonFormat() {
         when()
             .get(INTERNAL_SERVER_ERROR)
         .then()
@@ -73,7 +73,7 @@ public class ErrorRoutesTest {
     }
 
     @Test
-    public void defineNotFoundShouldReturnNotFoundJsonFormat() {
+    void defineNotFoundShouldReturnNotFoundJsonFormat() {
         when()
             .get(NOT_FOUND)
         .then()
@@ -84,7 +84,7 @@ public class ErrorRoutesTest {
     }
 
     @Test
-    public void defineJsonExtractExceptionShouldReturnBadRequestJsonFormat() {
+    void defineJsonExtractExceptionShouldReturnBadRequestJsonFormat() {
         when()
             .get(JSON_EXTRACT_EXCEPTION)
         .then()
@@ -96,7 +96,7 @@ public class ErrorRoutesTest {
     }
 
     @Test
-    public void defineIllegalExceptionShouldReturnBadRequestJsonFormat() {
+    void defineIllegalExceptionShouldReturnBadRequestJsonFormat() {
         when()
             .get(INVALID_ARGUMENT_EXCEPTION)
         .then()

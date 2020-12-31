@@ -41,10 +41,10 @@ import org.apache.james.util.streams.Offset;
 import org.apache.james.webadmin.dto.MailKeyDTO;
 import org.apache.james.webadmin.dto.SingleMailRepositoryResponse;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class MailRepositoryStoreServiceTest {
+class MailRepositoryStoreServiceTest {
     private static final MailRepositoryPath FIRST_REPOSITORY_PATH = MailRepositoryPath.from("repository");
     private static final MailRepositoryPath SECOND_REPOSITORY_PATH = MailRepositoryPath.from("repository2");
     private static final MailKey NAME_1 = new MailKey("name1");
@@ -54,22 +54,22 @@ public class MailRepositoryStoreServiceTest {
     private MailRepositoryStoreService testee;
     private MemoryMailRepository repository;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         mailRepositoryStore = mock(MailRepositoryStore.class);
         repository = new MemoryMailRepository();
         testee = new MailRepositoryStoreService(mailRepositoryStore);
     }
 
     @Test
-    public void listMailRepositoriesShouldReturnEmptyWhenEmpty() {
+    void listMailRepositoriesShouldReturnEmptyWhenEmpty() {
         when(mailRepositoryStore.getPaths()).thenReturn(Stream.empty());
 
         assertThat(testee.listMailRepositories()).isEmpty();
     }
 
     @Test
-    public void listMailRepositoriesShouldReturnOneRepositoryWhenOne() {
+    void listMailRepositoriesShouldReturnOneRepositoryWhenOne() {
         when(mailRepositoryStore.getPaths())
             .thenReturn(Stream.of(FIRST_REPOSITORY_PATH));
         assertThat(testee.listMailRepositories())
@@ -78,7 +78,7 @@ public class MailRepositoryStoreServiceTest {
     }
 
     @Test
-    public void listMailRepositoriesShouldReturnTwoRepositoriesWhentwo() {
+    void listMailRepositoriesShouldReturnTwoRepositoriesWhentwo() {
         when(mailRepositoryStore.getPaths())
             .thenReturn(Stream.of(FIRST_REPOSITORY_PATH, SECOND_REPOSITORY_PATH));
         assertThat(testee.listMailRepositories())
@@ -87,7 +87,7 @@ public class MailRepositoryStoreServiceTest {
     }
 
     @Test
-    public void listMailsShouldThrowWhenMailRepositoryStoreThrows() throws Exception {
+    void listMailsShouldThrowWhenMailRepositoryStoreThrows() throws Exception {
         when(mailRepositoryStore.getByPath(FIRST_REPOSITORY_PATH))
             .thenThrow(new MailRepositoryStore.MailRepositoryStoreException("message"));
 
@@ -96,7 +96,7 @@ public class MailRepositoryStoreServiceTest {
     }
 
     @Test
-    public void listMailsShouldReturnEmptyWhenMailRepositoryIsEmpty() throws Exception {
+    void listMailsShouldReturnEmptyWhenMailRepositoryIsEmpty() throws Exception {
         when(mailRepositoryStore.getByPath(FIRST_REPOSITORY_PATH)).thenReturn(Stream.of(repository));
 
         assertThat(testee.listMails(FIRST_REPOSITORY_PATH, Offset.none(), Limit.unlimited()).get())
@@ -104,7 +104,7 @@ public class MailRepositoryStoreServiceTest {
     }
 
     @Test
-    public void listMailsShouldReturnContainedMailKeys() throws Exception {
+    void listMailsShouldReturnContainedMailKeys() throws Exception {
         when(mailRepositoryStore.getByPath(FIRST_REPOSITORY_PATH)).thenReturn(Stream.of(repository));
 
         repository.store(FakeMail.builder()
@@ -119,7 +119,7 @@ public class MailRepositoryStoreServiceTest {
     }
 
     @Test
-    public void listMailsShouldApplyLimitAndOffset() throws Exception {
+    void listMailsShouldApplyLimitAndOffset() throws Exception {
         when(mailRepositoryStore.getByPath(FIRST_REPOSITORY_PATH)).thenReturn(Stream.of(repository));
 
         repository.store(FakeMail.builder()
@@ -137,7 +137,7 @@ public class MailRepositoryStoreServiceTest {
     }
 
     @Test
-    public void retrieveMessageShouldThrownWhenUnknownRepository() throws Exception {
+    void retrieveMessageShouldThrownWhenUnknownRepository() throws Exception {
         when(mailRepositoryStore.getByPath(FIRST_REPOSITORY_PATH)).thenReturn(Stream.of());
 
         assertThatThrownBy(() -> testee.retrieveMessage(FIRST_REPOSITORY_PATH, NAME_1))
@@ -145,7 +145,7 @@ public class MailRepositoryStoreServiceTest {
     }
 
     @Test
-    public void retrieveMessageShouldThrowWhenMailRepositoryStoreThrows() throws Exception {
+    void retrieveMessageShouldThrowWhenMailRepositoryStoreThrows() throws Exception {
         when(mailRepositoryStore.getByPath(FIRST_REPOSITORY_PATH))
             .thenThrow(new MailRepositoryStore.MailRepositoryStoreException("message"));
 
@@ -154,7 +154,7 @@ public class MailRepositoryStoreServiceTest {
     }
 
     @Test
-    public void retrieveMessageShouldReturnEmptyWhenMailNotFound() throws Exception {
+    void retrieveMessageShouldReturnEmptyWhenMailNotFound() throws Exception {
         when(mailRepositoryStore.getByPath(FIRST_REPOSITORY_PATH)).thenReturn(Stream.of(repository));
 
         assertThat(testee.retrieveMessage(FIRST_REPOSITORY_PATH, NAME_1))
@@ -162,7 +162,7 @@ public class MailRepositoryStoreServiceTest {
     }
 
     @Test
-    public void retrieveMessageShouldReturnTheMessageWhenMailExists() throws Exception {
+    void retrieveMessageShouldReturnTheMessageWhenMailExists() throws Exception {
         when(mailRepositoryStore.getByPath(FIRST_REPOSITORY_PATH)).thenReturn(Stream.of(repository));
 
         FakeMail mail = FakeMail.builder()

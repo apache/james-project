@@ -38,17 +38,16 @@ import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 
 import io.restassured.RestAssured;
 import net.javacrumbs.jsonunit.core.Option;
 import reactor.core.publisher.Mono;
 
-public class HealthCheckRoutesTest {
-
+class HealthCheckRoutesTest {
     private static final String NAME_1 = "component-1";
     private static final String NAME_2 = "component-2";
     private static final String NAME_3 = "component 3";
@@ -76,8 +75,8 @@ public class HealthCheckRoutesTest {
     private WebAdminServer webAdminServer;
     private Set<HealthCheck> healthChecks;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         healthChecks = new HashSet<>();
         webAdminServer = WebAdminUtils.createWebAdminServer(new HealthCheckRoutes(healthChecks, new JsonTransformer()))
             .start();
@@ -87,13 +86,13 @@ public class HealthCheckRoutesTest {
             .build();
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         webAdminServer.destroy();
     }
 
     @Test
-    public void validateHealthChecksShouldReturnOkWhenNoHealthChecks() {
+    void validateHealthChecksShouldReturnOkWhenNoHealthChecks() {
         String healthCheckBody =
             "{\"status\":\"healthy\"," +
             " \"checks\":[]}";
@@ -110,7 +109,7 @@ public class HealthCheckRoutesTest {
     }
 
     @Test
-    public void validateHealthChecksShouldReturnOkWhenHealthChecksAreHealthy() {
+    void validateHealthChecksShouldReturnOkWhenHealthChecksAreHealthy() {
         healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_1)));
         healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_2)));
         String healthCheckBody =
@@ -142,7 +141,7 @@ public class HealthCheckRoutesTest {
     }
 
     @Test
-    public void validateHealthChecksShouldReturnInternalErrorWhenOneHealthCheckIsUnhealthy() {
+    void validateHealthChecksShouldReturnInternalErrorWhenOneHealthCheckIsUnhealthy() {
         healthChecks.add(healthCheck(Result.unhealthy(COMPONENT_NAME_1, "cause")));
         healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_2)));
         String healthCheckBody =
@@ -174,7 +173,7 @@ public class HealthCheckRoutesTest {
     }
 
     @Test
-    public void validateHealthChecksShouldReturnInternalErrorWhenAllHealthChecksAreUnhealthy() {
+    void validateHealthChecksShouldReturnInternalErrorWhenAllHealthChecksAreUnhealthy() {
         healthChecks.add(healthCheck(Result.unhealthy(COMPONENT_NAME_1, "cause")));
         healthChecks.add(healthCheck(Result.unhealthy(COMPONENT_NAME_2, SAMPLE_CAUSE)));
         String healthCheckBody =
@@ -206,7 +205,7 @@ public class HealthCheckRoutesTest {
     }
 
     @Test
-    public void validateHealthChecksShouldReturnInternalErrorWhenOneHealthCheckIsDegraded() {
+    void validateHealthChecksShouldReturnInternalErrorWhenOneHealthCheckIsDegraded() {
         healthChecks.add(healthCheck(Result.degraded(COMPONENT_NAME_1, "cause")));
         healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_2)));
         String healthCheckBody =
@@ -238,7 +237,7 @@ public class HealthCheckRoutesTest {
     }
 
     @Test
-    public void validateHealthChecksShouldReturnInternalErrorWhenAllHealthCheckAreDegraded() {
+    void validateHealthChecksShouldReturnInternalErrorWhenAllHealthCheckAreDegraded() {
         healthChecks.add(healthCheck(Result.degraded(COMPONENT_NAME_1, "cause")));
         healthChecks.add(healthCheck(Result.degraded(COMPONENT_NAME_2, "cause")));
         String healthCheckBody =
@@ -270,7 +269,7 @@ public class HealthCheckRoutesTest {
     }
 
     @Test
-    public void validateHealthChecksShouldReturnStatusUnHealthyWhenOneIsUnHealthyAndOtherIsDegraded() {
+    void validateHealthChecksShouldReturnStatusUnHealthyWhenOneIsUnHealthyAndOtherIsDegraded() {
         healthChecks.add(healthCheck(Result.degraded(COMPONENT_NAME_1, "cause")));
         healthChecks.add(healthCheck(Result.unhealthy(COMPONENT_NAME_2, "cause")));
         String healthCheckBody =
@@ -301,7 +300,7 @@ public class HealthCheckRoutesTest {
     }
     
     @Test
-    public void performHealthCheckShouldReturnOkWhenHealthCheckIsHealthy() {
+    void performHealthCheckShouldReturnOkWhenHealthCheckIsHealthy() {
         healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_1)));
         
         given()
@@ -317,7 +316,7 @@ public class HealthCheckRoutesTest {
     }
     
     @Test
-    public void performHealthCheckShouldReturnNotFoundWhenComponentNameIsUnknown() {
+    void performHealthCheckShouldReturnNotFoundWhenComponentNameIsUnknown() {
         
         given()
             .pathParam("componentName", "unknown")
@@ -332,7 +331,7 @@ public class HealthCheckRoutesTest {
     }
     
     @Test
-    public void performHealthCheckShouldReturnInternalErrorWhenHealthCheckIsDegraded() {
+    void performHealthCheckShouldReturnInternalErrorWhenHealthCheckIsDegraded() {
         healthChecks.add(healthCheck(Result.degraded(COMPONENT_NAME_1, "the cause")));
         
         given()
@@ -348,7 +347,7 @@ public class HealthCheckRoutesTest {
     }
     
     @Test
-    public void performHealthCheckShouldReturnInternalErrorWhenHealthCheckIsUnhealthy() {
+    void performHealthCheckShouldReturnInternalErrorWhenHealthCheckIsUnhealthy() {
         healthChecks.add(healthCheck(Result.unhealthy(COMPONENT_NAME_1, SAMPLE_CAUSE)));
         
         given()
@@ -364,7 +363,7 @@ public class HealthCheckRoutesTest {
     }
     
     @Test
-    public void performHealthCheckShouldReturnProperlyEscapedComponentName() {
+    void performHealthCheckShouldReturnProperlyEscapedComponentName() {
         healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_3)));
         
         given()
@@ -379,7 +378,7 @@ public class HealthCheckRoutesTest {
     }
     
     @Test
-    public void performHealthCheckShouldWorkWithEscapedPathParam() {
+    void performHealthCheckShouldWorkWithEscapedPathParam() {
         healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_3)));
         
         // disable URL encoding
@@ -397,7 +396,7 @@ public class HealthCheckRoutesTest {
     }
 
     @Test
-    public void getHealthchecksShouldReturnEmptyWhenNoHealthChecks() {
+    void getHealthchecksShouldReturnEmptyWhenNoHealthChecks() {
         when()
            .get(HealthCheckRoutes.CHECKS)
         .then()
@@ -407,7 +406,7 @@ public class HealthCheckRoutesTest {
     }
 
     @Test
-    public void getHealthchecksShouldReturnHealthCheckWhenHealthCheckPresent() {
+    void getHealthchecksShouldReturnHealthCheckWhenHealthCheckPresent() {
         healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_3)));
         when()
            .get(HealthCheckRoutes.CHECKS)
@@ -419,7 +418,7 @@ public class HealthCheckRoutesTest {
     }
 
     @Test
-    public void getHealthchecksShouldReturnHealthChecksWhenHealthChecksPresent() {
+    void getHealthchecksShouldReturnHealthChecksWhenHealthChecksPresent() {
         healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_2)));
         healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_3)));
         when()

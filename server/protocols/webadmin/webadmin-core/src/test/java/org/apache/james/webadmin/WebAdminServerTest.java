@@ -27,17 +27,16 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.Port;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 import org.apache.james.webadmin.mdc.LoggingRequestFilter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
 import io.restassured.RestAssured;
 import spark.Service;
 
-public class WebAdminServerTest {
-
+class WebAdminServerTest {
     @Test
-    public void getPortShouldThrowWhenNotConfigured() {
+    void getPortShouldThrowWhenNotConfigured() {
         WebAdminServer server = new WebAdminServer(
             WebAdminConfiguration.TEST_CONFIGURATION,
             ImmutableList.of(),
@@ -49,7 +48,7 @@ public class WebAdminServerTest {
     }
 
     @Test
-    public void getPortShouldReturnPortWhenConfigured() {
+    void getPortShouldReturnPortWhenConfigured() {
         WebAdminServer server = WebAdminUtils.createWebAdminServer().start();
 
         Port port = server.getPort();
@@ -58,7 +57,7 @@ public class WebAdminServerTest {
     }
 
     @Test
-    public void aSecondRouteWithSameEndpointShouldNotOverridePreviouslyDefinedRoutes() {
+    void aSecondRouteWithSameEndpointShouldNotOverridePreviouslyDefinedRoutes() {
         String firstAnswer = "1";
         String secondAnswer = "2";
         WebAdminServer server = WebAdminUtils.createWebAdminServer(
@@ -81,7 +80,7 @@ public class WebAdminServerTest {
     }
 
     @Test
-    public void aSecondRouteWithSameEndpointShouldNotOverridePreviouslyDefinedRoutesWhenPublic() {
+    void aSecondRouteWithSameEndpointShouldNotOverridePreviouslyDefinedRoutesWhenPublic() {
         String firstAnswer = "1";
         String secondAnswer = "2";
         WebAdminServer server = WebAdminUtils.createWebAdminServer(
@@ -104,7 +103,7 @@ public class WebAdminServerTest {
     }
 
     @Test
-    public void privateRoutesShouldBePrioritizedOverPublicRoutes() {
+    void privateRoutesShouldBePrioritizedOveroutes() {
         String firstAnswer = "1";
         String secondAnswer = "2";
         WebAdminServer server = WebAdminUtils.createWebAdminServer(

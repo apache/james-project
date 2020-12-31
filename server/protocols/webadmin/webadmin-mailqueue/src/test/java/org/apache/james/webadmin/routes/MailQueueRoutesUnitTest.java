@@ -28,40 +28,39 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.webadmin.utils.JsonTransformer;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class MailQueueRoutesUnitTest {
-
+class MailQueueRoutesUnitTest {
     MailQueueRoutes testee;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         MemoryTaskManager taskManager = new MemoryTaskManager(new Hostname("foo"));
         MailQueueFactory<ManageableMailQueue> mailQueueFactory = null;
         testee = new MailQueueRoutes(mailQueueFactory, new JsonTransformer(), taskManager);
     }
 
     @Test
-    public void isDelayedShouldReturnEmptyWhenNull() {
+    void isDelayedShouldReturnEmptyWhenNull() {
         Optional<Boolean> delayed = testee.isDelayed(null);
         assertThat(delayed).isEmpty();
     }
 
     @Test
-    public void isDelayedShouldBeEqualsToTrueWhenTrue() {
+    void isDelayedShouldBeEqualsToTrueWhenTrue() {
         Optional<Boolean> delayed = testee.isDelayed("true");
         assertThat(delayed).contains(true);
     }
 
     @Test
-    public void isDelayedShouldBeEqualsToFalseWhenFalse() {
+    void isDelayedShouldBeEqualsToFalseWhenFalse() {
         Optional<Boolean> delayed = testee.isDelayed("false");
         assertThat(delayed).contains(false);
     }
 
     @Test
-    public void isDelayedShouldBeEqualsToFalseWhenOtherValue() {
+    void isDelayedShouldBeEqualsToFalseWhenOtherValue() {
         Optional<Boolean> delayed = testee.isDelayed("abc");
         assertThat(delayed).contains(false);
     }

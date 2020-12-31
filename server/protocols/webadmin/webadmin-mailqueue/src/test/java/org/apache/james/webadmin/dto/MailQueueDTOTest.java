@@ -20,29 +20,24 @@ package org.apache.james.webadmin.dto;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.assertj.core.api.JUnitSoftAssertions;
-import org.junit.Rule;
-import org.junit.Test;
+import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.Test;
 
-public class MailQueueDTOTest {
-
-    @Rule
-    public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
-
+class MailQueueDTOTest {
     @Test
-    public void buildShouldThrowWhenNameIsNull() {
+    void buildShouldThrowWhenNameIsNull() {
         assertThatThrownBy(() -> MailQueueDTO.builder().build())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void buildShouldThrowWhenNameIsEmpty() {
+    void buildShouldThrowWhenNameIsEmpty() {
         assertThatThrownBy(() -> MailQueueDTO.builder().name("").build())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void builderShouldCreateTheRightObject() {
+    void builderShouldCreateTheRightObject() {
         String name = "name";
         int size = 123;
 
@@ -50,8 +45,9 @@ public class MailQueueDTOTest {
             .name(name)
             .size(size)
             .build();
-
-        softly.assertThat(mailQueueDTO.getName()).isEqualTo(name);
-        softly.assertThat(mailQueueDTO.getSize()).isEqualTo(size);
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(mailQueueDTO.getName()).isEqualTo(name);
+            softly.assertThat(mailQueueDTO.getSize()).isEqualTo(size);
+        });
     }
 }
