@@ -467,6 +467,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         ModSeq modSeq = messageResult.getModSeq();
         UpdatedFlags updatedFlags = UpdatedFlags.builder()
             .uid(messageUid)
+            .messageId(messageId)
             .modSeq(modSeq)
             .oldFlags(FLAGS)
             .newFlags(newFlags)

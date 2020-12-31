@@ -194,6 +194,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
 
                     updatedFlags.add(UpdatedFlags.builder()
                         .uid(member.getUid())
+                        .messageId(member.getMessageId())
                         .modSeq(member.getModSeq())
                         .newFlags(newFlags)
                         .oldFlags(originalFlags)

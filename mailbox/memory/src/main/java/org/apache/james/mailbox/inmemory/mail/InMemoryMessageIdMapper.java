@@ -151,6 +151,7 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
                 UpdatedFlags updatedFlags = UpdatedFlags.builder()
                     .modSeq(message.getModSeq())
                     .uid(message.getUid())
+                    .messageId(message.getMessageId())
                     .oldFlags(message.createFlags())
                     .newFlags(newState)
                     .build();

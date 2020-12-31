@@ -709,6 +709,7 @@ public abstract class MessageMapperTest {
         assertThat(updatedFlags)
             .contains(UpdatedFlags.builder()
                 .uid(message1.getUid())
+                .messageId(message1.getMessageId())
                 .modSeq(modSeq.next())
                 .oldFlags(new Flags())
                 .newFlags(new Flags(Flags.Flag.FLAGGED))
@@ -723,6 +724,7 @@ public abstract class MessageMapperTest {
         assertThat(messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.ADD)))
             .contains(UpdatedFlags.builder()
                     .uid(message1.getUid())
+                    .messageId(message1.getMessageId())
                     .modSeq(modSeq.next())
                     .oldFlags(new Flags(Flags.Flag.FLAGGED))
                     .newFlags(new FlagsBuilder().add(Flags.Flag.SEEN, Flags.Flag.FLAGGED).build())
@@ -756,6 +758,7 @@ public abstract class MessageMapperTest {
             .contains(
                 UpdatedFlags.builder()
                     .uid(message1.getUid())
+                    .messageId(message1.getMessageId())
                     .modSeq(modSeq.next())
                     .oldFlags(new FlagsBuilder().add(Flags.Flag.SEEN, Flags.Flag.FLAGGED).build())
                     .newFlags(new Flags(Flags.Flag.FLAGGED))
@@ -881,6 +884,7 @@ public abstract class MessageMapperTest {
             .contains(
                 UpdatedFlags.builder()
                     .uid(message1.getUid())
+                    .messageId(message1.getMessageId())
                     .modSeq(modSeq.next())
                     .oldFlags(new Flags())
                     .newFlags(new Flags(USER_FLAG))
@@ -897,6 +901,7 @@ public abstract class MessageMapperTest {
             .contains(
                 UpdatedFlags.builder()
                     .uid(message1.getUid())
+                    .messageId(message1.getMessageId())
                     .modSeq(message1.getModSeq())
                     .oldFlags(new Flags())
                     .newFlags(new Flags())

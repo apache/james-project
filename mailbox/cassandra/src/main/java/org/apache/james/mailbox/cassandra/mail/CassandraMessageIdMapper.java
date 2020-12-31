@@ -268,6 +268,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         return Pair.of(composedMessageIdWithMetaData.getComposedMessageId().getMailboxId(),
                 UpdatedFlags.builder()
                     .uid(composedMessageIdWithMetaData.getComposedMessageId().getUid())
+                    .messageId(composedMessageIdWithMetaData.getComposedMessageId().getMessageId())
                     .modSeq(composedMessageIdWithMetaData.getModSeq())
                     .oldFlags(oldFlags)
                     .newFlags(composedMessageIdWithMetaData.getFlags())

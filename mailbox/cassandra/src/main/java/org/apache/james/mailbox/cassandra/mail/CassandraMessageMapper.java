@@ -541,6 +541,7 @@ public class CassandraMessageMapper implements MessageMapper {
         if (identicalFlags(oldFlags, newFlags)) {
             return Mono.just(FlagsUpdateStageResult.success(UpdatedFlags.builder()
                 .uid(oldMetaData.getComposedMessageId().getUid())
+                .messageId(oldMetaData.getComposedMessageId().getMessageId())
                 .modSeq(oldMetaData.getModSeq())
                 .oldFlags(oldFlags)
                 .newFlags(newFlags)
@@ -552,6 +553,7 @@ public class CassandraMessageMapper implements MessageMapper {
                 if (success) {
                     return FlagsUpdateStageResult.success(UpdatedFlags.builder()
                         .uid(oldMetaData.getComposedMessageId().getUid())
+                        .messageId(oldMetaData.getComposedMessageId().getMessageId())
                         .modSeq(newModSeq)
                         .oldFlags(oldFlags)
                         .newFlags(newFlags)

@@ -355,6 +355,7 @@ public abstract class MessageIdMapperTest {
         ModSeq modSeq = mapperProvider.highestModSeq(benwaInboxMailbox);
         UpdatedFlags expectedUpdatedFlags = UpdatedFlags.builder()
             .uid(message1.getUid())
+            .messageId(messageId)
             .modSeq(modSeq)
             .oldFlags(new Flags())
             .newFlags(newFlags)
@@ -382,6 +383,7 @@ public abstract class MessageIdMapperTest {
         ModSeq modSeq = mapperProvider.highestModSeq(benwaInboxMailbox);
         UpdatedFlags expectedUpdatedFlags = UpdatedFlags.builder()
             .uid(message1.getUid())
+            .messageId(messageId)
             .modSeq(modSeq)
             .oldFlags(messageFlags)
             .newFlags(newFlags)
@@ -411,6 +413,7 @@ public abstract class MessageIdMapperTest {
         ModSeq modSeq = mapperProvider.highestModSeq(benwaInboxMailbox);
         UpdatedFlags expectedUpdatedFlags = UpdatedFlags.builder()
             .uid(message1.getUid())
+            .messageId(messageId)
             .modSeq(modSeq)
             .oldFlags(messageFlags)
             .newFlags(new Flags(Flags.Flag.RECENT))
@@ -483,6 +486,7 @@ public abstract class MessageIdMapperTest {
         ModSeq modSeq = mapperProvider.highestModSeq(benwaInboxMailbox);
         UpdatedFlags expectedUpdatedFlags = UpdatedFlags.builder()
             .uid(message1.getUid())
+            .messageId(messageId)
             .modSeq(modSeq)
             .oldFlags(initialFlags)
             .newFlags(newFlags)
@@ -510,12 +514,14 @@ public abstract class MessageIdMapperTest {
         ModSeq modSeqBenwaWorkMailbox = mapperProvider.highestModSeq(benwaWorkMailbox);
         UpdatedFlags expectedUpdatedFlags = UpdatedFlags.builder()
             .uid(message1.getUid())
+            .messageId(messageId)
             .modSeq(modSeqBenwaInboxMailbox)
             .oldFlags(new Flags())
             .newFlags(newFlags)
             .build();
         UpdatedFlags expectedUpdatedFlags2 = UpdatedFlags.builder()
             .uid(message1InOtherMailbox.getUid())
+            .messageId(messageId)
             .modSeq(modSeqBenwaWorkMailbox)
             .oldFlags(new Flags())
             .newFlags(newFlags)
@@ -854,6 +860,7 @@ public abstract class MessageIdMapperTest {
                 ImmutableList.of(UpdatedFlags.builder()
                     .modSeq(modSeq)
                     .uid(message1.getUid())
+                    .messageId(message1.getMessageId())
                     .newFlags(flags)
                     .oldFlags(flags)
                     .build())));
