@@ -166,7 +166,7 @@
                         </dd>
 
                     <dt><strong>james.message.usememorycopy</strong></dt>
-                    <dd>Optional. Boolean. Defaults to false. Recommended value is true. <br/>
+                    <dd>Optional. Boolean. Defaults to false. Recommended value is false. <br/>
                         Should MimeMessageWrapper use a copy of the message in memory?</dd>
                 </dl>
 
