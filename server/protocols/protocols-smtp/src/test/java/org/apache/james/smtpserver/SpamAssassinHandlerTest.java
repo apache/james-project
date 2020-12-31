@@ -39,13 +39,13 @@ import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.james.smtpserver.fastfail.SpamAssassinHandler;
 import org.apache.james.spamassassin.SpamAssassinResult;
 import org.apache.james.spamassassin.mock.MockSpamd;
-import org.apache.james.spamassassin.mock.MockSpamdTestRule;
+import org.apache.james.spamassassin.mock.MockSpamdExtension;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Preconditions;
 
@@ -116,8 +116,8 @@ public class SpamAssassinHandlerTest {
 
     }
 
-    @Rule
-    public MockSpamdTestRule spamd = new MockSpamdTestRule();
+    @RegisterExtension
+    MockSpamdExtension spamd = new MockSpamdExtension();
 
     private Mail setupMockedMail(MimeMessage message) throws MessagingException {
         return FakeMail.builder()

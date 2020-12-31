@@ -30,23 +30,23 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.spamassassin.SpamAssassinResult;
 import org.apache.james.spamassassin.mock.MockSpamd;
-import org.apache.james.spamassassin.mock.MockSpamdTestRule;
+import org.apache.james.spamassassin.mock.MockSpamdExtension;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.util.Port;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.steveash.guavate.Guavate;
 
 public class SpamAssassinTest {
 
     public static final DomainList NO_DOMAIN_LIST = null;
-    @Rule
-    public MockSpamdTestRule spamd = new MockSpamdTestRule();
+    @RegisterExtension
+    public MockSpamdExtension spamd = new MockSpamdExtension();
 
     private SpamAssassin mailet = new SpamAssassin(new RecordingMetricFactory(), MemoryUsersRepository.withVirtualHosting(NO_DOMAIN_LIST));
 
