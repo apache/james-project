@@ -50,10 +50,10 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.jboss.netty.util.HashedWheelTimer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import com.google.inject.name.Names;
 
@@ -73,7 +73,7 @@ public class POP3ServerTest {
     private POP3Server pop3Server;
     private HashedWheelTimer hashedWheelTimer;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         hashedWheelTimer = new HashedWheelTimer();
         setUpServiceManager();
@@ -81,7 +81,7 @@ public class POP3ServerTest {
         pop3Configuration = new POP3TestConfiguration();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         try {
             if (pop3Client != null) {
@@ -422,12 +422,8 @@ public class POP3ServerTest {
 
     }
 
-    /**
-     * Test for JAMES-1202 - This was failing before as the more then one connection to the same
-     * mailbox was not handled the right way
-     */
     @Test
-    @Ignore
+    @Disabled("Test for JAMES-1202 - This was failing before as the more then one connection to the same mailbox was not handled the right way")
     public void testStatUidlListTwoConnections() throws Exception {
         finishSetUp(pop3Configuration);
 
