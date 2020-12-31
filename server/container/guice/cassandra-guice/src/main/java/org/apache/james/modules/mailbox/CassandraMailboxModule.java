@@ -184,6 +184,7 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(MailboxManager.class).to(CassandraMailboxManager.class);
         bind(StoreMailboxManager.class).to(CassandraMailboxManager.class);
         bind(MailboxChangeRepository.class).to(CassandraMailboxChangeRepository.class);
+        bind(State.Factory.class).to(CassandraStateFactory.class);
         bind(MailboxId.Factory.class).to(CassandraId.Factory.class);
         bind(State.Factory.class).to(CassandraStateFactory.class);
         bind(MessageId.Factory.class).to(CassandraMessageId.Factory.class);
