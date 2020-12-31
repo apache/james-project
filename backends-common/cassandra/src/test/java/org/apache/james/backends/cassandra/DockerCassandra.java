@@ -190,7 +190,7 @@ public class DockerCassandra {
     }
 
     private static void displayDockerLog(OutputFrame outputFrame) {
-        logger.info(outputFrame.getUtf8String());
+        logger.info(outputFrame.getUtf8String().trim());
     }
 
     public void start() {
