@@ -29,17 +29,17 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import spark.Request;
 import spark.Response;
 
-public class TaskFromRequestTest {
+class TaskFromRequestTest {
     static final Task TASK = mock(Task.class);
     static final String UUID_VALUE = "ce5316cb-c924-40eb-9ca0-c5828e276297";
 
     @Test
-    public void handleShouldReturnCreatedWithTaskIdHeader() throws Exception {
+    void handleShouldReturnCreatedWithTaskIdHeader() throws Exception {
         Request request = mock(Request.class);
         Response response = mock(Response.class);
 

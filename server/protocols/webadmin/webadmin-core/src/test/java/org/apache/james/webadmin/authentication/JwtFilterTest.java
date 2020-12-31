@@ -19,19 +19,14 @@
 
 package org.apache.james.webadmin.authentication;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.jwt.JwtTokenVerifier;
-import org.eclipse.jetty.http.HttpStatus;
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -39,38 +34,18 @@ import spark.HaltException;
 import spark.Request;
 import spark.Response;
 
-public class JwtFilterTest {
-
-    public static final Matcher<HaltException> STATUS_CODE_MATCHER_401 = new BaseMatcher<HaltException>() {
-        @Override
-        public boolean matches(Object o) {
-            if (o instanceof HaltException) {
-                HaltException haltException = (HaltException) o;
-                return haltException.statusCode() == HttpStatus.UNAUTHORIZED_401;
-            }
-            return false;
-        }
-
-        @Override
-        public void describeTo(Description description) {
-            
-        }
-    };
-
+class JwtFilterTest {
     private JwtTokenVerifier jwtTokenVerifier;
     private JwtFilter jwtFilter;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         jwtTokenVerifier = mock(JwtTokenVerifier.class);
         jwtFilter = new JwtFilter(() -> jwtTokenVerifier);
     }
 
     @Test
-    public void handleShouldDoNothingOnOptions() throws Exception {
+    void handleShouldDoNothingOnOptions() throws Exception {
         Request request = mock(Request.class);
         //Ensure we don't take OPTIONS string from the constant pool
         when(request.requestMethod()).thenReturn(new String("OPTIONS"));
@@ -83,58 +58,59 @@ public class JwtFilterTest {
 
 
     @Test
-    public void handleShouldRejectRequestWithHeaders() throws Exception {
+    void handleShouldRejectRequestWithHeaders() throws Exception {
         Request request = mock(Request.class);
         when(request.requestMethod()).thenReturn("GET");
         when(request.headers()).thenReturn(ImmutableSet.of());
 
-        expectedException.expect(HaltException.class);
-        expectedException.expect(STATUS_CODE_MATCHER_401);
-
-        jwtFilter.handle(request, mock(Response.class));
+        assertThatThrownBy(() -> jwtFilter.handle(request, mock(Response.class)))
+            .isInstanceOf(HaltException.class)
+            .extracting(e -> HaltException.class.cast(e).statusCode())
+            .isEqualTo(401);
     }
 
     @Test
-    public void handleShouldRejectRequestWithBearersHeaders() throws Exception {
+    void handleShouldRejectRequestWithBearersHeaders() throws Exception {
         Request request = mock(Request.class);
         when(request.requestMethod()).thenReturn("GET");
         when(request.headers(JwtFilter.AUTHORIZATION_HEADER_NAME)).thenReturn("Invalid value");
 
-        expectedException.expect(HaltException.class);
-        expectedException.expect(STATUS_CODE_MATCHER_401);
-
-        jwtFilter.handle(request, mock(Response.class));
+        assertThatThrownBy(() -> jwtFilter.handle(request, mock(Response.class)))
+            .isInstanceOf(HaltException.class)
+            .extracting(e -> HaltException.class.cast(e).statusCode())
+            .isEqualTo(401);
     }
 
     @Test
-    public void handleShouldRejectRequestWithInvalidBearerHeaders() throws Exception {
+    void handleShouldRejectRequestWithInvalidBearerHeaders() throws Exception {
         Request request = mock(Request.class);
         when(request.requestMethod()).thenReturn("GET");
         when(request.headers(JwtFilter.AUTHORIZATION_HEADER_NAME)).thenReturn("Bearer value");
         when(jwtTokenVerifier.verify("value")).thenReturn(false);
 
-        expectedException.expect(HaltException.class);
-        expectedException.expect(STATUS_CODE_MATCHER_401);
 
-        jwtFilter.handle(request, mock(Response.class));
+        assertThatThrownBy(() -> jwtFilter.handle(request, mock(Response.class)))
+            .isInstanceOf(HaltException.class)
+            .extracting(e -> HaltException.class.cast(e).statusCode())
+            .isEqualTo(401);
     }
 
     @Test
-    public void handleShouldRejectRequestWithoutAdminClaim() throws Exception {
+    void handleShouldRejectRequestWithoutAdminClaim() throws Exception {
         Request request = mock(Request.class);
         when(request.requestMethod()).thenReturn("GET");
         when(request.headers(JwtFilter.AUTHORIZATION_HEADER_NAME)).thenReturn("Bearer value");
         when(jwtTokenVerifier.verify("value")).thenReturn(true);
         when(jwtTokenVerifier.hasAttribute("admin", true, "value")).thenReturn(false);
 
-        expectedException.expect(HaltException.class);
-        expectedException.expect(STATUS_CODE_MATCHER_401);
-
-        jwtFilter.handle(request, mock(Response.class));
+        assertThatThrownBy(() -> jwtFilter.handle(request, mock(Response.class)))
+            .isInstanceOf(HaltException.class)
+            .extracting(e -> HaltException.class.cast(e).statusCode())
+            .isEqualTo(401);
     }
 
     @Test
-    public void handleShouldAcceptValidJwt() throws Exception {
+    void handleShouldAcceptValidJwt() throws Exception {
         Request request = mock(Request.class);
         when(request.requestMethod()).thenReturn("GET");
         when(request.headers(JwtFilter.AUTHORIZATION_HEADER_NAME)).thenReturn("Bearer value");

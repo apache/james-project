@@ -22,36 +22,34 @@ package org.apache.james.webadmin;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class FixedPortSupplierTest {
-
+class FixedPortSupplierTest {
     @Test
-    public void toIntShouldThrowOnNegativePort() {
+    void toIntShouldThrowOnNegativePort() {
         assertThatThrownBy(() -> new FixedPortSupplier(-1)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void toIntShouldThrowOnNullPort() {
+    void toIntShouldThrowOnNullPort() {
         assertThatThrownBy(() -> new FixedPortSupplier(0)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void toIntShouldThrowOnTooBigNumbers() {
+    void toIntShouldThrowOnTooBigNumbers() {
         assertThatThrownBy(() -> new FixedPortSupplier(65536)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void toIntShouldReturnedDesiredPort() {
+    void toIntShouldReturnedDesiredPort() {
         int expectedPort = 452;
         assertThat(new FixedPortSupplier(expectedPort).get().getValue()).isEqualTo(expectedPort);
     }
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(FixedPortSupplier.class).verify();
     }
-
 }

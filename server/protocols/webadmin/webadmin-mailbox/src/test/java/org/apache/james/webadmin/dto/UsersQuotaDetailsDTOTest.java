@@ -21,26 +21,24 @@ package org.apache.james.webadmin.dto;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import javax.mail.internet.AddressException;
-
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.model.Quota;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class UsersQuotaDetailsDTOTest {
+class UsersQuotaDetailsDTOTest {
 
     @Test
-    public void builderShouldThrowWhenUserIsNull() {
+    void builderShouldThrowWhenUserIsNull() {
         assertThatThrownBy(() -> UsersQuotaDetailsDTO.builder().build())
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void builderShouldThrowWhenDetailIsNull() {
+    void builderShouldThrowWhenDetailIsNull() {
         assertThatThrownBy(() -> UsersQuotaDetailsDTO.builder()
                 .user(Username.of("user@domain.org"))
                 .build())
@@ -48,7 +46,7 @@ public class UsersQuotaDetailsDTOTest {
     }
 
     @Test
-    public void builderShouldWork() throws AddressException {
+    void builderShouldWork() {
         Username username = Username.of("user@domain.org");
         QuotaDetailsDTO quotaDetailsDTO = QuotaDetailsDTO.builder()
                 .occupation(

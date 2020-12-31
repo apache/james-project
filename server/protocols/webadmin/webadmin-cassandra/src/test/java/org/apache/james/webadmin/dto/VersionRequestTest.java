@@ -23,35 +23,35 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class VersionRequestTest {
+class VersionRequestTest {
     @Test
-    public void parseShouldThrowWhenNullVersion() throws Exception {
+    void parseShouldThrowWhenNullVersion() {
         assertThatThrownBy(() -> CassandraVersionRequest.parse(null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void parseShouldThrowWhenNonIntegerVersion() throws Exception {
+    void parseShouldThrowWhenNonIntegerVersion() {
         assertThatThrownBy(() -> CassandraVersionRequest.parse("NoInt"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void parseShouldThrowWhenNegativeVersion() throws Exception {
+    void parseShouldThrowWhenNegativeVersion() {
         assertThatThrownBy(() -> CassandraVersionRequest.parse("-1"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void parseShouldThrowWhenZeroVersion() throws Exception {
+    void parseShouldThrowWhenZeroVersion() {
         assertThatThrownBy(() -> CassandraVersionRequest.parse("0"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void parseShouldParseTheVersionValue() throws Exception {
+    void parseShouldParseTheVersionValue() {
         CassandraVersionRequest cassandraVersionRequest = CassandraVersionRequest.parse("1");
 
         assertThat(cassandraVersionRequest.getValue()).isEqualTo(new SchemaVersion(1));

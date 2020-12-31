@@ -52,10 +52,10 @@ import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.dto.WebAdminMigrationTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -63,7 +63,7 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import reactor.core.publisher.Mono;
 
-public class CassandraMigrationRoutesTest {
+class CassandraMigrationRoutesTest {
     private static final SchemaVersion LATEST_VERSION = new SchemaVersion(3);
     private static final SchemaVersion CURRENT_VERSION = new SchemaVersion(2);
     private static final SchemaVersion OLDER_VERSION = new SchemaVersion(1);
@@ -98,19 +98,19 @@ public class CassandraMigrationRoutesTest {
             .build();
     }
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         createServer();
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         webAdminServer.destroy();
         taskManager.stop();
     }
 
     @Test
-    public void getShouldReturnTheCurrentVersion() {
+    void getShouldReturnTheCurrentVersion() {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(CURRENT_VERSION)));
 
         Integer version =
@@ -127,7 +127,7 @@ public class CassandraMigrationRoutesTest {
     }
 
     @Test
-    public void getShouldReturnTheLatestVersionWhenSetUpTheLatestVersion() {
+    void getShouldReturnTheLatestVersionWhenSetUpTheLatestVersion() {
         Integer version =
             when()
                 .get("/latest")
@@ -141,9 +141,9 @@ public class CassandraMigrationRoutesTest {
         assertThat(version).isEqualTo(LATEST_VERSION.getValue());
     }
 
-    @Ignore
+    @Disabled
     @Test
-    public void postShouldReturnConflictWhenMigrationOnRunning() {
+    void postShouldReturnConflictWhenMigrationOnRunning() {
         when()
             .post("/upgrade")
         .then()
@@ -151,7 +151,7 @@ public class CassandraMigrationRoutesTest {
     }
 
     @Test
-    public void postShouldReturnErrorCodeWhenInvalidVersion() {
+    void postShouldReturnErrorCodeWhenInvalidVersion() {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(OLDER_VERSION)));
 
         Map<String, Object> errors = given()
@@ -176,7 +176,7 @@ public class CassandraMigrationRoutesTest {
     }
 
     @Test
-    public void postShouldDoMigrationToNewVersion() {
+    void postShouldDoMigrationToNewVersion() {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(OLDER_VERSION)));
 
         String taskId = with()
@@ -198,7 +198,7 @@ public class CassandraMigrationRoutesTest {
     }
 
     @Test
-    public void postShouldCreateTaskWhenCurrentVersionIsNewerThan() {
+    void postShouldCreateTaskWhenCurrentVersionIsNewerThan() {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(CURRENT_VERSION)));
 
         String taskId =  given()
@@ -217,7 +217,7 @@ public class CassandraMigrationRoutesTest {
     }
 
     @Test
-    public void postShouldNotUpdateVersionWhenCurrentVersionIsNewerThan() {
+    void postShouldNotUpdateVersionWhenCurrentVersionIsNewerThan() {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(CURRENT_VERSION)));
 
         String taskId =  given()
@@ -236,7 +236,7 @@ public class CassandraMigrationRoutesTest {
     }
 
     @Test
-    public void postShouldPositionLocationHeader() {
+    void postShouldPositionLocationHeader() {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(CURRENT_VERSION)));
 
         given()
@@ -248,7 +248,7 @@ public class CassandraMigrationRoutesTest {
     }
 
     @Test
-    public void postShouldDoMigrationToLatestVersion() {
+    void postShouldDoMigrationToLatestVersion() {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(OLDER_VERSION)));
 
         String taskId = with()
@@ -267,7 +267,7 @@ public class CassandraMigrationRoutesTest {
     }
 
     @Test
-    public void postShouldReturnTaskIdAndLocation() {
+    void postShouldReturnTaskIdAndLocation() {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(OLDER_VERSION)));
 
         when()
@@ -278,7 +278,7 @@ public class CassandraMigrationRoutesTest {
     }
 
     @Test
-    public void createdTaskShouldHaveDetails() {
+    void createdTaskShouldHaveDetails() {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(OLDER_VERSION)));
 
         String taskId = with()
@@ -301,7 +301,7 @@ public class CassandraMigrationRoutesTest {
     }
 
     @Test
-    public void postShouldCreateTaskWhenItIsUpToDate() {
+    void postShouldCreateTaskWhenItIsUpToDate() {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(LATEST_VERSION)));
 
         String taskId = with()
@@ -318,7 +318,7 @@ public class CassandraMigrationRoutesTest {
     }
 
     @Test
-    public void postShouldNotUpdateVersionWhenItIsUpToDate() {
+    void postShouldNotUpdateVersionWhenItIsUpToDate() {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(LATEST_VERSION)));
 
         String taskId = with()
