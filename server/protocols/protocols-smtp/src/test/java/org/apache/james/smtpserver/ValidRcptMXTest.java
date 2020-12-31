@@ -31,12 +31,12 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.james.smtpserver.fastfail.ValidRcptMX;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-public class ValidRcptMXTest {
+class ValidRcptMXTest {
 
     private static final String INVALID_HOST = "invalid.host.de";
 
@@ -81,7 +81,7 @@ public class ValidRcptMXTest {
     }
 
     @Test
-    public void testRejectLoopbackMX() throws Exception {
+    void testRejectLoopbackMX() throws Exception {
         String bannedAddress = "172.53.64.2";
 
         DNSService dns = new InMemoryDNSService()

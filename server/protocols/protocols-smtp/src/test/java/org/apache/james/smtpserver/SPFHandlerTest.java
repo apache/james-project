@@ -34,8 +34,8 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.james.smtpserver.fastfail.SPFHandler;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Preconditions;
 
@@ -46,7 +46,7 @@ public class SPFHandlerTest {
 
     private boolean relaying = false;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         setupMockedDnsService();
         setRelayingAllowed(false);

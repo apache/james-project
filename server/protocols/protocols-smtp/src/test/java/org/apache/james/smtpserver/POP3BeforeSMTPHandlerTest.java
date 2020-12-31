@@ -26,9 +26,9 @@ import java.time.Duration;
 import org.apache.james.protocols.lib.POP3BeforeSMTPHelper;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class POP3BeforeSMTPHandlerTest {
+class POP3BeforeSMTPHandlerTest {
 
     private SMTPSession mockedSession;
 
@@ -59,7 +59,7 @@ public class POP3BeforeSMTPHandlerTest {
     }
 
     @Test
-    public void testAuthWorks() {
+    void testAuthWorks() {
 
         POP3BeforeSMTPHandler handler = new POP3BeforeSMTPHandler();
 
@@ -72,7 +72,7 @@ public class POP3BeforeSMTPHandlerTest {
     }
 
     @Test
-    public void testIPGetRemoved() {
+    void testIPGetRemoved() {
         long sleepTime = 100;
         POP3BeforeSMTPHandler handler = new POP3BeforeSMTPHandler();
 
@@ -92,7 +92,7 @@ public class POP3BeforeSMTPHandlerTest {
     }
 
     @Test
-    public void testThrowExceptionOnIllegalExpireTime() {
+    void testThrowExceptionOnIllegalExpireTime() {
         boolean exception = false;
         POP3BeforeSMTPHandler handler = new POP3BeforeSMTPHandler();
 
@@ -107,7 +107,7 @@ public class POP3BeforeSMTPHandlerTest {
     }
 
     @Test
-    public void testValidExpireTime() {
+    void testValidExpireTime() {
         boolean exception = false;
         POP3BeforeSMTPHandler handler = new POP3BeforeSMTPHandler();
 
