@@ -21,7 +21,6 @@ package org.apache.james.jmap.change
 
 import javax.inject.Inject
 import org.apache.james.jmap.api.change.{MailboxChange, MailboxChangeRepository}
-import org.apache.james.mailbox.MailboxManager
 import org.apache.james.mailbox.events.MailboxListener.{MailboxEvent, ReactiveGroupMailboxListener}
 import org.apache.james.mailbox.events.{Event, Group}
 import org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY
@@ -33,7 +32,6 @@ import scala.jdk.CollectionConverters._
 case class MailboxChangeListenerGroup() extends Group {}
 
 case class MailboxChangeListener @Inject() (mailboxChangeRepository: MailboxChangeRepository,
-                                            mailboxManager: MailboxManager,
                                             mailboxChangeFactory: MailboxChange.Factory) extends ReactiveGroupMailboxListener {
 
   override def reactiveEvent(event: Event): Publisher[Void] =

@@ -67,7 +67,7 @@ class MailboxChangeListenerTest {
     stateFactory = new State.DefaultFactory
     mailboxChangeFactory = new MailboxChange.Factory(clock, mailboxManager, stateFactory)
     repository = new MemoryMailboxChangeRepository()
-    listener = MailboxChangeListener(repository, mailboxManager, mailboxChangeFactory)
+    listener = MailboxChangeListener(repository, mailboxChangeFactory)
     resources.getEventBus.register(listener)
   }
 
