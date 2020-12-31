@@ -23,25 +23,29 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.james.util.concurrent.NamedThreadFactory;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.rules.ExternalResource;
 
-public class MockSpamdTestRule extends ExternalResource {
+public class MockSpamdExtension implements AfterEachCallback, BeforeEachCallback {
 
     private ExecutorService executor = Executors.newSingleThreadExecutor(NamedThreadFactory.withClassName(getClass()));
     private MockSpamd spamd = new MockSpamd();
 
     @Override
-    protected void before() throws Throwable {
+    public void afterEach(ExtensionContext extensionContext) {
+        executor.shutdownNow();
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext extensionContext) throws Exception {
         spamd.bind();
         executor.execute(spamd);
     }
 
     public int getPort() {
         return spamd.getPort();
-    }
-
-    @Override
-    protected void after() {
-        executor.shutdownNow();
     }
 }
