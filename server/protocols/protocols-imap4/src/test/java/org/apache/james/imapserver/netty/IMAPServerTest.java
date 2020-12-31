@@ -27,18 +27,13 @@ import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.imap.api.ImapConfiguration;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 
 public class IMAPServerTest {
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Test
-    public void getImapConfigurationShouldReturnDefaultValuesWhenEmpty() throws Exception {
+    public void getImapConfigurationShouldReturnDefaultValuesWhenEmpty() {
         ImapConfiguration imapConfiguration = IMAPServer.getImapConfiguration(new BaseHierarchicalConfiguration());
 
         ImapConfiguration expectImapConfiguration = ImapConfiguration.builder()
@@ -52,7 +47,7 @@ public class IMAPServerTest {
     }
 
     @Test
-    public void getImapConfigurationShouldReturnSetValue() throws Exception {
+    public void getImapConfigurationShouldReturnSetValue() {
         HierarchicalConfiguration<ImmutableNode> configurationBuilder = new BaseHierarchicalConfiguration();
         configurationBuilder.addProperty("enableIdle", "false");
         configurationBuilder.addProperty("idleTimeInterval", "1");
