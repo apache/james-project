@@ -69,6 +69,7 @@ public interface ReIndexer {
 
         public enum Mode {
             REBUILD_ALL("rebuildAll"),
+            REBUILD_ALL_NO_CLEANUP("rebuildAllNoCleanup"),
             FIX_OUTDATED("fixOutdated");
 
             private final String value;

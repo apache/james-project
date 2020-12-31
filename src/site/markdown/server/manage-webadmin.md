@@ -611,7 +611,9 @@ This optional parameter must have a strictly positive integer as a value and be 
 An admin can also specify the reindexing mode it wants to use when running the task:
 
  - `mode` the reindexing mode used. There are 2 modes for the moment:
-   - `rebuildAll` allows to rebuild all indexes. This is the default mode.
+   - `rebuildAll` allows to rebuild all indexes. It drops indexed entries prior reindexing. This is the default mode.
+   - `rebuildAllNoCleanup` allows to rebuild all indexes. It skips the cleanup phase thus will not remove evicted entries
+   upon reindex. However it yields better performances on a known to be empty index.
    - `fixOutdated` will check for outdated indexed document and reindex only those.
    
 This optional parameter must be passed as query parameter. 
@@ -665,7 +667,9 @@ This optional parameter must have a strictly positive integer as a value and be 
 An admin can also specify the reindexing mode it wants to use when running the task:
 
  - `mode` the reindexing mode used. There are 2 modes for the moment:
-   - `rebuildAll` allows to rebuild all indexes. This is the default mode.
+   - `rebuildAll` allows to rebuild all indexes. It drops indexed entries prior reindexing. This is the default mode.
+   - `rebuildAllNoCleanup` allows to rebuild all indexes. It skips the cleanup phase thus will not remove evicted entries
+   upon reindex. However it yields better performances on a known to be empty index.
    - `fixOutdated` will check for outdated indexed document and reindex only those.
    
 This optional parameter must be passed as query parameter.
@@ -725,7 +729,9 @@ This optional parameter must have a strictly positive integer as a value and be 
 An admin can also specify the reindexing mode it wants to use when running the task:
 
  - `mode` the reindexing mode used. There are 2 modes for the moment:
-   - `rebuildAll` allows to rebuild all indexes. This is the default mode.
+   - `rebuildAll` allows to rebuild all indexes. It drops indexed entries prior reindexing. This is the default mode.
+   - `rebuildAllNoCleanup` allows to rebuild all indexes. It skips the cleanup phase thus will not remove evicted entries
+   upon reindex. However it yields better performances on a known to be empty index.
    - `fixOutdated` will check for outdated indexed document and reindex only those.
    
 This optional parameter must be passed as query parameter.
@@ -876,7 +882,9 @@ This optional parameter must have a strictly positive integer as a value and be 
 An admin can also specify the reindexing mode it wants to use when running the task:
 
  - `mode` the reindexing mode used. There are 2 modes for the moment:
-   - `rebuildAll` allows to rebuild all indexes. This is the default mode.
+   - `rebuildAll` allows to rebuild all indexes. It drops indexed entries prior reindexing. This is the default mode.
+   - `rebuildAllNoCleanup` allows to rebuild all indexes. It skips the cleanup phase thus will not remove evicted entries
+   upon reindex. However it yields better performances on a known to be empty index.
    - `fixOutdated` will check for outdated indexed document and reindex only those.
    
 This optional parameter must be passed as query parameter.
@@ -1078,7 +1086,9 @@ This optional parameter must have a strictly positive integer as a value and be 
 An admin can also specify the reindexing mode it wants to use when running the task:
 
  - `mode` the reindexing mode used. There are 2 modes for the moment:
-   - `rebuildAll` allows to rebuild all indexes. This is the default mode.
+   - `rebuildAll` allows to rebuild all indexes. It drops indexed entries prior reindexing. This is the default mode.
+   - `rebuildAllNoCleanup` allows to rebuild all indexes. It skips the cleanup phase thus will not remove evicted entries
+   upon reindex. However it yields better performances on a known to be empty index.
    - `fixOutdated` will check for outdated indexed document and reindex only those.
    
 This optional parameter must be passed as query parameter.

@@ -271,10 +271,14 @@ public class ReIndexerPerformer {
     }
 
     private Mono<Void> updateSearchIndex(Mailbox mailbox, MailboxSession mailboxSession, RunningOptions runningOptions) {
-        if (runningOptions.getMode() == RunningOptions.Mode.REBUILD_ALL) {
-            return messageSearchIndex.deleteAll(mailboxSession, mailbox.getMailboxId());
+        switch (runningOptions.getMode()) {
+            case REBUILD_ALL:
+                return messageSearchIndex.deleteAll(mailboxSession, mailbox.getMailboxId());
+            case REBUILD_ALL_NO_CLEANUP:
+            case FIX_OUTDATED:
+            default:
+                return Mono.empty();
         }
-        return Mono.empty();
     }
 
     private Mono<Task.Result> reIndexMessages(Flux<Either<Failure, ReIndexingEntry>> entriesToIndex, RunningOptions runningOptions, ReprocessingContext reprocessingContext) {
