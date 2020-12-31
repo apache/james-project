@@ -26,8 +26,8 @@ import java.security.interfaces.RSAPublicKey;
 import java.util.Optional;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class PublicKeyProviderTest {
 
@@ -41,7 +41,7 @@ public class PublicKeyProviderTest {
             "kwIDAQAB\n" +
             "-----END PUBLIC KEY-----";
 
-    @BeforeClass
+    @BeforeAll
     public static void init() {
         Security.addProvider(new BouncyCastleProvider());
     }

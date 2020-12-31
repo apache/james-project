@@ -26,9 +26,9 @@ import java.util.Optional;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class JwtTokenVerifierTest {
 
@@ -65,15 +65,12 @@ public class JwtTokenVerifierTest {
         "bmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.";
     private JwtTokenVerifier sut;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
-    @BeforeClass
+    @BeforeAll
     public static void init() {
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
         PublicKeyProvider pubKeyProvider = new PublicKeyProvider(getJWTConfiguration(), new PublicKeyReader());
         sut = new JwtTokenVerifier(pubKeyProvider);
