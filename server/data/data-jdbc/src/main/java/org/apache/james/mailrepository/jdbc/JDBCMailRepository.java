@@ -45,7 +45,6 @@ import java.util.StringTokenizer;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 import javax.sql.DataSource;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
@@ -383,10 +382,7 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
             // Need to determine whether need to insert this record, or update
             // it.
 
-            // Determine whether the message body has changed, and possibly
-            // avoid
-            // updating the database.
-            boolean saveBody = saveBodyRequired(mc);
+            mc.getMessage().saveChanges();
             MessageInputStream is = new MessageInputStream(mc, sr, inMemorySizeLimit, true);
 
             // Begin a transaction
@@ -405,9 +401,7 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
                     updateMailAttributes(mc, conn);
                 }
 
-                if (saveBody) {
-                    updateMessageBody(mc, conn, is);
-                }
+                updateMessageBody(mc, conn, is);
 
             } else {
                 // Insert the record into the database
@@ -549,22 +543,6 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
             ResultSet rsExists = checkMessageExists.executeQuery();
             return rsExists.next() && rsExists.getInt(1) > 0;
         }
-    }
-
-    private boolean saveBodyRequired(Mail mc) throws MessagingException {
-        boolean saveBody;
-        MimeMessage messageBody = mc.getMessage();
-
-        if (messageBody instanceof MimeMessageWrapper) {
-            MimeMessageWrapper message = (MimeMessageWrapper) messageBody;
-            saveBody = message.isModified();
-            if (saveBody) {
-                message.loadMessage();
-            }
-        } else {
-            saveBody = true;
-        }
-        return saveBody;
     }
 
     @Override
