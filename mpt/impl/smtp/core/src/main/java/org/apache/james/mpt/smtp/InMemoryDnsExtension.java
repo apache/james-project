@@ -39,11 +39,6 @@ public class InMemoryDnsExtension implements GuiceModuleTestExtension {
     }
 
     @Override
-    public void afterEach(ExtensionContext extensionContext) throws Exception {
-        inMemoryDns = null;
-    }
-
-    @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
         inMemoryDns = new InMemoryDNSService();
     }
