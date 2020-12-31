@@ -45,7 +45,7 @@ import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.james.smtpserver.fastfail.URIRBLHandler;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Preconditions;
 

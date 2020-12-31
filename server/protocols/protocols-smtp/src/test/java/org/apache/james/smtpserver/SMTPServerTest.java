@@ -87,10 +87,10 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.mailet.Mail;
 import org.jboss.netty.util.HashedWheelTimer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -207,7 +207,7 @@ public class SMTPServerTest {
 
     private SMTPServer smtpServer;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         domainList = new MemoryDomainList(new InMemoryDNSService()
@@ -369,8 +369,8 @@ public class SMTPServerTest {
         }
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    public void tearDown() {
         smtpServer.destroy();
         hashedWheelTimer.stop();
     }
@@ -640,7 +640,7 @@ public class SMTPServerTest {
     }
 
     // FIXME
-    @Ignore
+    @Disabled
     @Test
     public void testEmptyMessageReceivedHeader() throws Exception {
         init(smtpConfiguration);

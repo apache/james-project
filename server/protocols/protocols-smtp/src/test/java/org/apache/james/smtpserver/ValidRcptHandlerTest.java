@@ -41,8 +41,8 @@ import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.smtpserver.fastfail.ValidRcptHandler;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 import com.google.common.base.Preconditions;
 
@@ -62,7 +62,7 @@ public class ValidRcptHandlerTest {
     private MailAddress user1mail;
     private MailAddress invalidUserEmail;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         MemoryDomainList memoryDomainList = new MemoryDomainList(mock(DNSService.class));
         memoryDomainList.configure(DomainListConfiguration.builder()

@@ -75,14 +75,14 @@ import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
 import org.assertj.core.api.SoftAssertions;
 import org.jboss.netty.util.HashedWheelTimer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.TypeLiteral;
 
-public class DSNTest {
+class DSNTest {
     public static final String LOCAL_DOMAIN = "example.local";
     public static final Username BOB = Username.of("bob@localhost");
     public static final String PASSWORD = "bobpwd";
@@ -100,8 +100,8 @@ public class DSNTest {
 
     private SMTPServer smtpServer;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         domainList = new MemoryDomainList(new InMemoryDNSService()
             .registerMxRecord(Domain.LOCALHOST.asString(), "127.0.0.1")
             .registerMxRecord(Domain.LOCALHOST.asString(), "127.0.0.1")
@@ -178,14 +178,14 @@ public class DSNTest {
             .build();
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         smtpServer.destroy();
         hashedWheelTimer.stop();
     }
 
     @Test
-    public void ehloShouldAdvertiseDsnExtension() throws Exception {
+    void ehloShouldAdvertiseDsnExtension() throws Exception {
         smtpServer.configure(FileConfigurationProvider.getConfig(
             ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
         smtpServer.init();
@@ -211,7 +211,7 @@ public class DSNTest {
     }
 
     @Test
-    public void dsnParametersShouldBeSetOnTheFinalEmail() throws Exception {
+    void dsnParametersShouldBeSetOnTheFinalEmail() throws Exception {
         smtpServer.configure(FileConfigurationProvider.getConfig(
             ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
         smtpServer.init();
@@ -238,7 +238,7 @@ public class DSNTest {
     }
 
     @Test
-    public void multipleRecipientsShouldBeSupported() throws Exception {
+    void multipleRecipientsShouldBeSupported() throws Exception {
         smtpServer.configure(FileConfigurationProvider.getConfig(
             ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
         smtpServer.init();
@@ -270,7 +270,7 @@ public class DSNTest {
     }
 
     @Test
-    public void notifyCanBeOmitted() throws Exception {
+    void notifyCanBeOmitted() throws Exception {
         smtpServer.configure(FileConfigurationProvider.getConfig(
             ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
         smtpServer.init();
@@ -296,7 +296,7 @@ public class DSNTest {
     }
 
     @Test
-    public void orcptCanBeOmitted() throws Exception {
+    void orcptCanBeOmitted() throws Exception {
         smtpServer.configure(FileConfigurationProvider.getConfig(
             ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
         smtpServer.init();
@@ -322,7 +322,7 @@ public class DSNTest {
     }
 
     @Test
-    public void retCanBeOmitted() throws Exception {
+    void retCanBeOmitted() throws Exception {
         smtpServer.configure(FileConfigurationProvider.getConfig(
             ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
         smtpServer.init();
@@ -348,7 +348,7 @@ public class DSNTest {
     }
 
     @Test
-    public void envIdCanBeOmitted() throws Exception {
+    void envIdCanBeOmitted() throws Exception {
         smtpServer.configure(FileConfigurationProvider.getConfig(
             ClassLoader.getSystemResourceAsStream("smtpserver-dsn.xml")));
         smtpServer.init();
