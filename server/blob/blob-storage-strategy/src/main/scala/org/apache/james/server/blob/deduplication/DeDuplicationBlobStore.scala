@@ -36,13 +36,12 @@ import reactor.util.function.{Tuple2, Tuples}
 import scala.compat.java8.FunctionConverters._
 
 object DeDuplicationBlobStore {
-  val DEFAULT_BUCKET = "defaultBucket"
   val LAZY_RESOURCE_CLEANUP = false
   val FILE_THRESHOLD = 10000
 }
 
 class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
-                                       @Named("defaultBucket") defaultBucketName: BucketName,
+                                       @Named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER) defaultBucketName: BucketName,
                                        blobIdFactory: BlobId.Factory) extends BlobStore {
 
   override def save(bucketName: BucketName, data: Array[Byte], storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
