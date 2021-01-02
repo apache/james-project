@@ -495,6 +495,10 @@ public class MailImpl implements Disposable, Mail {
      */
     @Override
     public void setMessage(MimeMessage message) throws MessagingException {
+        setMessageNoCopy(new MimeMessageWrapper(message));
+    }
+
+    public void setMessageNoCopy(MimeMessageWrapper message) throws MessagingException {
         if (this.message != message) {
             // If a setMessage is called on a Mail that already have a message
             // (discouraged) we have to make sure that the message we remove is
@@ -502,8 +506,12 @@ public class MailImpl implements Disposable, Mail {
             if (this.message != null) {
                 LifecycleUtil.dispose(this.message);
             }
-            this.message = new MimeMessageWrapper(message);
+            this.message = message;
         }
+    }
+
+    public void setMessageContent(MimeMessageSource message) throws MessagingException {
+           setMessageNoCopy(new MimeMessageWrapper(message));
     }
 
     @Override

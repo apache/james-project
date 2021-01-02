@@ -29,6 +29,8 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.james.server.core.MailImpl;
+import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.mailet.Mail;
 
 import com.github.fge.lambdas.Throwing;
@@ -60,7 +62,14 @@ class MailLoader {
 
     private Mono<Mail> buildMailWithMessageReference(MailReference mailReference, MimeMessage mimeMessage) {
         Function<Mail, Mono<Object>> setMessage = mail ->
-            Mono.fromRunnable(Throwing.runnable(() -> mail.setMessage(mimeMessage)).sneakyThrow())
+            Mono.fromRunnable(Throwing.runnable(() -> {
+                if (mimeMessage instanceof MimeMessageWrapper && mail instanceof MailImpl) {
+                    MailImpl mailImpl = (MailImpl) mail;
+                    mailImpl.setMessageNoCopy((MimeMessageWrapper) mimeMessage);
+                } else {
+                    mail.setMessage(mimeMessage);
+                }
+            }).sneakyThrow())
                 .onErrorResume(AddressException.class, e -> Mono.error(new MailQueue.MailQueueException("Failed to parse mail address", e)))
                 .onErrorResume(MessagingException.class, e -> Mono.error(new MailQueue.MailQueueException("Failed to generate mime message", e)));
 
