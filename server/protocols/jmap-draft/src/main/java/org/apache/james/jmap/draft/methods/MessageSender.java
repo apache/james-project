@@ -19,11 +19,8 @@
 
 package org.apache.james.jmap.draft.methods;
 
-import java.io.InputStream;
-
 import javax.inject.Inject;
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory.MetaDataWithContent;
 import org.apache.james.jmap.draft.send.MailMetadata;
@@ -34,8 +31,6 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.server.core.Envelope;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageInputStreamSource;
-import org.apache.james.server.core.MimeMessageSource;
-import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.mailet.Mail;
 
 import com.google.common.annotations.VisibleForTesting;

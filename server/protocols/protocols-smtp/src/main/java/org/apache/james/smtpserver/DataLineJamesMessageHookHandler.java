@@ -51,7 +51,6 @@ import org.apache.james.protocols.smtp.hook.MessageHook;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.server.core.MimeMessageInputStreamSource;
-import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
