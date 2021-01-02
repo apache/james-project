@@ -100,10 +100,8 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
                 // store mail in the session so we can be sure it get disposed later
                 session.setAttachment(SMTPConstants.MAIL, mail, State.Transaction);
 
-                MimeMessageWrapper mimeMessageWrapper = null;
                 try {
-                    mimeMessageWrapper = new MimeMessageWrapper(mmiss);
-                    mail.setMessage(mimeMessageWrapper);
+                    mail.setMessageContent(mmiss);
 
                     Response response = processExtensions(session, mail);
 
@@ -115,7 +113,6 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
                     LOGGER.info("Unexpected error handling DATA stream", e);
                     return new SMTPResponse(SMTPRetCode.LOCAL_ERROR, "Unexpected error handling DATA stream.");
                 } finally {
-                    LifecycleUtil.dispose(mimeMessageWrapper);
                     LifecycleUtil.dispose(mmiss);
                     LifecycleUtil.dispose(mail);
                 }

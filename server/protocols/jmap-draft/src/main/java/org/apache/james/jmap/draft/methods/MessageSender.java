@@ -62,18 +62,13 @@ public class MessageSender {
     @VisibleForTesting
     static Mail buildMail(MetaDataWithContent message, Envelope envelope) throws MessagingException {
         String name = message.getMessageId().serialize();
-        return MailImpl.builder()
+        MailImpl mail = MailImpl.builder()
             .name(name)
             .sender(envelope.getFrom().asOptional().orElseThrow(() -> new RuntimeException("Sender is mandatory")))
             .addRecipients(envelope.getRecipients())
-            .mimeMessage(toMimeMessage(name, message.getContent()))
             .build();
-    }
-
-    private static MimeMessage toMimeMessage(String name, InputStream inputStream) throws MessagingException {
-        MimeMessageSource source = new MimeMessageInputStreamSource(name, inputStream);
-
-        return new MimeMessageWrapper(source);
+        mail.setMessageContent(new MimeMessageInputStreamSource(name, message.getContent()));
+        return mail;
     }
 
     public void sendMessage(MessageId messageId,

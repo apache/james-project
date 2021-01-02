@@ -214,13 +214,17 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         message <- toMimeMessage(submissionId.value, m.getFullContent.getInputStream)
         envelope <- resolveEnvelope(message, request.envelope)
         validation <- validate(mailboxSession)(message, envelope)
-        enqueue <- Try(queue.enQueue(MailImpl.builder()
-          .name(submissionId.value)
-          .addRecipients(envelope.rcptTo.map(_.email).asJava)
-          .sender(envelope.mailFrom.email)
-          .mimeMessage(message)
-          .addAttribute(new Attribute(MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of(mailboxSession.getUser.asString())))
-          .build()))
+        mail <- Try({
+          val mailImpl = MailImpl.builder()
+            .name(submissionId.value)
+            .addRecipients(envelope.rcptTo.map(_.email).asJava)
+            .sender(envelope.mailFrom.email)
+            .addAttribute(new Attribute(MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of(mailboxSession.getUser.asString())))
+            .build()
+          mailImpl.setMessageNoCopy(message)
+          mailImpl
+        })
+        enqueue <- Try(queue.enQueue(mail))
       } yield {
         EmailSubmissionCreationResponse(submissionId)
       }
@@ -228,7 +232,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
     })
   }
 
-  private def toMimeMessage(name: String, inputStream: InputStream): Try[MimeMessage] = {
+  private def toMimeMessage(name: String, inputStream: InputStream): Try[MimeMessageWrapper] = {
     val source = new MimeMessageInputStreamSource(name, inputStream)
     // if MimeMessageCopyOnWriteProxy throws an error in the constructor we
     // have to manually care disposing our source.

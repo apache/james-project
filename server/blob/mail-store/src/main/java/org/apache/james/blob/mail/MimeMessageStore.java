@@ -32,12 +32,11 @@ import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.nio.ByteBuffer;
 import java.util.Map;
-import java.util.Properties;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
-import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
@@ -45,6 +44,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobType;
 import org.apache.james.blob.api.Store;
+import org.apache.james.server.core.MimeMessageSource;
+import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.james.util.io.BodyOffsetInputStream;
 
 import com.google.common.base.Preconditions;
@@ -137,21 +138,45 @@ public class MimeMessageStore {
             Preconditions.checkArgument(pairs.containsKey(BODY_BLOB_TYPE));
 
             return toMimeMessage(
-                new SequenceInputStream(
-                    new ByteArrayInputStream(pairs.get(HEADER_BLOB_TYPE)),
-                    new ByteArrayInputStream(pairs.get(BODY_BLOB_TYPE))));
+                    pairs.get(HEADER_BLOB_TYPE),
+                    pairs.get(BODY_BLOB_TYPE));
         }
 
-        private MimeMessage toMimeMessage(InputStream inputStream) {
-            try {
-                return new MimeMessage(Session.getInstance(new Properties()), inputStream);
-            } catch (MessagingException e) {
-                throw new RuntimeException(e);
-            }
+        private MimeMessage toMimeMessage(byte[] headers, byte[] body) {
+            return new MimeMessageWrapper(new MimeMessageBytesSource(headers, body));
         }
     }
 
     public static Factory factory(BlobStore blobStore) {
         return new Factory(blobStore);
+    }
+
+    private static class MimeMessageBytesSource extends MimeMessageSource {
+        private final byte[] headers;
+        private final byte[] body;
+        private final String sourceId;
+
+        private MimeMessageBytesSource(byte[] headers, byte[] body) {
+            this.headers = headers;
+            this.body = body;
+            this.sourceId = UUID.randomUUID().toString();
+        }
+
+        @Override
+        public String getSourceId() {
+            return sourceId;
+        }
+
+        @Override
+        public InputStream getInputStream() {
+            return new SequenceInputStream(
+                new ByteArrayInputStream(headers),
+                new ByteArrayInputStream(body));
+        }
+
+        @Override
+        public long getMessageSize() {
+            return headers.length + body.length;
+        }
     }
 }
