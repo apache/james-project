@@ -701,7 +701,7 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    void flagsReplacementShouldReturnAnUpdatedFlagHighlightingTheReplacement() throws MailboxException {
+    protected void flagsReplacementShouldReturnAnUpdatedFlagHighlightingTheReplacement() throws MailboxException {
         saveMessages();
         ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
         Optional<UpdatedFlags> updatedFlags = messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(),
@@ -717,7 +717,7 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    void flagsAdditionShouldReturnAnUpdatedFlagHighlightingTheAddition() throws MailboxException {
+    protected void flagsAdditionShouldReturnAnUpdatedFlagHighlightingTheAddition() throws MailboxException {
         saveMessages();
         messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.REPLACE));
         ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
@@ -750,7 +750,7 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    void flagsRemovalShouldReturnAnUpdatedFlagHighlightingTheRemoval() throws MailboxException {
+    protected void flagsRemovalShouldReturnAnUpdatedFlagHighlightingTheRemoval() throws MailboxException {
         saveMessages();
         messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new FlagsBuilder().add(Flags.Flag.FLAGGED, Flags.Flag.SEEN).build(), FlagsUpdateMode.REPLACE));
         ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
@@ -877,7 +877,7 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    void userFlagsUpdateShouldReturnCorrectUpdatedFlags() throws Exception {
+    protected void userFlagsUpdateShouldReturnCorrectUpdatedFlags() throws Exception {
         saveMessages();
         ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
         assertThat(messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(USER_FLAG), FlagsUpdateMode.ADD)))
@@ -892,7 +892,7 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    void userFlagsUpdateShouldReturnCorrectUpdatedFlagsWhenNoop() throws Exception {
+    protected void userFlagsUpdateShouldReturnCorrectUpdatedFlagsWhenNoop() throws Exception {
         saveMessages();
 
         assertThat(

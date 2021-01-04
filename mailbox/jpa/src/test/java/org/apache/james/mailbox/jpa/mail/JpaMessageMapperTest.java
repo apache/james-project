@@ -20,10 +20,13 @@
 package org.apache.james.mailbox.jpa.mail;
 
 import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAMailboxFixture;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageMapperTest;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 class JpaMessageMapperTest extends MessageMapperTest {
 
@@ -37,5 +40,35 @@ class JpaMessageMapperTest extends MessageMapperTest {
     @AfterEach
     void cleanUp() {
         JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
+    }
+
+    @Disabled("JAMES-3471 messageId is not supported by JPA ")
+    @Test
+    public void flagsAdditionShouldReturnAnUpdatedFlagHighlightingTheAddition() throws MailboxException {
+
+    }
+
+    @Disabled("")
+    @Test
+    public void flagsReplacementShouldReturnAnUpdatedFlagHighlightingTheReplacement() throws MailboxException {
+
+    }
+
+    @Disabled("")
+    @Test
+    public void flagsRemovalShouldReturnAnUpdatedFlagHighlightingTheRemoval() throws MailboxException {
+
+    }
+
+    @Disabled("")
+    @Test
+    public void userFlagsUpdateShouldReturnCorrectUpdatedFlags() throws MailboxException {
+
+    }
+
+    @Disabled("")
+    @Test
+    public void userFlagsUpdateShouldReturnCorrectUpdatedFlagsWhenNoop() throws MailboxException {
+
     }
 }
