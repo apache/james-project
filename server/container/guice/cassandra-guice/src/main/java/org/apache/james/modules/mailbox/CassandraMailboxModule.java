@@ -28,8 +28,10 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
+import org.apache.james.jmap.api.change.EmailChangeRepository;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.api.change.State;
+import org.apache.james.jmap.cassandra.change.CassandraEmailChangeRepository;
 import org.apache.james.jmap.cassandra.change.CassandraMailboxChangeRepository;
 import org.apache.james.jmap.cassandra.change.CassandraStateFactory;
 import org.apache.james.jmap.change.MailboxChangeListener;
@@ -184,6 +186,7 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(MailboxManager.class).to(CassandraMailboxManager.class);
         bind(StoreMailboxManager.class).to(CassandraMailboxManager.class);
         bind(MailboxChangeRepository.class).to(CassandraMailboxChangeRepository.class);
+        bind(EmailChangeRepository.class).to(CassandraEmailChangeRepository.class);
         bind(State.Factory.class).to(CassandraStateFactory.class);
         bind(MailboxId.Factory.class).to(CassandraId.Factory.class);
         bind(State.Factory.class).to(CassandraStateFactory.class);
