@@ -25,6 +25,7 @@ import javax.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.JMAPServer;
+import org.apache.james.jmap.api.change.EmailChange;
 import org.apache.james.jmap.api.change.EmailChangeRepository;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.api.change.State;
@@ -92,6 +93,10 @@ public class JmapGuiceProbe implements GuiceProbe {
 
     public void clearMessageFastViewProjection() {
         Mono.from(messageFastViewProjection.clear()).block();
+    }
+
+    public void saveEmailChange(EmailChange change) {
+        emailChangeRepository.save(change).block();
     }
 
     public State getLatestMailboxState(AccountId accountId) {
