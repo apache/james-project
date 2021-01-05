@@ -60,7 +60,6 @@ public class MemoryEmailChangeRepository implements EmailChangeRepository {
     public Mono<State> getLatestState(AccountId accountId) {
         return allChanges(accountId)
             .filter(change -> !change.isDelegated())
-            .sort(Comparator.comparing(EmailChange::getDate))
             .map(EmailChange::getState)
             .last(State.INITIAL);
     }
