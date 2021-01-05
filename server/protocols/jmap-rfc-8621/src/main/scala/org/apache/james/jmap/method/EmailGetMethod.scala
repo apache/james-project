@@ -23,10 +23,12 @@ import java.time.ZoneId
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import javax.inject.Inject
+import org.apache.james.jmap.api.change.{EmailChangeRepository, State => JavaState}
+import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.State.INSTANCE
-import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, Properties}
+import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, Properties, State}
 import org.apache.james.jmap.json.{EmailGetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.Email.UnparsedEmailId
 import org.apache.james.jmap.mail.{Email, EmailBodyPart, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound, EmailView, EmailViewReaderFactory, SpecificHeaderRequest}
@@ -78,6 +80,7 @@ class SystemZoneIdProvider extends ZoneIdProvider {
 class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
                                 messageIdFactory: MessageId.Factory,
                                 val metricFactory: MetricFactory,
+                                val emailchangeRepository: EmailChangeRepository,
                                 val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[EmailGetRequest] {
   override val methodName: MethodName = MethodName("Email/get")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
@@ -141,11 +144,12 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
     request.ids match {
       case None => SMono.raiseError(new IllegalArgumentException("ids can not be ommited for email/get"))
       case Some(ids) => getEmails(ids, mailboxSession, request)
-        .map(result => EmailGetResponse(
-          accountId = request.accountId,
-          state = INSTANCE,
-          list = result.emails.toList,
-          notFound = result.notFound))
+        .flatMap(result => SMono[JavaState](emailchangeRepository.getLatestState(JavaAccountId.fromUsername(mailboxSession.getUser)))
+          .map(state => EmailGetResponse(
+            accountId = request.accountId,
+            state = State.fromJava(state),
+            list = result.emails.toList,
+            notFound = result.notFound)))
     }
 
   private def getEmails(ids: EmailIds, mailboxSession: MailboxSession, request: EmailGetRequest): SMono[EmailGetResults] = {

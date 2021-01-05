@@ -28,12 +28,16 @@ import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
 import javax.mail.Flags
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
+import net.javacrumbs.jsonunit.core.Option
 import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
 import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.jmap.api.change.{EmailChange, State}
+import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.State.INSTANCE
+import org.apache.james.jmap.draft.JmapGuiceProbe
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.EmailGetMethodContract.createTestMessage
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ALICE, ANDRE, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
@@ -7045,5 +7049,78 @@ trait EmailGetMethodContract {
            |    "id": "${messageId.serialize}",
            |    "header:List-Help:asURLs": null
            }""".stripMargin)
+  }
+
+  @Test
+  def emailStateShouldBeTheLatestOne(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
+    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val path: MailboxPath = MailboxPath.inbox(BOB)
+    mailboxProbe.createMailbox(path)
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(BOB.asString())
+      .setFrom(ANDRE.asString())
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.from(message))
+      .getMessageId
+      .serialize()
+
+    val state: State = storeReferenceState(server, accountId)
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+           |  "methodCalls": [[
+           |     "Email/get",
+           |     {
+           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "ids": ["$messageId"],
+           |       "properties": ["id"]
+           |     },
+           |     "c1"]
+           |  ]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .extract()
+      .body()
+      .asString()
+
+    assertThatJson(response)
+      .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
+      .inPath("methodResponses[0][1]")
+      .isEqualTo(
+        s"""{
+           |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |  "state": "${state.getValue}",
+           |  "list":[
+           |    {
+           |      "id":"$messageId"
+           |    }
+           |  ],
+           |  "notFound": []
+           |}""".stripMargin)
+  }
+
+  private def storeReferenceState(server: GuiceJamesServer, accountId: AccountId) = {
+    val jmapGuiceProbe: JmapGuiceProbe = server.getProbe(classOf[JmapGuiceProbe])
+    jmapGuiceProbe.saveEmailChange(
+      EmailChange.builder()
+        .accountId(accountId)
+        .state(State.Factory.DEFAULT.generate())
+        .date(ZonedDateTime.now())
+        .isDelegated(false)
+        .build())
+
+    val state: State = jmapGuiceProbe.getLatestEmailState(accountId)
+    state
   }
 }
