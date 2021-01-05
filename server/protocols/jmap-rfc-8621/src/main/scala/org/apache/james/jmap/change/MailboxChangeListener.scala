@@ -20,7 +20,7 @@
 package org.apache.james.jmap.change
 
 import javax.inject.Inject
-import org.apache.james.jmap.api.change.{MailboxChange, MailboxChangeRepository}
+import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, MailboxChange, MailboxChangeRepository}
 import org.apache.james.mailbox.events.MailboxListener.{MailboxEvent, ReactiveGroupMailboxListener}
 import org.apache.james.mailbox.events.{Event, Group}
 import org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY
@@ -32,12 +32,16 @@ import scala.jdk.CollectionConverters._
 case class MailboxChangeListenerGroup() extends Group {}
 
 case class MailboxChangeListener @Inject() (mailboxChangeRepository: MailboxChangeRepository,
-                                            mailboxChangeFactory: MailboxChange.Factory) extends ReactiveGroupMailboxListener {
+                                            mailboxChangeFactory: MailboxChange.Factory,
+                                            emailChangeRepository: EmailChangeRepository,
+                                            emailChangeFactory: EmailChange.Factory) extends ReactiveGroupMailboxListener {
 
   override def reactiveEvent(event: Event): Publisher[Void] =
     SFlux.fromIterable(mailboxChangeFactory.fromEvent(event).asScala)
       .flatMap(change => mailboxChangeRepository.save(change), DEFAULT_CONCURRENCY)
-      .`then`()
+      .thenMany(SFlux.fromIterable(emailChangeFactory.fromEvent(event).asScala))
+      .flatMap(change => emailChangeRepository.save(change), DEFAULT_CONCURRENCY)
+      .`then`
       .`then`(SMono.empty[Void]).asJava
 
   override def getDefaultGroup: Group = MailboxChangeListenerGroup()

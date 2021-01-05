@@ -20,22 +20,21 @@
 package org.apache.james.jmap.change
 
 import java.time.{Clock, ZonedDateTime}
-
 import javax.mail.Flags
-import org.apache.james.jmap.api.change.{MailboxChange, MailboxChangeRepository, State}
+import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, MailboxChange, MailboxChangeRepository, State}
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.change.MailboxChangeListenerTest.ACCOUNT_ID
-import org.apache.james.jmap.memory.change.MemoryMailboxChangeRepository
+import org.apache.james.jmap.memory.change.{MemoryEmailChangeRepository, MemoryMailboxChangeRepository}
 import org.apache.james.mailbox.MessageManager.{AppendCommand, AppendResult, FlagsUpdateMode}
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery
 import org.apache.james.mailbox.events.{InVMEventBus, MemoryEventDeadLetters, RetryBackoffConfiguration}
 import org.apache.james.mailbox.fixture.MailboxFixture.{ALICE, BOB}
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources
-import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath, MessageRange, TestId}
+import org.apache.james.mailbox.model.{ComposedMessageId, MailboxACL, MailboxId, MailboxPath, MessageRange, TestId, TestMessageId}
 import org.apache.james.mailbox.{MailboxManager, MailboxSessionUtil, MessageManager}
 import org.apache.james.metrics.tests.RecordingMetricFactory
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.{BeforeEach, Test}
+import org.junit.jupiter.api.{BeforeEach, Nested, Test}
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
@@ -46,9 +45,11 @@ object MailboxChangeListenerTest {
 
 class MailboxChangeListenerTest {
 
-  var repository: MailboxChangeRepository = _
+  var mailboxChangeRepository: MailboxChangeRepository = _
   var mailboxManager: MailboxManager = _
   var mailboxChangeFactory: MailboxChange.Factory = _
+  var emailChangeRepository: EmailChangeRepository = _
+  var emailChangeFactory: EmailChange.Factory = _
   var stateFactory: State.Factory = _
   var listener: MailboxChangeListener = _
   var clock: Clock = _
@@ -66,171 +67,277 @@ class MailboxChangeListenerTest {
     mailboxManager = resources.getMailboxManager
     stateFactory = new State.DefaultFactory
     mailboxChangeFactory = new MailboxChange.Factory(clock, mailboxManager, stateFactory)
-    repository = new MemoryMailboxChangeRepository()
-    listener = MailboxChangeListener(repository, mailboxChangeFactory)
+    mailboxChangeRepository = new MemoryMailboxChangeRepository()
+    emailChangeFactory = new EmailChange.Factory(clock, mailboxManager, stateFactory)
+    emailChangeRepository = new MemoryEmailChangeRepository()
+    listener = MailboxChangeListener(mailboxChangeRepository, mailboxChangeFactory, emailChangeRepository, emailChangeFactory)
     resources.getEventBus.register(listener)
   }
 
-  @Test
-  def createMailboxShouldStoreCreatedEvent(): Unit = {
-    val state = stateFactory.generate()
-    repository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+  @Nested
+  class MailboxChangeEvents {
+    @Test
+    def createMailboxShouldStoreCreatedEvent(): Unit = {
+      val state = stateFactory.generate()
+      mailboxChangeRepository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
 
-    val mailboxSession = MailboxSessionUtil.create(BOB)
-    val inboxId: MailboxId = mailboxManager.createMailbox(MailboxPath.inbox(BOB), mailboxSession).get
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val inboxId: MailboxId = mailboxManager.createMailbox(MailboxPath.inbox(BOB), mailboxSession).get
 
-    assertThat(repository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getCreated)
-      .containsExactly(inboxId)
+      assertThat(mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getCreated)
+        .containsExactly(inboxId)
+    }
+
+    @Test
+    def updateMailboxNameShouldStoreUpdatedEvent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val newPath = MailboxPath.forUser(BOB, "another")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+
+      val state = stateFactory.generate()
+      mailboxChangeRepository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+
+      mailboxManager.renameMailbox(path, newPath, mailboxSession)
+
+      assertThat(mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
+        .containsExactly(inboxId)
+    }
+
+    @Test
+    def updateMailboxACLShouldStoreUpdatedEvent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.inbox(BOB)
+      val inboxId: MailboxId = mailboxManager.createMailbox(MailboxPath.inbox(BOB), mailboxSession).get
+      val state: State = mailboxChangeRepository.getLatestState(ACCOUNT_ID).block()
+
+      mailboxManager.applyRightsCommand(path, MailboxACL.command().forUser(ALICE).rights(MailboxACL.Right.Read).asAddition(), mailboxSession)
+
+      assertThat(mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
+        .containsExactly(inboxId)
+    }
+
+    @Test
+    def appendMessageToMailboxShouldStoreUpdateEvent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+
+      val state = stateFactory.generate()
+      mailboxChangeRepository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+
+      mailboxManager.applyRightsCommand(path, MailboxACL.command().forUser(ALICE).rights(MailboxACL.Right.Read).asAddition(), mailboxSession)
+
+      mailboxManager
+        .getMailbox(inboxId, mailboxSession)
+        .appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      assertThat(mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
+        .containsExactly(inboxId)
+    }
+
+    @Test
+    def addSeenFlagsShouldStoreUpdateEvent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      val state = stateFactory.generate()
+      mailboxChangeRepository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+
+      messageManager.setFlags(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
+
+      assertThat(mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
+        .containsExactly(inboxId)
+    }
+
+    @Test
+    def removeSeenFlagsShouldStoreUpdateEvent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      messageManager.appendMessage(AppendCommand.builder()
+        .withFlags(new Flags(Flags.Flag.SEEN))
+        .build("header: value\r\n\r\nbody"), mailboxSession)
+
+      val state = stateFactory.generate()
+      mailboxChangeRepository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+
+      messageManager.setFlags(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REMOVE, MessageRange.all(), mailboxSession)
+
+      assertThat(mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
+        .containsExactly(inboxId)
+    }
+
+    @Test
+    def addOtherThanSeenFlagsShouldNotStoreUpdateEvent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      val state = stateFactory.generate()
+      mailboxChangeRepository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+
+      messageManager.setFlags(new Flags(Flags.Flag.ANSWERED), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
+
+      assertThat(mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
+        .isEmpty()
+    }
+
+    @Test
+    def updateOtherThanSeenFlagsShouldNotStoreUpdateEvent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      messageManager.appendMessage(AppendCommand.builder()
+        .withFlags(new Flags(Flags.Flag.ANSWERED))
+        .build("header: value\r\n\r\nbody"), mailboxSession)
+
+      val state = stateFactory.generate()
+      mailboxChangeRepository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+
+      messageManager.setFlags(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.REPLACE, MessageRange.all(), mailboxSession)
+
+      assertThat(mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
+        .isEmpty()
+    }
+
+    @Test
+    def deleteMessageFromMailboxShouldStoreUpdateEvent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      val appendResult: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      val state = stateFactory.generate()
+      mailboxChangeRepository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+      messageManager.delete(List(appendResult.getId.getUid).asJava, mailboxSession)
+
+      assertThat(mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
+        .containsExactly(inboxId)
+    }
+
+    @Test
+    def deleteMailboxNameShouldStoreDestroyedEvent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+
+      val state = stateFactory.generate()
+      mailboxChangeRepository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+
+      mailboxManager.deleteMailbox(inboxId, mailboxSession)
+
+      assertThat(mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getDestroyed)
+        .containsExactly(inboxId)
+    }
   }
 
-  @Test
-  def updateMailboxNameShouldStoreUpdatedEvent(): Unit = {
-    val mailboxSession = MailboxSessionUtil.create(BOB)
-    val path = MailboxPath.forUser(BOB, "test")
-    val newPath = MailboxPath.forUser(BOB, "another")
-    val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+  @Nested
+  class EmailChangeEvents {
+    @Test
+    def appendMessageToMailboxShouldStoreCreatedEvent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
 
-    val state = stateFactory.generate()
-    repository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+      val state = stateFactory.generate()
+      emailChangeRepository.save(EmailChange.builder()
+          .accountId(ACCOUNT_ID)
+          .state(state)
+          .date(ZonedDateTime.now)
+          .isDelegated(false)
+          .created(TestMessageId.of(0))
+          .build)
+        .block()
 
-    mailboxManager.renameMailbox(path, newPath, mailboxSession)
+      val appendResult: AppendResult = mailboxManager
+        .getMailbox(inboxId, mailboxSession)
+        .appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
 
-    assertThat(repository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
-      .containsExactly(inboxId)
-  }
+      assertThat(emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getCreated)
+        .containsExactly(appendResult.getId.getMessageId)
+    }
 
-  @Test
-  def updateMailboxACLShouldStoreUpdatedEvent(): Unit = {
-    val mailboxSession = MailboxSessionUtil.create(BOB)
-    val path = MailboxPath.inbox(BOB)
-    val inboxId: MailboxId = mailboxManager.createMailbox(MailboxPath.inbox(BOB), mailboxSession).get
-    val state: State = repository.getLatestState(ACCOUNT_ID).block()
+    @Test
+    def addFlagsShouldStoreUpdateEvent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      val appendResult: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
 
-    mailboxManager.applyRightsCommand(path, MailboxACL.command().forUser(ALICE).rights(MailboxACL.Right.Read).asAddition(), mailboxSession)
+      val state = stateFactory.generate()
+      emailChangeRepository.save(EmailChange.builder()
+          .accountId(ACCOUNT_ID)
+          .state(state)
+          .date(ZonedDateTime.now)
+          .isDelegated(false)
+          .created(TestMessageId.of(0))
+          .build)
+        .block()
 
-    assertThat(repository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
-      .containsExactly(inboxId)
-  }
+      messageManager.setFlags(new Flags(Flags.Flag.ANSWERED), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
 
-  @Test
-  def appendMessageToMailboxShouldStoreUpdateEvent(): Unit = {
-    val mailboxSession = MailboxSessionUtil.create(BOB)
-    val path = MailboxPath.forUser(BOB, "test")
-    val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      assertThat(emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
+        .containsExactly(appendResult.getId.getMessageId)
+    }
 
-    val state = stateFactory.generate()
-    repository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+    @Test
+    def removeSeenFlagsShouldStoreUpdateEvent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      val appendResult: AppendResult = messageManager.appendMessage(AppendCommand.builder()
+        .withFlags(new Flags(Flags.Flag.DRAFT))
+        .build("header: value\r\n\r\nbody"), mailboxSession)
 
-    mailboxManager.applyRightsCommand(path, MailboxACL.command().forUser(ALICE).rights(MailboxACL.Right.Read).asAddition(), mailboxSession)
+      val state = stateFactory.generate()
+      emailChangeRepository.save(EmailChange.builder()
+          .accountId(ACCOUNT_ID)
+          .state(state)
+          .date(ZonedDateTime.now)
+          .isDelegated(false)
+          .created(TestMessageId.of(0))
+          .build)
+        .block()
 
-    mailboxManager
-      .getMailbox(inboxId, mailboxSession)
-      .appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+      messageManager.setFlags(new Flags(Flags.Flag.DRAFT), FlagsUpdateMode.REMOVE, MessageRange.all(), mailboxSession)
 
-    assertThat(repository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
-      .containsExactly(inboxId)
-  }
+      assertThat(emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
+        .containsExactly(appendResult.getId.getMessageId)
+    }
 
-  @Test
-  def addSeenFlagsShouldStoreUpdateEvent(): Unit = {
-    val mailboxSession = MailboxSessionUtil.create(BOB)
-    val path = MailboxPath.forUser(BOB, "test")
-    val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
-    val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
-    messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+    @Test
+    def deleteMessageFromMailboxShouldStoreUpdateEvent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      val appendResult: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
 
-    val state = stateFactory.generate()
-    repository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+      val state = stateFactory.generate()
+      emailChangeRepository.save(EmailChange.builder()
+          .accountId(ACCOUNT_ID)
+          .state(state)
+          .date(ZonedDateTime.now)
+          .isDelegated(false)
+          .created(TestMessageId.of(0))
+          .build)
+        .block()
 
-    messageManager.setFlags(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
+      messageManager.delete(List(appendResult.getId.getUid).asJava, mailboxSession)
 
-    assertThat(repository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
-      .containsExactly(inboxId)
-  }
-
-  @Test
-  def removeSeenFlagsShouldStoreUpdateEvent(): Unit = {
-    val mailboxSession = MailboxSessionUtil.create(BOB)
-    val path = MailboxPath.forUser(BOB, "test")
-    val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
-    val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
-    messageManager.appendMessage(AppendCommand.builder()
-      .withFlags(new Flags(Flags.Flag.SEEN))
-      .build("header: value\r\n\r\nbody"), mailboxSession)
-
-    val state = stateFactory.generate()
-    repository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
-
-    messageManager.setFlags(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REMOVE, MessageRange.all(), mailboxSession)
-
-    assertThat(repository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
-      .containsExactly(inboxId)
-  }
-
-  @Test
-  def addOtherThanSeenFlagsShouldNotStoreUpdateEvent(): Unit = {
-    val mailboxSession = MailboxSessionUtil.create(BOB)
-    val path = MailboxPath.forUser(BOB, "test")
-    val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
-    val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
-    messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
-
-    val state = stateFactory.generate()
-    repository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
-
-    messageManager.setFlags(new Flags(Flags.Flag.ANSWERED), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
-
-    assertThat(repository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
-      .isEmpty()
-  }
-
-  @Test
-  def updateOtherThanSeenFlagsShouldNotStoreUpdateEvent(): Unit = {
-    val mailboxSession = MailboxSessionUtil.create(BOB)
-    val path = MailboxPath.forUser(BOB, "test")
-    val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
-    val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
-    messageManager.appendMessage(AppendCommand.builder()
-      .withFlags(new Flags(Flags.Flag.ANSWERED))
-      .build("header: value\r\n\r\nbody"), mailboxSession)
-
-    val state = stateFactory.generate()
-    repository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
-
-    messageManager.setFlags(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.REPLACE, MessageRange.all(), mailboxSession)
-
-    assertThat(repository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
-      .isEmpty()
-  }
-
-  @Test
-  def deleteMessageFromMailboxShouldStoreUpdateEvent(): Unit = {
-    val mailboxSession = MailboxSessionUtil.create(BOB)
-    val path = MailboxPath.forUser(BOB, "test")
-    val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
-    val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
-    val appendResult: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
-
-    val state = stateFactory.generate()
-    repository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
-    messageManager.delete(List(appendResult.getId.getUid).asJava, mailboxSession)
-
-    assertThat(repository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
-      .containsExactly(inboxId)
-  }
-
-  @Test
-  def deleteMailboxNameShouldStoreDestroyedEvent(): Unit = {
-    val mailboxSession = MailboxSessionUtil.create(BOB)
-    val path = MailboxPath.forUser(BOB, "test")
-    val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
-
-    val state = stateFactory.generate()
-    repository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
-
-    mailboxManager.deleteMailbox(inboxId, mailboxSession)
-
-    assertThat(repository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getDestroyed)
-      .containsExactly(inboxId)
+      assertThat(emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getDestroyed)
+        .containsExactly(appendResult.getId.getMessageId)
+    }
   }
 }
