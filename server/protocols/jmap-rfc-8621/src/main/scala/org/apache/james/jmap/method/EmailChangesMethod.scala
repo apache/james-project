@@ -21,9 +21,11 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_MAIL}
+import org.apache.james.jmap.api.change.{EmailChangeRepository, EmailChanges, State => JavaState}
+import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{ErrorCode, Invocation, State}
+import org.apache.james.jmap.core.{Invocation, State}
 import org.apache.james.jmap.json.{EmailGetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{EmailChangesRequest, EmailChangesResponse, HasMoreChanges}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -32,32 +34,38 @@ import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.{JsError, JsSuccess}
 import reactor.core.scala.publisher.SMono
 
+import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
+
 class EmailChangesMethod @Inject()(val metricFactory: MetricFactory,
+                                   val emailChangeRepository: EmailChangeRepository,
                                    val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[EmailChangesRequest] {
   override val methodName: MethodName = MethodName("Email/changes")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailChangesRequest): SMono[InvocationWithContext] =
-    if (request.sinceState.equals(State.INSTANCE)) {
-      val response: EmailChangesResponse = EmailChangesResponse(
+    SMono({
+      val accountId: JavaAccountId = JavaAccountId.fromUsername(mailboxSession.getUser)
+      if (capabilities.contains(JAMES_SHARES)) {
+        SMono[EmailChanges](emailChangeRepository.getSinceStateWithDelegation(accountId, JavaState.of(request.sinceState.value), request.maxChanged.toJava))
+      } else {
+        SMono[EmailChanges](emailChangeRepository.getSinceState(accountId, JavaState.of(request.sinceState.value), request.maxChanged.toJava))
+      }
+    })
+      .map(emailChanges => EmailChangesResponse(
         accountId = request.accountId,
-        oldState = State.INSTANCE,
-        newState = State.INSTANCE,
-        hasMoreChanges = HasMoreChanges(false),
-        created = List(),
-        updated = List(),
-        destroyed = List())
-      SMono.just(InvocationWithContext(invocation = Invocation(
-        methodName = methodName,
-        arguments = Arguments(EmailGetSerializer.serializeChanges(response)),
-        methodCallId = invocation.invocation.methodCallId
-      ), processingContext = invocation.processingContext))
-    } else {
-      SMono.just(InvocationWithContext(invocation = Invocation.error(ErrorCode.CannotCalculateChanges,
-        "Naive implementation for Email/changes",
-        invocation.invocation.methodCallId),
+        oldState = request.sinceState,
+        newState = State.fromEmailChanges(emailChanges),
+        hasMoreChanges = HasMoreChanges.fromEmailChanges(emailChanges),
+        created = emailChanges.getCreated.asScala.toSet,
+        updated = emailChanges.getUpdated.asScala.toSet,
+        destroyed = emailChanges.getDestroyed.asScala.toSet))
+      .map(response => InvocationWithContext(
+        invocation = Invocation(
+          methodName = methodName,
+          arguments = Arguments(EmailGetSerializer.serializeChanges(response)),
+          methodCallId = invocation.invocation.methodCallId),
         processingContext = invocation.processingContext))
-    }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailChangesRequest] =
     EmailGetSerializer.deserializeEmailChangesRequest(invocation.arguments.value) match {
