@@ -73,10 +73,10 @@ public class ExtendedMailFromCommand extends BaseCommand {
                     sess.setDeclaredMessageSize(size);
                     sess.setHasMailFrom(true);
                     sess.sendResponse("250 Ok");
-                } catch (DropConnectionException var9) {
-                    throw var9;
-                } catch (RejectException var10) {
-                    sess.sendResponse(var10.getErrorResponse());
+                } catch (DropConnectionException dropConnectionException) {
+                    throw dropConnectionException;
+                } catch (RejectException rejectException) {
+                    sess.sendResponse(rejectException.getErrorResponse());
                 }
             } else {
                 sess.sendResponse("553 <" + emailAddress + "> Invalid email address.");

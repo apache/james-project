@@ -51,10 +51,10 @@ public class ExtendedRcptToCommand extends BaseCommand {
                     messageHandler.recipient(recipientAddress, Mail.Parameter.fromArgLine(args));
                     sess.addRecipient(recipientAddress);
                     sess.sendResponse("250 Ok");
-                } catch (DropConnectionException var6) {
-                    throw var6;
-                } catch (RejectException var7) {
-                    sess.sendResponse(var7.getErrorResponse());
+                } catch (DropConnectionException dropConnectionException) {
+                    throw dropConnectionException;
+                } catch (RejectException rejectException) {
+                    sess.sendResponse(rejectException.getErrorResponse());
                 }
 
             }
