@@ -22,8 +22,7 @@ package org.apache.james.jmap.mail
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
-import org.apache.james.jmap.api.change.Limit
-import org.apache.james.jmap.api.change.MailboxChanges
+import org.apache.james.jmap.api.change.{EmailChanges, Limit, MailboxChanges}
 import org.apache.james.jmap.core.{AccountId, Properties, State}
 import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
 import org.apache.james.jmap.method.WithAccountId
@@ -68,6 +67,8 @@ case class MailboxGetResponse(accountId: AccountId,
 
 object HasMoreChanges {
   def fromMailboxChanges(mailboxChanges: MailboxChanges): HasMoreChanges = HasMoreChanges(mailboxChanges.hasMoreChanges)
+
+  def fromEmailChanges(emailChanges: EmailChanges): HasMoreChanges = HasMoreChanges(emailChanges.hasMoreChanges)
 }
 
 case class HasMoreChanges(value: Boolean) extends AnyVal
