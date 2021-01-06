@@ -25,6 +25,7 @@ import javax.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.JMAPServer;
+import org.apache.james.jmap.api.change.EmailChangeRepository;
 import org.apache.james.jmap.api.change.MailboxChange;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.api.change.State;
@@ -50,6 +51,7 @@ public class JmapGuiceProbe implements GuiceProbe {
 
     private final VacationRepository vacationRepository;
     private final MailboxChangeRepository mailboxChangeRepository;
+    private final EmailChangeRepository emailChangeRepository;
     private final JMAPServer jmapServer;
     private final MessageIdManager messageIdManager;
     private final MailboxManager mailboxManager;
@@ -57,9 +59,10 @@ public class JmapGuiceProbe implements GuiceProbe {
     private final MessageFastViewProjection messageFastViewProjection;
 
     @Inject
-    private JmapGuiceProbe(VacationRepository vacationRepository, MailboxChangeRepository mailboxChangeRepository, JMAPServer jmapServer, MessageIdManager messageIdManager, MailboxManager mailboxManager, EventBus eventBus, MessageFastViewProjection messageFastViewProjection) {
+    private JmapGuiceProbe(VacationRepository vacationRepository, MailboxChangeRepository mailboxChangeRepository, EmailChangeRepository emailChangeRepository, JMAPServer jmapServer, MessageIdManager messageIdManager, MailboxManager mailboxManager, EventBus eventBus, MessageFastViewProjection messageFastViewProjection) {
         this.vacationRepository = vacationRepository;
         this.mailboxChangeRepository = mailboxChangeRepository;
+        this.emailChangeRepository = emailChangeRepository;
         this.jmapServer = jmapServer;
         this.messageIdManager = messageIdManager;
         this.mailboxManager = mailboxManager;
@@ -102,5 +105,13 @@ public class JmapGuiceProbe implements GuiceProbe {
 
     public State getLastestStateWithDelegation(AccountId accountId) {
         return mailboxChangeRepository.getLatestStateWithDelegation(accountId).block();
+    }
+
+    public State getLatestEmailState(AccountId accountId) {
+        return emailChangeRepository.getLatestState(accountId).block();
+    }
+
+    public State getLatestEmailStateWithDelegation(AccountId accountId) {
+        return emailChangeRepository.getLatestStateWithDelegation(accountId).block();
     }
 }
