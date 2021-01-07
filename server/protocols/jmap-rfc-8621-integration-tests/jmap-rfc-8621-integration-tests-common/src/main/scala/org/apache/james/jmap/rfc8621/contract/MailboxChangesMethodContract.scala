@@ -1279,7 +1279,7 @@ trait MailboxChangesMethodContract {
   @Test
   def mailboxChangesShouldFailWhenAccountIdNotFound(server: GuiceJamesServer): Unit = {
     val jmapGuiceProbe:JmapGuiceProbe = server.getProbe(classOf[JmapGuiceProbe])
-    val oldState: State = jmapGuiceProbe.getLastestState(AccountId.fromUsername(BOB))
+    val oldState: State = jmapGuiceProbe.getLatestMailboxState(AccountId.fromUsername(BOB))
 
     val request =
       s"""{
@@ -1437,9 +1437,9 @@ trait MailboxChangesMethodContract {
       val response = `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
-        .when
+      .when
         .post
-        .`then`
+      .`then`
         .statusCode(SC_OK)
         .contentType(JSON)
         .extract
@@ -1886,17 +1886,17 @@ trait MailboxChangesMethodContract {
   private def waitForNextState(server: GuiceJamesServer, accountId: AccountId, initialState: State): State = {
     val jmapGuiceProbe: JmapGuiceProbe = server.getProbe(classOf[JmapGuiceProbe])
     awaitAtMostTenSeconds.untilAsserted {
-      () => assertThat(jmapGuiceProbe.getLastestState(accountId)).isNotEqualTo(initialState)
+      () => assertThat(jmapGuiceProbe.getLatestMailboxState(accountId)).isNotEqualTo(initialState)
     }
 
-    jmapGuiceProbe.getLastestState(accountId)
+    jmapGuiceProbe.getLatestMailboxState(accountId)
   }
 
   private def waitForNextStateWithDelegation(server: GuiceJamesServer, accountId: AccountId, initialState: State): State = {
     val jmapGuiceProbe: JmapGuiceProbe = server.getProbe(classOf[JmapGuiceProbe])
-    awaitAtMostTenSeconds.untilAsserted{ () => assertThat(jmapGuiceProbe.getLastestStateWithDelegation(accountId)).isNotEqualTo(initialState) }
+    awaitAtMostTenSeconds.untilAsserted{ () => assertThat(jmapGuiceProbe.getLatestMailboxStateWithDelegation(accountId)).isNotEqualTo(initialState) }
 
-    jmapGuiceProbe.getLastestStateWithDelegation(accountId)
+    jmapGuiceProbe.getLatestMailboxStateWithDelegation(accountId)
   }
 
   private def provisionSystemMailboxes(server: GuiceJamesServer): State = {
@@ -1959,6 +1959,6 @@ trait MailboxChangesMethodContract {
       assertThat(createdSize).isEqualTo(5)
     }
 
-    jmapGuiceProbe.getLastestState(AccountId.fromUsername(BOB))
+    jmapGuiceProbe.getLatestMailboxState(AccountId.fromUsername(BOB))
   }
 }

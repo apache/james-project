@@ -26,7 +26,6 @@ import javax.inject.Inject;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.JMAPServer;
 import org.apache.james.jmap.api.change.EmailChangeRepository;
-import org.apache.james.jmap.api.change.MailboxChange;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.api.change.State;
 import org.apache.james.jmap.api.model.AccountId;
@@ -95,15 +94,11 @@ public class JmapGuiceProbe implements GuiceProbe {
         Mono.from(messageFastViewProjection.clear()).block();
     }
 
-    public void saveMailboxChange(MailboxChange change) {
-        mailboxChangeRepository.save(change).block();
-    }
-
-    public State getLastestState(AccountId accountId) {
+    public State getLatestMailboxState(AccountId accountId) {
         return mailboxChangeRepository.getLatestState(accountId).block();
     }
 
-    public State getLastestStateWithDelegation(AccountId accountId) {
+    public State getLatestMailboxStateWithDelegation(AccountId accountId) {
         return mailboxChangeRepository.getLatestStateWithDelegation(accountId).block();
     }
 
