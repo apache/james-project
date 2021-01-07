@@ -19,13 +19,23 @@
 
 package org.apache.james.mailbox.jpa.mail;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Optional;
+
+import javax.mail.Flags;
+
 import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.mailbox.FlagsBuilder;
+import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAMailboxFixture;
+import org.apache.james.mailbox.model.UpdatedFlags;
+import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageMapperTest;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class JpaMessageMapperTest extends MessageMapperTest {
@@ -42,33 +52,91 @@ class JpaMessageMapperTest extends MessageMapperTest {
         JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
     }
 
-    @Disabled("JAMES-3471 messageId is not supported by JPA ")
     @Test
+    @Override
     public void flagsAdditionShouldReturnAnUpdatedFlagHighlightingTheAddition() throws MailboxException {
+        saveMessages();
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), MessageManager.FlagsUpdateMode.REPLACE));
+        ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
 
+        // JPA does not support MessageId
+        assertThat(messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD)))
+            .contains(UpdatedFlags.builder()
+                .uid(message1.getUid())
+                .modSeq(modSeq.next())
+                .oldFlags(new Flags(Flags.Flag.FLAGGED))
+                .newFlags(new FlagsBuilder().add(Flags.Flag.SEEN, Flags.Flag.FLAGGED).build())
+                .build());
     }
 
-    @Disabled("")
     @Test
+    @Override
     public void flagsReplacementShouldReturnAnUpdatedFlagHighlightingTheReplacement() throws MailboxException {
+        saveMessages();
+        ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
+        Optional<UpdatedFlags> updatedFlags = messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(),
+            new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), MessageManager.FlagsUpdateMode.REPLACE));
 
+        // JPA does not support MessageId
+        assertThat(updatedFlags)
+            .contains(UpdatedFlags.builder()
+                .uid(message1.getUid())
+                .modSeq(modSeq.next())
+                .oldFlags(new Flags())
+                .newFlags(new Flags(Flags.Flag.FLAGGED))
+                .build());
     }
 
-    @Disabled("")
     @Test
+    @Override
     public void flagsRemovalShouldReturnAnUpdatedFlagHighlightingTheRemoval() throws MailboxException {
+        saveMessages();
+        messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new FlagsBuilder().add(Flags.Flag.FLAGGED, Flags.Flag.SEEN).build(), MessageManager.FlagsUpdateMode.REPLACE));
+        ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
 
+        // JPA does not support MessageId
+        assertThat(messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.REMOVE)))
+            .contains(
+                UpdatedFlags.builder()
+                    .uid(message1.getUid())
+                    .modSeq(modSeq.next())
+                    .oldFlags(new FlagsBuilder().add(Flags.Flag.SEEN, Flags.Flag.FLAGGED).build())
+                    .newFlags(new Flags(Flags.Flag.FLAGGED))
+                    .build());
     }
 
-    @Disabled("")
     @Test
+    @Override
     public void userFlagsUpdateShouldReturnCorrectUpdatedFlags() throws MailboxException {
+        saveMessages();
+        ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
 
+        // JPA does not support MessageId
+        assertThat(messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(), new FlagsUpdateCalculator(new Flags(USER_FLAG), MessageManager.FlagsUpdateMode.ADD)))
+            .contains(
+                UpdatedFlags.builder()
+                    .uid(message1.getUid())
+                    .modSeq(modSeq.next())
+                    .oldFlags(new Flags())
+                    .newFlags(new Flags(USER_FLAG))
+                    .build());
     }
 
-    @Disabled("")
     @Test
+    @Override
     public void userFlagsUpdateShouldReturnCorrectUpdatedFlagsWhenNoop() throws MailboxException {
+        saveMessages();
 
+        // JPA does not support MessageId
+        assertThat(
+            messageMapper.updateFlags(benwaInboxMailbox,message1.getUid(),
+                new FlagsUpdateCalculator(new Flags(USER_FLAG), MessageManager.FlagsUpdateMode.REMOVE)))
+            .contains(
+                UpdatedFlags.builder()
+                    .uid(message1.getUid())
+                    .modSeq(message1.getModSeq())
+                    .oldFlags(new Flags())
+                    .newFlags(new Flags())
+                    .build());
     }
 }

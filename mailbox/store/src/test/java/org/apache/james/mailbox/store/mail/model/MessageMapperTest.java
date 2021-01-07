@@ -71,10 +71,11 @@ public abstract class MessageMapperTest {
     private static final int LIMIT = 10;
     private static final int BODY_START = 16;
     private static final UidValidity UID_VALIDITY = UidValidity.of(42);
-    private static final String USER_FLAG = "userFlag";
 
     private static final String CUSTOMS_USER_FLAGS_VALUE = "CustomsFlags";
     private static final Username BENWA = Username.of("benwa");
+
+    protected static final String USER_FLAG = "userFlag";
 
     private MapperProvider mapperProvider;
     protected MessageMapper messageMapper;

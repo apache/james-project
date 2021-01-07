@@ -274,10 +274,11 @@ public class UpdatedFlags {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(UpdatedFlags.class)
-                .add("uid", uid)
-                .add("oldFlags", oldFlags)
-                .add("newFlags", newFlags)
-                .add("modSeq", modSeq)
-                .toString();
+            .add("uid", uid)
+            .add("messageId", messageId)
+            .add("oldFlags", oldFlags)
+            .add("newFlags", newFlags)
+            .add("modSeq", modSeq)
+            .toString();
     }
 }
