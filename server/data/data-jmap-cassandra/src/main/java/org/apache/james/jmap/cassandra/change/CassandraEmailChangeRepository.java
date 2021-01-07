@@ -49,11 +49,11 @@ public class CassandraEmailChangeRepository implements EmailChangeRepository {
 
     @Override
     public Mono<State> getLatestState(AccountId accountId) {
-        return Mono.empty();
+        return Mono.just(State.INITIAL);
     }
 
     @Override
     public Mono<State> getLatestStateWithDelegation(AccountId accountId) {
-        return Mono.empty();
+        return Mono.just(State.INITIAL);
     }
 }
