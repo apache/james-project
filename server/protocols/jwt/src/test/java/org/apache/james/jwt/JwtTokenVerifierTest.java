@@ -24,13 +24,11 @@ import java.security.Security;
 import java.util.Optional;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class JwtTokenVerifierTest {
+class JwtTokenVerifierTest {
 
     private static final String PUBLIC_PEM_KEY = "-----BEGIN PUBLIC KEY-----\n" +
             "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtlChO/nlVP27MpdkG0Bh\n" +
@@ -66,12 +64,12 @@ public class JwtTokenVerifierTest {
     private JwtTokenVerifier sut;
 
     @BeforeAll
-    public static void init() {
+    static void init() {
         Security.addProvider(new BouncyCastleProvider());
     }
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         PublicKeyProvider pubKeyProvider = new PublicKeyProvider(getJWTConfiguration(), new PublicKeyReader());
         sut = new JwtTokenVerifier(pubKeyProvider);
     }
@@ -81,12 +79,12 @@ public class JwtTokenVerifierTest {
     }
 
     @Test
-    public void shouldReturnTrueOnValidSignature() {
+    void shouldReturnTrueOnValidSignature() {
         assertThat(sut.verify(VALID_TOKEN_WITHOUT_ADMIN)).isTrue();
     }
 
     @Test
-    public void shouldReturnFalseOnMismatchingSigningKey() {
+    void shouldReturnFalseOnMismatchingSigningKey() {
         String invalidToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.Pd6t82" +
                 "tPL3EZdkeYxw_DV2KimE1U2FvuLHmfR_mimJ5US3JFU4J2Gd94O7rwpSTGN1B9h-_lsTebo4ua4xHsTtmczZ9xa8a_kWKaSkqFjNFa" +
                 "Fp6zcoD6ivCu03SlRqsQzSRHXo6TKbnqOt9D6Y2rNa3C4igSwoS0jUE4BgpXbc0";
@@ -95,7 +93,7 @@ public class JwtTokenVerifierTest {
     }
 
     @Test
-    public void verifyShouldReturnFalseWhenSubjectIsNull() {
+    void verifyShouldReturnFalseWhenSubjectIsNull() {
         String tokenWithNullSubject = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOm51bGwsIm5hbWUiOiJKb2huIERvZSJ9.EB" +
                 "_1grWDy_kFelXs3AQeiP13ay4eG_134dWB9XPRSeWsuPs8Mz2UY-VHDxLGD-fAqv-xKXr4QFEnS7iZkdpe0tPLNSwIjqeqkC6KqQln" +
                 "oC1okqWVWBDOcf7Acp1Jzp_cFTUhL5LkHvZDsyCdq5T9OOVVkzO4A9RrzIUsTrYPtRCBuYJ3ggR33cKpw191PulPGNH70rZqpUfDXe" +
@@ -106,7 +104,7 @@ public class JwtTokenVerifierTest {
     }
     
     @Test
-    public void verifyShouldReturnFalseWhenEmptySubject() {
+    void verifyShouldReturnFalseWhenEmptySubject() {
         String tokenWithEmptySubject = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIiLCJuYW1lIjoiSm9obiBEb2UifQ.UdY" +
                 "s2PPzFCegUYspoDCnlJR_bJm8_z1InOv4v3tq8SJETQUarOXlhb_n6y6ujVvmJiSx9dI24Hc3Czi3RGUOXbnBDj1WPfd0aVSiUSqZr" +
                 "MCHBt5vjCYqAseDaP3w4aiiFb6EV3tteJFeBLZx8XlKPYxlzRLLUADDyDSQvrFBBPxfsvCETZovKdo9ofIN64o-yx23ss63yE6oIOd" +
@@ -118,48 +116,48 @@ public class JwtTokenVerifierTest {
     }
 
     @Test
-    public void verifyShouldNotAcceptNoneAlgorithm() {
+    void verifyShouldNotAcceptNoneAlgorithm() {
         assertThat(sut.verify(TOKEN_NONE_ALGORITHM)).isFalse();
     }
 
     @Test
-    public void verifyShouldNotAcceptNoneAlgorithmWithoutSignature() {
+    void verifyShouldNotAcceptNoneAlgorithmWithoutSignature() {
         assertThat(sut.verify(TOKEN_NONE_ALGORITHM_NO_SIGNATURE)).isFalse();
     }
 
     @Test
-    public void shouldReturnUserLoginFromValidToken() {
+    void shouldReturnUserLoginFromValidToken() {
         assertThat(sut.extractLogin(VALID_TOKEN_WITHOUT_ADMIN)).isEqualTo("1234567890");
     }
 
     @Test
-    public void hasAttributeShouldReturnFalseOnNoneAlgorithm() throws Exception {
+    void hasAttributeShouldReturnFalseOnNoneAlgorithm() throws Exception {
         boolean authorized = sut.hasAttribute("admin", true, TOKEN_NONE_ALGORITHM);
 
         assertThat(authorized).isFalse();
     }
 
     @Test
-    public void hasAttributeShouldReturnFalseOnNoneAlgorithmWithoutSignature() throws Exception {
+    void hasAttributeShouldReturnFalseOnNoneAlgorithmWithoutSignature() throws Exception {
         boolean authorized = sut.hasAttribute("admin", true, TOKEN_NONE_ALGORITHM_NO_SIGNATURE);
 
         assertThat(authorized).isFalse();
     }
 
     @Test
-    public void hasAttributeShouldReturnTrueIfClaimValid() throws Exception {
+    void hasAttributeShouldReturnTrueIfClaimValid() throws Exception {
         boolean authorized = sut.hasAttribute("admin", true, VALID_TOKEN_ADMIN_TRUE);
 
         assertThat(authorized).isTrue();
     }
 
     @Test
-    public void extractLoginShouldWorkWithAdminClaim() {
+    void extractLoginShouldWorkWithAdminClaim() {
         assertThat(sut.extractLogin(VALID_TOKEN_ADMIN_TRUE)).isEqualTo("admin@open-paas.org");
     }
 
     @Test
-    public void hasAttributeShouldThrowIfClaimInvalid() throws Exception {
+    void hasAttributeShouldThrowIfClaimInvalid() throws Exception {
         boolean authorized = sut.hasAttribute("admin", true, VALID_TOKEN_ADMIN_FALSE);
 
         assertThat(authorized).isFalse();

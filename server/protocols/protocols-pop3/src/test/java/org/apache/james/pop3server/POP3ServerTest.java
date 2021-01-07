@@ -57,7 +57,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.inject.name.Names;
 
-public class POP3ServerTest {
+class POP3ServerTest {
     private static final DomainList NO_DOMAIN_LIST = null;
 
     private POP3TestConfiguration pop3Configuration;
@@ -74,7 +74,7 @@ public class POP3ServerTest {
     private HashedWheelTimer hashedWheelTimer;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         hashedWheelTimer = new HashedWheelTimer();
         setUpServiceManager();
         setUpPOP3Server();
@@ -82,7 +82,7 @@ public class POP3ServerTest {
     }
 
     @AfterEach
-    public void tearDown() throws Exception {
+    void tearDown() throws Exception {
         try {
             if (pop3Client != null) {
                 if (pop3Client.isConnected()) {
@@ -99,7 +99,7 @@ public class POP3ServerTest {
     }
 
     @Test
-    public void testAuthenticationFail() throws Exception {
+    void testAuthenticationFail() throws Exception {
         finishSetUp(pop3Configuration);
 
         pop3Client = new POP3Client();
@@ -114,7 +114,7 @@ public class POP3ServerTest {
     }
 
     @Test
-    public void testUnknownUser() throws Exception {
+    void testUnknownUser() throws Exception {
         finishSetUp(pop3Configuration);
 
         pop3Client = new POP3Client();
@@ -127,7 +127,7 @@ public class POP3ServerTest {
     }
 
     @Test
-    public void testKnownUserEmptyInbox() throws Exception {
+    void testKnownUserEmptyInbox() throws Exception {
         finishSetUp(pop3Configuration);
 
         pop3Client = new POP3Client();
@@ -176,7 +176,7 @@ public class POP3ServerTest {
      */
 
     @Test
-    public void testUnknownCommand() throws Exception {
+    void testUnknownCommand() throws Exception {
         finishSetUp(pop3Configuration);
 
         pop3Client = new POP3Client();
@@ -189,7 +189,7 @@ public class POP3ServerTest {
     }
 
     @Test
-    public void testUidlCommand() throws Exception {
+    void testUidlCommand() throws Exception {
         finishSetUp(pop3Configuration);
 
         Username username = Username.of("foo");
@@ -229,7 +229,7 @@ public class POP3ServerTest {
     }
 
     @Test
-    public void testMiscCommandsWithWithoutAuth() throws Exception {
+    void testMiscCommandsWithWithoutAuth() throws Exception {
         finishSetUp(pop3Configuration);
 
         usersRepository.addUser(Username.of("foo"), "bar");
@@ -284,7 +284,7 @@ public class POP3ServerTest {
     }
 
     @Test
-    public void testKnownUserInboxWithMessages() throws Exception {
+    void testKnownUserInboxWithMessages() throws Exception {
         finishSetUp(pop3Configuration);
 
         pop3Client = new POP3Client();
@@ -374,7 +374,7 @@ public class POP3ServerTest {
      * Test for JAMES-1202 -  Which shows that UIDL,STAT and LIST all show the same message numbers.
      */
     @Test
-    public void testStatUidlList() throws Exception {
+    void testStatUidlList() throws Exception {
         finishSetUp(pop3Configuration);
 
         pop3Client = new POP3Client();
@@ -424,7 +424,7 @@ public class POP3ServerTest {
 
     @Test
     @Disabled("Test for JAMES-1202 - This was failing before as the more then one connection to the same mailbox was not handled the right way")
-    public void testStatUidlListTwoConnections() throws Exception {
+    void testStatUidlListTwoConnections() throws Exception {
         finishSetUp(pop3Configuration);
 
         pop3Client = new POP3Client();
@@ -548,7 +548,7 @@ public class POP3ServerTest {
      */
     
     @Test
-    public void testIpStored() throws Exception {
+    void testIpStored() throws Exception {
 
         finishSetUp(pop3Configuration);
 
@@ -566,7 +566,7 @@ public class POP3ServerTest {
     }
 
     @Test
-    public void testCapa() throws Exception {
+    void testCapa() throws Exception {
         finishSetUp(pop3Configuration);
 
         pop3Client = new POP3Client();
@@ -635,7 +635,7 @@ public class POP3ServerTest {
      */
     // See JAMES-1136
     @Test
-    public void testDeadlockOnRetr() throws Exception {
+    void testDeadlockOnRetr() throws Exception {
         finishSetUp(pop3Configuration);
 
         pop3Client = new POP3Client();

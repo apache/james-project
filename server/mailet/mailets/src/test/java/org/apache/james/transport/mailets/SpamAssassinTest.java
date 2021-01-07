@@ -42,16 +42,17 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.steveash.guavate.Guavate;
 
-public class SpamAssassinTest {
+class SpamAssassinTest {
 
-    public static final DomainList NO_DOMAIN_LIST = null;
+    private static final DomainList NO_DOMAIN_LIST = null;
+
     @RegisterExtension
-    public MockSpamdExtension spamd = new MockSpamdExtension();
+    MockSpamdExtension spamd = new MockSpamdExtension();
 
     private SpamAssassin mailet = new SpamAssassin(new RecordingMetricFactory(), MemoryUsersRepository.withVirtualHosting(NO_DOMAIN_LIST));
 
     @Test
-    public void initShouldSetDefaultSpamdHostWhenNone() throws Exception {
+    void initShouldSetDefaultSpamdHostWhenNone() throws Exception {
         mailet.init(FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .build());
@@ -60,7 +61,7 @@ public class SpamAssassinTest {
     }
 
     @Test
-    public void initShouldSetDefaultSpamdPortWhenNone() throws Exception {
+    void initShouldSetDefaultSpamdPortWhenNone() throws Exception {
         mailet.init(FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .build());
@@ -69,7 +70,7 @@ public class SpamAssassinTest {
     }
 
     @Test
-    public void initShouldSetSpamdHostWhenPresent() throws Exception {
+    void initShouldSetSpamdHostWhenPresent() throws Exception {
         String spamdHost = "any.host";
         mailet.init(FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
@@ -80,7 +81,7 @@ public class SpamAssassinTest {
     }
 
     @Test
-    public void getSpamHostShouldReturnDefaultValueWhenEmpty() throws Exception {
+    void getSpamHostShouldReturnDefaultValueWhenEmpty() throws Exception {
         mailet.init(FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .setProperty(SpamAssassin.SPAMD_HOST, "")
@@ -90,7 +91,7 @@ public class SpamAssassinTest {
     }
 
     @Test
-    public void initShouldSetDefaultSpamdPortWhenDefault() throws Exception {
+    void initShouldSetDefaultSpamdPortWhenDefault() throws Exception {
         mailet.init(FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .build());
@@ -99,7 +100,7 @@ public class SpamAssassinTest {
     }
 
     @Test
-    public void initShouldThrowWhenSpamdPortIsNotNumber() {
+    void initShouldThrowWhenSpamdPortIsNotNumber() {
         assertThatThrownBy(() -> mailet.init(FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .setProperty(SpamAssassin.SPAMD_PORT, "noNumber")
@@ -107,7 +108,7 @@ public class SpamAssassinTest {
     }
 
     @Test
-    public void initShouldThrowWhenSpamdPortIsNegative() {
+    void initShouldThrowWhenSpamdPortIsNegative() {
         assertThatThrownBy(() -> mailet.init(FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .setProperty(SpamAssassin.SPAMD_PORT, "-1")
@@ -115,7 +116,7 @@ public class SpamAssassinTest {
     }
 
     @Test
-    public void initShouldThrowWhenSpamdPortIsZero() {
+    void initShouldThrowWhenSpamdPortIsZero() {
         assertThatThrownBy(() -> mailet.init(FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .setProperty(SpamAssassin.SPAMD_PORT, "0")
@@ -123,7 +124,7 @@ public class SpamAssassinTest {
     }
 
     @Test
-    public void initShouldThrowWhenSpamdPortTooBig() {
+    void initShouldThrowWhenSpamdPortTooBig() {
         assertThatThrownBy(() -> mailet.init(FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .setProperty(SpamAssassin.SPAMD_PORT,
@@ -132,7 +133,7 @@ public class SpamAssassinTest {
     }
 
     @Test
-    public void initShouldSetSpamPortWhenPresent() throws Exception {
+    void initShouldSetSpamPortWhenPresent() throws Exception {
         int spamPort = 1000;
         mailet.init(FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
@@ -143,7 +144,7 @@ public class SpamAssassinTest {
     }
 
     @Test
-    public void serviceShouldWriteSpamAttributeOnMail() throws Exception {
+    void serviceShouldWriteSpamAttributeOnMail() throws Exception {
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .setProperty(SpamAssassin.SPAMD_HOST, "localhost")
@@ -177,7 +178,7 @@ public class SpamAssassinTest {
     }
 
     @Test
-    public void serviceShouldWriteMessageAsNotSpamWhenNotSpam() throws Exception {
+    void serviceShouldWriteMessageAsNotSpamWhenNotSpam() throws Exception {
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .setProperty(SpamAssassin.SPAMD_HOST, "localhost")
@@ -213,7 +214,7 @@ public class SpamAssassinTest {
     }
 
     @Test
-    public void serviceShouldWriteMessageAsSpamWhenSpam() throws Exception {
+    void serviceShouldWriteMessageAsSpamWhenSpam() throws Exception {
         FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
             .mailetName("SpamAssassin")
             .setProperty(SpamAssassin.SPAMD_HOST, "localhost")
@@ -249,7 +250,7 @@ public class SpamAssassinTest {
     }
 
     @Test
-    public void getMailetInfoShouldReturnSpamAssasinMailetInformation() {
+    void getMailetInfoShouldReturnSpamAssasinMailetInformation() {
         assertThat(mailet.getMailetInfo()).isEqualTo("Checks message against SpamAssassin");
     }
 

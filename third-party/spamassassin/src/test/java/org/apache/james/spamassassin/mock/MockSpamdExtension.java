@@ -24,10 +24,8 @@ import java.util.concurrent.Executors;
 
 import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.junit.jupiter.api.extension.AfterEachCallback;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.rules.ExternalResource;
 
 public class MockSpamdExtension implements AfterEachCallback, BeforeEachCallback {
 

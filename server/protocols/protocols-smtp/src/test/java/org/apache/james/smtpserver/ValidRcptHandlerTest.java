@@ -46,7 +46,7 @@ import org.junit.jupiter.api.BeforeEach;
 
 import com.google.common.base.Preconditions;
 
-public class ValidRcptHandlerTest {
+class ValidRcptHandlerTest {
     private static final Username VALID_USER = Username.of("postmaster");
     private static final String INVALID_USER = "invalid";
     private static final String USER1 = "user1";
@@ -54,7 +54,7 @@ public class ValidRcptHandlerTest {
     private static final String PASSWORD = "xxx";
     private static final boolean RELAYING_ALLOWED = true;
     private static final MaybeSender MAYBE_SENDER = MaybeSender.of(SENDER);
-    public static final Domain DOMAIN_1 = Domain.of("domain.tld");
+    private static final Domain DOMAIN_1 = Domain.of("domain.tld");
 
     private ValidRcptHandler handler;
     private MemoryRecipientRewriteTable memoryRecipientRewriteTable;
@@ -63,7 +63,7 @@ public class ValidRcptHandlerTest {
     private MailAddress invalidUserEmail;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         MemoryDomainList memoryDomainList = new MemoryDomainList(mock(DNSService.class));
         memoryDomainList.configure(DomainListConfiguration.builder()
             .defaultDomain(Domain.LOCALHOST)
@@ -128,7 +128,7 @@ public class ValidRcptHandlerTest {
     }
 
     @Test
-    public void doRcptShouldRejectNotExistingLocalUsersWhenNoRelay() {
+    void doRcptShouldRejectNotExistingLocalUsersWhenNoRelay() {
         SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
 
         HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, invalidUserEmail).getResult();
@@ -137,7 +137,7 @@ public class ValidRcptHandlerTest {
     }
 
     @Test
-    public void doRcptShouldDenyNotExistingLocalUsersWhenRelay() {
+    void doRcptShouldDenyNotExistingLocalUsersWhenRelay() {
         SMTPSession session = setupMockedSMTPSession(RELAYING_ALLOWED);
 
         HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, invalidUserEmail).getResult();
@@ -146,7 +146,7 @@ public class ValidRcptHandlerTest {
     }
 
     @Test
-    public void doRcptShouldDeclineNonLocalUsersWhenRelay() throws Exception {
+    void doRcptShouldDeclineNonLocalUsersWhenRelay() throws Exception {
         MailAddress mailAddress = new MailAddress(INVALID_USER + "@otherdomain");
         SMTPSession session = setupMockedSMTPSession(RELAYING_ALLOWED);
 
@@ -156,7 +156,7 @@ public class ValidRcptHandlerTest {
     }
 
     @Test
-    public void doRcptShouldDeclineNonLocalUsersWhenNoRelay() throws Exception {
+    void doRcptShouldDeclineNonLocalUsersWhenNoRelay() throws Exception {
         MailAddress mailAddress = new MailAddress(INVALID_USER + "@otherdomain");
         SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
 
@@ -166,7 +166,7 @@ public class ValidRcptHandlerTest {
     }
 
     @Test
-    public void doRcptShouldDeclineValidUsersWhenNoRelay() throws Exception {
+    void doRcptShouldDeclineValidUsersWhenNoRelay() throws Exception {
         SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
 
         HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, validUserEmail).getResult();
@@ -175,7 +175,7 @@ public class ValidRcptHandlerTest {
     }
 
     @Test
-    public void doRcptShouldDeclineValidUsersWhenRelay() throws Exception {
+    void doRcptShouldDeclineValidUsersWhenRelay() throws Exception {
         SMTPSession session = setupMockedSMTPSession(RELAYING_ALLOWED);
 
         HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, validUserEmail).getResult();
@@ -184,7 +184,7 @@ public class ValidRcptHandlerTest {
     }
 
     @Test
-    public void doRcptShouldDeclineWhenHasAddressMapping() throws Exception {
+    void doRcptShouldDeclineWhenHasAddressMapping() throws Exception {
         memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), "address");
 
         SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
@@ -195,7 +195,7 @@ public class ValidRcptHandlerTest {
     }
 
     @Test
-    public void doRcptShouldDenyWhenHasMappingLoop() throws Exception {
+    void doRcptShouldDenyWhenHasMappingLoop() throws Exception {
         memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), USER2 + "@domain.tld");
         memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER2, DOMAIN_1), USER1 + "@domain.tld");
         // The loop needs to be created by a domain mapping
@@ -209,7 +209,7 @@ public class ValidRcptHandlerTest {
     }
 
     @Test
-    public void doRcptShouldDeclineWhenHasErrorMapping() throws Exception {
+    void doRcptShouldDeclineWhenHasErrorMapping() throws Exception {
         memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), "554 BOUNCE");
 
         SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
