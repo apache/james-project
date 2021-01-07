@@ -49,7 +49,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Preconditions;
 
-public class SpamAssassinHandlerTest {
+class SpamAssassinHandlerTest {
 
     private static final String SPAMD_HOST = "localhost";
     private static final Attribute FLAG_MAIL_ATTRIBUTE_NO = new Attribute(SpamAssassinResult.FLAG_MAIL, AttributeValue.of("NO"));
@@ -126,14 +126,14 @@ public class SpamAssassinHandlerTest {
             .build();
     }
 
-    public MimeMessage setupMockedMimeMessage(String text) throws MessagingException {
+    private MimeMessage setupMockedMimeMessage(String text) throws MessagingException {
         return MimeMessageBuilder.mimeMessageBuilder()
             .setText(text)
             .build();
     }
 
     @Test
-    public void testNonSpam() throws Exception {
+    void testNonSpam() throws Exception {
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage("test")));
 
         SpamAssassinHandler handler = new SpamAssassinHandler(new RecordingMetricFactory());
@@ -150,7 +150,7 @@ public class SpamAssassinHandlerTest {
     }
 
     @Test
-    public void testSpam() throws Exception {
+    void testSpam() throws Exception {
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage(MockSpamd.GTUBE)));
 
         SpamAssassinHandler handler = new SpamAssassinHandler(new RecordingMetricFactory());
@@ -166,7 +166,7 @@ public class SpamAssassinHandlerTest {
     }
 
     @Test
-    public void testSpamReject() throws Exception {
+    void testSpamReject() throws Exception {
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage(MockSpamd.GTUBE)));
 
         SpamAssassinHandler handler = new SpamAssassinHandler(new RecordingMetricFactory());

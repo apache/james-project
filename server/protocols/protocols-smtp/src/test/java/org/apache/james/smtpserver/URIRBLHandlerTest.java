@@ -49,7 +49,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Preconditions;
 
-public class URIRBLHandlerTest {
+class URIRBLHandlerTest {
 
     private static final String BAD_DOMAIN1 = "bad.domain.de";
     private static final String BAD_DOMAIN2 = "bad2.domain.de";
@@ -125,13 +125,13 @@ public class URIRBLHandlerTest {
             .build();
     }
 
-    public MimeMessage setupMockedMimeMessage(String text) throws MessagingException {
+    private MimeMessage setupMockedMimeMessage(String text) throws MessagingException {
         return MimeMessageBuilder.mimeMessageBuilder()
             .setText(text)
             .build();
     }
 
-    public MimeMessage setupMockedMimeMessageMP(String text) throws MessagingException {
+    private MimeMessage setupMockedMimeMessageMP(String text) throws MessagingException {
         return MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
                 MimeMessageBuilder.bodyPartBuilder()
@@ -175,7 +175,7 @@ public class URIRBLHandlerTest {
     }
 
     @Test
-    public void testNotBlocked() throws IOException, MessagingException {
+    void testNotBlocked() throws IOException, MessagingException {
 
         ArrayList<String> servers = new ArrayList<>();
         servers.add(URISERVER);
@@ -193,7 +193,7 @@ public class URIRBLHandlerTest {
     }
 
     @Test
-    public void testBlocked() throws IOException, MessagingException {
+    void testBlocked() throws IOException, MessagingException {
 
         ArrayList<String> servers = new ArrayList<>();
         servers.add(URISERVER);
@@ -211,7 +211,7 @@ public class URIRBLHandlerTest {
     }
 
     @Test
-    public void testBlockedMultiPart() throws IOException, MessagingException {
+    void testBlockedMultiPart() throws IOException, MessagingException {
 
         ArrayList<String> servers = new ArrayList<>();
         servers.add(URISERVER);
