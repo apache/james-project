@@ -21,6 +21,8 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import static org.apache.james.MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
@@ -47,6 +49,6 @@ public class MemoryMailboxChangesMethodTest implements MailboxChangesMethodContr
 
     @Override
     public MailboxId generateMailboxId() {
-        return InMemoryId.of(0);
+        return InMemoryId.of(ThreadLocalRandom.current().nextInt());
     }
 }
