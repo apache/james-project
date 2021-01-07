@@ -885,7 +885,8 @@ trait EmailSubmissionSetMethodContract {
 
     assertThatJson(response)
       // Ids are randomly generated, and not stored, let's ignore it
-      .whenIgnoringPaths("methodResponses[0][1].created.k1490")
+      .whenIgnoringPaths("methodResponses[0][1].created.k1490",
+        "methodResponses[2][1].state")
       .isEqualTo(s"""{
                    |    "sessionState": "${SESSION_STATE.value}",
                    |    "methodResponses": [
@@ -915,7 +916,6 @@ trait EmailSubmissionSetMethodContract {
                    |            "Email/get",
                    |            {
                    |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-                   |                "state": "${INSTANCE.value}",
                    |                "list": [
                    |                    {
                    |                        "keywords": {"$$sent": true},
@@ -987,7 +987,8 @@ trait EmailSubmissionSetMethodContract {
 
     assertThatJson(response)
       // Ids are randomly generated, and not stored, let's ignore it
-      .whenIgnoringPaths("methodResponses[0][1].created.k1490")
+      .whenIgnoringPaths("methodResponses[0][1].created.k1490",
+        "methodResponses[2][1].state")
       .isEqualTo(s"""{
                    |    "sessionState": "${SESSION_STATE.value}",
                    |    "methodResponses": [
@@ -1015,7 +1016,6 @@ trait EmailSubmissionSetMethodContract {
                    |            "Email/get",
                    |            {
                    |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-                   |                "state": "${INSTANCE.value}",
                    |                "list":[],
                    |                "notFound": ["${messageId.serialize}"]
                    |            },

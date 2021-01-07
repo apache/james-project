@@ -320,14 +320,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [{
          |                        "id": "${messageId.serialize}",
          |                        "size": 85
@@ -2289,6 +2290,7 @@ trait EmailGetMethodContract {
 
     assertThatJson(response)
       .withOptions(new Options(IGNORING_ARRAY_ORDER))
+      .whenIgnoringPaths("methodResponses[0][1].state")
       .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
@@ -2296,7 +2298,6 @@ trait EmailGetMethodContract {
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${SESSION_STATE.value}",
          |                "list": [ {
          |                        "id": "${messageId.serialize}",
          |                        "size": 85
@@ -2349,14 +2350,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId1.serialize()}",
@@ -2409,7 +2411,9 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -2417,7 +2421,6 @@ trait EmailGetMethodContract {
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "threadId": "${messageId.serialize}",
@@ -2532,14 +2535,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [{
          |                        "id": "${messageId.serialize}",
          |                        "size": 85
@@ -2589,14 +2593,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [{
          |                        "id": "${messageId.serialize}"
          |                    }],
@@ -2645,7 +2650,9 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
@@ -2701,14 +2708,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [{
          |                        "id": "${messageId.serialize}",
          |                        "size": 85
@@ -3103,14 +3111,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -3354,7 +3363,9 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -3362,7 +3373,6 @@ trait EmailGetMethodContract {
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -3425,14 +3435,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -3544,7 +3555,9 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -3552,7 +3565,6 @@ trait EmailGetMethodContract {
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -3626,7 +3638,9 @@ trait EmailGetMethodContract {
       .asString
 
     val contentType = " multipart/mixed;\\r\\n boundary=\\\"------------64D8D789FC30153D6ED18258\\\""
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -3634,7 +3648,6 @@ trait EmailGetMethodContract {
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -3816,7 +3829,9 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -3824,7 +3839,6 @@ trait EmailGetMethodContract {
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -3999,14 +4013,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4063,14 +4078,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4127,14 +4143,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4192,14 +4209,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4255,14 +4273,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4318,7 +4337,9 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -4329,7 +4350,6 @@ trait EmailGetMethodContract {
          |                "notFound": [
          |
          |                ],
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "1",
@@ -4385,14 +4405,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4448,14 +4469,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4512,7 +4534,9 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -4520,7 +4544,6 @@ trait EmailGetMethodContract {
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4583,14 +4606,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4646,7 +4670,9 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -4654,7 +4680,6 @@ trait EmailGetMethodContract {
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4720,14 +4745,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4784,7 +4810,9 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [
@@ -4792,7 +4820,6 @@ trait EmailGetMethodContract {
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4858,14 +4885,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4930,14 +4958,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -4986,14 +5015,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -5070,14 +5100,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [
          |                    {
          |                        "id": "${messageId.serialize}",
@@ -5465,14 +5496,15 @@ trait EmailGetMethodContract {
       .body
       .asString
 
-    assertThatJson(response).isEqualTo(
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
          |    "methodResponses": [[
          |            "Email/get",
          |            {
          |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "state": "${INSTANCE.value}",
          |                "list": [{
          |                    "id": "${messageId.serialize}",
          |                    "headers": [

@@ -492,6 +492,7 @@ trait BackReferenceContract {
 
     assertThatJson(response)
       .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
+      .whenIgnoringPaths("methodResponses[2][1].state")
       .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
