@@ -886,6 +886,8 @@ trait EmailSubmissionSetMethodContract {
     assertThatJson(response)
       // Ids are randomly generated, and not stored, let's ignore it
       .whenIgnoringPaths("methodResponses[0][1].created.k1490",
+        "methodResponses[1][1].newState",
+        "methodResponses[1][1].oldState",
         "methodResponses[2][1].state")
       .isEqualTo(s"""{
                    |    "sessionState": "${SESSION_STATE.value}",
@@ -988,6 +990,8 @@ trait EmailSubmissionSetMethodContract {
     assertThatJson(response)
       // Ids are randomly generated, and not stored, let's ignore it
       .whenIgnoringPaths("methodResponses[0][1].created.k1490",
+        "methodResponses[1][1].newState",
+        "methodResponses[1][1].oldState",
         "methodResponses[2][1].state")
       .isEqualTo(s"""{
                    |    "sessionState": "${SESSION_STATE.value}",
