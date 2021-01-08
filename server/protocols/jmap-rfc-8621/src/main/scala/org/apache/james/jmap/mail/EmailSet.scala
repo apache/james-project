@@ -338,6 +338,7 @@ case class EmailSetRequest(accountId: AccountId,
                            destroy: Option[DestroyIds]) extends WithAccountId
 
 case class EmailSetResponse(accountId: AccountId,
+                            oldState: Option[State],
                             newState: State,
                             created: Option[Map[EmailCreationId, EmailCreationResponse]],
                             notCreated: Option[Map[EmailCreationId, SetError]],
