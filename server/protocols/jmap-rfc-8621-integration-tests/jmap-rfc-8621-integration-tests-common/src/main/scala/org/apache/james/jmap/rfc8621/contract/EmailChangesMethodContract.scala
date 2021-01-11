@@ -60,7 +60,6 @@ trait EmailChangesMethodContract {
   private lazy val awaitAtMostTenSeconds = calmlyAwait.atMost(10, TimeUnit.SECONDS)
 
   def stateFactory: State.Factory
-  def generateMailboxId: MailboxId
 
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
