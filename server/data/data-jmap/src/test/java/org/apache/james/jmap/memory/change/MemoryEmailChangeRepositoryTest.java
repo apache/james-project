@@ -19,9 +19,13 @@
 
 package org.apache.james.jmap.memory.change;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import org.apache.james.jmap.api.change.EmailChangeRepository;
 import org.apache.james.jmap.api.change.EmailChangeRepositoryContract;
-import org.apache.james.jmap.api.change.MailboxChangeRepository;
+import org.apache.james.jmap.api.change.State;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.jupiter.api.BeforeEach;
 
 public class MemoryEmailChangeRepositoryTest implements EmailChangeRepositoryContract {
@@ -35,5 +39,15 @@ public class MemoryEmailChangeRepositoryTest implements EmailChangeRepositoryCon
     @Override
     public EmailChangeRepository emailChangeRepository() {
         return emailChangeRepository;
+    }
+
+    @Override
+    public State generateNewState() {
+        return State.Factory.DEFAULT.generate();
+    }
+
+    @Override
+    public MessageId generateNewMessageId() {
+        return TestMessageId.of(ThreadLocalRandom.current().nextLong());
     }
 }

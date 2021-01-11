@@ -36,7 +36,7 @@ public class CassandraMessageId implements MessageId {
             return of(UUIDs.timeBased());
         }
 
-        public CassandraMessageId of(UUID uuid) {
+        public static CassandraMessageId of(UUID uuid) {
             return new CassandraMessageId(uuid);
         }
 
