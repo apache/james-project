@@ -40,7 +40,7 @@ import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
-import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath, MessageId}
+import org.apache.james.mailbox.model.{MailboxACL, MailboxPath, MessageId}
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
@@ -970,6 +970,8 @@ trait EmailChangesMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message))
+
+    waitForNextState(server, AccountId.fromUsername(BOB), State.INITIAL)
 
     val request1 =
       s"""{
