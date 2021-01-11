@@ -21,39 +21,81 @@ package org.apache.james.jmap.cassandra.change;
 
 import java.util.Optional;
 
+import javax.inject.Inject;
+
 import org.apache.james.jmap.api.change.EmailChange;
 import org.apache.james.jmap.api.change.EmailChangeRepository;
 import org.apache.james.jmap.api.change.EmailChanges;
 import org.apache.james.jmap.api.change.Limit;
 import org.apache.james.jmap.api.change.State;
+import org.apache.james.jmap.api.exception.ChangeNotFoundException;
 import org.apache.james.jmap.api.model.AccountId;
 
+import com.google.common.base.Preconditions;
+
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraEmailChangeRepository implements EmailChangeRepository {
+    public static final Limit DEFAULT_NUMBER_OF_CHANGES = Limit.of(5);
+
+    private final EmailChangeRepositoryDAO emailChangeRepositoryDAO;
+
+    @Inject
+    public CassandraEmailChangeRepository(EmailChangeRepositoryDAO emailChangeRepositoryDAO) {
+        this.emailChangeRepositoryDAO = emailChangeRepositoryDAO;
+    }
 
     @Override
     public Mono<Void> save(EmailChange change) {
-        return Mono.empty();
+        return emailChangeRepositoryDAO.insert(change);
     }
 
     @Override
-    public Mono<EmailChanges> getSinceState(AccountId accountId, State state, Optional<Limit> maxIdsToReturn) {
-        return Mono.empty();
+    public Mono<EmailChanges> getSinceState(AccountId accountId, State state, Optional<Limit> maxChanges) {
+        Preconditions.checkNotNull(accountId);
+        Preconditions.checkNotNull(state);
+        maxChanges.ifPresent(limit -> Preconditions.checkArgument(limit.getValue() > 0, "maxChanges must be a positive integer"));
+
+        if (state.equals(State.INITIAL)) {
+            return emailChangeRepositoryDAO.getAllChanges(accountId)
+                .filter(change -> !change.isDelegated())
+                .collect(new EmailChanges.Builder.EmailChangeCollector(state, maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
+        }
+
+        return emailChangeRepositoryDAO.getChangesSince(accountId, state)
+            .switchIfEmpty(Flux.error(new ChangeNotFoundException(state, String.format("State '%s' could not be found", state.getValue()))))
+            .filter(change -> !change.isDelegated())
+            .filter(change -> !change.getState().equals(state))
+            .collect(new EmailChanges.Builder.EmailChangeCollector(state, maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
     }
 
     @Override
-    public Mono<EmailChanges> getSinceStateWithDelegation(AccountId accountId, State state, Optional<Limit> maxIdsToReturn) {
-        return Mono.empty();
+    public Mono<EmailChanges> getSinceStateWithDelegation(AccountId accountId, State state, Optional<Limit> maxChanges) {
+        Preconditions.checkNotNull(accountId);
+        Preconditions.checkNotNull(state);
+        maxChanges.ifPresent(limit -> Preconditions.checkArgument(limit.getValue() > 0, "maxChanges must be a positive integer"));
+
+        if (state.equals(State.INITIAL)) {
+            return emailChangeRepositoryDAO.getAllChanges(accountId)
+                .collect(new EmailChanges.Builder.EmailChangeCollector(state, maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
+        }
+
+        return emailChangeRepositoryDAO.getChangesSince(accountId, state)
+            .switchIfEmpty(Flux.error(new ChangeNotFoundException(state, String.format("State '%s' could not be found", state.getValue()))))
+            .filter(change -> !change.getState().equals(state))
+            .collect(new EmailChanges.Builder.EmailChangeCollector(state, maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
     }
 
     @Override
     public Mono<State> getLatestState(AccountId accountId) {
-        return Mono.just(State.INITIAL);
+        return emailChangeRepositoryDAO.latestStateNotDelegated(accountId)
+            .switchIfEmpty(Mono.just(State.INITIAL));
     }
 
     @Override
     public Mono<State> getLatestStateWithDelegation(AccountId accountId) {
-        return Mono.just(State.INITIAL);
+        return emailChangeRepositoryDAO.latestState(accountId)
+            .switchIfEmpty(Mono.just(State.INITIAL));
     }
 }
