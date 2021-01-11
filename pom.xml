@@ -643,7 +643,7 @@
         <guice.version>4.2.2</guice.version>
         <logback.version>1.2.3</logback.version>
 
-        <bouncycastle.version>1.66</bouncycastle.version>
+        <bouncycastle.version>1.68</bouncycastle.version>
 
         <scala.base>2.13</scala.base>
         <scala.version>${scala.base}.1</scala.version>
