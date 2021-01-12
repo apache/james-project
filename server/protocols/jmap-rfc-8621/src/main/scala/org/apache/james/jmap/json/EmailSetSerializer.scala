@@ -355,12 +355,15 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   private implicit val emailCreationRequestWithoutHeadersReads: Reads[EmailCreationRequestWithoutHeaders] = Json.reads[EmailCreationRequestWithoutHeaders]
   private implicit val emailCreationRequestReads: Reads[EmailCreationRequest] = {
     case o: JsObject =>
-      val withoutHeader = emailCreationRequestWithoutHeadersReads.reads(o)
+      if(o.value.contains("headers")) {
+        JsError("'headers' is not allowed")
+      } else {
+        val withoutHeader = emailCreationRequestWithoutHeadersReads.reads(o)
 
-      val specificHeadersEither: Either[IllegalArgumentException, List[EmailHeader]] = o.value.toList
-        .filter {
-          case (name, _) => name.startsWith("header:")
-        }.map {
+        val specificHeadersEither: Either[IllegalArgumentException, List[EmailHeader]] = o.value.toList
+          .filter {
+            case (name, _) => name.startsWith("header:")
+          }.map {
           case (name, value) =>
             val refinedName: Either[String, NonEmptyString] = refineV[NonEmpty](name)
             refinedName.left.map(e => new IllegalArgumentException(e))
@@ -372,8 +375,10 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
                 .map(headerValue => EmailHeader(EmailHeaderName(specificHeaderRequest.headerName), headerValue)))
         }.sequence
 
-      specificHeadersEither.fold(e => JsError(e.getMessage),
-        specificHeaders => withoutHeader.map(_.toCreationRequest(specificHeaders)))
+        specificHeadersEither.fold(e => JsError(e.getMessage),
+          specificHeaders => withoutHeader.map(_.toCreationRequest(specificHeaders)))
+      }
+
     case _ => JsError("Expecting a JsObject to represent a creation request")
   }
 

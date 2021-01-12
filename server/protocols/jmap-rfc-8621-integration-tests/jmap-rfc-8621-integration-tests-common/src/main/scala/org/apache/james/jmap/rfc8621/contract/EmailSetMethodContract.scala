@@ -404,6 +404,60 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def createShouldFailWhenEmailContainsHeadersProperties(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa":{
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "headers": [
+         |            {
+         |              "name": "Content-Type",
+         |              "value": " text/plain; charset=utf-8; format=flowed"
+         |            },
+         |            {
+         |              "name": "Content-Transfer-Encoding",
+         |              "value": " 7bit"
+         |            }
+         |          ]
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated")
+      .isEqualTo(
+        s"""{
+           |  "aaaaaa": {
+           |    "type": "invalidArguments",
+           |    "description": "List((,List(JsonValidationError(List('headers' is not allowed),ArraySeq()))))"
+           |  }
+           |}""".stripMargin)
+  }
+
+  @Test
   def shouldNotResetKeywordWhenFalseValue(server: GuiceJamesServer): Unit = {
     val message: Message = Fixture.createTestMessage
 
