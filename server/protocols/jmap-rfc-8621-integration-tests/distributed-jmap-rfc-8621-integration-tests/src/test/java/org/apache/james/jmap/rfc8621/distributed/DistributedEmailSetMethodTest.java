@@ -23,6 +23,7 @@ import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesConfiguration;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.DockerElasticSearchExtension;
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.jmap.rfc8621.contract.EmailSetMethodContract;
@@ -32,6 +33,8 @@ import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.datastax.driver.core.utils.UUIDs;
@@ -67,4 +70,14 @@ public class DistributedEmailSetMethodTest implements EmailSetMethodContract {
     public String invalidMessageIdMessage(String invalid) {
         return String.format("Invalid UUID string: %s", invalid);
     }
+
+    @Override
+    @Test
+    @Disabled("Distributed event bus is asynchronous, we cannot expect the newState to be returned immediately after Email/set call")
+    public void newStateShouldBeUpToDate(GuiceJamesServer server) {}
+
+    @Override
+    @Test
+    @Disabled("Distributed event bus is asynchronous, we cannot expect the newState to be returned immediately after Email/set call")
+    public void oldStateShouldIncludeSetChanges(GuiceJamesServer server) {}
 }
