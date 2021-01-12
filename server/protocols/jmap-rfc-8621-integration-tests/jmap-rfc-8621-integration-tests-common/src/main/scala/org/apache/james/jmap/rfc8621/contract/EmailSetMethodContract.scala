@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
+import java.util.concurrent.TimeUnit
 
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, `with`, requestSpecification}
@@ -51,6 +52,8 @@ import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.Awaitility
+import org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS
 import org.hamcrest.Matchers.{equalTo, not}
 import org.junit.jupiter.api.{BeforeEach, Test}
 import org.junit.jupiter.params.ParameterizedTest
@@ -60,6 +63,12 @@ import play.api.libs.json.{JsNumber, JsString, Json}
 import scala.jdk.CollectionConverters._
 
 trait EmailSetMethodContract {
+  private lazy val slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS
+  private lazy val calmlyAwait = Awaitility.`with`
+    .pollInterval(slowPacedPollInterval)
+    .and.`with`.pollDelay(slowPacedPollInterval)
+    .await
+  private lazy val awaitAtMostTenSeconds = calmlyAwait.atMost(10, TimeUnit.SECONDS)
   private lazy val UTC_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")
 
   @BeforeEach
@@ -6546,24 +6555,27 @@ trait EmailSetMethodContract {
           .build(message))
       .getMessageId
 
-    `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(s"""{
-               |  "using": [
-               |    "urn:ietf:params:jmap:core",
-               |    "urn:ietf:params:jmap:mail",
-               |    "urn:apache:james:params:jmap:mail:shares"],
-               |  "methodCalls": [
-               |    ["Email/set", {
-               |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
-               |    }, "c1"]
-               |  ]
-               |}""".stripMargin)
-    .when
-      .post
-    .`then`
-      .statusCode(SC_OK)
-      .body("methodResponses[0][1].oldState", not(equalTo(state)))
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(
+          s"""{
+             |  "using": [
+             |    "urn:ietf:params:jmap:core",
+             |    "urn:ietf:params:jmap:mail",
+             |    "urn:apache:james:params:jmap:mail:shares"],
+             |  "methodCalls": [
+             |    ["Email/set", {
+             |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+             |    }, "c1"]
+             |  ]
+             |}""".stripMargin)
+        .when
+          .post
+        .`then`
+          .statusCode(SC_OK)
+          .body("methodResponses[0][1].oldState", not(equalTo(state)))
+    }
   }
 
   private def buildTestMessage = {
