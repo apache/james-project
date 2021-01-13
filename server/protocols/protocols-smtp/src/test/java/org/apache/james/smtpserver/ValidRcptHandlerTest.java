@@ -20,7 +20,9 @@ package org.apache.james.smtpserver;
 
 import static org.apache.mailet.base.MailAddressFixture.SENDER;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
 import java.util.Optional;
@@ -40,6 +42,7 @@ import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.smtpserver.fastfail.ValidRcptHandler;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,6 +59,7 @@ class ValidRcptHandlerTest {
     private static final MaybeSender MAYBE_SENDER = MaybeSender.of(SENDER);
     private static final Domain DOMAIN_1 = Domain.of("domain.tld");
 
+    private MemoryDomainList memoryDomainList;
     private ValidRcptHandler handler;
     private MemoryRecipientRewriteTable memoryRecipientRewriteTable;
     private MailAddress validUserEmail;
@@ -64,7 +68,7 @@ class ValidRcptHandlerTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        MemoryDomainList memoryDomainList = new MemoryDomainList(mock(DNSService.class));
+        memoryDomainList = new MemoryDomainList(mock(DNSService.class));
         memoryDomainList.configure(DomainListConfiguration.builder()
             .defaultDomain(Domain.LOCALHOST)
             .build());
@@ -218,5 +222,18 @@ class ValidRcptHandlerTest {
 
         assertThat(rCode).isEqualTo(HookReturnCode.declined());
     }
-    
+
+    @Test
+    void doRcptShouldReturnDenySoftWhenUsersRepositoryError() throws Exception {
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+
+        UsersRepository users = mock(UsersRepository.class);
+        when(users.contains(any()))
+            .thenThrow(new UsersRepositoryException("simulated error"));
+        ValidRcptHandler handler = new ValidRcptHandler(users, memoryRecipientRewriteTable, memoryDomainList);
+        HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, validUserEmail).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.denySoft());
+    }
+
 }
