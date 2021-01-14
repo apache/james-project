@@ -22,6 +22,7 @@ package org.apache.james;
 import static org.apache.james.user.ldap.DockerLdapSingleton.JAMES_USER;
 import static org.apache.james.user.ldap.DockerLdapSingleton.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 
 import org.apache.commons.net.imap.IMAPClient;
@@ -30,6 +31,7 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.SMTPSendingException;
 import org.apache.james.utils.SpoolerProbe;
 import org.apache.james.utils.TestIMAPClient;
 import org.awaitility.Awaitility;
@@ -51,12 +53,13 @@ class CassandraLdapJamesServerTest implements JamesServerContract {
     @RegisterExtension
     TestIMAPClient testIMAPClient = new TestIMAPClient();
     SMTPMessageSender messageSender = new SMTPMessageSender(Domain.LOCALHOST.asString());
+    static LdapTestExtension ldap = new LdapTestExtension();
 
     @RegisterExtension
     static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
-        .extension(new LdapTestExtension())
+        .extension(ldap)
         .server(configuration -> CassandraLdapJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))
         .build();
@@ -79,5 +82,17 @@ class CassandraLdapJamesServerTest implements JamesServerContract {
             .login(JAMES_USER, PASSWORD)
             .select("INBOX")
             .awaitMessage(calmlyAwait);
+    }
+
+    @Test
+    void receivingMailShouldIssueAnSmtpErrorWhenLdapIsNotAvailable(GuiceJamesServer server) {
+        try {
+            ldap.getLdapRule().stop();
+            assertThatThrownBy(() -> messageSender.connect(JAMES_SERVER_HOST, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                    .sendMessage("bob@any.com", JAMES_USER.asString() + "@localhost"))
+                .isInstanceOf(SMTPSendingException.class);
+        } finally {
+            ldap.getLdapRule().start();
+        }
     }
 }

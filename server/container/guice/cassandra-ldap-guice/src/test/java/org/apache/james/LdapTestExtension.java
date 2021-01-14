@@ -49,4 +49,8 @@ public class LdapTestExtension implements GuiceModuleTestExtension {
     public Module getModule() {
         return ldapRule.getModule();
     }
+
+    public DockerLdapRule getLdapRule() {
+        return ldapRule;
+    }
 }

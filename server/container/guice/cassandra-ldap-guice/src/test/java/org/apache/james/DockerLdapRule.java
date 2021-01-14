@@ -64,5 +64,6 @@ public class DockerLdapRule implements GuiceModuleTestRule {
     }
 
     public void stop() {
+        DockerLdapSingleton.ldapContainer.stop();
     }
 }
