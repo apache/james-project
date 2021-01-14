@@ -213,7 +213,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <argLine>-Xms512m -Xmx2048m</argLine>
-                    <reuseForks>true</reuseForks>
+                    <reuseForks>false</reuseForks>
                     <!-- Fail tests longer than 20 minutes, prevent form random locking tests -->
                     <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
                     <groups combine.self="override">org.apache.james.jmap.categories.CassandraAndElasticSearchCategory,org.apache.james.junit.categories.BasicFeature,org.apache.james.jmap.categories.EnableCucumber</groups>
