@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.api.change;
 
-import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -28,15 +27,9 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.Username;
 import org.apache.james.jmap.api.model.AccountId;
-import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.MailboxListener;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.events.MailboxListener.Added;
 import org.apache.james.mailbox.model.MessageId;
 
 import com.github.steveash.guavate.Guavate;
@@ -44,7 +37,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-public class EmailChange {
+public class EmailChange implements JmapChange {
     public static class Builder {
         @FunctionalInterface
         public interface RequireAccountId {
@@ -128,105 +121,77 @@ public class EmailChange {
     }
 
     public static class Factory {
-        private final Clock clock;
-        private final MailboxManager mailboxManager;
         private final State.Factory stateFactory;
 
         @Inject
-        public Factory(Clock clock, MailboxManager mailboxManager, State.Factory stateFactory) {
-            this.clock = clock;
-            this.mailboxManager = mailboxManager;
+        public Factory(State.Factory stateFactory) {
             this.stateFactory = stateFactory;
         }
 
-        public List<EmailChange> fromEvent(Event event) {
-            ZonedDateTime now = ZonedDateTime.now(clock);
+        public List<JmapChange> fromAdded(Added messageAdded, ZonedDateTime now, List<AccountId> sharees) {
+            EmailChange ownerChange = EmailChange.builder()
+                .accountId(AccountId.fromUsername(messageAdded.getUsername()))
+                .state(stateFactory.generate())
+                .date(now)
+                .isDelegated(false)
+                .created(messageAdded.getMessageIds())
+                .build();
 
-            if (event instanceof MailboxListener.Added) {
-                MailboxListener.Added messageAdded = (MailboxListener.Added) event;
-
-                EmailChange ownerChange = EmailChange.builder()
-                    .accountId(AccountId.fromUsername(messageAdded.getUsername()))
+            Stream<EmailChange> shareeChanges = sharees.stream()
+                .map(shareeId -> EmailChange.builder()
+                    .accountId(shareeId)
                     .state(stateFactory.generate())
                     .date(now)
-                    .isDelegated(false)
+                    .isDelegated(true)
                     .created(messageAdded.getMessageIds())
-                    .build();
+                    .build());
 
-                Stream<EmailChange> shareeChanges = getSharees(messageAdded.getMailboxPath(), messageAdded.getUsername(), mailboxManager)
-                    .map(name -> EmailChange.builder()
-                        .accountId(AccountId.fromString(name))
-                        .state(stateFactory.generate())
-                        .date(now)
-                        .isDelegated(true)
-                        .created(messageAdded.getMessageIds())
-                        .build());
-
-                return Stream.concat(Stream.of(ownerChange), shareeChanges)
-                    .collect(Guavate.toImmutableList());
-            }
-            if (event instanceof MailboxListener.FlagsUpdated) {
-                MailboxListener.FlagsUpdated messageFlagUpdated = (MailboxListener.FlagsUpdated) event;
-
-                EmailChange ownerChange = EmailChange.builder()
-                    .accountId(AccountId.fromUsername(messageFlagUpdated.getUsername()))
-                    .state(stateFactory.generate())
-                    .date(now)
-                    .isDelegated(false)
-                    .updated(messageFlagUpdated.getMessageIds())
-                    .build();
-
-                Stream<EmailChange> shareeChanges = getSharees(messageFlagUpdated.getMailboxPath(), messageFlagUpdated.getUsername(), mailboxManager)
-                    .map(name -> EmailChange.builder()
-                        .accountId(AccountId.fromString(name))
-                        .state(stateFactory.generate())
-                        .date(now)
-                        .isDelegated(true)
-                        .updated(messageFlagUpdated.getMessageIds())
-                        .build());
-
-                return Stream.concat(Stream.of(ownerChange), shareeChanges)
-                    .collect(Guavate.toImmutableList());
-            }
-            if (event instanceof MailboxListener.Expunged) {
-                MailboxListener.Expunged expunged = (MailboxListener.Expunged) event;
-
-                EmailChange ownerChange = EmailChange.builder()
-                    .accountId(AccountId.fromUsername(expunged.getUsername()))
-                    .state(stateFactory.generate())
-                    .date(now)
-                    .isDelegated(false)
-                    .destroyed(expunged.getMessageIds())
-                    .build();
-
-                Stream<EmailChange> shareeChanges = getSharees(expunged.getMailboxPath(), expunged.getUsername(), mailboxManager)
-                    .map(name -> EmailChange.builder()
-                        .accountId(AccountId.fromString(name))
-                        .state(stateFactory.generate())
-                        .date(now)
-                        .isDelegated(true)
-                        .destroyed(expunged.getMessageIds())
-                        .build());
-
-                return Stream.concat(Stream.of(ownerChange), shareeChanges)
-                    .collect(Guavate.toImmutableList());
-            }
-
-            return ImmutableList.of();
+            return Stream.concat(Stream.of(ownerChange), shareeChanges)
+                .collect(Guavate.toImmutableList());
         }
-    }
 
-    private static Stream<String> getSharees(MailboxPath path, Username username, MailboxManager mailboxManager) {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
-        try {
-            MailboxACL mailboxACL = mailboxManager.listRights(path, mailboxSession);
-            return mailboxACL.getEntries().keySet()
-                .stream()
-                .filter(rfc4314Rights -> !rfc4314Rights.isNegative())
-                .filter(rfc4314Rights -> rfc4314Rights.getNameType().equals(MailboxACL.NameType.user))
-                .map(MailboxACL.EntryKey::getName);
-        } catch (MailboxException e) {
-            return Stream.of();
+        public List<JmapChange> fromFlagsUpdated(MailboxListener.FlagsUpdated messageFlagUpdated, ZonedDateTime now, List<AccountId> sharees) {
+            EmailChange ownerChange = EmailChange.builder()
+                .accountId(AccountId.fromUsername(messageFlagUpdated.getUsername()))
+                .state(stateFactory.generate())
+                .date(now)
+                .isDelegated(false)
+                .updated(messageFlagUpdated.getMessageIds())
+                .build();
+
+            Stream<EmailChange> shareeChanges = sharees.stream()
+                .map(shareeId -> EmailChange.builder()
+                    .accountId(shareeId)
+                    .state(stateFactory.generate())
+                    .date(now)
+                    .isDelegated(true)
+                    .updated(messageFlagUpdated.getMessageIds())
+                    .build());
+
+            return Stream.concat(Stream.of(ownerChange), shareeChanges)
+                .collect(Guavate.toImmutableList());
+        }
+
+        public List<JmapChange> fromExpunged(MailboxListener.Expunged expunged, ZonedDateTime now, List<AccountId> sharees) {
+            EmailChange ownerChange = EmailChange.builder()
+                .accountId(AccountId.fromUsername(expunged.getUsername()))
+                .state(stateFactory.generate())
+                .date(now)
+                .isDelegated(false)
+                .destroyed(expunged.getMessageIds())
+                .build();
+
+            Stream<EmailChange> shareeChanges = sharees.stream()
+                .map(shareeId -> EmailChange.builder()
+                    .accountId(shareeId)
+                    .state(stateFactory.generate())
+                    .date(now)
+                    .isDelegated(true)
+                    .destroyed(expunged.getMessageIds())
+                    .build());
+
+            return Stream.concat(Stream.of(ownerChange), shareeChanges)
+                .collect(Guavate.toImmutableList());
         }
     }
 

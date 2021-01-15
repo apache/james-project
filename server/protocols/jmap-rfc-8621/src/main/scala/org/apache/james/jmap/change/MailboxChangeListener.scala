@@ -19,32 +19,100 @@
 
 package org.apache.james.jmap.change
 
+import org.apache.james.core.Username
+
 import javax.inject.Inject
-import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, MailboxChange, MailboxChangeRepository}
-import org.apache.james.mailbox.events.MailboxListener.{MailboxEvent, ReactiveGroupMailboxListener}
+import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, JmapChange, MailboxChange, MailboxChangeRepository}
+import org.apache.james.jmap.api.model.AccountId
+import org.apache.james.jmap.change.MailboxChangeListener.LOGGER
+import org.apache.james.mailbox.{MailboxManager, MailboxSession}
+import org.apache.james.mailbox.events.MailboxListener.{Added, Expunged, FlagsUpdated, MailboxACLUpdated, MailboxAdded, MailboxDeletion, MailboxEvent, MailboxRenamed, ReactiveGroupMailboxListener}
 import org.apache.james.mailbox.events.{Event, Group}
+import org.apache.james.mailbox.exception.MailboxException
+import org.apache.james.mailbox.model.{MailboxACL, MailboxId}
 import org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY
 import org.reactivestreams.Publisher
+import org.slf4j.{Logger, LoggerFactory}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
+import java.time.{Clock, ZonedDateTime}
 import scala.jdk.CollectionConverters._
 
 case class MailboxChangeListenerGroup() extends Group {}
 
+object MailboxChangeListener {
+  val LOGGER: Logger = LoggerFactory.getLogger(classOf[MailboxChangeListener])
+}
+
 case class MailboxChangeListener @Inject() (mailboxChangeRepository: MailboxChangeRepository,
                                             mailboxChangeFactory: MailboxChange.Factory,
                                             emailChangeRepository: EmailChangeRepository,
-                                            emailChangeFactory: EmailChange.Factory) extends ReactiveGroupMailboxListener {
+                                            emailChangeFactory: EmailChange.Factory,
+                                            mailboxManager: MailboxManager,
+                                            clock: Clock) extends ReactiveGroupMailboxListener {
 
   override def reactiveEvent(event: Event): Publisher[Void] =
-    SFlux.fromIterable(mailboxChangeFactory.fromEvent(event).asScala)
-      .flatMap(change => mailboxChangeRepository.save(change), DEFAULT_CONCURRENCY)
-      .thenMany(SFlux.fromIterable(emailChangeFactory.fromEvent(event).asScala))
-      .flatMap(change => emailChangeRepository.save(change), DEFAULT_CONCURRENCY)
-      .`then`
-      .`then`(SMono.empty[Void]).asJava
+    handleEvent(event.asInstanceOf[MailboxEvent])
+      .`then`(SMono.empty[Void])
+      .asJava
 
   override def getDefaultGroup: Group = MailboxChangeListenerGroup()
 
   override def isHandling(event: Event): Boolean = event.isInstanceOf[MailboxEvent]
+
+  private def handleEvent(mailboxEvent: MailboxEvent): SMono[Unit] = {
+    val now: ZonedDateTime = ZonedDateTime.now(clock)
+    val mailboxId: MailboxId = mailboxEvent.getMailboxId
+    val username: Username = mailboxEvent.getUsername
+
+    SFlux.fromIterable(
+      mailboxEvent match {
+        case mailboxAdded: MailboxAdded =>
+          mailboxChangeFactory.fromMailboxAdded(mailboxAdded, now).asScala
+        case mailboxRenamed: MailboxRenamed =>
+          mailboxChangeFactory.fromMailboxRenamed(mailboxRenamed, now, getSharees(mailboxId, username).asJava).asScala
+        case mailboxACLUpdated: MailboxACLUpdated =>
+          mailboxChangeFactory.fromMailboxACLUpdated(mailboxACLUpdated, now, getSharees(mailboxId, username).asJava).asScala
+        case mailboxDeletion: MailboxDeletion =>
+          mailboxChangeFactory.fromMailboxDeletion(mailboxDeletion, now).asScala
+        case added: Added =>
+          val sharees = getSharees(mailboxId, username).asJava
+          mailboxChangeFactory.fromAdded(added, now, sharees).asScala
+            .concat(emailChangeFactory.fromAdded(added, now, sharees).asScala)
+        case flagsUpdated: FlagsUpdated =>
+          val sharees = getSharees(mailboxId, username).asJava
+          mailboxChangeFactory.fromFlagsUpdated(flagsUpdated, now, sharees).asScala
+            .concat(emailChangeFactory.fromFlagsUpdated(flagsUpdated, now, sharees).asScala)
+        case expunged: Expunged =>
+          val sharees = getSharees(mailboxId, username).asJava
+          mailboxChangeFactory.fromExpunged(expunged, now, sharees).asScala
+            .concat(emailChangeFactory.fromExpunged(expunged, now, sharees).asScala)
+      })
+      .flatMap(saveChangeEvent, DEFAULT_CONCURRENCY)
+      .`then`()
+  }
+
+  private def saveChangeEvent(jmapChange: JmapChange): Publisher[Void] =
+    jmapChange match {
+      case mailboxChange: MailboxChange => mailboxChangeRepository.save(mailboxChange)
+      case emailChange: EmailChange => emailChangeRepository.save(emailChange)
+    }
+
+  private def getSharees(mailboxId: MailboxId, username: Username): List[AccountId] = {
+    val mailboxSession: MailboxSession = mailboxManager.createSystemSession(username)
+    try {
+      val mailboxACL = mailboxManager.listRights(mailboxId, mailboxSession)
+      mailboxACL.getEntries.keySet
+        .asScala
+        .filter(!_.isNegative)
+        .filter(_.getNameType == MailboxACL.NameType.user)
+        .map(_.getName)
+        .map(AccountId.fromString)
+        .toList
+    } catch {
+      case e: MailboxException =>
+        LOGGER.warn("Could not get sharees for mailbox [%s] when listening to change events", mailboxId)
+        List.empty
+    }
+  }
 }

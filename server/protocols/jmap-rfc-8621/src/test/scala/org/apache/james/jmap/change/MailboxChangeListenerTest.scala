@@ -66,11 +66,11 @@ class MailboxChangeListenerTest {
     clock = Clock.systemUTC()
     mailboxManager = resources.getMailboxManager
     stateFactory = new State.DefaultFactory
-    mailboxChangeFactory = new MailboxChange.Factory(clock, mailboxManager, stateFactory)
+    mailboxChangeFactory = new MailboxChange.Factory(stateFactory)
     mailboxChangeRepository = new MemoryMailboxChangeRepository()
-    emailChangeFactory = new EmailChange.Factory(clock, mailboxManager, stateFactory)
+    emailChangeFactory = new EmailChange.Factory(stateFactory)
     emailChangeRepository = new MemoryEmailChangeRepository()
-    listener = MailboxChangeListener(mailboxChangeRepository, mailboxChangeFactory, emailChangeRepository, emailChangeFactory)
+    listener = MailboxChangeListener(mailboxChangeRepository, mailboxChangeFactory, emailChangeRepository, emailChangeFactory, mailboxManager, clock)
     resources.getEventBus.register(listener)
   }
 
