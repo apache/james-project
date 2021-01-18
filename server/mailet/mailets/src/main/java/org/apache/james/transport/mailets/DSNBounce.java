@@ -111,7 +111,7 @@ import com.google.common.collect.ImmutableSet;
  *   &lt;passThrough&gt;<i>true or false, default=true</i>&lt;/passThrough&gt;
  *   &lt;debug&gt;<i>true or false, default=false</i>&lt;/debug&gt;
  *   &lt;action&gt;<i>failed, delayed, delivered, expanded or relayed, default=failed</i>&lt;/action&gt;
- *   &lt;defaultStatus&gt;<i>failed, delayed, delivered, expanded or relayed, default=unknown</i>&lt;/defaultStatus&gt;  &lt;!-- See https://tools.ietf.org/html/rfc3463 --&gt;
+ *   &lt;defaultStatus&gt;<i>SMTP status code. Try to adapt it to the mailet position: 2.0.0 for success, 4.0.0 for delays, 5.0.0 for failures default=unknown</i>&lt;/defaultStatus&gt;  &lt;!-- See https://tools.ietf.org/html/rfc3463 --&gt;
  * &lt;/mailet&gt;
  * </code>
  * </pre>
