@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.smtp;
+package org.apache.james.smtp.dsn;
 
 import static org.apache.james.MemoryJamesServerMain.SMTP_AND_IMAP_MODULE;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
