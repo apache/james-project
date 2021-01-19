@@ -535,7 +535,6 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     void shouldNotCrashWhenErrorHandlingFails(CassandraCluster cassandra) throws Exception {
         TaskManager taskManager = taskManager(HOSTNAME);
 
-        cassandra.getConf().printStatements();
         cassandra.getConf().registerScenario(Scenario.combine(
             executeNormally()
                 .times(2) // submit + inProgress

@@ -58,7 +58,6 @@ class CassandraACLMapperV2Test extends CassandraACLMapperContract {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        cassandra.getConf().printStatements();
         CassandraSchemaVersionDAO schemaVersionDAO = new CassandraSchemaVersionDAO(cassandra.getConf());
         schemaVersionDAO.truncateVersion().block();
         schemaVersionDAO.updateVersion(new SchemaVersion(10)).block();

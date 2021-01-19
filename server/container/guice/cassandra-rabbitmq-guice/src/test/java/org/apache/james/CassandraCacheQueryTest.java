@@ -125,7 +125,6 @@ class CassandraCacheQueryTest {
         MailboxProbeImpl mailboxProbe = server.getProbe(MailboxProbeImpl.class);
         mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
 
-        server.getProbe(TestingSessionProbe.class).getTestingSession().printStatements();
         server.getProbe(TestingSessionProbe.class).getTestingSession().recordStatements(statementRecorder);
 
         sendAMail(server);
