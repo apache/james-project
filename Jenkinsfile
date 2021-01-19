@@ -34,6 +34,7 @@ pipeline {
         // ... setup any environment variables ...
         MVN_LOCAL_REPO_OPT = '-Dmaven.repo.local=.repository'
         MVN_TEST_FAIL_IGNORE = '-Dmaven.test.failure.ignore=true'
+        MVN_SHOW_TIMESTAMPS="-Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS"
         CI = true
         LC_CTYPE = 'en_US.UTF-8'
     }
@@ -84,7 +85,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building'
-                sh 'mvn -U -B -e clean install -DskipTests -T1C'
+                sh 'mvn -U -B -e clean install -DskipTests -T1C ${MVN_SHOW_TIMESTAMPS}'
             }
         }
 
@@ -92,7 +93,7 @@ pipeline {
             steps {
                 echo 'Running tests'
                 // all tests run is very very long (10 hours on Apache Jenkins)
-                sh 'mvn -B -e -fae test '
+                sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS}'
             }
             post {
                 always {
@@ -107,7 +108,7 @@ pipeline {
             steps {
                 echo 'Running unstable tests'
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh 'mvn -B -e -fae test -Punstable-tests'
+                    sh 'mvn -B -e -fae test -Punstable-tests ${MVN_SHOW_TIMESTAMPS}'
                 }
             }
             post {
@@ -115,7 +116,6 @@ pipeline {
                     junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: true)
                     junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
                     archiveArtifacts artifacts: '**/surefire-reports/*.dumpstream' , fingerprint: true
-
                 }
             }
         }
