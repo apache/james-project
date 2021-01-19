@@ -28,6 +28,8 @@ import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMin
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.io.File;
+
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.mailets.configuration.CommonProcessors;
@@ -42,12 +44,11 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 
 public class GatewayRemoteDeliveryIntegrationTest {
     private static final String JAMES_ANOTHER_DOMAIN = "james.com";
@@ -55,26 +56,24 @@ public class GatewayRemoteDeliveryIntegrationTest {
     private static final String FROM = "from@" + DEFAULT_DOMAIN;
     private static final String RECIPIENT = "touser@" + JAMES_ANOTHER_DOMAIN;
 
-    @ClassRule
+    @RegisterExtension
     public static FakeSmtp fakeSmtp = FakeSmtp.withDefaultPort();
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
-    @Rule
+    @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
-    @Rule
+    @RegisterExtension
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
     private DataProbe dataProbe;
     private InMemoryDNSService inMemoryDNSService;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         inMemoryDNSService = new InMemoryDNSService()
             .registerMxRecord(JAMES_ANOTHER_DOMAIN, fakeSmtp.getContainer().getContainerIp());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         fakeSmtp.clean();
         if (jamesServer != null) {
@@ -83,13 +82,13 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void outgoingMailShouldTransitThroughGatewayWhenNoPort() throws Exception {
+    public void outgoingMailShouldTransitThroughGatewayWhenNoPort(@TempDir File temporaryFolder) throws Exception {
         String gatewayProperty = fakeSmtp.getContainer().getContainerIp();
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
@@ -104,13 +103,13 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void outgoingMailShouldTransitThroughGatewayWhenPort() throws Exception {
+    public void outgoingMailShouldTransitThroughGatewayWhenPort(@TempDir File temporaryFolder) throws Exception {
         String gatewayProperty = fakeSmtp.getContainer().getContainerIp() + ":25";
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
@@ -124,13 +123,13 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void outgoingMailShouldTransitThroughGatewayWhenSeveralIps() throws Exception {
+    public void outgoingMailShouldTransitThroughGatewayWhenSeveralIps(@TempDir File temporaryFolder) throws Exception {
         String gatewayProperty = fakeSmtp.getContainer().getContainerIp() + ",invalid.domain";
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
@@ -145,13 +144,13 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void outgoingMailShouldFallbackToSecondGatewayWhenFirstInvalid() throws Exception {
+    public void outgoingMailShouldFallbackToSecondGatewayWhenFirstInvalid(@TempDir File temporaryFolder) throws Exception {
         String gatewayProperty = "invalid.domain," + fakeSmtp.getContainer().getContainerIp();
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
@@ -166,14 +165,14 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void outgoingMailShouldNotBeSentDirectlyToTheHostWhenGatewayFails() throws Exception {
+    public void outgoingMailShouldNotBeSentDirectlyToTheHostWhenGatewayFails(@TempDir File temporaryFolder) throws Exception {
         String gatewayProperty = "invalid.domain";
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
@@ -192,14 +191,14 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void remoteDeliveryShouldBounceUponFailure() throws Exception {
+    public void remoteDeliveryShouldBounceUponFailure(@TempDir File temporaryFolder) throws Exception {
         String gatewayProperty = "invalid.domain";
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
             .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
@@ -216,7 +215,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void remoteDeliveryShouldBounceUponFailureWhenNoBounceProcessor() throws Exception {
+    public void remoteDeliveryShouldBounceUponFailureWhenNoBounceProcessor(@TempDir File temporaryFolder) throws Exception {
         String gatewayProperty = "invalid.domain";
 
         jamesServer = TemporaryJamesServer.builder()
@@ -229,7 +228,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
                     .addMailet(MailetConfiguration.remoteDeliveryBuilderNoBounces()
                         .matcher(All.class)
                         .addProperty("gateway", gatewayProperty))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);

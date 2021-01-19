@@ -26,6 +26,9 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.junit.AssumptionViolatedException;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -42,7 +45,7 @@ import org.testcontainers.images.builder.ImageFromDockerfile;
 import com.github.dockerjava.api.model.ContainerNetwork;
 import com.google.common.base.Strings;
 
-public class DockerContainer implements TestRule {
+public class DockerContainer implements TestRule, BeforeAllCallback, AfterAllCallback {
     private static final Logger LOGGER = LoggerFactory.getLogger(DockerContainer.class);
     private static final String DOCKER_CONTAINER = "DOCKER_CONTAINER";
 
@@ -187,4 +190,13 @@ public class DockerContainer implements TestRule {
         };
     }
 
+    @Override
+    public void afterAll(ExtensionContext extensionContext) {
+        container.stop();
+    }
+
+    @Override
+    public void beforeAll(ExtensionContext extensionContext) {
+        container.start();
+    }
 }

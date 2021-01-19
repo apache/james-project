@@ -26,6 +26,8 @@ import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMin
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.File;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.TemporaryJamesServer;
@@ -44,27 +46,25 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.SMTPSendingException;
 import org.apache.james.utils.TestIMAPClient;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 
 public class SMTPHeloHooksTest {
     private static final String FROM = "fromuser@" + DEFAULT_DOMAIN;
     private static final String TO = "to@" + DEFAULT_DOMAIN;
 
-    @Rule
+    @RegisterExtension
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
-    @Rule
+    @RegisterExtension
     public StaticInputChecker resultChecker = new StaticInputChecker();
-    @Rule
+    @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
 
     private TemporaryJamesServer jamesServer;
 
-    private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
+    private void createJamesServer(File temporaryFolder, SmtpConfiguration.Builder smtpConfiguration) throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(CommonProcessors.deliverOnlyTransport());
 
@@ -72,7 +72,7 @@ public class SMTPHeloHooksTest {
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withSmtpConfiguration(smtpConfiguration)
             .withMailetContainer(mailetContainer)
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
@@ -81,7 +81,7 @@ public class SMTPHeloHooksTest {
         dataProbe.addUser(TO, PASSWORD);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         if (jamesServer != null) {
             jamesServer.shutdown();
@@ -89,8 +89,8 @@ public class SMTPHeloHooksTest {
     }
 
     @Test
-    public void heloHookShouldBeCalledWithTheRightArgument() throws Exception {
-        createJamesServer(SmtpConfiguration.builder()
+    public void heloHookShouldBeCalledWithTheRightArgument(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .addHook(RecordingHeloHook.class.getCanonicalName()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -102,8 +102,8 @@ public class SMTPHeloHooksTest {
     }
 
     @Test
-    public void mailShouldBeWellDeliveredUponDeclinedHeloHook() throws Exception {
-        createJamesServer(SmtpConfiguration.builder()
+    public void mailShouldBeWellDeliveredUponDeclinedHeloHook(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .addHook(DeclinedHeloHook.class.getCanonicalName()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -116,8 +116,8 @@ public class SMTPHeloHooksTest {
     }
 
     @Test
-    public void mailShouldBeWellDeliveredUponOKHeloHook() throws Exception {
-        createJamesServer(SmtpConfiguration.builder()
+    public void mailShouldBeWellDeliveredUponOKHeloHook(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .addHook(OkHeloHook.class.getCanonicalName()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -130,8 +130,8 @@ public class SMTPHeloHooksTest {
     }
 
     @Test
-    public void mailShouldBeWellDeliveredUponOKHeloHookFollowedByADenyHook() throws Exception {
-        createJamesServer(SmtpConfiguration.builder()
+    public void mailShouldBeWellDeliveredUponOKHeloHookFollowedByADenyHook(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .addHook(OkHeloHook.class.getCanonicalName())
             .addHook(DenyHeloHook.class.getCanonicalName()));
 
@@ -145,8 +145,8 @@ public class SMTPHeloHooksTest {
     }
 
     @Test
-    public void denyHeloHookShouldBeAppliedAfterADeclinedHeloHook() throws Exception {
-        createJamesServer(SmtpConfiguration.builder()
+    public void denyHeloHookShouldBeAppliedAfterADeclinedHeloHook(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .addHook(DeclinedHeloHook.class.getCanonicalName())
             .addHook(DenyHeloHook.class.getCanonicalName()));
 
@@ -158,8 +158,8 @@ public class SMTPHeloHooksTest {
     }
 
     @Test
-    public void smtpSessionShouldBeAbortedUponDenyHeloHook() throws Exception {
-        createJamesServer(SmtpConfiguration.builder()
+    public void smtpSessionShouldBeAbortedUponDenyHeloHook(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .addHook(DenyHeloHook.class.getCanonicalName()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort());
@@ -170,8 +170,8 @@ public class SMTPHeloHooksTest {
     }
 
     @Test
-    public void smtpSessionShouldBeAbortedUponDenySoftHeloHook() throws Exception {
-        createJamesServer(SmtpConfiguration.builder()
+    public void smtpSessionShouldBeAbortedUponDenySoftHeloHook(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .addHook(DenySoftHeloHook.class.getCanonicalName()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort());

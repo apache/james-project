@@ -26,8 +26,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.james.util.docker.DockerContainer;
+import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.RateLimiters;
 import org.awaitility.Awaitility;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.rules.ExternalResource;
+import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
 import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
@@ -35,8 +43,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.GetResponse;
 
-public class AmqpRule extends ExternalResource {
-
+public class AmqpExtension implements BeforeAllCallback, AfterAllCallback, AfterEachCallback {
     private static final boolean AUTO_ACK = true;
 
     private final DockerContainer rabbitMqContainer;
@@ -47,14 +54,18 @@ public class AmqpRule extends ExternalResource {
     private Connection connection;
     private String amqpUri;
 
-    public AmqpRule(DockerContainer rabbitMqContainer, String exchangeName, String routingKey) {
-        this.rabbitMqContainer = rabbitMqContainer;
+    public AmqpExtension(String exchangeName, String routingKey) {
+        this.rabbitMqContainer = DockerContainer.fromName(Images.RABBITMQ)
+            .withAffinityToContainer()
+            .waitingFor(new HostPortWaitStrategy()
+                .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));;
         this.exchangeName = exchangeName;
         this.routingKey = routingKey;
     }
 
     @Override
-    protected void before() throws Throwable {
+    public void beforeAll(ExtensionContext extensionContext) throws Exception {
+        rabbitMqContainer.start();
         amqpUri = "amqp://" + rabbitMqContainer.getContainerIp();
         ConnectionFactory factory = new ConnectionFactory();
         factory.setUri(amqpUri);
@@ -64,6 +75,22 @@ public class AmqpRule extends ExternalResource {
         channel.exchangeDeclare(exchangeName, BuiltinExchangeType.DIRECT);
         queueName = channel.queueDeclare().getQueue();
         channel.queueBind(queueName, exchangeName, routingKey);
+    }
+
+    @Override
+    public void afterAll(ExtensionContext extensionContext) {
+        try {
+            channel.close();
+            connection.close();
+            rabbitMqContainer.stop();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void afterEach(ExtensionContext extensionContext) throws Exception {
+        readAll();
     }
 
     public String getAmqpUri() {
@@ -84,16 +111,6 @@ public class AmqpRule extends ExternalResource {
     public Optional<byte[]> readContentAsBytes() throws IOException {
         return Optional.ofNullable(channel.basicGet(queueName, AUTO_ACK))
             .map(GetResponse::getBody);
-    }
-
-    @Override
-    protected void after() {
-        try {
-            channel.close();
-            connection.close();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private void waitingForRabbitToBeReady(ConnectionFactory factory) {

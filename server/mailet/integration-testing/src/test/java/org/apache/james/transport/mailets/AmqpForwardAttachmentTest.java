@@ -25,6 +25,7 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.MemoryJamesServerMain;
@@ -37,22 +38,17 @@ import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.transport.mailets.amqp.AmqpRule;
+import org.apache.james.transport.mailets.amqp.AmqpExtension;
 import org.apache.james.transport.matchers.All;
-import org.apache.james.util.docker.DockerContainer;
-import org.apache.james.util.docker.Images;
-import org.apache.james.util.docker.RateLimiters;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
-import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 
 public class AmqpForwardAttachmentTest {
     private static final String FROM = "fromUser@" + DEFAULT_DOMAIN;
@@ -64,25 +60,17 @@ public class AmqpForwardAttachmentTest {
     
     private static final byte[] TEST_ATTACHMENT_CONTENT = "Test attachment content".getBytes(StandardCharsets.UTF_8);
 
-    public DockerContainer rabbitMqContainer = DockerContainer.fromName(Images.RABBITMQ)
-        .withAffinityToContainer()
-        .waitingFor(new HostPortWaitStrategy()
-            .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
-
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
-    public AmqpRule amqpRule = new AmqpRule(rabbitMqContainer, EXCHANGE_NAME, ROUTING_KEY);
-
-    @Rule
-    public final RuleChain chain = RuleChain.outerRule(temporaryFolder).around(rabbitMqContainer).around(amqpRule);
-    @Rule
+    @RegisterExtension
+    public static AmqpExtension amqpExtension = new AmqpExtension(EXCHANGE_NAME, ROUTING_KEY);
+    @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
-    @Rule
+    @RegisterExtension
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
     
     private TemporaryJamesServer jamesServer;
 
-    @Before
-    public void setup() throws Exception {
+    @BeforeEach
+    public void setup(@TempDir File temporaryFolder) throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.defaultMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.transport()
                 .addMailet(MailetConfiguration.builder()
@@ -97,7 +85,7 @@ public class AmqpForwardAttachmentTest {
                 .addMailet(MailetConfiguration.builder()
                     .matcher(All.class)
                     .mailet(AmqpForwardAttribute.class)
-                    .addProperty(AmqpForwardAttribute.URI_PARAMETER_NAME, amqpRule.getAmqpUri())
+                    .addProperty(AmqpForwardAttribute.URI_PARAMETER_NAME, amqpExtension.getAmqpUri())
                     .addProperty(AmqpForwardAttribute.EXCHANGE_PARAMETER_NAME, EXCHANGE_NAME)
                     .addProperty(AmqpForwardAttribute.ATTRIBUTE_PARAMETER_NAME, MAIL_ATTRIBUTE)
                     .addProperty(AmqpForwardAttribute.ROUTING_KEY_PARAMETER_NAME, ROUTING_KEY))
@@ -106,7 +94,7 @@ public class AmqpForwardAttachmentTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withMailetContainer(mailetContainer)
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
 
         DataProbe dataprobe = jamesServer.getProbe(DataProbeImpl.class);
@@ -114,7 +102,7 @@ public class AmqpForwardAttachmentTest {
         dataprobe.addUser(RECIPIENT, PASSWORD);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         jamesServer.shutdown();
     }
@@ -143,7 +131,7 @@ public class AmqpForwardAttachmentTest {
             .select(TestIMAPClient.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
 
-        assertThat(amqpRule.readContentAsBytes()).contains(TEST_ATTACHMENT_CONTENT);
+        assertThat(amqpExtension.readContentAsBytes()).contains(TEST_ATTACHMENT_CONTENT);
     }
 
 }

@@ -42,29 +42,27 @@ import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 
 public class SMIMEDecryptIntegrationTest {
     private static final ZonedDateTime DATE_2015 = ZonedDateTime.parse("2015-10-15T14:10:00Z");
     private static final String FROM = "sender@" + DEFAULT_DOMAIN;
     private static final String PASSWORD = "secret";
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
-    @Rule
+    @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
-    @Rule
+    @RegisterExtension
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
 
-    @Before
-    public void setup() throws Exception {
-        File workingDir = temporaryFolder.newFolder();
+    @BeforeEach
+    public void setup(@TempDir File temporaryFolder) throws Exception {
         MailetContainer mailetContainer = MailetContainer.builder()
             .putProcessor(CommonProcessors.root())
             .putProcessor(CommonProcessors.error())
@@ -73,7 +71,7 @@ public class SMIMEDecryptIntegrationTest {
                 .addMailet(MailetConfiguration.builder()
                     .mailet(SMIMEDecrypt.class)
                     .matcher(All.class)
-                    .addProperty("keyStoreFileName", workingDir.toPath().resolve("conf").resolve("smime.p12").toAbsolutePath().toString())
+                    .addProperty("keyStoreFileName", temporaryFolder.toPath().resolve("conf").resolve("smime.p12").toAbsolutePath().toString())
                     .addProperty("keyStorePassword", "secret")
                     .addProperty("keyStoreType", "PKCS12")
                     .addProperty("debug", "true"))
@@ -84,7 +82,7 @@ public class SMIMEDecryptIntegrationTest {
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(ZonedDateTimeProvider.class).toInstance(() -> DATE_2015))
             .withMailetContainer(mailetContainer)
-            .build(workingDir);
+            .build(temporaryFolder);
         jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
@@ -93,7 +91,7 @@ public class SMIMEDecryptIntegrationTest {
             .addUser(FROM, PASSWORD);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         jamesServer.shutdown();
     }

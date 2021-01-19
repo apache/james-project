@@ -23,11 +23,12 @@ import java.util.ArrayList;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.protocols.smtp.hook.Hook;
-import org.junit.rules.ExternalResource;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.common.collect.ImmutableList;
 
-public class StaticInputChecker extends ExternalResource {
+public class StaticInputChecker implements AfterEachCallback {
     private static final ArrayList<Pair<Class<? extends Hook>, ?>> results = new ArrayList<>();
 
     public static void registerHookResult(Class<? extends Hook> clazz, Object result) {
@@ -35,7 +36,7 @@ public class StaticInputChecker extends ExternalResource {
     }
 
     @Override
-    protected void after() {
+    public void afterEach(ExtensionContext extensionContext) {
         results.clear();
     }
 

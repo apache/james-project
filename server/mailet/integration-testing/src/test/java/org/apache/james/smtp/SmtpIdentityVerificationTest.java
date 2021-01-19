@@ -24,6 +24,8 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.File;
+
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
@@ -32,10 +34,10 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.SMTPSendingException;
 import org.apache.james.utils.SmtpSendingStep;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 
 public class SmtpIdentityVerificationTest {
     private static final String ATTACKER_PASSWORD = "secret";
@@ -43,17 +45,15 @@ public class SmtpIdentityVerificationTest {
     private static final String ATTACKER = "attacker@" + DEFAULT_DOMAIN;
     private static final String USER = "user@" + DEFAULT_DOMAIN;
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
-    @Rule
+    @RegisterExtension
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
 
-    private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
+    private void createJamesServer(File temporaryFolder, SmtpConfiguration.Builder smtpConfiguration) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withSmtpConfiguration(smtpConfiguration)
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
@@ -62,7 +62,7 @@ public class SmtpIdentityVerificationTest {
         dataProbe.addUser(ATTACKER, ATTACKER_PASSWORD);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         if (jamesServer != null) {
             jamesServer.shutdown();
@@ -70,8 +70,8 @@ public class SmtpIdentityVerificationTest {
     }
 
     @Test
-    public void smtpShouldAcceptMessageWhenIdentityIsMatching() throws Exception {
-        createJamesServer(SmtpConfiguration.builder()
+    public void smtpShouldAcceptMessageWhenIdentityIsMatching(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()
             .verifyIdentity());
 
@@ -80,8 +80,8 @@ public class SmtpIdentityVerificationTest {
     }
 
     @Test
-    public void smtpShouldAcceptMessageWhenIdentityIsNotMatchingButNotChecked() throws Exception {
-        createJamesServer(SmtpConfiguration.builder()
+    public void smtpShouldAcceptMessageWhenIdentityIsNotMatchingButNotChecked(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()
             .doNotVerifyIdentity());
 
@@ -91,8 +91,8 @@ public class SmtpIdentityVerificationTest {
     }
 
     @Test
-    public void smtpShouldRejectMessageWhenIdentityIsNotMatching() throws Exception {
-        createJamesServer(SmtpConfiguration.builder()
+    public void smtpShouldRejectMessageWhenIdentityIsNotMatching(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()
             .verifyIdentity());
 

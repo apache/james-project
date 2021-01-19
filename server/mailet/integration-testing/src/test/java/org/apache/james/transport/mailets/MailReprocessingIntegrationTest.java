@@ -31,6 +31,8 @@ import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMin
 import static org.apache.james.mailets.configuration.ProcessorConfiguration.TRANSPORT_PROCESSOR;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.File;
+
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailets.TemporaryJamesServer;
@@ -46,11 +48,11 @@ import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 
 import com.google.inject.util.Modules;
 
@@ -60,17 +62,14 @@ public class MailReprocessingIntegrationTest {
     private static final MailRepositoryUrl REPOSITORY_A = MailRepositoryUrl.from("memory://var/mail/a");
     private static final MailRepositoryUrl REPOSITORY_B = MailRepositoryUrl.from("memory://var/mail/b");
 
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
-
-    @Rule
+    @RegisterExtension
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
     private RequestSpecification specification;
 
-    @Before
-    public void createJamesServer() throws Exception {
+    @BeforeEach
+    public void createJamesServer(@TempDir File temporaryFolder) throws Exception {
         MailetContainer.Builder mailets = TemporaryJamesServer.defaultMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.transport()
                     .addMailet(MailetConfiguration.BCC_STRIPPER)
@@ -87,7 +86,7 @@ public class MailReprocessingIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(Modules.combine(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE, MemoryJamesServerMain.WEBADMIN_TESTING))
             .withMailetContainer(mailets)
-            .build(folder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
@@ -100,7 +99,7 @@ public class MailReprocessingIntegrationTest {
         specification = WebAdminUtils.spec(jamesServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         jamesServer.shutdown();
     }

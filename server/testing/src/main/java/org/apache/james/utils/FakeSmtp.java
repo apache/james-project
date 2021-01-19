@@ -30,6 +30,10 @@ import java.util.function.Consumer;
 import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -42,7 +46,7 @@ import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
 
-public class FakeSmtp implements TestRule {
+public class FakeSmtp implements TestRule, BeforeAllCallback, AfterAllCallback, AfterEachCallback {
     public static void clean(RequestSpecification requestSpecification) {
         given(requestSpecification, RESPONSE_SPECIFICATION)
             .get("/api/email")
@@ -87,6 +91,21 @@ public class FakeSmtp implements TestRule {
     @Override
     public Statement apply(Statement statement, Description description) {
         return container.apply(statement, description);
+    }
+
+    @Override
+    public void afterAll(ExtensionContext extensionContext) {
+        container.stop();
+    }
+
+    @Override
+    public void afterEach(ExtensionContext extensionContext) {
+        clean();
+    }
+
+    @Override
+    public void beforeAll(ExtensionContext extensionContext) {
+        container.start();
     }
 
     public void assertEmailReceived(Consumer<ValidatableResponse> expectations) {

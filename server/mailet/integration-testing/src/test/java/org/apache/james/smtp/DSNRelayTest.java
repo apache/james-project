@@ -28,8 +28,9 @@ import static org.apache.james.util.docker.Images.MOCK_SMTP_SERVER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Duration.TEN_SECONDS;
 
+import java.io.File;
+
 import org.apache.commons.net.smtp.AuthenticatingSMTPClient;
-import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
@@ -56,13 +57,12 @@ import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,20 +78,18 @@ public class DSNRelayTest {
     private InMemoryDNSService inMemoryDNSService;
     private ConfigurationClient mockSMTPConfiguration;
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
-    @Rule
+    @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
-    @Rule
+    @RegisterExtension
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
-    @ClassRule
+    @RegisterExtension
     public static DockerContainer mockSmtp = DockerContainer.fromName(MOCK_SMTP_SERVER)
         .withLogConsumer(outputFrame -> LOGGER.debug("MockSMTP 1: " + outputFrame.getUtf8String()));
 
     private TemporaryJamesServer jamesServer;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    public void setUp(@TempDir File temporaryFolder) throws Exception {
         inMemoryDNSService = new InMemoryDNSService()
             .registerMxRecord(DEFAULT_DOMAIN, LOCALHOST_IP)
             .registerMxRecord(ANOTHER_DOMAIN, mockSmtp.getContainerIp());
@@ -109,7 +107,7 @@ public class DSNRelayTest {
                 .addHook(DSNMailParameterHook.class.getName())
                 .addHook(DSNRcptParameterHook.class.getName())
                 .addHook(DSNMessageHook.class.getName()))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
@@ -123,14 +121,14 @@ public class DSNRelayTest {
         assertThat(mockSMTPConfiguration.version()).isEqualTo("0.2");
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         jamesServer.shutdown();
 
         mockSMTPConfiguration.cleanServer();
     }
 
-    @Ignore("JAMES-3431 No javax.mail support for ORCPT DSN parameter...")
+    @Disabled("JAMES-3431 No javax.mail support for ORCPT DSN parameter...")
     @Test
     public void orcptIsUnsupported() throws Exception {
         AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");

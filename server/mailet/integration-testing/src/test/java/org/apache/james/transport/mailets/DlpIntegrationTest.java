@@ -29,6 +29,8 @@ import static org.apache.james.mailets.configuration.Constants.RECIPIENT2;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.File;
+
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailets.TemporaryJamesServer;
@@ -47,10 +49,10 @@ import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.mailet.base.test.FakeMail;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 
 import com.google.inject.util.Modules;
 
@@ -59,18 +61,15 @@ import io.restassured.specification.RequestSpecification;
 public class DlpIntegrationTest {
     public static final String REPOSITORY_PREFIX = "memory://var/mail/dlp/quarantine/";
 
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
-
-    @Rule
+    @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
-    @Rule
+    @RegisterExtension
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
     private RequestSpecification specification;
 
-    private void createJamesServer(MailetConfiguration.Builder dlpMailet) throws Exception {
+    private void createJamesServer(File folder, MailetConfiguration.Builder dlpMailet) throws Exception {
         MailetContainer.Builder mailets = TemporaryJamesServer.defaultMailetContainerConfiguration()
             .putProcessor(
                 ProcessorConfiguration.transport()
@@ -81,7 +80,7 @@ public class DlpIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(Modules.combine(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE, MemoryJamesServerMain.WEBADMIN_TESTING))
             .withMailetContainer(mailets)
-            .build(folder.newFolder());
+            .build(folder);
         jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
@@ -93,14 +92,14 @@ public class DlpIntegrationTest {
         specification = WebAdminUtils.spec(jamesServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void dlpShouldStoreMatchingEmails() throws Exception {
-        createJamesServer(MailetConfiguration.builder()
+    public void dlpShouldStoreMatchingEmails(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, MailetConfiguration.builder()
             .matcher(Dlp.class)
             .mailet(ToSenderDomainRepository.class)
             .addProperty(ToSenderDomainRepository.URL_PREFIX, REPOSITORY_PREFIX));
@@ -131,8 +130,8 @@ public class DlpIntegrationTest {
     }
 
     @Test
-    public void dlpShouldNotCreateRepositoryWhenNotAllowed() throws Exception {
-        createJamesServer(MailetConfiguration.builder()
+    public void dlpShouldNotCreateRepositoryWhenNotAllowed(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, MailetConfiguration.builder()
             .matcher(Dlp.class)
             .mailet(ToSenderDomainRepository.class)
             .addProperty(ToSenderDomainRepository.URL_PREFIX, REPOSITORY_PREFIX)
@@ -169,8 +168,8 @@ public class DlpIntegrationTest {
     }
 
     @Test
-    public void dlpShouldCreateRepositoryWhenAllowed() throws Exception {
-        createJamesServer(MailetConfiguration.builder()
+    public void dlpShouldCreateRepositoryWhenAllowed(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, MailetConfiguration.builder()
             .matcher(Dlp.class)
             .mailet(ToSenderDomainRepository.class)
             .addProperty(ToSenderDomainRepository.URL_PREFIX, REPOSITORY_PREFIX)
@@ -203,8 +202,8 @@ public class DlpIntegrationTest {
     }
 
     @Test
-    public void dlpShouldStoreMailWhenNotAllowedButRepositoryExists() throws Exception {
-        createJamesServer(MailetConfiguration.builder()
+    public void dlpShouldStoreMailWhenNotAllowedButRepositoryExists(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, MailetConfiguration.builder()
             .matcher(Dlp.class)
             .mailet(ToSenderDomainRepository.class)
             .addProperty(ToSenderDomainRepository.URL_PREFIX, REPOSITORY_PREFIX)
@@ -242,8 +241,8 @@ public class DlpIntegrationTest {
     }
 
     @Test
-    public void dlpShouldBeAbleToReadMailContentWithAttachments() throws Exception {
-        createJamesServer(MailetConfiguration.builder()
+    public void dlpShouldBeAbleToReadMailContentWithAttachments(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, MailetConfiguration.builder()
             .matcher(Dlp.class)
             .mailet(ToSenderDomainRepository.class)
             .addProperty(ToSenderDomainRepository.URL_PREFIX, REPOSITORY_PREFIX)

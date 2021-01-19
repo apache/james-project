@@ -25,6 +25,7 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.File;
 import java.util.Optional;
 
 import org.apache.james.MemoryJamesServerMain;
@@ -36,23 +37,18 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
-import org.apache.james.transport.mailets.amqp.AmqpRule;
+import org.apache.james.transport.mailets.amqp.AmqpExtension;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.SMTPAuthSuccessful;
-import org.apache.james.util.docker.DockerContainer;
-import org.apache.james.util.docker.Images;
-import org.apache.james.util.docker.RateLimiters;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
-import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 
 public class ContactExtractorTest {
     public static final String SENDER = "sender@" + DEFAULT_DOMAIN;
@@ -65,22 +61,17 @@ public class ContactExtractorTest {
     public static final String EXCHANGE = "collector:email";
     public static final String ROUTING_KEY = "";
 
-    public DockerContainer rabbit = DockerContainer.fromName(Images.RABBITMQ)
-        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
-    public AmqpRule amqpRule = new AmqpRule(rabbit, EXCHANGE, ROUTING_KEY);
-    public TemporaryFolder folder = new TemporaryFolder();
-
-    @Rule
-    public RuleChain chain = RuleChain.outerRule(rabbit).around(amqpRule).around(folder);
-    @Rule
+    @RegisterExtension
+    public static AmqpExtension amqpExtension = new AmqpExtension(EXCHANGE, ROUTING_KEY);
+    @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
-    @Rule
+    @RegisterExtension
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
 
-    @Before
-    public void setup() throws Exception {
+    @BeforeEach
+    public void setup(@TempDir File temporaryFolder) throws Exception {
         String attribute = "ExtractedContacts";
         MailetContainer.Builder mailets = TemporaryJamesServer.defaultMailetContainerConfiguration()
             .postmaster(SENDER)
@@ -93,7 +84,7 @@ public class ContactExtractorTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(AmqpForwardAttribute.class)
-                        .addProperty(AmqpForwardAttribute.URI_PARAMETER_NAME, amqpRule.getAmqpUri())
+                        .addProperty(AmqpForwardAttribute.URI_PARAMETER_NAME, amqpExtension.getAmqpUri())
                         .addProperty(AmqpForwardAttribute.EXCHANGE_PARAMETER_NAME, EXCHANGE)
                         .addProperty(AmqpForwardAttribute.ATTRIBUTE_PARAMETER_NAME, attribute))
                     .addMailetsFrom(CommonProcessors.deliverOnlyTransport()));
@@ -101,7 +92,7 @@ public class ContactExtractorTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withMailetContainer(mailets)
-            .build(folder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
@@ -116,7 +107,7 @@ public class ContactExtractorTest {
             .addUser(BCC2, PASSWORD);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         jamesServer.shutdown();
     }
@@ -143,7 +134,7 @@ public class ContactExtractorTest {
             .select(TestIMAPClient.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
 
-        Optional<String> actual = amqpRule.readContent();
+        Optional<String> actual = amqpExtension.readContent();
         assertThat(actual).isNotEmpty();
         assertThatJson(actual.get()).isEqualTo("{"
             + "\"userEmail\" : \"sender@james.org\", "

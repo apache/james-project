@@ -28,6 +28,8 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 
+import java.io.File;
+
 import javax.mail.MessagingException;
 
 import org.apache.james.MemoryJamesServerMain;
@@ -47,29 +49,26 @@ import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
 import org.apache.mailet.Mail;
-import org.junit.After;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 
 public class SmtpContentTypeTest {
     private static final String FROM = "fromuser@" + DEFAULT_DOMAIN;
     private static final String TO = "to@any.com";
     public static final String SUBJECT = "test";
 
-    @ClassRule
+    @RegisterExtension
     public static FakeSmtp fakeSmtp = FakeSmtp.withDefaultPort();
-    @Rule
+    @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
-    @Rule
+    @RegisterExtension
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private TemporaryJamesServer jamesServer;
 
-    private void createJamesServer(SmtpConfiguration.Builder smtpConfiguration) throws Exception {
+    private void createJamesServer(File temporaryFolder, SmtpConfiguration.Builder smtpConfiguration) throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.transport()
                 .addMailetsFrom(CommonProcessors.deliverOnlyTransport())
@@ -82,7 +81,7 @@ public class SmtpContentTypeTest {
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withSmtpConfiguration(smtpConfiguration)
             .withMailetContainer(mailetContainer)
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
@@ -90,7 +89,7 @@ public class SmtpContentTypeTest {
         dataProbe.addUser(FROM, PASSWORD);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         fakeSmtp.clean();
         if (jamesServer != null) {
@@ -99,8 +98,8 @@ public class SmtpContentTypeTest {
     }
 
     @Test
-    public void userShouldBeAbleToReceiveMessagesWithGoodContentType() throws Exception {
-        createJamesServer(SmtpConfiguration.builder()
+    public void userShouldBeAbleToReceiveMessagesWithGoodContentType(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()
             .withAutorizedAddresses("172.0.0.0/8"));
 
@@ -117,8 +116,8 @@ public class SmtpContentTypeTest {
     }
 
     @Test
-    public void userShouldBeAbleToReceiveMessagesWithBadContentType() throws Exception {
-        createJamesServer(SmtpConfiguration.builder()
+    public void userShouldBeAbleToReceiveMessagesWithBadContentType(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()
             .withAutorizedAddresses("172.0.0.0/8"));
 

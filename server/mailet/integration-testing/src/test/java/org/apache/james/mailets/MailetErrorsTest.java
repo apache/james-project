@@ -26,6 +26,8 @@ import static org.apache.james.mailets.configuration.Constants.FROM;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 
+import java.io.File;
+
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
@@ -48,23 +50,21 @@ import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.HasException;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 
 public class MailetErrorsTest {
     public static final String CUSTOM_PROCESSOR = "custom";
     public static final MailRepositoryUrl CUSTOM_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/custom/");
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
-    @Rule
+    @RegisterExtension
     public SMTPMessageSender smtpMessageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
 
-    @After
+    @AfterEach
     public void tearDown() {
         if (jamesServer != null) {
             jamesServer.shutdown();
@@ -72,7 +72,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void mailetProcessorsShouldHandleMessagingException() throws Exception {
+    public void mailetProcessorsShouldHandleMessagingException(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -82,7 +82,7 @@ public class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(ErrorMailet.class))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -92,7 +92,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void mailetProcessingShouldHandleClassNotFoundException() throws Exception {
+    public void mailetProcessingShouldHandleClassNotFoundException(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -102,7 +102,7 @@ public class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(NoClassDefFoundErrorMailet.class))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -112,7 +112,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void matcherProcessingShouldHandleClassNotFoundException() throws Exception {
+    public void matcherProcessingShouldHandleClassNotFoundException(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -122,7 +122,7 @@ public class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(NoClassDefFoundErrorMatcher.class)
                         .mailet(Null.class))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -132,7 +132,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void mailetProcessorsShouldHandleRuntimeException() throws Exception {
+    public void mailetProcessorsShouldHandleRuntimeException(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -142,7 +142,7 @@ public class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(RuntimeExceptionMailet.class))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -152,7 +152,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void spoolerShouldEventuallyProcessUponTemporaryError() throws Exception {
+    public void spoolerShouldEventuallyProcessUponTemporaryError(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -166,7 +166,7 @@ public class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -176,7 +176,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void spoolerShouldEventuallyProcessMailsAfterThreadSuicide() throws Exception {
+    public void spoolerShouldEventuallyProcessMailsAfterThreadSuicide(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -190,7 +190,7 @@ public class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -200,7 +200,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void spoolerShouldNotInfinitLoopUponPermanentError() throws Exception {
+    public void spoolerShouldNotInfinitLoopUponPermanentError(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -210,7 +210,7 @@ public class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(RuntimeErrorMailet.class))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -220,7 +220,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void mailetProcessorsShouldHandleMessagingExceptionWhenSpecificErrorHandlingSpecified() throws Exception {
+    public void mailetProcessorsShouldHandleMessagingExceptionWhenSpecificErrorHandlingSpecified(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -232,7 +232,7 @@ public class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(ErrorMailet.class)
                         .addProperty("onMailetException", CUSTOM_PROCESSOR))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -243,7 +243,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void mailetProcessorsShouldHandleRuntimeExceptionWhenSpecificErrorHandlingSpecified() throws Exception {
+    public void mailetProcessorsShouldHandleRuntimeExceptionWhenSpecificErrorHandlingSpecified(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -255,7 +255,7 @@ public class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(RuntimeExceptionMailet.class)
                         .addProperty("onMailetException", CUSTOM_PROCESSOR))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -265,7 +265,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void onExceptionIgnoreShouldContinueProcessingWhenRuntimeException() throws Exception {
+    public void onExceptionIgnoreShouldContinueProcessingWhenRuntimeException(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -281,7 +281,7 @@ public class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -291,7 +291,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void onExceptionIgnoreShouldContinueProcessingWhenMessagingException() throws Exception {
+    public void onExceptionIgnoreShouldContinueProcessingWhenMessagingException(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -307,7 +307,7 @@ public class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -317,7 +317,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void matcherProcessorsShouldHandleMessagingException() throws Exception {
+    public void matcherProcessorsShouldHandleMessagingException(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -327,7 +327,7 @@ public class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(ErrorMatcher.class)
                         .mailet(NoopMailet.class))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -337,7 +337,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void matcherProcessorsShouldHandleRuntimeException() throws Exception {
+    public void matcherProcessorsShouldHandleRuntimeException(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -347,7 +347,7 @@ public class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(RuntimeExceptionMatcher.class)
                         .mailet(NoopMailet.class))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -357,7 +357,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void matcherProcessorsShouldHandleMessagingExceptionWhenSpecificErrorHandlingSpecified() throws Exception {
+    public void matcherProcessorsShouldHandleMessagingExceptionWhenSpecificErrorHandlingSpecified(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -369,7 +369,7 @@ public class MailetErrorsTest {
                         .matcher(ErrorMatcher.class)
                         .mailet(NoopMailet.class)
                         .addProperty("onMatchException", CUSTOM_PROCESSOR))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -379,7 +379,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void matcherProcessorsShouldHandleRuntimeExceptionWhenSpecificErrorHandlingSpecified() throws Exception {
+    public void matcherProcessorsShouldHandleRuntimeExceptionWhenSpecificErrorHandlingSpecified(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -391,7 +391,7 @@ public class MailetErrorsTest {
                         .matcher(RuntimeExceptionMatcher.class)
                         .mailet(NoopMailet.class)
                         .addProperty("onMatchException", CUSTOM_PROCESSOR))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -401,7 +401,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void onMatcherExceptionIgnoreShouldNotMatchWhenRuntimeExceptionAndNoMatchConfigured() throws Exception {
+    public void onMatcherExceptionIgnoreShouldNotMatchWhenRuntimeExceptionAndNoMatchConfigured(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -417,7 +417,7 @@ public class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -427,7 +427,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void onMatcherExceptionIgnoreShouldNotMatchWhenMessagingExceptionAndNoMatchConfigured() throws Exception {
+    public void onMatcherExceptionIgnoreShouldNotMatchWhenMessagingExceptionAndNoMatchConfigured(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -443,7 +443,7 @@ public class MailetErrorsTest {
                         .matcher(All.class)
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -453,7 +453,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void onMatcherExceptionIgnoreShouldMatchWhenRuntimeExceptionAndAllMatchConfigured() throws Exception {
+    public void onMatcherExceptionIgnoreShouldMatchWhenRuntimeExceptionAndAllMatchConfigured(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -469,7 +469,7 @@ public class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(Null.class))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -479,7 +479,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void onMatcherExceptionIgnoreShouldMatchWhenMessagingExceptionAndAllMatchConfigured() throws Exception {
+    public void onMatcherExceptionIgnoreShouldMatchWhenMessagingExceptionAndAllMatchConfigured(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -495,7 +495,7 @@ public class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(Null.class))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -505,7 +505,7 @@ public class MailetErrorsTest {
     }
 
     @Test
-    public void hasExceptionMatcherShouldMatchWhenMatcherThrowsExceptionSpecified() throws Exception {
+    public void hasExceptionMatcherShouldMatchWhenMatcherThrowsExceptionSpecified(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -525,7 +525,7 @@ public class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(ErrorMatcher.class)
                         .mailet(Null.class))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -535,7 +535,7 @@ public class MailetErrorsTest {
     }
     
     @Test
-    public void hasExceptionMatcherShouldNotMatchWhenMatcherThrowsExceptionNotSpecified() throws Exception {
+    public void hasExceptionMatcherShouldNotMatchWhenMatcherThrowsExceptionNotSpecified(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -555,7 +555,7 @@ public class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(RuntimeExceptionMatcher.class)
                         .mailet(Null.class))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -565,7 +565,7 @@ public class MailetErrorsTest {
     }
     
     @Test
-    public void hasExceptionMatcherShouldMatchWhenMailetThrowsExceptionSpecified() throws Exception {
+    public void hasExceptionMatcherShouldMatchWhenMailetThrowsExceptionSpecified(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -585,7 +585,7 @@ public class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(ErrorMailet.class))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -595,7 +595,7 @@ public class MailetErrorsTest {
     }
     
     @Test
-    public void hasExceptionMatcherShouldNotMatchWhenMailetThrowsExceptionNotSpecified() throws Exception {
+    public void hasExceptionMatcherShouldNotMatchWhenMailetThrowsExceptionNotSpecified(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withMailetContainer(MailetContainer.builder()
@@ -615,7 +615,7 @@ public class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(RuntimeExceptionMailet.class))))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 

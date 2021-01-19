@@ -25,6 +25,8 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.File;
+
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
@@ -42,31 +44,29 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 
 public class NetworkMatcherIntegrationTest {
     private static final String FROM = "fromuser@" + DEFAULT_DOMAIN;
     private static final MailRepositoryUrl DROPPED_MAILS = MailRepositoryUrl.from("memory://var/mail/dropped-mails/");
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
-    @Rule
+    @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
-    @Rule
+    @RegisterExtension
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
 
-    private TemporaryJamesServer createJamesServerWithRootProcessor(ProcessorConfiguration.Builder rootProcessor) throws Exception {
+    private TemporaryJamesServer createJamesServerWithRootProcessor(File temporaryFolder, ProcessorConfiguration.Builder rootProcessor) throws Exception {
         TemporaryJamesServer temporaryJamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withMailetContainer(TemporaryJamesServer.defaultMailetContainerConfiguration()
                 .putProcessor(rootProcessor)
                 .putProcessor(CommonProcessors.deliverOnlyTransport()))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         temporaryJamesServer.start();
 
         DataProbe dataProbe = temporaryJamesServer.getProbe(DataProbeImpl.class);
@@ -82,14 +82,14 @@ public class NetworkMatcherIntegrationTest {
             .addProperty("repositoryPath", DROPPED_MAILS.asString());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void mailsFromAuthorizedNetworksShouldBeDeliveredWithRemoteAddrInNetwork() throws Exception {
-        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.root()
+    public void mailsFromAuthorizedNetworksShouldBeDeliveredWithRemoteAddrInNetwork(@TempDir File temporaryFolder) throws Exception {
+        jamesServer = createJamesServerWithRootProcessor(temporaryFolder, ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("127.0.0.0/8")
@@ -108,8 +108,8 @@ public class NetworkMatcherIntegrationTest {
     }
 
     @Test
-    public void mailsFromAuthorizedNetworksShouldBeDeliveredWithRemoteAddrNotInNetwork() throws Exception {
-        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.root()
+    public void mailsFromAuthorizedNetworksShouldBeDeliveredWithRemoteAddrNotInNetwork(@TempDir File temporaryFolder) throws Exception {
+        jamesServer = createJamesServerWithRootProcessor(temporaryFolder, ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrNotInNetwork.class)
                 .matcherCondition("172.0.0.0/8")
@@ -128,8 +128,8 @@ public class NetworkMatcherIntegrationTest {
     }
 
     @Test
-    public void remoteAddrInNetworkShouldSupportLargerMask() throws Exception {
-        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.root()
+    public void remoteAddrInNetworkShouldSupportLargerMask(@TempDir File temporaryFolder) throws Exception {
+        jamesServer = createJamesServerWithRootProcessor(temporaryFolder, ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("127.0.0.0/2")
@@ -148,8 +148,8 @@ public class NetworkMatcherIntegrationTest {
     }
 
     @Test
-    public void remoteAddrInNetworkShouldSupportRangesDefinedByAMiddleIp() throws Exception {
-        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.root()
+    public void remoteAddrInNetworkShouldSupportRangesDefinedByAMiddleIp(@TempDir File temporaryFolder) throws Exception {
+        jamesServer = createJamesServerWithRootProcessor(temporaryFolder, ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("127.0.4.108/8")
@@ -168,8 +168,8 @@ public class NetworkMatcherIntegrationTest {
     }
 
     @Test
-    public void remoteAddrInNetworkShouldSupportRangesDefinedByEndingIp() throws Exception {
-        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.root()
+    public void remoteAddrInNetworkShouldSupportRangesDefinedByEndingIp(@TempDir File temporaryFolder) throws Exception {
+        jamesServer = createJamesServerWithRootProcessor(temporaryFolder, ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("127.255.255.255/8")
@@ -188,8 +188,8 @@ public class NetworkMatcherIntegrationTest {
     }
 
     @Test
-    public void remoteAddrInNetworkShouldSupportRangesWithNonEightMultipleSubMasks() throws Exception {
-        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.root()
+    public void remoteAddrInNetworkShouldSupportRangesWithNonEightMultipleSubMasks(@TempDir File temporaryFolder) throws Exception {
+        jamesServer = createJamesServerWithRootProcessor(temporaryFolder, ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("126.0.0.0/4")
@@ -208,8 +208,8 @@ public class NetworkMatcherIntegrationTest {
     }
 
     @Test
-    public void mailsFromNonAuthorizedNetworksShouldNotBeDeliveredWithRemoteAddrInNetwork() throws Exception {
-        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.root()
+    public void mailsFromNonAuthorizedNetworksShouldNotBeDeliveredWithRemoteAddrInNetwork(@TempDir File temporaryFolder) throws Exception {
+        jamesServer = createJamesServerWithRootProcessor(temporaryFolder, ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrInNetwork.class)
                 .matcherCondition("172.0.0.0/8")
@@ -232,8 +232,8 @@ public class NetworkMatcherIntegrationTest {
     }
 
     @Test
-    public void mailsFromNonAuthorizedNetworksShouldNotBeDeliveredWithRemoteAddrNotInNetwork() throws Exception {
-        jamesServer = createJamesServerWithRootProcessor(ProcessorConfiguration.root()
+    public void mailsFromNonAuthorizedNetworksShouldNotBeDeliveredWithRemoteAddrNotInNetwork(@TempDir File temporaryFolder) throws Exception {
+        jamesServer = createJamesServerWithRootProcessor(temporaryFolder, ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrNotInNetwork.class)
                 .matcherCondition("127.0.0.0/8")

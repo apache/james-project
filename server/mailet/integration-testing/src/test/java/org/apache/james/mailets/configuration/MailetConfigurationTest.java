@@ -19,32 +19,27 @@
 package org.apache.james.mailets.configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.transport.mailets.ToProcessor;
 import org.apache.james.transport.matchers.All;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 public class MailetConfigurationTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Test
     public void builderShouldThrowWhenMatcherIsNull() {
-        expectedException.expect(IllegalStateException.class);
-        MailetConfiguration.builder()
-            .mailet(ToProcessor.class)
-            .build();
+        assertThatThrownBy(() -> MailetConfiguration.builder()
+                .mailet(ToProcessor.class)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     public void builderShouldThrowWhenMailetIsNull() {
-        expectedException.expect(IllegalStateException.class);
-        MailetConfiguration.builder()
+        assertThatThrownBy(() -> MailetConfiguration.builder()
             .matcher(All.class)
-            .build();
+            .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test

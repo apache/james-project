@@ -31,6 +31,7 @@ import static org.apache.james.mock.smtp.server.ConfigurationClient.BehaviorsPar
 import static org.apache.james.util.docker.Images.MOCK_SMTP_SERVER;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.File;
 import java.net.InetAddress;
 
 import javax.mail.internet.AddressException;
@@ -56,13 +57,12 @@ import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,22 +102,20 @@ public class RemoteDeliveryErrorTest {
     private ConfigurationClient mockSMTP1Configuration;
     private ConfigurationClient mockSMTP2Configuration;
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
-    @Rule
+    @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
-    @Rule
+    @RegisterExtension
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
-    @ClassRule
+    @RegisterExtension
     public static DockerContainer mockSmtp = DockerContainer.fromName(MOCK_SMTP_SERVER)
         .withLogConsumer(outputFrame -> LOGGER.debug("MockSMTP 1: " + outputFrame.getUtf8String()));
-    @ClassRule
+    @RegisterExtension
     public static DockerContainer mockSmtp2 = DockerContainer.fromName(MOCK_SMTP_SERVER)
         .withLogConsumer(outputFrame -> LOGGER.debug("MockSMTP 2: " + outputFrame.getUtf8String()));
 
     private TemporaryJamesServer jamesServer;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws AddressException {
         FROM_ADDRESS = new MailAddress(FROM);
         RECIPIENT_ADDRESS = new MailAddress(RECIPIENT);
@@ -129,8 +127,8 @@ public class RemoteDeliveryErrorTest {
         FROM_RECIPIENT2_ENVELOPE = Mail.Envelope.ofAddresses(FROM_ADDRESS, RECIPIENT2_ADDRESS);
     }
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    public void setUp(@TempDir File temporaryFolder) throws Exception {
         inMemoryDNSService = new InMemoryDNSService()
             .registerMxRecord(DEFAULT_DOMAIN, LOCALHOST_IP)
             .registerMxRecord(ANOTHER_DOMAIN, mockSmtp.getContainerIp());
@@ -143,7 +141,7 @@ public class RemoteDeliveryErrorTest {
                 .putProcessor(CommonProcessors.error())
                 .putProcessor(directResolutionTransport())
                 .putProcessor(CommonProcessors.bounces()))
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
 
         jamesServer.getProbe(DataProbeImpl.class)
@@ -158,7 +156,7 @@ public class RemoteDeliveryErrorTest {
         assertThat(mockSMTP2Configuration.version()).isEqualTo("0.2");
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         jamesServer.shutdown();
 

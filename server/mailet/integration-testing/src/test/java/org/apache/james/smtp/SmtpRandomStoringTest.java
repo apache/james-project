@@ -25,6 +25,7 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.stream.IntStream;
@@ -55,11 +56,11 @@ import org.apache.james.utils.TestIMAPClient;
 import org.apache.mailet.Mail;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
@@ -84,18 +85,16 @@ public class SmtpRandomStoringTest {
             .mailet(RandomStoring.class)
             .build();
 
-    @Rule
+    @RegisterExtension
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private TemporaryJamesServer jamesServer;
     private ImapGuiceProbe imapProbe;
     private Collection<TestIMAPClient> connections;
 
-    @Before
-    public void setUp() throws Exception {
-        createJamesServer();
+    @BeforeEach
+    public void setUp(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder);
 
         createUsersAndMailboxes();
 
@@ -130,7 +129,7 @@ public class SmtpRandomStoringTest {
         }
     }
 
-    private void createJamesServer() throws Exception {
+    private void createJamesServer(File temporaryFolder) throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.transport()
                 .addMailet(RANDOM_STORING)
@@ -139,7 +138,7 @@ public class SmtpRandomStoringTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withMailetContainer(mailetContainer)
-            .build(temporaryFolder.newFolder());
+            .build(temporaryFolder);
         jamesServer.start();
     }
 
@@ -155,7 +154,7 @@ public class SmtpRandomStoringTest {
         }
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         connections.forEach(Throwing.consumer(TestIMAPClient::close).sneakyThrow());
         jamesServer.shutdown();
