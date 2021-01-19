@@ -70,7 +70,6 @@ class CassandraMessageMapperTest extends MessageMapperTest {
         void updateFlagsShouldNotRetryOnDeletedMessages(CassandraCluster cassandra) throws MailboxException {
             saveMessages();
 
-            cassandra.getConf().printStatements();
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
@@ -98,7 +97,6 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
             StatementRecorder statementRecorder = new StatementRecorder();
             cassandra.getConf().recordStatements(statementRecorder);
-            cassandra.getConf().printStatements();
 
             messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
 
@@ -114,7 +112,6 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
             StatementRecorder statementRecorder = new StatementRecorder();
             cassandra.getConf().recordStatements(statementRecorder);
-            cassandra.getConf().printStatements();
 
             messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
 
@@ -129,7 +126,6 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
             StatementRecorder statementRecorder = new StatementRecorder();
             cassandra.getConf().recordStatements(statementRecorder);
-            cassandra.getConf().printStatements();
 
             messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
 
@@ -144,7 +140,6 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
             StatementRecorder statementRecorder = new StatementRecorder();
             cassandra.getConf().recordStatements(statementRecorder);
-            cassandra.getConf().printStatements();
 
             messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
 
@@ -161,7 +156,6 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
             StatementRecorder statementRecorder = new StatementRecorder();
             cassandra.getConf().recordStatements(statementRecorder);
-            cassandra.getConf().printStatements();
 
             messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
 
@@ -176,7 +170,6 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
             StatementRecorder statementRecorder = new StatementRecorder();
             cassandra.getConf().recordStatements(statementRecorder);
-            cassandra.getConf().printStatements();
 
             messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.REPLACE), MessageRange.all());
 
