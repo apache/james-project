@@ -98,7 +98,6 @@ public interface MailboxManagerStressContract<T extends MailboxManager> {
                                 .setSubject("test")
                                 .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession).getId();
 
-                    System.out.println("Append message with uid=" + messageId.getUid());
                     if (uids.put(messageId.getUid(), new Object()) != null) {
                         fail.set(true);
                     }
