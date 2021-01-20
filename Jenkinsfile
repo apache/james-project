@@ -99,7 +99,9 @@ pipeline {
                 always {
                     junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: false)
                     junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
-                    archiveArtifacts artifacts: '**/surefire-reports/*.dumpstream' , fingerprint: true
+                }
+                failure {
+                    archiveArtifacts artifacts: '**/surefire-reports/*' , fingerprint: true
                 }
             }
         }
@@ -115,7 +117,9 @@ pipeline {
                 always {
                     junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: true)
                     junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
-                    archiveArtifacts artifacts: '**/surefire-reports/*.dumpstream' , fingerprint: true
+                }
+                failure {
+                    archiveArtifacts artifacts: '**/surefire-reports/*' , fingerprint: true
                 }
             }
         }
