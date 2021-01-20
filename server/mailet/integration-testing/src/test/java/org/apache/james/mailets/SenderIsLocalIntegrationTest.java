@@ -53,7 +53,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import io.restassured.specification.RequestSpecification;
 
-public class SenderIsLocalIntegrationTest {
+class SenderIsLocalIntegrationTest {
     private static final String POSTMASTER = "postmaster@" + DEFAULT_DOMAIN;
     private static final MailRepositoryUrl LOCAL_SENDER_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/local/sender/");
     private static final MailRepositoryUrl REMOTE_SENDER_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/remote/sender/");
@@ -68,7 +68,7 @@ public class SenderIsLocalIntegrationTest {
     private RequestSpecification webAdminApi;
 
     @BeforeEach
-    public void setUp(@TempDir File temporaryFolder) throws Exception {
+    void setUp(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .withMailetContainer(TemporaryJamesServer.defaultMailetContainerConfiguration()
@@ -85,12 +85,12 @@ public class SenderIsLocalIntegrationTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void shouldMatchLocalSender() throws Exception {
+    void shouldMatchLocalSender() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(RECIPIENT, RECIPIENT);
 
@@ -98,7 +98,7 @@ public class SenderIsLocalIntegrationTest {
     }
 
     @Test
-    public void shouldMatchLocalSenderAlias() throws Exception {
+    void shouldMatchLocalSenderAlias() throws Exception {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + RECIPIENT + "/sources/" + ALIAS);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -108,7 +108,7 @@ public class SenderIsLocalIntegrationTest {
     }
 
     @Test
-    public void shouldNotMatchRemoteSender() throws Exception {
+    void shouldNotMatchRemoteSender() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage("sender@domain.com", RECIPIENT);
 

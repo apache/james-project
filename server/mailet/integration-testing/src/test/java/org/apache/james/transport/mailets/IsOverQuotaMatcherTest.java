@@ -52,7 +52,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import io.restassured.specification.RequestSpecification;
 
-public class IsOverQuotaMatcherTest {
+class IsOverQuotaMatcherTest {
 
     private static final String OTHER_DOMAIN = "other.com";
     private static final String FROM = "fromuser@" + OTHER_DOMAIN;
@@ -74,7 +74,7 @@ public class IsOverQuotaMatcherTest {
     private RequestSpecification webAdminApi;
 
     @BeforeEach
-    public void setup(@TempDir File temporaryFolder) throws Exception {
+    void setup(@TempDir File temporaryFolder) throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.defaultMailetContainerConfiguration()
                 .putProcessor(ProcessorConfiguration.transport()
                         .addMailet(MailetConfiguration.builder()
@@ -102,12 +102,12 @@ public class IsOverQuotaMatcherTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void aBounceMessageShouldBeSentToTheSenderWhenRecipientAsReachedHisSizeQuota() throws Exception {
+    void aBounceMessageShouldBeSentToTheSenderWhenRecipientAsReachedHisSizeQuota() throws Exception {
         webAdminApi.given()
             .body(SMALL_SIZE.asLong())
             .put("/quota/users/" + RECIPIENT + "/size");
@@ -125,7 +125,7 @@ public class IsOverQuotaMatcherTest {
     }
 
     @Test
-    public void aBounceMessageShouldBeSentToTheSenderWhenRecipientAsReachedHisDomainSizeQuota() throws Exception {
+    void aBounceMessageShouldBeSentToTheSenderWhenRecipientAsReachedHisDomainSizeQuota() throws Exception {
         webAdminApi.given()
             .body(SMALL_SIZE.asLong())
             .put("/quota/domains/" + DEFAULT_DOMAIN + "/size");
@@ -143,7 +143,7 @@ public class IsOverQuotaMatcherTest {
     }
 
     @Test
-    public void aBounceMessageShouldBeSentToTheRecipientWhenRecipientSizeQuotaIsNotExceeded() throws Exception {
+    void aBounceMessageShouldBeSentToTheRecipientWhenRecipientSizeQuotaIsNotExceeded() throws Exception {
         webAdminApi.given()
             .body(LARGE_SIZE.asLong())
             .put("/quota/users/" + RECIPIENT + "/size");
@@ -158,7 +158,7 @@ public class IsOverQuotaMatcherTest {
     }
 
     @Test
-    public void aBounceMessageShouldBeSentToTheSenderWhenRecipientAsReachedHisCountQuota() throws Exception {
+    void aBounceMessageShouldBeSentToTheSenderWhenRecipientAsReachedHisCountQuota() throws Exception {
         webAdminApi.given()
             .body(SMALL_COUNT.asLong())
             .put("/quota/users/" + RECIPIENT + "/count");
@@ -176,7 +176,7 @@ public class IsOverQuotaMatcherTest {
     }
 
     @Test
-    public void aBounceMessageShouldBeSentToTheSenderWhenRecipientAsReachedHisDomainCountQuota() throws Exception {
+    void aBounceMessageShouldBeSentToTheSenderWhenRecipientAsReachedHisDomainCountQuota() throws Exception {
         webAdminApi.given()
             .body(SMALL_COUNT.asLong())
             .put("/quota/domains/" + DEFAULT_DOMAIN + "/count");
@@ -194,7 +194,7 @@ public class IsOverQuotaMatcherTest {
     }
 
     @Test
-    public void aBounceMessageShouldBeSentToTheRecipientWhenRecipientCountQuotaIsNotExceeded() throws Exception {
+    void aBounceMessageShouldBeSentToTheRecipientWhenRecipientCountQuotaIsNotExceeded() throws Exception {
         webAdminApi.given()
             .body(LARGE_COUNT.asLong())
             .put("/quota/users/" + RECIPIENT + "/count");

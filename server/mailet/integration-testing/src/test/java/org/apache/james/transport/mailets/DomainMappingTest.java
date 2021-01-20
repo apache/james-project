@@ -55,7 +55,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import io.restassured.specification.RequestSpecification;
 
-public class DomainMappingTest {
+class DomainMappingTest {
     private static final String DOMAIN1 = "domain1.com";
     private static final String DOMAIN2 = "domain2.com";
 
@@ -77,7 +77,7 @@ public class DomainMappingTest {
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     @BeforeEach
-    public void setup(@TempDir File temporaryFolder) throws Exception {
+    void setup(@TempDir File temporaryFolder) throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(CommonProcessors.rrtErrorEnabledTransport())
             .putProcessor(CommonProcessors.rrtErrorProcessor());
@@ -105,12 +105,12 @@ public class DomainMappingTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void messageShouldRedirectToUserWhenBelongingToGroup() throws Exception {
+    void messageShouldRedirectToUserWhenBelongingToGroup() throws Exception {
         webAdminApi.body(DOMAIN1).put("/domainMappings/" + DOMAIN2);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -128,7 +128,7 @@ public class DomainMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectToUserOfTheDestinationDomainWhenSentToTheAliasDomain() throws Exception {
+    void messageShouldRedirectToUserOfTheDestinationDomainWhenSentToTheAliasDomain() throws Exception {
         webAdminApi.put("/domains/" + DOMAIN1 + "/aliases/" + DOMAIN2);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -146,7 +146,7 @@ public class DomainMappingTest {
     }
 
     @Test
-    public void mailShouldGoToRRTErrorMailRepositoryUponDomainLoop() throws Exception {
+    void mailShouldGoToRRTErrorMailRepositoryUponDomainLoop() throws Exception {
         webAdminApi.put("/domains/" + DOMAIN1 + "/aliases/" + DOMAIN2);
         webAdminApi.put("/domains/" + DOMAIN2 + "/aliases/" + DOMAIN1);
 
@@ -163,7 +163,7 @@ public class DomainMappingTest {
     }
 
     @Test
-    public void mailShouldGoToRRTErrorMailRepositoryUponLoopCombiningDomainAndAlias() throws Exception {
+    void mailShouldGoToRRTErrorMailRepositoryUponLoopCombiningDomainAndAlias() throws Exception {
         jamesServer.getProbe(DataProbeImpl.class).addUser(BOB_DOMAIN2, PASSWORD);
 
         webAdminApi.put("/address/aliases/" + BOB_DOMAIN2 + "/sources/" + BOB_DOMAIN1);
@@ -182,7 +182,7 @@ public class DomainMappingTest {
     }
 
     @Test
-    public void domainAliasShouldBeIgnoredWhenUserAlias() throws Exception {
+    void domainAliasShouldBeIgnoredWhenUserAlias() throws Exception {
         jamesServer.getProbe(DataProbeImpl.class).addUser(BOB_DOMAIN1, PASSWORD);
 
         webAdminApi.put("/address/aliases/" + BOB_DOMAIN1 + "/sources/" + USER_DOMAIN2);
@@ -203,7 +203,7 @@ public class DomainMappingTest {
     }
 
     @Test
-    public void domainAliasShouldBeChainedIfApplicableAfterUserAliasRewrite() throws Exception {
+    void domainAliasShouldBeChainedIfApplicableAfterUserAliasRewrite() throws Exception {
         jamesServer.getProbe(DataProbeImpl.class).addUser(BOB_DOMAIN1, PASSWORD);
 
         webAdminApi.put("/address/aliases/" + BOB_DOMAIN2 + "/sources/" + USER_DOMAIN2);

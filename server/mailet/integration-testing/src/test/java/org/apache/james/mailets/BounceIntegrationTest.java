@@ -58,7 +58,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class BounceIntegrationTest {
+class BounceIntegrationTest {
     public static final String POSTMASTER = "postmaster@" + DEFAULT_DOMAIN;
     public static final String POSTMASTER_PASSWORD = "postmasterSecret";
     public static final String SENDER = "bounce.receiver@" + DEFAULT_DOMAIN;
@@ -74,12 +74,12 @@ public class BounceIntegrationTest {
     private TemporaryJamesServer jamesServer;
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void dsnBounceMailetShouldDeliverBounce(@TempDir File temporaryFolder) throws Exception {
+    void dsnBounceMailetShouldDeliverBounce(@TempDir File temporaryFolder) throws Exception {
         setup(temporaryFolder, DSNBounce.class);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -92,7 +92,7 @@ public class BounceIntegrationTest {
     }
 
     @Test
-    public void dsnBounceMailetShouldDeliverBounceToTheMailFromAddress(@TempDir File temporaryFolder) throws Exception {
+    void dsnBounceMailetShouldDeliverBounceToTheMailFromAddress(@TempDir File temporaryFolder) throws Exception {
         setup(temporaryFolder, DSNBounce.class);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -111,7 +111,7 @@ public class BounceIntegrationTest {
     }
 
     @Test
-    public void dsnBounceMailetBouncedMailShouldBeAdressedToTheSenderInEnvelopeAndHeader(@TempDir File temporaryFolder) throws Exception {
+    void dsnBounceMailetBouncedMailShouldBeAdressedToTheSenderInEnvelopeAndHeader(@TempDir File temporaryFolder) throws Exception {
         setup(temporaryFolder, DSNBounce.class);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -157,7 +157,7 @@ public class BounceIntegrationTest {
     }
 
     @Test
-    public void bounceMailetShouldDeliverBounce(@TempDir File temporaryFolder) throws Exception {
+    void bounceMailetShouldDeliverBounce(@TempDir File temporaryFolder) throws Exception {
         setup(temporaryFolder, Bounce.class);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -170,7 +170,7 @@ public class BounceIntegrationTest {
     }
 
     @Test
-    public void forwardMailetShouldDeliverBounce(@TempDir File temporaryFolder) throws Exception {
+    void forwardMailetShouldDeliverBounce(@TempDir File temporaryFolder) throws Exception {
         setup(temporaryFolder, Forward.class, Pair.of("forwardTo", SENDER));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -183,7 +183,7 @@ public class BounceIntegrationTest {
     }
 
     @Test
-    public void redirectMailetShouldDeliverBounce(@TempDir File temporaryFolder) throws Exception {
+    void redirectMailetShouldDeliverBounce(@TempDir File temporaryFolder) throws Exception {
         setup(temporaryFolder, Redirect.class, Pair.of("recipients", SENDER));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -196,7 +196,7 @@ public class BounceIntegrationTest {
     }
 
     @Test
-    public void resendMailetShouldDeliverBounce(@TempDir File temporaryFolder) throws Exception {
+    void resendMailetShouldDeliverBounce(@TempDir File temporaryFolder) throws Exception {
         setup(temporaryFolder, Resend.class, Pair.of("recipients", SENDER));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -209,7 +209,7 @@ public class BounceIntegrationTest {
     }
 
     @Test
-    public void notifySenderMailetShouldDeliverBounce(@TempDir File temporaryFolder) throws Exception {
+    void notifySenderMailetShouldDeliverBounce(@TempDir File temporaryFolder) throws Exception {
         setup(temporaryFolder, NotifySender.class);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -222,7 +222,7 @@ public class BounceIntegrationTest {
     }
 
     @Test
-    public void notifyPostmasterMailetShouldDeliverBounce(@TempDir File temporaryFolder) throws Exception {
+    void notifyPostmasterMailetShouldDeliverBounce(@TempDir File temporaryFolder) throws Exception {
         setup(temporaryFolder, NotifyPostmaster.class);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())

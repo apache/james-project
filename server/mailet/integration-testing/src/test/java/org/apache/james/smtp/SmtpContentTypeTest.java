@@ -54,7 +54,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class SmtpContentTypeTest {
+class SmtpContentTypeTest {
     private static final String FROM = "fromuser@" + DEFAULT_DOMAIN;
     private static final String TO = "to@any.com";
     public static final String SUBJECT = "test";
@@ -90,7 +90,7 @@ public class SmtpContentTypeTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         fakeSmtp.clean();
         if (jamesServer != null) {
             jamesServer.shutdown();
@@ -98,7 +98,7 @@ public class SmtpContentTypeTest {
     }
 
     @Test
-    public void userShouldBeAbleToReceiveMessagesWithGoodContentType(@TempDir File temporaryFolder) throws Exception {
+    void userShouldBeAbleToReceiveMessagesWithGoodContentType(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()
             .withAutorizedAddresses("172.0.0.0/8"));
@@ -116,7 +116,7 @@ public class SmtpContentTypeTest {
     }
 
     @Test
-    public void userShouldBeAbleToReceiveMessagesWithBadContentType(@TempDir File temporaryFolder) throws Exception {
+    void userShouldBeAbleToReceiveMessagesWithBadContentType(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()
             .withAutorizedAddresses("172.0.0.0/8"));

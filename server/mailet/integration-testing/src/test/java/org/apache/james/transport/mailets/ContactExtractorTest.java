@@ -50,7 +50,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class ContactExtractorTest {
+class ContactExtractorTest {
     public static final String SENDER = "sender@" + DEFAULT_DOMAIN;
     public static final String TO = "to@" + DEFAULT_DOMAIN;
     public static final String TO2 = "to2@" + DEFAULT_DOMAIN;
@@ -71,7 +71,7 @@ public class ContactExtractorTest {
     private TemporaryJamesServer jamesServer;
 
     @BeforeEach
-    public void setup(@TempDir File temporaryFolder) throws Exception {
+    void setup(@TempDir File temporaryFolder) throws Exception {
         String attribute = "ExtractedContacts";
         MailetContainer.Builder mailets = TemporaryJamesServer.defaultMailetContainerConfiguration()
             .postmaster(SENDER)
@@ -108,12 +108,12 @@ public class ContactExtractorTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void recipientsShouldBePublishedToAmqpWhenSendingEmail() throws Exception {
+    void recipientsShouldBePublishedToAmqpWhenSendingEmail() throws Exception {
         MimeMessageBuilder message = MimeMessageBuilder.mimeMessageBuilder()
             .setSender(SENDER)
             .addToRecipient(TO, "John To2 <" + TO2 + ">")

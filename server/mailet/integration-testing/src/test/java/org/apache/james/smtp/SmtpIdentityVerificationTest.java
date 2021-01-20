@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class SmtpIdentityVerificationTest {
+class SmtpIdentityVerificationTest {
     private static final String ATTACKER_PASSWORD = "secret";
 
     private static final String ATTACKER = "attacker@" + DEFAULT_DOMAIN;
@@ -63,14 +63,14 @@ public class SmtpIdentityVerificationTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         if (jamesServer != null) {
             jamesServer.shutdown();
         }
     }
 
     @Test
-    public void smtpShouldAcceptMessageWhenIdentityIsMatching(@TempDir File temporaryFolder) throws Exception {
+    void smtpShouldAcceptMessageWhenIdentityIsMatching(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()
             .verifyIdentity());
@@ -80,7 +80,7 @@ public class SmtpIdentityVerificationTest {
     }
 
     @Test
-    public void smtpShouldAcceptMessageWhenIdentityIsNotMatchingButNotChecked(@TempDir File temporaryFolder) throws Exception {
+    void smtpShouldAcceptMessageWhenIdentityIsNotMatchingButNotChecked(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()
             .doNotVerifyIdentity());
@@ -91,7 +91,7 @@ public class SmtpIdentityVerificationTest {
     }
 
     @Test
-    public void smtpShouldRejectMessageWhenIdentityIsNotMatching(@TempDir File temporaryFolder) throws Exception {
+    void smtpShouldRejectMessageWhenIdentityIsNotMatching(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()
             .verifyIdentity());
@@ -102,5 +102,4 @@ public class SmtpIdentityVerificationTest {
                 .sendMessage(USER, USER))
             .isEqualTo(new SMTPSendingException(SmtpSendingStep.RCPT, "503 5.7.1 Incorrect Authentication for Specified Email Address\n"));
     }
-
 }

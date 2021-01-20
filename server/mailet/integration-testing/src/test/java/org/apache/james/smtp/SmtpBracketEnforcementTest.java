@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class SmtpBracketEnforcementTest {
+class SmtpBracketEnforcementTest {
     private static final String USER = "user@" + DEFAULT_DOMAIN;
 
     @RegisterExtension
@@ -59,14 +59,14 @@ public class SmtpBracketEnforcementTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         if (jamesServer != null) {
             jamesServer.shutdown();
         }
     }
 
     @Test
-    public void recipientWithBracketsShouldBeAcceptedWhenNoBracketRequired(@TempDir File temporaryFolder) throws Exception {
+    void recipientWithBracketsShouldBeAcceptedWhenNoBracketRequired(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .doNotRequireBracketEnforcement());
 
@@ -76,7 +76,7 @@ public class SmtpBracketEnforcementTest {
     }
 
     @Test
-    public void recipientWithNoBracketsShouldBeAcceptedWhenNoBracketRequired(@TempDir File temporaryFolder) throws Exception {
+    void recipientWithNoBracketsShouldBeAcceptedWhenNoBracketRequired(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .doNotRequireBracketEnforcement());
 
@@ -86,7 +86,7 @@ public class SmtpBracketEnforcementTest {
     }
 
     @Test
-    public void recipientWithBracketsShouldBeAcceptedWhenBracketRequired(@TempDir File temporaryFolder) throws Exception {
+    void recipientWithBracketsShouldBeAcceptedWhenBracketRequired(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireBracketEnforcement());
 
@@ -96,7 +96,7 @@ public class SmtpBracketEnforcementTest {
     }
 
     @Test
-    public void recipientWithNoBracketsShouldBeRejectedWhenBracketRequired(@TempDir File temporaryFolder) throws Exception {
+    void recipientWithNoBracketsShouldBeRejectedWhenBracketRequired(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireBracketEnforcement());
 

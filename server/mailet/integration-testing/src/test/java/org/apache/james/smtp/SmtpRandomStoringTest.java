@@ -66,7 +66,7 @@ import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
-public class SmtpRandomStoringTest {
+class SmtpRandomStoringTest {
     private static final String FROM = "from@" + DEFAULT_DOMAIN;
     private static final String TO = "to@any.com";
     private static final Long USERS_NUMBERS = 10L;
@@ -93,7 +93,7 @@ public class SmtpRandomStoringTest {
     private Collection<TestIMAPClient> connections;
 
     @BeforeEach
-    public void setUp(@TempDir File temporaryFolder) throws Exception {
+    void setUp(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder);
 
         createUsersAndMailboxes();
@@ -155,13 +155,13 @@ public class SmtpRandomStoringTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         connections.forEach(Throwing.consumer(TestIMAPClient::close).sneakyThrow());
         jamesServer.shutdown();
     }
 
     @Test
-    public void oneHundredMailsShouldHaveBeenStoredBetweenFourAndEightTimes() {
+    void oneHundredMailsShouldHaveBeenStoredBetweenFourAndEightTimes() {
         connections = USERS
             .stream()
             .map(this::createIMAPConnection)
@@ -172,7 +172,7 @@ public class SmtpRandomStoringTest {
     }
 
     @Test
-    public void messagesShouldBeRandomlyAssignedToEveryMailboxesOfEveryUsers() {
+    void messagesShouldBeRandomlyAssignedToEveryMailboxesOfEveryUsers() {
         connections = USERS
             .stream()
             .map(this::createIMAPConnection)

@@ -47,7 +47,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class SizeGreaterThanIntegrationTest {
+class SizeGreaterThanIntegrationTest {
     public static final String POSTMASTER = "postmaster@" + DEFAULT_DOMAIN;
     public static final String SENDER = "sender@" + DEFAULT_DOMAIN;
 
@@ -59,7 +59,7 @@ public class SizeGreaterThanIntegrationTest {
     private TemporaryJamesServer jamesServer;
 
     @BeforeEach
-    public void setup(@TempDir File temporaryFolder) throws Exception {
+    void setup(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withMailetContainer(

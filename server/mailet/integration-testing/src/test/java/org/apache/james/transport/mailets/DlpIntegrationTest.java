@@ -58,7 +58,7 @@ import com.google.inject.util.Modules;
 
 import io.restassured.specification.RequestSpecification;
 
-public class DlpIntegrationTest {
+class DlpIntegrationTest {
     public static final String REPOSITORY_PREFIX = "memory://var/mail/dlp/quarantine/";
 
     @RegisterExtension
@@ -93,12 +93,12 @@ public class DlpIntegrationTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void dlpShouldStoreMatchingEmails(@TempDir File temporaryFolder) throws Exception {
+    void dlpShouldStoreMatchingEmails(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, MailetConfiguration.builder()
             .matcher(Dlp.class)
             .mailet(ToSenderDomainRepository.class)
@@ -130,7 +130,7 @@ public class DlpIntegrationTest {
     }
 
     @Test
-    public void dlpShouldNotCreateRepositoryWhenNotAllowed(@TempDir File temporaryFolder) throws Exception {
+    void dlpShouldNotCreateRepositoryWhenNotAllowed(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, MailetConfiguration.builder()
             .matcher(Dlp.class)
             .mailet(ToSenderDomainRepository.class)
@@ -168,7 +168,7 @@ public class DlpIntegrationTest {
     }
 
     @Test
-    public void dlpShouldCreateRepositoryWhenAllowed(@TempDir File temporaryFolder) throws Exception {
+    void dlpShouldCreateRepositoryWhenAllowed(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, MailetConfiguration.builder()
             .matcher(Dlp.class)
             .mailet(ToSenderDomainRepository.class)
@@ -202,7 +202,7 @@ public class DlpIntegrationTest {
     }
 
     @Test
-    public void dlpShouldStoreMailWhenNotAllowedButRepositoryExists(@TempDir File temporaryFolder) throws Exception {
+    void dlpShouldStoreMailWhenNotAllowedButRepositoryExists(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, MailetConfiguration.builder()
             .matcher(Dlp.class)
             .mailet(ToSenderDomainRepository.class)
@@ -241,7 +241,7 @@ public class DlpIntegrationTest {
     }
 
     @Test
-    public void dlpShouldBeAbleToReadMailContentWithAttachments(@TempDir File temporaryFolder) throws Exception {
+    void dlpShouldBeAbleToReadMailContentWithAttachments(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, MailetConfiguration.builder()
             .matcher(Dlp.class)
             .mailet(ToSenderDomainRepository.class)

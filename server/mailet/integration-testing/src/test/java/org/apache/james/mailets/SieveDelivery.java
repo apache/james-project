@@ -43,7 +43,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class SieveDelivery {
+class SieveDelivery {
     private static final String TARGETED_MAILBOX = "INBOX.any";
 
     @RegisterExtension
@@ -54,7 +54,7 @@ public class SieveDelivery {
     private TemporaryJamesServer jamesServer;
 
     @BeforeEach
-    public void setup(@TempDir File temporaryFolder) throws Exception {
+    void setup(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder().build(temporaryFolder);
         jamesServer.start();
 
@@ -67,12 +67,12 @@ public class SieveDelivery {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void simpleMailShouldBeSent() throws Exception {
+    void simpleMailShouldBeSent() throws Exception {
         jamesServer.getProbe(SieveProbeImpl.class).addActiveSieveScript(RECIPIENT, "myscript.sieve",
             "require \"fileinto\";\n" +
             "\n" +

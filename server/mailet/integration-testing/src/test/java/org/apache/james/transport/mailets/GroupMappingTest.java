@@ -57,7 +57,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import io.restassured.specification.RequestSpecification;
 
-public class GroupMappingTest {
+class GroupMappingTest {
     private static final String DOMAIN1 = "domain1.com";
     private static final String DOMAIN2 = "domain2.com";
 
@@ -81,7 +81,7 @@ public class GroupMappingTest {
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     @BeforeEach
-    public void setup(@TempDir File temporaryFolder) throws Exception {
+    void setup(@TempDir File temporaryFolder) throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(CommonProcessors.rrtErrorEnabledTransport())
             .putProcessor(CommonProcessors.rrtErrorProcessor());
@@ -112,12 +112,12 @@ public class GroupMappingTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void messageShouldRedirectToUserWhenBelongingToGroup() throws Exception {
+    void messageShouldRedirectToUserWhenBelongingToGroup() throws Exception {
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -135,7 +135,7 @@ public class GroupMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectToUserDoesNotHaveSameDomainWhenBelongingToGroup() throws Exception {
+    void messageShouldRedirectToUserDoesNotHaveSameDomainWhenBelongingToGroup() throws Exception {
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN2);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -153,7 +153,7 @@ public class GroupMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectToAllUsersBelongingToGroup() throws Exception {
+    void messageShouldRedirectToAllUsersBelongingToGroup() throws Exception {
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
 
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN2);
@@ -176,7 +176,7 @@ public class GroupMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectWhenGroupBelongingToAnotherGroup() throws Exception {
+    void messageShouldRedirectWhenGroupBelongingToAnotherGroup() throws Exception {
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + USER_DOMAIN2);
 
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
@@ -196,7 +196,7 @@ public class GroupMappingTest {
     }
 
     @Test
-    public void messageShouldNotBeDuplicatedWhenUserBelongingToTwoGroups() throws Exception {
+    void messageShouldNotBeDuplicatedWhenUserBelongingToTwoGroups() throws Exception {
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
 
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + USER_DOMAIN1);
@@ -217,7 +217,7 @@ public class GroupMappingTest {
     }
 
     @Test
-    public void messageShouldNotBeDuplicatedWhenRecipientIsAlsoPartOfGroup() throws Exception {
+    void messageShouldNotBeDuplicatedWhenRecipientIsAlsoPartOfGroup() throws Exception {
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -234,7 +234,7 @@ public class GroupMappingTest {
     }
 
     @Test
-    public void groupMappingShouldSupportTreeStructure() throws Exception {
+    void groupMappingShouldSupportTreeStructure() throws Exception {
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
 
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + USER_DOMAIN2);
@@ -260,7 +260,7 @@ public class GroupMappingTest {
     }
 
     @Test
-    public void messageShouldBeStoredInRepositoryWhenGroupLoopMapping() throws Exception {
+    void messageShouldBeStoredInRepositoryWhenGroupLoopMapping() throws Exception {
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
 
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + USER_DOMAIN2);
@@ -282,7 +282,7 @@ public class GroupMappingTest {
     }
 
     @Test
-    public void messageShouldBeWellDeliveredToRecipientNotPartOfTheLoop() throws Exception {
+    void messageShouldBeWellDeliveredToRecipientNotPartOfTheLoop() throws Exception {
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
 
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + GROUP_ON_DOMAIN1);
@@ -301,7 +301,7 @@ public class GroupMappingTest {
     }
 
     @Test
-    public void senderShouldReceiveABounceUponRRTFailure() throws Exception {
+    void senderShouldReceiveABounceUponRRTFailure() throws Exception {
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
         jamesServer.getProbe(DataProbeImpl.class).addDomainAliasMapping(DOMAIN2, DOMAIN1);
 
@@ -319,7 +319,7 @@ public class GroupMappingTest {
     }
 
     @Test
-    public void senderShouldNotReceiveABounceUponRRTFailureWhenPartOfTheLoop() throws Exception {
+    void senderShouldNotReceiveABounceUponRRTFailureWhenPartOfTheLoop() throws Exception {
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
         jamesServer.getProbe(DataProbeImpl.class).addDomainAliasMapping(DOMAIN2, DOMAIN1);
 
@@ -337,7 +337,7 @@ public class GroupMappingTest {
     }
 
     @Test
-    public void avoidInfiniteBouncingLoopWhenSenderIsPartOfRRTLoop() throws Exception {
+    void avoidInfiniteBouncingLoopWhenSenderIsPartOfRRTLoop() throws Exception {
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
         jamesServer.getProbe(DataProbeImpl.class).addDomainAliasMapping(DOMAIN2, DOMAIN1);
 
@@ -354,7 +354,7 @@ public class GroupMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectToUserWhenDomainMapping() throws Exception {
+    void messageShouldRedirectToUserWhenDomainMapping() throws Exception {
         dataProbe.addDomainAliasMapping(DOMAIN1, DOMAIN2);
 
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
@@ -373,7 +373,7 @@ public class GroupMappingTest {
     }
 
     @Test
-    public void messageShouldNotSendToUserBelongingToGroupWhenDomainMapping() throws Exception {
+    void messageShouldNotSendToUserBelongingToGroupWhenDomainMapping() throws Exception {
         dataProbe.addDomainAliasMapping(DOMAIN1, DOMAIN2);
 
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
@@ -392,7 +392,7 @@ public class GroupMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectToGroupWhenDomainMapping() throws Exception {
+    void messageShouldRedirectToGroupWhenDomainMapping() throws Exception {
         dataProbe.addDomainAliasMapping(DOMAIN1, DOMAIN2);
 
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + USER_DOMAIN2);
@@ -411,7 +411,7 @@ public class GroupMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectToGroupContainingSlash() throws Exception {
+    void messageShouldRedirectToGroupContainingSlash() throws Exception {
         String groupWithSlash = "a/a@" + DOMAIN1;
         String groupWithEncodedSlash = "a%2Fa@" + DOMAIN1;
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + groupWithEncodedSlash + "/" + USER_DOMAIN1);
@@ -430,7 +430,7 @@ public class GroupMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectToUserContainingSlash() throws Exception {
+    void messageShouldRedirectToUserContainingSlash() throws Exception {
         String userWithSlash = "a/a@" + DOMAIN1;
         dataProbe.addUser(userWithSlash, PASSWORD);
         String userWithEncodedSlash = "a%2Fa@" + DOMAIN1;
@@ -450,7 +450,7 @@ public class GroupMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectToUserWhenEncodingAt() throws Exception {
+    void messageShouldRedirectToUserWhenEncodingAt() throws Exception {
         String userWithEncodedAt = "user%40" + DOMAIN1;
         String groupWithEncodedAt = "group%40" + DOMAIN1;
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + groupWithEncodedAt + "/" + userWithEncodedAt);

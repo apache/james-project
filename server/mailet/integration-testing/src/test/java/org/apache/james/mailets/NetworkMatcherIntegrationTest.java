@@ -49,7 +49,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class NetworkMatcherIntegrationTest {
+class NetworkMatcherIntegrationTest {
     private static final String FROM = "fromuser@" + DEFAULT_DOMAIN;
     private static final MailRepositoryUrl DROPPED_MAILS = MailRepositoryUrl.from("memory://var/mail/dropped-mails/");
 
@@ -83,12 +83,12 @@ public class NetworkMatcherIntegrationTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void mailsFromAuthorizedNetworksShouldBeDeliveredWithRemoteAddrInNetwork(@TempDir File temporaryFolder) throws Exception {
+    void mailsFromAuthorizedNetworksShouldBeDeliveredWithRemoteAddrInNetwork(@TempDir File temporaryFolder) throws Exception {
         jamesServer = createJamesServerWithRootProcessor(temporaryFolder, ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrInNetwork.class)
@@ -108,7 +108,7 @@ public class NetworkMatcherIntegrationTest {
     }
 
     @Test
-    public void mailsFromAuthorizedNetworksShouldBeDeliveredWithRemoteAddrNotInNetwork(@TempDir File temporaryFolder) throws Exception {
+    void mailsFromAuthorizedNetworksShouldBeDeliveredWithRemoteAddrNotInNetwork(@TempDir File temporaryFolder) throws Exception {
         jamesServer = createJamesServerWithRootProcessor(temporaryFolder, ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrNotInNetwork.class)
@@ -128,7 +128,7 @@ public class NetworkMatcherIntegrationTest {
     }
 
     @Test
-    public void remoteAddrInNetworkShouldSupportLargerMask(@TempDir File temporaryFolder) throws Exception {
+    void remoteAddrInNetworkShouldSupportLargerMask(@TempDir File temporaryFolder) throws Exception {
         jamesServer = createJamesServerWithRootProcessor(temporaryFolder, ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrInNetwork.class)
@@ -148,7 +148,7 @@ public class NetworkMatcherIntegrationTest {
     }
 
     @Test
-    public void remoteAddrInNetworkShouldSupportRangesDefinedByAMiddleIp(@TempDir File temporaryFolder) throws Exception {
+    void remoteAddrInNetworkShouldSupportRangesDefinedByAMiddleIp(@TempDir File temporaryFolder) throws Exception {
         jamesServer = createJamesServerWithRootProcessor(temporaryFolder, ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrInNetwork.class)
@@ -168,7 +168,7 @@ public class NetworkMatcherIntegrationTest {
     }
 
     @Test
-    public void remoteAddrInNetworkShouldSupportRangesDefinedByEndingIp(@TempDir File temporaryFolder) throws Exception {
+    void remoteAddrInNetworkShouldSupportRangesDefinedByEndingIp(@TempDir File temporaryFolder) throws Exception {
         jamesServer = createJamesServerWithRootProcessor(temporaryFolder, ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrInNetwork.class)
@@ -188,7 +188,7 @@ public class NetworkMatcherIntegrationTest {
     }
 
     @Test
-    public void remoteAddrInNetworkShouldSupportRangesWithNonEightMultipleSubMasks(@TempDir File temporaryFolder) throws Exception {
+    void remoteAddrInNetworkShouldSupportRangesWithNonEightMultipleSubMasks(@TempDir File temporaryFolder) throws Exception {
         jamesServer = createJamesServerWithRootProcessor(temporaryFolder, ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrInNetwork.class)
@@ -208,7 +208,7 @@ public class NetworkMatcherIntegrationTest {
     }
 
     @Test
-    public void mailsFromNonAuthorizedNetworksShouldNotBeDeliveredWithRemoteAddrInNetwork(@TempDir File temporaryFolder) throws Exception {
+    void mailsFromNonAuthorizedNetworksShouldNotBeDeliveredWithRemoteAddrInNetwork(@TempDir File temporaryFolder) throws Exception {
         jamesServer = createJamesServerWithRootProcessor(temporaryFolder, ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrInNetwork.class)
@@ -232,7 +232,7 @@ public class NetworkMatcherIntegrationTest {
     }
 
     @Test
-    public void mailsFromNonAuthorizedNetworksShouldNotBeDeliveredWithRemoteAddrNotInNetwork(@TempDir File temporaryFolder) throws Exception {
+    void mailsFromNonAuthorizedNetworksShouldNotBeDeliveredWithRemoteAddrNotInNetwork(@TempDir File temporaryFolder) throws Exception {
         jamesServer = createJamesServerWithRootProcessor(temporaryFolder, ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(RemoteAddrNotInNetwork.class)

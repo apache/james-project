@@ -80,14 +80,14 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
     private DataProbe dataProbe;
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         if (jamesServer != null) {
             jamesServer.shutdown();
         }
     }
 
     @Test
-    public void directResolutionShouldBeWellPerformed(@TempDir File temporaryFolder) throws Exception {
+    void directResolutionShouldBeWellPerformed(@TempDir File temporaryFolder) throws Exception {
         InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
             .registerMxRecord(JAMES_ANOTHER_DOMAIN, fakeSmtp.getContainer().getContainerIp());
 
@@ -112,7 +112,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void directResolutionShouldFailoverOnSecondMxWhenFirstMxFailed(@TempDir File temporaryFolder) throws Exception {
+    void directResolutionShouldFailoverOnSecondMxWhenFirstMxFailed(@TempDir File temporaryFolder) throws Exception {
         InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
             .registerRecord(JAMES_ANOTHER_DOMAIN, ADDRESS_EMPTY_LIST, JAMES_ANOTHER_MX_DOMAINS, RECORD_EMPTY_LIST)
             .registerMxRecord(JAMES_ANOTHER_MX_DOMAIN_1, fakeSmtpOnPort26.getContainer().getContainerIp())
@@ -139,7 +139,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void directResolutionShouldBounceUponUnreachableMxRecords(@TempDir File temporaryFolder) throws Exception {
+    void directResolutionShouldBounceUponUnreachableMxRecords(@TempDir File temporaryFolder) throws Exception {
         InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
             .registerRecord(JAMES_ANOTHER_DOMAIN, ADDRESS_EMPTY_LIST, ImmutableList.of("unknown"), RECORD_EMPTY_LIST);
 
@@ -166,7 +166,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void directResolutionShouldBounceWhenNoMxRecord(@TempDir File temporaryFolder) throws Exception {
+    void directResolutionShouldBounceWhenNoMxRecord(@TempDir File temporaryFolder) throws Exception {
         InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
             .registerRecord(JAMES_ANOTHER_DOMAIN, ADDRESS_EMPTY_LIST, RECORD_EMPTY_LIST, RECORD_EMPTY_LIST);
 
@@ -194,7 +194,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
 
     @Disabled("JAMES-2913 PerRecipientHeaders are not handled by RemoteDelivery")
     @Test
-    public void remoteDeliveryShouldAddPerRecipientHeaders(@TempDir File temporaryFolder) throws Exception {
+    void remoteDeliveryShouldAddPerRecipientHeaders(@TempDir File temporaryFolder) throws Exception {
         InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
             .registerMxRecord(JAMES_ANOTHER_DOMAIN, fakeSmtp.getContainer().getContainerIp());
 

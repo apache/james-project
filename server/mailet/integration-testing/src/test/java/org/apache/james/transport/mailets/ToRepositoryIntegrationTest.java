@@ -53,7 +53,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import io.restassured.specification.RequestSpecification;
 
-public class ToRepositoryIntegrationTest {
+class ToRepositoryIntegrationTest {
     private static final String RECIPIENT = "touser@" + DEFAULT_DOMAIN;
     public static final MailRepositoryUrl CUSTOM_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/custom/");
 
@@ -67,7 +67,7 @@ public class ToRepositoryIntegrationTest {
     private RequestSpecification webAdminAPI;
 
     @BeforeEach
-    public void setup(@TempDir File temporaryFolder) throws Exception {
+    void setup(@TempDir File temporaryFolder) throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.root()
                 .addMailet(MailetConfiguration.builder()
@@ -92,12 +92,12 @@ public class ToRepositoryIntegrationTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void incomingShouldBeStoredInProcessorByDefault() throws Exception {
+    void incomingShouldBeStoredInProcessorByDefault() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(RECIPIENT, RECIPIENT)
             .sendMessage(RECIPIENT, RECIPIENT);
@@ -106,7 +106,7 @@ public class ToRepositoryIntegrationTest {
     }
 
     @Test
-    public void userShouldBeAbleToAccessReprocessedMails() throws Exception {
+    void userShouldBeAbleToAccessReprocessedMails() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(RECIPIENT, RECIPIENT)
             .sendMessage(RECIPIENT, RECIPIENT);
@@ -136,7 +136,7 @@ public class ToRepositoryIntegrationTest {
     }
 
     @Test
-    public void userShouldBeAbleToAccessReprocessedMail() throws Exception {
+    void userShouldBeAbleToAccessReprocessedMail() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(RECIPIENT, RECIPIENT)
             .sendMessage(RECIPIENT, RECIPIENT);

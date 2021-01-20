@@ -42,7 +42,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class AddDeliveredToHeaderTest {
+class AddDeliveredToHeaderTest {
     @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
     @RegisterExtension
@@ -51,7 +51,7 @@ public class AddDeliveredToHeaderTest {
     private TemporaryJamesServer jamesServer;
 
     @BeforeEach
-    public void setup(@TempDir File temporaryFolder) throws Exception {
+    void setup(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder().build(temporaryFolder);
         jamesServer.start();
 
@@ -61,12 +61,12 @@ public class AddDeliveredToHeaderTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void receivedMessagesShouldContainDeliveredToHeaders() throws Exception {
+    void receivedMessagesShouldContainDeliveredToHeaders() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
 

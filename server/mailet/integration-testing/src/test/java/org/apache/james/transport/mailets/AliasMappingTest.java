@@ -58,7 +58,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import io.restassured.specification.RequestSpecification;
 
-public class AliasMappingTest {
+class AliasMappingTest {
     private static final String DOMAIN = "domain.tld";
     private static final String DOMAIN_2 = "domain2.tld";
 
@@ -93,7 +93,7 @@ public class AliasMappingTest {
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     @BeforeEach
-    public void setup(@TempDir File temporaryFolder) throws Exception {
+    void setup(@TempDir File temporaryFolder) throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(CommonProcessors.rrtErrorEnabledTransport())
             .putProcessor(CommonProcessors.rrtErrorProcessor());
@@ -124,12 +124,12 @@ public class AliasMappingTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void messageShouldRedirectToUserWhenSentToHisAlias() throws Exception {
+    void messageShouldRedirectToUserWhenSentToHisAlias() throws Exception {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/sources/" + BOB_ALIAS);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -147,7 +147,7 @@ public class AliasMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectToUserWhenSentToHisUpperCaseAlias() throws Exception {
+    void messageShouldRedirectToUserWhenSentToHisUpperCaseAlias() throws Exception {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/sources/" + BOB_ALIAS);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -165,7 +165,7 @@ public class AliasMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectToUserWhenLowerCaseAliasMappedToUpperCaseUser() throws Exception {
+    void messageShouldRedirectToUserWhenLowerCaseAliasMappedToUpperCaseUser() throws Exception {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + UPPER_BOB_ADDRESS + "/sources/" + BOB_ALIAS);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -183,7 +183,7 @@ public class AliasMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectToUserWithUpperCaseDefinedAliasWhenSentToHisLowerCaseAlias() throws Exception {
+    void messageShouldRedirectToUserWithUpperCaseDefinedAliasWhenSentToHisLowerCaseAlias() throws Exception {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/sources/" + UPPER_BOB_ALIAS);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -201,7 +201,7 @@ public class AliasMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectToForwardOfUserWhenSentToHisAlias() throws Exception {
+    void messageShouldRedirectToForwardOfUserWhenSentToHisAlias() throws Exception {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/sources/" + BOB_ALIAS);
         webAdminApi.put(ForwardRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/targets/" + CEDRIC_ADDRESS);
 
@@ -220,7 +220,7 @@ public class AliasMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectToUserWhenForwardedToHisAlias() throws Exception {
+    void messageShouldRedirectToUserWhenForwardedToHisAlias() throws Exception {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/sources/" + BOB_ALIAS);
         webAdminApi.put(ForwardRoutes.ROOT_PATH + "/" + ALICE_ADDRESS + "/targets/" + BOB_ALIAS);
 
@@ -239,7 +239,7 @@ public class AliasMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectToUserWhenHisAliasIsPartOfGroup() throws Exception {
+    void messageShouldRedirectToUserWhenHisAliasIsPartOfGroup() throws Exception {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/sources/" + BOB_ALIAS);
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ADDRESS + "/" + BOB_ALIAS);
 
@@ -258,7 +258,7 @@ public class AliasMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectToMembersWhenSentToGroupAlias() throws Exception {
+    void messageShouldRedirectToMembersWhenSentToGroupAlias() throws Exception {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + GROUP_ADDRESS + "/sources/" + GROUP_ALIAS);
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ADDRESS + "/" + BOB_ADDRESS);
 
@@ -277,7 +277,7 @@ public class AliasMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectToUserWithAliasesCascading() throws Exception {
+    void messageShouldRedirectToUserWithAliasesCascading() throws Exception {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/sources/" + BOB_ALIAS);
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ALIAS + "/sources/" + BOB_ALIAS_2);
 
@@ -296,7 +296,7 @@ public class AliasMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectToUsersSharingSameAlias() throws Exception {
+    void messageShouldRedirectToUsersSharingSameAlias() throws Exception {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/sources/" + BOB_ALIAS);
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + ALICE_ADDRESS + "/sources/" + BOB_ALIAS);
 
@@ -320,9 +320,8 @@ public class AliasMappingTest {
         assertThat(testIMAPClient.readFirstMessage()).contains(MESSAGE_CONTENT);
     }
 
-
     @Test
-    public void messageShouldRedirectFromAliasContainingSlash() throws Exception {
+    void messageShouldRedirectFromAliasContainingSlash() throws Exception {
         String aliasWithSlash = "bob/alias@" + DOMAIN;
         String aliasWithEncodedSlash = "bob%2Falias@" + DOMAIN;
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/sources/" + aliasWithEncodedSlash);
@@ -341,7 +340,7 @@ public class AliasMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectToUserContainingSlash() throws Exception {
+    void messageShouldRedirectToUserContainingSlash() throws Exception {
         String userWithSlash = "bob/a@" + DOMAIN;
         dataProbe.addUser(userWithSlash, PASSWORD);
         String userWithEncodedSlash = "bob%2Fa@" + DOMAIN;
@@ -361,7 +360,7 @@ public class AliasMappingTest {
     }
 
     @Test
-    public void messageShouldRedirectToUserWhenEncodingAt() throws Exception {
+    void messageShouldRedirectToUserWhenEncodingAt() throws Exception {
         String userWithEncodedAt = "bob%40" + DOMAIN;
         String aliasWithEncodedAt = "bob-alias%40" + DOMAIN;
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + userWithEncodedAt + "/sources/" + aliasWithEncodedAt);
@@ -380,7 +379,7 @@ public class AliasMappingTest {
     }
 
     @Test
-    public void messageShouldBeStoredInRepositoryWhenAliasLoopMapping() throws Exception {
+    void messageShouldBeStoredInRepositoryWhenAliasLoopMapping() throws Exception {
         String bobAlias2 = BOB_USER + "@" + DOMAIN_2;
 
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/sources/" + bobAlias2);
@@ -399,7 +398,7 @@ public class AliasMappingTest {
     }
 
     @Test
-    public void userShouldNotReceiveDuplicatesWhenUserAndAliasRegisteredToAGroup() throws Exception {
+    void userShouldNotReceiveDuplicatesWhenUserAndAliasRegisteredToAGroup() throws Exception {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/sources/" + BOB_ALIAS);
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ADDRESS + "/" + BOB_ADDRESS);
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ADDRESS + "/" + BOB_ALIAS);
@@ -416,5 +415,4 @@ public class AliasMappingTest {
             .select(TestIMAPClient.INBOX)
             .awaitMessageCount(awaitAtMostOneMinute, 1);
     }
-
 }

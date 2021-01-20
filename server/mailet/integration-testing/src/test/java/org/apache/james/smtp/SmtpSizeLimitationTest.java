@@ -41,7 +41,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import com.google.common.base.Strings;
 
-public class SmtpSizeLimitationTest {
+class SmtpSizeLimitationTest {
     private static final String USER = "user@" + DEFAULT_DOMAIN;
 
     @RegisterExtension
@@ -61,14 +61,14 @@ public class SmtpSizeLimitationTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         if (jamesServer != null) {
             jamesServer.shutdown();
         }
     }
 
     @Test
-    public void messageShouldNotBeAcceptedWhenOverSized(@TempDir File temporaryFolder) throws Exception {
+    void messageShouldNotBeAcceptedWhenOverSized(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .doNotVerifyIdentity()
             .withMaxMessageSizeInKb(10));
@@ -81,7 +81,7 @@ public class SmtpSizeLimitationTest {
     }
 
     @Test
-    public void messageShouldBeAcceptedWhenNotOverSized(@TempDir File temporaryFolder) throws Exception {
+    void messageShouldBeAcceptedWhenNotOverSized(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .doNotVerifyIdentity()
             .withMaxMessageSizeInKb(10));

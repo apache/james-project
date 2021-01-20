@@ -58,7 +58,7 @@ import com.google.inject.util.Modules;
 
 import io.restassured.specification.RequestSpecification;
 
-public class MailReprocessingIntegrationTest {
+class MailReprocessingIntegrationTest {
     private static final MailRepositoryUrl REPOSITORY_A = MailRepositoryUrl.from("memory://var/mail/a");
     private static final MailRepositoryUrl REPOSITORY_B = MailRepositoryUrl.from("memory://var/mail/b");
 
@@ -69,7 +69,7 @@ public class MailReprocessingIntegrationTest {
     private RequestSpecification specification;
 
     @BeforeEach
-    public void createJamesServer(@TempDir File temporaryFolder) throws Exception {
+    void createJamesServer(@TempDir File temporaryFolder) throws Exception {
         MailetContainer.Builder mailets = TemporaryJamesServer.defaultMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.transport()
                     .addMailet(MailetConfiguration.BCC_STRIPPER)
@@ -100,12 +100,12 @@ public class MailReprocessingIntegrationTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void reprocessingShouldAllowToTargetASpecificProcessor() throws Exception {
+    void reprocessingShouldAllowToTargetASpecificProcessor() throws Exception {
         // Given an incoming email
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
@@ -133,7 +133,7 @@ public class MailReprocessingIntegrationTest {
     }
 
     @Test
-    public void reprocessingShouldPreserveStateWhenProcessorIsNotSpecified() throws Exception {
+    void reprocessingShouldPreserveStateWhenProcessorIsNotSpecified() throws Exception {
         // Given an incoming email
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
@@ -177,7 +177,7 @@ public class MailReprocessingIntegrationTest {
     }
 
     @Test
-    public void reprocessingShouldProcessAsErrorWhenUnknownMailProcessor() throws Exception {
+    void reprocessingShouldProcessAsErrorWhenUnknownMailProcessor() throws Exception {
         // Given an incoming email
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()

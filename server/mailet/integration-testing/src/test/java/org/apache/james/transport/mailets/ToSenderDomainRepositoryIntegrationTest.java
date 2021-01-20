@@ -43,8 +43,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class ToSenderDomainRepositoryIntegrationTest {
-
+class ToSenderDomainRepositoryIntegrationTest {
     private static final String RECIPIENT = "touser@" + DEFAULT_DOMAIN;
     private static final String CUSTOM_REPOSITORY_PREFIX = "memory://var/mail/custom/";
     public static final MailRepositoryUrl DOMAIN_URL = MailRepositoryUrl.from(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN);
@@ -58,14 +57,14 @@ public class ToSenderDomainRepositoryIntegrationTest {
     private TemporaryJamesServer jamesServer;
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         if (jamesServer != null) {
             jamesServer.shutdown();
         }
     }
 
     @Test
-    public void incomingMailShouldBeStoredInCorrespondingMailRepository(@TempDir File temporaryFolder) throws Exception {
+    void incomingMailShouldBeStoredInCorrespondingMailRepository(@TempDir File temporaryFolder) throws Exception {
         startJamesServerWithMailetContainer(temporaryFolder, TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.root()
                 .addMailet(MailetConfiguration.builder()
@@ -85,7 +84,7 @@ public class ToSenderDomainRepositoryIntegrationTest {
     }
 
     @Test
-    public void incomingMailShouldBeStoredWhenRepositoryDoesNotExistAndAllowedToCreateRepository(@TempDir File temporaryFolder) throws Exception {
+    void incomingMailShouldBeStoredWhenRepositoryDoesNotExistAndAllowedToCreateRepository(@TempDir File temporaryFolder) throws Exception {
         startJamesServerWithMailetContainer(temporaryFolder, TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.root()
                 .addMailet(MailetConfiguration.builder()
@@ -106,7 +105,7 @@ public class ToSenderDomainRepositoryIntegrationTest {
     }
 
     @Test
-    public void incomingMailShouldBeStoredWhenRepositoryExistsAndAllowedToCreateRepository(@TempDir File temporaryFolder) throws Exception {
+    void incomingMailShouldBeStoredWhenRepositoryExistsAndAllowedToCreateRepository(@TempDir File temporaryFolder) throws Exception {
         startJamesServerWithMailetContainer(temporaryFolder, TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.root()
                 .addMailet(MailetConfiguration.builder()
@@ -129,7 +128,7 @@ public class ToSenderDomainRepositoryIntegrationTest {
     }
 
     @Test
-    public void incomingMailShouldBeIgnoredWhenRepositoryDoesNotExistAndNotAllowedToCreateRepository(@TempDir File temporaryFolder) throws Exception {
+    void incomingMailShouldBeIgnoredWhenRepositoryDoesNotExistAndNotAllowedToCreateRepository(@TempDir File temporaryFolder) throws Exception {
         startJamesServerWithMailetContainer(temporaryFolder, TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.root()
                 .addMailet(MailetConfiguration.builder()
@@ -155,7 +154,7 @@ public class ToSenderDomainRepositoryIntegrationTest {
     }
 
     @Test
-    public void incomingMailShouldBeStoredWhenRepositoryExistsAndNotAllowedToCreateRepository(@TempDir File temporaryFolder) throws Exception {
+    void incomingMailShouldBeStoredWhenRepositoryExistsAndNotAllowedToCreateRepository(@TempDir File temporaryFolder) throws Exception {
         startJamesServerWithMailetContainer(temporaryFolder, TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.root()
                 .addMailet(MailetConfiguration.builder()
@@ -178,7 +177,7 @@ public class ToSenderDomainRepositoryIntegrationTest {
     }
 
     @Test
-    public void incomingMailsShouldBeStoredInCorrespondingMailRepository(@TempDir File temporaryFolder) throws Exception {
+    void incomingMailsShouldBeStoredInCorrespondingMailRepository(@TempDir File temporaryFolder) throws Exception {
         startJamesServerWithMailetContainer(temporaryFolder, TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.root()
                 .addMailet(MailetConfiguration.builder()

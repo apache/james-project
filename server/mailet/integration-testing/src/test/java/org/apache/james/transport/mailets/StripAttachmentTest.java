@@ -50,7 +50,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class StripAttachmentTest {
+class StripAttachmentTest {
     private static final String FROM = "fromUser@" + DEFAULT_DOMAIN;
     private static final String RECIPIENT = "touser@" + DEFAULT_DOMAIN;
 
@@ -62,7 +62,7 @@ public class StripAttachmentTest {
     private TemporaryJamesServer jamesServer;
 
     @BeforeEach
-    public void setup(@TempDir File temporaryFolder) throws Exception {
+    void setup(@TempDir File temporaryFolder) throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.defaultMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.transport()
                 .addMailet(MailetConfiguration.builder()
@@ -92,7 +92,7 @@ public class StripAttachmentTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
@@ -103,7 +103,7 @@ public class StripAttachmentTest {
      * - RecoverAttachment recovers attachments from attribute
      */
     @Test
-    public void stripAttachmentShouldPutAttachmentsInMailAttributeWhenConfiguredForIt() throws Exception {
+    void stripAttachmentShouldPutAttachmentsInMailAttributeWhenConfiguredForIt() throws Exception {
         MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
                 MimeMessageBuilder.bodyPartBuilder()

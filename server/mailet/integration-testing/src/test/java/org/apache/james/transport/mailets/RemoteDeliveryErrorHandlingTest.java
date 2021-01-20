@@ -66,7 +66,7 @@ import com.google.inject.util.Modules;
 
 import io.restassured.specification.RequestSpecification;
 
-public class RemoteDeliveryErrorHandlingTest {
+class RemoteDeliveryErrorHandlingTest {
     private static final String FROM = "from@" + DEFAULT_DOMAIN;
     private static final String RECIPIENT_DOMAIN = "test.com";
     private static final String RECIPIENT = "touser@" + RECIPIENT_DOMAIN;

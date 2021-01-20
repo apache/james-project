@@ -53,7 +53,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class DKIMIntegrationTest {
+class DKIMIntegrationTest {
 
     private static final String FROM_LOCAL_PART = "fromUser";
     private static final String FROM = FROM_LOCAL_PART + "@" + DEFAULT_DOMAIN;
@@ -109,7 +109,7 @@ public class DKIMIntegrationTest {
     private List<Optional<String>> dkimAuthResults;
 
     @BeforeEach
-    public void setup(@TempDir File temporaryFolder) throws Exception {
+    void setup(@TempDir File temporaryFolder) throws Exception {
         dkimAuthResults = new ArrayList<>();
         ExtractAttributeStub.setDkimAuthResultInspector(value -> dkimAuthResults.add(value.map(result -> (String) result)));
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
@@ -134,12 +134,12 @@ public class DKIMIntegrationTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void incomingMessageShouldBeReceivedSignedAndChecked() throws Exception {
+    void incomingMessageShouldBeReceivedSignedAndChecked() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
 

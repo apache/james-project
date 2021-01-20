@@ -53,7 +53,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import io.restassured.specification.RequestSpecification;
 
-public class GroupMappingRelayTest {
+class GroupMappingRelayTest {
     private static final String DOMAIN1 = "domain1.com";
 
     public static final String SENDER_LOCAL_PART = "fromuser";
@@ -74,7 +74,7 @@ public class GroupMappingRelayTest {
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     @BeforeEach
-    public void setup(@TempDir File temporaryFolder) throws Exception {
+    void setup(@TempDir File temporaryFolder) throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(CommonProcessors.rrtErrorEnabledTransport()
                 .addMailet(MailetConfiguration.remoteDeliveryBuilder()
@@ -101,12 +101,12 @@ public class GroupMappingRelayTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void sendMessageShouldSendAMessageToAnExternalGroupMember() throws Exception {
+    void sendMessageShouldSendAMessageToAnExternalGroupMember() throws Exception {
         String externalMail = "ray@yopmail.com";
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + externalMail);
 

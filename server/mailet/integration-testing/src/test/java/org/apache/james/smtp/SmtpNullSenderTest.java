@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class SmtpNullSenderTest {
+class SmtpNullSenderTest {
     private static final String USER = "user@" + DEFAULT_DOMAIN;
 
     @RegisterExtension
@@ -50,7 +50,7 @@ public class SmtpNullSenderTest {
     private TemporaryJamesServer jamesServer;
 
     @BeforeEach
-    public void setUp(@TempDir File temporaryFolder) throws Exception {
+    void setUp(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .build(temporaryFolder);
         jamesServer.start();
@@ -61,18 +61,18 @@ public class SmtpNullSenderTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void smtpLayerShouldAcceptEmptySenders() throws Exception {
+    void smtpLayerShouldAcceptEmptySenders() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessageWithHeaders("", USER,"Short message");
     }
 
     @Test
-    public void mailProcessingShouldDeliverNullSender() throws Exception {
+    void mailProcessingShouldDeliverNullSender() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessageWithHeaders("", USER,"Short message");
 

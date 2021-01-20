@@ -49,7 +49,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class AddFooterTest {
+class AddFooterTest {
     public static final String MATCH_ME = "Match me";
 
     @RegisterExtension
@@ -60,7 +60,7 @@ public class AddFooterTest {
     private TemporaryJamesServer jamesServer;
 
     @BeforeEach
-    public void setup(@TempDir File temporaryFolder) throws Exception {
+    void setup(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
             .withOverrides(new ActiveMQQueueModule())
             .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
@@ -79,12 +79,12 @@ public class AddFooterTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void shouldAddFooterWhenSimpleMessage() throws Exception {
+    void shouldAddFooterWhenSimpleMessage() throws Exception {
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .name("name")
@@ -103,7 +103,7 @@ public class AddFooterTest {
     }
 
     @Test
-    public void shouldAddFooterWhenMultipartMessage() throws Exception {
+    void shouldAddFooterWhenMultipartMessage() throws Exception {
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FakeMail.builder()
                 .name("name")

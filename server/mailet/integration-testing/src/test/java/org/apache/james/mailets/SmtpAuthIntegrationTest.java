@@ -50,7 +50,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class SmtpAuthIntegrationTest {
+class SmtpAuthIntegrationTest {
     private static final String FROM = "fromuser@" + DEFAULT_DOMAIN;
     private static final MailRepositoryUrl DROPPED_MAILS = MailRepositoryUrl.from("memory://var/mail/dropped-mails/");
 
@@ -63,7 +63,7 @@ public class SmtpAuthIntegrationTest {
     private MailRepositoryProbeImpl repositoryProbe;
 
     @BeforeEach
-    public void setup(@TempDir File temporaryFolder) throws Exception {
+    void setup(@TempDir File temporaryFolder) throws Exception {
         ProcessorConfiguration.Builder rootProcessor = ProcessorConfiguration.root()
             .addMailet(MailetConfiguration.builder()
                 .matcher(SMTPAuthSuccessful.class)
@@ -97,12 +97,12 @@ public class SmtpAuthIntegrationTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void authenticatedSmtpSessionsShouldBeDelivered() throws Exception {
+    void authenticatedSmtpSessionsShouldBeDelivered() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, FROM);
@@ -114,7 +114,7 @@ public class SmtpAuthIntegrationTest {
     }
 
     @Test
-    public void nonAuthenticatedSmtpSessionsShouldNotBeDelivered() throws Exception {
+    void nonAuthenticatedSmtpSessionsShouldNotBeDelivered() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, FROM);
 
@@ -128,7 +128,7 @@ public class SmtpAuthIntegrationTest {
     }
 
     @Test
-    public void mixedCaseSenderMailShouldBeDelivered() throws Exception {
+    void mixedCaseSenderMailShouldBeDelivered() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(FROM, PASSWORD)
             .sendMessage("FROMUSER@" + DEFAULT_DOMAIN, FROM);

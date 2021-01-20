@@ -68,7 +68,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
-public class RemoteDeliveryErrorTest {
+class RemoteDeliveryErrorTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RemoteDeliveryErrorTest.class);
 
@@ -116,7 +116,7 @@ public class RemoteDeliveryErrorTest {
     private TemporaryJamesServer jamesServer;
 
     @BeforeAll
-    public static void setUpClass() throws AddressException {
+    static void setUpClass() throws AddressException {
         FROM_ADDRESS = new MailAddress(FROM);
         RECIPIENT_ADDRESS = new MailAddress(RECIPIENT);
         RECIPIENT1_ADDRESS = new MailAddress(RECIPIENT1);
@@ -128,7 +128,7 @@ public class RemoteDeliveryErrorTest {
     }
 
     @BeforeEach
-    public void setUp(@TempDir File temporaryFolder) throws Exception {
+    void setUp(@TempDir File temporaryFolder) throws Exception {
         inMemoryDNSService = new InMemoryDNSService()
             .registerMxRecord(DEFAULT_DOMAIN, LOCALHOST_IP)
             .registerMxRecord(ANOTHER_DOMAIN, mockSmtp.getContainerIp());
@@ -157,7 +157,7 @@ public class RemoteDeliveryErrorTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
 
         mockSMTP1Configuration.cleanServer();
@@ -165,7 +165,7 @@ public class RemoteDeliveryErrorTest {
     }
 
     @Test
-    public void remoteDeliveryShouldBounceWhenAlwaysRCPT421() throws Exception {
+    void remoteDeliveryShouldBounceWhenAlwaysRCPT421() throws Exception {
         mockSMTP1Configuration
             .addNewBehavior()
                 .expect(SMTPCommand.RCPT_TO)
@@ -186,7 +186,7 @@ public class RemoteDeliveryErrorTest {
     }
 
     @Test
-    public void remoteDeliveryShouldBounceWhenAlwaysFROM421() throws Exception {
+    void remoteDeliveryShouldBounceWhenAlwaysFROM421() throws Exception {
         mockSMTP1Configuration
             .addNewBehavior()
                 .expect(SMTPCommand.MAIL_FROM)
@@ -207,7 +207,7 @@ public class RemoteDeliveryErrorTest {
     }
 
     @Test
-    public void remoteDeliveryShouldBounceWhenAlwaysDATA421() throws Exception {
+    void remoteDeliveryShouldBounceWhenAlwaysDATA421() throws Exception {
         mockSMTP1Configuration
             .addNewBehavior()
                 .expect(SMTPCommand.DATA)
@@ -228,7 +228,7 @@ public class RemoteDeliveryErrorTest {
     }
 
     @Test
-    public void remoteDeliveryShouldNotRetryWhenRCPT500() throws Exception {
+    void remoteDeliveryShouldNotRetryWhenRCPT500() throws Exception {
         mockSMTP1Configuration
             .addNewBehavior()
                 .expect(SMTPCommand.RCPT_TO)
@@ -249,7 +249,7 @@ public class RemoteDeliveryErrorTest {
     }
 
     @Test
-    public void remoteDeliveryShouldNotRetryWhenFROM500() throws Exception {
+    void remoteDeliveryShouldNotRetryWhenFROM500() throws Exception {
         mockSMTP1Configuration
             .addNewBehavior()
                 .expect(SMTPCommand.MAIL_FROM)
@@ -270,7 +270,7 @@ public class RemoteDeliveryErrorTest {
     }
 
     @Test
-    public void remoteDeliveryShouldNotRetryWhenDATA500() throws Exception {
+    void remoteDeliveryShouldNotRetryWhenDATA500() throws Exception {
         mockSMTP1Configuration
             .addNewBehavior()
                 .expect(SMTPCommand.DATA)
@@ -291,7 +291,7 @@ public class RemoteDeliveryErrorTest {
     }
 
     @Test
-    public void remoteDeliveryShouldRetryWhenRCPT421() throws Exception {
+    void remoteDeliveryShouldRetryWhenRCPT421() throws Exception {
         mockSMTP1Configuration
             .addNewBehavior()
                 .expect(SMTPCommand.RCPT_TO)
@@ -313,7 +313,7 @@ public class RemoteDeliveryErrorTest {
     }
 
     @Test
-    public void remoteDeliveryShouldRetryWhenFROM421() throws Exception {
+    void remoteDeliveryShouldRetryWhenFROM421() throws Exception {
         mockSMTP1Configuration
             .addNewBehavior()
                 .expect(SMTPCommand.MAIL_FROM)
@@ -335,7 +335,7 @@ public class RemoteDeliveryErrorTest {
     }
 
     @Test
-    public void remoteDeliveryShouldRetryWhenDATA421() throws Exception {
+    void remoteDeliveryShouldRetryWhenDATA421() throws Exception {
         mockSMTP1Configuration
             .addNewBehavior()
                 .expect(SMTPCommand.DATA)
@@ -357,7 +357,7 @@ public class RemoteDeliveryErrorTest {
     }
 
     @Test
-    public void remoteDeliveryShouldNotDuplicateContentWhenSendPartial() throws Exception {
+    void remoteDeliveryShouldNotDuplicateContentWhenSendPartial() throws Exception {
         mockSMTP1Configuration
             .addNewBehavior()
                 .expect(SMTPCommand.RCPT_TO)
@@ -383,7 +383,7 @@ public class RemoteDeliveryErrorTest {
     }
 
     @Test
-    public void remoteDeliveryShouldNotDuplicateContentWhenSendPartialWhenFailover() throws Exception {
+    void remoteDeliveryShouldNotDuplicateContentWhenSendPartialWhenFailover() throws Exception {
         ImmutableList<InetAddress> addresses = ImmutableList.of(InetAddress.getByName(mockSmtp.getContainerIp()));
         ImmutableList<String> mxs = ImmutableList.of(mockSmtp.getContainerIp(), mockSmtp2.getContainerIp());
         ImmutableList<String> txtRecords = ImmutableList.of();

@@ -51,7 +51,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class SmtpAuthorizedAddressesTest {
+class SmtpAuthorizedAddressesTest {
     private static final String FROM = "fromuser@" + DEFAULT_DOMAIN;
     private static final String TO = "to@any.com";
 
@@ -86,7 +86,7 @@ public class SmtpAuthorizedAddressesTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         fakeSmtp.clean();
         if (jamesServer != null) {
             jamesServer.shutdown();
@@ -94,7 +94,7 @@ public class SmtpAuthorizedAddressesTest {
     }
 
     @Test
-    public void userShouldBeAbleToRelayMessagesWhenInAcceptedNetwork(@TempDir File temporaryFolder) throws Exception {
+    void userShouldBeAbleToRelayMessagesWhenInAcceptedNetwork(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()
             .withAutorizedAddresses("127.0.0.0/8"));
@@ -110,7 +110,7 @@ public class SmtpAuthorizedAddressesTest {
     }
 
     @Test
-    public void userShouldNotBeAbleToRelayMessagesWhenOutOfAcceptedNetwork(@TempDir File temporaryFolder) throws Exception {
+    void userShouldNotBeAbleToRelayMessagesWhenOutOfAcceptedNetwork(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()
             .withAutorizedAddresses("172.0.0.0/8"));
@@ -122,7 +122,7 @@ public class SmtpAuthorizedAddressesTest {
     }
 
     @Test
-    public void userShouldBeAbleToRelayMessagesWhenOutOfAcceptedNetworkButAuthenticated(@TempDir File temporaryFolder) throws Exception {
+    void userShouldBeAbleToRelayMessagesWhenOutOfAcceptedNetworkButAuthenticated(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()
             .withAutorizedAddresses("172.0.0.0/8"));
@@ -139,7 +139,7 @@ public class SmtpAuthorizedAddressesTest {
     }
 
     @Test
-    public void localDeliveryShouldBePossibleFromNonAuthenticatedNonAuthorizedSender(@TempDir File temporaryFolder) throws Exception {
+    void localDeliveryShouldBePossibleFromNonAuthenticatedNonAuthorizedSender(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()
             .withAutorizedAddresses("172.0.0.0/8"));

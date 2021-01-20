@@ -50,7 +50,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class GatewayRemoteDeliveryIntegrationTest {
+class GatewayRemoteDeliveryIntegrationTest {
     private static final String JAMES_ANOTHER_DOMAIN = "james.com";
 
     private static final String FROM = "from@" + DEFAULT_DOMAIN;
@@ -68,13 +68,13 @@ public class GatewayRemoteDeliveryIntegrationTest {
     private InMemoryDNSService inMemoryDNSService;
 
     @BeforeEach
-    public void setup() throws Exception {
+    void setup() throws Exception {
         inMemoryDNSService = new InMemoryDNSService()
             .registerMxRecord(JAMES_ANOTHER_DOMAIN, fakeSmtp.getContainer().getContainerIp());
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         fakeSmtp.clean();
         if (jamesServer != null) {
             jamesServer.shutdown();
@@ -82,7 +82,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void outgoingMailShouldTransitThroughGatewayWhenNoPort(@TempDir File temporaryFolder) throws Exception {
+    void outgoingMailShouldTransitThroughGatewayWhenNoPort(@TempDir File temporaryFolder) throws Exception {
         String gatewayProperty = fakeSmtp.getContainer().getContainerIp();
 
         jamesServer = TemporaryJamesServer.builder()
@@ -103,7 +103,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void outgoingMailShouldTransitThroughGatewayWhenPort(@TempDir File temporaryFolder) throws Exception {
+    void outgoingMailShouldTransitThroughGatewayWhenPort(@TempDir File temporaryFolder) throws Exception {
         String gatewayProperty = fakeSmtp.getContainer().getContainerIp() + ":25";
 
         jamesServer = TemporaryJamesServer.builder()
@@ -123,7 +123,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void outgoingMailShouldTransitThroughGatewayWhenSeveralIps(@TempDir File temporaryFolder) throws Exception {
+    void outgoingMailShouldTransitThroughGatewayWhenSeveralIps(@TempDir File temporaryFolder) throws Exception {
         String gatewayProperty = fakeSmtp.getContainer().getContainerIp() + ",invalid.domain";
 
         jamesServer = TemporaryJamesServer.builder()
@@ -144,7 +144,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void outgoingMailShouldFallbackToSecondGatewayWhenFirstInvalid(@TempDir File temporaryFolder) throws Exception {
+    void outgoingMailShouldFallbackToSecondGatewayWhenFirstInvalid(@TempDir File temporaryFolder) throws Exception {
         String gatewayProperty = "invalid.domain," + fakeSmtp.getContainer().getContainerIp();
 
         jamesServer = TemporaryJamesServer.builder()
@@ -165,7 +165,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void outgoingMailShouldNotBeSentDirectlyToTheHostWhenGatewayFails(@TempDir File temporaryFolder) throws Exception {
+    void outgoingMailShouldNotBeSentDirectlyToTheHostWhenGatewayFails(@TempDir File temporaryFolder) throws Exception {
         String gatewayProperty = "invalid.domain";
 
         jamesServer = TemporaryJamesServer.builder()
@@ -191,7 +191,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void remoteDeliveryShouldBounceUponFailure(@TempDir File temporaryFolder) throws Exception {
+    void remoteDeliveryShouldBounceUponFailure(@TempDir File temporaryFolder) throws Exception {
         String gatewayProperty = "invalid.domain";
 
         jamesServer = TemporaryJamesServer.builder()
@@ -215,7 +215,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void remoteDeliveryShouldBounceUponFailureWhenNoBounceProcessor(@TempDir File temporaryFolder) throws Exception {
+    void remoteDeliveryShouldBounceUponFailureWhenNoBounceProcessor(@TempDir File temporaryFolder) throws Exception {
         String gatewayProperty = "invalid.domain";
 
         jamesServer = TemporaryJamesServer.builder()

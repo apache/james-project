@@ -66,7 +66,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DSNRelayTest {
+class DSNRelayTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(DSNRelayTest.class);
 
     private static final String ANOTHER_DOMAIN = "other.com";
@@ -89,7 +89,7 @@ public class DSNRelayTest {
     private TemporaryJamesServer jamesServer;
 
     @BeforeEach
-    public void setUp(@TempDir File temporaryFolder) throws Exception {
+    void setUp(@TempDir File temporaryFolder) throws Exception {
         inMemoryDNSService = new InMemoryDNSService()
             .registerMxRecord(DEFAULT_DOMAIN, LOCALHOST_IP)
             .registerMxRecord(ANOTHER_DOMAIN, mockSmtp.getContainerIp());
@@ -122,7 +122,7 @@ public class DSNRelayTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
 
         mockSMTPConfiguration.cleanServer();
@@ -130,7 +130,7 @@ public class DSNRelayTest {
 
     @Disabled("JAMES-3431 No javax.mail support for ORCPT DSN parameter...")
     @Test
-    public void orcptIsUnsupported() throws Exception {
+    void orcptIsUnsupported() throws Exception {
         AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
 
         try {
@@ -171,7 +171,7 @@ public class DSNRelayTest {
     }
 
     @Test
-    public void remoteDeliveryShouldCarryOverDSNParameters() throws Exception {
+    void remoteDeliveryShouldCarryOverDSNParameters() throws Exception {
         AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
 
         try {
@@ -242,7 +242,7 @@ public class DSNRelayTest {
     }
 
     @Test
-    public void remoteDeliveryShouldDeliverSimilarDsnNotifyParametersTogether() throws Exception {
+    void remoteDeliveryShouldDeliverSimilarDsnNotifyParametersTogether() throws Exception {
         AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
 
         try {
@@ -290,7 +290,7 @@ public class DSNRelayTest {
     }
 
     @Test
-    public void remoteDeliveryShouldCarryOverDSNParametersWhenSingleRecipient() throws Exception {
+    void remoteDeliveryShouldCarryOverDSNParametersWhenSingleRecipient() throws Exception {
         AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
 
         try {
@@ -327,7 +327,7 @@ public class DSNRelayTest {
     }
 
     @Test
-    public void dsnShouldBeCarriedAfterRRT() throws Exception {
+    void dsnShouldBeCarriedAfterRRT() throws Exception {
         DataProbeImpl dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(ANOTHER_DOMAIN);
         dataProbe.addAddressMapping("touser", ANOTHER_DOMAIN, "touser-alias@other.com");
@@ -368,7 +368,7 @@ public class DSNRelayTest {
     }
 
     @Test
-    public void remoteDeliveryShouldCarryOverDSNMailParameters() throws Exception {
+    void remoteDeliveryShouldCarryOverDSNMailParameters() throws Exception {
         AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
 
         try {
@@ -399,7 +399,6 @@ public class DSNRelayTest {
                     .build())
                 .build()));
     }
-
 
     private ProcessorConfiguration.Builder directResolutionTransport() {
         return ProcessorConfiguration.transport()

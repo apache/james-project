@@ -56,7 +56,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
-public class SpamAssassinIntegrationTest {
+class SpamAssassinIntegrationTest {
     private static final String SPAM_CONTENT = "XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X";
 
     @RegisterExtension
@@ -72,7 +72,7 @@ public class SpamAssassinIntegrationTest {
     private TemporaryJamesServer jamesServer;
 
     @BeforeEach
-    public void setup(@TempDir File temporaryFolder) throws Exception {
+    void setup(@TempDir File temporaryFolder) throws Exception {
         MailetContainer.Builder mailets = TemporaryJamesServer.defaultMailetContainerConfiguration()
             .putProcessor(
                 ProcessorConfiguration.transport()
@@ -97,12 +97,12 @@ public class SpamAssassinIntegrationTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void spamAssassinShouldAppendNewHeaderOnMessage() throws Exception {
+    void spamAssassinShouldAppendNewHeaderOnMessage() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(mailWithContent("This is the content", RECIPIENT));
 
@@ -118,7 +118,7 @@ public class SpamAssassinIntegrationTest {
     }
 
     @Test
-    public void spamAssassinShouldAppendNewHeaderWhichDetectIsSpamWhenSpamMessage() throws Exception {
+    void spamAssassinShouldAppendNewHeaderWhichDetectIsSpamWhenSpamMessage() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(mailWithContent(SPAM_CONTENT, RECIPIENT));
 
@@ -133,7 +133,7 @@ public class SpamAssassinIntegrationTest {
     }
 
     @Test
-    public void spamAssassinShouldAppendNewHeaderWhichNoWhenNonSpamMessage() throws Exception {
+    void spamAssassinShouldAppendNewHeaderWhichNoWhenNonSpamMessage() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(mailWithContent("This is the content", RECIPIENT));
 
@@ -148,7 +148,7 @@ public class SpamAssassinIntegrationTest {
     }
 
     @Test
-    public void spamAssassinShouldAppendNewHeaderPerRecipientOnMessage() throws Exception {
+    void spamAssassinShouldAppendNewHeaderPerRecipientOnMessage() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(mailWithContent("This is the content", RECIPIENT, RECIPIENT2));
 

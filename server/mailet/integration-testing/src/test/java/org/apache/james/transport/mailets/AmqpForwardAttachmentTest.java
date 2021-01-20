@@ -50,7 +50,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class AmqpForwardAttachmentTest {
+class AmqpForwardAttachmentTest {
     private static final String FROM = "fromUser@" + DEFAULT_DOMAIN;
     private static final String RECIPIENT = "touser@" + DEFAULT_DOMAIN;
     
@@ -70,7 +70,7 @@ public class AmqpForwardAttachmentTest {
     private TemporaryJamesServer jamesServer;
 
     @BeforeEach
-    public void setup(@TempDir File temporaryFolder) throws Exception {
+    void setup(@TempDir File temporaryFolder) throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.defaultMailetContainerConfiguration()
             .putProcessor(ProcessorConfiguration.transport()
                 .addMailet(MailetConfiguration.builder()
@@ -103,12 +103,12 @@ public class AmqpForwardAttachmentTest {
     }
 
     @AfterEach
-    public void tearDown() throws Exception {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void stripAttachmentShouldPutAttachmentsInMailAttributeWhenConfiguredForIt() throws Exception {
+    void stripAttachmentShouldPutAttachmentsInMailAttributeWhenConfiguredForIt() throws Exception {
         MimeMessageBuilder message = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
                 MimeMessageBuilder.bodyPartBuilder()

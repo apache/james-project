@@ -69,7 +69,7 @@ public class RecipientRewriteTableIntegrationTest {
     private RequestSpecification webAdminApi;
 
     @BeforeEach
-    public void setup(@TempDir File temporaryFolder) throws Exception {
+    void setup(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder().build(temporaryFolder);
         jamesServer.start();
 
@@ -85,12 +85,12 @@ public class RecipientRewriteTableIntegrationTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void rrtServiceShouldNotImpactRecipientsNotMatchingAnyRRT() throws Exception {
+    void rrtServiceShouldNotImpactRecipientsNotMatchingAnyRRT() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
 
@@ -102,7 +102,7 @@ public class RecipientRewriteTableIntegrationTest {
     }
 
     @Test
-    public void rrtServiceShouldDeliverEmailToMappingRecipients() throws Exception {
+    void rrtServiceShouldDeliverEmailToMappingRecipients() throws Exception {
         dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, ANY_AT_JAMES);
         dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
@@ -122,7 +122,7 @@ public class RecipientRewriteTableIntegrationTest {
     }
 
     @Test
-    public void rrtServiceShouldNotDeliverEmailToRecipientWhenHaveMappingRecipients() throws Exception {
+    void rrtServiceShouldNotDeliverEmailToRecipientWhenHaveMappingRecipients() throws Exception {
         dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, ANY_AT_JAMES);
         dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
@@ -137,7 +137,7 @@ public class RecipientRewriteTableIntegrationTest {
     }
 
     @Test
-    public void rrtServiceShouldDeliverEmailToRecipientOnLocalWhenMappingContainsNonDomain() throws Exception {
+    void rrtServiceShouldDeliverEmailToRecipientOnLocalWhenMappingContainsNonDomain() throws Exception {
         String nonDomainUser = "nondomain";
         String localUser = nonDomainUser + "@" + dataProbe.getDefaultDomain();
         dataProbe.addUser(localUser, PASSWORD);
@@ -161,7 +161,7 @@ public class RecipientRewriteTableIntegrationTest {
     }
 
     @Test
-    public void messageShouldRedirectToTheSameUserWhenDomainMapping() throws Exception {
+    void messageShouldRedirectToTheSameUserWhenDomainMapping() throws Exception {
         dataProbe.addDomainAliasMapping(DEFAULT_DOMAIN, JAMES_ANOTHER_DOMAIN);
         dataProbe.addUser(ANY_AT_ANOTHER_DOMAIN, PASSWORD);
 
@@ -176,7 +176,7 @@ public class RecipientRewriteTableIntegrationTest {
     }
 
     @Test
-    public void messageShouldNotSendToRecipientWhenDomainMapping() throws Exception {
+    void messageShouldNotSendToRecipientWhenDomainMapping() throws Exception {
         dataProbe.addDomainAliasMapping(DEFAULT_DOMAIN, JAMES_ANOTHER_DOMAIN);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -190,7 +190,7 @@ public class RecipientRewriteTableIntegrationTest {
     }
 
     @Test
-    public void rrtServiceShouldDeliverEmailToForwardRecipients() throws Exception {
+    void rrtServiceShouldDeliverEmailToForwardRecipients() throws Exception {
         webAdminApi.put(ForwardRoutes.ROOT_PATH + "/" + RECIPIENT + "/targets/" + ANY_AT_JAMES);
         webAdminApi.put(ForwardRoutes.ROOT_PATH + "/" + RECIPIENT + "/targets/" + OTHER_AT_JAMES);
 
@@ -209,7 +209,7 @@ public class RecipientRewriteTableIntegrationTest {
     }
 
     @Test
-    public void rrtServiceShouldFollowForwardWhenSendingToAGroup() throws Exception {
+    void rrtServiceShouldFollowForwardWhenSendingToAGroup() throws Exception {
         dataProbe.addAddressMapping(GROUP_LOCAL_PART, DEFAULT_DOMAIN, ANY_AT_JAMES);
 
         webAdminApi.put(ForwardRoutes.ROOT_PATH + "/" + ANY_AT_JAMES + "/targets/" + OTHER_AT_JAMES);
@@ -225,7 +225,7 @@ public class RecipientRewriteTableIntegrationTest {
     }
 
     @Test
-    public void domainAliasMappingShouldNotCreateNonExistedUserWhenReRouting() throws Exception {
+    void domainAliasMappingShouldNotCreateNonExistedUserWhenReRouting() throws Exception {
         dataProbe.addDomain("domain1.com");
         dataProbe.addDomain("domain2.com");
 

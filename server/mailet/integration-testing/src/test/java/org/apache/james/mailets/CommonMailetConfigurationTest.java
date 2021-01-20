@@ -41,7 +41,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
-public class CommonMailetConfigurationTest {
+class CommonMailetConfigurationTest {
     @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
     @RegisterExtension
@@ -50,7 +50,7 @@ public class CommonMailetConfigurationTest {
     private TemporaryJamesServer jamesServer;
 
     @BeforeEach
-    public void setup(@TempDir File temporaryFolder) throws Exception {
+    void setup(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder().build(temporaryFolder);
         jamesServer.start();
 
@@ -60,16 +60,16 @@ public class CommonMailetConfigurationTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         jamesServer.shutdown();
     }
 
     @Test
-    public void startingJamesWithCommonMailetConfigurationShouldWork() throws Exception {
+    void startingJamesWithCommonMailetConfigurationShouldWork() {
     }
 
     @Test
-    public void simpleMailShouldBeSent() throws Exception {
+    void simpleMailShouldBeSent() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
 
@@ -80,7 +80,7 @@ public class CommonMailetConfigurationTest {
     }
 
     @Test
-    public void simpleMailShouldBeSentToUpperCaseRecipient() throws Exception {
+    void simpleMailShouldBeSentToUpperCaseRecipient() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT.toUpperCase(Locale.US));
 
