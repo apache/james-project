@@ -25,6 +25,7 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.apache.james.mock.smtp.server.ConfigurationClient.BehaviorsParamsBuilder.ResponseStep.doesNotAcceptAnyMail;
+import static org.apache.james.mock.smtp.server.ConfigurationClient.BehaviorsParamsBuilder.ResponseStep.serviceNotAvailable;
 import static org.apache.james.mock.smtp.server.model.Condition.MATCH_ALL;
 import static org.apache.james.mock.smtp.server.model.SMTPCommand.RCPT_TO;
 import static org.apache.james.util.docker.Images.MOCK_SMTP_SERVER;
@@ -55,8 +56,12 @@ import org.apache.james.transport.mailets.DSNBounce;
 import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.transport.mailets.RecipientRewriteTable;
 import org.apache.james.transport.mailets.RemoteDelivery;
+import org.apache.james.transport.mailets.ToProcessor;
 import org.apache.james.transport.matchers.All;
+import org.apache.james.transport.matchers.DSNDelayRequested;
 import org.apache.james.transport.matchers.DSNFailureRequested;
+import org.apache.james.transport.matchers.IsRemoteDeliveryPermanentError;
+import org.apache.james.transport.matchers.IsRemoteDeliveryTemporaryError;
 import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.util.Host;
 import org.apache.james.util.docker.DockerContainer;
@@ -114,12 +119,31 @@ class DSNRemoteIntegrationTest {
                 .putProcessor(ProcessorConfiguration.builder().state("relay-bounces")
                     .enableJmx(false)
                     .addMailet(MailetConfiguration.builder()
+                        .matcher(IsRemoteDeliveryPermanentError.class)
+                        .mailet(ToProcessor.class)
+                        .addProperty("processor", "remote-delivery-permanent-error"))
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(IsRemoteDeliveryTemporaryError.class)
+                        .mailet(ToProcessor.class)
+                        .addProperty("processor", "remote-delivery-temporary-error")))
+                .putProcessor(ProcessorConfiguration.builder().state("remote-delivery-permanent-error")
+                    .enableJmx(false)
+                    .addMailet(MailetConfiguration.builder()
                         .matcher(DSNFailureRequested.class)
                         .mailet(DSNBounce.class)
                         .addProperty("defaultStatus", "5.0.0")
                         .addProperty("action", "failed")
                         .addProperty("prefix", "[FAILURE]")
                         .addProperty("messageString", "Your message failed to be delivered")))
+                .putProcessor(ProcessorConfiguration.builder().state("remote-delivery-temporary-error")
+                    .enableJmx(false)
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(DSNDelayRequested.class)
+                        .mailet(DSNBounce.class)
+                        .addProperty("defaultStatus", "4.0.0")
+                        .addProperty("action", "delayed")
+                        .addProperty("prefix", "[DELAY]")
+                        .addProperty("messageString", "Your message is delayed")))
                 .putProcessor(CommonProcessors.bounces()))
             .withSmtpConfiguration(SmtpConfiguration.builder()
                 .addHook(DSNEhloHook.class.getName())
@@ -152,6 +176,8 @@ class DSNRemoteIntegrationTest {
                 .mailet(RemoteDelivery.class)
                 .matcher(All.class)
                 .addProperty("sendpartial", "true")
+                .addProperty("maxRetries", "2")
+                .addProperty("delayTime", "2 * 200 ms")
                 .addProperty("bounceProcessor", "relay-bounces"));
     }
 
@@ -326,6 +352,39 @@ class DSNRemoteIntegrationTest {
         Assertions.assertThat(dsnMessage).contains("Status: 521 mock response");
         Assertions.assertThat(dsnMessage).contains("Your message failed to be delivered\n" +
             "Failed recipient(s):\n" +
+            "touser@other.com");
+    }
+
+    @Test
+    void givenAMailWithNotifyDelayWhenItIsDelayedThenADsnDelayedIsSentBack() throws Exception {
+        AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
+        mockSMTPConfiguration.addNewBehavior()
+            .expect(RCPT_TO)
+            .matching(MATCH_ALL)
+            .thenRespond(serviceNotAvailable("mock_response"))
+            .anyTimes()
+            .post();
+
+        try {
+            smtpClient.connect("localhost", jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue());
+            smtpClient.ehlo(DEFAULT_DOMAIN);
+            smtpClient.mail("<" + FROM + ">");
+            smtpClient.rcpt("<" + RECIPIENT + "> NOTIFY=DELAY");
+            smtpClient.sendShortMessageData("A short message...");
+        } finally {
+            smtpClient.disconnect();
+        }
+
+        String dsnMessage = testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(FROM, PASSWORD)
+            .select(TestIMAPClient.INBOX)
+            .awaitMessageCount(awaitAtMostOneMinute, 1)
+            .readFirstMessage();
+
+        Assertions.assertThat(dsnMessage).contains("Subject: [DELAY]");
+        Assertions.assertThat(dsnMessage).contains("Too many retries failure. Bouncing after 2 retries.");
+        Assertions.assertThat(dsnMessage).contains("Your message is delayed\n" +
+            "Delayed recipient(s):\n" +
             "touser@other.com");
     }
 
