@@ -34,8 +34,8 @@ import org.apache.james.utils.SMTPMessageSender;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 public abstract class DeploymentValidation {
 
@@ -66,7 +66,7 @@ public abstract class DeploymentValidation {
         .await();
     protected static final ConditionFactory awaitAtMostTenSeconds = calmlyAwait.atMost(TEN_SECONDS);
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         system = createImapHostSystem();
         smtpSystem = createSmtpHostSystem();

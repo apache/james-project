@@ -26,18 +26,19 @@ import org.apache.james.mpt.imapmailbox.external.james.host.external.ExternalJam
 import org.apache.james.mpt.imapmailbox.external.james.host.external.NoopDomainsAndUserAdder;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-public class JamesDeploymentValidationTest extends DeploymentValidation {
-
+class JamesDeploymentValidationTest extends DeploymentValidation {
     private ImapHostSystem system;
     private SmtpHostSystem smtpHostSystem;
     private final ExternalJamesConfiguration configuration = new ExternalJamesConfigurationEnvironnementVariables();
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         Injector injector = Guice.createInjector(new ExternalJamesModule(configuration, new NoopDomainsAndUserAdder()));
         system = injector.getInstance(ImapHostSystem.class);
@@ -61,9 +62,8 @@ public class JamesDeploymentValidationTest extends DeploymentValidation {
         return configuration;
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         system.afterTest();
     }
-
 }

@@ -24,26 +24,26 @@ import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.external.james.host.ProvisioningAPI;
 import org.apache.james.mpt.imapmailbox.external.james.host.SmtpHostSystem;
 import org.apache.james.mpt.imapmailbox.external.james.host.external.ExternalJamesConfiguration;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-@Ignore("Not to be run on CI, as it will not use the current build")
-public class DockerDeploymentValidationGuiceJPATest extends DeploymentValidation {
+@Disabled("Not to be run on CI, as it will not use the current build")
+class DockerDeploymentValidationGuiceJPATest extends DeploymentValidation {
 
     private ImapHostSystem system;
     private SmtpHostSystem smtpHostSystem;
 
-    @Rule
+    @RegisterExtension
     public DockerJamesRule dockerJamesRule = new DockerJamesRule("linagora/james-jpa-guice");
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         dockerJamesRule.start();
@@ -60,13 +60,13 @@ public class DockerDeploymentValidationGuiceJPATest extends DeploymentValidation
     }
 
     @Test
-    @Ignore("Not to be run on CI, as it will not use the current build. Uncomment to test on local dev environment")
+    @Disabled("Not to be run on CI, as it will not use the current build. Uncomment to test on local dev environment")
     @Override
     public void validateDeployment() throws Exception {
     }
 
     @Test
-    @Ignore("Not to be run on CI, as it will not use the current build. Uncomment to test on local dev environment")
+    @Disabled("Not to be run on CI, as it will not use the current build. Uncomment to test on local dev environment")
     @Override
     public void validateDeploymentWithMailsFromSmtp() throws Exception {
     }
@@ -86,7 +86,7 @@ public class DockerDeploymentValidationGuiceJPATest extends DeploymentValidation
         return dockerJamesRule.getConfiguration();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         system.afterTest();
         dockerJamesRule.stop();
