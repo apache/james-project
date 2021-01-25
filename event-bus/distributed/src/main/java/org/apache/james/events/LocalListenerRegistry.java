@@ -26,9 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
-import org.apache.james.events.EventListener;
-import org.apache.james.events.RegistrationKey;
-
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableSet;
 

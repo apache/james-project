@@ -21,9 +21,6 @@ package org.apache.james.events;
 
 import static org.apache.james.events.EventBus.Metrics.timerName;
 
-import org.apache.james.events.Event;
-import org.apache.james.events.EventBus;
-import org.apache.james.events.EventListener;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.ReactorUtils;

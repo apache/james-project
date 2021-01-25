@@ -185,7 +185,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     @Test
     void eventProcessingShouldNotCrashOnInvalidMessage() {
         EventCollector listener = new EventCollector();
-        EventBusTestFixture.GroupA registeredGroup = new EventBusTestFixture.GroupA();
+        GroupA registeredGroup = new GroupA();
         eventBus.register(listener, registeredGroup);
 
         String emptyRoutingKey = "";
@@ -204,7 +204,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     @Test
     void eventProcessingShouldNotCrashOnInvalidMessages() {
         EventCollector listener = new EventCollector();
-        EventBusTestFixture.GroupA registeredGroup = new EventBusTestFixture.GroupA();
+        GroupA registeredGroup = new GroupA();
         eventBus.register(listener, registeredGroup);
 
         String emptyRoutingKey = "";
@@ -223,7 +223,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     @Test
     void eventProcessingShouldStoreInvalidMessagesInDeadLetterQueue() {
         EventCollector listener = new EventCollector();
-        EventBusTestFixture.GroupA registeredGroup = new EventBusTestFixture.GroupA();
+        GroupA registeredGroup = new GroupA();
         eventBus.register(listener, registeredGroup);
 
         String emptyRoutingKey = "";
@@ -287,7 +287,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     @Test
     void registerGroupShouldCreateRetryExchange() throws Exception {
         EventListener listener = newListener();
-        EventBusTestFixture.GroupA registeredGroup = new EventBusTestFixture.GroupA();
+        GroupA registeredGroup = new GroupA();
         eventBus.register(listener, registeredGroup);
 
         GroupConsumerRetry.RetryExchangeName retryExchangeName = GroupConsumerRetry.RetryExchangeName.of(registeredGroup);
@@ -307,7 +307,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         @Test
         void rabbitMQEventBusShouldHandleBulksGracefully() throws Exception {
             EventListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
-            eventBus().register(countingListener1, new EventBusTestFixture.GroupA());
+            eventBus().register(countingListener1, new GroupA());
             int totalGlobalRegistrations = 1; // GroupA
 
             int threadCount = 10;
