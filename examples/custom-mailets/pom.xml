@@ -1,44 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>examples</artifactId>
-        <groupId>org.apache.james.examples</groupId>
-        <version>3.6.0-SNAPSHOT</version>
-    </parent>
-    <modelVersion>4.0.0</modelVersion>
-    <name>Apache James :: Examples :: Custom Mailets</name>
-
-    <artifactId>custom-mailets</artifactId>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>apache-mailet-api</artifactId>
-            <version>${james.baseVersion}</version>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>apache-mailet-base</artifactId>
-            <version>${james.baseVersion}</version>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-util</artifactId>
-            <version>${james.baseVersion}</version>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>11</source>
-                    <target>11</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.apache.james.examples</groupId>
+    <artifactId>examples</artifactId>
+    <version>3.6.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>custom-mailets</artifactId>
+  <name>Apache James :: Examples :: Custom Mailets</name>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.james</groupId>
+      <artifactId>apache-mailet-api</artifactId>
+      <version>${james.baseVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>${james.groupId}</groupId>
+      <artifactId>apache-mailet-base</artifactId>
+      <version>${james.baseVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>${james.groupId}</groupId>
+      <artifactId>james-server-util</artifactId>
+      <version>${james.baseVersion}</version>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>11</source>
+          <target>11</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

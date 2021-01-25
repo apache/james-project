@@ -59,11 +59,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>event-bus-in-vm</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-memory</artifactId>
             <scope>test</scope>
         </dependency>
@@ -133,6 +128,11 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>blob-memory</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>event-bus-in-vm</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
