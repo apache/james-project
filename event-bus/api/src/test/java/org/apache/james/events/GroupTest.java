@@ -76,7 +76,7 @@ class GroupTest {
 
     @Test
     void asStringShouldReturnFqdnByDefault() {
-        assertThat(new EventBusTestFixture.GroupA().asString()).isEqualTo("org.apache.james.mailbox.events.EventBusTestFixture$GroupA");
+        assertThat(new EventBusTestFixture.GroupA().asString()).isEqualTo("org.apache.james.events.EventBusTestFixture$GroupA");
     }
 
     @Test
@@ -98,7 +98,7 @@ class GroupTest {
 
     @Test
     void deserializeShouldReturnGroupWhenExtendsGroup() throws Exception {
-        assertThat(Group.deserialize("org.apache.james.mailbox.events.EventBusTestFixture$GroupA"))
+        assertThat(Group.deserialize("org.apache.james.events.EventBusTestFixture$GroupA"))
             .isEqualTo(new EventBusTestFixture.GroupA());
     }
 

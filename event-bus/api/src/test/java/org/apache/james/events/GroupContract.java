@@ -38,8 +38,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.events.MailboxEvents.Added;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.events.EventBusTestFixture.TestEvent;

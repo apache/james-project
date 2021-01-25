@@ -19,39 +19,35 @@
 
 package org.apache.james.events;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import java.util.Collection;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
-import java.util.UUID;
+public class EventCollector implements EventListener.GroupEventListener {
+    public static class EventCollectorGroup extends Group {
 
-import org.apache.james.events.EventDeadLetters;
-import org.junit.jupiter.api.Test;
-
-import nl.jqno.equalsverifier.EqualsVerifier;
-
-class InsertionIdTest {
-    private static final UUID UUID_1 = UUID.fromString("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
-
-    @Test
-    void eventIdShouldMatchBeanContract() {
-        EqualsVerifier.forClass(EventDeadLetters.InsertionId.class).verify();
     }
 
-    @Test
-    void ofShouldDeserializeUUIDs() {
-        assertThat(EventDeadLetters.InsertionId.of(UUID_1.toString()))
-            .isEqualTo(EventDeadLetters.InsertionId.of(UUID_1));
+    private static final Group GROUP = new EventCollectorGroup();
+
+    private final ConcurrentLinkedDeque<Event> events = new ConcurrentLinkedDeque<>();
+
+    @Override
+    public Group getDefaultGroup() {
+        return GROUP;
     }
 
-    @Test
-    void ofStringShouldThrowOnNullValue() {
-        assertThatThrownBy(() -> EventDeadLetters.InsertionId.of((String) null))
-            .isInstanceOf(NullPointerException.class);
+    public Collection<Event> getEvents() {
+        return events;
     }
 
-    @Test
-    void ofUuidShouldThrowOnNullValue() {
-        assertThatThrownBy(() -> EventDeadLetters.InsertionId.of((UUID) null))
-            .isInstanceOf(NullPointerException.class);
+    @Override
+    public boolean isHandling(Event event) {
+        return true;
     }
+
+    @Override
+    public void event(Event event) {
+        events.add(event);
+    }
+
 }

@@ -28,10 +28,10 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.events.MailboxEvents.MailboxAdded;
 import org.apache.james.events.MailboxEvents.MailboxEvent;
 import org.apache.james.events.MailboxEvents.MailboxRenamed;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
