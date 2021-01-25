@@ -63,7 +63,7 @@ import org.apache.james.backends.rabbitmq.RabbitMQExtension.DockerRestartPolicy;
 import org.apache.james.backends.rabbitmq.RabbitMQFixture;
 import org.apache.james.backends.rabbitmq.RabbitMQManagementAPI;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
-import org.apache.james.event.json.EventSerializer;
+import org.apache.james.event.json.MailboxEventSerializer;
 import org.apache.james.events.EventBusTestFixture.EventListenerCountingSuccessfulExecution;
 import org.apache.james.events.EventBusTestFixture.GroupA;
 import org.apache.james.events.EventDispatcher.DispatchingFailureGroup;
@@ -71,7 +71,6 @@ import org.apache.james.events.RoutingKeyConverter.RoutingKey;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
-import org.apache.james.mailbox.util.EventCollector;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.assertj.core.data.Percentage;
@@ -107,7 +106,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     private RabbitMQEventBus eventBus2;
     private RabbitMQEventBus eventBus3;
     private RabbitMQEventBus eventBusWithKeyHandlerNotStarted;
-    private EventSerializer eventSerializer;
+    private MailboxEventSerializer eventSerializer;
     private RoutingKeyConverter routingKeyConverter;
     private MemoryEventDeadLetters memoryEventDeadLetters;
 
@@ -121,7 +120,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         memoryEventDeadLetters = new MemoryEventDeadLetters();
 
         TestId.Factory mailboxIdFactory = new TestId.Factory();
-        eventSerializer = new EventSerializer(mailboxIdFactory, new TestMessageId.Factory(), new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
+        eventSerializer = new MailboxEventSerializer(mailboxIdFactory, new TestMessageId.Factory(), new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
         routingKeyConverter = RoutingKeyConverter.forFactories(new MailboxIdRegistrationKey.Factory(mailboxIdFactory));
 
         eventBus = newEventBus();

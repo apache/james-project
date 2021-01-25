@@ -28,12 +28,10 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.event.json.EventSerializer;
 import org.apache.james.events.tables.CassandraEventDeadLettersTable;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -59,7 +57,7 @@ public class CassandraEventDeadLettersDAO {
     }
 
     private PreparedStatement prepareInsertStatement(Session session) {
-        return session.prepare(QueryBuilder.insertInto(CassandraEventDeadLettersTable.TABLE_NAME)
+        return session.prepare(insertInto(CassandraEventDeadLettersTable.TABLE_NAME)
             .value(CassandraEventDeadLettersTable.GROUP, bindMarker(CassandraEventDeadLettersTable.GROUP))
             .value(CassandraEventDeadLettersTable.INSERTION_ID, bindMarker(CassandraEventDeadLettersTable.INSERTION_ID))
             .value(CassandraEventDeadLettersTable.EVENT, bindMarker(CassandraEventDeadLettersTable.EVENT)));
@@ -68,25 +66,25 @@ public class CassandraEventDeadLettersDAO {
     private PreparedStatement prepareDeleteStatement(Session session) {
         return session.prepare(delete()
             .from(CassandraEventDeadLettersTable.TABLE_NAME)
-            .where(QueryBuilder.eq(CassandraEventDeadLettersTable.GROUP, bindMarker(CassandraEventDeadLettersTable.GROUP)))
-            .and(QueryBuilder.eq(CassandraEventDeadLettersTable.INSERTION_ID, bindMarker(CassandraEventDeadLettersTable.INSERTION_ID))));
+            .where(eq(CassandraEventDeadLettersTable.GROUP, bindMarker(CassandraEventDeadLettersTable.GROUP)))
+            .and(eq(CassandraEventDeadLettersTable.INSERTION_ID, bindMarker(CassandraEventDeadLettersTable.INSERTION_ID))));
     }
 
     private PreparedStatement prepareSelectEventStatement(Session session) {
-        return session.prepare(QueryBuilder.select(CassandraEventDeadLettersTable.EVENT)
+        return session.prepare(select(CassandraEventDeadLettersTable.EVENT)
             .from(CassandraEventDeadLettersTable.TABLE_NAME)
-            .where(QueryBuilder.eq(CassandraEventDeadLettersTable.GROUP, bindMarker(CassandraEventDeadLettersTable.GROUP)))
-            .and(QueryBuilder.eq(CassandraEventDeadLettersTable.INSERTION_ID, bindMarker(CassandraEventDeadLettersTable.INSERTION_ID))));
+            .where(eq(CassandraEventDeadLettersTable.GROUP, bindMarker(CassandraEventDeadLettersTable.GROUP)))
+            .and(eq(CassandraEventDeadLettersTable.INSERTION_ID, bindMarker(CassandraEventDeadLettersTable.INSERTION_ID))));
     }
 
     private PreparedStatement prepareSelectInsertionIdsWithGroupStatement(Session session) {
-        return session.prepare(QueryBuilder.select(CassandraEventDeadLettersTable.INSERTION_ID)
+        return session.prepare(select(CassandraEventDeadLettersTable.INSERTION_ID)
             .from(CassandraEventDeadLettersTable.TABLE_NAME)
-            .where(QueryBuilder.eq(CassandraEventDeadLettersTable.GROUP, bindMarker(CassandraEventDeadLettersTable.GROUP))));
+            .where(eq(CassandraEventDeadLettersTable.GROUP, bindMarker(CassandraEventDeadLettersTable.GROUP))));
     }
 
     private PreparedStatement prepareContainEventStatement(Session session) {
-        return session.prepare(QueryBuilder.select(CassandraEventDeadLettersTable.EVENT)
+        return session.prepare(select(CassandraEventDeadLettersTable.EVENT)
             .from(CassandraEventDeadLettersTable.TABLE_NAME)
             .limit(1));
     }
@@ -122,6 +120,6 @@ public class CassandraEventDeadLettersDAO {
     }
 
     private Event deserializeEvent(String serializedEvent) {
-        return eventSerializer.fromJson(serializedEvent).get();
+        return eventSerializer.asEvent(serializedEvent);
     }
 }

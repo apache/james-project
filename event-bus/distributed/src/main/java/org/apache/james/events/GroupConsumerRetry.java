@@ -27,7 +27,6 @@ import static org.apache.james.events.GroupRegistration.RETRY_COUNT;
 
 import java.nio.charset.StandardCharsets;
 
-import org.apache.james.event.json.EventSerializer;
 import org.apache.james.util.MDCStructuredLogger;
 import org.apache.james.util.StructuredLogger;
 import org.slf4j.Logger;

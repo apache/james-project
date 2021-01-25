@@ -32,7 +32,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
 import org.apache.james.core.Username;
-import org.apache.james.event.json.EventSerializer;
+import org.apache.james.event.json.MailboxEventSerializer;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusTestFixture;
@@ -119,7 +119,7 @@ class EventDeadLettersRoutesTest {
     void beforeEach() {
         deadLetters = new MemoryEventDeadLetters();
         JsonTransformer jsonTransformer = new JsonTransformer();
-        EventSerializer eventSerializer = new EventSerializer(new InMemoryId.Factory(), new InMemoryMessageId.Factory(), new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
+        MailboxEventSerializer eventSerializer = new MailboxEventSerializer(new InMemoryId.Factory(), new InMemoryMessageId.Factory(), new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
         eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), RetryBackoffConfiguration.DEFAULT, deadLetters);
         EventDeadLettersRedeliverService redeliverService = new EventDeadLettersRedeliverService(eventBus, deadLetters);
         EventDeadLettersService service = new EventDeadLettersService(redeliverService, deadLetters);

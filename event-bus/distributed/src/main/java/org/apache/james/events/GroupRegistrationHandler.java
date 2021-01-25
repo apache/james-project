@@ -25,7 +25,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
-import org.apache.james.event.json.EventSerializer;
 
 import reactor.rabbitmq.Sender;
 

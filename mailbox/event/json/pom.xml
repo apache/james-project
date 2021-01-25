@@ -53,6 +53,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>event-bus-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.beachape</groupId>
             <artifactId>enumeratum_${scala.base}</artifactId>
             <version>1.5.13</version>

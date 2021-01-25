@@ -33,7 +33,6 @@ import java.util.function.Predicate;
 
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
-import org.apache.james.event.json.EventSerializer;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -155,7 +154,7 @@ class GroupRegistration implements Registration {
     }
 
     private Mono<Event> deserializeEvent(byte[] eventAsBytes) {
-        return Mono.fromCallable(() -> eventSerializer.fromJson(new String(eventAsBytes, StandardCharsets.UTF_8)).get())
+        return Mono.fromCallable(() -> eventSerializer.asEvent(new String(eventAsBytes, StandardCharsets.UTF_8)))
             .subscribeOn(Schedulers.parallel());
     }
 

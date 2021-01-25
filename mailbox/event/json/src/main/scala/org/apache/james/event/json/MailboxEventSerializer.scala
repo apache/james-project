@@ -31,7 +31,7 @@ import org.apache.james.event.json.DTOs._
 import org.apache.james.events
 import org.apache.james.events.Event.EventId
 import org.apache.james.events.MailboxEvents.{Added => JavaAdded, Expunged => JavaExpunged, FlagsUpdated => JavaFlagsUpdated, MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
-import org.apache.james.events.MessageMoveEvent
+import org.apache.james.events.{EventSerializer, MessageMoveEvent => JavaMessageMoveEvent}
 import org.apache.james.mailbox.MailboxSession.SessionId
 import org.apache.james.mailbox.model.{MailboxId, MessageId, MessageMoves, QuotaRoot, MailboxACL => JavaMailboxACL, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota}
 import org.apache.james.mailbox.quota.QuotaRootDeserializer
@@ -174,7 +174,7 @@ private object ScalaConverter {
     mailboxId = event.getMailboxId,
     expunged = event.getExpunged.asScala.view.mapValues(DTOs.MessageMetaData.fromJava).toMap)
 
-  private def toScala(event: MessageMoveEvent): DTO.MessageMoveEvent = DTO.MessageMoveEvent(
+  private def toScala(event: JavaMessageMoveEvent): DTO.MessageMoveEvent = DTO.MessageMoveEvent(
     eventId = event.getEventId,
     user = event.getUsername,
     previousMailboxIds = event.getMessageMoves.getPreviousMailboxIds.asScala.toSet,
@@ -197,7 +197,7 @@ private object ScalaConverter {
     case e: JavaMailboxAdded => toScala(e)
     case e: JavaMailboxDeletion => toScala(e)
     case e: JavaMailboxRenamed => toScala(e)
-    case e: MessageMoveEvent => toScala(e)
+    case e: JavaMessageMoveEvent => toScala(e)
     case e: JavaQuotaUsageUpdatedEvent => toScala(e)
     case _ => throw new RuntimeException("no Scala conversion known")
   }
@@ -353,10 +353,13 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
     .map(event => event.toJava)
 }
 
-class EventSerializer @Inject() (mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory, quotaRootDeserializer: QuotaRootDeserializer) {
+class MailboxEventSerializer @Inject()(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory, quotaRootDeserializer: QuotaRootDeserializer) extends EventSerializer{
   private val jsonSerialize = new JsonSerialize(mailboxIdFactory, messageIdFactory, quotaRootDeserializer)
 
-  def toJson(event: events.Event): String = jsonSerialize.toJson(event)
+  override def toJson(event: events.Event): String = jsonSerialize.toJson(event)
+
   def fromJson(json: String): JsResult[events.Event] = jsonSerialize.fromJson(json)
+
+  override def asEvent(serialized: String): events.Event = fromJson(serialized).get
 }
 

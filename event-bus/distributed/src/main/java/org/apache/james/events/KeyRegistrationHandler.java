@@ -31,7 +31,6 @@ import java.util.Optional;
 import java.util.function.Predicate;
 
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
-import org.apache.james.event.json.EventSerializer;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.MDCStructuredLogger;
 import org.apache.james.util.StructuredLogger;
@@ -186,7 +185,7 @@ class KeyRegistrationHandler {
     }
 
     private Event toEvent(Delivery delivery) {
-        return eventSerializer.fromJson(new String(delivery.getBody(), StandardCharsets.UTF_8)).get();
+        return eventSerializer.asEvent(new String(delivery.getBody(), StandardCharsets.UTF_8));
     }
 
     private StructuredLogger structuredLogger(Event event, RegistrationKey key) {

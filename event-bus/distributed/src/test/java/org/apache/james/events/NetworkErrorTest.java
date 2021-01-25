@@ -29,7 +29,7 @@ import static org.mockito.Mockito.verify;
 
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
 import org.apache.james.backends.rabbitmq.RabbitMQFixture;
-import org.apache.james.event.json.EventSerializer;
+import org.apache.james.event.json.MailboxEventSerializer;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
@@ -51,7 +51,7 @@ class NetworkErrorTest {
         MemoryEventDeadLetters memoryEventDeadLetters = new MemoryEventDeadLetters();
 
         TestId.Factory mailboxIdFactory = new TestId.Factory();
-        EventSerializer eventSerializer = new EventSerializer(mailboxIdFactory, new TestMessageId.Factory(), new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
+        MailboxEventSerializer eventSerializer = new MailboxEventSerializer(mailboxIdFactory, new TestMessageId.Factory(), new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
         RoutingKeyConverter routingKeyConverter = RoutingKeyConverter.forFactories(new MailboxIdRegistrationKey.Factory(mailboxIdFactory));
 
         eventBus = new RabbitMQEventBus(rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(),

@@ -36,7 +36,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-import org.apache.james.event.json.EventSerializer;
 import org.apache.james.events.RoutingKeyConverter.RoutingKey;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.MDCStructuredLogger;

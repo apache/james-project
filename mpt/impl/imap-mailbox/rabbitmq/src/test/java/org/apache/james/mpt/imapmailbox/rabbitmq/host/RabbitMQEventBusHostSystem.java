@@ -30,7 +30,7 @@ import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
-import org.apache.james.event.json.EventSerializer;
+import org.apache.james.event.json.MailboxEventSerializer;
 import org.apache.james.events.EventBusId;
 import org.apache.james.events.MailboxIdRegistrationKey;
 import org.apache.james.events.MemoryEventDeadLetters;
@@ -115,7 +115,7 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
     private RabbitMQEventBus createEventBus() {
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         InMemoryId.Factory mailboxIdFactory = new InMemoryId.Factory();
-        EventSerializer eventSerializer = new EventSerializer(mailboxIdFactory, messageIdFactory, new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
+        MailboxEventSerializer eventSerializer = new MailboxEventSerializer(mailboxIdFactory, messageIdFactory, new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
         RoutingKeyConverter routingKeyConverter = new RoutingKeyConverter(ImmutableSet.of(new MailboxIdRegistrationKey.Factory(mailboxIdFactory)));
         return new RabbitMQEventBus(reactorRabbitMQChannelPool.getSender(), reactorRabbitMQChannelPool::createReceiver,
             eventSerializer, RetryBackoffConfiguration.DEFAULT, routingKeyConverter, new MemoryEventDeadLetters(),

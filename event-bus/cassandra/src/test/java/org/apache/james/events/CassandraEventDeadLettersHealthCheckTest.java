@@ -22,7 +22,7 @@ package org.apache.james.events;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.DockerCassandra;
-import org.apache.james.event.json.EventSerializer;
+import org.apache.james.event.json.MailboxEventSerializer;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
@@ -39,7 +39,7 @@ class CassandraEventDeadLettersHealthCheckTest implements EventDeadLettersHealth
 
     @BeforeEach
     void setUp(CassandraCluster cassandraCluster, DockerCassandra dockerCassandra) {
-        EventSerializer eventSerializer = new EventSerializer(new TestId.Factory(), new TestMessageId.Factory(), new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
+        MailboxEventSerializer eventSerializer = new MailboxEventSerializer(new TestId.Factory(), new TestMessageId.Factory(), new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
         eventDeadLetters = new CassandraEventDeadLetters(new CassandraEventDeadLettersDAO(cassandraCluster.getConf(), eventSerializer),
                                                          new CassandraEventDeadLettersGroupDAO(cassandraCluster.getConf()));
         testee = new EventDeadLettersHealthCheck(eventDeadLetters);

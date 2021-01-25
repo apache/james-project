@@ -26,7 +26,7 @@ import static org.apache.james.events.EventBusTestFixture.RETRY_BACKOFF_CONFIGUR
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
-import org.apache.james.event.json.EventSerializer;
+import org.apache.james.event.json.MailboxEventSerializer;
 import org.apache.james.events.EventBusTestFixture.GroupA;
 import org.apache.james.events.GroupRegistration.WorkQueueName;
 import org.apache.james.mailbox.model.TestId;
@@ -53,7 +53,7 @@ class RabbitMQEventBusDeadLetterQueueUpgradeTest {
         MemoryEventDeadLetters memoryEventDeadLetters = new MemoryEventDeadLetters();
 
         TestId.Factory mailboxIdFactory = new TestId.Factory();
-        EventSerializer eventSerializer = new EventSerializer(mailboxIdFactory, new TestMessageId.Factory(), new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
+        MailboxEventSerializer eventSerializer = new MailboxEventSerializer(mailboxIdFactory, new TestMessageId.Factory(), new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
         RoutingKeyConverter routingKeyConverter = RoutingKeyConverter.forFactories(new MailboxIdRegistrationKey.Factory(mailboxIdFactory));
 
         eventBus = new RabbitMQEventBus(rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(),
