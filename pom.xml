@@ -2250,14 +2250,14 @@
             <dependency>
                 <groupId>io.projectreactor</groupId>
                 <artifactId>reactor-bom</artifactId>
-                <version>Dysprosium-SR6</version>
+                <version>2020.0.3</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>io.projectreactor</groupId>
                 <artifactId>reactor-scala-extensions_${scala.base}</artifactId>
-                <version>0.5.1</version>
+                <version>0.8.0</version>
             </dependency>
             <dependency>
                 <groupId>io.rest-assured</groupId>
