@@ -33,7 +33,7 @@ import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Invocation.MethodName
 import org.apache.james.jmap.core.ProblemDetails.{notJSONProblem, notRequestProblem, unknownCapabilityProblem}
-import org.apache.james.jmap.core.{DefaultCapabilities, ErrorCode, Invocation, MissingCapabilityException, ProblemDetails, RequestObject, ResponseObject}
+import org.apache.james.jmap.core.{Capability, ErrorCode, Invocation, MissingCapabilityException, ProblemDetails, RequestObject, ResponseObject}
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
@@ -57,15 +57,16 @@ object JMAPApiRoutes {
 
 class JMAPApiRoutes (val authenticator: Authenticator,
                      userProvisioner: UserProvisioning,
-                     methods: Set[Method]) extends JMAPRoutes {
+                     methods: Set[Method],
+                     defaultCapabilities: Set[Capability]) extends JMAPRoutes {
 
   private val methodsByName: Map[MethodName, Method] = methods.map(method => method.methodName -> method).toMap
 
   @Inject
   def this(@Named(InjectionKeys.RFC_8621) authenticator: Authenticator,
            userProvisioner: UserProvisioning,
-           javaMethods: java.util.Set[Method]) {
-    this(authenticator, userProvisioner, javaMethods.asScala.toSet)
+           javaMethods: java.util.Set[Method], supportedCapabilities: java.util.Set[Capability]) {
+    this(authenticator, userProvisioner, javaMethods.asScala.toSet, supportedCapabilities.asScala.toSet)
   }
 
   override def routes(): stream.Stream[JMAPRoute] = Stream.of(
@@ -109,7 +110,7 @@ class JMAPApiRoutes (val authenticator: Authenticator,
                       httpServerResponse: HttpServerResponse,
                       mailboxSession: MailboxSession): SMono[Void] = {
     val processingContext: ProcessingContext = ProcessingContext(Map.empty, Map.empty)
-    val unsupportedCapabilities = requestObject.using.toSet -- DefaultCapabilities.SUPPORTED_CAPABILITY_IDENTIFIERS
+    val unsupportedCapabilities = requestObject.using.toSet -- defaultCapabilities.map(_.identifier())
     val capabilities: Set[CapabilityIdentifier] = requestObject.using.toSet
 
     if (unsupportedCapabilities.nonEmpty) {

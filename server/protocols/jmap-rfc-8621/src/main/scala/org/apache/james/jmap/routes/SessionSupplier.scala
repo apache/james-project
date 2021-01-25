@@ -23,9 +23,8 @@ import javax.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.{Account, AccountId, DefaultCapabilities, IsPersonal, IsReadOnly, JmapRfc8621Configuration, Session}
-import reactor.core.scala.publisher.SMono
 
-class SessionSupplier @Inject() (val configuration: JmapRfc8621Configuration){
+class SessionSupplier @Inject() (val configuration: JmapRfc8621Configuration) {
   private val maxSizeUpload = configuration.maxUploadSize
 
   def generate(username: Username): Either[IllegalArgumentException, Session] =

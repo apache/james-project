@@ -45,7 +45,7 @@ object CapabilityIdentifier {
   val JAMES_SHARES: CapabilityIdentifier = "urn:apache:james:params:jmap:mail:shares"
 }
 
-sealed trait CapabilityProperties
+trait CapabilityProperties
 
 trait Capability {
   def identifier(): CapabilityIdentifier

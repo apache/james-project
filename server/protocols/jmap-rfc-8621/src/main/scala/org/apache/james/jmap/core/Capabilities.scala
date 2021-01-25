@@ -22,7 +22,7 @@ import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
 
 object DefaultCapabilities {
-  private def coreCapability(maxUploadSize: MaxSizeUpload) = CoreCapability(
+  def coreCapability(maxUploadSize: MaxSizeUpload) = CoreCapability(
     properties = CoreCapabilityProperties(
       maxUploadSize,
       MaxConcurrentUpload(4L),
@@ -32,7 +32,7 @@ object DefaultCapabilities {
       MaxObjectsInGet(500L),
       MaxObjectsInSet(500L),
       collationAlgorithms = List("i;unicode-casemap")))
-  private val MAIL_CAPABILITY = MailCapability(
+  val MAIL_CAPABILITY = MailCapability(
     properties = MailCapabilityProperties(
       MaxMailboxesPerEmail(Some(10_000_000L)),
       MaxMailboxDepth(None),
@@ -40,10 +40,10 @@ object DefaultCapabilities {
       MaxSizeAttachmentsPerEmail(20_000_000L),
       emailQuerySortOptions = List("receivedAt", "sentAt"),
       MayCreateTopLevelMailbox(true)))
-  private val QUOTA_CAPABILITY = QuotaCapability()
-  private val SHARES_CAPABILITY = SharesCapability()
-  private val VACATION_RESPONSE_CAPABILITY = VacationResponseCapability()
-  private val SUBMISSION_CAPABILITY = SubmissionCapability()
+  val QUOTA_CAPABILITY = QuotaCapability()
+  val SHARES_CAPABILITY = SharesCapability()
+  val VACATION_RESPONSE_CAPABILITY = VacationResponseCapability()
+  val SUBMISSION_CAPABILITY = SubmissionCapability()
 
   val SUPPORTED_CAPABILITY_IDENTIFIERS: Set[CapabilityIdentifier] =
     Set(JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE, JAMES_SHARES, JAMES_QUOTA, EMAIL_SUBMISSION)

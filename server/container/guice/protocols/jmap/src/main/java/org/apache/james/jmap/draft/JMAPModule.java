@@ -35,6 +35,9 @@ import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.JMAPServer;
 import org.apache.james.jmap.Version;
 import org.apache.james.jmap.change.MailboxChangeListener;
+import org.apache.james.jmap.core.Capability;
+import org.apache.james.jmap.core.DefaultCapabilities;
+import org.apache.james.jmap.core.JmapRfc8621Configuration;
 import org.apache.james.jmap.draft.methods.RequestHandler;
 import org.apache.james.jmap.draft.send.PostDequeueDecoratorFactory;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
@@ -131,6 +134,14 @@ public class JMAPModule extends AbstractModule {
         Multibinder<Version> supportedVersions = Multibinder.newSetBinder(binder(), Version.class);
         supportedVersions.addBinding().toInstance(Version.DRAFT);
         supportedVersions.addBinding().toInstance(Version.RFC8621);
+
+        Multibinder<Capability> supportedCapabilities = Multibinder.newSetBinder(binder(), Capability.class);
+        supportedCapabilities.addBinding().toInstance(DefaultCapabilities.coreCapability(JmapRfc8621Configuration.UPLOAD_LIMIT_30_MB()));
+        supportedCapabilities.addBinding().toInstance(DefaultCapabilities.MAIL_CAPABILITY());
+        supportedCapabilities.addBinding().toInstance(DefaultCapabilities.QUOTA_CAPABILITY());
+        supportedCapabilities.addBinding().toInstance(DefaultCapabilities.SHARES_CAPABILITY());
+        supportedCapabilities.addBinding().toInstance(DefaultCapabilities.VACATION_RESPONSE_CAPABILITY());
+        supportedCapabilities.addBinding().toInstance(DefaultCapabilities.SUBMISSION_CAPABILITY());
     }
 
     @Provides
