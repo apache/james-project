@@ -21,10 +21,10 @@ package org.apache.james.modules.mailbox;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.core.healthcheck.HealthCheck;
-import org.apache.james.mailbox.events.CassandraEventDeadLetters;
-import org.apache.james.mailbox.events.CassandraEventDeadLettersDAO;
-import org.apache.james.mailbox.events.CassandraEventDeadLettersGroupDAO;
-import org.apache.james.mailbox.events.CassandraEventDeadLettersModule;
+import org.apache.james.events.CassandraEventDeadLetters;
+import org.apache.james.events.CassandraEventDeadLettersDAO;
+import org.apache.james.events.CassandraEventDeadLettersGroupDAO;
+import org.apache.james.events.CassandraEventDeadLettersModule;
 import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.EventDeadLettersHealthCheck;
 

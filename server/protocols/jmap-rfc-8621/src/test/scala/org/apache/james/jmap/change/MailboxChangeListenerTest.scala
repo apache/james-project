@@ -20,17 +20,18 @@
 package org.apache.james.jmap.change
 
 import java.time.{Clock, ZonedDateTime}
+
 import javax.mail.Flags
+import org.apache.james.events.delivery.InVmEventDelivery
+import org.apache.james.events.{InVMEventBus, MemoryEventDeadLetters, RetryBackoffConfiguration}
 import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, MailboxChange, MailboxChangeRepository, State}
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.change.MailboxChangeListenerTest.ACCOUNT_ID
 import org.apache.james.jmap.memory.change.{MemoryEmailChangeRepository, MemoryMailboxChangeRepository}
 import org.apache.james.mailbox.MessageManager.{AppendCommand, AppendResult, FlagsUpdateMode}
-import org.apache.james.mailbox.events.delivery.InVmEventDelivery
-import org.apache.james.mailbox.events.{InVMEventBus, MemoryEventDeadLetters, RetryBackoffConfiguration}
 import org.apache.james.mailbox.fixture.MailboxFixture.{ALICE, BOB}
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources
-import org.apache.james.mailbox.model.{ComposedMessageId, MailboxACL, MailboxId, MailboxPath, MessageRange, TestId, TestMessageId}
+import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath, MessageRange, TestId, TestMessageId}
 import org.apache.james.mailbox.{MailboxManager, MailboxSessionUtil, MessageManager}
 import org.apache.james.metrics.tests.RecordingMetricFactory
 import org.assertj.core.api.Assertions.assertThat

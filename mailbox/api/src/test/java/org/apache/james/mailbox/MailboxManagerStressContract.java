@@ -33,8 +33,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.james.core.Username;
 import org.apache.james.events.EventBus;
-import org.apache.james.mailbox.events.MailboxEvents.Added;
-import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
+import org.apache.james.events.MailboxEvents.Added;
+import org.apache.james.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;

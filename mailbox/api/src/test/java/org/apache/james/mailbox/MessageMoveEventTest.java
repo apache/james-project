@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.events.MessageMoveEvent;
+import org.apache.james.events.MessageMoveEvent;
 import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;

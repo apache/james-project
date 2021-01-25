@@ -45,7 +45,7 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-mailbox-event-memory</artifactId>
+            <artifactId>event-bus-in-vm</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -21,7 +21,7 @@ package org.apache.james.modules.mailbox;
 
 import java.time.Duration;
 
-import org.apache.james.mailbox.events.RetryBackoffConfiguration;
+import org.apache.james.events.RetryBackoffConfiguration;
 
 import com.google.inject.AbstractModule;
 

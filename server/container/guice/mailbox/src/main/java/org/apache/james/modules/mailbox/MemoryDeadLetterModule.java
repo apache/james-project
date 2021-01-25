@@ -22,7 +22,7 @@ package org.apache.james.modules.mailbox;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.EventDeadLettersHealthCheck;
-import org.apache.james.mailbox.events.MemoryEventDeadLetters;
+import org.apache.james.events.MemoryEventDeadLetters;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;

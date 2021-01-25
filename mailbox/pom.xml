@@ -41,7 +41,6 @@
         <module>elasticsearch</module>
 
         <module>event/event-cassandra</module>
-        <module>event/event-memory</module>
         <module>event/event-rabbitmq</module>
         <module>event/json</module>
 

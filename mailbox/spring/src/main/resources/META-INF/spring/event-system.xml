@@ -25,15 +25,15 @@
           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
-    <bean id="event-bus" class="org.apache.james.mailbox.events.InVMEventBus" lazy-init="true">
+    <bean id="event-bus" class="org.apache.james.events.InVMEventBus" lazy-init="true">
         <constructor-arg index="0" ref="event-delivery"/>
         <constructor-arg index="1">
-            <util:constant static-field="org.apache.james.mailbox.events.RetryBackoffConfiguration.DEFAULT"/>
+            <util:constant static-field="org.apache.james.events.RetryBackoffConfiguration.DEFAULT"/>
         </constructor-arg>
         <constructor-arg index="2" ref="event-deadletters"/>
     </bean>
-    <bean id="event-delivery" class="org.apache.james.mailbox.events.delivery.InVmEventDelivery" lazy-init="true">
+    <bean id="event-delivery" class="org.apache.james.events.delivery.InVmEventDelivery" lazy-init="true">
         <constructor-arg index="0" ref="metricFactory"/>
     </bean>
-    <bean id="event-deadletters" class="org.apache.james.mailbox.events.MemoryEventDeadLetters" lazy-init="true"/>
+    <bean id="event-deadletters" class="org.apache.james.events.MemoryEventDeadLetters" lazy-init="true"/>
 </beans>

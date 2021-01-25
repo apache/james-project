@@ -20,11 +20,11 @@
 package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.events.EventBusTestFixture;
+import org.apache.james.events.InVMEventBus;
+import org.apache.james.events.MemoryEventDeadLetters;
+import org.apache.james.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
-import org.apache.james.mailbox.events.EventBusTestFixture;
-import org.apache.james.mailbox.events.InVMEventBus;
-import org.apache.james.mailbox.events.MemoryEventDeadLetters;
-import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.store.AbstractCombinationManagerTest;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;

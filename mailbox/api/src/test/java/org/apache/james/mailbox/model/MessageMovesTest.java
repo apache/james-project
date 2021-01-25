@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.model;
 
-import org.apache.james.mailbox.events.MessageMoveEvent;
+import org.apache.james.events.MessageMoveEvent;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;

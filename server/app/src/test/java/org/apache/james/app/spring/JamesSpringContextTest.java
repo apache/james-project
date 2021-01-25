@@ -22,7 +22,7 @@ package org.apache.james.app.spring;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.container.spring.context.JamesServerApplicationContext;
-import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.events.InVMEventBus;
 import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;

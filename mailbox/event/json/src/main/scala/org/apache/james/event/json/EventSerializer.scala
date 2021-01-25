@@ -30,9 +30,9 @@ import org.apache.james.event.json.DTOs.SystemFlag.SystemFlag
 import org.apache.james.event.json.DTOs._
 import org.apache.james.events
 import org.apache.james.events.Event.EventId
+import org.apache.james.events.MailboxEvents.{Added => JavaAdded, Expunged => JavaExpunged, FlagsUpdated => JavaFlagsUpdated, MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
+import org.apache.james.events.MessageMoveEvent
 import org.apache.james.mailbox.MailboxSession.SessionId
-import org.apache.james.mailbox.events.MailboxEvents.{Added => JavaAdded, Expunged => JavaExpunged, FlagsUpdated => JavaFlagsUpdated, MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
-import org.apache.james.mailbox.events.{MessageMoveEvent => JavaMessageMoveEvent}
 import org.apache.james.mailbox.model.{MailboxId, MessageId, MessageMoves, QuotaRoot, MailboxACL => JavaMailboxACL, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota}
 import org.apache.james.mailbox.quota.QuotaRootDeserializer
 import org.apache.james.mailbox.{MessageUid, ModSeq}
@@ -174,7 +174,7 @@ private object ScalaConverter {
     mailboxId = event.getMailboxId,
     expunged = event.getExpunged.asScala.view.mapValues(DTOs.MessageMetaData.fromJava).toMap)
 
-  private def toScala(event: JavaMessageMoveEvent): DTO.MessageMoveEvent = DTO.MessageMoveEvent(
+  private def toScala(event: MessageMoveEvent): DTO.MessageMoveEvent = DTO.MessageMoveEvent(
     eventId = event.getEventId,
     user = event.getUsername,
     previousMailboxIds = event.getMessageMoves.getPreviousMailboxIds.asScala.toSet,
@@ -197,7 +197,7 @@ private object ScalaConverter {
     case e: JavaMailboxAdded => toScala(e)
     case e: JavaMailboxDeletion => toScala(e)
     case e: JavaMailboxRenamed => toScala(e)
-    case e: JavaMessageMoveEvent => toScala(e)
+    case e: MessageMoveEvent => toScala(e)
     case e: JavaQuotaUsageUpdatedEvent => toScala(e)
     case _ => throw new RuntimeException("no Scala conversion known")
   }
