@@ -19,6 +19,7 @@
 
 package org.apache.james.events;
 
+import static org.apache.james.events.EventBusTestFixture.EVENT_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
@@ -40,14 +41,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import org.apache.james.core.Username;
-import org.apache.james.events.MailboxEvents.Added;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.TestId;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -116,8 +112,7 @@ public interface KeyContract extends EventBusContract {
 
             Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
 
-            Username bob = Username.of("bob");
-            Added noopEvent = new Added(MailboxSession.SessionId.of(18), bob, MailboxPath.forUser(bob, "mailbox"), TestId.of(58), ImmutableSortedMap.of(), Event.EventId.random());
+            Event noopEvent = new EventBusTestFixture.TestEvent(EVENT_ID, Username.of("noop"));
             eventBus().dispatch(noopEvent, EventBusTestFixture.KEY_1).block();
 
             verify(listener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never())

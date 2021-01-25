@@ -26,7 +26,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.james.mailbox.model.TestId;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -36,7 +35,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 class LocalListenerRegistryTest {
-    private static final MailboxIdRegistrationKey KEY_1 = new MailboxIdRegistrationKey(TestId.of(42));
+    private static final RegistrationKey KEY_1 = new EventBusTestFixture.TestRegistrationKey("a");
 
     private LocalListenerRegistry testee;
 

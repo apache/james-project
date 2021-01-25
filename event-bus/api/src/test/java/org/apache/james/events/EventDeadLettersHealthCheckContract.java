@@ -24,11 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.core.Username;
 import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.Result;
-import org.apache.james.events.MailboxEvents.MailboxAdded;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.TestId;
+import org.apache.james.events.EventBusTestFixture.TestEvent;
 import org.junit.jupiter.api.Test;
 
 interface EventDeadLettersHealthCheckContract {
@@ -37,13 +33,11 @@ interface EventDeadLettersHealthCheckContract {
     String EXPECTED_DEGRADED_MESSAGE = "EventDeadLetters contain events. This might indicate transient failure on mailbox event processing.";
 
     Username USERNAME = Username.of("user");
-    MailboxPath MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, "mailboxName");
-    MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(235);
-    TestId MAILBOX_ID = TestId.of(563);
+
     Event.EventId EVENT_ID_1 = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
     Event.EventId EVENT_ID_2 = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b5");
-    MailboxAdded EVENT_1 = new MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, EVENT_ID_1);
-    MailboxAdded EVENT_2 = new MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, EVENT_ID_2);
+    Event EVENT_1 = new TestEvent(EVENT_ID_1, USERNAME);
+    Event EVENT_2 = new TestEvent(EVENT_ID_2, USERNAME);
 
     Group GROUP_A = new EventBusTestFixture.GroupA();
     Group GROUP_B = new EventBusTestFixture.GroupB();

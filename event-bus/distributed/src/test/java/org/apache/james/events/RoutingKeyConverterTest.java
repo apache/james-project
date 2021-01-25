@@ -24,26 +24,27 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Objects;
 
-import org.apache.james.mailbox.model.TestId;
+import org.apache.james.events.EventBusTestFixture.TestRegistrationKey;
+import org.apache.james.events.EventBusTestFixture.TestRegistrationKeyFactory;
 import org.junit.jupiter.api.Test;
 
 class RoutingKeyConverterTest {
-    static class TestRegistrationKey implements RegistrationKey {
+    static class OtherTestRegistrationKey implements RegistrationKey {
         static class Factory implements RegistrationKey.Factory {
             @Override
             public Class<? extends RegistrationKey> forClass() {
-                return TestRegistrationKey.class;
+                return OtherTestRegistrationKey.class;
             }
 
             @Override
             public RegistrationKey fromString(String asString) {
-                return new TestRegistrationKey(asString);
+                return new OtherTestRegistrationKey(asString);
             }
         }
 
         private final String value;
 
-        TestRegistrationKey(String value) {
+        OtherTestRegistrationKey(String value) {
             this.value = value;
         }
 
@@ -54,8 +55,8 @@ class RoutingKeyConverterTest {
 
         @Override
         public final boolean equals(Object o) {
-            if (o instanceof TestRegistrationKey) {
-                TestRegistrationKey that = (TestRegistrationKey) o;
+            if (o instanceof OtherTestRegistrationKey) {
+                OtherTestRegistrationKey that = (OtherTestRegistrationKey) o;
 
                 return Objects.equals(this.value, that.value);
             }
@@ -68,12 +69,12 @@ class RoutingKeyConverterTest {
         }
     }
 
-    private static final RegistrationKey REGISTRATION_KEY_1 = new MailboxIdRegistrationKey(TestId.of(42));
-    private static final String ROUTING_KEY_1 = "org.apache.james.mailbox.events.MailboxIdRegistrationKey:42";
+    private static final RegistrationKey REGISTRATION_KEY_1 = new TestRegistrationKey("a");
+    private static final String ROUTING_KEY_1 = "org.apache.james.events.EventBusTestFixture$TestRegistrationKey:a";
 
     private RoutingKeyConverter testee = RoutingKeyConverter.forFactories(
-        new TestRegistrationKey.Factory(),
-        new MailboxIdRegistrationKey.Factory(new TestId.Factory()));
+        new OtherTestRegistrationKey.Factory(),
+        new TestRegistrationKeyFactory());
 
     @Test
     void toRoutingKeyShouldTransformAKeyIntoAString() {
@@ -89,26 +90,26 @@ class RoutingKeyConverterTest {
 
     @Test
     void toRoutingKeyShouldAcceptSeparator() {
-        assertThat(RoutingKeyConverter.RoutingKey.of(new TestRegistrationKey("a:b")).asString())
-            .isEqualTo("org.apache.james.mailbox.events.RoutingKeyConverterTest$TestRegistrationKey:a:b");
+        assertThat(RoutingKeyConverter.RoutingKey.of(new OtherTestRegistrationKey("a:b")).asString())
+            .isEqualTo("org.apache.james.events.RoutingKeyConverterTest$OtherTestRegistrationKey:a:b");
     }
 
     @Test
     void toRegistrationKeyShouldAcceptSeparator() {
-        assertThat(testee.toRegistrationKey("org.apache.james.mailbox.events.RoutingKeyConverterTest$TestRegistrationKey:a:b"))
-            .isEqualTo(new TestRegistrationKey("a:b"));
+        assertThat(testee.toRegistrationKey("org.apache.james.events.RoutingKeyConverterTest$OtherTestRegistrationKey:a:b"))
+            .isEqualTo(new OtherTestRegistrationKey("a:b"));
     }
 
     @Test
     void toRoutingKeyShouldAcceptEmptyValue() {
-        assertThat(RoutingKeyConverter.RoutingKey.of(new TestRegistrationKey("")).asString())
-            .isEqualTo("org.apache.james.mailbox.events.RoutingKeyConverterTest$TestRegistrationKey:");
+        assertThat(RoutingKeyConverter.RoutingKey.of(new OtherTestRegistrationKey("")).asString())
+            .isEqualTo("org.apache.james.events.RoutingKeyConverterTest$OtherTestRegistrationKey:");
     }
 
     @Test
     void toRegistrationKeyShouldAcceptEmptyValue() {
-        assertThat(testee.toRegistrationKey("org.apache.james.mailbox.events.RoutingKeyConverterTest$TestRegistrationKey:"))
-            .isEqualTo(new TestRegistrationKey(""));
+        assertThat(testee.toRegistrationKey("org.apache.james.events.RoutingKeyConverterTest$OtherTestRegistrationKey:"))
+            .isEqualTo(new OtherTestRegistrationKey(""));
     }
 
     @Test

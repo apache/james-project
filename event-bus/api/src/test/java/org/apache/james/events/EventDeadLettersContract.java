@@ -31,11 +31,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.apache.james.core.Username;
-import org.apache.james.events.MailboxEvents.MailboxAdded;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.TestId;
+import org.apache.james.events.EventBusTestFixture.TestEvent;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.Test;
 
@@ -94,7 +90,7 @@ interface EventDeadLettersContract {
     }
 
     static Event event(Event.EventId eventId) {
-        return new MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, eventId);
+        return new TestEvent(eventId, USERNAME);
     }
 
     List<Group> CONCURRENT_GROUPS = ImmutableList.of(new Group0(), new Group1(), new Group2(), new Group3(), new Group4(), new Group5(),
@@ -104,15 +100,13 @@ interface EventDeadLettersContract {
     int OPERATION_COUNT = 50;
 
     Username USERNAME = Username.of("user");
-    MailboxPath MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, "mailboxName");
-    MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(235);
-    TestId MAILBOX_ID = TestId.of(563);
+
     Event.EventId EVENT_ID_1 = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
     Event.EventId EVENT_ID_2 = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b5");
     Event.EventId EVENT_ID_3 = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b6");
-    MailboxAdded EVENT_1 = new MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, EVENT_ID_1);
-    MailboxAdded EVENT_2 = new MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, EVENT_ID_2);
-    MailboxAdded EVENT_3 = new MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, EVENT_ID_3);
+    Event EVENT_1 = new TestEvent(EVENT_ID_1, USERNAME);
+    Event EVENT_2 = new TestEvent(EVENT_ID_2, USERNAME);
+    Event EVENT_3 = new TestEvent(EVENT_ID_3, USERNAME);
     EventDeadLetters.InsertionId INSERTION_ID_1 = EventDeadLetters.InsertionId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b7");
     EventDeadLetters.InsertionId INSERTION_ID_2 = EventDeadLetters.InsertionId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b8");
     EventDeadLetters.InsertionId INSERTION_ID_3 = EventDeadLetters.InsertionId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b9");

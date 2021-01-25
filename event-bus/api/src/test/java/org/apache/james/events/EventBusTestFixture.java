@@ -25,18 +25,16 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.james.core.Username;
-import org.apache.james.events.MailboxEvents.MailboxAdded;
-import org.apache.james.events.MailboxEvents.MailboxEvent;
-import org.apache.james.events.MailboxEvents.MailboxRenamed;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.TestId;
 
+import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -93,25 +91,161 @@ public interface EventBusTestFixture {
 
     }
 
-    MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(42);
+    class TestEvent implements Event {
+        private final EventId eventId;
+        private final Username username;
+
+        public TestEvent(EventId eventId, Username username) {
+            this.eventId = eventId;
+            this.username = username;
+        }
+
+        @Override
+        public Username getUsername() {
+            return username;
+        }
+
+        @Override
+        public boolean isNoop() {
+            return username.asString().equals("noop");
+        }
+
+        @Override
+        public EventId getEventId() {
+            return eventId;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof TestEvent) {
+                TestEvent that = (TestEvent) o;
+
+                return Objects.equals(this.eventId, that.eventId)
+                    && Objects.equals(this.username, that.username);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(eventId, username);
+        }
+    }
+
+    class UnsupportedEvent implements Event {
+        private final EventId eventId;
+        private final Username username;
+
+        public UnsupportedEvent(EventId eventId, Username username) {
+            this.eventId = eventId;
+            this.username = username;
+        }
+
+        @Override
+        public Username getUsername() {
+            return username;
+        }
+
+        @Override
+        public boolean isNoop() {
+            return false;
+        }
+
+        @Override
+        public EventId getEventId() {
+            return eventId;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof UnsupportedEvent) {
+                UnsupportedEvent that = (UnsupportedEvent) o;
+
+                return Objects.equals(this.eventId, that.eventId)
+                    && Objects.equals(this.username, that.username);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(eventId, username);
+        }
+    }
+
+    class TestEventSerializer implements EventSerializer {
+        @Override
+        public String toJson(Event event) {
+            Preconditions.checkArgument(event instanceof TestEvent || event instanceof UnsupportedEvent);
+            return event.getClass().getCanonicalName() + "&" + event.getEventId().getId().toString() + "&" + event.getUsername().asString();
+        }
+
+        @Override
+        public Event asEvent(String serialized) {
+            Preconditions.checkArgument(serialized.contains("&"));
+            List<String> parts = Splitter.on("&").splitToList(serialized);
+            Preconditions.checkArgument(parts.get(0).equals(TestEvent.class.getCanonicalName()));
+
+            Event.EventId eventId = Event.EventId.of(UUID.fromString(parts.get(1)));
+            Username username = Username.of(Joiner.on("&").join(parts.stream().skip(2).collect(Guavate.toImmutableList())));
+            return new TestEvent(eventId, username);
+        }
+    }
+
+    class TestRegistrationKey implements RegistrationKey {
+        private final String value;
+
+        public TestRegistrationKey(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String asString() {
+            return value;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof TestRegistrationKey) {
+                TestRegistrationKey that = (TestRegistrationKey) o;
+
+                return Objects.equals(this.value, that.value);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(value);
+        }
+    }
+
+    class TestRegistrationKeyFactory implements RegistrationKey.Factory {
+        @Override
+        public Class<? extends RegistrationKey> forClass() {
+            return TestRegistrationKey.class;
+        }
+
+        @Override
+        public RegistrationKey fromString(String asString) {
+            return new TestRegistrationKey(asString);
+        }
+    }
+
     Username USERNAME = Username.of("user");
-    MailboxPath MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, "mailboxName");
-    TestId TEST_ID = TestId.of(18);
     Event.EventId EVENT_ID = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
     Event.EventId EVENT_ID_2 = Event.EventId.of("5a7a9f3f-5f03-44be-b457-a51e93760645");
-    MailboxEvent EVENT = new MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, TEST_ID, EVENT_ID);
-    MailboxEvent EVENT_2 = new MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, TEST_ID, EVENT_ID_2);
-    MailboxRenamed EVENT_UNSUPPORTED_BY_LISTENER = new MailboxRenamed(SESSION_ID, USERNAME, MAILBOX_PATH, TEST_ID, MAILBOX_PATH, EVENT_ID_2);
+    Event EVENT = new TestEvent(EVENT_ID, USERNAME);
+    Event EVENT_2 = new TestEvent(EVENT_ID_2, USERNAME);
+    Event EVENT_UNSUPPORTED_BY_LISTENER = new UnsupportedEvent(EVENT_ID_2, USERNAME);
 
     java.time.Duration ONE_SECOND = java.time.Duration.ofSeconds(1);
     java.time.Duration FIVE_HUNDRED_MS = java.time.Duration.ofMillis(500);
-    MailboxId ID_1 = TEST_ID;
-    MailboxId ID_2 = TestId.of(24);
-    MailboxId ID_3 = TestId.of(36);
+
     ImmutableSet<RegistrationKey> NO_KEYS = ImmutableSet.of();
-    MailboxIdRegistrationKey KEY_1 = new MailboxIdRegistrationKey(ID_1);
-    MailboxIdRegistrationKey KEY_2 = new MailboxIdRegistrationKey(ID_2);
-    MailboxIdRegistrationKey KEY_3 = new MailboxIdRegistrationKey(ID_3);
+    RegistrationKey KEY_1 = new TestRegistrationKey("a");
+    RegistrationKey KEY_2 = new TestRegistrationKey("b");
+    RegistrationKey KEY_3 = new TestRegistrationKey("c");
     GroupA GROUP_A = new GroupA();
     GroupB GROUP_B = new GroupB();
     GroupC GROUP_C = new GroupC();
@@ -128,14 +262,14 @@ public interface EventBusTestFixture {
     static EventListener newListener() {
         EventListener listener = mock(EventListener.class);
         when(listener.getExecutionMode()).thenReturn(EventListener.ExecutionMode.SYNCHRONOUS);
-        when(listener.isHandling(any(MailboxAdded.class))).thenReturn(true);
+        when(listener.isHandling(any(TestEvent.class))).thenReturn(true);
         return listener;
     }
 
     static EventListener newAsyncListener() {
         EventListener listener = mock(EventListener.class);
         when(listener.getExecutionMode()).thenReturn(EventListener.ExecutionMode.ASYNCHRONOUS);
-        when(listener.isHandling(any(MailboxAdded.class))).thenReturn(true);
+        when(listener.isHandling(any(TestEvent.class))).thenReturn(true);
         return listener;
     }
 }

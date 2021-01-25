@@ -19,6 +19,7 @@
 
 package org.apache.james.events;
 
+import static org.apache.james.events.EventBusTestFixture.EVENT_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -38,16 +39,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import org.apache.james.core.Username;
-import org.apache.james.events.MailboxEvents.Added;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.TestId;
 import org.apache.james.events.EventBusTestFixture.TestEvent;
 import org.apache.james.mailbox.events.GenericGroup;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
 
 import reactor.core.scheduler.Schedulers;
 
@@ -150,7 +146,7 @@ public interface GroupContract {
         default void listenersShouldBeAbleToDispatch() {
             AtomicBoolean successfulRetry = new AtomicBoolean(false);
             EventListener listener = event -> {
-                if (event.getEventId().equals(EventBusTestFixture.EVENT_ID)) {
+                if (event.getEventId().equals(EVENT_ID)) {
                     eventBus().dispatch(EventBusTestFixture.EVENT_2, EventBusTestFixture.NO_KEYS)
                         .subscribeOn(Schedulers.elastic())
                         .block();
@@ -193,8 +189,7 @@ public interface GroupContract {
 
             eventBus().register(listener, EventBusTestFixture.GROUP_A);
 
-            Username bob = Username.of("bob");
-            Added noopEvent = new Added(MailboxSession.SessionId.of(18), bob, MailboxPath.forUser(bob, "mailbox"), TestId.of(58), ImmutableSortedMap.of(), Event.EventId.random());
+            Event noopEvent = new TestEvent(EVENT_ID, Username.of("noop"));
             eventBus().dispatch(noopEvent, EventBusTestFixture.NO_KEYS).block();
 
             verify(listener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never())
@@ -404,8 +399,7 @@ public interface GroupContract {
 
             eventBus().register(listener, EventBusTestFixture.GROUP_A);
 
-            Username bob = Username.of("bob");
-            Added noopEvent = new Added(MailboxSession.SessionId.of(18), bob, MailboxPath.forUser(bob, "mailbox"), TestId.of(58), ImmutableSortedMap.of(), Event.EventId.random());
+            Event noopEvent = new TestEvent(EVENT_ID, Username.of("noop"));
             eventBus().reDeliver(EventBusTestFixture.GROUP_A, noopEvent).block();
 
             verify(listener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never()).event(any());

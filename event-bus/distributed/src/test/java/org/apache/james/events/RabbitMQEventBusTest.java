@@ -63,14 +63,12 @@ import org.apache.james.backends.rabbitmq.RabbitMQExtension.DockerRestartPolicy;
 import org.apache.james.backends.rabbitmq.RabbitMQFixture;
 import org.apache.james.backends.rabbitmq.RabbitMQManagementAPI;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
-import org.apache.james.event.json.MailboxEventSerializer;
 import org.apache.james.events.EventBusTestFixture.EventListenerCountingSuccessfulExecution;
 import org.apache.james.events.EventBusTestFixture.GroupA;
+import org.apache.james.events.EventBusTestFixture.TestEventSerializer;
+import org.apache.james.events.EventBusTestFixture.TestRegistrationKeyFactory;
 import org.apache.james.events.EventDispatcher.DispatchingFailureGroup;
 import org.apache.james.events.RoutingKeyConverter.RoutingKey;
-import org.apache.james.mailbox.model.TestId;
-import org.apache.james.mailbox.model.TestMessageId;
-import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.assertj.core.data.Percentage;
@@ -106,7 +104,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     private RabbitMQEventBus eventBus2;
     private RabbitMQEventBus eventBus3;
     private RabbitMQEventBus eventBusWithKeyHandlerNotStarted;
-    private MailboxEventSerializer eventSerializer;
+    private EventSerializer eventSerializer;
     private RoutingKeyConverter routingKeyConverter;
     private MemoryEventDeadLetters memoryEventDeadLetters;
 
@@ -119,9 +117,8 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     void setUp() {
         memoryEventDeadLetters = new MemoryEventDeadLetters();
 
-        TestId.Factory mailboxIdFactory = new TestId.Factory();
-        eventSerializer = new MailboxEventSerializer(mailboxIdFactory, new TestMessageId.Factory(), new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
-        routingKeyConverter = RoutingKeyConverter.forFactories(new MailboxIdRegistrationKey.Factory(mailboxIdFactory));
+        eventSerializer = new TestEventSerializer();
+        routingKeyConverter = RoutingKeyConverter.forFactories(new TestRegistrationKeyFactory());
 
         eventBus = newEventBus();
         eventBus2 = newEventBus();
@@ -279,7 +276,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
     @Test
     void deserializeEventCollectorGroup() throws Exception {
-        assertThat(Group.deserialize("org.apache.james.mailbox.util.EventCollector$EventCollectorGroup"))
+        assertThat(Group.deserialize("org.apache.james.events.EventCollector$EventCollectorGroup"))
             .isEqualTo(new EventCollector.EventCollectorGroup());
     }
 
@@ -417,8 +414,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                     .blockFirst()
                     .getBody();
 
-                return eventSerializer.fromJson(new String(eventInBytes, StandardCharsets.UTF_8))
-                    .get();
+                return eventSerializer.asEvent(new String(eventInBytes, StandardCharsets.UTF_8));
             }
         }
     }
