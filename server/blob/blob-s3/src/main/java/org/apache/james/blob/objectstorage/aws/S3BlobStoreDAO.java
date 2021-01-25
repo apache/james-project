@@ -55,8 +55,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.pool.InstrumentedPool;
 import reactor.pool.PoolBuilder;
-import reactor.retry.Retry;
-import reactor.retry.RetryWithAsyncCallback;
+import reactor.util.retry.RetryBackoffSpec;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.BytesWrapper;
@@ -250,14 +249,20 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .then();
     }
 
-    private Retry<Object> createBucketOnRetry(BucketName bucketName) {
-        return RetryWithAsyncCallback.onlyIf(retryContext -> retryContext.exception() instanceof NoSuchBucketException)
-            .exponentialBackoff(FIRST_BACK_OFF, FOREVER)
-            .withBackoffScheduler(Schedulers.elastic())
-            .retryMax(MAX_RETRIES)
-            .onRetryWithMono(retryContext -> clientPool.withPoolable(client -> Mono
-                .fromFuture(client.createBucket(builder -> builder.bucket(bucketName.asString())))
-                .onErrorResume(BucketAlreadyOwnedByYouException.class, e -> Mono.empty())).next());
+    private RetryBackoffSpec createBucketOnRetry(BucketName bucketName) {
+        return RetryBackoffSpec.backoff(MAX_RETRIES, FIRST_BACK_OFF)
+            .maxAttempts(MAX_RETRIES)
+            .doBeforeRetryAsync(retrySignal -> {
+                if (retrySignal.failure() instanceof NoSuchBucketException) {
+                    return clientPool.withPoolable(client -> Mono
+                        .fromFuture(client.createBucket(builder -> builder.bucket(bucketName.asString())))
+                        .onErrorResume(BucketAlreadyOwnedByYouException.class, e -> Mono.empty()))
+                        .next()
+                        .then();
+                } else {
+                    return Mono.error(retrySignal.failure());
+                }
+            });
     }
 
     @Override
