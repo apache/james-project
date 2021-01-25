@@ -17,12 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.events;
+package org.apache.james.mailbox.events;
 
 import java.util.Objects;
 
 import javax.inject.Inject;
 
+import org.apache.james.events.RegistrationKey;
 import org.apache.james.mailbox.model.MailboxId;
 
 public class MailboxIdRegistrationKey implements RegistrationKey {

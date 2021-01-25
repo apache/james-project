@@ -27,10 +27,10 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.events.MailboxEvents.Added;
-import org.apache.james.events.MailboxEvents.Expunged;
-import org.apache.james.events.MailboxEvents.FlagsUpdated;
 import org.apache.james.jmap.api.model.AccountId;
+import org.apache.james.mailbox.events.MailboxEvents.Added;
+import org.apache.james.mailbox.events.MailboxEvents.Expunged;
+import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
 import org.apache.james.mailbox.model.MessageId;
 
 import com.github.steveash.guavate.Guavate;

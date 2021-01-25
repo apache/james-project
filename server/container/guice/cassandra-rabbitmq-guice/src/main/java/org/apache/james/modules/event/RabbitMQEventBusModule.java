@@ -25,10 +25,10 @@ import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusId;
 import org.apache.james.events.EventSerializer;
 import org.apache.james.events.KeyReconnectionHandler;
-import org.apache.james.events.MailboxIdRegistrationKey;
 import org.apache.james.events.RabbitMQEventBus;
 import org.apache.james.events.RegistrationKey;
 import org.apache.james.events.RetryBackoffConfiguration;
+import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 

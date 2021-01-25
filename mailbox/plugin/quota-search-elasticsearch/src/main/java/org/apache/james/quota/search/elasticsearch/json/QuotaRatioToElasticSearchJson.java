@@ -22,7 +22,7 @@ package org.apache.james.quota.search.elasticsearch.json;
 import javax.inject.Inject;
 
 import org.apache.james.core.Domain;
-import org.apache.james.events.MailboxEvents.QuotaUsageUpdatedEvent;
+import org.apache.james.mailbox.events.MailboxEvents.QuotaUsageUpdatedEvent;
 import org.apache.james.mailbox.model.QuotaRatio;
 
 import com.fasterxml.jackson.core.JsonProcessingException;

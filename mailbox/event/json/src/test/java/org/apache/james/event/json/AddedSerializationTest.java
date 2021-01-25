@@ -33,11 +33,11 @@ import java.util.SortedMap;
 import javax.mail.Flags;
 
 import org.apache.james.core.Username;
-import org.apache.james.events.MailboxEvents.Added;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;

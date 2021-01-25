@@ -28,14 +28,14 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
-import org.apache.james.events.MailboxEvents.Added;
-import org.apache.james.events.MailboxEvents.Expunged;
-import org.apache.james.events.MailboxEvents.FlagsUpdated;
-import org.apache.james.events.MailboxEvents.MailboxACLUpdated;
-import org.apache.james.events.MailboxEvents.MailboxAdded;
-import org.apache.james.events.MailboxEvents.MailboxDeletion;
-import org.apache.james.events.MailboxEvents.MailboxRenamed;
 import org.apache.james.jmap.api.model.AccountId;
+import org.apache.james.mailbox.events.MailboxEvents.Added;
+import org.apache.james.mailbox.events.MailboxEvents.Expunged;
+import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxACLUpdated;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxAdded;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxRenamed;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 

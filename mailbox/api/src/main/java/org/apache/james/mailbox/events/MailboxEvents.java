@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.events;
+package org.apache.james.mailbox.events;
 
 import java.time.Instant;
 import java.util.Collection;

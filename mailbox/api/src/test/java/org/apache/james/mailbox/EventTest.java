@@ -28,7 +28,7 @@ import javax.mail.Flags;
 
 import org.apache.james.core.Username;
 import org.apache.james.events.Event;
-import org.apache.james.events.MailboxEvents.Added;
+import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.TestId;
