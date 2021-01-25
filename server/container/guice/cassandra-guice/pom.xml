@@ -77,10 +77,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-mailbox-event-cassandra</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-quota-search-elasticsearch</artifactId>
         </dependency>
         <dependency>
@@ -125,6 +121,10 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>data-cassandra</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>dead-letter-cassandra</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

@@ -40,7 +40,6 @@
         <module>cassandra</module>
         <module>elasticsearch</module>
 
-        <module>event/event-cassandra</module>
         <module>event/json</module>
 
         <module>jpa</module>
