@@ -19,7 +19,14 @@
 
 package org.apache.james.events;
 
+import static org.apache.james.events.EventBusTestFixture.EVENT;
 import static org.apache.james.events.EventBusTestFixture.EVENT_ID;
+import static org.apache.james.events.EventBusTestFixture.EVENT_UNSUPPORTED_BY_LISTENER;
+import static org.apache.james.events.EventBusTestFixture.FIVE_HUNDRED_MS;
+import static org.apache.james.events.EventBusTestFixture.KEY_1;
+import static org.apache.james.events.EventBusTestFixture.KEY_2;
+import static org.apache.james.events.EventBusTestFixture.NO_KEYS;
+import static org.apache.james.events.EventBusTestFixture.ONE_SECOND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
@@ -41,6 +48,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import org.apache.james.core.Username;
+import org.apache.james.events.EventListener.ExecutionMode;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
@@ -66,10 +74,10 @@ public interface KeyContract extends EventBusContract {
                 Thread.sleep(Duration.ofMillis(20).toMillis());
                 finishedExecutions.incrementAndGet();
 
-            }, EventBusTestFixture.KEY_1)).block();
+            }, KEY_1)).block();
 
             IntStream.range(0, eventCount)
-                .forEach(i -> eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.KEY_1).block());
+                .forEach(i -> eventBus().dispatch(EVENT, KEY_1).block());
 
             getSpeedProfile().shortWaitCondition().atMost(org.awaitility.Duration.TEN_MINUTES)
                 .untilAsserted(() -> assertThat(finishedExecutions.get()).isEqualTo(eventCount));
@@ -84,17 +92,17 @@ public interface KeyContract extends EventBusContract {
                 Mono.from(eventBus().register(event -> {
                     threads.add(Thread.currentThread().getName());
                     countDownLatch.await();
-                }, EventBusTestFixture.KEY_1)).block();
+                }, KEY_1)).block();
                 Mono.from(eventBus().register(event -> {
                     threads.add(Thread.currentThread().getName());
                     countDownLatch.await();
-                }, EventBusTestFixture.KEY_1)).block();
+                }, KEY_1)).block();
                 Mono.from(eventBus().register(event -> {
                     threads.add(Thread.currentThread().getName());
                     countDownLatch.await();
-                }, EventBusTestFixture.KEY_1)).block();
+                }, KEY_1)).block();
 
-                eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.KEY_1).subscribeOn(Schedulers.elastic()).subscribe();
+                eventBus().dispatch(EVENT, KEY_1).subscribeOn(Schedulers.elastic()).subscribe();
 
 
                 getSpeedProfile().shortWaitCondition().atMost(org.awaitility.Duration.TEN_SECONDS)
@@ -110,12 +118,12 @@ public interface KeyContract extends EventBusContract {
         default void registeredListenersShouldNotReceiveNoopEvents() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
 
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
+            Mono.from(eventBus().register(listener, KEY_1)).block();
 
             Event noopEvent = new EventBusTestFixture.TestEvent(EVENT_ID, Username.of("noop"));
-            eventBus().dispatch(noopEvent, EventBusTestFixture.KEY_1).block();
+            eventBus().dispatch(noopEvent, KEY_1).block();
 
-            verify(listener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never())
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
@@ -123,11 +131,11 @@ public interface KeyContract extends EventBusContract {
         default void registeredListenersShouldReceiveOnlyHandledEvents() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
 
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
+            Mono.from(eventBus().register(listener, KEY_1)).block();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT_UNSUPPORTED_BY_LISTENER, EventBusTestFixture.KEY_1).block();
+            eventBus().dispatch(EVENT_UNSUPPORTED_BY_LISTENER, KEY_1).block();
 
-            verify(listener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never())
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
@@ -136,50 +144,50 @@ public interface KeyContract extends EventBusContract {
             EventListener listener = EventBusTestFixture.newListener();
             doThrow(new RuntimeException()).when(listener).event(any());
 
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
+            Mono.from(eventBus().register(listener, KEY_1)).block();
 
-            assertThatCode(() -> eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block())
+            assertThatCode(() -> eventBus().dispatch(EVENT, NO_KEYS).block())
                 .doesNotThrowAnyException();
         }
 
         @Test
         default void dispatchShouldNotNotifyRegisteredListenerWhenEmptyKeySet() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
+            Mono.from(eventBus().register(listener, KEY_1)).block();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block();
+            eventBus().dispatch(EVENT, NO_KEYS).block();
 
-            verify(listener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never())
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
         @Test
         default void dispatchShouldNotNotifyListenerRegisteredOnOtherKeys() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
+            Mono.from(eventBus().register(listener, KEY_1)).block();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, ImmutableSet.of(EventBusTestFixture.KEY_2)).block();
+            eventBus().dispatch(EVENT, ImmutableSet.of(KEY_2)).block();
 
-            verify(listener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never())
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
         @Test
         default void dispatchShouldNotifyRegisteredListeners() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
+            Mono.from(eventBus().register(listener, KEY_1)).block();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, ImmutableSet.of(EventBusTestFixture.KEY_1)).block();
+            eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-            verify(listener, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
         default void dispatchShouldNotifyLocalRegisteredListenerWithoutDelay() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
+            Mono.from(eventBus().register(listener, KEY_1)).block();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, ImmutableSet.of(EventBusTestFixture.KEY_1)).block();
+            eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
             verify(listener, times(1)).event(any());
         }
@@ -188,13 +196,13 @@ public interface KeyContract extends EventBusContract {
         default void dispatchShouldNotifyOnlyRegisteredListener() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
             EventListener listener2 = EventBusTestFixture.newListener();
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
-            Mono.from(eventBus().register(listener2, EventBusTestFixture.KEY_2)).block();
+            Mono.from(eventBus().register(listener, KEY_1)).block();
+            Mono.from(eventBus().register(listener2, KEY_2)).block();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, ImmutableSet.of(EventBusTestFixture.KEY_1)).block();
+            eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-            verify(listener, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
-            verify(listener2, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never())
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener2, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
@@ -202,35 +210,35 @@ public interface KeyContract extends EventBusContract {
         default void dispatchShouldNotifyAllListenersRegisteredOnAKey() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
             EventListener listener2 = EventBusTestFixture.newListener();
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
-            Mono.from(eventBus().register(listener2, EventBusTestFixture.KEY_1)).block();
+            Mono.from(eventBus().register(listener, KEY_1)).block();
+            Mono.from(eventBus().register(listener2, KEY_1)).block();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, ImmutableSet.of(EventBusTestFixture.KEY_1)).block();
+            eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-            verify(listener, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
-            verify(listener2, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener2, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
         default void registerShouldAllowDuplicatedRegistration() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
+            Mono.from(eventBus().register(listener, KEY_1)).block();
+            Mono.from(eventBus().register(listener, KEY_1)).block();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, ImmutableSet.of(EventBusTestFixture.KEY_1)).block();
+            eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-            verify(listener, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
         default void unregisterShouldRemoveDoubleRegisteredListener() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block().unregister();
+            Mono.from(eventBus().register(listener, KEY_1)).block();
+            Mono.from(eventBus().register(listener, KEY_1)).block().unregister();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, ImmutableSet.of(EventBusTestFixture.KEY_1)).block();
+            eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-            verify(listener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never())
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
@@ -238,43 +246,43 @@ public interface KeyContract extends EventBusContract {
         default void registerShouldNotDispatchPastEvents() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, ImmutableSet.of(EventBusTestFixture.KEY_1)).block();
+            eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
+            Mono.from(eventBus().register(listener, KEY_1)).block();
 
-            verify(listener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never())
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
         @Test
         default void callingAllUnregisterMethodShouldUnregisterTheListener() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
-            Registration registration = Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block().unregister();
+            Registration registration = Mono.from(eventBus().register(listener, KEY_1)).block();
+            Mono.from(eventBus().register(listener, KEY_1)).block().unregister();
             registration.unregister();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, ImmutableSet.of(EventBusTestFixture.KEY_1)).block();
+            eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-            verify(listener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never())
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
         @Test
         default void unregisterShouldHaveNotNotifyWhenCalledOnDifferentKeys() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_2)).block().unregister();
+            Mono.from(eventBus().register(listener, KEY_1)).block();
+            Mono.from(eventBus().register(listener, KEY_2)).block().unregister();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, ImmutableSet.of(EventBusTestFixture.KEY_1)).block();
+            eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-            verify(listener, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
         default void unregisterShouldBeIdempotentForKeyRegistrations() {
             EventListener listener = EventBusTestFixture.newListener();
 
-            Registration registration = Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
+            Registration registration = Mono.from(eventBus().register(listener, KEY_1)).block();
             registration.unregister();
 
             assertThatCode(registration::unregister)
@@ -284,32 +292,32 @@ public interface KeyContract extends EventBusContract {
         @Test
         default void dispatchShouldAcceptSeveralKeys() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
+            Mono.from(eventBus().register(listener, KEY_1)).block();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, ImmutableSet.of(EventBusTestFixture.KEY_1, EventBusTestFixture.KEY_2)).block();
+            eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1, KEY_2)).block();
 
-            verify(listener, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
         default void dispatchShouldCallListenerOnceWhenSeveralKeysMatching() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_2)).block();
+            Mono.from(eventBus().register(listener, KEY_1)).block();
+            Mono.from(eventBus().register(listener, KEY_2)).block();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, ImmutableSet.of(EventBusTestFixture.KEY_1, EventBusTestFixture.KEY_2)).block();
+            eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1, KEY_2)).block();
 
-            verify(listener, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
         default void dispatchShouldNotNotifyUnregisteredListener() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block().unregister();
+            Mono.from(eventBus().register(listener, KEY_1)).block().unregister();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, ImmutableSet.of(EventBusTestFixture.KEY_1)).block();
+            eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-            verify(listener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never())
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
@@ -317,38 +325,38 @@ public interface KeyContract extends EventBusContract {
         @Test
         default void dispatchShouldNotifyAsynchronousListener() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
-            when(listener.getExecutionMode()).thenReturn(EventListener.ExecutionMode.ASYNCHRONOUS);
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
+            when(listener.getExecutionMode()).thenReturn(ExecutionMode.ASYNCHRONOUS);
+            Mono.from(eventBus().register(listener, KEY_1)).block();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.KEY_1).block();
+            eventBus().dispatch(EVENT, KEY_1).block();
 
-            verify(listener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis())).event(EventBusTestFixture.EVENT);
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis())).event(EVENT);
         }
 
         @Test
         default void dispatchShouldNotBlockAsynchronousListener() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
-            when(listener.getExecutionMode()).thenReturn(EventListener.ExecutionMode.ASYNCHRONOUS);
+            when(listener.getExecutionMode()).thenReturn(ExecutionMode.ASYNCHRONOUS);
             CountDownLatch latch = new CountDownLatch(1);
             doAnswer(invocation -> {
                 latch.await();
                 return null;
-            }).when(listener).event(EventBusTestFixture.EVENT);
+            }).when(listener).event(EVENT);
 
             assertTimeout(Duration.ofSeconds(2),
                 () -> {
-                    eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block();
+                    eventBus().dispatch(EVENT, NO_KEYS).block();
                     latch.countDown();
                 });
         }
 
         @Test
         default void failingRegisteredListenersShouldNotAbortRegisteredDelivery() {
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution listener = new EventBusTestFixture.EventMatcherThrowingListener(ImmutableSet.of(EventBusTestFixture.EVENT));
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution listener = new EventBusTestFixture.EventMatcherThrowingListener(ImmutableSet.of(EVENT));
+            Mono.from(eventBus().register(listener, KEY_1)).block();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.KEY_1).block();
-            eventBus().dispatch(EventBusTestFixture.EVENT_2, EventBusTestFixture.KEY_1).block();
+            eventBus().dispatch(EVENT, KEY_1).block();
+            eventBus().dispatch(EventBusTestFixture.EVENT_2, KEY_1).block();
 
             getSpeedProfile().shortWaitCondition()
                 .untilAsserted(() -> assertThat(listener.numberOfEventCalls()).isEqualTo(1));
@@ -359,15 +367,15 @@ public interface KeyContract extends EventBusContract {
             EventListener listener = EventBusTestFixture.newListener();
 
             EventListener failingListener = mock(EventListener.class);
-            when(failingListener.getExecutionMode()).thenReturn(EventListener.ExecutionMode.SYNCHRONOUS);
+            when(failingListener.getExecutionMode()).thenReturn(ExecutionMode.SYNCHRONOUS);
             doThrow(new RuntimeException()).when(failingListener).event(any());
 
-            Mono.from(eventBus().register(failingListener, EventBusTestFixture.KEY_1)).block();
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
+            Mono.from(eventBus().register(failingListener, KEY_1)).block();
+            Mono.from(eventBus().register(listener, KEY_1)).block();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, ImmutableSet.of(EventBusTestFixture.KEY_1)).block();
+            eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-            verify(listener, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
     }
 
@@ -377,22 +385,22 @@ public interface KeyContract extends EventBusContract {
         default void crossEventBusRegistrationShouldBeAllowed() throws Exception {
             EventListener mailboxListener = EventBusTestFixture.newListener();
 
-            Mono.from(eventBus().register(mailboxListener, EventBusTestFixture.KEY_1)).block();
+            Mono.from(eventBus().register(mailboxListener, KEY_1)).block();
 
-            eventBus2().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.KEY_1).block();
+            eventBus2().dispatch(EVENT, KEY_1).block();
 
-            verify(mailboxListener, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(mailboxListener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
         default void unregisteredDistantListenersShouldNotBeNotified() throws Exception {
             EventListener eventListener = EventBusTestFixture.newListener();
 
-            Mono.from(eventBus().register(eventListener, EventBusTestFixture.KEY_1)).block().unregister();
+            Mono.from(eventBus().register(eventListener, KEY_1)).block().unregister();
 
-            eventBus2().dispatch(EventBusTestFixture.EVENT, ImmutableSet.of(EventBusTestFixture.KEY_1)).block();
+            eventBus2().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-            verify(eventListener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never())
+            verify(eventListener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
@@ -401,24 +409,24 @@ public interface KeyContract extends EventBusContract {
             EventListener mailboxListener1 = EventBusTestFixture.newListener();
             EventListener mailboxListener2 = EventBusTestFixture.newListener();
 
-            Mono.from(eventBus().register(mailboxListener1, EventBusTestFixture.KEY_1)).block();
-            Mono.from(eventBus2().register(mailboxListener2, EventBusTestFixture.KEY_1)).block();
+            Mono.from(eventBus().register(mailboxListener1, KEY_1)).block();
+            Mono.from(eventBus2().register(mailboxListener2, KEY_1)).block();
 
-            eventBus2().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.KEY_1).block();
+            eventBus2().dispatch(EVENT, KEY_1).block();
 
-            verify(mailboxListener1, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
-            verify(mailboxListener2, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(mailboxListener1, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(mailboxListener2, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
         default void registerShouldNotDispatchPastEventsInDistributedContext() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus2().dispatch(EventBusTestFixture.EVENT, ImmutableSet.of(EventBusTestFixture.KEY_1)).block();
+            eventBus2().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-            Mono.from(eventBus().register(listener, EventBusTestFixture.KEY_1)).block();
+            Mono.from(eventBus().register(listener, KEY_1)).block();
 
-            verify(listener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never())
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
@@ -427,13 +435,13 @@ public interface KeyContract extends EventBusContract {
             EventListener mailboxListener1 = EventBusTestFixture.newListener();
             EventListener mailboxListener2 = EventBusTestFixture.newListener();
 
-            Mono.from(eventBus().register(mailboxListener1, EventBusTestFixture.KEY_1)).block();
-            Mono.from(eventBus2().register(mailboxListener2, EventBusTestFixture.KEY_1)).block();
+            Mono.from(eventBus().register(mailboxListener1, KEY_1)).block();
+            Mono.from(eventBus2().register(mailboxListener2, KEY_1)).block();
 
-            eventBus2().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.KEY_1).block();
+            eventBus2().dispatch(EVENT, KEY_1).block();
 
             verify(mailboxListener2, times(1)).event(any());
-            verify(mailboxListener1, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(mailboxListener1, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
     }

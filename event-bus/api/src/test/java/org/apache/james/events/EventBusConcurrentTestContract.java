@@ -19,6 +19,11 @@
 
 package org.apache.james.events;
 
+import static org.apache.james.events.EventBusTestFixture.EVENT;
+import static org.apache.james.events.EventBusTestFixture.KEY_1;
+import static org.apache.james.events.EventBusTestFixture.KEY_2;
+import static org.apache.james.events.EventBusTestFixture.KEY_3;
+import static org.apache.james.events.EventBusTestFixture.NO_KEYS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -26,6 +31,10 @@ import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.james.events.EventBusTestFixture.EventListenerCountingSuccessfulExecution;
+import org.apache.james.events.EventBusTestFixture.GroupA;
+import org.apache.james.events.EventBusTestFixture.GroupB;
+import org.apache.james.events.EventBusTestFixture.GroupC;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.Test;
@@ -44,15 +53,15 @@ public interface EventBusConcurrentTestContract {
     int OPERATION_COUNT = 30;
     int TOTAL_DISPATCH_OPERATIONS = THREAD_COUNT * OPERATION_COUNT;
 
-    Set<RegistrationKey> ALL_KEYS = ImmutableSet.of(EventBusTestFixture.KEY_1, EventBusTestFixture.KEY_2, EventBusTestFixture.KEY_3);
+    Set<RegistrationKey> ALL_KEYS = ImmutableSet.of(KEY_1, KEY_2, KEY_3);
 
-    static EventBusTestFixture.EventListenerCountingSuccessfulExecution newCountingListener() {
-        return new EventBusTestFixture.EventListenerCountingSuccessfulExecution();
+    static EventListenerCountingSuccessfulExecution newCountingListener() {
+        return new EventListenerCountingSuccessfulExecution();
     }
 
-    static int totalEventsReceived(ImmutableList<EventBusTestFixture.EventListenerCountingSuccessfulExecution> allListeners) {
+    static int totalEventsReceived(ImmutableList<EventListenerCountingSuccessfulExecution> allListeners) {
         return allListeners.stream()
-            .mapToInt(EventBusTestFixture.EventListenerCountingSuccessfulExecution::numberOfEventCalls)
+            .mapToInt(EventListenerCountingSuccessfulExecution::numberOfEventCalls)
             .sum();
     }
 
@@ -60,17 +69,17 @@ public interface EventBusConcurrentTestContract {
 
         @Test
         default void concurrentDispatchGroupShouldDeliverAllEventsToListenersWithSingleEventBus() throws Exception {
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
+            EventListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
+            EventListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
+            EventListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
 
-            eventBus().register(countingListener1, new EventBusTestFixture.GroupA());
-            eventBus().register(countingListener2, new EventBusTestFixture.GroupB());
-            eventBus().register(countingListener3, new EventBusTestFixture.GroupC());
+            eventBus().register(countingListener1, new GroupA());
+            eventBus().register(countingListener2, new GroupB());
+            eventBus().register(countingListener3, new GroupC());
             int totalGlobalRegistrations = 3; // GroupA + GroupB + GroupC
 
             ConcurrentTestRunner.builder()
-                .operation((threadNumber, operationNumber) -> eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block())
+                .operation((threadNumber, operationNumber) -> eventBus().dispatch(EVENT, NO_KEYS).block())
                 .threadCount(THREAD_COUNT)
                 .operationCount(OPERATION_COUNT)
                 .runSuccessfullyWithin(FIVE_SECONDS);
@@ -82,18 +91,18 @@ public interface EventBusConcurrentTestContract {
 
         @Test
         default void concurrentDispatchKeyShouldDeliverAllEventsToListenersWithSingleEventBus() throws Exception {
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
-            Mono.from(eventBus().register(countingListener1, EventBusTestFixture.KEY_1)).block();
-            Mono.from(eventBus().register(countingListener2, EventBusTestFixture.KEY_2)).block();
-            Mono.from(eventBus().register(countingListener3, EventBusTestFixture.KEY_3)).block();
+            EventListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
+            EventListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
+            EventListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
+            Mono.from(eventBus().register(countingListener1, KEY_1)).block();
+            Mono.from(eventBus().register(countingListener2, KEY_2)).block();
+            Mono.from(eventBus().register(countingListener3, KEY_3)).block();
 
             int totalKeyListenerRegistrations = 3; // KEY1 + KEY2 + KEY3
             int totalEventBus = 1;
 
             ConcurrentTestRunner.builder()
-                .operation((threadNumber, operationNumber) -> eventBus().dispatch(EventBusTestFixture.EVENT, ALL_KEYS).block())
+                .operation((threadNumber, operationNumber) -> eventBus().dispatch(EVENT, ALL_KEYS).block())
                 .threadCount(THREAD_COUNT)
                 .operationCount(OPERATION_COUNT)
                 .runSuccessfullyWithin(FIVE_SECONDS);
@@ -105,25 +114,25 @@ public interface EventBusConcurrentTestContract {
 
         @Test
         default void concurrentDispatchShouldDeliverAllEventsToListenersWithSingleEventBus() throws Exception {
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
+            EventListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
+            EventListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
+            EventListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
 
-            eventBus().register(countingListener1, new EventBusTestFixture.GroupA());
-            eventBus().register(countingListener2, new EventBusTestFixture.GroupB());
-            eventBus().register(countingListener3, new EventBusTestFixture.GroupC());
+            eventBus().register(countingListener1, new GroupA());
+            eventBus().register(countingListener2, new GroupB());
+            eventBus().register(countingListener3, new GroupC());
 
             int totalGlobalRegistrations = 3; // GroupA + GroupB + GroupC
             int totalEventDeliveredGlobally = totalGlobalRegistrations * TOTAL_DISPATCH_OPERATIONS;
 
-            Mono.from(eventBus().register(countingListener1, EventBusTestFixture.KEY_1)).block();
-            Mono.from(eventBus().register(countingListener2, EventBusTestFixture.KEY_2)).block();
-            Mono.from(eventBus().register(countingListener3, EventBusTestFixture.KEY_3)).block();
+            Mono.from(eventBus().register(countingListener1, KEY_1)).block();
+            Mono.from(eventBus().register(countingListener2, KEY_2)).block();
+            Mono.from(eventBus().register(countingListener3, KEY_3)).block();
             int totalKeyListenerRegistrations = 3; // KEY1 + KEY2 + KEY3
             int totalEventDeliveredByKeys = totalKeyListenerRegistrations * TOTAL_DISPATCH_OPERATIONS;
 
             ConcurrentTestRunner.builder()
-                .operation((threadNumber, operationNumber) -> eventBus().dispatch(EventBusTestFixture.EVENT, ALL_KEYS).block())
+                .operation((threadNumber, operationNumber) -> eventBus().dispatch(EVENT, ALL_KEYS).block())
                 .threadCount(THREAD_COUNT)
                 .operationCount(OPERATION_COUNT)
                 .runSuccessfullyWithin(FIVE_SECONDS);
@@ -140,22 +149,22 @@ public interface EventBusConcurrentTestContract {
 
         @Test
         default void concurrentDispatchGroupShouldDeliverAllEventsToListenersWithMultipleEventBus() throws Exception {
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
+            EventListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
+            EventListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
+            EventListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
 
-            eventBus().register(countingListener1, new EventBusTestFixture.GroupA());
-            eventBus().register(countingListener2, new EventBusTestFixture.GroupB());
-            eventBus().register(countingListener3, new EventBusTestFixture.GroupC());
+            eventBus().register(countingListener1, new GroupA());
+            eventBus().register(countingListener2, new GroupB());
+            eventBus().register(countingListener3, new GroupC());
 
-            eventBus2().register(countingListener1, new EventBusTestFixture.GroupA());
-            eventBus2().register(countingListener2, new EventBusTestFixture.GroupB());
-            eventBus2().register(countingListener3, new EventBusTestFixture.GroupC());
+            eventBus2().register(countingListener1, new GroupA());
+            eventBus2().register(countingListener2, new GroupB());
+            eventBus2().register(countingListener3, new GroupC());
 
             int totalGlobalRegistrations = 3; // GroupA + GroupB + GroupC
 
             ConcurrentTestRunner.builder()
-                .operation((threadNumber, operationNumber) -> eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block())
+                .operation((threadNumber, operationNumber) -> eventBus().dispatch(EVENT, NO_KEYS).block())
                 .threadCount(THREAD_COUNT)
                 .operationCount(OPERATION_COUNT)
                 .runSuccessfullyWithin(FIVE_SECONDS);
@@ -167,23 +176,23 @@ public interface EventBusConcurrentTestContract {
 
         @Test
         default void concurrentDispatchKeyShouldDeliverAllEventsToListenersWithMultipleEventBus() throws Exception {
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
+            EventListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
+            EventListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
+            EventListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
 
-            Mono.from(eventBus().register(countingListener1, EventBusTestFixture.KEY_1)).block();
-            Mono.from(eventBus().register(countingListener2, EventBusTestFixture.KEY_2)).block();
-            Mono.from(eventBus().register(countingListener3, EventBusTestFixture.KEY_3)).block();
+            Mono.from(eventBus().register(countingListener1, KEY_1)).block();
+            Mono.from(eventBus().register(countingListener2, KEY_2)).block();
+            Mono.from(eventBus().register(countingListener3, KEY_3)).block();
 
-            Mono.from(eventBus2().register(countingListener1, EventBusTestFixture.KEY_1)).block();
-            Mono.from(eventBus2().register(countingListener2, EventBusTestFixture.KEY_2)).block();
-            Mono.from(eventBus2().register(countingListener3, EventBusTestFixture.KEY_3)).block();
+            Mono.from(eventBus2().register(countingListener1, KEY_1)).block();
+            Mono.from(eventBus2().register(countingListener2, KEY_2)).block();
+            Mono.from(eventBus2().register(countingListener3, KEY_3)).block();
 
             int totalKeyListenerRegistrations = 3; // KEY1 + KEY2 + KEY3
             int totalEventBus = 2; // eventBus1 + eventBus2
 
             ConcurrentTestRunner.builder()
-                .operation((threadNumber, operationNumber) -> eventBus().dispatch(EventBusTestFixture.EVENT, ALL_KEYS).block())
+                .operation((threadNumber, operationNumber) -> eventBus().dispatch(EVENT, ALL_KEYS).block())
                 .threadCount(THREAD_COUNT)
                 .operationCount(OPERATION_COUNT)
                 .runSuccessfullyWithin(FIVE_SECONDS);
@@ -195,31 +204,31 @@ public interface EventBusConcurrentTestContract {
 
         @Test
         default void concurrentDispatchShouldDeliverAllEventsToListenersWithMultipleEventBus() throws Exception {
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
+            EventListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
+            EventListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
+            EventListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
 
             eventBus2().register(countingListener1, EventDeadLettersContract.GROUP_A);
-            eventBus2().register(countingListener2, new EventBusTestFixture.GroupB());
-            eventBus2().register(countingListener3, new EventBusTestFixture.GroupC());
+            eventBus2().register(countingListener2, new GroupB());
+            eventBus2().register(countingListener3, new GroupC());
             int totalGlobalRegistrations = 3; // GroupA + GroupB + GroupC
             int totalEventDeliveredGlobally = totalGlobalRegistrations * TOTAL_DISPATCH_OPERATIONS;
 
-            Mono.from(eventBus().register(countingListener1, EventBusTestFixture.KEY_1)).block();
-            Mono.from(eventBus().register(countingListener2, EventBusTestFixture.KEY_2)).block();
+            Mono.from(eventBus().register(countingListener1, KEY_1)).block();
+            Mono.from(eventBus().register(countingListener2, KEY_2)).block();
 
-            Mono.from(eventBus2().register(countingListener1, EventBusTestFixture.KEY_1)).block();
-            Mono.from(eventBus2().register(countingListener2, EventBusTestFixture.KEY_2)).block();
+            Mono.from(eventBus2().register(countingListener1, KEY_1)).block();
+            Mono.from(eventBus2().register(countingListener2, KEY_2)).block();
 
-            Mono.from(eventBus3().register(countingListener3, EventBusTestFixture.KEY_1)).block();
-            Mono.from(eventBus3().register(countingListener3, EventBusTestFixture.KEY_2)).block();
+            Mono.from(eventBus3().register(countingListener3, KEY_1)).block();
+            Mono.from(eventBus3().register(countingListener3, KEY_2)).block();
 
             int totalKeyListenerRegistrations = 2; // KEY1 + KEY2
             int totalEventBus = 3; // eventBus1 + eventBus2 + eventBus3
             int totalEventDeliveredByKeys = totalKeyListenerRegistrations * totalEventBus * TOTAL_DISPATCH_OPERATIONS;
 
             ConcurrentTestRunner.builder()
-                .operation((threadNumber, operationNumber) -> eventBus().dispatch(EventBusTestFixture.EVENT, ALL_KEYS).block())
+                .operation((threadNumber, operationNumber) -> eventBus().dispatch(EVENT, ALL_KEYS).block())
                 .threadCount(THREAD_COUNT)
                 .operationCount(OPERATION_COUNT)
                 .runSuccessfullyWithin(FIVE_SECONDS);

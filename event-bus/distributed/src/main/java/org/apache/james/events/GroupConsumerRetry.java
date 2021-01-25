@@ -24,6 +24,7 @@ import static org.apache.james.backends.rabbitmq.Constants.DIRECT_EXCHANGE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.events.GroupRegistration.RETRY_COUNT;
+import static org.apache.james.events.RabbitMQEventBus.MAILBOX_EVENT;
 
 import java.nio.charset.StandardCharsets;
 
@@ -51,7 +52,7 @@ class GroupConsumerRetry {
             return new RetryExchangeName(group.asString());
         }
 
-        static final String MAILBOX_EVENT_RETRY_EXCHANGE_PREFIX = RabbitMQEventBus.MAILBOX_EVENT + "-retryExchange-";
+        static final String MAILBOX_EVENT_RETRY_EXCHANGE_PREFIX = MAILBOX_EVENT + "-retryExchange-";
 
         private final String name;
 

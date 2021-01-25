@@ -25,6 +25,7 @@ import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backends.rabbitmq.Constants.REQUEUE;
 import static org.apache.james.backends.rabbitmq.Constants.deadLetterQueue;
+import static org.apache.james.events.RabbitMQEventBus.MAILBOX_EVENT;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -56,7 +57,7 @@ class GroupRegistration implements Registration {
             return new WorkQueueName(group);
         }
 
-        static final String MAILBOX_EVENT_WORK_QUEUE_PREFIX = RabbitMQEventBus.MAILBOX_EVENT + "-workQueue-";
+        static final String MAILBOX_EVENT_WORK_QUEUE_PREFIX = MAILBOX_EVENT + "-workQueue-";
 
         private final Group group;
 

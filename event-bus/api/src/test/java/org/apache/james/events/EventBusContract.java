@@ -19,10 +19,12 @@
 
 package org.apache.james.events;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.awaitility.Awaitility.await;
+import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
+import static org.awaitility.Duration.ZERO;
 
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 import org.awaitility.core.ConditionFactory;
 
@@ -49,15 +51,15 @@ public interface EventBusContract {
         }
 
         public ConditionFactory shortWaitCondition() {
-            return await().pollDelay(org.awaitility.Duration.ZERO)
-                .pollInterval(org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS)
-                .timeout(new org.awaitility.Duration(this.getShortWaitTime().toMillis(), TimeUnit.MILLISECONDS));
+            return await().pollDelay(ZERO)
+                .pollInterval(ONE_HUNDRED_MILLISECONDS)
+                .timeout(new org.awaitility.Duration(this.getShortWaitTime().toMillis(), MILLISECONDS));
         }
 
         public ConditionFactory longWaitCondition() {
-            return await().pollDelay(org.awaitility.Duration.ZERO)
-                .pollInterval(org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS)
-                .timeout(new org.awaitility.Duration(this.getLongWaitTime().toMillis(), TimeUnit.MILLISECONDS));
+            return await().pollDelay(ZERO)
+                .pollInterval(ONE_HUNDRED_MILLISECONDS)
+                .timeout(new org.awaitility.Duration(this.getLongWaitTime().toMillis(), MILLISECONDS));
         }
     }
 

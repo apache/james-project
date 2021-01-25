@@ -24,11 +24,14 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static org.apache.james.events.tables.CassandraEventDeadLettersTable.EVENT;
+import static org.apache.james.events.tables.CassandraEventDeadLettersTable.GROUP;
+import static org.apache.james.events.tables.CassandraEventDeadLettersTable.INSERTION_ID;
+import static org.apache.james.events.tables.CassandraEventDeadLettersTable.TABLE_NAME;
 
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.events.tables.CassandraEventDeadLettersTable;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
@@ -57,62 +60,62 @@ public class CassandraEventDeadLettersDAO {
     }
 
     private PreparedStatement prepareInsertStatement(Session session) {
-        return session.prepare(insertInto(CassandraEventDeadLettersTable.TABLE_NAME)
-            .value(CassandraEventDeadLettersTable.GROUP, bindMarker(CassandraEventDeadLettersTable.GROUP))
-            .value(CassandraEventDeadLettersTable.INSERTION_ID, bindMarker(CassandraEventDeadLettersTable.INSERTION_ID))
-            .value(CassandraEventDeadLettersTable.EVENT, bindMarker(CassandraEventDeadLettersTable.EVENT)));
+        return session.prepare(insertInto(TABLE_NAME)
+            .value(GROUP, bindMarker(GROUP))
+            .value(INSERTION_ID, bindMarker(INSERTION_ID))
+            .value(EVENT, bindMarker(EVENT)));
     }
 
     private PreparedStatement prepareDeleteStatement(Session session) {
         return session.prepare(delete()
-            .from(CassandraEventDeadLettersTable.TABLE_NAME)
-            .where(eq(CassandraEventDeadLettersTable.GROUP, bindMarker(CassandraEventDeadLettersTable.GROUP)))
-            .and(eq(CassandraEventDeadLettersTable.INSERTION_ID, bindMarker(CassandraEventDeadLettersTable.INSERTION_ID))));
+            .from(TABLE_NAME)
+            .where(eq(GROUP, bindMarker(GROUP)))
+            .and(eq(INSERTION_ID, bindMarker(INSERTION_ID))));
     }
 
     private PreparedStatement prepareSelectEventStatement(Session session) {
-        return session.prepare(select(CassandraEventDeadLettersTable.EVENT)
-            .from(CassandraEventDeadLettersTable.TABLE_NAME)
-            .where(eq(CassandraEventDeadLettersTable.GROUP, bindMarker(CassandraEventDeadLettersTable.GROUP)))
-            .and(eq(CassandraEventDeadLettersTable.INSERTION_ID, bindMarker(CassandraEventDeadLettersTable.INSERTION_ID))));
+        return session.prepare(select(EVENT)
+            .from(TABLE_NAME)
+            .where(eq(GROUP, bindMarker(GROUP)))
+            .and(eq(INSERTION_ID, bindMarker(INSERTION_ID))));
     }
 
     private PreparedStatement prepareSelectInsertionIdsWithGroupStatement(Session session) {
-        return session.prepare(select(CassandraEventDeadLettersTable.INSERTION_ID)
-            .from(CassandraEventDeadLettersTable.TABLE_NAME)
-            .where(eq(CassandraEventDeadLettersTable.GROUP, bindMarker(CassandraEventDeadLettersTable.GROUP))));
+        return session.prepare(select(INSERTION_ID)
+            .from(TABLE_NAME)
+            .where(eq(GROUP, bindMarker(GROUP))));
     }
 
     private PreparedStatement prepareContainEventStatement(Session session) {
-        return session.prepare(select(CassandraEventDeadLettersTable.EVENT)
-            .from(CassandraEventDeadLettersTable.TABLE_NAME)
+        return session.prepare(select(EVENT)
+            .from(TABLE_NAME)
             .limit(1));
     }
 
     Mono<Void> store(Group group, Event failedEvent, EventDeadLetters.InsertionId insertionId) {
         return executor.executeVoid(insertStatement.bind()
-                .setString(CassandraEventDeadLettersTable.GROUP, group.asString())
-                .setUUID(CassandraEventDeadLettersTable.INSERTION_ID, insertionId.getId())
-                .setString(CassandraEventDeadLettersTable.EVENT, eventSerializer.toJson(failedEvent)));
+                .setString(GROUP, group.asString())
+                .setUUID(INSERTION_ID, insertionId.getId())
+                .setString(EVENT, eventSerializer.toJson(failedEvent)));
     }
 
     Mono<Void> removeEvent(Group group, EventDeadLetters.InsertionId failedInsertionId) {
         return executor.executeVoid(deleteStatement.bind()
-                .setString(CassandraEventDeadLettersTable.GROUP, group.asString())
-                .setUUID(CassandraEventDeadLettersTable.INSERTION_ID, failedInsertionId.getId()));
+                .setString(GROUP, group.asString())
+                .setUUID(INSERTION_ID, failedInsertionId.getId()));
     }
 
     Mono<Event> retrieveFailedEvent(Group group, EventDeadLetters.InsertionId insertionId) {
         return executor.executeSingleRow(selectEventStatement.bind()
-                .setString(CassandraEventDeadLettersTable.GROUP, group.asString())
-                .setUUID(CassandraEventDeadLettersTable.INSERTION_ID, insertionId.getId()))
-            .map(row -> deserializeEvent(row.getString(CassandraEventDeadLettersTable.EVENT)));
+                .setString(GROUP, group.asString())
+                .setUUID(INSERTION_ID, insertionId.getId()))
+            .map(row -> deserializeEvent(row.getString(EVENT)));
     }
 
     Flux<EventDeadLetters.InsertionId> retrieveInsertionIdsWithGroup(Group group) {
         return executor.executeRows(selectEventIdsWithGroupStatement.bind()
-                .setString(CassandraEventDeadLettersTable.GROUP, group.asString()))
-            .map(row -> EventDeadLetters.InsertionId.of(row.getUUID(CassandraEventDeadLettersTable.INSERTION_ID)));
+                .setString(GROUP, group.asString()))
+            .map(row -> EventDeadLetters.InsertionId.of(row.getUUID(INSERTION_ID)));
     }
 
     Mono<Boolean> containEvents() {

@@ -19,7 +19,15 @@
 
 package org.apache.james.events;
 
+import static org.apache.james.events.EventBusTestFixture.EVENT;
+import static org.apache.james.events.EventBusTestFixture.EVENT_2;
 import static org.apache.james.events.EventBusTestFixture.EVENT_ID;
+import static org.apache.james.events.EventBusTestFixture.EVENT_UNSUPPORTED_BY_LISTENER;
+import static org.apache.james.events.EventBusTestFixture.FIVE_HUNDRED_MS;
+import static org.apache.james.events.EventBusTestFixture.GROUP_A;
+import static org.apache.james.events.EventBusTestFixture.GROUP_B;
+import static org.apache.james.events.EventBusTestFixture.NO_KEYS;
+import static org.apache.james.events.EventBusTestFixture.ONE_SECOND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -79,10 +87,10 @@ public interface GroupContract {
                     finishedExecutions.incrementAndGet();
 
                 }
-            }, EventBusTestFixture.GROUP_A);
+            }, GROUP_A);
 
             IntStream.range(0, eventCount)
-                .forEach(i -> eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block());
+                .forEach(i -> eventBus().dispatch(EVENT, NO_KEYS).block());
 
             getSpeedProfile().shortWaitCondition().atMost(org.awaitility.Duration.TEN_MINUTES)
                 .untilAsserted(() -> assertThat(finishedExecutions.get()).isEqualTo(eventCount));
@@ -105,7 +113,7 @@ public interface GroupContract {
                         threads.add(Thread.currentThread().getName());
                         countDownLatch.await();
                     }
-                }, EventBusTestFixture.GROUP_A);
+                }, GROUP_A);
                 eventBus().register(new EventListener.GroupEventListener() {
                     @Override
                     public Group getDefaultGroup() {
@@ -117,7 +125,7 @@ public interface GroupContract {
                         threads.add(Thread.currentThread().getName());
                         countDownLatch.await();
                     }
-                }, EventBusTestFixture.GROUP_B);
+                }, GROUP_B);
                 eventBus().register(new EventListener.GroupEventListener() {
                     @Override
                     public Group getDefaultGroup() {
@@ -131,7 +139,7 @@ public interface GroupContract {
                     }
                 }, EventBusTestFixture.GROUP_C);
 
-                eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).subscribeOn(Schedulers.elastic()).subscribe();
+                eventBus().dispatch(EVENT, NO_KEYS).subscribeOn(Schedulers.elastic()).subscribe();
 
 
                 getSpeedProfile().shortWaitCondition().atMost(org.awaitility.Duration.TEN_SECONDS)
@@ -147,15 +155,15 @@ public interface GroupContract {
             AtomicBoolean successfulRetry = new AtomicBoolean(false);
             EventListener listener = event -> {
                 if (event.getEventId().equals(EVENT_ID)) {
-                    eventBus().dispatch(EventBusTestFixture.EVENT_2, EventBusTestFixture.NO_KEYS)
+                    eventBus().dispatch(EVENT_2, NO_KEYS)
                         .subscribeOn(Schedulers.elastic())
                         .block();
                     successfulRetry.set(true);
                 }
             };
 
-            eventBus().register(listener, EventBusTestFixture.GROUP_A);
-            eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block();
+            eventBus().register(listener, GROUP_A);
+            eventBus().dispatch(EVENT, NO_KEYS).block();
 
             getSpeedProfile().shortWaitCondition().until(successfulRetry::get);
         }
@@ -164,11 +172,11 @@ public interface GroupContract {
         default void registerShouldNotDispatchPastEventsForGroups() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block();
+            eventBus().dispatch(EVENT, NO_KEYS).block();
 
-            eventBus().register(listener, EventBusTestFixture.GROUP_A);
+            eventBus().register(listener, GROUP_A);
 
-            verify(listener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never())
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
@@ -176,23 +184,23 @@ public interface GroupContract {
         default void listenerGroupShouldReceiveEvents() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus().register(listener, EventBusTestFixture.GROUP_A);
+            eventBus().register(listener, GROUP_A);
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block();
+            eventBus().dispatch(EVENT, NO_KEYS).block();
 
-            verify(listener, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
         default void groupListenersShouldNotReceiveNoopEvents() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus().register(listener, EventBusTestFixture.GROUP_A);
+            eventBus().register(listener, GROUP_A);
 
             Event noopEvent = new TestEvent(EVENT_ID, Username.of("noop"));
-            eventBus().dispatch(noopEvent, EventBusTestFixture.NO_KEYS).block();
+            eventBus().dispatch(noopEvent, NO_KEYS).block();
 
-            verify(listener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never())
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
@@ -200,11 +208,11 @@ public interface GroupContract {
         default void groupListenersShouldReceiveOnlyHandledEvents() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus().register(listener, EventBusTestFixture.GROUP_A);
+            eventBus().register(listener, GROUP_A);
 
-            eventBus().dispatch(EventBusTestFixture.EVENT_UNSUPPORTED_BY_LISTENER, EventBusTestFixture.NO_KEYS).block();
+            eventBus().dispatch(EVENT_UNSUPPORTED_BY_LISTENER, NO_KEYS).block();
 
-            verify(listener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never())
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
@@ -213,9 +221,9 @@ public interface GroupContract {
             EventListener listener = EventBusTestFixture.newListener();
             doThrow(new RuntimeException()).when(listener).event(any());
 
-            eventBus().register(listener, EventBusTestFixture.GROUP_A);
+            eventBus().register(listener, GROUP_A);
 
-            assertThatCode(() -> eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block())
+            assertThatCode(() -> eventBus().dispatch(EVENT, NO_KEYS).block())
                 .doesNotThrowAnyException();
         }
 
@@ -223,24 +231,24 @@ public interface GroupContract {
         default void eachListenerGroupShouldReceiveEvents() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
             EventListener listener2 = EventBusTestFixture.newListener();
-            eventBus().register(listener, EventBusTestFixture.GROUP_A);
-            eventBus().register(listener2, EventBusTestFixture.GROUP_B);
+            eventBus().register(listener, GROUP_A);
+            eventBus().register(listener2, GROUP_B);
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block();
+            eventBus().dispatch(EVENT, NO_KEYS).block();
 
-            verify(listener, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
-            verify(listener2, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener2, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
         default void unregisteredGroupListenerShouldNotReceiveEvents() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
-            Registration registration = eventBus().register(listener, EventBusTestFixture.GROUP_A);
+            Registration registration = eventBus().register(listener, GROUP_A);
 
             registration.unregister();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block();
-            verify(listener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never())
+            eventBus().dispatch(EVENT, NO_KEYS).block();
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
@@ -249,9 +257,9 @@ public interface GroupContract {
             EventListener listener = EventBusTestFixture.newListener();
             EventListener listener2 = EventBusTestFixture.newListener();
 
-            eventBus().register(listener, EventBusTestFixture.GROUP_A);
+            eventBus().register(listener, GROUP_A);
 
-            assertThatThrownBy(() -> eventBus().register(listener2, EventBusTestFixture.GROUP_A))
+            assertThatThrownBy(() -> eventBus().register(listener2, GROUP_A))
                 .isInstanceOf(GroupAlreadyRegistered.class);
         }
 
@@ -260,9 +268,9 @@ public interface GroupContract {
             EventListener listener = EventBusTestFixture.newListener();
             EventListener listener2 = EventBusTestFixture.newListener();
 
-            eventBus().register(listener, EventBusTestFixture.GROUP_A).unregister();
+            eventBus().register(listener, GROUP_A).unregister();
 
-            assertThatCode(() -> eventBus().register(listener2, EventBusTestFixture.GROUP_A))
+            assertThatCode(() -> eventBus().register(listener2, GROUP_A))
                 .doesNotThrowAnyException();
         }
 
@@ -270,7 +278,7 @@ public interface GroupContract {
         default void unregisterShouldBeIdempotentForGroups() {
             EventListener listener = EventBusTestFixture.newListener();
 
-            Registration registration = eventBus().register(listener, EventBusTestFixture.GROUP_A);
+            Registration registration = eventBus().register(listener, GROUP_A);
             registration.unregister();
 
             assertThatCode(registration::unregister)
@@ -281,32 +289,32 @@ public interface GroupContract {
         default void registerShouldAcceptAlreadyUnregisteredGroups() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus().register(listener, EventBusTestFixture.GROUP_A).unregister();
-            eventBus().register(listener, EventBusTestFixture.GROUP_A);
+            eventBus().register(listener, GROUP_A).unregister();
+            eventBus().register(listener, GROUP_A);
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block();
+            eventBus().dispatch(EVENT, NO_KEYS).block();
 
-            verify(listener, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
         default void dispatchShouldCallSynchronousListener() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus().register(listener, EventBusTestFixture.GROUP_A);
+            eventBus().register(listener, GROUP_A);
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block();
+            eventBus().dispatch(EVENT, NO_KEYS).block();
 
-            verify(listener, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
         default void failingGroupListenersShouldNotAbortGroupDelivery() {
-            EventBusTestFixture.EventListenerCountingSuccessfulExecution listener = new EventBusTestFixture.EventMatcherThrowingListener(ImmutableSet.of(EventBusTestFixture.EVENT));
-            eventBus().register(listener, EventBusTestFixture.GROUP_A);
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution listener = new EventBusTestFixture.EventMatcherThrowingListener(ImmutableSet.of(EVENT));
+            eventBus().register(listener, GROUP_A);
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block();
-            eventBus().dispatch(EventBusTestFixture.EVENT_2, EventBusTestFixture.NO_KEYS).block();
+            eventBus().dispatch(EVENT, NO_KEYS).block();
+            eventBus().dispatch(EVENT_2, NO_KEYS).block();
 
             getSpeedProfile().shortWaitCondition()
                 .untilAsserted(() -> assertThat(listener.numberOfEventCalls()).isEqualTo(1));
@@ -320,12 +328,12 @@ public interface GroupContract {
             when(failingListener.getExecutionMode()).thenReturn(EventListener.ExecutionMode.SYNCHRONOUS);
             doThrow(new RuntimeException()).when(failingListener).event(any());
 
-            eventBus().register(failingListener, EventBusTestFixture.GROUP_A);
-            eventBus().register(listener, EventBusTestFixture.GROUP_B);
+            eventBus().register(failingListener, GROUP_A);
+            eventBus().register(listener, GROUP_B);
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block();
+            eventBus().dispatch(EVENT, NO_KEYS).block();
 
-            verify(listener, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
@@ -336,21 +344,21 @@ public interface GroupContract {
             eventBus().register(listener1, new GenericGroup("a"));
             eventBus().register(listener2, new GenericGroup("b"));
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block();
+            eventBus().dispatch(EVENT, NO_KEYS).block();
 
-            verify(listener1, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
-            verify(listener2, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener1, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener2, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
         default void groupListenerShouldReceiveEventWhenRedeliver() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus().register(listener, EventBusTestFixture.GROUP_A);
+            eventBus().register(listener, GROUP_A);
 
-            eventBus().reDeliver(EventBusTestFixture.GROUP_A, EventBusTestFixture.EVENT).block();
+            eventBus().reDeliver(GROUP_A, EVENT).block();
 
-            verify(listener, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
@@ -358,15 +366,15 @@ public interface GroupContract {
             EventListener listener = EventBusTestFixture.newListener();
             doThrow(new RuntimeException()).when(listener).event(any());
 
-            eventBus().register(listener, EventBusTestFixture.GROUP_A);
+            eventBus().register(listener, GROUP_A);
 
-            assertThatCode(() -> eventBus().reDeliver(EventBusTestFixture.GROUP_A, EventBusTestFixture.EVENT).block())
+            assertThatCode(() -> eventBus().reDeliver(GROUP_A, EVENT).block())
                 .doesNotThrowAnyException();
         }
 
         @Test
         default void redeliverShouldThrowWhenGroupNotRegistered() {
-            assertThatThrownBy(() -> eventBus().reDeliver(EventBusTestFixture.GROUP_A, EventBusTestFixture.EVENT).block())
+            assertThatThrownBy(() -> eventBus().reDeliver(GROUP_A, EVENT).block())
                 .isInstanceOf(GroupRegistrationNotFound.class);
         }
 
@@ -374,9 +382,9 @@ public interface GroupContract {
         default void redeliverShouldThrowAfterGroupIsUnregistered() {
             EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus().register(listener, EventBusTestFixture.GROUP_A).unregister();
+            eventBus().register(listener, GROUP_A).unregister();
 
-            assertThatThrownBy(() -> eventBus().reDeliver(EventBusTestFixture.GROUP_A, EventBusTestFixture.EVENT).block())
+            assertThatThrownBy(() -> eventBus().reDeliver(GROUP_A, EVENT).block())
                 .isInstanceOf(GroupRegistrationNotFound.class);
         }
 
@@ -384,25 +392,25 @@ public interface GroupContract {
         default void redeliverShouldOnlySendEventToDefinedGroup() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
             EventListener listener2 = EventBusTestFixture.newListener();
-            eventBus().register(listener, EventBusTestFixture.GROUP_A);
-            eventBus().register(listener2, EventBusTestFixture.GROUP_B);
+            eventBus().register(listener, GROUP_A);
+            eventBus().register(listener2, GROUP_B);
 
-            eventBus().reDeliver(EventBusTestFixture.GROUP_A, EventBusTestFixture.EVENT).block();
+            eventBus().reDeliver(GROUP_A, EVENT).block();
 
-            verify(listener, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
-            verify(listener2, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never()).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener2, after(FIVE_HUNDRED_MS.toMillis()).never()).event(any());
         }
 
         @Test
         default void groupListenersShouldNotReceiveNoopRedeliveredEvents() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus().register(listener, EventBusTestFixture.GROUP_A);
+            eventBus().register(listener, GROUP_A);
 
             Event noopEvent = new TestEvent(EVENT_ID, Username.of("noop"));
-            eventBus().reDeliver(EventBusTestFixture.GROUP_A, noopEvent).block();
+            eventBus().reDeliver(GROUP_A, noopEvent).block();
 
-            verify(listener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never()).event(any());
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never()).event(any());
         }
     }
 
@@ -412,20 +420,20 @@ public interface GroupContract {
         default void groupsDefinedOnlyOnSomeNodesShouldBeNotifiedWhenDispatch() throws Exception {
             EventListener mailboxListener = EventBusTestFixture.newListener();
 
-            eventBus().register(mailboxListener, EventBusTestFixture.GROUP_A);
+            eventBus().register(mailboxListener, GROUP_A);
 
-            eventBus2().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block();
+            eventBus2().dispatch(EVENT, NO_KEYS).block();
 
-            verify(mailboxListener, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(mailboxListener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
         default void groupsDefinedOnlyOnSomeNodesShouldNotBeNotifiedWhenRedeliver() {
             EventListener mailboxListener = EventBusTestFixture.newListener();
 
-            eventBus().register(mailboxListener, EventBusTestFixture.GROUP_A);
+            eventBus().register(mailboxListener, GROUP_A);
 
-            assertThatThrownBy(() -> eventBus2().reDeliver(EventBusTestFixture.GROUP_A, EventBusTestFixture.EVENT).block())
+            assertThatThrownBy(() -> eventBus2().reDeliver(GROUP_A, EVENT).block())
                 .isInstanceOf(GroupRegistrationNotFound.class);
         }
 
@@ -433,36 +441,36 @@ public interface GroupContract {
         default void groupListenersShouldBeExecutedOnceWhenRedeliverInADistributedEnvironment() throws Exception {
             EventListener mailboxListener = EventBusTestFixture.newListener();
 
-            eventBus().register(mailboxListener, EventBusTestFixture.GROUP_A);
-            eventBus2().register(mailboxListener, EventBusTestFixture.GROUP_A);
+            eventBus().register(mailboxListener, GROUP_A);
+            eventBus2().register(mailboxListener, GROUP_A);
 
-            eventBus2().reDeliver(EventBusTestFixture.GROUP_A, EventBusTestFixture.EVENT).block();
+            eventBus2().reDeliver(GROUP_A, EVENT).block();
 
-            verify(mailboxListener, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(mailboxListener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
         default void groupListenersShouldBeExecutedOnceInAControlledEnvironment() throws Exception {
             EventListener mailboxListener = EventBusTestFixture.newListener();
 
-            eventBus().register(mailboxListener, EventBusTestFixture.GROUP_A);
-            eventBus2().register(mailboxListener, EventBusTestFixture.GROUP_A);
+            eventBus().register(mailboxListener, GROUP_A);
+            eventBus2().register(mailboxListener, GROUP_A);
 
-            eventBus2().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block();
+            eventBus2().dispatch(EVENT, NO_KEYS).block();
 
-            verify(mailboxListener, timeout(EventBusTestFixture.ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(mailboxListener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
         default void unregisterShouldStopNotificationForDistantGroups() throws Exception {
             EventListener mailboxListener = EventBusTestFixture.newListener();
 
-            eventBus().register(mailboxListener, EventBusTestFixture.GROUP_A).unregister();
+            eventBus().register(mailboxListener, GROUP_A).unregister();
 
-            eventBus2().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block();
+            eventBus2().dispatch(EVENT, NO_KEYS).block();
 
 
-            verify(mailboxListener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never())
+            verify(mailboxListener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
@@ -470,11 +478,11 @@ public interface GroupContract {
         default void registerShouldNotDispatchPastEventsForGroupsInADistributedContext() throws Exception {
             EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus().dispatch(EventBusTestFixture.EVENT, EventBusTestFixture.NO_KEYS).block();
+            eventBus().dispatch(EVENT, NO_KEYS).block();
 
-            eventBus2().register(listener, EventBusTestFixture.GROUP_A);
+            eventBus2().register(listener, GROUP_A);
 
-            verify(listener, after(EventBusTestFixture.FIVE_HUNDRED_MS.toMillis()).never())
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
     }

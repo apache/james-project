@@ -20,11 +20,12 @@
 package org.apache.james.events;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
+import static org.apache.james.events.tables.CassandraEventDeadLettersGroupTable.GROUP;
+import static org.apache.james.events.tables.CassandraEventDeadLettersGroupTable.TABLE_NAME;
 
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.events.tables.CassandraEventDeadLettersGroupTable;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
@@ -47,22 +48,22 @@ public class CassandraEventDeadLettersGroupDAO {
     }
 
     private PreparedStatement prepareInsertStatement(Session session) {
-        return session.prepare(QueryBuilder.insertInto(CassandraEventDeadLettersGroupTable.TABLE_NAME)
-            .value(CassandraEventDeadLettersGroupTable.GROUP, bindMarker(CassandraEventDeadLettersGroupTable.GROUP)));
+        return session.prepare(QueryBuilder.insertInto(TABLE_NAME)
+            .value(GROUP, bindMarker(GROUP)));
     }
 
     private PreparedStatement prepareSelectStatement(Session session) {
-        return session.prepare(QueryBuilder.select(CassandraEventDeadLettersGroupTable.GROUP)
-            .from(CassandraEventDeadLettersGroupTable.TABLE_NAME));
+        return session.prepare(QueryBuilder.select(GROUP)
+            .from(TABLE_NAME));
     }
 
     Mono<Void> storeGroup(Group group) {
         return executor.executeVoid(insertStatement.bind()
-                .setString(CassandraEventDeadLettersGroupTable.GROUP, group.asString()));
+                .setString(GROUP, group.asString()));
     }
 
     Flux<Group> retrieveAllGroups() {
         return executor.executeRows(selectAllStatement.bind())
-            .map(Throwing.function(row -> Group.deserialize(row.getString(CassandraEventDeadLettersGroupTable.GROUP))));
+            .map(Throwing.function(row -> Group.deserialize(row.getString(GROUP))));
     }
 }

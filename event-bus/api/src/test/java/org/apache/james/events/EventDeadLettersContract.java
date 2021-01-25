@@ -32,6 +32,7 @@ import java.util.stream.Stream;
 
 import org.apache.james.core.Username;
 import org.apache.james.events.EventBusTestFixture.TestEvent;
+import org.apache.james.events.EventDeadLetters.InsertionId;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.Test;
 
@@ -107,19 +108,19 @@ interface EventDeadLettersContract {
     Event EVENT_1 = new TestEvent(EVENT_ID_1, USERNAME);
     Event EVENT_2 = new TestEvent(EVENT_ID_2, USERNAME);
     Event EVENT_3 = new TestEvent(EVENT_ID_3, USERNAME);
-    EventDeadLetters.InsertionId INSERTION_ID_1 = EventDeadLetters.InsertionId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b7");
-    EventDeadLetters.InsertionId INSERTION_ID_2 = EventDeadLetters.InsertionId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b8");
-    EventDeadLetters.InsertionId INSERTION_ID_3 = EventDeadLetters.InsertionId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b9");
+    InsertionId INSERTION_ID_1 = InsertionId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b7");
+    InsertionId INSERTION_ID_2 = InsertionId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b8");
+    InsertionId INSERTION_ID_3 = InsertionId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b9");
 
     Group GROUP_A = new EventBusTestFixture.GroupA();
     Group GROUP_B = new EventBusTestFixture.GroupB();
     Group NULL_GROUP = null;
     Event NULL_EVENT = null;
-    EventDeadLetters.InsertionId NULL_INSERTION_ID = null;
+    InsertionId NULL_INSERTION_ID = null;
 
     EventDeadLetters eventDeadLetters();
 
-    default Stream<EventDeadLetters.InsertionId> allInsertionIds() {
+    default Stream<InsertionId> allInsertionIds() {
         EventDeadLetters eventDeadLetters = eventDeadLetters();
 
         return eventDeadLetters.groupsWithFailedEvents()
@@ -157,7 +158,7 @@ interface EventDeadLettersContract {
         default void storeShouldStoreGroupWithCorrespondingEvent() {
             EventDeadLetters eventDeadLetters = eventDeadLetters();
 
-            EventDeadLetters.InsertionId insertionId = eventDeadLetters.store(GROUP_A, EVENT_1).block();
+            InsertionId insertionId = eventDeadLetters.store(GROUP_A, EVENT_1).block();
             assertThat(eventDeadLetters.failedEvent(GROUP_A, insertionId).block())
                 .isEqualTo(EVENT_1);
         }
@@ -167,12 +168,12 @@ interface EventDeadLettersContract {
             EventDeadLetters eventDeadLetters = eventDeadLetters();
 
             ImmutableMap<Integer, Group> groups = concurrentGroups();
-            Multimap<Integer, EventDeadLetters.InsertionId> storedInsertionIds = Multimaps.synchronizedSetMultimap(HashMultimap.create());
+            Multimap<Integer, InsertionId> storedInsertionIds = Multimaps.synchronizedSetMultimap(HashMultimap.create());
 
             ConcurrentTestRunner.builder()
                 .operation((threadNumber, step) -> {
                     Event.EventId eventId = Event.EventId.random();
-                    EventDeadLetters.InsertionId insertionId = eventDeadLetters.store(groups.get(threadNumber), event(eventId)).block();
+                    InsertionId insertionId = eventDeadLetters.store(groups.get(threadNumber), event(eventId)).block();
                     storedInsertionIds.put(threadNumber, insertionId);
                 })
                 .threadCount(THREAD_COUNT)
@@ -230,9 +231,9 @@ interface EventDeadLettersContract {
         default void removeShouldKeepNonMatched() {
             EventDeadLetters eventDeadLetters = eventDeadLetters();
 
-            EventDeadLetters.InsertionId insertionId1 = eventDeadLetters.store(GROUP_A, EVENT_1).block();
-            EventDeadLetters.InsertionId insertionId2 = eventDeadLetters.store(GROUP_A, EVENT_2).block();
-            EventDeadLetters.InsertionId insertionId3 = eventDeadLetters.store(GROUP_A, EVENT_3).block();
+            InsertionId insertionId1 = eventDeadLetters.store(GROUP_A, EVENT_1).block();
+            InsertionId insertionId2 = eventDeadLetters.store(GROUP_A, EVENT_2).block();
+            InsertionId insertionId3 = eventDeadLetters.store(GROUP_A, EVENT_3).block();
 
             eventDeadLetters.remove(GROUP_A, insertionId1).block();
 
@@ -265,13 +266,13 @@ interface EventDeadLettersContract {
             EventDeadLetters eventDeadLetters = eventDeadLetters();
 
             ImmutableMap<Integer, Group> groups = concurrentGroups();
-            ConcurrentHashMap<Integer, EventDeadLetters.InsertionId> storedInsertionIds = new ConcurrentHashMap<>();
+            ConcurrentHashMap<Integer, InsertionId> storedInsertionIds = new ConcurrentHashMap<>();
 
             ConcurrentTestRunner.builder()
                 .operation((threadNumber, step) -> {
                     int operationIndex = threadNumber * OPERATION_COUNT + step;
                     Event.EventId eventId = Event.EventId.random();
-                    EventDeadLetters.InsertionId insertionId = eventDeadLetters.store(groups.get(threadNumber), event(eventId)).block();
+                    InsertionId insertionId = eventDeadLetters.store(groups.get(threadNumber), event(eventId)).block();
                     storedInsertionIds.put(operationIndex, insertionId);
                 })
                 .threadCount(THREAD_COUNT)
@@ -334,7 +335,7 @@ interface EventDeadLettersContract {
         default void failedEventShouldReturnEventWhenContains() {
             EventDeadLetters eventDeadLetters = eventDeadLetters();
 
-            EventDeadLetters.InsertionId insertionId = eventDeadLetters.store(GROUP_A, EVENT_1).block();
+            InsertionId insertionId = eventDeadLetters.store(GROUP_A, EVENT_1).block();
             eventDeadLetters.store(GROUP_A, EVENT_2).block();
 
             assertThat(eventDeadLetters.failedEvent(GROUP_A, insertionId).block())
@@ -345,9 +346,9 @@ interface EventDeadLettersContract {
         default void failedEventShouldNotRemoveEvent() {
             EventDeadLetters eventDeadLetters = eventDeadLetters();
 
-            EventDeadLetters.InsertionId insertionId1 = eventDeadLetters.store(GROUP_A, EVENT_1).block();
-            EventDeadLetters.InsertionId insertionId2 = eventDeadLetters.store(GROUP_A, EVENT_2).block();
-            EventDeadLetters.InsertionId insertionId3 = eventDeadLetters.store(GROUP_A, EVENT_3).block();
+            InsertionId insertionId1 = eventDeadLetters.store(GROUP_A, EVENT_1).block();
+            InsertionId insertionId2 = eventDeadLetters.store(GROUP_A, EVENT_2).block();
+            InsertionId insertionId3 = eventDeadLetters.store(GROUP_A, EVENT_3).block();
 
             eventDeadLetters.failedEvent(GROUP_A, insertionId1).block();
 
@@ -359,7 +360,7 @@ interface EventDeadLettersContract {
         default void failedEventShouldNotThrowWhenNoGroupMatched() {
             EventDeadLetters eventDeadLetters = eventDeadLetters();
 
-            EventDeadLetters.InsertionId insertionId = eventDeadLetters.store(GROUP_A, EVENT_1).block();
+            InsertionId insertionId = eventDeadLetters.store(GROUP_A, EVENT_1).block();
 
             assertThatCode(() -> eventDeadLetters.failedEvent(GROUP_B, insertionId).block())
                 .doesNotThrowAnyException();
@@ -392,7 +393,7 @@ interface EventDeadLettersContract {
         default void failedEventsByGroupShouldReturnAllEventsCorrespondingToGivenGroup() {
             EventDeadLetters eventDeadLetters = eventDeadLetters();
 
-            EventDeadLetters.InsertionId insertionId = eventDeadLetters.store(GROUP_A, EVENT_1).block();
+            InsertionId insertionId = eventDeadLetters.store(GROUP_A, EVENT_1).block();
             eventDeadLetters.store(GROUP_B, EVENT_2).block();
             eventDeadLetters.store(GROUP_B, EVENT_3).block();
 
@@ -404,9 +405,9 @@ interface EventDeadLettersContract {
         default void failedEventsByGroupShouldNotRemoveEvents() {
             EventDeadLetters eventDeadLetters = eventDeadLetters();
 
-            EventDeadLetters.InsertionId insertionId1 = eventDeadLetters.store(GROUP_A, EVENT_1).block();
-            EventDeadLetters.InsertionId insertionId2 = eventDeadLetters.store(GROUP_A, EVENT_2).block();
-            EventDeadLetters.InsertionId insertionId3 = eventDeadLetters.store(GROUP_B, EVENT_3).block();
+            InsertionId insertionId1 = eventDeadLetters.store(GROUP_A, EVENT_1).block();
+            InsertionId insertionId2 = eventDeadLetters.store(GROUP_A, EVENT_2).block();
+            InsertionId insertionId3 = eventDeadLetters.store(GROUP_B, EVENT_3).block();
 
             eventDeadLetters.failedIds(GROUP_A).toStream();
 
@@ -453,8 +454,8 @@ interface EventDeadLettersContract {
         @Test
         default void containEventsShouldReturnFalseWhenRemoveAllStoredEvents() {
             EventDeadLetters eventDeadLetters = eventDeadLetters();
-            EventDeadLetters.InsertionId insertionId1 = eventDeadLetters().store(GROUP_A, EVENT_1).block();
-            EventDeadLetters.InsertionId insertionId2 = eventDeadLetters().store(GROUP_A, EVENT_2).block();
+            InsertionId insertionId1 = eventDeadLetters().store(GROUP_A, EVENT_1).block();
+            InsertionId insertionId2 = eventDeadLetters().store(GROUP_A, EVENT_2).block();
 
             assertThat(eventDeadLetters.containEvents().block()).isTrue();
 
@@ -467,7 +468,7 @@ interface EventDeadLettersContract {
         @Test
         default void containEventsShouldReturnTrueWhenRemoveSomeStoredEvents() {
             EventDeadLetters eventDeadLetters = eventDeadLetters();
-            EventDeadLetters.InsertionId insertionId1 = eventDeadLetters().store(GROUP_A, EVENT_1).block();
+            InsertionId insertionId1 = eventDeadLetters().store(GROUP_A, EVENT_1).block();
             eventDeadLetters().store(GROUP_B, EVENT_2).block();
 
             assertThat(eventDeadLetters.containEvents().block()).isTrue();

@@ -19,6 +19,8 @@
 
 package org.apache.james.events;
 
+import static org.apache.james.events.EventDeadLettersContract.GROUP_A;
+import static org.apache.james.events.EventDeadLettersContract.GROUP_B;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -48,11 +50,11 @@ public class CassandraEventDeadLettersGroupDAOTest {
 
     @Test
     void retrieveAllGroupsShouldReturnStoredGroups() {
-        GROUP_DAO.storeGroup(EventDeadLettersContract.GROUP_A).block();
-        GROUP_DAO.storeGroup(EventDeadLettersContract.GROUP_B).block();
+        GROUP_DAO.storeGroup(GROUP_A).block();
+        GROUP_DAO.storeGroup(GROUP_B).block();
 
         assertThat(GROUP_DAO.retrieveAllGroups()
                 .collectList().block())
-            .containsOnly(EventDeadLettersContract.GROUP_A, EventDeadLettersContract.GROUP_B);
+            .containsOnly(GROUP_A, GROUP_B);
     }
 }

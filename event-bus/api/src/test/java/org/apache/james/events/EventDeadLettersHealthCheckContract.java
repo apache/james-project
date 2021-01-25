@@ -25,6 +25,7 @@ import org.apache.james.core.Username;
 import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.Result;
 import org.apache.james.events.EventBusTestFixture.TestEvent;
+import org.apache.james.events.EventDeadLetters.InsertionId;
 import org.junit.jupiter.api.Test;
 
 interface EventDeadLettersHealthCheckContract {
@@ -78,8 +79,8 @@ interface EventDeadLettersHealthCheckContract {
 
     @Test
     default void checkShouldReturnHealthyWhenRemovedAllEventDeadLetters() {
-        EventDeadLetters.InsertionId insertionId1 = eventDeadLetters().store(GROUP_A, EVENT_1).block();
-        EventDeadLetters.InsertionId insertionId2 = eventDeadLetters().store(GROUP_B, EVENT_2).block();
+        InsertionId insertionId1 = eventDeadLetters().store(GROUP_A, EVENT_1).block();
+        InsertionId insertionId2 = eventDeadLetters().store(GROUP_B, EVENT_2).block();
 
         assertThat(testee().check().block().isDegraded()).isTrue();
         assertThat(testee().check().block())
@@ -95,7 +96,7 @@ interface EventDeadLettersHealthCheckContract {
 
     @Test
     default void checkShouldReturnDegradedWhenRemovedSomeEventDeadLetters() {
-        EventDeadLetters.InsertionId insertionId1 = eventDeadLetters().store(GROUP_A, EVENT_1).block();
+        InsertionId insertionId1 = eventDeadLetters().store(GROUP_A, EVENT_1).block();
         eventDeadLetters().store(GROUP_B, EVENT_2).block();
 
         assertThat(testee().check().block().isDegraded()).isTrue();
