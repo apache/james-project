@@ -167,7 +167,7 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
     }))
 
     SFlux.merge(Seq(retrieveEmails(messagesIds, mailboxSession, request), parsingErrors))
-      .reduce(EmailGetResults.empty(), EmailGetResults.merge)
+      .reduce(EmailGetResults.empty())(EmailGetResults.merge)
   }
 
   private def asMessageId(id: UnparsedEmailId): Either[(UnparsedEmailId, IllegalArgumentException),  MessageId] =

@@ -169,8 +169,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
 
   private def updateByRange(ranges: List[MessageRange],
                             metaData: Map[MessageId, Traversable[ComposedMessageIdWithMetaData]],
-                            operation: Consumer[MessageRange]): SMono[Seq[EmailUpdateResult]] = {
-
+                            operation: Consumer[MessageRange]): SMono[Seq[EmailUpdateResult]] =
     SFlux.fromIterable(ranges)
       .concatMap(range => {
         val messageIds = metaData.filter(entry => entry._2.exists(composedId => range.includes(composedId.getComposedMessageId.getUid)))
@@ -183,8 +182,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
           .onErrorResume(e => SMono.just(messageIds.map(id => EmailUpdateFailure(EmailSet.asUnparsed(id), e))))
           .subscribeOn(Schedulers.elastic())
       })
-      .reduce(Seq(), _ ++ _)
-  }
+      .reduce(Seq[EmailUpdateResult]())( _ ++ _)
 
   private def updateEachMessage(validUpdates: List[(MessageId, ValidatedEmailSetUpdate)],
                                 metaData: Map[MessageId, Traversable[ComposedMessageIdWithMetaData]],

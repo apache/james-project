@@ -162,7 +162,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
     SFlux.fromIterable(request.create
       .getOrElse(Map.empty)
       .view)
-      .foldLeft((CreationResults(Nil), processingContext)) {
+      .fold((CreationResults(Nil), processingContext)) {
         (acc : (CreationResults, ProcessingContext), elem: (EmailSubmissionCreationId, JsObject)) => {
           val (emailSubmissionCreationId, jsObject) = elem
           val (creationResult, updatedProcessingContext) = createSubmission(session, emailSubmissionCreationId, jsObject, acc._2)

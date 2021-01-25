@@ -67,7 +67,7 @@ class VacationResponseGetMethod @Inject()(vacationRepository: VacationRepository
       val requestedProperties: Properties = request.properties.getOrElse(VacationResponse.allProperties)
       (requestedProperties -- VacationResponse.allProperties match {
         case invalidProperties if invalidProperties.isEmpty() => getVacationResponse(request, mailboxSession)
-          .reduce(VacationResponseGetResult.empty, VacationResponseGetResult.merge)
+          .reduce(VacationResponseGetResult.empty)(VacationResponseGetResult.merge)
           .map(vacationResult => vacationResult.asResponse(request.accountId))
           .map(vacationResponseGetResponse => Invocation(
             methodName = methodName,

@@ -59,7 +59,7 @@ class JMAPApi (methods: Set[Method], defaultCapabilities: Set[Capability]) {
 
   private def processSequentiallyAndUpdateContext(requestObject: RequestObject, mailboxSession: MailboxSession, processingContext: ProcessingContext, capabilities: Set[CapabilityIdentifier]): SMono[Seq[(InvocationWithContext)]] =
     SFlux.fromIterable(requestObject.methodCalls)
-      .foldLeft(List[SFlux[InvocationWithContext]]())((acc, elem) => {
+      .fold(List[SFlux[InvocationWithContext]]())((acc, elem) => {
         val lastProcessingContext: SMono[ProcessingContext] = acc.headOption
           .map(last => SMono.fromPublisher(Flux.from(last.map(_.processingContext)).last()))
           .getOrElse(SMono.just(processingContext))

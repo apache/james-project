@@ -79,7 +79,7 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
     val requestedProperties: Properties = request.properties.getOrElse(Mailbox.allProperties)
     (requestedProperties -- Mailbox.allProperties match {
       case invalidProperties if invalidProperties.isEmpty() => getMailboxes(capabilities, request, mailboxSession)
-        .reduce(MailboxGetResults.empty(), MailboxGetResults.merge)
+        .reduce(MailboxGetResults.empty())(MailboxGetResults.merge)
         .flatMap(mailboxes => retrieveState(capabilities, mailboxSession)
           .map(state => mailboxes.asResponse(request.accountId, state)))
         .map(mailboxGetResponse => Invocation(

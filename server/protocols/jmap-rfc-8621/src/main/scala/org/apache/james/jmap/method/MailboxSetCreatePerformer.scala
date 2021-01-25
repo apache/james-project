@@ -88,7 +88,7 @@ class MailboxSetCreatePerformer @Inject()(serializer: MailboxSerializer,
     SFlux.fromIterable(mailboxSetRequest.create
       .getOrElse(Map.empty)
       .view)
-      .foldLeft((MailboxCreationResults(Nil), processingContext)){
+      .fold((MailboxCreationResults(Nil), processingContext)){
         (acc : (MailboxCreationResults, ProcessingContext), elem: (MailboxCreationId, JsObject)) => {
           val (mailboxCreationId, jsObject) = elem
           val (creationResult, updatedProcessingContext) = createMailbox(mailboxSession, mailboxCreationId, jsObject, acc._2)

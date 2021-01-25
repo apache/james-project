@@ -19,12 +19,13 @@
 package org.apache.james.eventsourcing
 
 import java.util
-
 import com.google.common.base.Preconditions
+
 import javax.inject.Inject
 import org.apache.james.eventsourcing.eventstore.EventStoreFailedException
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
+import reactor.util.retry.Retry
 
 import scala.jdk.CollectionConverters._
 
@@ -51,11 +52,11 @@ class CommandDispatcher @Inject()(eventBus: EventBus, handlers: Set[CommandHandl
 
   def dispatch(c: Command): Publisher[util.List[_ <: Event]] = {
     tryDispatch(c)
-      .retry(CommandDispatcher.MAX_RETRY, {
+      .retryWhen(Retry.max(CommandDispatcher.MAX_RETRY)
+        .filter {
         case _: EventStoreFailedException => true
         case _ => false
-      })
-      .onErrorMap({
+      }).onErrorMap({
         case _: EventStoreFailedException => CommandDispatcher.TooManyRetries(c, CommandDispatcher.MAX_RETRY)
         case error => error
       })
@@ -75,7 +76,7 @@ class CommandDispatcher @Inject()(eventBus: EventBus, handlers: Set[CommandHandl
         SMono(eventsPublisher)
           .flatMap(events => eventBus.publish(events.asScala).`then`(SMono.just(events)))
       case _ =>
-        SMono.raiseError(CommandDispatcher.UnknownCommandException(c))
+        SMono.error(CommandDispatcher.UnknownCommandException(c))
     }
   }
 
