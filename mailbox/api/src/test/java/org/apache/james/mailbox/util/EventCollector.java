@@ -22,11 +22,11 @@ package org.apache.james.mailbox.util;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.Group;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
 
-public class EventCollector implements MailboxListener.GroupMailboxListener {
+public class EventCollector implements EventListener.GroupEventListener {
     public static class EventCollectorGroup extends Group {
 
     }

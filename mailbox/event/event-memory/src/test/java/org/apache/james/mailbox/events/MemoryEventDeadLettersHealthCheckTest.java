@@ -20,6 +20,8 @@
 package org.apache.james.mailbox.events;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.EventDeadLettersHealthCheck;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 

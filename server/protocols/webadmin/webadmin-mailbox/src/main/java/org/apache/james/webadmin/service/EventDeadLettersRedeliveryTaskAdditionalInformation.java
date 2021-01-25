@@ -21,8 +21,8 @@ package org.apache.james.webadmin.service;
 import java.time.Instant;
 import java.util.Optional;
 
-import org.apache.james.mailbox.events.EventDeadLetters;
-import org.apache.james.mailbox.events.Group;
+import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.Group;
 import org.apache.james.task.TaskExecutionDetails;
 
 public class EventDeadLettersRedeliveryTaskAdditionalInformation implements TaskExecutionDetails.AdditionalInformation {

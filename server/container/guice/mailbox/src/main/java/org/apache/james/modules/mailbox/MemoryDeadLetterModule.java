@@ -20,8 +20,8 @@
 package org.apache.james.modules.mailbox;
 
 import org.apache.james.core.healthcheck.HealthCheck;
-import org.apache.james.mailbox.events.EventDeadLetters;
-import org.apache.james.mailbox.events.EventDeadLettersHealthCheck;
+import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.EventDeadLettersHealthCheck;
 import org.apache.james.mailbox.events.MemoryEventDeadLetters;
 
 import com.google.inject.AbstractModule;

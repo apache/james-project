@@ -28,7 +28,14 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.james.core.Username;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
+import org.apache.james.events.RegistrationKey;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxAdded;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxEvent;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxRenamed;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -39,7 +46,7 @@ import com.google.common.collect.ImmutableSet;
 
 public interface EventBusTestFixture {
 
-    class MailboxListenerCountingSuccessfulExecution implements MailboxListener {
+    class EventListenerCountingSuccessfulExecution implements EventListener {
         private final AtomicInteger calls = new AtomicInteger(0);
 
         @Override
@@ -57,7 +64,7 @@ public interface EventBusTestFixture {
         }
     }
 
-    class EventMatcherThrowingListener extends MailboxListenerCountingSuccessfulExecution {
+    class EventMatcherThrowingListener extends EventListenerCountingSuccessfulExecution {
         private final ImmutableSet<Event> eventsCauseThrowing;
 
         EventMatcherThrowingListener(ImmutableSet<Event> eventsCauseThrowing) {
@@ -96,9 +103,9 @@ public interface EventBusTestFixture {
     TestId TEST_ID = TestId.of(18);
     Event.EventId EVENT_ID = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
     Event.EventId EVENT_ID_2 = Event.EventId.of("5a7a9f3f-5f03-44be-b457-a51e93760645");
-    MailboxListener.MailboxEvent EVENT = new MailboxListener.MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, TEST_ID, EVENT_ID);
-    MailboxListener.MailboxEvent EVENT_2 = new MailboxListener.MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, TEST_ID, EVENT_ID_2);
-    MailboxListener.MailboxRenamed EVENT_UNSUPPORTED_BY_LISTENER = new MailboxListener.MailboxRenamed(SESSION_ID, USERNAME, MAILBOX_PATH, TEST_ID, MAILBOX_PATH, EVENT_ID_2);
+    MailboxEvent EVENT = new MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, TEST_ID, EVENT_ID);
+    MailboxEvent EVENT_2 = new MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, TEST_ID, EVENT_ID_2);
+    MailboxRenamed EVENT_UNSUPPORTED_BY_LISTENER = new MailboxRenamed(SESSION_ID, USERNAME, MAILBOX_PATH, TEST_ID, MAILBOX_PATH, EVENT_ID_2);
 
     java.time.Duration ONE_SECOND = java.time.Duration.ofSeconds(1);
     java.time.Duration FIVE_HUNDRED_MS = java.time.Duration.ofMillis(500);
@@ -122,17 +129,17 @@ public interface EventBusTestFixture {
         .jitterFactor(DEFAULT_JITTER_FACTOR)
         .build();
 
-    static MailboxListener newListener() {
-        MailboxListener listener = mock(MailboxListener.class);
-        when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
-        when(listener.isHandling(any(MailboxListener.MailboxAdded.class))).thenReturn(true);
+    static EventListener newListener() {
+        EventListener listener = mock(EventListener.class);
+        when(listener.getExecutionMode()).thenReturn(EventListener.ExecutionMode.SYNCHRONOUS);
+        when(listener.isHandling(any(MailboxAdded.class))).thenReturn(true);
         return listener;
     }
 
-    static MailboxListener newAsyncListener() {
-        MailboxListener listener = mock(MailboxListener.class);
-        when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
-        when(listener.isHandling(any(MailboxListener.MailboxAdded.class))).thenReturn(true);
+    static EventListener newAsyncListener() {
+        EventListener listener = mock(EventListener.class);
+        when(listener.getExecutionMode()).thenReturn(EventListener.ExecutionMode.ASYNCHRONOUS);
+        when(listener.isHandling(any(MailboxAdded.class))).thenReturn(true);
         return listener;
     }
 }

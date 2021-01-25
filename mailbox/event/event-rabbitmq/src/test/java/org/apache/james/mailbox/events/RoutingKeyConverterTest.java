@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Objects;
 
+import org.apache.james.events.RegistrationKey;
 import org.apache.james.mailbox.model.TestId;
 import org.junit.jupiter.api.Test;
 

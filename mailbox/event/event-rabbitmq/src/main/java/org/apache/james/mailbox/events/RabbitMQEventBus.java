@@ -27,6 +27,13 @@ import javax.inject.Inject;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.event.json.EventSerializer;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventBus;
+import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
+import org.apache.james.events.Registration;
+import org.apache.james.events.RegistrationKey;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.MetricFactory;
 
@@ -127,13 +134,13 @@ public class RabbitMQEventBus implements EventBus, Startable {
     }
 
     @Override
-    public Mono<Registration> register(MailboxListener.ReactiveMailboxListener listener, RegistrationKey key) {
+    public Mono<Registration> register(EventListener.ReactiveEventListener listener, RegistrationKey key) {
         Preconditions.checkState(isRunning, NOT_RUNNING_ERROR_MESSAGE);
         return keyRegistrationHandler.register(listener, key);
     }
 
     @Override
-    public Registration register(MailboxListener.ReactiveMailboxListener listener, Group group) {
+    public Registration register(EventListener.ReactiveEventListener listener, Group group) {
         Preconditions.checkState(isRunning, NOT_RUNNING_ERROR_MESSAGE);
         return groupRegistrationHandler.register(listener, group);
     }

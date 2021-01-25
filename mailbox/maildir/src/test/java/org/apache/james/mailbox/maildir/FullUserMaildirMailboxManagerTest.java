@@ -20,10 +20,10 @@ package org.apache.james.mailbox.maildir;
 
 import java.util.Optional;
 
+import org.apache.james.events.EventBus;
 import org.apache.james.junit.TemporaryFolderExtension;
 import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
-import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.junit.jupiter.api.Disabled;

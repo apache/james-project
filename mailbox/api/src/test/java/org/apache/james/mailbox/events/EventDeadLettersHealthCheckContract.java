@@ -24,7 +24,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.core.Username;
 import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.Result;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.EventDeadLettersHealthCheck;
+import org.apache.james.events.Group;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxAdded;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestId;
@@ -41,8 +46,8 @@ interface EventDeadLettersHealthCheckContract {
     TestId MAILBOX_ID = TestId.of(563);
     Event.EventId EVENT_ID_1 = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
     Event.EventId EVENT_ID_2 = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b5");
-    MailboxListener.MailboxAdded EVENT_1 = new MailboxListener.MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, EVENT_ID_1);
-    MailboxListener.MailboxAdded EVENT_2 = new MailboxListener.MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, EVENT_ID_2);
+    MailboxAdded EVENT_1 = new MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, EVENT_ID_1);
+    MailboxAdded EVENT_2 = new MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, EVENT_ID_2);
 
     Group GROUP_A = new EventBusTestFixture.GroupA();
     Group GROUP_B = new EventBusTestFixture.GroupB();

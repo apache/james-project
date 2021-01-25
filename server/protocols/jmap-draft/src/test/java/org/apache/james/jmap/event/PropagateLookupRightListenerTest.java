@@ -22,11 +22,11 @@ package org.apache.james.jmap.event;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.Username;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.events.Group;
-import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -98,7 +98,7 @@ public class PropagateLookupRightListenerTest {
 
     @Test
     public void getExecutionModeShouldReturnAsynchronous() throws Exception {
-        assertThat(testee.getExecutionMode()).isEqualTo(MailboxListener.ExecutionMode.SYNCHRONOUS);
+        assertThat(testee.getExecutionMode()).isEqualTo(EventListener.ExecutionMode.SYNCHRONOUS);
     }
 
     @Test

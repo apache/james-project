@@ -29,11 +29,18 @@ import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
+import org.apache.james.events.Event;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.acl.ACLDiff;
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MailboxEvents.Added;
+import org.apache.james.mailbox.events.MailboxEvents.Expunged;
+import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxACLUpdated;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxAdded;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxRenamed;
+import org.apache.james.mailbox.events.MailboxEvents.QuotaUsageUpdatedEvent;
 import org.apache.james.mailbox.events.MessageMoveEvent;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -203,13 +210,13 @@ public class EventFactory {
             this.sessionId = sessionId;
         }
 
-        public MailboxListener.MailboxAdded build() {
+        public MailboxAdded build() {
             Preconditions.checkNotNull(path);
             Preconditions.checkNotNull(mailboxId);
             Preconditions.checkNotNull(username);
             Preconditions.checkNotNull(sessionId);
 
-            return new MailboxListener.MailboxAdded(sessionId, username, path, mailboxId, eventId);
+            return new MailboxAdded(sessionId, username, path, mailboxId, eventId);
         }
     }
 
@@ -230,14 +237,14 @@ public class EventFactory {
             this.metaData = ImmutableSortedMap.copyOf(metaData);
         }
 
-        public MailboxListener.Added build() {
+        public Added build() {
             Preconditions.checkNotNull(path);
             Preconditions.checkNotNull(mailboxId);
             Preconditions.checkNotNull(username);
             Preconditions.checkNotNull(sessionId);
             Preconditions.checkNotNull(metaData);
 
-            return new MailboxListener.Added(sessionId, username, path, mailboxId, metaData, eventId);
+            return new Added(sessionId, username, path, mailboxId, metaData, eventId);
         }
     }
 
@@ -258,14 +265,14 @@ public class EventFactory {
             this.metaData = ImmutableSortedMap.copyOf(metaData);
         }
 
-        public MailboxListener.Expunged build() {
+        public Expunged build() {
             Preconditions.checkNotNull(path);
             Preconditions.checkNotNull(mailboxId);
             Preconditions.checkNotNull(username);
             Preconditions.checkNotNull(sessionId);
             Preconditions.checkNotNull(metaData);
 
-            return new MailboxListener.Expunged(sessionId, username, path, mailboxId, metaData, eventId);
+            return new Expunged(sessionId, username, path, mailboxId, metaData, eventId);
         }
     }
 
@@ -286,14 +293,14 @@ public class EventFactory {
             this.aclDiff = aclDiff;
         }
 
-        public MailboxListener.MailboxACLUpdated build() {
+        public MailboxACLUpdated build() {
             Preconditions.checkNotNull(path);
             Preconditions.checkNotNull(mailboxId);
             Preconditions.checkNotNull(username);
             Preconditions.checkNotNull(sessionId);
             Preconditions.checkNotNull(aclDiff);
 
-            return new MailboxListener.MailboxACLUpdated(sessionId, username, path, aclDiff, mailboxId, eventId);
+            return new MailboxACLUpdated(sessionId, username, path, aclDiff, mailboxId, eventId);
         }
     }
 
@@ -320,7 +327,7 @@ public class EventFactory {
             this.totalDeletedSize = totalDeletedSize;
         }
 
-        public MailboxListener.MailboxDeletion build() {
+        public MailboxDeletion build() {
             Preconditions.checkNotNull(path);
             Preconditions.checkNotNull(mailboxId);
             Preconditions.checkNotNull(username);
@@ -329,7 +336,7 @@ public class EventFactory {
             Preconditions.checkNotNull(deletedMessageCount);
             Preconditions.checkNotNull(totalDeletedSize);
 
-            return new MailboxListener.MailboxDeletion(sessionId, username, path, mailboxACL, quotaRoot, deletedMessageCount, totalDeletedSize, mailboxId, eventId);
+            return new MailboxDeletion(sessionId, username, path, mailboxACL, quotaRoot, deletedMessageCount, totalDeletedSize, mailboxId, eventId);
         }
     }
 
@@ -351,14 +358,14 @@ public class EventFactory {
         }
 
 
-        public MailboxListener.MailboxRenamed build() {
+        public MailboxRenamed build() {
             Preconditions.checkNotNull(oldPath);
             Preconditions.checkNotNull(newPath);
             Preconditions.checkNotNull(mailboxId);
             Preconditions.checkNotNull(username);
             Preconditions.checkNotNull(sessionId);
 
-            return new MailboxListener.MailboxRenamed(sessionId, username, oldPath, mailboxId, newPath, eventId);
+            return new MailboxRenamed(sessionId, username, oldPath, mailboxId, newPath, eventId);
         }
     }
 
@@ -380,14 +387,14 @@ public class EventFactory {
         }
 
 
-        public MailboxListener.FlagsUpdated build() {
+        public FlagsUpdated build() {
             Preconditions.checkNotNull(path);
             Preconditions.checkNotNull(mailboxId);
             Preconditions.checkNotNull(username);
             Preconditions.checkNotNull(sessionId);
             Preconditions.checkNotNull(updatedFlags);
 
-            return new MailboxListener.FlagsUpdated(sessionId, username, path, mailboxId, updatedFlags, eventId);
+            return new FlagsUpdated(sessionId, username, path, mailboxId, updatedFlags, eventId);
         }
     }
 
@@ -408,8 +415,8 @@ public class EventFactory {
             this.instant = instant;
         }
 
-        public MailboxListener.QuotaUsageUpdatedEvent build() {
-            return new MailboxListener.QuotaUsageUpdatedEvent(eventId, username, quotaRoot, countQuota, sizeQuota, instant);
+        public QuotaUsageUpdatedEvent build() {
+            return new QuotaUsageUpdatedEvent(eventId, username, quotaRoot, countQuota, sizeQuota, instant);
         }
     }
 

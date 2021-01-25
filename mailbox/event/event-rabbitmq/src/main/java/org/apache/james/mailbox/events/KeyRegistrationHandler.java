@@ -32,6 +32,11 @@ import java.util.function.Predicate;
 
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.event.json.EventSerializer;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventBus;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Registration;
+import org.apache.james.events.RegistrationKey;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.MDCStructuredLogger;
 import org.apache.james.util.StructuredLogger;
@@ -127,7 +132,7 @@ class KeyRegistrationHandler {
         receiver.close();
     }
 
-    Mono<Registration> register(MailboxListener.ReactiveMailboxListener listener, RegistrationKey key) {
+    Mono<Registration> register(EventListener.ReactiveEventListener listener, RegistrationKey key) {
         LocalListenerRegistry.LocalRegistration registration = localListenerRegistry.addListener(key, listener);
 
         return registerIfNeeded(key, registration)
@@ -169,7 +174,7 @@ class KeyRegistrationHandler {
             .then();
     }
 
-    private Mono<Void> executeListener(MailboxListener.ReactiveMailboxListener listener, Event event, RegistrationKey key) {
+    private Mono<Void> executeListener(EventListener.ReactiveEventListener listener, Event event, RegistrationKey key) {
         MDCBuilder mdcBuilder = MDCBuilder.create()
             .addContext(EventBus.StructuredLoggingFields.REGISTRATION_KEY, key);
 
@@ -180,9 +185,9 @@ class KeyRegistrationHandler {
             .then();
     }
 
-    private boolean isLocalSynchronousListeners(EventBusId eventBusId, MailboxListener listener) {
+    private boolean isLocalSynchronousListeners(EventBusId eventBusId, EventListener listener) {
         return eventBusId.equals(this.eventBusId) &&
-            listener.getExecutionMode().equals(MailboxListener.ExecutionMode.SYNCHRONOUS);
+            listener.getExecutionMode().equals(EventListener.ExecutionMode.SYNCHRONOUS);
     }
 
     private Event toEvent(Delivery delivery) {

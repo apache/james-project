@@ -25,9 +25,9 @@ import java.time.Instant;
 import java.util.Optional;
 
 import org.apache.james.JsonSerializationVerifier;
-import org.apache.james.mailbox.events.EventDeadLetters;
+import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.Group;
 import org.apache.james.mailbox.events.GenericGroup;
-import org.apache.james.mailbox.events.Group;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForAll;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForGroup;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForOne;

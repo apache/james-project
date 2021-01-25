@@ -19,7 +19,7 @@
 
 package org.apache.james.modules.mailbox;
 
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.events.EventListener;
 import org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaManager;
 import org.apache.james.mailbox.jpa.quota.JpaCurrentQuotaManager;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
@@ -55,7 +55,7 @@ public class JpaQuotaModule extends AbstractModule {
 
         bind(ListeningCurrentQuotaUpdater.class).in(Scopes.SINGLETON);
         bind(QuotaUpdater.class).to(ListeningCurrentQuotaUpdater.class);
-        Multibinder.newSetBinder(binder(), MailboxListener.ReactiveGroupMailboxListener.class)
+        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class)
             .addBinding()
             .to(ListeningCurrentQuotaUpdater.class);
     }

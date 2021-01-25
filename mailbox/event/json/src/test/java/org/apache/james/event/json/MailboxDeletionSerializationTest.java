@@ -35,7 +35,7 @@ import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -53,7 +53,7 @@ class MailboxDeletionSerializationTest {
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("#private&user@domain", Optional.of(Domain.of("domain")));
     private static final QuotaCountUsage DELETED_MESSAGE_COUNT = QuotaCountUsage.count(60);
     private static final QuotaSizeUsage TOTAL_DELETED_SIZE = QuotaSizeUsage.size(100);
-    private static final MailboxListener.MailboxDeletion DEFAULT_MAILBOX_DELETION_EVENT = new MailboxListener.MailboxDeletion(
+    private static final MailboxDeletion DEFAULT_MAILBOX_DELETION_EVENT = new MailboxDeletion(
         SESSION_ID,
         USERNAME,
         MAILBOX_PATH,
@@ -64,7 +64,7 @@ class MailboxDeletionSerializationTest {
         MAILBOX_ID,
         EVENT_ID);
 
-    private static final MailboxListener.MailboxDeletion EMPTY_ACL_MAILBOX_DELETION_EVENT = new MailboxListener.MailboxDeletion(
+    private static final MailboxDeletion EMPTY_ACL_MAILBOX_DELETION_EVENT = new MailboxDeletion(
         SESSION_ID,
         USERNAME,
         MAILBOX_PATH,

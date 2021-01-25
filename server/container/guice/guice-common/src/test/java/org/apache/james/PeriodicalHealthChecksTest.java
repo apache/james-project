@@ -32,7 +32,7 @@ import java.time.Duration;
 import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
-import org.apache.james.mailbox.events.EventDeadLettersHealthCheck;
+import org.apache.james.events.EventDeadLettersHealthCheck;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.AfterEach;

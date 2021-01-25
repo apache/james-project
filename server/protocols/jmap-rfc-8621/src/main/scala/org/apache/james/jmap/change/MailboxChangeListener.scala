@@ -20,22 +20,22 @@
 package org.apache.james.jmap.change
 
 import org.apache.james.core.Username
-
-import javax.inject.Inject
+import org.apache.james.events.EventListener.ReactiveGroupEventListener
+import org.apache.james.events.{Event, Group}
 import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, JmapChange, MailboxChange, MailboxChangeRepository}
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.change.MailboxChangeListener.LOGGER
-import org.apache.james.mailbox.{MailboxManager, MailboxSession}
-import org.apache.james.mailbox.events.MailboxListener.{Added, Expunged, FlagsUpdated, MailboxACLUpdated, MailboxAdded, MailboxDeletion, MailboxEvent, MailboxRenamed, ReactiveGroupMailboxListener}
-import org.apache.james.mailbox.events.{Event, Group}
+import org.apache.james.mailbox.events.MailboxEvents.{Added, Expunged, FlagsUpdated, MailboxACLUpdated, MailboxAdded, MailboxDeletion, MailboxEvent, MailboxRenamed}
 import org.apache.james.mailbox.exception.MailboxException
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId}
+import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY
 import org.reactivestreams.Publisher
 import org.slf4j.{Logger, LoggerFactory}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import java.time.{Clock, ZonedDateTime}
+import javax.inject.Inject
 import scala.jdk.CollectionConverters._
 
 case class MailboxChangeListenerGroup() extends Group {}
@@ -49,7 +49,7 @@ case class MailboxChangeListener @Inject() (mailboxChangeRepository: MailboxChan
                                             emailChangeRepository: EmailChangeRepository,
                                             emailChangeFactory: EmailChange.Factory,
                                             mailboxManager: MailboxManager,
-                                            clock: Clock) extends ReactiveGroupMailboxListener {
+                                            clock: Clock) extends ReactiveGroupEventListener {
 
   override def reactiveEvent(event: Event): Publisher[Void] =
     handleEvent(event.asInstanceOf[MailboxEvent])

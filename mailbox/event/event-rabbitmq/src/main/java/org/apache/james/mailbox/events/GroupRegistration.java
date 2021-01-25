@@ -37,6 +37,12 @@ import java.util.function.Predicate;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.event.json.EventSerializer;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventBus;
+import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
+import org.apache.james.events.Registration;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +85,7 @@ class GroupRegistration implements Registration {
     static final int DEFAULT_RETRY_COUNT = 0;
 
     private final ReactorRabbitMQChannelPool channelPool;
-    private final MailboxListener.ReactiveMailboxListener mailboxListener;
+    private final EventListener.ReactiveEventListener mailboxListener;
     private final WorkQueueName queueName;
     private final Receiver receiver;
     private final Runnable unregisterGroup;
@@ -93,7 +99,7 @@ class GroupRegistration implements Registration {
     private Optional<Disposable> receiverSubscriber;
 
     GroupRegistration(ReactorRabbitMQChannelPool channelPool, Sender sender, ReceiverProvider receiverProvider, EventSerializer eventSerializer,
-                      MailboxListener.ReactiveMailboxListener mailboxListener, Group group, RetryBackoffConfiguration retryBackoff,
+                      EventListener.ReactiveEventListener mailboxListener, Group group, RetryBackoffConfiguration retryBackoff,
                       EventDeadLetters eventDeadLetters,
                       Runnable unregisterGroup, MailboxListenerExecutor mailboxListenerExecutor) {
         this.channelPool = channelPool;

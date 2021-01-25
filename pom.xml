@@ -527,6 +527,7 @@
     <modules>
         <module>backends-common</module>
         <module>core</module>
+        <module>event-bus</module>
         <module>event-sourcing</module>
         <module>examples</module>
         <module>javax-mail-extension</module>
@@ -1156,6 +1157,11 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>blob-storage-strategy</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>event-bus-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

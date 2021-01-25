@@ -38,6 +38,7 @@ import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
+import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
@@ -46,10 +47,12 @@ import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.MetadataWithMailboxId;
 import org.apache.james.mailbox.ModSeq;
-import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.EventBusTestFixture;
 import org.apache.james.mailbox.events.InVMEventBus;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MailboxEvents.Added;
+import org.apache.james.mailbox.events.MailboxEvents.Expunged;
+import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxEvent;
 import org.apache.james.mailbox.events.MemoryEventDeadLetters;
 import org.apache.james.mailbox.events.MessageMoveEvent;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
@@ -143,10 +146,10 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         messageIdManager.delete(messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
 
         assertThat(eventCollector.getEvents())
-            .filteredOn(event -> event instanceof MailboxListener.Expunged)
+            .filteredOn(event -> event instanceof Expunged)
             .hasSize(1).first()
             .satisfies(e -> {
-                MailboxListener.Expunged event = (MailboxListener.Expunged) e;
+                Expunged event = (Expunged) e;
                 assertThat(event.getMailboxId()).isEqualTo(mailbox1.getMailboxId());
                 assertThat(event.getMailboxPath()).isEqualTo(mailbox1.generateAssociatedPath());
                 assertThat(event.getExpunged().values()).containsOnly(simpleMessageMetaData);
@@ -168,13 +171,13 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         eventBus.register(eventCollector);
         messageIdManager.delete(ImmutableList.of(messageId1, messageId2), session);
 
-        AbstractListAssert<?, List<? extends MailboxListener.Expunged>, MailboxListener.Expunged, ObjectAssert<MailboxListener.Expunged>> events =
+        AbstractListAssert<?, List<? extends Expunged>, Expunged, ObjectAssert<Expunged>> events =
             assertThat(eventCollector.getEvents())
-                .filteredOn(event -> event instanceof MailboxListener.Expunged)
+                .filteredOn(event -> event instanceof Expunged)
                 .hasSize(2)
-                .extracting(event -> (MailboxListener.Expunged) event);
-        events.extracting(MailboxListener.MailboxEvent::getMailboxId).containsOnly(mailbox1.getMailboxId(), mailbox1.getMailboxId());
-        events.extracting(MailboxListener.Expunged::getExpunged)
+                .extracting(event -> (Expunged) event);
+        events.extracting(MailboxEvent::getMailboxId).containsOnly(mailbox1.getMailboxId(), mailbox1.getMailboxId());
+        events.extracting(Expunged::getExpunged)
             .containsOnly(ImmutableSortedMap.of(simpleMessageMetaData1.getUid(), simpleMessageMetaData1),
                 ImmutableSortedMap.of(simpleMessageMetaData2.getUid(), simpleMessageMetaData2));
     }
@@ -332,8 +335,8 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
         assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof MessageMoveEvent).hasSize(1);
-        assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof MailboxListener.Added).hasSize(1)
-            .extracting(event -> (MailboxListener.Added) event).extracting(MailboxListener.Added::getMailboxId)
+        assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof Added).hasSize(1)
+            .extracting(event -> (Added) event).extracting(Added::getMailboxId)
             .containsOnly(mailbox1.getMailboxId());
     }
 
@@ -348,8 +351,8 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, session);
 
         assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof MessageMoveEvent).hasSize(1);
-        assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof MailboxListener.Added).hasSize(2)
-            .extracting(event -> (MailboxListener.Added) event).extracting(MailboxListener.Added::getMailboxId)
+        assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof Added).hasSize(2)
+            .extracting(event -> (Added) event).extracting(Added::getMailboxId)
             .containsOnly(mailbox1.getMailboxId(), mailbox3.getMailboxId());
     }
 
@@ -381,11 +384,11 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox3.getMailboxId()), session);
 
         assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof MessageMoveEvent).hasSize(1);
-        assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof MailboxListener.Added).hasSize(1)
-            .extracting(event -> (MailboxListener.Added) event).extracting(MailboxListener.Added::getMailboxId)
+        assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof Added).hasSize(1)
+            .extracting(event -> (Added) event).extracting(Added::getMailboxId)
             .containsOnly(mailbox3.getMailboxId());
-        assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof MailboxListener.Expunged).hasSize(1)
-            .extracting(event -> (MailboxListener.Expunged) event).extracting(MailboxListener.Expunged::getMailboxId)
+        assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof Expunged).hasSize(1)
+            .extracting(event -> (Expunged) event).extracting(Expunged::getMailboxId)
             .containsOnly(mailbox2.getMailboxId());
     }
 
@@ -448,7 +451,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         eventBus.register(eventCollector);
         messageIdManager.setFlags(newFlags, MessageManager.FlagsUpdateMode.ADD, messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        assertThat(eventCollector.getEvents()).hasSize(2).allSatisfy(event -> assertThat(event).isInstanceOf(MailboxListener.FlagsUpdated.class));
+        assertThat(eventCollector.getEvents()).hasSize(2).allSatisfy(event -> assertThat(event).isInstanceOf(FlagsUpdated.class));
     }
 
     @Test
@@ -473,9 +476,9 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
             .newFlags(newFlags)
             .build();
 
-        assertThat(eventCollector.getEvents()).hasSize(1).first().isInstanceOf(MailboxListener.FlagsUpdated.class)
+        assertThat(eventCollector.getEvents()).hasSize(1).first().isInstanceOf(FlagsUpdated.class)
             .satisfies(e -> {
-                MailboxListener.FlagsUpdated event = (MailboxListener.FlagsUpdated) e;
+                FlagsUpdated event = (FlagsUpdated) e;
                 assertThat(event.getUpdatedFlags()).containsOnly(updatedFlags);
                 assertThat(event.getMailboxId()).isEqualTo(mailbox2.getMailboxId());
             });

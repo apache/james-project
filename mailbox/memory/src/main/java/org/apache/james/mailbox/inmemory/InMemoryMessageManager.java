@@ -2,9 +2,9 @@ package org.apache.james.mailbox.inmemory;
 
 import javax.mail.Flags;
 
+import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaManager;

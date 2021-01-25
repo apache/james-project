@@ -25,6 +25,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
 
+import org.apache.james.events.Event;
+import org.apache.james.events.EventBus;
+import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
+import org.apache.james.events.GroupAlreadyRegistered;
+import org.apache.james.events.GroupRegistrationNotFound;
+import org.apache.james.events.Registration;
+import org.apache.james.events.RegistrationKey;
 import org.apache.james.mailbox.events.delivery.EventDelivery;
 import org.apache.james.mailbox.events.delivery.EventDelivery.PermanentFailureHandler.StoreToDeadLetters;
 import org.apache.james.mailbox.events.delivery.EventDelivery.Retryer.BackoffRetryer;
@@ -39,8 +48,8 @@ import reactor.core.publisher.Mono;
 
 public class InVMEventBus implements EventBus {
 
-    private final Multimap<RegistrationKey, MailboxListener.ReactiveMailboxListener> registrations;
-    private final ConcurrentHashMap<Group, MailboxListener.ReactiveMailboxListener> groups;
+    private final Multimap<RegistrationKey, EventListener.ReactiveEventListener> registrations;
+    private final ConcurrentHashMap<Group, EventListener.ReactiveEventListener> groups;
     private final EventDelivery eventDelivery;
     private final RetryBackoffConfiguration retryBackoff;
     private final EventDeadLetters eventDeadLetters;
@@ -55,14 +64,14 @@ public class InVMEventBus implements EventBus {
     }
 
     @Override
-    public Mono<Registration> register(MailboxListener.ReactiveMailboxListener listener, RegistrationKey key) {
+    public Mono<Registration> register(EventListener.ReactiveEventListener listener, RegistrationKey key) {
         registrations.put(key, listener);
         return Mono.just(() -> registrations.remove(key, listener));
     }
 
     @Override
-    public Registration register(MailboxListener.ReactiveMailboxListener listener, Group group) {
-        MailboxListener previous = groups.putIfAbsent(group, listener);
+    public Registration register(EventListener.ReactiveEventListener listener, Group group) {
+        EventListener previous = groups.putIfAbsent(group, listener);
         if (previous == null) {
             return () -> groups.remove(group, listener);
         }
@@ -87,7 +96,7 @@ public class InVMEventBus implements EventBus {
         return Mono.empty();
     }
 
-    private MailboxListener.ReactiveMailboxListener retrieveListenerFromGroup(Group group) {
+    private EventListener.ReactiveEventListener retrieveListenerFromGroup(Group group) {
         return Optional.ofNullable(groups.get(group))
             .orElseThrow(() -> new GroupRegistrationNotFound(group));
     }
@@ -104,7 +113,7 @@ public class InVMEventBus implements EventBus {
             .then();
     }
 
-    private Mono<Void> groupDelivery(Event event, MailboxListener.ReactiveMailboxListener mailboxListener, Group group) {
+    private Mono<Void> groupDelivery(Event event, EventListener.ReactiveEventListener mailboxListener, Group group) {
         return eventDelivery.deliver(
             mailboxListener,
             event,
@@ -117,7 +126,7 @@ public class InVMEventBus implements EventBus {
         return groups.keySet();
     }
 
-    private Set<MailboxListener.ReactiveMailboxListener> registeredListenersByKeys(Set<RegistrationKey> keys) {
+    private Set<EventListener.ReactiveEventListener> registeredListenersByKeys(Set<RegistrationKey> keys) {
         return keys.stream()
             .flatMap(registrationKey -> registrations.get(registrationKey).stream())
             .collect(Guavate.toImmutableSet());

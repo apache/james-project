@@ -31,8 +31,8 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.ReactorElasticSearchClient;
+import org.apache.james.events.EventListener;
 import org.apache.james.lifecycle.api.Startable;
-import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.quota.search.QuotaSearcher;
 import org.apache.james.quota.search.elasticsearch.ElasticSearchQuotaConfiguration;
 import org.apache.james.quota.search.elasticsearch.ElasticSearchQuotaSearcher;
@@ -81,7 +81,7 @@ public class ElasticSearchQuotaSearcherModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        Multibinder.newSetBinder(binder(), MailboxListener.ReactiveGroupMailboxListener.class)
+        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class)
             .addBinding()
             .to(ElasticSearchQuotaMailboxListener.class);
     }

@@ -23,11 +23,11 @@ import java.util.Set;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.events.EventBus;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.GenericGroup;
-import org.apache.james.mailbox.events.Group;
-import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.utils.ClassName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,23 +42,23 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
 
     private final MailboxListenerFactory mailboxListenerFactory;
     private final EventBus eventBus;
-    private final Set<MailboxListener.ReactiveGroupMailboxListener> guiceDefinedListeners;
+    private final Set<EventListener.ReactiveGroupEventListener> guiceDefinedListeners;
 
     @Inject
     MailboxListenersLoaderImpl(MailboxListenerFactory mailboxListenerFactory, EventBus eventBus,
-                               Set<MailboxListener.ReactiveGroupMailboxListener> guiceDefinedListeners,
-                               Set<MailboxListener.GroupMailboxListener> nonReactiveGuiceDefinedListeners) {
+                               Set<EventListener.ReactiveGroupEventListener> guiceDefinedListeners,
+                               Set<EventListener.GroupEventListener> nonReactiveGuiceDefinedListeners) {
         this.mailboxListenerFactory = mailboxListenerFactory;
         this.eventBus = eventBus;
-        this.guiceDefinedListeners = ImmutableSet.<MailboxListener.ReactiveGroupMailboxListener>builder()
+        this.guiceDefinedListeners = ImmutableSet.<EventListener.ReactiveGroupEventListener>builder()
             .addAll(guiceDefinedListeners)
             .addAll(wrap(nonReactiveGuiceDefinedListeners))
             .build();
     }
 
-    private ImmutableSet<MailboxListener.ReactiveGroupMailboxListener> wrap(Set<MailboxListener.GroupMailboxListener> nonReactiveGuiceDefinedListeners) {
+    private ImmutableSet<EventListener.ReactiveGroupEventListener> wrap(Set<EventListener.GroupEventListener> nonReactiveGuiceDefinedListeners) {
         return nonReactiveGuiceDefinedListeners.stream()
-            .map(MailboxListener::wrapReactive)
+            .map(EventListener::wrapReactive)
             .collect(Guavate.toImmutableSet());
     }
 
@@ -80,16 +80,16 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
     }
 
     @Override
-    public void register(Pair<Group, MailboxListener.ReactiveMailboxListener> listener) {
+    public void register(Pair<Group, EventListener.ReactiveEventListener> listener) {
         eventBus.register(listener.getRight(), listener.getLeft());
     }
 
     @Override
-    public Pair<Group, MailboxListener.ReactiveMailboxListener> createListener(ListenerConfiguration configuration) {
+    public Pair<Group, EventListener.ReactiveEventListener> createListener(ListenerConfiguration configuration) {
         ClassName listenerClass = new ClassName(configuration.getClazz());
         try {
             LOGGER.info("Loading user registered mailbox listener {}", listenerClass);
-            MailboxListener mailboxListener = mailboxListenerFactory.newInstance()
+            EventListener mailboxListener = mailboxListenerFactory.newInstance()
                 .withConfiguration(configuration.getConfiguration())
                 .withExecutionMode(configuration.isAsync().map(this::getExecutionMode))
                 .clazz(listenerClass)
@@ -98,7 +98,7 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
 
             return configuration.getGroup()
                 .map(GenericGroup::new)
-                .map(group -> Pair.<Group, MailboxListener.ReactiveMailboxListener>of(group, wrapIfNeeded(mailboxListener)))
+                .map(group -> Pair.<Group, EventListener.ReactiveEventListener>of(group, wrapIfNeeded(mailboxListener)))
                 .orElseGet(() -> withDefaultGroup(mailboxListener));
         } catch (ClassNotFoundException e) {
             LOGGER.error("Error while loading user registered global listener {}", listenerClass, e);
@@ -106,24 +106,24 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
         }
     }
 
-    private MailboxListener.ReactiveMailboxListener wrapIfNeeded(MailboxListener listener) {
-        if (listener instanceof MailboxListener.ReactiveMailboxListener) {
-            return (MailboxListener.ReactiveGroupMailboxListener) listener;
+    private EventListener.ReactiveEventListener wrapIfNeeded(EventListener listener) {
+        if (listener instanceof EventListener.ReactiveEventListener) {
+            return (EventListener.ReactiveGroupEventListener) listener;
         }
-        return MailboxListener.wrapReactive(listener);
+        return EventListener.wrapReactive(listener);
     }
 
-    private Pair<Group, MailboxListener.ReactiveMailboxListener> withDefaultGroup(MailboxListener mailboxListener) {
-        Preconditions.checkArgument(mailboxListener instanceof MailboxListener.GroupMailboxListener);
+    private Pair<Group, EventListener.ReactiveEventListener> withDefaultGroup(EventListener mailboxListener) {
+        Preconditions.checkArgument(mailboxListener instanceof EventListener.GroupEventListener);
 
-        MailboxListener.GroupMailboxListener groupMailboxListener = (MailboxListener.GroupMailboxListener) mailboxListener;
+        EventListener.GroupEventListener groupMailboxListener = (EventListener.GroupEventListener) mailboxListener;
         return Pair.of(groupMailboxListener.getDefaultGroup(), wrapIfNeeded(groupMailboxListener));
     }
 
-    private MailboxListener.ExecutionMode getExecutionMode(boolean isAsync) {
+    private EventListener.ExecutionMode getExecutionMode(boolean isAsync) {
         if (isAsync) {
-            return MailboxListener.ExecutionMode.ASYNCHRONOUS;
+            return EventListener.ExecutionMode.ASYNCHRONOUS;
         }
-        return MailboxListener.ExecutionMode.SYNCHRONOUS;
+        return EventListener.ExecutionMode.SYNCHRONOUS;
     }
 }

@@ -33,9 +33,16 @@ import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
+import org.apache.james.events.Event;
 import org.apache.james.mailbox.acl.ACLDiff;
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MailboxEvents.Added;
+import org.apache.james.mailbox.events.MailboxEvents.Expunged;
+import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxACLUpdated;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxAdded;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxRenamed;
+import org.apache.james.mailbox.events.MailboxEvents.QuotaUsageUpdatedEvent;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -69,42 +76,42 @@ class MailboxListenerTest {
 
     @Test
     void mailboxAddedShouldMatchBeanContract() {
-        EqualsVerifier.forClass(MailboxListener.MailboxAdded.class).verify();
+        EqualsVerifier.forClass(MailboxAdded.class).verify();
     }
 
     @Test
     void mailboxRenamedShouldMatchBeanContract() {
-        EqualsVerifier.forClass(MailboxListener.MailboxRenamed.class).verify();
+        EqualsVerifier.forClass(MailboxRenamed.class).verify();
     }
 
     @Test
     void mailboxDeletionShouldMatchBeanContract() {
-        EqualsVerifier.forClass(MailboxListener.MailboxDeletion.class).verify();
+        EqualsVerifier.forClass(MailboxDeletion.class).verify();
     }
 
     @Test
     void mailboxACLUpdatedShouldMatchBeanContract() {
-        EqualsVerifier.forClass(MailboxListener.MailboxACLUpdated.class).verify();
+        EqualsVerifier.forClass(MailboxACLUpdated.class).verify();
     }
 
     @Test
     void addedShouldMatchBeanContract() {
-        EqualsVerifier.forClass(MailboxListener.Added.class).verify();
+        EqualsVerifier.forClass(Added.class).verify();
     }
 
     @Test
     void expungedShouldMatchBeanContract() {
-        EqualsVerifier.forClass(MailboxListener.Expunged.class).verify();
+        EqualsVerifier.forClass(Expunged.class).verify();
     }
 
     @Test
     void flagUpdatedShouldMatchBeanContract() {
-        EqualsVerifier.forClass(MailboxListener.FlagsUpdated.class).verify();
+        EqualsVerifier.forClass(FlagsUpdated.class).verify();
     }
 
     @Test
     void renameWithSameNameShouldBeNoop() {
-        MailboxListener.MailboxRenamed mailboxRenamed = new MailboxListener.MailboxRenamed(SESSION_ID, BOB, PATH, MAILBOX_ID, PATH,
+        MailboxRenamed mailboxRenamed = new MailboxRenamed(SESSION_ID, BOB, PATH, MAILBOX_ID, PATH,
             Event.EventId.random());
 
         assertThat(mailboxRenamed.isNoop()).isTrue();
@@ -112,7 +119,7 @@ class MailboxListenerTest {
 
     @Test
     void renameWithDifferentNameShouldNotBeNoop() {
-        MailboxListener.MailboxRenamed mailboxRenamed = new MailboxListener.MailboxRenamed(SESSION_ID, BOB, PATH, MAILBOX_ID, OTHER_PATH,
+        MailboxRenamed mailboxRenamed = new MailboxRenamed(SESSION_ID, BOB, PATH, MAILBOX_ID, OTHER_PATH,
             Event.EventId.random());
 
         assertThat(mailboxRenamed.isNoop()).isFalse();
@@ -120,7 +127,7 @@ class MailboxListenerTest {
 
     @Test
     void addedShouldNotBeNoop() {
-        MailboxListener.MailboxAdded added = new MailboxListener.MailboxAdded(SESSION_ID, BOB, PATH, MAILBOX_ID,
+        MailboxAdded added = new MailboxAdded(SESSION_ID, BOB, PATH, MAILBOX_ID,
             Event.EventId.random());
 
         assertThat(added.isNoop()).isFalse();
@@ -128,7 +135,7 @@ class MailboxListenerTest {
 
     @Test
     void removedShouldNotBeNoop() {
-        MailboxListener.MailboxDeletion deletion = new MailboxListener.MailboxDeletion(SESSION_ID, BOB, PATH, new MailboxACL(), QUOTA_ROOT,
+        MailboxDeletion deletion = new MailboxDeletion(SESSION_ID, BOB, PATH, new MailboxACL(), QUOTA_ROOT,
             QUOTA_COUNT, QUOTA_SIZE, MAILBOX_ID, Event.EventId.random());
 
         assertThat(deletion.isNoop()).isFalse();
@@ -136,7 +143,7 @@ class MailboxListenerTest {
 
     @Test
     void aclDiffWithSameAclShouldBeNoop() {
-        MailboxListener.MailboxACLUpdated aclUpdated = new MailboxListener.MailboxACLUpdated(SESSION_ID, BOB, PATH, ACLDiff.computeDiff(ACL_1, ACL_1), MAILBOX_ID,
+        MailboxACLUpdated aclUpdated = new MailboxACLUpdated(SESSION_ID, BOB, PATH, ACLDiff.computeDiff(ACL_1, ACL_1), MAILBOX_ID,
             Event.EventId.random());
 
         assertThat(aclUpdated.isNoop()).isTrue();
@@ -144,7 +151,7 @@ class MailboxListenerTest {
 
     @Test
     void aclDiffWithDifferentAclShouldNotBeNoop() {
-        MailboxListener.MailboxACLUpdated aclUpdated = new MailboxListener.MailboxACLUpdated(SESSION_ID, BOB, PATH, ACLDiff.computeDiff(ACL_1, ACL_2), MAILBOX_ID,
+        MailboxACLUpdated aclUpdated = new MailboxACLUpdated(SESSION_ID, BOB, PATH, ACLDiff.computeDiff(ACL_1, ACL_2), MAILBOX_ID,
             Event.EventId.random());
 
         assertThat(aclUpdated.isNoop()).isFalse();
@@ -152,7 +159,7 @@ class MailboxListenerTest {
 
     @Test
     void addedShouldBeNoopWhenEmpty() {
-        MailboxListener.Added added = new MailboxListener.Added(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(),
+        Added added = new Added(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(),
             Event.EventId.random());
 
         assertThat(added.isNoop()).isTrue();
@@ -160,7 +167,7 @@ class MailboxListenerTest {
 
     @Test
     void addedShouldNotBeNoopWhenNotEmpty() {
-        MailboxListener.Added added = new MailboxListener.Added(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(UID, META_DATA),
+        Added added = new Added(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(UID, META_DATA),
             Event.EventId.random());
 
         assertThat(added.isNoop()).isFalse();
@@ -168,7 +175,7 @@ class MailboxListenerTest {
 
     @Test
     void expungedShouldBeNoopWhenEmpty() {
-        MailboxListener.Expunged expunged = new MailboxListener.Expunged(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(),
+        Expunged expunged = new Expunged(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(),
             Event.EventId.random());
 
         assertThat(expunged.isNoop()).isTrue();
@@ -176,7 +183,7 @@ class MailboxListenerTest {
 
     @Test
     void expungedShouldNotBeNoopWhenNotEmpty() {
-        MailboxListener.Expunged expunged = new MailboxListener.Expunged(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(UID, META_DATA),
+        Expunged expunged = new Expunged(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(UID, META_DATA),
             Event.EventId.random());
 
         assertThat(expunged.isNoop()).isFalse();
@@ -184,14 +191,14 @@ class MailboxListenerTest {
 
     @Test
     void flagsUpdatedShouldBeNoopWhenEmpty() {
-        MailboxListener.FlagsUpdated flagsUpdated = new MailboxListener.FlagsUpdated(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableList.of(), Event.EventId.random());
+        FlagsUpdated flagsUpdated = new FlagsUpdated(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableList.of(), Event.EventId.random());
 
         assertThat(flagsUpdated.isNoop()).isTrue();
     }
 
     @Test
     void flagsUpdatedShouldNotBeNoopWhenNotEmpty() {
-        MailboxListener.FlagsUpdated flagsUpdated = new MailboxListener.FlagsUpdated(SESSION_ID, BOB, PATH, MAILBOX_ID,
+        FlagsUpdated flagsUpdated = new FlagsUpdated(SESSION_ID, BOB, PATH, MAILBOX_ID,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(UID)
                 .modSeq(ModSeq.of(45))
@@ -205,7 +212,7 @@ class MailboxListenerTest {
 
     @Test
     void quotaUsageUpdatedEventShouldNotBeNoop() {
-        MailboxListener.QuotaUsageUpdatedEvent event = new MailboxListener.QuotaUsageUpdatedEvent(Event.EventId.random(), BOB, QUOTA_ROOT,
+        QuotaUsageUpdatedEvent event = new QuotaUsageUpdatedEvent(Event.EventId.random(), BOB, QUOTA_ROOT,
             Quota.<QuotaCountLimit, QuotaCountUsage>builder()
                 .used(QUOTA_COUNT)
                 .computedLimit(QuotaCountLimit.unlimited())

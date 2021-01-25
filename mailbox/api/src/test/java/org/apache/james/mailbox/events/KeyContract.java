@@ -49,7 +49,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import org.apache.james.core.Username;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventBus;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Registration;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestId;
 import org.junit.jupiter.api.Test;
@@ -120,12 +125,12 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void registeredListenersShouldNotReceiveNoopEvents() throws Exception {
-            MailboxListener listener = newListener();
+            EventListener listener = newListener();
 
             Mono.from(eventBus().register(listener, KEY_1)).block();
 
             Username bob = Username.of("bob");
-            MailboxListener.Added noopEvent = new MailboxListener.Added(MailboxSession.SessionId.of(18), bob, MailboxPath.forUser(bob, "mailbox"), TestId.of(58), ImmutableSortedMap.of(), Event.EventId.random());
+            Added noopEvent = new Added(MailboxSession.SessionId.of(18), bob, MailboxPath.forUser(bob, "mailbox"), TestId.of(58), ImmutableSortedMap.of(), Event.EventId.random());
             eventBus().dispatch(noopEvent, KEY_1).block();
 
             verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
@@ -134,7 +139,7 @@ public interface KeyContract extends EventBusContract {
 
        @Test
         default void registeredListenersShouldReceiveOnlyHandledEvents() throws Exception {
-            MailboxListener listener = newListener();
+            EventListener listener = newListener();
 
             Mono.from(eventBus().register(listener, KEY_1)).block();
 
@@ -146,7 +151,7 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void dispatchShouldNotThrowWhenARegisteredListenerFails() throws Exception {
-            MailboxListener listener = newListener();
+            EventListener listener = newListener();
             doThrow(new RuntimeException()).when(listener).event(any());
 
             Mono.from(eventBus().register(listener, KEY_1)).block();
@@ -157,7 +162,7 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void dispatchShouldNotNotifyRegisteredListenerWhenEmptyKeySet() throws Exception {
-            MailboxListener listener = newListener();
+            EventListener listener = newListener();
             Mono.from(eventBus().register(listener, KEY_1)).block();
 
             eventBus().dispatch(EVENT, NO_KEYS).block();
@@ -168,7 +173,7 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void dispatchShouldNotNotifyListenerRegisteredOnOtherKeys() throws Exception {
-            MailboxListener listener = newListener();
+            EventListener listener = newListener();
             Mono.from(eventBus().register(listener, KEY_1)).block();
 
             eventBus().dispatch(EVENT, ImmutableSet.of(KEY_2)).block();
@@ -179,7 +184,7 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void dispatchShouldNotifyRegisteredListeners() throws Exception {
-            MailboxListener listener = newListener();
+            EventListener listener = newListener();
             Mono.from(eventBus().register(listener, KEY_1)).block();
 
             eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
@@ -189,7 +194,7 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void dispatchShouldNotifyLocalRegisteredListenerWithoutDelay() throws Exception {
-            MailboxListener listener = newListener();
+            EventListener listener = newListener();
             Mono.from(eventBus().register(listener, KEY_1)).block();
 
             eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
@@ -199,8 +204,8 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void dispatchShouldNotifyOnlyRegisteredListener() throws Exception {
-            MailboxListener listener = newListener();
-            MailboxListener listener2 = newListener();
+            EventListener listener = newListener();
+            EventListener listener2 = newListener();
             Mono.from(eventBus().register(listener, KEY_1)).block();
             Mono.from(eventBus().register(listener2, KEY_2)).block();
 
@@ -213,8 +218,8 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void dispatchShouldNotifyAllListenersRegisteredOnAKey() throws Exception {
-            MailboxListener listener = newListener();
-            MailboxListener listener2 = newListener();
+            EventListener listener = newListener();
+            EventListener listener2 = newListener();
             Mono.from(eventBus().register(listener, KEY_1)).block();
             Mono.from(eventBus().register(listener2, KEY_1)).block();
 
@@ -226,7 +231,7 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void registerShouldAllowDuplicatedRegistration() throws Exception {
-            MailboxListener listener = newListener();
+            EventListener listener = newListener();
             Mono.from(eventBus().register(listener, KEY_1)).block();
             Mono.from(eventBus().register(listener, KEY_1)).block();
 
@@ -237,7 +242,7 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void unregisterShouldRemoveDoubleRegisteredListener() throws Exception {
-            MailboxListener listener = newListener();
+            EventListener listener = newListener();
             Mono.from(eventBus().register(listener, KEY_1)).block();
             Mono.from(eventBus().register(listener, KEY_1)).block().unregister();
 
@@ -249,7 +254,7 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void registerShouldNotDispatchPastEvents() throws Exception {
-            MailboxListener listener = newListener();
+            EventListener listener = newListener();
 
             eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
@@ -261,7 +266,7 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void callingAllUnregisterMethodShouldUnregisterTheListener() throws Exception {
-            MailboxListener listener = newListener();
+            EventListener listener = newListener();
             Registration registration = Mono.from(eventBus().register(listener, KEY_1)).block();
             Mono.from(eventBus().register(listener, KEY_1)).block().unregister();
             registration.unregister();
@@ -274,7 +279,7 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void unregisterShouldHaveNotNotifyWhenCalledOnDifferentKeys() throws Exception {
-            MailboxListener listener = newListener();
+            EventListener listener = newListener();
             Mono.from(eventBus().register(listener, KEY_1)).block();
             Mono.from(eventBus().register(listener, KEY_2)).block().unregister();
 
@@ -285,7 +290,7 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void unregisterShouldBeIdempotentForKeyRegistrations() {
-            MailboxListener listener = newListener();
+            EventListener listener = newListener();
 
             Registration registration = Mono.from(eventBus().register(listener, KEY_1)).block();
             registration.unregister();
@@ -296,7 +301,7 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void dispatchShouldAcceptSeveralKeys() throws Exception {
-            MailboxListener listener = newListener();
+            EventListener listener = newListener();
             Mono.from(eventBus().register(listener, KEY_1)).block();
 
             eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1, KEY_2)).block();
@@ -306,7 +311,7 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void dispatchShouldCallListenerOnceWhenSeveralKeysMatching() throws Exception {
-            MailboxListener listener = newListener();
+            EventListener listener = newListener();
             Mono.from(eventBus().register(listener, KEY_1)).block();
             Mono.from(eventBus().register(listener, KEY_2)).block();
 
@@ -317,7 +322,7 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void dispatchShouldNotNotifyUnregisteredListener() throws Exception {
-            MailboxListener listener = newListener();
+            EventListener listener = newListener();
             Mono.from(eventBus().register(listener, KEY_1)).block().unregister();
 
             eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
@@ -329,8 +334,8 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void dispatchShouldNotifyAsynchronousListener() throws Exception {
-            MailboxListener listener = newListener();
-            when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
+            EventListener listener = newListener();
+            when(listener.getExecutionMode()).thenReturn(EventListener.ExecutionMode.ASYNCHRONOUS);
             Mono.from(eventBus().register(listener, KEY_1)).block();
 
             eventBus().dispatch(EVENT, KEY_1).block();
@@ -340,8 +345,8 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void dispatchShouldNotBlockAsynchronousListener() throws Exception {
-            MailboxListener listener = newListener();
-            when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
+            EventListener listener = newListener();
+            when(listener.getExecutionMode()).thenReturn(EventListener.ExecutionMode.ASYNCHRONOUS);
             CountDownLatch latch = new CountDownLatch(1);
             doAnswer(invocation -> {
                 latch.await();
@@ -357,7 +362,7 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void failingRegisteredListenersShouldNotAbortRegisteredDelivery() {
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution listener = new EventBusTestFixture.EventMatcherThrowingListener(ImmutableSet.of(EVENT));
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution listener = new EventBusTestFixture.EventMatcherThrowingListener(ImmutableSet.of(EVENT));
             Mono.from(eventBus().register(listener, KEY_1)).block();
 
             eventBus().dispatch(EVENT, KEY_1).block();
@@ -369,10 +374,10 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void allRegisteredListenersShouldBeExecutedWhenARegisteredListenerFails() throws Exception {
-            MailboxListener listener = newListener();
+            EventListener listener = newListener();
 
-            MailboxListener failingListener = mock(MailboxListener.class);
-            when(failingListener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
+            EventListener failingListener = mock(EventListener.class);
+            when(failingListener.getExecutionMode()).thenReturn(EventListener.ExecutionMode.SYNCHRONOUS);
             doThrow(new RuntimeException()).when(failingListener).event(any());
 
             Mono.from(eventBus().register(failingListener, KEY_1)).block();
@@ -388,7 +393,7 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void crossEventBusRegistrationShouldBeAllowed() throws Exception {
-            MailboxListener mailboxListener = newListener();
+            EventListener mailboxListener = newListener();
 
             Mono.from(eventBus().register(mailboxListener, KEY_1)).block();
 
@@ -399,20 +404,20 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void unregisteredDistantListenersShouldNotBeNotified() throws Exception {
-            MailboxListener mailboxListener = newListener();
+            EventListener eventListener = newListener();
 
-            Mono.from(eventBus().register(mailboxListener, KEY_1)).block().unregister();
+            Mono.from(eventBus().register(eventListener, KEY_1)).block().unregister();
 
             eventBus2().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-            verify(mailboxListener, after(FIVE_HUNDRED_MS.toMillis()).never())
+            verify(eventListener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 
         @Test
         default void allRegisteredListenersShouldBeDispatched() throws Exception {
-            MailboxListener mailboxListener1 = newListener();
-            MailboxListener mailboxListener2 = newListener();
+            EventListener mailboxListener1 = newListener();
+            EventListener mailboxListener2 = newListener();
 
             Mono.from(eventBus().register(mailboxListener1, KEY_1)).block();
             Mono.from(eventBus2().register(mailboxListener2, KEY_1)).block();
@@ -425,7 +430,7 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void registerShouldNotDispatchPastEventsInDistributedContext() throws Exception {
-            MailboxListener listener = newListener();
+            EventListener listener = newListener();
 
             eventBus2().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
@@ -437,8 +442,8 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void localDispatchedListenersShouldBeDispatchedWithoutDelay() throws Exception {
-            MailboxListener mailboxListener1 = newListener();
-            MailboxListener mailboxListener2 = newListener();
+            EventListener mailboxListener1 = newListener();
+            EventListener mailboxListener2 = newListener();
 
             Mono.from(eventBus().register(mailboxListener1, KEY_1)).block();
             Mono.from(eventBus2().register(mailboxListener2, KEY_1)).block();

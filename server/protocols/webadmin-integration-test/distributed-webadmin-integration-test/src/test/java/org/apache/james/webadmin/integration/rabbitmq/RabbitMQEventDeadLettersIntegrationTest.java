@@ -46,14 +46,13 @@ import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.rabbitmq.DockerRabbitMQ;
-import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.core.Username;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
-import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventDispatcher.DispatchingFailureGroup;
-import org.apache.james.mailbox.events.Group;
-import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.events.RetryBackoffConfiguration;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -95,7 +94,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
     public static class RetryEventsListenerGroup2 extends Group {
     }
 
-    public static class RetryEventsListener implements MailboxListener.GroupMailboxListener {
+    public static class RetryEventsListener implements EventListener.GroupEventListener {
         static final Group GROUP = new RetryEventsListenerGroup();
 
         private final AtomicInteger totalCalls;
@@ -170,7 +169,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         @Override
         public Module getModule() {
             return binder -> {
-                Multibinder<MailboxListener.GroupMailboxListener> setBinder = Multibinder.newSetBinder(binder, MailboxListener.GroupMailboxListener.class);
+                Multibinder<EventListener.GroupEventListener> setBinder = Multibinder.newSetBinder(binder, EventListener.GroupEventListener.class);
                 setBinder.addBinding().toInstance(retryEventsListener);
                 setBinder.addBinding().toInstance(retryEventsListener2);
             };

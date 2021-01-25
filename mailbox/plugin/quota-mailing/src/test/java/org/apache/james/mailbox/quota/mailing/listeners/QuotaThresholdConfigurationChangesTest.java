@@ -28,8 +28,8 @@ import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture._75;
 import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture.mailetContext;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.events.Event;
 import org.apache.james.eventsourcing.eventstore.EventStore;
-import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.quota.QuotaFixture.Counts;
 import org.apache.james.mailbox.quota.QuotaFixture.Sizes;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;

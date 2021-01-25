@@ -19,8 +19,11 @@
 
 package org.apache.james.mailbox.events;
 
-import static org.apache.james.mailbox.events.EventBus.Metrics.timerName;
+import static org.apache.james.events.EventBus.Metrics.timerName;
 
+import org.apache.james.events.Event;
+import org.apache.james.events.EventBus;
+import org.apache.james.events.EventListener;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.ReactorUtils;
@@ -34,7 +37,7 @@ class MailboxListenerExecutor {
         this.metricFactory = metricFactory;
     }
 
-    Mono<Void> execute(MailboxListener.ReactiveMailboxListener listener, MDCBuilder mdcBuilder, Event event) {
+    Mono<Void> execute(EventListener.ReactiveEventListener listener, MDCBuilder mdcBuilder, Event event) {
         if (listener.isHandling(event)) {
             return Mono.from(metricFactory.decoratePublisherWithTimerMetric(timerName(listener),
                 Mono.from(listener.reactiveEvent(event))
@@ -43,7 +46,7 @@ class MailboxListenerExecutor {
         return Mono.empty();
     }
 
-    private MDCBuilder mdc(MailboxListener listener, MDCBuilder mdcBuilder, Event event) {
+    private MDCBuilder mdc(EventListener listener, MDCBuilder mdcBuilder, Event event) {
         return mdcBuilder
             .addContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
             .addContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())

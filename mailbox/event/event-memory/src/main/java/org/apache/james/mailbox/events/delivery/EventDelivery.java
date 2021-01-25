@@ -22,10 +22,10 @@ package org.apache.james.mailbox.events.delivery;
 import static org.apache.james.mailbox.events.delivery.EventDelivery.PermanentFailureHandler.NO_HANDLER;
 import static org.apache.james.mailbox.events.delivery.EventDelivery.Retryer.NO_RETRYER;
 
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.EventDeadLetters;
-import org.apache.james.mailbox.events.Group;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
 import org.apache.james.mailbox.events.RetryBackoffConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,16 +69,16 @@ public interface EventDelivery {
 
         class BackoffRetryer implements EventDelivery.Retryer {
 
-            public static BackoffRetryer of(RetryBackoffConfiguration retryBackoff, MailboxListener mailboxListener) {
+            public static BackoffRetryer of(RetryBackoffConfiguration retryBackoff, EventListener mailboxListener) {
                 return new BackoffRetryer(retryBackoff, mailboxListener);
             }
 
             private static final Logger LOGGER = LoggerFactory.getLogger(BackoffRetryer.class);
 
             private final RetryBackoffConfiguration retryBackoff;
-            private final MailboxListener mailboxListener;
+            private final EventListener mailboxListener;
 
-            public BackoffRetryer(RetryBackoffConfiguration retryBackoff, MailboxListener mailboxListener) {
+            public BackoffRetryer(RetryBackoffConfiguration retryBackoff, EventListener mailboxListener) {
                 this.retryBackoff = retryBackoff;
                 this.mailboxListener = mailboxListener;
             }
@@ -126,9 +126,9 @@ public interface EventDelivery {
         Mono<Void> handle(Event event);
     }
 
-    Mono<Void> deliver(MailboxListener.ReactiveMailboxListener listener, Event event, DeliveryOption option);
+    Mono<Void> deliver(EventListener.ReactiveEventListener listener, Event event, DeliveryOption option);
 
-    default Mono<Void> deliver(MailboxListener listener, Event event, DeliveryOption option) {
-        return deliver(MailboxListener.wrapReactive(listener), event, option);
+    default Mono<Void> deliver(EventListener listener, Event event, DeliveryOption option) {
+        return deliver(EventListener.wrapReactive(listener), event, option);
     }
 }

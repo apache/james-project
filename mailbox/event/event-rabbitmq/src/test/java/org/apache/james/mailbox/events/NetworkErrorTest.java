@@ -30,6 +30,7 @@ import static org.mockito.Mockito.verify;
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
 import org.apache.james.backends.rabbitmq.RabbitMQFixture;
 import org.apache.james.event.json.EventSerializer;
+import org.apache.james.events.EventListener;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
@@ -69,7 +70,7 @@ class NetworkErrorTest {
 
     @Test
     void dispatchShouldWorkAfterNetworkIssuesForOldRegistration() {
-        MailboxListener listener = newListener();
+        EventListener listener = newListener();
         eventBus.register(listener, GROUP_A);
 
         rabbitMQExtension.getRabbitMQ().pause();

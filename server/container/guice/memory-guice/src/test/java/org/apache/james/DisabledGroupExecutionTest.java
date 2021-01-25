@@ -28,9 +28,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.Group;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.events.Event;
+import org.apache.james.events.Group;
+import org.apache.james.events.EventListener;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -47,7 +47,7 @@ import reactor.core.publisher.Mono;
 
 class DisabledGroupExecutionTest {
 
-    public static class ReactiveNoopMailboxListener implements MailboxListener.ReactiveGroupMailboxListener {
+    public static class ReactiveNoopMailboxListener implements EventListener.ReactiveGroupEventListener {
         public static class NoopMailboxListenerGroup extends Group {
 
         }
@@ -87,7 +87,7 @@ class DisabledGroupExecutionTest {
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
-            .overrideWith(binder -> Multibinder.newSetBinder(binder, MailboxListener.ReactiveGroupMailboxListener.class)
+            .overrideWith(binder -> Multibinder.newSetBinder(binder, EventListener.ReactiveGroupEventListener.class)
                 .addBinding()
                 .toInstance(listener))
             .overrideWith(binder -> binder.bind(ListenersConfiguration.class)

@@ -23,6 +23,7 @@ import java.util.Objects;
 
 import javax.inject.Inject;
 
+import org.apache.james.events.RegistrationKey;
 import org.apache.james.mailbox.model.MailboxId;
 
 public class MailboxIdRegistrationKey implements RegistrationKey {

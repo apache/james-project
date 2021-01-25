@@ -24,15 +24,16 @@ import javax.inject.Inject;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Username;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
 import org.apache.james.eventsourcing.Command;
 import org.apache.james.eventsourcing.CommandHandler;
 import org.apache.james.eventsourcing.EventSourcingSystem;
 import org.apache.james.eventsourcing.Subscriber;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.Group;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MailboxEvents.QuotaUsageUpdatedEvent;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.james.mailbox.quota.mailing.commands.DetectThresholdCrossing;
 import org.apache.james.mailbox.quota.mailing.commands.DetectThresholdCrossingHandler;
@@ -45,7 +46,7 @@ import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Mono;
 
-public class QuotaThresholdCrossingListener implements MailboxListener.ReactiveGroupMailboxListener {
+public class QuotaThresholdCrossingListener implements EventListener.ReactiveGroupEventListener {
     public static class QuotaThresholdCrossingListenerGroup extends Group {
 
     }

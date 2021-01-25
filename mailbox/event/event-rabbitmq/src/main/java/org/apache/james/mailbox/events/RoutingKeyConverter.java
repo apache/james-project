@@ -27,6 +27,8 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.apache.james.events.RegistrationKey;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;

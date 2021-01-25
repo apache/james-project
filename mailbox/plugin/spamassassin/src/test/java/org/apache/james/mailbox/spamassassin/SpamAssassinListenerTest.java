@@ -33,11 +33,12 @@ import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.core.Username;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
-import org.apache.james.mailbox.events.Group;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.events.MessageMoveEvent;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -95,7 +96,7 @@ class SpamAssassinListenerTest {
         spamCapitalMailboxId = mailboxMapper.create(MailboxPath.forUser(USER, "SPAM"), UID_VALIDITY).block().getMailboxId();
         trashMailboxId = mailboxMapper.create(MailboxPath.forUser(USER, "Trash"), UID_VALIDITY).block().getMailboxId();
 
-        listener = new SpamAssassinListener(spamAssassin, systemMailboxesProvider, mailboxManager, mapperFactory, MailboxListener.ExecutionMode.SYNCHRONOUS);
+        listener = new SpamAssassinListener(spamAssassin, systemMailboxesProvider, mailboxManager, mapperFactory, EventListener.ExecutionMode.SYNCHRONOUS);
     }
 
     @Test
@@ -238,7 +239,7 @@ class SpamAssassinListenerTest {
     void eventShouldCallSpamAssassinHamLearningWhenTheMessageIsAddedInInbox() throws Exception {
         SimpleMailboxMessage message = createMessage(inbox);
 
-        MailboxListener.Added addedEvent = EventFactory.added()
+        Added addedEvent = EventFactory.added()
             .randomEventId()
             .mailboxSession(MAILBOX_SESSION)
             .mailbox(inbox)
@@ -254,7 +255,7 @@ class SpamAssassinListenerTest {
     void eventShouldNotCallSpamAssassinHamLearningWhenTheMessageIsAddedInAMailboxOtherThanInbox() throws Exception {
         SimpleMailboxMessage message = createMessage(mailbox1);
 
-        MailboxListener.Added addedEvent = EventFactory.added()
+        Added addedEvent = EventFactory.added()
             .randomEventId()
             .mailboxSession(MAILBOX_SESSION)
             .mailbox(mailbox1)

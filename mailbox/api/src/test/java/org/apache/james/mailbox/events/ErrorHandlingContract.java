@@ -37,6 +37,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.james.events.Event;
+import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.EventListener;
 import org.apache.james.mailbox.util.EventCollector;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Disabled;
@@ -48,7 +51,7 @@ import reactor.core.publisher.Mono;
 
 interface ErrorHandlingContract extends EventBusContract {
 
-    class ThrowingListener implements MailboxListener {
+    class ThrowingListener implements EventListener {
         private final List<Instant> timeElapsed;
 
         private ThrowingListener() {
@@ -200,7 +203,7 @@ interface ErrorHandlingContract extends EventBusContract {
     default void retryingListenerCallingDispatchShouldNotFail() {
         AtomicBoolean firstExecution = new AtomicBoolean(true);
         AtomicBoolean successfulRetry = new AtomicBoolean(false);
-        MailboxListener listener = event -> {
+        EventListener listener = event -> {
             if (event.getEventId().equals(EVENT_ID)) {
                 if (firstExecution.get()) {
                     firstExecution.set(false);

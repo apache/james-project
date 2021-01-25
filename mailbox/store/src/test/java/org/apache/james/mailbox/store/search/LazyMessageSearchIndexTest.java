@@ -21,7 +21,7 @@ package org.apache.james.mailbox.store.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.mailbox.events.Group;
+import org.apache.james.events.Group;
 import org.junit.jupiter.api.Test;
 
 class LazyMessageSearchIndexTest {

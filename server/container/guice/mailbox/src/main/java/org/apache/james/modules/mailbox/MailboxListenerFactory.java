@@ -25,7 +25,7 @@ import javax.inject.Inject;
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.events.EventListener;
 import org.apache.james.utils.ClassName;
 import org.apache.james.utils.GuiceGenericLoader;
 
@@ -39,7 +39,7 @@ public class MailboxListenerFactory {
     public static class MailboxListenerBuilder {
         private final GuiceGenericLoader genericLoader;
         private Optional<ClassName> clazz;
-        private Optional<MailboxListener.ExecutionMode> executionMode;
+        private Optional<EventListener.ExecutionMode> executionMode;
         private Optional<HierarchicalConfiguration<ImmutableNode>> configuration;
 
         public MailboxListenerBuilder(GuiceGenericLoader genericLoader) {
@@ -49,7 +49,7 @@ public class MailboxListenerFactory {
             this.configuration = Optional.empty();
         }
 
-        public MailboxListenerBuilder withExecutionMode(MailboxListener.ExecutionMode executionMode) {
+        public MailboxListenerBuilder withExecutionMode(EventListener.ExecutionMode executionMode) {
             this.executionMode = Optional.of(executionMode);
             return this;
         }
@@ -59,7 +59,7 @@ public class MailboxListenerFactory {
             return this;
         }
 
-        public MailboxListenerBuilder withExecutionMode(Optional<MailboxListener.ExecutionMode> executionMode) {
+        public MailboxListenerBuilder withExecutionMode(Optional<EventListener.ExecutionMode> executionMode) {
             executionMode.ifPresent(this::withExecutionMode);
             return this;
         }
@@ -74,15 +74,15 @@ public class MailboxListenerFactory {
             return this;
         }
 
-        public MailboxListener build() throws ClassNotFoundException {
+        public EventListener build() throws ClassNotFoundException {
             Preconditions.checkState(clazz.isPresent(), "'clazz' is mandatory");
             Module childModule = Modules.combine(
-                binder -> binder.bind(MailboxListener.ExecutionMode.class)
-                    .toInstance(executionMode.orElse(MailboxListener.ExecutionMode.SYNCHRONOUS)),
+                binder -> binder.bind(EventListener.ExecutionMode.class)
+                    .toInstance(executionMode.orElse(EventListener.ExecutionMode.SYNCHRONOUS)),
                 binder -> binder.bind(new TypeLiteral<HierarchicalConfiguration<ImmutableNode>>() {})
                     .toInstance(configuration.orElse(new BaseHierarchicalConfiguration())));
 
-            return genericLoader.<MailboxListener>withChildModule(childModule)
+            return genericLoader.<EventListener>withChildModule(childModule)
                 .instantiate(clazz.get());
         }
     }

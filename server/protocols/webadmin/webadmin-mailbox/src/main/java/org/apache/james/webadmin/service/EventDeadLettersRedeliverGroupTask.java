@@ -23,7 +23,7 @@ import java.time.Clock;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.james.mailbox.events.Group;
+import org.apache.james.events.Group;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;

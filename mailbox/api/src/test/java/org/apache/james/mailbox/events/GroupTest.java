@@ -22,6 +22,8 @@ package org.apache.james.mailbox.events;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.events.GenericGroup;
+import org.apache.james.events.Group;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -80,18 +82,18 @@ class GroupTest {
 
     @Test
     void asStringShouldReturnNameWhenGenericGroup() {
-        assertThat(new GenericGroup("abc").asString()).isEqualTo("org.apache.james.mailbox.events.GenericGroup-abc");
+        assertThat(new GenericGroup("abc").asString()).isEqualTo("org.apache.james.events.GenericGroup-abc");
     }
 
     @Test
     void deserializeShouldReturnGroupWhenGenericGroup() throws Exception {
-        assertThat(Group.deserialize("org.apache.james.mailbox.events.GenericGroup-abc"))
+        assertThat(Group.deserialize("org.apache.james.events.GenericGroup-abc"))
             .isEqualTo(new GenericGroup("abc"));
     }
 
     @Test
     void deserializeShouldReturnGroupWhenEmptyGenericGroup() throws Exception {
-        assertThat(Group.deserialize("org.apache.james.mailbox.events.GenericGroup-"))
+        assertThat(Group.deserialize("org.apache.james.events.GenericGroup-"))
             .isEqualTo(new GenericGroup(""));
     }
 
@@ -115,7 +117,7 @@ class GroupTest {
 
     @Test
     void deserializeShouldThrowWhenConstructorArgumentsRequired() {
-        assertThatThrownBy(() -> Group.deserialize("org.apache.james.mailbox.events.GenericGroup"))
+        assertThatThrownBy(() -> Group.deserialize("org.apache.james.events.GenericGroup"))
             .isInstanceOf(Group.GroupDeserializationException.class);
     }
 

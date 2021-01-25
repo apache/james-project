@@ -32,6 +32,8 @@ import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.james.events.EventBus;
+import org.apache.james.events.RegistrationKey;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.Test;
@@ -52,13 +54,13 @@ public interface EventBusConcurrentTestContract {
 
     Set<RegistrationKey> ALL_KEYS = ImmutableSet.of(KEY_1, KEY_2, KEY_3);
 
-    static EventBusTestFixture.MailboxListenerCountingSuccessfulExecution newCountingListener() {
-        return new EventBusTestFixture.MailboxListenerCountingSuccessfulExecution();
+    static EventBusTestFixture.EventListenerCountingSuccessfulExecution newCountingListener() {
+        return new EventBusTestFixture.EventListenerCountingSuccessfulExecution();
     }
 
-    static int totalEventsReceived(ImmutableList<EventBusTestFixture.MailboxListenerCountingSuccessfulExecution> allListeners) {
+    static int totalEventsReceived(ImmutableList<EventBusTestFixture.EventListenerCountingSuccessfulExecution> allListeners) {
         return allListeners.stream()
-            .mapToInt(EventBusTestFixture.MailboxListenerCountingSuccessfulExecution::numberOfEventCalls)
+            .mapToInt(EventBusTestFixture.EventListenerCountingSuccessfulExecution::numberOfEventCalls)
             .sum();
     }
 
@@ -66,9 +68,9 @@ public interface EventBusConcurrentTestContract {
 
         @Test
         default void concurrentDispatchGroupShouldDeliverAllEventsToListenersWithSingleEventBus() throws Exception {
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
 
             eventBus().register(countingListener1, new EventBusTestFixture.GroupA());
             eventBus().register(countingListener2, new EventBusTestFixture.GroupB());
@@ -88,9 +90,9 @@ public interface EventBusConcurrentTestContract {
 
         @Test
         default void concurrentDispatchKeyShouldDeliverAllEventsToListenersWithSingleEventBus() throws Exception {
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
             Mono.from(eventBus().register(countingListener1, KEY_1)).block();
             Mono.from(eventBus().register(countingListener2, KEY_2)).block();
             Mono.from(eventBus().register(countingListener3, KEY_3)).block();
@@ -111,9 +113,9 @@ public interface EventBusConcurrentTestContract {
 
         @Test
         default void concurrentDispatchShouldDeliverAllEventsToListenersWithSingleEventBus() throws Exception {
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
 
             eventBus().register(countingListener1, new EventBusTestFixture.GroupA());
             eventBus().register(countingListener2, new EventBusTestFixture.GroupB());
@@ -146,9 +148,9 @@ public interface EventBusConcurrentTestContract {
 
         @Test
         default void concurrentDispatchGroupShouldDeliverAllEventsToListenersWithMultipleEventBus() throws Exception {
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
 
             eventBus().register(countingListener1, new EventBusTestFixture.GroupA());
             eventBus().register(countingListener2, new EventBusTestFixture.GroupB());
@@ -173,9 +175,9 @@ public interface EventBusConcurrentTestContract {
 
         @Test
         default void concurrentDispatchKeyShouldDeliverAllEventsToListenersWithMultipleEventBus() throws Exception {
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
 
             Mono.from(eventBus().register(countingListener1, KEY_1)).block();
             Mono.from(eventBus().register(countingListener2, KEY_2)).block();
@@ -201,9 +203,9 @@ public interface EventBusConcurrentTestContract {
 
         @Test
         default void concurrentDispatchShouldDeliverAllEventsToListenersWithMultipleEventBus() throws Exception {
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener1 = newCountingListener();
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener2 = newCountingListener();
+            EventBusTestFixture.EventListenerCountingSuccessfulExecution countingListener3 = newCountingListener();
 
             eventBus2().register(countingListener1, GROUP_A);
             eventBus2().register(countingListener2, new EventBusTestFixture.GroupB());

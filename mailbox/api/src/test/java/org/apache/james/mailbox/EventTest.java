@@ -27,8 +27,8 @@ import java.util.UUID;
 import javax.mail.Flags;
 
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.events.Event;
+import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.TestId;
@@ -56,7 +56,7 @@ class EventTest {
 
     @Test
     void getMessageIdsShouldReturnEmptyWhenAddedEmpty() {
-        MailboxListener.Added added = new MailboxListener.Added(MailboxSession.SessionId.of(36), BOB, MailboxPath.inbox(BOB), TestId.of(48), ImmutableSortedMap.of(), Event.EventId.of(UUID_1));
+        Added added = new Added(MailboxSession.SessionId.of(36), BOB, MailboxPath.inbox(BOB), TestId.of(48), ImmutableSortedMap.of(), Event.EventId.of(UUID_1));
 
         assertThat(added.getMessageIds()).isEmpty();
     }
@@ -70,7 +70,7 @@ class EventTest {
         MessageMetaData metaData1 = new MessageMetaData(uid1, ModSeq.of(85), new Flags(), 36, new Date(), messageId1);
         MessageMetaData metaData2 = new MessageMetaData(uid2, ModSeq.of(85), new Flags(), 36, new Date(), messageId2);
 
-        MailboxListener.Added added = new MailboxListener.Added(MailboxSession.SessionId.of(36), BOB, MailboxPath.inbox(BOB), TestId.of(48),
+        Added added = new Added(MailboxSession.SessionId.of(36), BOB, MailboxPath.inbox(BOB), TestId.of(48),
             ImmutableSortedMap.of(
                 uid1, metaData1,
                 uid2, metaData2),
@@ -87,7 +87,7 @@ class EventTest {
         MessageMetaData metaData1 = new MessageMetaData(uid1, ModSeq.of(85), new Flags(), 36, new Date(), messageId);
         MessageMetaData metaData2 = new MessageMetaData(uid2, ModSeq.of(85), new Flags(), 36, new Date(), messageId);
 
-        MailboxListener.Added added = new MailboxListener.Added(MailboxSession.SessionId.of(36), BOB, MailboxPath.inbox(BOB), TestId.of(48),
+        Added added = new Added(MailboxSession.SessionId.of(36), BOB, MailboxPath.inbox(BOB), TestId.of(48),
             ImmutableSortedMap.of(
                 uid1, metaData1,
                 uid2, metaData2),

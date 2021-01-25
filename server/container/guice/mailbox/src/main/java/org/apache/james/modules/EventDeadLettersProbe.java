@@ -21,7 +21,7 @@ package org.apache.james.modules;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.events.EventDeadLetters;
+import org.apache.james.events.EventDeadLetters;
 import org.apache.james.utils.GuiceProbe;
 
 public class EventDeadLettersProbe implements GuiceProbe {

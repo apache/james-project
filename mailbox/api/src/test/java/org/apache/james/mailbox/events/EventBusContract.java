@@ -24,6 +24,7 @@ import static org.awaitility.Awaitility.await;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.james.events.EventBus;
 import org.awaitility.core.ConditionFactory;
 
 public interface EventBusContract {

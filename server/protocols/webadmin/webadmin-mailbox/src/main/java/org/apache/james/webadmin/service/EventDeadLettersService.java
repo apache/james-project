@@ -24,9 +24,9 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.EventDeadLetters;
-import org.apache.james.mailbox.events.Group;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.Group;
 import org.apache.james.task.Task;
 
 import com.github.steveash.guavate.Guavate;

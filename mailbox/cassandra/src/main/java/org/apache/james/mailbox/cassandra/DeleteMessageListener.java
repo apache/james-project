@@ -28,6 +28,9 @@ import java.util.function.Predicate;
 import javax.inject.Inject;
 
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -47,9 +50,8 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.mail.MessageAttachmentRepresentation;
 import org.apache.james.mailbox.cassandra.mail.MessageRepresentation;
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.Group;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MailboxEvents.Expunged;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -71,7 +73,7 @@ import reactor.core.publisher.Mono;
  * Mailbox listener failures lead to eventBus retrying their execution, it ensures the result of the deletion to be
  * idempotent.
  */
-public class DeleteMessageListener implements MailboxListener.GroupMailboxListener {
+public class DeleteMessageListener implements EventListener.GroupEventListener {
     private static final Optional<CassandraId> ALL_MAILBOXES = Optional.empty();
 
     public static class DeleteMessageListenerGroup extends Group {

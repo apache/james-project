@@ -28,8 +28,9 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 
 import org.apache.james.jmap.api.model.AccountId;
-import org.apache.james.mailbox.events.MailboxListener;
-import org.apache.james.mailbox.events.MailboxListener.Added;
+import org.apache.james.mailbox.events.MailboxEvents.Added;
+import org.apache.james.mailbox.events.MailboxEvents.Expunged;
+import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
 import org.apache.james.mailbox.model.MessageId;
 
 import com.github.steveash.guavate.Guavate;
@@ -150,7 +151,7 @@ public class EmailChange implements JmapChange {
                 .collect(Guavate.toImmutableList());
         }
 
-        public List<JmapChange> fromFlagsUpdated(MailboxListener.FlagsUpdated messageFlagUpdated, ZonedDateTime now, List<AccountId> sharees) {
+        public List<JmapChange> fromFlagsUpdated(FlagsUpdated messageFlagUpdated, ZonedDateTime now, List<AccountId> sharees) {
             EmailChange ownerChange = EmailChange.builder()
                 .accountId(AccountId.fromUsername(messageFlagUpdated.getUsername()))
                 .state(stateFactory.generate())
@@ -172,7 +173,7 @@ public class EmailChange implements JmapChange {
                 .collect(Guavate.toImmutableList());
         }
 
-        public List<JmapChange> fromExpunged(MailboxListener.Expunged expunged, ZonedDateTime now, List<AccountId> sharees) {
+        public List<JmapChange> fromExpunged(Expunged expunged, ZonedDateTime now, List<AccountId> sharees) {
             EmailChange ownerChange = EmailChange.builder()
                 .accountId(AccountId.fromUsername(expunged.getUsername()))
                 .state(stateFactory.generate())

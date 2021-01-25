@@ -18,14 +18,14 @@
  ****************************************************************/
 package org.apache.james.modules.mailbox;
 
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.Group;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
 import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Mono;
 
-public class ReactiveNoopMailboxListener implements MailboxListener.ReactiveGroupMailboxListener {
+public class ReactiveNoopMailboxListener implements EventListener.ReactiveGroupEventListener {
     public static class NoopMailboxListenerGroup extends Group {
 
     }

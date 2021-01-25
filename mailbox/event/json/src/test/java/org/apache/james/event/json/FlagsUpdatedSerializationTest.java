@@ -35,7 +35,7 @@ import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -94,7 +94,7 @@ class FlagsUpdatedSerializationTest {
 
     private static List<UpdatedFlags> UPDATED_FLAGS_LIST = ImmutableList.of(UPDATED_FLAG_1, UPDATED_FLAG_2);
 
-    private static final MailboxListener.FlagsUpdated DEFAULT_EVENT = new MailboxListener.FlagsUpdated(SESSION_ID, USERNAME,
+    private static final FlagsUpdated DEFAULT_EVENT = new FlagsUpdated(SESSION_ID, USERNAME,
         MAILBOX_PATH, MAILBOX_ID, UPDATED_FLAGS_LIST, EVENT_ID);
     private static final String DEFAULT_EVENT_JSON =
         "{" +
@@ -141,7 +141,7 @@ class FlagsUpdatedSerializationTest {
     @Nested
     class WithEmptyUpdatedFlags {
         private final List<UpdatedFlags> emptyUpdatedFlags = ImmutableList.of();
-        private final MailboxListener.FlagsUpdated emptyUpdatedFlagsEvent = new MailboxListener.FlagsUpdated(SESSION_ID, USERNAME, MAILBOX_PATH,
+        private final FlagsUpdated emptyUpdatedFlagsEvent = new FlagsUpdated(SESSION_ID, USERNAME, MAILBOX_PATH,
             MAILBOX_ID, emptyUpdatedFlags, EVENT_ID);
 
         private static final String EVENT_JSON_WITH_EMPTY_UPDATED_FLAGS =
@@ -196,7 +196,7 @@ class FlagsUpdatedSerializationTest {
 
         private final List<UpdatedFlags> updatedFlagsListWithMessageIds = ImmutableList.of(updatedFlagsWithMessageId1, updatedFlagsWithMessageId2);
 
-        private final MailboxListener.FlagsUpdated eventWithMessageIds = new MailboxListener.FlagsUpdated(SESSION_ID, USERNAME,
+        private final FlagsUpdated eventWithMessageIds = new FlagsUpdated(SESSION_ID, USERNAME,
             MAILBOX_PATH, MAILBOX_ID, updatedFlagsListWithMessageIds, EVENT_ID);
 
         private static final String EVENT_WITH_MESSAGE_IDS_JSON =

@@ -25,8 +25,8 @@ import org.apache.james.mailbox.events.CassandraEventDeadLetters;
 import org.apache.james.mailbox.events.CassandraEventDeadLettersDAO;
 import org.apache.james.mailbox.events.CassandraEventDeadLettersGroupDAO;
 import org.apache.james.mailbox.events.CassandraEventDeadLettersModule;
-import org.apache.james.mailbox.events.EventDeadLetters;
-import org.apache.james.mailbox.events.EventDeadLettersHealthCheck;
+import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.EventDeadLettersHealthCheck;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;

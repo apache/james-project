@@ -131,14 +131,14 @@ import reactor.core.publisher.Mono;
  * Lucene based {@link ListeningMessageSearchIndex} which offers message searching via a Lucene index
  */
 public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
-    public static class LuceneMessageSearchIndexGroup extends org.apache.james.mailbox.events.Group {
+    public static class LuceneMessageSearchIndexGroup extends org.apache.james.events.Group {
 
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LuceneMessageSearchIndex.class);
     private static final Date MAX_DATE;
     private static final Date MIN_DATE;
-    public static final org.apache.james.mailbox.events.Group GROUP = new LuceneMessageSearchIndexGroup();
+    public static final org.apache.james.events.Group GROUP = new LuceneMessageSearchIndexGroup();
     
     static {
         Calendar cal = Calendar.getInstance();
@@ -404,7 +404,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public org.apache.james.mailbox.events.Group getDefaultGroup() {
+    public org.apache.james.events.Group getDefaultGroup() {
         return GROUP;
     }
 

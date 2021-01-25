@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.events;
 
+import org.apache.james.events.EventDeadLetters;
 import org.junit.jupiter.api.BeforeEach;
 
 class MemoryEventDeadLettersTest implements EventDeadLettersContract.AllContracts {

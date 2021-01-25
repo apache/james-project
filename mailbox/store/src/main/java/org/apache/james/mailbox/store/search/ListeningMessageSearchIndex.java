@@ -23,11 +23,16 @@ import java.util.List;
 
 import javax.mail.Flags;
 
+import org.apache.james.events.Event;
+import org.apache.james.events.EventListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.SessionProvider;
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MailboxEvents.Added;
+import org.apache.james.mailbox.events.MailboxEvents.Expunged;
+import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxEvent;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageRange;
@@ -42,10 +47,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * {@link MessageSearchIndex} which needs to get registered as global {@link MailboxListener} and so get
+ * {@link MessageSearchIndex} which needs to get registered as global {@link EventListener} and so get
  * notified about message changes. This will then allow to update the underlying index.
  */
-public abstract class ListeningMessageSearchIndex implements MessageSearchIndex, MailboxListener.ReactiveGroupMailboxListener {
+public abstract class ListeningMessageSearchIndex implements MessageSearchIndex, EventListener.ReactiveGroupEventListener {
     protected static final int UNLIMITED = -1;
     private final MailboxSessionMapperFactory factory;
     private final SessionProvider sessionProvider;

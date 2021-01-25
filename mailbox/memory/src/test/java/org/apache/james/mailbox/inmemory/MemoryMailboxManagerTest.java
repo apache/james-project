@@ -19,9 +19,9 @@
 
 package org.apache.james.mailbox.inmemory;
 
+import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
-import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 
 class MemoryMailboxManagerTest extends MailboxManagerTest<InMemoryMailboxManager> {

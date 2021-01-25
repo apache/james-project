@@ -34,7 +34,6 @@ import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.comparator.BaseSubjectComparator;
 import org.apache.james.mailbox.store.search.comparator.CombinedComparator;
-import org.apache.james.mailbox.store.search.comparator.HeaderDisplayComparator;
 import org.apache.james.mailbox.store.search.comparator.HeaderMailboxComparator;
 import org.apache.james.mailbox.store.search.comparator.MessageComparators;
 import org.apache.james.mailbox.store.search.comparator.SentDateComparator;

@@ -21,6 +21,8 @@ package org.apache.james.mailbox.events;
 
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_EXCHANGE_NAME;
 
+import org.apache.james.events.RegistrationKey;
+
 import reactor.core.publisher.Mono;
 import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.Sender;

@@ -69,7 +69,6 @@ import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.runnable.ThrowingRunnable;
 
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 class CassandraMailboxMapperTest {
     private static final UidValidity UID_VALIDITY = UidValidity.of(52);

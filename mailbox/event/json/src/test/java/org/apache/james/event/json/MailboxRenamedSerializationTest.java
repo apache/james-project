@@ -30,7 +30,7 @@ import java.util.NoSuchElementException;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxRenamed;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestId;
@@ -46,7 +46,7 @@ class MailboxRenamedSerializationTest {
     private static final MailboxPath DEFAULT_NEW_MAILBOX_PATH = new MailboxPath(USER_NAMESPACE, DEFAULT_USERNAME, NEW_MAILBOX_NAME);
     private static final MailboxSession.SessionId DEFAULT_SESSION_ID = MailboxSession.SessionId.of(123456789);
     private static final MailboxId DEFAULT_MAILBOX_ID = TestId.of(123456);
-    private static final MailboxListener.MailboxRenamed DEFAULT_MAILBOX_RENAMED_EVENT = new MailboxListener.MailboxRenamed(
+    private static final MailboxRenamed DEFAULT_MAILBOX_RENAMED_EVENT = new MailboxRenamed(
         DEFAULT_SESSION_ID,
         DEFAULT_USERNAME,
         DEFAULT_OLD_MAILBOX_PATH,

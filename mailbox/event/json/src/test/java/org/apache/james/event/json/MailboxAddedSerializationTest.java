@@ -29,7 +29,7 @@ import java.util.NoSuchElementException;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxAdded;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestId;
@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 
 class MailboxAddedSerializationTest {
     private static final Username USERNAME = Username.of("user");
-    private static final MailboxListener.MailboxAdded EVENT_1 = new MailboxListener.MailboxAdded(
+    private static final MailboxAdded EVENT_1 = new MailboxAdded(
         MailboxSession.SessionId.of(42),
         USERNAME,
         new MailboxPath(MailboxConstants.USER_NAMESPACE, Username.of("bob"), "mailboxName"),

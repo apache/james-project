@@ -22,14 +22,15 @@ package org.apache.james.examples.custom.listeners;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
+import org.apache.james.events.EventListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.Group;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.events.Event;
+import org.apache.james.events.Group;
+import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
 import org.slf4j.Logger;
@@ -42,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * Then it will be considered as a big message and added BIG_MESSAGE {@value BIG_MESSAGE} flag
  *
  */
-class SetCustomFlagOnBigMessages implements MailboxListener.GroupMailboxListener {
+class SetCustomFlagOnBigMessages implements EventListener.GroupEventListener {
     public static class PositionCustomFlagOnBigMessagesGroup extends Group {
 
     }
@@ -63,8 +64,8 @@ class SetCustomFlagOnBigMessages implements MailboxListener.GroupMailboxListener
 
     @Override
     public void event(Event event) {
-        if (event instanceof MailboxListener.Added) {
-            MailboxListener.Added addedEvent = (MailboxListener.Added) event;
+        if (event instanceof Added) {
+            Added addedEvent = (Added) event;
             addedEvent.getUids().stream()
                 .filter(messageUid -> isBig(addedEvent, messageUid))
                 .forEach(messageUid -> setBigMessageFlag(addedEvent, messageUid));

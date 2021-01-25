@@ -21,12 +21,12 @@ package org.apache.james.modules.event;
 
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.event.json.EventSerializer;
-import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.events.EventBusId;
 import org.apache.james.mailbox.events.KeyReconnectionHandler;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.events.RabbitMQEventBus;
-import org.apache.james.mailbox.events.RegistrationKey;
+import org.apache.james.events.RegistrationKey;
 import org.apache.james.mailbox.events.RetryBackoffConfiguration;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;

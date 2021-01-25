@@ -33,6 +33,9 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.event.json.EventSerializer;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.Group;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;

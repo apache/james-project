@@ -49,13 +49,13 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManage
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.Group;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.EventDeadLetters;
 import org.apache.james.mailbox.events.GenericGroup;
-import org.apache.james.mailbox.events.Group;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxAdded;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -532,7 +532,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     void eventDeadLettersRedeliverShouldCreateATask(GuiceJamesServer guiceJamesServer) {
         Group group = new GenericGroup("a");
 
-        MailboxListener.MailboxAdded event = createMailboxAdded();
+        MailboxAdded event = createMailboxAdded();
 
         guiceJamesServer
             .getProbe(EventDeadLettersProbe.class)
@@ -566,7 +566,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     void postRedeliverSingleEventShouldCreateATask(GuiceJamesServer guiceJamesServer) {
         Group group = new GenericGroup("a");
 
-        MailboxListener.MailboxAdded event = createMailboxAdded();
+        MailboxAdded event = createMailboxAdded();
 
         EventDeadLetters.InsertionId insertionId = guiceJamesServer
             .getProbe(EventDeadLettersProbe.class)
@@ -848,7 +848,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("additionalInformation.failedQuotaRoots", empty());
     }
 
-    private MailboxListener.MailboxAdded createMailboxAdded() {
+    private MailboxAdded createMailboxAdded() {
         String uuid = "6e0dd59d-660e-4d9b-b22f-0354479f47b4";
         return EventFactory.mailboxAdded()
             .eventId(Event.EventId.of(uuid))

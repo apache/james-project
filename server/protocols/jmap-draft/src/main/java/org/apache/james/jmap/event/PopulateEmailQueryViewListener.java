@@ -26,13 +26,16 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.james.events.Event;
+import org.apache.james.events.EventListener.ReactiveGroupEventListener;
+import org.apache.james.events.Group;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.SessionProvider;
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.Group;
-import org.apache.james.mailbox.events.MailboxListener.ReactiveGroupMailboxListener;
+import org.apache.james.mailbox.events.MailboxEvents.Added;
+import org.apache.james.mailbox.events.MailboxEvents.Expunged;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageId;
@@ -48,7 +51,7 @@ import com.google.common.collect.ImmutableList;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class PopulateEmailQueryViewListener implements ReactiveGroupMailboxListener {
+public class PopulateEmailQueryViewListener implements ReactiveGroupEventListener {
     public static class PopulateEmailQueryViewListenerGroup extends Group {
 
     }

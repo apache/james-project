@@ -37,12 +37,14 @@ import javax.mail.Flags;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventBus;
+import org.apache.james.events.Group;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.EventBus;
-import org.apache.james.mailbox.events.Group;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MailboxEvents.Added;
+import org.apache.james.mailbox.events.MailboxEvents.Expunged;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.QuotaOperation;
@@ -90,7 +92,7 @@ class ListeningCurrentQuotaUpdaterTest {
 
     @Test
     void addedEventShouldIncreaseCurrentQuotaValues() throws Exception {
-        MailboxListener.Added added = mock(MailboxListener.Added.class);
+        Added added = mock(Added.class);
         when(added.getMailboxId()).thenReturn(MAILBOX_ID);
         when(added.getMetaData(MessageUid.of(36))).thenReturn(new MessageMetaData(MessageUid.of(36), ModSeq.first(),new Flags(), SIZE, new Date(), new DefaultMessageId()));
         when(added.getMetaData(MessageUid.of(38))).thenReturn(new MessageMetaData(MessageUid.of(38), ModSeq.first(),new Flags(), SIZE, new Date(), new DefaultMessageId()));
@@ -106,7 +108,7 @@ class ListeningCurrentQuotaUpdaterTest {
 
     @Test
     void expungedEventShouldDecreaseCurrentQuotaValues() throws Exception {
-        MailboxListener.Expunged expunged = mock(MailboxListener.Expunged.class);
+        Expunged expunged = mock(Expunged.class);
         when(expunged.getMetaData(MessageUid.of(36))).thenReturn(new MessageMetaData(MessageUid.of(36), ModSeq.first(), new Flags(), SIZE, new Date(), new DefaultMessageId()));
         when(expunged.getMetaData(MessageUid.of(38))).thenReturn(new MessageMetaData(MessageUid.of(38), ModSeq.first(), new Flags(), SIZE, new Date(), new DefaultMessageId()));
         when(expunged.getUids()).thenReturn(Lists.newArrayList(MessageUid.of(36), MessageUid.of(38)));
@@ -122,7 +124,7 @@ class ListeningCurrentQuotaUpdaterTest {
     
     @Test
     void emptyExpungedEventShouldNotTriggerDecrease() throws Exception {
-        MailboxListener.Expunged expunged = mock(MailboxListener.Expunged.class);
+        Expunged expunged = mock(Expunged.class);
         when(expunged.getUids()).thenReturn(Lists.<MessageUid>newArrayList());
         when(expunged.getMailboxId()).thenReturn(MAILBOX_ID);
         when(expunged.getUsername()).thenReturn(USERNAME_BENWA);
@@ -135,7 +137,7 @@ class ListeningCurrentQuotaUpdaterTest {
 
     @Test
     void emptyAddedEventShouldNotTriggerDecrease() throws Exception {
-        MailboxListener.Added added = mock(MailboxListener.Added.class);
+        Added added = mock(Added.class);
         when(added.getUids()).thenReturn(Lists.<MessageUid>newArrayList());
         when(added.getMailboxId()).thenReturn(MAILBOX_ID);
         when(added.getUsername()).thenReturn(USERNAME_BENWA);
@@ -150,7 +152,8 @@ class ListeningCurrentQuotaUpdaterTest {
     void mailboxDeletionEventShouldDecreaseCurrentQuotaValues() throws Exception {
         QuotaOperation operation = new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(10), QuotaSizeUsage.size(5));
 
-        MailboxListener.MailboxDeletion deletion = mock(MailboxListener.MailboxDeletion.class);
+        MailboxDeletion deletion;
+        deletion = mock(MailboxDeletion.class);
         when(deletion.getQuotaRoot()).thenReturn(QUOTA_ROOT);
         when(deletion.getDeletedMessageCount()).thenReturn(QuotaCountUsage.count(10));
         when(deletion.getTotalDeletedSize()).thenReturn(QuotaSizeUsage.size(5));
@@ -166,7 +169,7 @@ class ListeningCurrentQuotaUpdaterTest {
 
     @Test
     void mailboxDeletionEventShouldDoNothingWhenEmptyMailbox() throws Exception {
-        MailboxListener.MailboxDeletion deletion = mock(MailboxListener.MailboxDeletion.class);
+        MailboxDeletion deletion = mock(MailboxDeletion.class);
         when(deletion.getQuotaRoot()).thenReturn(QUOTA_ROOT);
         when(deletion.getDeletedMessageCount()).thenReturn(QuotaCountUsage.count(0));
         when(deletion.getTotalDeletedSize()).thenReturn(QuotaSizeUsage.size(0));

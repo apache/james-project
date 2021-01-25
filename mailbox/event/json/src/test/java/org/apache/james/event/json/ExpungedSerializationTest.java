@@ -37,7 +37,7 @@ import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MailboxEvents.Expunged;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -68,7 +68,7 @@ class ExpungedSerializationTest {
     private static final Map<MessageUid, MessageMetaData> EXPUNGED = ImmutableMap.of(
         MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(INSTANT), MESSAGE_ID));
 
-    private static final MailboxListener.Expunged DEFAULT_EXPUNGED_EVENT = new MailboxListener.Expunged(SESSION_ID, USERNAME,
+    private static final Expunged DEFAULT_EXPUNGED_EVENT = new Expunged(SESSION_ID, USERNAME,
         MAILBOX_PATH, MAILBOX_ID, EXPUNGED, EVENT_ID);
     private static final String DEFAULT_EXPUNGED_EVENT_JSON =
         "{" +
@@ -112,7 +112,7 @@ class ExpungedSerializationTest {
     @Nested
     class WithEmptyExpungedMap {
 
-        private final MailboxListener.Expunged emptyExpungedEvent = new MailboxListener.Expunged(SESSION_ID, USERNAME,
+        private final Expunged emptyExpungedEvent = new Expunged(SESSION_ID, USERNAME,
             MAILBOX_PATH, MAILBOX_ID, ImmutableMap.of(), EVENT_ID);
         private final String emptyExpungedEventJson =
             "{" +

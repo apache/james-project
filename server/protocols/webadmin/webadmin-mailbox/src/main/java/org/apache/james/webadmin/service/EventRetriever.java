@@ -23,9 +23,9 @@ import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.util.Optional;
 
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.EventDeadLetters;
-import org.apache.james.mailbox.events.Group;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.Group;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

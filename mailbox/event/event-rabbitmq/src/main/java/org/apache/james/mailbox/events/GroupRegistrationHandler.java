@@ -26,6 +26,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.event.json.EventSerializer;
+import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
+import org.apache.james.events.GroupAlreadyRegistered;
+import org.apache.james.events.GroupRegistrationNotFound;
+import org.apache.james.events.Registration;
 
 import reactor.rabbitmq.Sender;
 
@@ -61,7 +67,7 @@ class GroupRegistrationHandler {
         groupRegistrations.values().forEach(GroupRegistration::unregister);
     }
 
-    Registration register(MailboxListener.ReactiveMailboxListener listener, Group group) {
+    Registration register(EventListener.ReactiveEventListener listener, Group group) {
         return groupRegistrations
             .compute(group, (groupToRegister, oldGroupRegistration) -> {
                 if (oldGroupRegistration != null) {
@@ -72,7 +78,7 @@ class GroupRegistrationHandler {
             .start();
     }
 
-    private GroupRegistration newGroupRegistration(MailboxListener.ReactiveMailboxListener listener, Group group) {
+    private GroupRegistration newGroupRegistration(EventListener.ReactiveEventListener listener, Group group) {
         return new GroupRegistration(
             channelPool, sender,
             receiverProvider,

@@ -37,6 +37,12 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.apache.james.event.json.EventSerializer;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventBus;
+import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
+import org.apache.james.events.RegistrationKey;
 import org.apache.james.mailbox.events.RoutingKeyConverter.RoutingKey;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.MDCStructuredLogger;
@@ -125,12 +131,12 @@ public class EventDispatcher {
         return Flux.fromIterable(keys)
             .flatMap(key -> localListenerRegistry.getLocalMailboxListeners(key)
                 .map(listener -> Tuples.of(key, listener)), EventBus.EXECUTION_RATE)
-            .filter(pair -> pair.getT2().getExecutionMode() == MailboxListener.ExecutionMode.SYNCHRONOUS)
+            .filter(pair -> pair.getT2().getExecutionMode() == EventListener.ExecutionMode.SYNCHRONOUS)
             .flatMap(pair -> executeListener(event, pair.getT2(), pair.getT1()), EventBus.EXECUTION_RATE)
             .then();
     }
 
-    private Mono<Void> executeListener(Event event, MailboxListener.ReactiveMailboxListener mailboxListener, RegistrationKey registrationKey) {
+    private Mono<Void> executeListener(Event event, EventListener.ReactiveEventListener mailboxListener, RegistrationKey registrationKey) {
         return mailboxListenerExecutor.execute(mailboxListener,
                     MDCBuilder.create()
                         .addContext(EventBus.StructuredLoggingFields.REGISTRATION_KEY, registrationKey),

@@ -19,8 +19,8 @@
 
 package org.apache.james.mailbox.inmemory;
 
+import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxManagerStressContract;
-import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.junit.jupiter.api.BeforeEach;
 

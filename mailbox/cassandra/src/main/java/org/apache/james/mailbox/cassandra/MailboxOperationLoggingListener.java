@@ -23,16 +23,19 @@ import static org.apache.james.mailbox.cassandra.GhostMailbox.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.GhostMailbox.MAILBOX_NAME;
 import static org.apache.james.mailbox.cassandra.GhostMailbox.TYPE;
 
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.Group;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxAdded;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxRenamed;
 
 /**
  * See https://issues.apache.org/jira/browse/MAILBOX-322 for reading about the Ghost mailbox bug.
  *
  * This class logs mailboxes writes in order to give context to analyse ghost mailbox bug.
  */
-public class MailboxOperationLoggingListener implements MailboxListener.GroupMailboxListener {
+public class MailboxOperationLoggingListener implements EventListener.GroupEventListener {
     public static class MailboxOperationLoggingListenerGroup extends Group {
 
     }

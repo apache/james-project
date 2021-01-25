@@ -21,8 +21,8 @@ package org.apache.james.mailbox.maildir;
 
 import java.io.File;
 
+import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxManagerStressContract;
-import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.junit.jupiter.api.BeforeEach;

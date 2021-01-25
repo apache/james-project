@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.events;
 
+import org.apache.james.events.Registration;
+
 class KeyRegistration implements Registration {
     private final Runnable unregister;
 

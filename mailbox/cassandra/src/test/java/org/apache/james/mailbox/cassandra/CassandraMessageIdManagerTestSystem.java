@@ -22,8 +22,8 @@ package org.apache.james.mailbox.cassandra;
 import java.util.Set;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;

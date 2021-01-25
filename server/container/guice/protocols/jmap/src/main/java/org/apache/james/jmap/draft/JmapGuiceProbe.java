@@ -24,6 +24,8 @@ import java.util.Arrays;
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
+import org.apache.james.events.EventBus;
+import org.apache.james.events.EventListener;
 import org.apache.james.jmap.JMAPServer;
 import org.apache.james.jmap.api.change.EmailChange;
 import org.apache.james.jmap.api.change.EmailChangeRepository;
@@ -37,8 +39,6 @@ import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
-import org.apache.james.mailbox.events.EventBus;
-import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -74,7 +74,7 @@ public class JmapGuiceProbe implements GuiceProbe {
         return jmapServer.getPort();
     }
 
-    public void addMailboxListener(MailboxListener.GroupMailboxListener listener) {
+    public void addEventListener(EventListener.GroupEventListener listener) {
         eventBus.register(listener);
     }
 

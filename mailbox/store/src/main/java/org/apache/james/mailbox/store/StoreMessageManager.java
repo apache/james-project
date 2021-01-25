@@ -45,6 +45,8 @@ import javax.mail.util.SharedFileInputStream;
 
 import org.apache.commons.io.input.TeeInputStream;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.events.EventBus;
+import org.apache.james.events.EventListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
 import org.apache.james.mailbox.MailboxPathLocker;
@@ -53,9 +55,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.MetadataWithMailboxId;
 import org.apache.james.mailbox.ModSeq;
-import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
-import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.ReadOnlyException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
@@ -114,7 +114,7 @@ import reactor.core.scheduler.Schedulers;
  * implementations.
  * 
  * This base class take care of dispatching events to the registered
- * {@link MailboxListener} and so help with handling concurrent
+ * {@link EventListener} and so help with handling concurrent
  * {@link MailboxSession}'s.
  */
 public class StoreMessageManager implements MessageManager {

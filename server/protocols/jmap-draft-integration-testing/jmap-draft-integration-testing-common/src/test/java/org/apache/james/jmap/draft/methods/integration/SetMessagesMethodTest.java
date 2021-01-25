@@ -88,8 +88,8 @@ import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.Role;
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.events.Event;
+import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
@@ -2568,7 +2568,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         EventCollector eventCollector = new EventCollector();
-        jmapServer.getProbe(JmapGuiceProbe.class).addMailboxListener(eventCollector);
+        jmapServer.getProbe(JmapGuiceProbe.class).addEventListener(eventCollector);
 
         String messageId = with()
             .header("Authorization", accessToken.asString())
@@ -2587,10 +2587,10 @@ public abstract class SetMessagesMethodTest {
     }
 
     private boolean isAddedToOutboxEvent(String messageId, Event event, String outboxId) {
-        if (!(event instanceof MailboxListener.Added)) {
+        if (!(event instanceof Added)) {
             return false;
         }
-        MailboxListener.Added added = (MailboxListener.Added) event;
+        Added added = (Added) event;
         return added.getMailboxId().serialize().equals(outboxId)
             && added.getUids().size() == 1
             && added.getMetaData(added.getUids().iterator().next()).getMessageId().serialize().equals(messageId);

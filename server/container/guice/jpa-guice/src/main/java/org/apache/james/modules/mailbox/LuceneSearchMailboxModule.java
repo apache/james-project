@@ -21,8 +21,8 @@ package org.apache.james.modules.mailbox;
 
 import java.io.IOException;
 
+import org.apache.james.events.EventListener;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -45,7 +45,7 @@ public class LuceneSearchMailboxModule extends AbstractModule {
         bind(MessageSearchIndex.class).to(LuceneMessageSearchIndex.class);
         bind(ListeningMessageSearchIndex.class).to(LuceneMessageSearchIndex.class);
 
-        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class)
+        Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class)
             .addBinding()
             .to(LuceneMessageSearchIndex.class);
     }

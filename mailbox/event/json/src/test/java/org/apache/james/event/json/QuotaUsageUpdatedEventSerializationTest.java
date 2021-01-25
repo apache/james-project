@@ -34,7 +34,7 @@ import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MailboxEvents.QuotaUsageUpdatedEvent;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.junit.jupiter.api.Test;
@@ -50,7 +50,7 @@ class QuotaUsageUpdatedEventSerializationTest {
         .computedLimit(QuotaSizeLimit.size(10000))
         .build();
     private static final Instant INSTANT = Instant.parse("2018-11-13T12:00:55Z");
-    private final MailboxListener.QuotaUsageUpdatedEvent eventWithUserContainsUsername = new MailboxListener.QuotaUsageUpdatedEvent(
+    private final QuotaUsageUpdatedEvent eventWithUserContainsUsername = new QuotaUsageUpdatedEvent(
         EVENT_ID,
         Username.of("onlyusername"),
         QUOTA_ROOT,

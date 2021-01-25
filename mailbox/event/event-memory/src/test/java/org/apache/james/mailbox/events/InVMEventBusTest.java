@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.events;
 
+import org.apache.james.events.EventBus;
+import org.apache.james.events.EventDeadLetters;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;

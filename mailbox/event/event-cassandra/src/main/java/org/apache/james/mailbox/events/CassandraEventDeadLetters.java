@@ -21,6 +21,10 @@ package org.apache.james.mailbox.events;
 
 import javax.inject.Inject;
 
+import org.apache.james.events.Event;
+import org.apache.james.events.EventDeadLetters;
+import org.apache.james.events.Group;
+
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;

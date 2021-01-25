@@ -32,14 +32,15 @@ import java.nio.charset.StandardCharsets;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
 import org.apache.james.filesystem.api.FileSystem;
+<<<<<<< HEAD
 import org.apache.james.mailbox.events.EventBusTestFixture;
-import org.apache.james.mailbox.events.GenericGroup;
-import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.InVMEventBus;
-import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.events.MemoryEventDeadLetters;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
+import org.apache.james.mailbox.events.GenericGroup;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.utils.ExtendedClassLoader;
@@ -100,7 +101,7 @@ class MailboxListenersLoaderImplTest {
     void createListenerShouldReturnMailboxListenerWhenConfigurationIsGood() {
         ListenerConfiguration configuration = ListenerConfiguration.forClass("org.apache.james.modules.mailbox.ReactiveNoopMailboxListener");
 
-        Pair<Group, MailboxListener.ReactiveMailboxListener> listener = testee.createListener(configuration);
+        Pair<Group, EventListener.ReactiveEventListener> listener = testee.createListener(configuration);
 
         assertThat(listener.getRight()).isInstanceOf(ReactiveNoopMailboxListener.class);
     }

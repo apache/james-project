@@ -30,7 +30,7 @@ import java.util.NoSuchElementException;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.acl.ACLDiff;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxACLUpdated;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -48,7 +48,7 @@ class MailboxACLUpdatedEventSerializationTest {
         new MailboxACL.Entry(MailboxACL.EntryKey.createUserEntryKey(Username.of("alice"), true),
             new MailboxACL.Rfc4314Rights(MailboxACL.Right.Insert)));
 
-    private static final MailboxListener.MailboxACLUpdated MAILBOX_ACL_UPDATED = new MailboxListener.MailboxACLUpdated(
+    private static final MailboxACLUpdated MAILBOX_ACL_UPDATED = new MailboxACLUpdated(
                 MailboxSession.SessionId.of(6),
         USERNAME,
                 new MailboxPath(MailboxConstants.USER_NAMESPACE, Username.of("bob"), "mailboxName"),

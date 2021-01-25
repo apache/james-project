@@ -28,6 +28,7 @@ import static org.apache.james.mailbox.events.tables.CassandraEventDeadLettersGr
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.events.Group;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;

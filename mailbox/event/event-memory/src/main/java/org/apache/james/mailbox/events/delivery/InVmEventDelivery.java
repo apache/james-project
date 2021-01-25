@@ -19,14 +19,14 @@
 
 package org.apache.james.mailbox.events.delivery;
 
-import static org.apache.james.mailbox.events.EventBus.Metrics.timerName;
+import static org.apache.james.events.EventBus.Metrics.timerName;
 import static org.apache.james.util.ReactorUtils.context;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.EventBus;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventBus;
+import org.apache.james.events.EventListener;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.MDCStructuredLogger;
@@ -51,14 +51,14 @@ public class InVmEventDelivery implements EventDelivery {
     }
 
     @Override
-    public Mono<Void> deliver(MailboxListener.ReactiveMailboxListener listener, Event event, DeliveryOption option) {
+    public Mono<Void> deliver(EventListener.ReactiveEventListener listener, Event event, DeliveryOption option) {
         Mono<Void> executionResult = deliverByOption(listener, event, option);
 
         return waitForResultIfNeeded(listener.getExecutionMode(), executionResult);
     }
 
-    private Mono<Void> waitForResultIfNeeded(MailboxListener.ExecutionMode executionMode, Mono<Void> executionResult) {
-        if (executionMode.equals(MailboxListener.ExecutionMode.SYNCHRONOUS)) {
+    private Mono<Void> waitForResultIfNeeded(EventListener.ExecutionMode executionMode, Mono<Void> executionResult) {
+        if (executionMode.equals(EventListener.ExecutionMode.SYNCHRONOUS)) {
             return executionResult;
         }
         return Flux.merge(executionResult, Mono.empty())
@@ -66,7 +66,7 @@ public class InVmEventDelivery implements EventDelivery {
             .onErrorResume(throwable -> Mono.empty());
     }
 
-    private Mono<Void> deliverByOption(MailboxListener.ReactiveMailboxListener listener, Event event, DeliveryOption deliveryOption) {
+    private Mono<Void> deliverByOption(EventListener.ReactiveEventListener listener, Event event, DeliveryOption deliveryOption) {
         Mono<Void> deliveryToListener = doDeliverToListener(listener, event)
             .doOnError(throwable -> structuredLogger(event, listener)
                 .log(logger -> logger.error("Error while processing listener", throwable)))
@@ -77,7 +77,7 @@ public class InVmEventDelivery implements EventDelivery {
             .then();
     }
 
-    private Mono<Void> doDeliverToListener(MailboxListener.ReactiveMailboxListener mailboxListener, Event event) {
+    private Mono<Void> doDeliverToListener(EventListener.ReactiveEventListener mailboxListener, Event event) {
         if (mailboxListener.isHandling(event)) {
             return Mono.defer(() -> Mono.from(metricFactory.decoratePublisherWithTimerMetric(timerName(mailboxListener),
                     mailboxListener.reactiveEvent(event))))
@@ -86,7 +86,7 @@ public class InVmEventDelivery implements EventDelivery {
         return Mono.empty();
     }
 
-    private MDCBuilder buildMDC(MailboxListener mailboxListener, Event event) {
+    private MDCBuilder buildMDC(EventListener mailboxListener, Event event) {
         return MDCBuilder.create()
             .addContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
             .addContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
@@ -94,7 +94,7 @@ public class InVmEventDelivery implements EventDelivery {
             .addContext(EventBus.StructuredLoggingFields.LISTENER_CLASS, mailboxListener.getClass());
     }
 
-    private StructuredLogger structuredLogger(Event event, MailboxListener mailboxListener) {
+    private StructuredLogger structuredLogger(Event event, EventListener mailboxListener) {
         return MDCStructuredLogger.forLogger(LOGGER)
             .addField(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
             .addField(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())

@@ -33,12 +33,13 @@ import java.util.Optional;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
+import org.apache.james.events.Event;
+import org.apache.james.events.Group;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.SessionProvider;
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.Group;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxAdded;
+import org.apache.james.mailbox.events.MailboxEvents.MailboxEvent;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
@@ -74,7 +75,7 @@ class MailboxAnnotationListenerTest {
     @Mock MailboxId mailboxId;
 
     MailboxAnnotationListener listener;
-    MailboxListener.MailboxEvent deleteEvent;
+    MailboxEvent deleteEvent;
     MailboxSession mailboxSession;
 
     @BeforeEach
@@ -107,7 +108,7 @@ class MailboxAnnotationListenerTest {
 
     @Test
     void eventShouldDoNothingIfDoNotHaveMailboxDeletionEvent() throws Exception {
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxAdded(null, null, MAILBOX_PATH, MAILBOX_ID, Event.EventId.random());
+        MailboxEvent event = new MailboxAdded(null, null, MAILBOX_PATH, MAILBOX_ID, Event.EventId.random());
         listener.event(event);
 
         verifyNoMoreInteractions(mailboxSessionMapperFactory);

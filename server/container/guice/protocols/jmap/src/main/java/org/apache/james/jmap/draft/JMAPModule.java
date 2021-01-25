@@ -30,6 +30,7 @@ import javax.inject.Named;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.io.FileUtils;
+import org.apache.james.events.EventListener;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.JMAPServer;
@@ -50,7 +51,6 @@ import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
-import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.modules.server.CamelMailetContainerModule.ProcessorsCheck;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
@@ -126,8 +126,8 @@ public class JMAPModule extends AbstractModule {
 
         bind(MailQueueItemDecoratorFactory.class).to(PostDequeueDecoratorFactory.class).in(Scopes.SINGLETON);
 
-        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class).addBinding().to(PropagateLookupRightListener.class);
-        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class).addBinding().to(MailboxChangeListener.class);
+        Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class).addBinding().to(PropagateLookupRightListener.class);
+        Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class).addBinding().to(MailboxChangeListener.class);
 
         Multibinder<Version> supportedVersions = Multibinder.newSetBinder(binder(), Version.class);
         supportedVersions.addBinding().toInstance(Version.DRAFT);

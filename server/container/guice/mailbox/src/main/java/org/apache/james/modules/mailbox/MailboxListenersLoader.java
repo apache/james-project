@@ -19,11 +19,11 @@
 package org.apache.james.modules.mailbox;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.mailbox.events.Group;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
 
 public interface MailboxListenersLoader {
-    Pair<Group, MailboxListener.ReactiveMailboxListener> createListener(ListenerConfiguration configuration);
+    Pair<Group, EventListener.ReactiveEventListener> createListener(ListenerConfiguration configuration);
 
-    void register(Pair<Group, MailboxListener.ReactiveMailboxListener> listener);
+    void register(Pair<Group, EventListener.ReactiveEventListener> listener);
 }

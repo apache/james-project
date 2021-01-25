@@ -32,9 +32,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.events.EventBus;
+import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
-import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
@@ -69,7 +69,7 @@ public interface MailboxManagerStressContract<T extends MailboxManager> {
         MailboxId mailboxId = getManager().createMailbox(path, session).get();
         Mono.from(retrieveEventBus()
             .register(event -> {
-                MessageUid u = ((MailboxListener.Added) event).getUids().iterator().next();
+                MessageUid u = ((Added) event).getUids().iterator().next();
                 uList.add(u);
             }, new MailboxIdRegistrationKey(mailboxId)))
             .block();
