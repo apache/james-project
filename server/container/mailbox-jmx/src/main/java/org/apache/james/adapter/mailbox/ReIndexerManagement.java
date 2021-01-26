@@ -22,6 +22,7 @@ package org.apache.james.adapter.mailbox;
 import java.io.Closeable;
 import java.io.IOException;
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -54,7 +55,7 @@ public class ReIndexerManagement implements ReIndexerManagementMBean {
                      .addContext(MDCBuilder.ACTION, "reIndex")
                      .build()) {
             TaskId taskId = taskManager.submit(reIndexer.reIndex(new MailboxPath(namespace, Username.of(user), name), RunningOptions.DEFAULT));
-            taskManager.await(taskId, Duration.ofMillis(Long.MAX_VALUE));
+            taskManager.await(taskId, Duration.of(365, ChronoUnit.DAYS));
         } catch (IOException | TaskManager.ReachedTimeoutException e) {
             throw new RuntimeException(e);
         }
@@ -68,7 +69,7 @@ public class ReIndexerManagement implements ReIndexerManagementMBean {
                      .addContext(MDCBuilder.ACTION, "reIndex")
                      .build()) {
             TaskId taskId = taskManager.submit(reIndexer.reIndex(RunningOptions.DEFAULT));
-            taskManager.await(taskId, Duration.ofMillis(Long.MAX_VALUE));
+            taskManager.await(taskId, Duration.of(365, ChronoUnit.DAYS));
         } catch (IOException | TaskManager.ReachedTimeoutException e) {
             throw new RuntimeException(e);
         }

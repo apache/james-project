@@ -47,7 +47,7 @@ public interface TaskManagerContract {
         .pollDelay(slowPacedPollInterval)
         .await();
     ConditionFactory awaitAtMostFiveSeconds = calmlyAwait.atMost(FIVE_SECONDS);
-    java.time.Duration TIMEOUT = java.time.Duration.ofMillis(Long.MAX_VALUE);
+    java.time.Duration TIMEOUT = java.time.Duration.ofMinutes(15);
 
     TaskManager taskManager();
 
