@@ -14,7 +14,7 @@ Requires [46. Generalize EventBus](0046-generalize-event-bus.md)
 
 JMAP Push notifications allow clients to efficiently update (almost) instantly to stay in sync with data changes on the server. 
 
-In order to support this, we need to have the server emit newests state changes to the client over a PUSH channel.
+In order to support this, we need to have the server emit newest state changes to the client over a PUSH channel.
 
 ## Decision
 
