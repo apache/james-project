@@ -46,7 +46,7 @@ object SessionRoutesContract {
                          |      "submissionExtensions": []
                          |    },
                          |    "urn:ietf:params:jmap:core" : {
-                         |      "maxSizeUpload" : 31457280,
+                         |      "maxSizeUpload" : 20971520,
                          |      "maxConcurrentUpload" : 4,
                          |      "maxSizeRequest" : 10000000,
                          |      "maxConcurrentRequests" : 4,
@@ -78,7 +78,7 @@ object SessionRoutesContract {
                          |          "submissionExtensions": []
                          |        },
                          |        "urn:ietf:params:jmap:core" : {
-                         |          "maxSizeUpload" : 31457280,
+                         |          "maxSizeUpload" : 20971520,
                          |          "maxConcurrentUpload" : 4,
                          |          "maxSizeRequest" : 10000000,
                          |          "maxConcurrentRequests" : 4,

@@ -73,6 +73,7 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class JMAPModule extends AbstractModule {
     private static final int DEFAULT_JMAP_PORT = 80;
@@ -136,12 +137,16 @@ public class JMAPModule extends AbstractModule {
         supportedVersions.addBinding().toInstance(Version.RFC8621);
 
         Multibinder<Capability> supportedCapabilities = Multibinder.newSetBinder(binder(), Capability.class);
-        supportedCapabilities.addBinding().toInstance(DefaultCapabilities.coreCapability(JmapRfc8621Configuration.UPLOAD_LIMIT_30_MB()));
         supportedCapabilities.addBinding().toInstance(DefaultCapabilities.MAIL_CAPABILITY());
         supportedCapabilities.addBinding().toInstance(DefaultCapabilities.QUOTA_CAPABILITY());
         supportedCapabilities.addBinding().toInstance(DefaultCapabilities.SHARES_CAPABILITY());
         supportedCapabilities.addBinding().toInstance(DefaultCapabilities.VACATION_RESPONSE_CAPABILITY());
         supportedCapabilities.addBinding().toInstance(DefaultCapabilities.SUBMISSION_CAPABILITY());
+    }
+
+    @ProvidesIntoSet
+    Capability coreCapability(JmapRfc8621Configuration configuration) {
+        return DefaultCapabilities.coreCapability(configuration.maxUploadSize());
     }
 
     @Provides
