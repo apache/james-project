@@ -38,6 +38,8 @@ import com.datastax.driver.core.Session;
 import com.github.dockerjava.api.DockerClient;
 import com.google.common.collect.ImmutableMap;
 
+import java.util.UUID;
+
 public class DockerCassandra {
 
     /**
@@ -118,7 +120,7 @@ public class DockerCassandra {
 
     @SuppressWarnings("resource")
     public DockerCassandra() {
-        this("cassandra_3_11_3", AdditionalDockerFileStep.IDENTITY);
+        this("cassandra_3_11_3-"+ UUID.randomUUID().toString(), AdditionalDockerFileStep.IDENTITY);
     }
 
     public DockerCassandra(String imageName, AdditionalDockerFileStep additionalSteps) {
