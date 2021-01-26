@@ -44,12 +44,12 @@ People deploying JMAP need to be aware that load-balancing webSockets requires s
 ## Sequence
 
  1. Bob authenticates against the `ws://` endpoints. Upgrade to websockets is granted.
- 2. Bob registers Email and Mailbox updates. A listener listen for state changes related to Bob account.
- 3. Bob receives a mail. The MailboxManager adds it to bob mailbox. An `Added` event is fired on the mailbox event bus.
- 4. The `MailboxChangeListener` process the Added event, handles delegation, record the state change, and fires related
+ 2. Bob registers Email and Mailbox updates. A listener listens for state changes related to Bob account.
+ 3. Bob receives a mail. The MailboxManager adds it to Bob's mailbox. An `Added` event is fired on the mailbox event bus.
+ 4. The `MailboxChangeListener` processes the Added event, handles delegation, records the state change, and fires related
  events for each account on the JMAP event bus, for both `Email` (as there is an addition) and `Mailbox` (as the counts 
  were updated).
- 5. Bob's webSocket listener receives a message from RabbitMQ and pushes it to bob.
+ 5. Bob's webSocket listener receives a message from RabbitMQ and pushes it to Bob.
  6. Bob's MUA is aware it needs to re-synchronize. It will perform resynch requests combining `Email/changes`, `Email/get`,
  `Mailbox/changes` and `Mailbox/get`.
  
