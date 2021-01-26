@@ -38,7 +38,7 @@
             <?SORTPOM IGNORE?>
             <groupId>io.netty</groupId>
             <artifactId>netty-transport</artifactId>
-            <version>4.1.48.Final</version>
+            <version>4.1.56.Final</version>
             <?SORTPOM RESUME?>
         </dependency>
         <dependency>
