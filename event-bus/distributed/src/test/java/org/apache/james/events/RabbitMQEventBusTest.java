@@ -143,6 +143,9 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         rabbitMQExtension.getSender()
             .delete(ExchangeSpecification.exchange(MAILBOX_EVENT_EXCHANGE_NAME))
             .block();
+        rabbitMQExtension.getSender()
+            .delete(QueueSpecification.queue().name(MAILBOX_EVENT_DEAD_LETTER_QUEUE))
+            .block();
     }
 
     private RabbitMQEventBus newEventBus() {

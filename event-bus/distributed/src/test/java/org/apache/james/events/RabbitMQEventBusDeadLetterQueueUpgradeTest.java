@@ -39,9 +39,12 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.rabbitmq.QueueSpecification;
 
 class RabbitMQEventBusDeadLetterQueueUpgradeTest {
+    private static final GroupA REGISTERED_GROUP = new GroupA();
+    private static final WorkQueueName WORK_QUEUE_NAME = WorkQueueName.of(REGISTERED_GROUP);
+
     @RegisterExtension
     static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ()
-        .isolationPolicy(RabbitMQExtension.IsolationPolicy.WEAK);
+        .isolationPolicy(RabbitMQExtension.IsolationPolicy.STRONG);
 
     private RabbitMQEventBus eventBus;
 
@@ -67,18 +70,16 @@ class RabbitMQEventBusDeadLetterQueueUpgradeTest {
 
     @Test
     void eventBusShouldStartWhenDeadLetterUpgradeWasNotPerformed() {
-        GroupA registeredGroup = new GroupA();
-        WorkQueueName workQueueName = WorkQueueName.of(registeredGroup);
-        
+        rabbitMQExtension.getSender().delete(QueueSpecification.queue().name(WORK_QUEUE_NAME.asString())).block();
         rabbitMQExtension.getSender()
-            .declareQueue(QueueSpecification.queue(workQueueName.asString())
+            .declareQueue(QueueSpecification.queue(WORK_QUEUE_NAME.asString())
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(!AUTO_DELETE))
             .block();
 
         assertThatCode(eventBus::start).doesNotThrowAnyException();
-        assertThatCode(() -> eventBus.register(new EventCollector(), registeredGroup)).doesNotThrowAnyException();
+        assertThatCode(() -> eventBus.register(new EventCollector(), REGISTERED_GROUP)).doesNotThrowAnyException();
     }
 
 }
