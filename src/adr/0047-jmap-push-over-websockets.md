@@ -22,7 +22,7 @@ We will implement [RFC-8887 - A JSON Meta Application Protocol (JMAP) Subprotoco
 as a transport mechanism for PUSH notifications.
 
 We will [generalize EventBus](0046-generalize-event-bus.md) in order to achieve an out-of-the box Publish-Subscribe 
-system for JMAP related events, that do not fit in the mailbox API.
+system for JMAP related events, that does not fit in the mailbox API.
 
 We will implement listeners registered on the JMAP event bus for WebSocket clients in order to carry over state changes
 to the client.
@@ -68,4 +68,3 @@ Sent Events) as a supported transport medium for PUSH notification. Yet:
 ## References
 
 - [Support JMAP WebSocket PUSH](https://issues.apache.org/jira/browse/JAMES-3491)
-
