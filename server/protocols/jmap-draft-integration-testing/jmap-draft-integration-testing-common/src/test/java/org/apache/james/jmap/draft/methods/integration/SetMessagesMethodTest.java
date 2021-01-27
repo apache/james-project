@@ -356,7 +356,7 @@ public abstract class SetMessagesMethodTest {
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".destroyed", hasSize(2))
             .body(ARGUMENTS + ".notDestroyed", aMapWithSize(1))
-            .body(ARGUMENTS + ".destroyed", contains(message1.getMessageId().serialize(), message3.getMessageId().serialize()))
+            .body(ARGUMENTS + ".destroyed", containsInAnyOrder(message1.getMessageId().serialize(), message3.getMessageId().serialize()))
             .body(ARGUMENTS + ".notDestroyed", hasEntry(equalTo(missingMessageId), Matchers.allOf(
                 hasEntry("type", "notFound"),
                 hasEntry("description", "The message " + missingMessageId + " can't be found")))
@@ -4050,7 +4050,7 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
             .body(notCreatedPath + ".type", equalTo("invalidProperties"))
             .body(notCreatedPath + ".properties", contains("attachments"))
-            .body(notCreatedPath + ".attachmentsNotFound", contains("brokenId1", "brokenId2"))
+            .body(notCreatedPath + ".attachmentsNotFound", containsInAnyOrder("brokenId1", "brokenId2"))
             .body(ARGUMENTS + ".created", aMapWithSize(0));
     }
 
