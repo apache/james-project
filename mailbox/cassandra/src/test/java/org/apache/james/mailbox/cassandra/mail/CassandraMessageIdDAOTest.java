@@ -39,7 +39,6 @@ import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.util.streams.Limit;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -86,7 +85,6 @@ class CassandraMessageIdDAOTest {
         assertThat(message.isPresent()).isFalse();
     }
 
-    @Disabled("A record with a 'null' messageId is returned")
     @Test
     void outOfOrderUpdatesShouldBeIgnored() {
         CassandraId mailboxId = CassandraId.timeBased();
