@@ -68,6 +68,7 @@ import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class CassandraMessageIdDAO {
 
@@ -334,7 +335,11 @@ public class CassandraMessageIdDAO {
     private Optional<ComposedMessageIdWithMetaData> fromRowToComposedMessageIdWithFlags(Row row) {
         if (row.getUUID(MESSAGE_ID) == null) {
             // Out of order updates with concurrent deletes can result in the row being partially deleted
-            // We filter out such records
+            // We filter out such records, and cleanup them.
+            delete(CassandraId.of(row.getUUID(MAILBOX_ID)),
+                MessageUid.of(row.getLong(IMAP_UID)))
+                .subscribeOn(Schedulers.elastic())
+                .subscribe();
             return Optional.empty();
         }
         return Optional.of(ComposedMessageIdWithMetaData.builder()
