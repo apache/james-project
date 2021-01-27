@@ -1181,18 +1181,18 @@ public abstract class SetMessagesMethodTest {
         given()
             .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {" +
-                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
-                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
-                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
-                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
-                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
-                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
-                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
-                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
-                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
-                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
-                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]}, " +
-                    "  \"%s\" : { \"mailboxIds\": [" + mailboxId.serialize() + "]} " +
+                    "  \"%s\" : { \"mailboxIds\": [\"" + mailboxId.serialize() + "\"]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [\"" + mailboxId.serialize() + "\"]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [\"" + mailboxId.serialize() + "\"]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [\"" + mailboxId.serialize() + "\"]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [\"" + mailboxId.serialize() + "\"]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [\"" + mailboxId.serialize() + "\"]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [\"" + mailboxId.serialize() + "\"]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [\"" + mailboxId.serialize() + "\"]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [\"" + mailboxId.serialize() + "\"]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [\"" + mailboxId.serialize() + "\"]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [\"" + mailboxId.serialize() + "\"]}, " +
+                    "  \"%s\" : { \"mailboxIds\": [\"" + mailboxId.serialize() + "\"]} " +
                     "} }, \"#0\"]]", serializedMessageId1, serializedMessageId2, serializedMessageId3,
                 serializedMessageId4, serializedMessageId5, serializedMessageId6,
                 serializedMessageId7, serializedMessageId8, serializedMessageId9,
