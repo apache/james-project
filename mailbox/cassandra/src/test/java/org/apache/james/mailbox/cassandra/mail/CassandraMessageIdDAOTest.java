@@ -39,6 +39,7 @@ import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.util.streams.Limit;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -80,6 +81,32 @@ class CassandraMessageIdDAOTest {
             .block();
 
         testee.delete(mailboxId, messageUid).block();
+
+        Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).block();
+        assertThat(message.isPresent()).isFalse();
+    }
+
+    @Disabled("A record with a 'null' messageId is returned")
+    @Test
+    void outOfOrderUpdatesShouldBeIgnored() {
+        CassandraId mailboxId = CassandraId.timeBased();
+        MessageUid messageUid = MessageUid.of(1);
+        CassandraMessageId messageId = messageIdFactory.generate();
+        testee.insert(ComposedMessageIdWithMetaData.builder()
+                .composedMessageId(new ComposedMessageId(mailboxId, messageId, messageUid))
+                .flags(new Flags())
+                .modSeq(ModSeq.of(1))
+                .build())
+            .block();
+
+        testee.delete(mailboxId, messageUid).block();
+
+        testee.updateMetadata(ComposedMessageIdWithMetaData.builder()
+                .composedMessageId(new ComposedMessageId(mailboxId, messageId, messageUid))
+                .flags(new Flags(org.apache.james.mailbox.cassandra.table.Flag.ANSWERED))
+                .modSeq(ModSeq.of(2))
+                .build())
+            .block();
 
         Optional<ComposedMessageIdWithMetaData> message = testee.retrieve(mailboxId, messageUid).block();
         assertThat(message.isPresent()).isFalse();
