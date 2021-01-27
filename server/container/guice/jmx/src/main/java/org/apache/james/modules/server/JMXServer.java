@@ -36,11 +36,15 @@ import javax.management.remote.JMXServiceURL;
 
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.util.RestrictingRMISocketFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableMap;
 
 public class JMXServer implements Startable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JMXServer.class);
+
     private final JmxConfiguration jmxConfiguration;
     private final Set<String> registeredKeys;
     private final Object lock;
@@ -101,6 +105,7 @@ public class JMXServer implements Startable {
                 ManagementFactory.getPlatformMBeanServer());
 
             jmxConnectorServer.start();
+            LOGGER.info("JMX server started");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -115,6 +120,7 @@ public class JMXServer implements Startable {
             restrictingRMISocketFactory.getSockets()
                 .forEach(Throwing.consumer(ServerSocket::close)
                     .sneakyThrow());
+            LOGGER.info("JMX server stopped");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

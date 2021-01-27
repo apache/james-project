@@ -93,6 +93,7 @@ public class GuiceJamesServer {
             injector.getInstance(InitializationOperations.class).initModules();
             guiceProbeProvider = injector.getInstance(GuiceProbeProvider.class);
             isStartedProbe.notifyStarted();
+            LOGGER.info("JAMES server started");
         } catch (Throwable e) {
             LOGGER.error("Fatal error while starting James", e);
             throw e;
@@ -104,6 +105,7 @@ public class GuiceJamesServer {
         if (preDestroy != null) {
             preDestroy.stage();
         }
+        LOGGER.info("JAMES server stopped");
     }
 
     public boolean isStarted() {
