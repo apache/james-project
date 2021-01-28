@@ -19,9 +19,6 @@
 
 package org.apache.james.jmap.json
 
-import java.io.InputStream
-import java.net.URL
-
 import eu.timepit.refined.refineV
 import io.netty.handler.codec.http.HttpResponseStatus
 import org.apache.james.core.Username
@@ -34,8 +31,11 @@ import org.apache.james.jmap.core.{Account, Invocation, Session, _}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
+import java.io.InputStream
+import java.net.URL
 import scala.collection.{Seq => LegacySeq}
 import scala.language.implicitConversions
+import scala.util.Try
 
 object ResponseSerializer {
   // CreateIds
@@ -68,7 +68,7 @@ object ResponseSerializer {
 
   private implicit val stateWrites: Writes[State] = Json.valueWrites[State]
   // ResponseObject
-  private implicit val responseObjectFormat: Format[ResponseObject] = Json.format[ResponseObject]
+  private implicit val responseObjectFormat: OFormat[ResponseObject] = Json.format[ResponseObject]
 
   private implicit val maxSizeUploadWrites: Writes[MaxSizeUpload] = Json.valueWrites[MaxSizeUpload]
   private implicit val maxConcurrentUploadWrites: Writes[MaxConcurrentUpload] = Json.valueWrites[MaxConcurrentUpload]
@@ -163,7 +163,45 @@ object ResponseSerializer {
 
   private implicit val jsErrorWrites: Writes[JsError] = Json.writes[JsError]
 
-  private implicit val problemDetailsWrites: Writes[ProblemDetails] = Json.writes[ProblemDetails]
+  private implicit val problemDetailsWrites: OWrites[ProblemDetails] = Json.writes[ProblemDetails]
+
+  private implicit val requestIdFormat: Format[RequestId] = Json.valueFormat[RequestId]
+  private implicit val webSocketRequestReads: Reads[WebSocketRequest] = {
+    case jsObject: JsObject =>
+      for {
+        requestId <- jsObject.value.get("requestId")
+          .map(requestIdJson => requestIdFormat.reads(requestIdJson).map(Some(_)))
+          .getOrElse(JsSuccess(None))
+        request <- requestObjectRead.reads(jsObject)
+      } yield {
+        WebSocketRequest(requestId, request)
+      }
+    case _ => JsError("Expecting a JsObject to represent a webSocket inbound request")
+  }
+  private implicit val webSocketInboundReads: Reads[WebSocketInboundMessage] = {
+    case json: JsObject =>
+      json.value.get("@type") match {
+        case Some(JsString("Request")) => webSocketRequestReads.reads(json)
+        case Some(JsString(unknownType)) => JsError(s"Unknown @type filed on a webSocket inbound message: $unknownType")
+        case Some(invalidType) => JsError(s"Invalid @type filed on a webSocket inbound message: expecting a JsString, got $invalidType")
+        case None => JsError(s"Missing @type filed on a webSocket inbound message")
+      }
+    case _ => JsError("Expecting a JsObject to represent a webSocket inbound message")
+  }
+  private implicit val webSocketResponseWrites: Writes[WebSocketResponse] = response => {
+    val apiResponseJson: JsObject = responseObjectFormat.writes(response.responseObject)
+    JsObject(Map(
+      "@type" -> JsString("Response"),
+      "requestId" -> response.requestId.map(_.value).map(JsString).getOrElse(JsNull))
+      ++ apiResponseJson.value)
+  }
+  private implicit val webSocketErrorWrites: Writes[WebSocketError] = error => {
+    val errorJson: JsObject = problemDetailsWrites.writes(error.problemDetails)
+    JsObject(Map(
+      "@type" -> JsString("RequestError"),
+      "requestId" -> error.requestId.map(_.value).map(JsString).getOrElse(JsNull))
+      ++ errorJson.value)
+  }
 
   def serialize(session: Session): JsValue = Json.toJson(session)
 
@@ -175,7 +213,17 @@ object ResponseSerializer {
 
   def serialize(errors: JsError): JsValue = Json.toJson(errors)
 
+  def serialize(response: WebSocketOutboundMessage): JsValue = {
+    case response: WebSocketResponse => Json.toJson(response)
+    case error: WebSocketError => Json.toJson(error)
+  }
+
+  def serialize(errors: WebSocketError): JsValue = Json.toJson(errors)
+
   def deserializeRequestObject(input: String): JsResult[RequestObject] = Json.parse(input).validate[RequestObject]
+
+  def deserializeWebSocketInboundMessage(input: String): JsResult[WebSocketInboundMessage] = Try(Json.parse(input).validate[WebSocketInboundMessage])
+    .fold(e => JsError(e.getMessage), result => result)
 
   def deserializeRequestObject(input: InputStream): JsResult[RequestObject] = Json.parse(input).validate[RequestObject]
 
