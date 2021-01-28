@@ -21,6 +21,7 @@ package org.apache.james.jmap;
 
 public interface JMAPUrls {
     String JMAP = "/jmap";
+    String JMAP_WS = "/jmap/ws";
     String AUTHENTICATION = "/authentication";
     String DOWNLOAD = "/download";
     String UPLOAD = "/upload";

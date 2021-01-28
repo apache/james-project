@@ -54,6 +54,7 @@ import org.apache.james.jmap.routes.DownloadRoutes;
 import org.apache.james.jmap.routes.JMAPApiRoutes;
 import org.apache.james.jmap.routes.SessionRoutes;
 import org.apache.james.jmap.routes.UploadRoutes;
+import org.apache.james.jmap.routes.WebSocketRoutes;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
@@ -97,8 +98,12 @@ public class RFC8621MethodsModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
-    JMAPRoutesHandler routesHandler(SessionRoutes sessionRoutes, JMAPApiRoutes jmapApiRoutes, DownloadRoutes downloadRoutes, UploadRoutes uploadRoutes) {
-        return new JMAPRoutesHandler(Version.RFC8621, jmapApiRoutes, sessionRoutes, downloadRoutes, uploadRoutes);
+    JMAPRoutesHandler routesHandler(SessionRoutes sessionRoutes,
+                                    JMAPApiRoutes jmapApiRoutes,
+                                    DownloadRoutes downloadRoutes,
+                                    UploadRoutes uploadRoutes,
+                                    WebSocketRoutes webSocketRoutes) {
+        return new JMAPRoutesHandler(Version.RFC8621, jmapApiRoutes, sessionRoutes, downloadRoutes, uploadRoutes, webSocketRoutes);
     }
 
     @Provides

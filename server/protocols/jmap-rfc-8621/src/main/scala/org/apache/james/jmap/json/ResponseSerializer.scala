@@ -202,6 +202,10 @@ object ResponseSerializer {
       "requestId" -> error.requestId.map(_.value).map(JsString).getOrElse(JsNull))
       ++ errorJson.value)
   }
+  private implicit val webSocketOutboundWrites: Writes[WebSocketOutboundMessage] = {
+    case response: WebSocketResponse => webSocketResponseWrites.writes(response)
+    case error: WebSocketError => webSocketErrorWrites.writes(error)
+  }
 
   def serialize(session: Session): JsValue = Json.toJson(session)
 
@@ -213,12 +217,7 @@ object ResponseSerializer {
 
   def serialize(errors: JsError): JsValue = Json.toJson(errors)
 
-  def serialize(response: WebSocketOutboundMessage): JsValue = {
-    case response: WebSocketResponse => Json.toJson(response)
-    case error: WebSocketError => Json.toJson(error)
-  }
-
-  def serialize(errors: WebSocketError): JsValue = Json.toJson(errors)
+  def serialize(outboundMessage: WebSocketOutboundMessage): JsValue = Json.toJson(outboundMessage)
 
   def deserializeRequestObject(input: String): JsResult[RequestObject] = Json.parse(input).validate[RequestObject]
 
