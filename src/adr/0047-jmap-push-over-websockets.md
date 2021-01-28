@@ -53,6 +53,13 @@ People deploying JMAP need to be aware that load-balancing webSockets requires s
  6. Bob's MUA is aware it needs to re-synchronize. It will perform resynch requests combining `Email/changes`, `Email/get`,
  `Mailbox/changes` and `Mailbox/get`.
  
+Event bus listener are created for each socket upon client requests, and removed upon disconnection or when PUSH is
+explicitly canceled by the client.
+
+In a multi-node settup, the event bus registration key mechanism described in [this ADR](0037-eventbus.md) and its 
+[distributed implementation](0038-distributed-eventbus.md) ensures events are routed to
+the James servers holding client PUSH registration. We will use the AccountId as a base for a registration key.
+ 
 ## Alternatives
 
 The [JMAP RFC](https://tools.ietf.org/html/rfc8620) defines [event source](https://www.w3.org/TR/eventsource/) (Server 
