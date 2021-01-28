@@ -118,12 +118,13 @@ object ResponseSerializer {
             jsObject.+(capability.identifier.value, submissionPropertiesWrites.writes(capability.properties))
           case capability: WebSocketCapability =>
             jsObject.+(capability.identifier.value, webSocketPropertiesWrites.writes(capability.properties))
-          case _ => jsObject
+          case _ =>
+            jsObject.+(capability.identifier.value, JsObject(Map[String, JsValue]()))
         }
       })
     }
 
-  private implicit val capabilitiesWrites: Writes[Capabilities] = capabilities => setCapabilityWrites.writes(capabilities.toSet)
+  private implicit val capabilitiesWrites: Writes[Capabilities] = capabilities => setCapabilityWrites.writes(capabilities.capabilities)
 
   private implicit val identifierMapWrite: Writes[Map[CapabilityIdentifier, AccountId]] =
     mapWrites[CapabilityIdentifier, AccountId](_.value, accountIdWrites)

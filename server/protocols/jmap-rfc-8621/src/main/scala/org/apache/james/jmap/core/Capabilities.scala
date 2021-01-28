@@ -51,7 +51,7 @@ object DefaultCapabilities {
   val VACATION_RESPONSE_CAPABILITY = VacationResponseCapability()
   val SUBMISSION_CAPABILITY = SubmissionCapability()
 
-  def supported(configuration: JmapRfc8621Configuration): Capabilities = Capabilities(
+  def supported(configuration: JmapRfc8621Configuration): Capabilities = Capabilities.of(
     coreCapability(configuration.maxUploadSize),
     MAIL_CAPABILITY,
     QUOTA_CAPABILITY,
@@ -61,8 +61,10 @@ object DefaultCapabilities {
     webSocketCapability(configuration.webSocketUrl))
 }
 
-case class Capabilities(capabilities: Capability*) {
-  def toSet: Set[Capability] = capabilities.toSet
+object Capabilities {
+  def of(capabilities: Capability*): Capabilities = Capabilities(capabilities.toSet)
+}
 
-  def ids: Set[CapabilityIdentifier] = toSet.map(_.identifier())
+case class Capabilities(capabilities: Set[Capability]) {
+  def ids: Set[CapabilityIdentifier] = capabilities.map(_.identifier())
 }

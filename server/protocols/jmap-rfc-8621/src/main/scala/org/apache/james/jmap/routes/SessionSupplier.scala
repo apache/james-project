@@ -22,13 +22,20 @@ package org.apache.james.jmap.routes
 import javax.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.core.{Account, AccountId, DefaultCapabilities, IsPersonal, IsReadOnly, JmapRfc8621Configuration, Session}
+import org.apache.james.jmap.core.{Account, AccountId, Capabilities, Capability, IsPersonal, IsReadOnly, JmapRfc8621Configuration, Session}
 
-class SessionSupplier @Inject() (val configuration: JmapRfc8621Configuration) {
+import scala.jdk.CollectionConverters._
+
+class SessionSupplier(val configuration: JmapRfc8621Configuration, defaultCapabilities: Set[Capability]) {
+  @Inject
+  def this(configuration: JmapRfc8621Configuration, defaultCapabilities: java.util.Set[Capability]) {
+    this(configuration, defaultCapabilities.asScala.toSet)
+  }
+
   def generate(username: Username): Either[IllegalArgumentException, Session] =
     accounts(username)
       .map(account => Session(
-        DefaultCapabilities.supported(configuration),
+        Capabilities(defaultCapabilities),
         List(account),
         primaryAccounts(account.accountId),
         username,
@@ -38,10 +45,10 @@ class SessionSupplier @Inject() (val configuration: JmapRfc8621Configuration) {
         eventSourceUrl = configuration.eventSourceUrl))
 
   private def accounts(username: Username): Either[IllegalArgumentException, Account] =
-    Account.from(username, IsPersonal(true), IsReadOnly(false), DefaultCapabilities.supported(configuration).toSet)
+    Account.from(username, IsPersonal(true), IsReadOnly(false), defaultCapabilities)
 
   private def primaryAccounts(accountId: AccountId): Map[CapabilityIdentifier, AccountId] =
-    DefaultCapabilities.supported(configuration).toSet
+    defaultCapabilities
       .map(capability => (capability.identifier(), accountId))
       .toMap
 }

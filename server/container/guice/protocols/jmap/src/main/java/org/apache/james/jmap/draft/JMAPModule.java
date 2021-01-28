@@ -162,6 +162,11 @@ public class JMAPModule extends AbstractModule {
         return DefaultCapabilities.coreCapability(configuration.maxUploadSize());
     }
 
+    @ProvidesIntoSet
+    Capability webSocketCapability(JmapRfc8621Configuration configuration) {
+        return DefaultCapabilities.webSocketCapability(configuration.webSocketUrl());
+    }
+
     @Provides
     @Singleton
     JMAPConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {

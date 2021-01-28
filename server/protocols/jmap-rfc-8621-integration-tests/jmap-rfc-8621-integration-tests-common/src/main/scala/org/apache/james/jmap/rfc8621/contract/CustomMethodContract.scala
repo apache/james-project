@@ -20,7 +20,7 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import com.google.inject.AbstractModule
-import com.google.inject.multibindings.{Multibinder, ProvidesIntoSet}
+import com.google.inject.multibindings.Multibinder
 import eu.timepit.refined.auto._
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
@@ -44,20 +44,107 @@ import reactor.core.scala.publisher.SMono
 
 object CustomMethodContract {
   val CUSTOM: CapabilityIdentifier = "urn:apache:james:params:jmap:custom"
+
+  private val expected_session_object: String =
+    s"""{
+      |  "capabilities" : {
+      |    "urn:ietf:params:jmap:submission": {
+      |      "maxDelayedSend": 0,
+      |      "submissionExtensions": []
+      |    },
+      |    "urn:ietf:params:jmap:core" : {
+      |      "maxSizeUpload" : 20971520,
+      |      "maxConcurrentUpload" : 4,
+      |      "maxSizeRequest" : 10000000,
+      |      "maxConcurrentRequests" : 4,
+      |      "maxCallsInRequest" : 16,
+      |      "maxObjectsInGet" : 500,
+      |      "maxObjectsInSet" : 500,
+      |      "collationAlgorithms" : [ "i;unicode-casemap" ]
+      |    },
+      |    "urn:ietf:params:jmap:mail" : {
+      |      "maxMailboxesPerEmail" : 10000000,
+      |      "maxMailboxDepth" : null,
+      |      "maxSizeMailboxName" : 200,
+      |      "maxSizeAttachmentsPerEmail" : 20000000,
+      |      "emailQuerySortOptions" : ["receivedAt", "sentAt"],
+      |      "mayCreateTopLevelMailbox" : true
+      |    },
+      |    "urn:ietf:params:jmap:websocket": {
+      |      "supportsPush": false,
+      |      "url": "http://domain.com/jmap/ws"
+      |    },
+      |    "urn:apache:james:params:jmap:mail:quota": {},
+      |    "$CUSTOM": {},
+      |    "urn:apache:james:params:jmap:mail:shares": {},
+      |    "urn:ietf:params:jmap:vacationresponse":{}
+      |  },
+      |  "accounts" : {
+      |    "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6" : {
+      |      "name" : "bob@domain.tld",
+      |      "isPersonal" : true,
+      |      "isReadOnly" : false,
+      |      "accountCapabilities" : {
+      |        "urn:ietf:params:jmap:submission": {
+      |          "maxDelayedSend": 0,
+      |          "submissionExtensions": []
+      |        },
+      |        "urn:ietf:params:jmap:websocket": {
+      |            "supportsPush": false,
+      |            "url": "http://domain.com/jmap/ws"
+      |        },
+      |        "urn:ietf:params:jmap:core" : {
+      |          "maxSizeUpload" : 20971520,
+      |          "maxConcurrentUpload" : 4,
+      |          "maxSizeRequest" : 10000000,
+      |          "maxConcurrentRequests" : 4,
+      |          "maxCallsInRequest" : 16,
+      |          "maxObjectsInGet" : 500,
+      |          "maxObjectsInSet" : 500,
+      |          "collationAlgorithms" : [ "i;unicode-casemap" ]
+      |        },
+      |        "urn:ietf:params:jmap:mail" : {
+      |          "maxMailboxesPerEmail" : 10000000,
+      |          "maxMailboxDepth" : null,
+      |          "maxSizeMailboxName" : 200,
+      |          "maxSizeAttachmentsPerEmail" : 20000000,
+      |          "emailQuerySortOptions" : ["receivedAt", "sentAt"],
+      |          "mayCreateTopLevelMailbox" : true
+      |        },
+      |        "urn:apache:james:params:jmap:mail:quota": {},
+      |        "urn:apache:james:params:jmap:mail:shares": {},
+      |        "$CUSTOM": {},
+      |        "urn:ietf:params:jmap:vacationresponse":{}
+      |      }
+      |    }
+      |  },
+      |  "primaryAccounts" : {
+      |    "urn:ietf:params:jmap:submission": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |    "urn:ietf:params:jmap:websocket": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |    "urn:ietf:params:jmap:core" : "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |    "urn:ietf:params:jmap:mail" : "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |    "urn:apache:james:params:jmap:mail:quota": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |    "urn:apache:james:params:jmap:mail:shares": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |    "$CUSTOM": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |    "urn:ietf:params:jmap:vacationresponse": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+      |  },
+      |  "username" : "bob@domain.tld",
+      |  "apiUrl" : "http://domain.com/jmap",
+      |  "downloadUrl" : "http://domain.com/download/{accountId}/{blobId}/?type={type}&name={name}",
+      |  "uploadUrl" : "http://domain.com/upload/{accountId}",
+      |  "eventSourceUrl" : "http://domain.com/eventSource",
+      |  "state" : "2c9f1b12-b35a-43e6-9af2-0106fb53a943"
+      |}""".stripMargin
 }
 
 case class CustomCapabilityProperties() extends CapabilityProperties
 
 case class CustomCapability(properties: CustomCapabilityProperties = CustomCapabilityProperties(), identifier: CapabilityIdentifier = CUSTOM) extends Capability
 
-class CustomCapabilitiesModule extends AbstractModule {
-  @ProvidesIntoSet
-  private def capability(): Capability = CustomCapability()
-}
-
 class CustomMethodModule extends AbstractModule {
   override protected def configure(): Unit = {
-    install(new CustomCapabilitiesModule)
+    val supportedCapabilities: Multibinder[Capability] = Multibinder.newSetBinder(binder, classOf[Capability])
+    supportedCapabilities.addBinding.toInstance(CustomCapability())
     Multibinder.newSetBinder(binder(), classOf[Method])
       .addBinding()
       .to(classOf[CustomMethod])
@@ -74,7 +161,6 @@ class CustomMethod extends Method {
 }
 
 trait CustomMethodContract {
-
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DataProbeImpl])
@@ -85,6 +171,22 @@ trait CustomMethodContract {
     requestSpecification = baseRequestSpecBuilder(server)
       .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
       .build
+  }
+
+  @Test
+  def getShouldReturnCorrectSession(): Unit = {
+    val sessionJson: String = `given`()
+      .when()
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .get("/session")
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract()
+      .body()
+      .asString()
+
+    assertThatJson(sessionJson).isEqualTo(CustomMethodContract.expected_session_object)
   }
 
   @Test
