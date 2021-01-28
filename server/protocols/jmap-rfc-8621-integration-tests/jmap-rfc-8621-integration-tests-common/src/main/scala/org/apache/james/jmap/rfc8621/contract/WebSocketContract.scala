@@ -251,22 +251,187 @@ trait WebSocketContract {
 
   @Test
   def badTypeFieldShouldTriggerError(server: GuiceJamesServer): Unit = {
-    /*
-    * TODO send something with @type being a JsNumber and get an error level error
-    * */
+    println("started")
+    val port = server.getProbe(classOf[JmapGuiceProbe])
+      .getJmapPort
+      .getValue
+    val client = new ExampleClient(new URI(s"ws://127.0.0.1:$port/jmap/ws"))
+    client.addHeader("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
+    client.addHeader("Accept", ACCEPT_RFC8621_VERSION_HEADER)
+
+    client.connectBlocking()
+
+    Thread.sleep(500)
+
+    client.send("""{
+                  |  "@type": 42,
+                  |  "requestId": "req-36",
+                  |  "using": [ "urn:ietf:params:jmap:core"],
+                  |  "methodCalls": [
+                  |    [
+                  |      "Core/echo",
+                  |      {
+                  |        "arg1": "arg1data",
+                  |        "arg2": "arg2data"
+                  |      },
+                  |      "c1"
+                  |    ]
+                  |  ]
+                  |}""".stripMargin)
+
+    Thread.sleep(500)
+
+    assertThat(client.receivedResponses).hasSize(1)
+    assertThatJson(client.receivedResponses.get(0)).isEqualTo(
+      """
+        |{
+        |  "status":400,
+        |  "detail":"The request was successfully parsed as JSON but did not match the type signature of the Request object: List((,List(JsonValidationError(List(Invalid @type filed on a webSocket inbound message: expecting a JsString, got 42),ArraySeq()))))",
+        |  "type":"urn:ietf:params:jmap:error:notRequest",
+        |  "requestId":null,
+        |  "@type":"RequestError"
+        |}
+        |""".stripMargin
+    )
+
   }
 
   @Test
   def unknownTypeFieldShouldTriggerError(server: GuiceJamesServer): Unit = {
-    /*
-    * TODO send something with @type being a JsString("unknown") and get an error level error
-    * */
+    println("started")
+    val port = server.getProbe(classOf[JmapGuiceProbe])
+      .getJmapPort
+      .getValue
+    val client = new ExampleClient(new URI(s"ws://127.0.0.1:$port/jmap/ws"))
+    client.addHeader("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
+    client.addHeader("Accept", ACCEPT_RFC8621_VERSION_HEADER)
+
+    client.connectBlocking()
+
+    Thread.sleep(500)
+
+    client.send(
+      """{
+        |  "@type": "unknown",
+        |  "requestId": "req-36",
+        |  "using": [ "urn:ietf:params:jmap:core"],
+        |  "methodCalls": [
+        |    [
+        |      "Core/echo",
+        |      {
+        |        "arg1": "arg1data",
+        |        "arg2": "arg2data"
+        |      },
+        |      "c1"
+        |    ]
+        |  ]
+        |}""".stripMargin)
+
+    Thread.sleep(500)
+
+    assertThat(client.receivedResponses).hasSize(1)
+    assertThatJson(client.receivedResponses.get(0)).isEqualTo(
+      """
+        |{
+        |  "status":400,
+        |  "detail":"The request was successfully parsed as JSON but did not match the type signature of the Request object: List((,List(JsonValidationError(List(Unknown @type filed on a webSocket inbound message: unknown),ArraySeq()))))",
+        |  "type":"urn:ietf:params:jmap:error:notRequest",
+        |  "requestId":null,
+        |  "@type":"RequestError"
+        |}
+        |""".stripMargin
+    )
+  }
+
+
+  @Test
+  def clientSendingARespondTypeFieldShouldTriggerError(server: GuiceJamesServer): Unit = {
+    println("started")
+    val port = server.getProbe(classOf[JmapGuiceProbe])
+      .getJmapPort
+      .getValue
+    val client = new ExampleClient(new URI(s"ws://127.0.0.1:$port/jmap/ws"))
+    client.addHeader("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
+    client.addHeader("Accept", ACCEPT_RFC8621_VERSION_HEADER)
+
+    client.connectBlocking()
+
+    Thread.sleep(500)
+
+    client.send(
+      """{
+        |  "@type": "Response",
+        |  "requestId": "req-36",
+        |  "using": [ "urn:ietf:params:jmap:core"],
+        |  "methodCalls": [
+        |    [
+        |      "Core/echo",
+        |      {
+        |        "arg1": "arg1data",
+        |        "arg2": "arg2data"
+        |      },
+        |      "c1"
+        |    ]
+        |  ]
+        |}""".stripMargin)
+
+    Thread.sleep(500)
+
+    assertThat(client.receivedResponses).hasSize(1)
+    assertThatJson(client.receivedResponses.get(0)).isEqualTo(
+      """
+        |{
+        |  "status":400,
+        |  "detail":"The request was successfully parsed as JSON but did not match the type signature of the Request object: List((,List(JsonValidationError(List(Unknown @type filed on a webSocket inbound message: Response),ArraySeq()))))",
+        |  "type":"urn:ietf:params:jmap:error:notRequest",
+        |  "requestId":null,
+        |  "@type":"RequestError"
+        |}
+        |""".stripMargin
+    )
+
   }
 
   @Test
   def requestLevelErrorShouldReturnAPIError(server: GuiceJamesServer): Unit = {
-    /*
-    * TODO send a request triggering a method level error (eg Mailbox/get with an invalid JSON payload)
-    * */
+    println("started")
+    val port = server.getProbe(classOf[JmapGuiceProbe])
+      .getJmapPort
+      .getValue
+    val client = new ExampleClient(new URI(s"ws://127.0.0.1:$port/jmap/ws"))
+    client.addHeader("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
+    client.addHeader("Accept", ACCEPT_RFC8621_VERSION_HEADER)
+
+    client.connectBlocking()
+
+    Thread.sleep(500)
+
+    client.send(s"""{
+                   |  "@type": "Request",
+                   |  "using": [
+                   |    "urn:ietf:params:jmap:core",
+                   |    "urn:ietf:params:jmap:mail"],
+                   |  "methodCalls": [[
+                   |      "Mailbox/get",
+                   |      {
+                   |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                   |        "properties": ["invalidProperty"]
+                   |      },
+                   |      "c1"]]
+                   |}""".stripMargin)
+
+    Thread.sleep(500)
+
+
+    assertThat(client.receivedResponses).hasSize(1)
+    assertThatJson(client.receivedResponses.get(0)).isEqualTo(
+      """
+        |{
+        |  "@type": "Response",
+        |  "requestId": null,
+        |  "sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+        |  "methodResponses": [["error",{"type":"invalidArguments","description":"The following properties [invalidProperty] do not exist."},"c1"]]
+        |}
+        |""".stripMargin)
   }
 }
