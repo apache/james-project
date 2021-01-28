@@ -79,14 +79,10 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
         new String(bytes, StandardCharsets.UTF_8)
       })
       .flatMap(handleClientMessages(session))
-      .onErrorResume(e => SMono.just(asError(None)(e)))
+      .onErrorResume(e => SMono.just[WebSocketOutboundMessage](asError(None)(e)))
       .map(ResponseSerializer.serialize)
       .map(_.toString)
       .flatMap(response => out.sendString(SMono.just(response), StandardCharsets.UTF_8))
-      .onErrorResume(e => {
-        e.printStackTrace()
-        SMono.empty
-      })
       .`then`()
       .asJava()
       .`then`()

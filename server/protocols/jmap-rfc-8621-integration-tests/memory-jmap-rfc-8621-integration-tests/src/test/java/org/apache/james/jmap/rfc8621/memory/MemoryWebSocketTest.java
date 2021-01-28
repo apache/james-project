@@ -28,7 +28,7 @@ import org.apache.james.jmap.rfc8621.contract.WebSocketContract;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class MemoryWebSocketContract implements WebSocketContract {
+public class MemoryWebSocketTest implements WebSocketContract {
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
