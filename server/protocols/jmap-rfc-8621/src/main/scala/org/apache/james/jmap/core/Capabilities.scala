@@ -18,8 +18,10 @@
  ****************************************************************/
 package org.apache.james.jmap.core
 
+import java.net.URL
+
 import eu.timepit.refined.auto._
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
+import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 
 object DefaultCapabilities {
   def coreCapability(maxUploadSize: MaxSizeUpload) = CoreCapability(
@@ -32,6 +34,10 @@ object DefaultCapabilities {
       MaxObjectsInGet(500L),
       MaxObjectsInSet(500L),
       collationAlgorithms = List("i;unicode-casemap")))
+
+  def webSocketCapability(url: URL) = WebSocketCapability(
+    properties = WebSocketCapabilityProperties(SupportsPush(false), url))
+
   val MAIL_CAPABILITY = MailCapability(
     properties = MailCapabilityProperties(
       MaxMailboxesPerEmail(Some(10_000_000L)),
@@ -45,15 +51,14 @@ object DefaultCapabilities {
   val VACATION_RESPONSE_CAPABILITY = VacationResponseCapability()
   val SUBMISSION_CAPABILITY = SubmissionCapability()
 
-  val SUPPORTED_CAPABILITY_IDENTIFIERS: Set[CapabilityIdentifier] =
-    Set(JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE, JAMES_SHARES, JAMES_QUOTA, EMAIL_SUBMISSION)
-
-  def supported(maxUploadSize: MaxSizeUpload): Capabilities = Capabilities(coreCapability(maxUploadSize),
+  def supported(configuration: JmapRfc8621Configuration): Capabilities = Capabilities(
+    coreCapability(configuration.maxUploadSize),
     MAIL_CAPABILITY,
     QUOTA_CAPABILITY,
     SHARES_CAPABILITY,
     VACATION_RESPONSE_CAPABILITY,
-    SUBMISSION_CAPABILITY)
+    SUBMISSION_CAPABILITY,
+    webSocketCapability(configuration.webSocketUrl))
 }
 
 case class Capabilities(capabilities: Capability*) {

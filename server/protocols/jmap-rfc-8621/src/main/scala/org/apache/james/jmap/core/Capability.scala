@@ -19,12 +19,14 @@
 
 package org.apache.james.jmap.core
 
+import java.net.URL
+
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.string.Uri
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE, JMAP_WEBSOCKET}
 import org.apache.james.jmap.core.CoreCapabilityProperties.CollationAlgorithm
 import org.apache.james.jmap.core.MailCapability.EmailQuerySortOption
 import org.apache.james.jmap.core.UnsignedInt.{UnsignedInt, UnsignedIntConstraint}
@@ -41,6 +43,7 @@ object CapabilityIdentifier {
   val JMAP_MAIL: CapabilityIdentifier = "urn:ietf:params:jmap:mail"
   val JMAP_VACATION_RESPONSE: CapabilityIdentifier = "urn:ietf:params:jmap:vacationresponse"
   val EMAIL_SUBMISSION: CapabilityIdentifier = "urn:ietf:params:jmap:submission"
+  val JMAP_WEBSOCKET: CapabilityIdentifier = "urn:ietf:params:jmap:websocket"
   val JAMES_QUOTA: CapabilityIdentifier = "urn:apache:james:params:jmap:mail:quota"
   val JAMES_SHARES: CapabilityIdentifier = "urn:apache:james:params:jmap:mail:shares"
 }
@@ -54,6 +57,8 @@ trait Capability {
 
 final case class CoreCapability(properties: CoreCapabilityProperties,
                                 identifier: CapabilityIdentifier = JMAP_CORE) extends Capability
+
+case class WebSocketCapability(properties: WebSocketCapabilityProperties, identifier: CapabilityIdentifier = JMAP_WEBSOCKET) extends Capability
 
 object MaxSizeUpload {
   def of(size: Size): Try[MaxSizeUpload] = refined.refineV[UnsignedIntConstraint](size.asBytes()) match {
@@ -83,6 +88,10 @@ final case class CoreCapabilityProperties(maxSizeUpload: MaxSizeUpload,
                                           maxObjectsInSet: MaxObjectsInSet,
                                           collationAlgorithms: List[CollationAlgorithm]) extends CapabilityProperties
 
+final case class WebSocketCapabilityProperties(supportsPush: SupportsPush,
+                                               url: URL) extends CapabilityProperties
+
+final case class SupportsPush(value: Boolean) extends AnyVal
 final case class MaxDelayedSend(value: Int) extends AnyVal
 final case class EhloName(value: String) extends AnyVal
 final case class EhloArgs(value: String) extends AnyVal

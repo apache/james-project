@@ -63,6 +63,10 @@ object SessionRoutesContract {
                          |      "emailQuerySortOptions" : ["receivedAt", "sentAt"],
                          |      "mayCreateTopLevelMailbox" : true
                          |    },
+                         |    "urn:ietf:params:jmap:websocket": {
+                         |      "supportsPush": false,
+                         |      "url": "http://domain.com/jmap/ws"
+                         |    },
                          |    "urn:apache:james:params:jmap:mail:quota": {},
                          |    "urn:apache:james:params:jmap:mail:shares": {},
                          |    "urn:ietf:params:jmap:vacationresponse":{}
@@ -76,6 +80,10 @@ object SessionRoutesContract {
                          |        "urn:ietf:params:jmap:submission": {
                          |          "maxDelayedSend": 0,
                          |          "submissionExtensions": []
+                         |        },
+                         |        "urn:ietf:params:jmap:websocket": {
+                         |            "supportsPush": false,
+                         |            "url": "http://domain.com/jmap/ws"
                          |        },
                          |        "urn:ietf:params:jmap:core" : {
                          |          "maxSizeUpload" : 20971520,
@@ -103,6 +111,7 @@ object SessionRoutesContract {
                          |  },
                          |  "primaryAccounts" : {
                          |    "urn:ietf:params:jmap:submission": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                         |    "urn:ietf:params:jmap:websocket": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
                          |    "urn:ietf:params:jmap:core" : "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
                          |    "urn:ietf:params:jmap:mail" : "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
                          |    "urn:apache:james:params:jmap:mail:quota": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",

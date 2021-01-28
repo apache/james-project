@@ -91,11 +91,14 @@ object ResponseSerializer {
   private implicit val maxDelayedSendWrites: Writes[MaxDelayedSend] = Json.valueWrites[MaxDelayedSend]
   private implicit val ehloNameWrites: Writes[EhloName] = Json.valueWrites[EhloName]
   private implicit val ehloArgsWrites: Writes[EhloArgs] = Json.valueWrites[EhloArgs]
+  private implicit val supportsPushWrites: Writes[SupportsPush] = Json.valueWrites[SupportsPush]
   private implicit val submissionPropertiesWrites: Writes[SubmissionProperties] = Json.writes[SubmissionProperties]
+  private implicit val webSocketPropertiesWrites: Writes[WebSocketCapabilityProperties] = Json.writes[WebSocketCapabilityProperties]
   private implicit val quotaCapabilityWrites: Writes[QuotaCapabilityProperties] = OWrites[QuotaCapabilityProperties](_ => Json.obj())
   private implicit val sharesCapabilityWrites: Writes[SharesCapabilityProperties] = OWrites[SharesCapabilityProperties](_ => Json.obj())
   private implicit val vacationResponseCapabilityWrites: Writes[VacationResponseCapabilityProperties] = OWrites[VacationResponseCapabilityProperties](_ => Json.obj())
   private implicit val submissionCapabilityWrites: Writes[SubmissionCapability] = OWrites[SubmissionCapability](_ => Json.obj())
+  private implicit val webSocketCapabilityWrites: Writes[WebSocketCapability] = OWrites[WebSocketCapability](_ => Json.obj())
 
   private implicit val setCapabilityWrites: Writes[Set[_ <: Capability]] =
     (set: Set[_ <: Capability]) => {
@@ -113,6 +116,8 @@ object ResponseSerializer {
             jsObject.+(capability.identifier.value, vacationResponseCapabilityWrites.writes(capability.properties))
           case capability: SubmissionCapability =>
             jsObject.+(capability.identifier.value, submissionPropertiesWrites.writes(capability.properties))
+          case capability: WebSocketCapability =>
+            jsObject.+(capability.identifier.value, webSocketPropertiesWrites.writes(capability.properties))
           case _ => jsObject
         }
       })

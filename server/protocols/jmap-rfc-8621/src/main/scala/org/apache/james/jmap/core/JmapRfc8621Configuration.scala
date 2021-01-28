@@ -48,4 +48,5 @@ case class JmapRfc8621Configuration(urlPrefixString: String, maxUploadSize: MaxS
   val downloadUrl: URL = new URL(urlPrefixString + "/download/{accountId}/{blobId}/?type={type}&name={name}")
   val uploadUrl: URL = new URL(s"$urlPrefixString/upload/{accountId}")
   val eventSourceUrl: URL = new URL(s"$urlPrefixString/eventSource")
+  val webSocketUrl: URL = new URL(s"$urlPrefixString/jmap/ws")
 }

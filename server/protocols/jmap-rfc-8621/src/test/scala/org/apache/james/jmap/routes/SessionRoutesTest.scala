@@ -142,6 +142,10 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |      "emailQuerySortOptions" : ["receivedAt", "sentAt"],
                          |      "mayCreateTopLevelMailbox" : true
                          |    },
+                         |    "urn:ietf:params:jmap:websocket": {
+                         |      "supportsPush": false,
+                         |      "url": "http://localhost/jmap/ws"
+                         |    },
                          |    "urn:apache:james:params:jmap:mail:quota": {},
                          |    "urn:apache:james:params:jmap:mail:shares": {},
                          |    "urn:ietf:params:jmap:vacationresponse":{}
@@ -155,6 +159,10 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |        "urn:ietf:params:jmap:submission": {
                          |          "maxDelayedSend": 0,
                          |          "submissionExtensions": []
+                         |        },
+                         |        "urn:ietf:params:jmap:websocket": {
+                         |            "supportsPush": false,
+                         |            "url": "http://localhost/jmap/ws"
                          |        },
                          |        "urn:ietf:params:jmap:core" : {
                          |          "maxSizeUpload" : 31457280,
@@ -182,6 +190,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |  },
                          |  "primaryAccounts" : {
                          |    "urn:ietf:params:jmap:submission": "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401",
+                         |    "urn:ietf:params:jmap:websocket": "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401",
                          |    "urn:ietf:params:jmap:core" : "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401",
                          |    "urn:ietf:params:jmap:mail" : "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401",
                          |    "urn:apache:james:params:jmap:mail:quota": "0fe275bf13ff761407c17f64b1dfae2f4b3186feea223d7267b79f873a105401",

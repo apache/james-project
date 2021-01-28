@@ -21,8 +21,9 @@ package org.apache.james.jmap.json
 
 import eu.timepit.refined.auto._
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
 import org.apache.james.jmap.core.State.INSTANCE
-import org.apache.james.jmap.core.{AccountId, DefaultCapabilities, Properties}
+import org.apache.james.jmap.core.{AccountId, Properties}
 import org.apache.james.jmap.json.Fixture._
 import org.apache.james.jmap.json.MailboxGetSerializationTest._
 import org.apache.james.jmap.json.MailboxSerializationTest.MAILBOX
@@ -144,6 +145,8 @@ class MailboxGetSerializationTest extends AnyWordSpec with Matchers {
 
   "Serialize MailboxGetResponse" should {
     "succeed" in {
+      val supportedCapabilityIdentifiers: Set[CapabilityIdentifier] =
+        Set(JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE, JAMES_SHARES, JAMES_QUOTA, EMAIL_SUBMISSION)
       val actualValue: MailboxGetResponse = MailboxGetResponse(
         accountId = ACCOUNT_ID,
         state = INSTANCE,
@@ -197,7 +200,7 @@ class MailboxGetSerializationTest extends AnyWordSpec with Matchers {
           |}
           |""".stripMargin
 
-      assertThatJson(Json.stringify(SERIALIZER.serialize(actualValue, Mailbox.allProperties, DefaultCapabilities.SUPPORTED_CAPABILITY_IDENTIFIERS))).isEqualTo(expectedJson)
+      assertThatJson(Json.stringify(SERIALIZER.serialize(actualValue, Mailbox.allProperties, supportedCapabilityIdentifiers))).isEqualTo(expectedJson)
     }
   }
 }

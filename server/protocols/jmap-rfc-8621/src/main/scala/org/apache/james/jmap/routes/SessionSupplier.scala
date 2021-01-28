@@ -25,12 +25,10 @@ import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.{Account, AccountId, DefaultCapabilities, IsPersonal, IsReadOnly, JmapRfc8621Configuration, Session}
 
 class SessionSupplier @Inject() (val configuration: JmapRfc8621Configuration) {
-  private val maxSizeUpload = configuration.maxUploadSize
-
   def generate(username: Username): Either[IllegalArgumentException, Session] =
     accounts(username)
       .map(account => Session(
-        DefaultCapabilities.supported(maxSizeUpload),
+        DefaultCapabilities.supported(configuration),
         List(account),
         primaryAccounts(account.accountId),
         username,
@@ -40,10 +38,10 @@ class SessionSupplier @Inject() (val configuration: JmapRfc8621Configuration) {
         eventSourceUrl = configuration.eventSourceUrl))
 
   private def accounts(username: Username): Either[IllegalArgumentException, Account] =
-    Account.from(username, IsPersonal(true), IsReadOnly(false), DefaultCapabilities.supported(maxSizeUpload).toSet)
+    Account.from(username, IsPersonal(true), IsReadOnly(false), DefaultCapabilities.supported(configuration).toSet)
 
   private def primaryAccounts(accountId: AccountId): Map[CapabilityIdentifier, AccountId] =
-    DefaultCapabilities.supported(maxSizeUpload).toSet
+    DefaultCapabilities.supported(configuration).toSet
       .map(capability => (capability.identifier(), accountId))
       .toMap
 }
