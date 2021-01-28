@@ -28,7 +28,7 @@ import org.apache.james.jmap.rfc8621.contract.UploadContract;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class MemoryUploadContract implements UploadContract {
+public class MemoryUploadTest implements UploadContract {
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
