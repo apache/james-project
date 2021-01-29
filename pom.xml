@@ -2274,7 +2274,7 @@
             <dependency>
                 <groupId>io.rest-assured</groupId>
                 <artifactId>rest-assured</artifactId>
-                <version>4.0.0</version>
+                <version>4.3.0</version>
                 <exclusions>
                     <exclusion>
                         <groupId>commons-logging</groupId>
