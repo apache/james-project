@@ -2161,7 +2161,7 @@
             <dependency>
                 <groupId>commons-daemon</groupId>
                 <artifactId>commons-daemon</artifactId>
-                <version>1.2.0</version>
+                <version>1.2.4</version>
             </dependency>
             <dependency>
                 <groupId>commons-dbcp</groupId>
