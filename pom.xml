@@ -587,7 +587,7 @@
 
         <james.groupId>org.apache.james</james.groupId>
         <james.protocols.groupId>${james.groupId}.protocols</james.protocols.groupId>
-        <activemq.version>5.15.9</activemq.version>
+        <activemq.version>5.16.1</activemq.version>
         <apache-mime4j.version>0.8.3</apache-mime4j.version>
         <apache.openjpa.version>3.1.0</apache.openjpa.version>
         <camel.version>2.24.1</camel.version>
@@ -598,7 +598,7 @@
         <javax.activation.artifactId>activation</javax.activation.artifactId>
         <jsieve.version>0.7</jsieve.version>
         <spring.version>4.3.25.RELEASE</spring.version>
-        <activmq-artemis.version>2.9.0</activmq-artemis.version>
+        <activmq-artemis.version>2.16.0</activmq-artemis.version>
         <apache-jspf-resolver.version>1.0.1</apache-jspf-resolver.version>
         <javamail.version>1.5.4</javamail.version>
         <javax-activation.version>1.1.1</javax-activation.version>
