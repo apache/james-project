@@ -105,6 +105,8 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
   "get .well-known/jmap" should "redirect" in {
     RestAssured.`given`()
       .basePath(".well-known/jmap")
+    .when()
+      .redirects().follow(false)
       .get
     .`then`
       .statusCode(308)
