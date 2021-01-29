@@ -31,7 +31,7 @@
     <name>Apache James Cassandra backend</name>
 
     <properties>
-        <cassandra.driver.version>3.7.2</cassandra.driver.version>
+        <cassandra.driver.version>3.10.2</cassandra.driver.version>
     </properties>
 
     <dependencies>
