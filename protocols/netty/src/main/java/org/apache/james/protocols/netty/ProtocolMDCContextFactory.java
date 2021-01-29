@@ -24,6 +24,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Optional;
 
+import org.apache.james.core.Username;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.util.MDCBuilder;
@@ -77,7 +78,7 @@ public interface ProtocolMDCContextFactory {
         return MDCBuilder.create()
             .addContext(MDCBuilder.SESSION_ID, protocolSession.getSessionID())
             .addContext(MDCBuilder.CHARSET, protocolSession.getCharset().displayName())
-            .addContext(MDCBuilder.USER, protocolSession.getUsername());
+            .addContext(MDCBuilder.USER, Optional.ofNullable(protocolSession.getUsername()).map(Username::asString));
     }
 
 }

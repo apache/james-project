@@ -22,6 +22,7 @@ package org.apache.james.protocols.smtp.core;
 import java.io.Closeable;
 import java.util.Optional;
 
+import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.netty.ProtocolMDCContextFactory;
@@ -55,7 +56,8 @@ public class SMTPMDCContextFactory implements ProtocolMDCContextFactory {
     private static MDCBuilder forSMTPSession(SMTPSession smtpSession) {
         return MDCBuilder.create()
             .addContext("ehlo", smtpSession.getAttachment(SMTPSession.CURRENT_HELO_NAME, ProtocolSession.State.Connection))
-            .addContext("sender", smtpSession.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction))
+            .addContext("sender", smtpSession.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction)
+                .map(MaybeSender::asString))
             .addContext("recipients", smtpSession.getAttachment(SMTPSession.RCPT_LIST, ProtocolSession.State.Transaction));
     }
 }
