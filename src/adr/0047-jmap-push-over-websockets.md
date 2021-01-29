@@ -56,8 +56,8 @@ People deploying JMAP need to be aware that load-balancing webSockets requires s
 Event bus listener are created for each socket upon client requests, and removed upon disconnection or when PUSH is
 explicitly canceled by the client.
 
-In a multi-node settup, the event bus registration key mechanism described in [this ADR](0037-eventbus.md) and its 
-[distributed implementation](0038-distributed-eventbus.md) ensures events are routed to
+In a multi-node setup, the event bus registration key mechanism described in [this ADR](0037-eventbus.md) and its 
+[distributed implementation](0038-distributed-eventbus.md) ensure events are routed to
 the James servers holding client PUSH registration. We will use the AccountId as a base for a registration key.
  
 ## Alternatives
