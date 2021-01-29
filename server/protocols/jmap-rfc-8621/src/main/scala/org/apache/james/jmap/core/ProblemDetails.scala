@@ -18,9 +18,13 @@
  ****************************************************************/
 package org.apache.james.jmap.core
 
+import com.fasterxml.jackson.core.JsonParseException
 import io.netty.handler.codec.http.HttpResponseStatus
-import io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST
+import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, INTERNAL_SERVER_ERROR, UNAUTHORIZED}
 import org.apache.james.jmap.core.RequestLevelErrorType.{DEFAULT_ERROR_TYPE, ErrorTypeIdentifier}
+import org.apache.james.jmap.exceptions.UnauthorizedException
+import org.apache.james.jmap.routes.UnsupportedCapabilitiesException
+import org.slf4j.{Logger, LoggerFactory}
 
 /**
  * Problem Details for HTTP APIs within the JMAP context
@@ -33,6 +37,25 @@ case class ProblemDetails(`type`: ErrorTypeIdentifier = DEFAULT_ERROR_TYPE,
                           detail: String)
 
 object ProblemDetails {
+  val LOGGER: Logger = LoggerFactory.getLogger(classOf[ProblemDetails])
+
+  def forThrowable(throwable: Throwable): ProblemDetails = throwable match {
+    case exception: IllegalArgumentException =>
+      notRequestProblem(
+        s"The request was successfully parsed as JSON but did not match the type signature of the Request object: ${exception.getMessage}")
+    case e: UnauthorizedException =>
+      LOGGER.warn("Unauthorized", e)
+      ProblemDetails(status = UNAUTHORIZED, detail = e.getMessage)
+    case exception: JsonParseException =>
+      notJSONProblem(
+        s"The content type of the request was not application/json or the request did not parse as I-JSON: ${exception.getMessage}")
+    case exception: UnsupportedCapabilitiesException =>
+      unknownCapabilityProblem(s"The request used unsupported capabilities: ${exception.capabilities}")
+    case e =>
+      LOGGER.error("Unexpected error upon API request", e)
+      ProblemDetails(status = INTERNAL_SERVER_ERROR, detail = e.getMessage)
+  }
+
   def notRequestProblem(message: String): ProblemDetails = ProblemDetails(RequestLevelErrorType.NOT_REQUEST, BAD_REQUEST, None, message)
   def notJSONProblem(message: String): ProblemDetails = ProblemDetails(RequestLevelErrorType.NOT_JSON, BAD_REQUEST, None, message)
   def unknownCapabilityProblem(message: String): ProblemDetails = ProblemDetails(RequestLevelErrorType.UNKNOWN_CAPABILITY, BAD_REQUEST, None, message)

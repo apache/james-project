@@ -23,21 +23,17 @@ import java.nio.charset.StandardCharsets
 import java.util.stream
 import java.util.stream.Stream
 
-import com.fasterxml.jackson.core.JsonParseException
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
-import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK, UNAUTHORIZED}
-import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus}
+import io.netty.handler.codec.http.HttpMethod
+import io.netty.handler.codec.http.HttpResponseStatus.OK
 import javax.inject.{Inject, Named}
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.core.ProblemDetails.{notJSONProblem, notRequestProblem, unknownCapabilityProblem}
 import org.apache.james.jmap.core.{ProblemDetails, RequestObject}
-import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
 import org.apache.james.jmap.json.ResponseSerializer
-import org.apache.james.jmap.routes.DownloadRoutes.LOGGER
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.mailbox.MailboxSession
 import org.slf4j.{Logger, LoggerFactory}
@@ -104,30 +100,11 @@ class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
           StandardCharsets.UTF_8)
         .`then`()))
 
-  private def handleError(throwable: Throwable, response: HttpServerResponse): SMono[Void] = throwable match {
-    case exception: IllegalArgumentException => respondDetails(response,
-      notRequestProblem(
-        s"The request was successfully parsed as JSON but did not match the type signature of the Request object: ${exception.getMessage}"))
+  private def handleError(throwable: Throwable, response: HttpServerResponse): SMono[Void] =
+    respondDetails(response, ProblemDetails.forThrowable(throwable))
 
-    case e: UnauthorizedException =>
-      LOGGER.warn("Unauthorized", e)
-      respondDetails(response,
-        ProblemDetails(status = UNAUTHORIZED, detail = e.getMessage),
-        UNAUTHORIZED)
-    case exception: JsonParseException => respondDetails(response,
-      notJSONProblem(
-        s"The content type of the request was not application/json or the request did not parse as I-JSON: ${exception.getMessage}"))
-    case exception: UnsupportedCapabilitiesException => respondDetails(response,
-      unknownCapabilityProblem(s"The request used unsupported capabilities: ${exception.capabilities}"))
-    case e =>
-      LOGGER.error("Unexpected error upon API request", e)
-      respondDetails(response,
-        ProblemDetails(status = INTERNAL_SERVER_ERROR, detail = e.getMessage),
-        INTERNAL_SERVER_ERROR)
-  }
-
-  private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails, statusCode: HttpResponseStatus = BAD_REQUEST): SMono[Void] =
-    SMono.fromPublisher(httpServerResponse.status(statusCode)
+  private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails): SMono[Void] =
+    SMono.fromPublisher(httpServerResponse.status(details.status)
       .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
       .sendString(SMono.fromCallable(() => ResponseSerializer.serialize(details).toString),
         StandardCharsets.UTF_8)
