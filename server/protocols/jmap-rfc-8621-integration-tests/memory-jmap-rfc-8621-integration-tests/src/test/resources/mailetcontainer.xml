@@ -31,10 +31,7 @@
     </spooler>
 
     <processors>
-
         <processor state="root" enableJmx="false">
-            <mailet match="All" class="PostmasterAlias"/>
-            <mailet match="RelayLimit=30" class="Null"/>
             <mailet match="All" class="ToProcessor">
                 <processor>transport</processor>
             </mailet>
@@ -59,30 +56,15 @@
             <mailet match="All" class="RemoveMimeHeader">
                 <name>bcc</name>
             </mailet>
-            <mailet match="All" class="ICSSanitizer"/>
-            <mailet match="All" class="org.apache.james.jmap.mailet.TextCalendarBodyToAttachment"/>
             <mailet match="All" class="RecipientRewriteTable">
-                <errorProcessor>rrt-error</errorProcessor>
+                <errorProcessor>error</errorProcessor>
             </mailet>
             <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet"/>
             <mailet match="mdn-matcher" class="org.apache.james.jmap.mailet.ExtractMDNOriginalJMAPMessageId" >
                 <onMailetException>ignore</onMailetException>
             </mailet>
-            <mailet match="RecipientIsLocal" class="Sieve"/>
-            <mailet match="RecipientIsLocal" class="SpamAssassin">
-                <onMailetException>ignore</onMailetException>
-                <spamdHost>localhost</spamdHost>
-                <spamdPort>783</spamdPort>
-            </mailet>
-            <mailet match="IsMarkedAsSpam" class="WithStorageDirective">
-                <targetFolderName>Spam</targetFolderName>
-            </mailet>
             <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.filter.JMAPFiltering"/>
             <mailet match="RecipientIsLocal" class="LocalDelivery"/>
-            <mailet match="HostIsLocal" class="ToProcessor">
-                <processor>local-address-error</processor>
-                <notice>550 - Requested action not taken: no such user here</notice>
-            </mailet>
 
             <mailet match="relay-allowed" class="RemoteDelivery">
                 <outgoingQueue>outgoing</outgoingQueue>
@@ -91,43 +73,14 @@
                 <maxDnsProblemRetries>0</maxDnsProblemRetries>
                 <deliveryThreads>10</deliveryThreads>
                 <sendpartial>true</sendpartial>
-                <bounceProcessor>bounces</bounceProcessor>
+                <bounceProcessor>error</bounceProcessor>
             </mailet>
 
             <mailet match="All" class="ToProcessor">
-                <processor>relay-denied</processor>
+                <processor>error</processor>
             </mailet>
         </processor>
-
-        <processor state="local-address-error" enableJmx="false">
-            <mailet match="All" class="Bounce">
-                <attachment>none</attachment>
-            </mailet>
-        </processor>
-
-        <processor state="relay-denied" enableJmx="false">
-            <mailet match="All" class="Bounce">
-                <attachment>none</attachment>
-            </mailet>
-        </processor>
-
-        <processor state="bounces" enableJmx="false">
-            <mailet match="All" class="DSNBounce">
-                <passThrough>false</passThrough>
-            </mailet>
-        </processor>
-
-        <processor state="rrt-error" enableJmx="false">
-            <mailet match="All" class="ToRepository">
-                <repositoryPath>memory://var/mail/rrt-error/</repositoryPath>
-                <passThrough>true</passThrough>
-            </mailet>
-            <mailet match="IsSenderInRRTLoop" class="Null"/>
-            <mailet match="All" class="Bounce"/>
-        </processor>
-
     </processors>
-
 </mailetcontainer>
 
 
