@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
@@ -58,7 +59,7 @@ public class DNSJavaServiceTest {
 
     private Cache defaultCache;
     private Resolver defaultResolver;
-    private Name[] defaultSearchPaths;
+    private List<Name> defaultSearchPaths;
 
     private Cache mockedCache;
 

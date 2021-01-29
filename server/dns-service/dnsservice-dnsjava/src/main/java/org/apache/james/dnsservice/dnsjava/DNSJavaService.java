@@ -19,6 +19,7 @@
 package org.apache.james.dnsservice.dnsjava;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -141,16 +142,16 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         List<Name> sPaths = new ArrayList<>();
         if (autodiscover) {
             LOGGER.info("Autodiscovery is enabled - trying to discover your system's DNS Servers");
-            String[] serversArray = ResolverConfig.getCurrentConfig().servers();
+            List<InetSocketAddress> serversArray = ResolverConfig.getCurrentConfig().servers();
             if (serversArray != null) {
-                for (String aServersArray : serversArray) {
-                    dnsServers.add(aServersArray);
+                for (InetSocketAddress aServersArray : serversArray) {
+                    dnsServers.add(aServersArray.getHostString());
                     LOGGER.info("Adding autodiscovered server {}", aServersArray);
                 }
             }
-            Name[] systemSearchPath = ResolverConfig.getCurrentConfig().searchPath();
-            if (systemSearchPath != null && systemSearchPath.length > 0) {
-                sPaths.addAll(Arrays.asList(systemSearchPath));
+            List<Name> systemSearchPath = ResolverConfig.getCurrentConfig().searchPath();
+            if (systemSearchPath != null && systemSearchPath.size() > 0) {
+                sPaths.addAll(systemSearchPath);
             }
             if (LOGGER.isInfoEnabled()) {
                 for (Name searchPath : sPaths) {
