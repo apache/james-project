@@ -33,7 +33,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
@@ -949,10 +948,10 @@ public abstract class SetMailboxesMethodTest {
             .body(NAME, equalTo("mailboxesSet"))
             .body(ARGUMENTS + ".created", aMapWithSize(2))
             .body(ARGUMENTS + ".created", hasEntry(equalTo("create-id00"), Matchers.allOf(
-                    hasEntry(equalTo("parentId"), is(emptyOrNullString())),
+                    hasEntry(equalTo("parentId"), is(nullValue())),
                     hasEntry(equalTo("name"), equalTo("parent")))))
             .body(ARGUMENTS + ".created", hasEntry(equalTo("create-id01"), Matchers.allOf(
-                    hasEntry(equalTo("parentId"), not(is(emptyOrNullString()))),
+                    hasEntry(equalTo("parentId"), not(is(nullValue()))),
                     hasEntry(equalTo("name"), equalTo("child")))));
     }
 
@@ -986,10 +985,10 @@ public abstract class SetMailboxesMethodTest {
             .body(NAME, equalTo("mailboxesSet"))
             .body(ARGUMENTS + ".created", aMapWithSize(2))
             .body(ARGUMENTS + ".created", hasEntry(equalTo("create-id00"), Matchers.allOf(
-                    hasEntry(equalTo("parentId"), is(emptyOrNullString())),
+                    hasEntry(equalTo("parentId"), is(nullValue())),
                     hasEntry(equalTo("name"), equalTo("parent")))))
             .body(ARGUMENTS + ".created", hasEntry(equalTo("create-id01"), Matchers.allOf(
-                    hasEntry(equalTo("parentId"), not(is(emptyOrNullString()))),
+                    hasEntry(equalTo("parentId"), not(is(nullValue()))),
                     hasEntry(equalTo("name"), equalTo("child")))));
     }
 

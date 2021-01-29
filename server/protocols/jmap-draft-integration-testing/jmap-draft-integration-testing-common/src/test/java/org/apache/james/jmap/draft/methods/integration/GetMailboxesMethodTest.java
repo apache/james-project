@@ -36,7 +36,6 @@ import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
@@ -444,7 +443,7 @@ public abstract class GetMailboxesMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
-            .body(FIRST_MAILBOX + ".id", not(is(emptyOrNullString())))
+            .body(FIRST_MAILBOX + ".id", not(is(nullValue())))
             .body(FIRST_MAILBOX + ".name", nullValue())
             .body(FIRST_MAILBOX + ".parentId", nullValue())
             .body(FIRST_MAILBOX + ".role", nullValue())
@@ -473,7 +472,7 @@ public abstract class GetMailboxesMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
-            .body(FIRST_MAILBOX + ".id", not(is(emptyOrNullString())))
+            .body(FIRST_MAILBOX + ".id", not(is(nullValue())))
             .body(FIRST_MAILBOX + ".name", nullValue());
     }
 
@@ -489,7 +488,7 @@ public abstract class GetMailboxesMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
-            .body(FIRST_MAILBOX + ".id", not(is(emptyOrNullString())))
+            .body(FIRST_MAILBOX + ".id", not(is(nullValue())))
             .body(FIRST_MAILBOX + ".name", nullValue());
     }
 
@@ -736,7 +735,7 @@ public abstract class GetMailboxesMethodTest {
             .body(NAME, equalTo("mailboxes"))
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(FIRST_MAILBOX + ".namespace.type", equalTo(MailboxNamespace.Type.Personal.toString()))
-            .body(FIRST_MAILBOX + ".namespace.owner", is(emptyOrNullString()));
+            .body(FIRST_MAILBOX + ".namespace.owner", is(nullValue()));
     }
 
 
