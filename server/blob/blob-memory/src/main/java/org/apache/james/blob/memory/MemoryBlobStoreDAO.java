@@ -69,6 +69,7 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
 
     @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
+        Preconditions.checkNotNull(inputStream);
         return Mono.fromCallable(() -> {
                 try {
                     return IOUtils.toByteArray(inputStream);
