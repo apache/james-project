@@ -2544,7 +2544,7 @@
             </dependency>
             <dependency>
                 <groupId>org.awaitility</groupId>
-                <artifactId>awaitility</artifactId>
+                <artifactId></artifactId>
                 <version>3.1.6</version>
             </dependency>
             <dependency>
