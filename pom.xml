@@ -2625,7 +2625,7 @@
             <dependency>
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest_${scala.base}</artifactId>
-                <version>3.1.1</version>
+                <version>3.2.3</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
