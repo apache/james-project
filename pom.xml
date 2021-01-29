@@ -2620,7 +2620,7 @@
             <dependency>
                 <groupId>org.scalacheck</groupId>
                 <artifactId>scalacheck_${scala.base}</artifactId>
-                <version>1.14.3</version>
+                <version>1.15.2</version>
             </dependency>
             <dependency>
                 <groupId>org.scalatest</groupId>
