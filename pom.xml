@@ -641,7 +641,7 @@
         <jaxb.version>2.3.1</jaxb.version>
         <lucene.version>3.6.2</lucene.version>
         <jasypt.version>1.9.3</jasypt.version>
-        <guice.version>4.2.2</guice.version>
+        <guice.version>4.2.3</guice.version>
         <logback.version>1.2.3</logback.version>
 
         <bouncycastle.version>1.68</bouncycastle.version>
