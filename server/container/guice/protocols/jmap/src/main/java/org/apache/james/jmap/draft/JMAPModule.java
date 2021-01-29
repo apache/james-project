@@ -52,6 +52,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.modules.server.CamelMailetContainerModule;
+import org.apache.james.modules.server.CamelMailetContainerModule.ProcessorsCheck;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.transport.matchers.All;
@@ -86,23 +87,23 @@ public class JMAPModule extends AbstractModule {
                 throw new RuntimeException(e);
             }
         };
-    public static final CamelMailetContainerModule.ProcessorsCheck VACATION_MAILET_CHECK =
-        CamelMailetContainerModule.ProcessorsCheck.Or.of(
-            new CamelMailetContainerModule.ProcessorsCheck.Impl(
+    public static final ProcessorsCheck VACATION_MAILET_CHECK =
+        ProcessorsCheck.Or.of(
+            new ProcessorsCheck.Impl(
                 Mail.TRANSPORT,
                 RecipientIsLocal.class,
                 VacationMailet.class),
-            new CamelMailetContainerModule.ProcessorsCheck.Impl(
+            new ProcessorsCheck.Impl(
                 Mail.LOCAL_DELIVERY,
                 All.class,
                 VacationMailet.class));
-    public static final CamelMailetContainerModule.ProcessorsCheck FILTERING_MAILET_CHECK =
-        CamelMailetContainerModule.ProcessorsCheck.Or.of(
-        new CamelMailetContainerModule.ProcessorsCheck.Impl(
+    public static final ProcessorsCheck FILTERING_MAILET_CHECK =
+        ProcessorsCheck.Or.of(
+        new ProcessorsCheck.Impl(
             Mail.TRANSPORT,
             RecipientIsLocal.class,
             JMAPFiltering.class),
-        new CamelMailetContainerModule.ProcessorsCheck.Impl(
+        new ProcessorsCheck.Impl(
             Mail.LOCAL_DELIVERY,
             All.class,
             JMAPFiltering.class));
@@ -123,10 +124,6 @@ public class JMAPModule extends AbstractModule {
         bind(HtmlTextExtractor.class).to(JsoupHtmlTextExtractor.class);
         Multibinder.newSetBinder(binder(), StartUpCheck.class).addBinding().to(RequiredCapabilitiesStartUpCheck.class);
 
-        Multibinder<CamelMailetContainerModule.ProcessorsCheck> transportProcessorChecks = Multibinder.newSetBinder(binder(), CamelMailetContainerModule.ProcessorsCheck.class);
-        transportProcessorChecks.addBinding().toInstance(VACATION_MAILET_CHECK);
-        transportProcessorChecks.addBinding().toInstance(FILTERING_MAILET_CHECK);
-
         bind(MailQueueItemDecoratorFactory.class).to(PostDequeueDecoratorFactory.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class).addBinding().to(PropagateLookupRightListener.class);
@@ -142,6 +139,22 @@ public class JMAPModule extends AbstractModule {
         supportedCapabilities.addBinding().toInstance(DefaultCapabilities.SHARES_CAPABILITY());
         supportedCapabilities.addBinding().toInstance(DefaultCapabilities.VACATION_RESPONSE_CAPABILITY());
         supportedCapabilities.addBinding().toInstance(DefaultCapabilities.SUBMISSION_CAPABILITY());
+    }
+
+    @ProvidesIntoSet
+    ProcessorsCheck vacationMailetCheck(JMAPConfiguration configuration) {
+        if (configuration.isEnabled()) {
+            return VACATION_MAILET_CHECK;
+        }
+        return ProcessorsCheck.noCheck();
+    }
+
+    @ProvidesIntoSet
+    ProcessorsCheck filteringMailetCheck(JMAPConfiguration configuration) {
+        if (configuration.isEnabled()) {
+            return FILTERING_MAILET_CHECK;
+        }
+        return ProcessorsCheck.noCheck();
     }
 
     @ProvidesIntoSet
