@@ -112,7 +112,7 @@ class JsonGenericSerializerTest {
     @ParameterizedTest
     @MethodSource
     void deserializeShouldHandleAllKnownTypes(BaseType domainObject, String serializedJson) throws Exception {
-        assertThatJson(JsonGenericSerializer
+        assertThat(JsonGenericSerializer
             .forModules(TestModules.FIRST_TYPE, TestModules.SECOND_TYPE)
             .withoutNestedType()
             .deserialize(serializedJson))

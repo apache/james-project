@@ -148,7 +148,7 @@ trait WebSocketContract {
     assertThatJson(response.toOption.get)
       .isEqualTo("""{
                    |  "status":400,
-                   |  "detail":"The request was successfully parsed as JSON but did not match the type signature of the Request object: List((,List(JsonValidationError(List(Unrecognized token 'The': was expecting ('true', 'false' or 'null')\n at [Source: (String)\"The quick brown fox\"; line: 1, column: 4]),ArraySeq()))))",
+                   |  "detail":"The request was successfully parsed as JSON but did not match the type signature of the Request object: List((,List(JsonValidationError(List(Unrecognized token 'The': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\n at [Source: (String)\"The quick brown fox\"; line: 1, column: 4]),List()))))",
                    |  "type":"urn:ietf:params:jmap:error:notRequest",
                    |  "requestId":null,
                    |  "@type":"RequestError"
@@ -202,7 +202,7 @@ trait WebSocketContract {
     assertThatJson(response.toOption.get)
       .isEqualTo("""{
                    |  "status":400,
-                   |  "detail":"The request was successfully parsed as JSON but did not match the type signature of the Request object: List((,List(JsonValidationError(List(Missing @type field on a webSocket inbound message),ArraySeq()))))",
+                   |  "detail":"The request was successfully parsed as JSON but did not match the type signature of the Request object: List((,List(JsonValidationError(List(Missing @type field on a webSocket inbound message),List()))))",
                    |  "type":"urn:ietf:params:jmap:error:notRequest",
                    |  "requestId":null,
                    |  "@type":"RequestError"
@@ -241,7 +241,7 @@ trait WebSocketContract {
     assertThatJson(response.toOption.get)
       .isEqualTo("""{
                    |  "status":400,
-                   |  "detail":"The request was successfully parsed as JSON but did not match the type signature of the Request object: List((,List(JsonValidationError(List(Invalid @type field on a webSocket inbound message: expecting a JsString, got 42),ArraySeq()))))",
+                   |  "detail":"The request was successfully parsed as JSON but did not match the type signature of the Request object: List((,List(JsonValidationError(List(Invalid @type field on a webSocket inbound message: expecting a JsString, got 42),List()))))",
                    |  "type":"urn:ietf:params:jmap:error:notRequest",
                    |  "requestId":null,
                    |  "@type":"RequestError"
@@ -280,7 +280,7 @@ trait WebSocketContract {
     assertThatJson(response.toOption.get)
       .isEqualTo("""{
                    |  "status":400,
-                   |  "detail":"The request was successfully parsed as JSON but did not match the type signature of the Request object: List((,List(JsonValidationError(List(Unknown @type field on a webSocket inbound message: unknown),ArraySeq()))))",
+                   |  "detail":"The request was successfully parsed as JSON but did not match the type signature of the Request object: List((,List(JsonValidationError(List(Unknown @type field on a webSocket inbound message: unknown),List()))))",
                    |  "type":"urn:ietf:params:jmap:error:notRequest",
                    |  "requestId":null,
                    |  "@type":"RequestError"
@@ -319,7 +319,7 @@ trait WebSocketContract {
     assertThatJson(response.toOption.get)
       .isEqualTo("""{
                    |  "status":400,
-                   |  "detail":"The request was successfully parsed as JSON but did not match the type signature of the Request object: List((,List(JsonValidationError(List(Unknown @type field on a webSocket inbound message: Response),ArraySeq()))))",
+                   |  "detail":"The request was successfully parsed as JSON but did not match the type signature of the Request object: List((,List(JsonValidationError(List(Unknown @type field on a webSocket inbound message: Response),List()))))",
                    |  "type":"urn:ietf:params:jmap:error:notRequest",
                    |  "requestId":null,
                    |  "@type":"RequestError"

@@ -195,7 +195,7 @@ trait BackReferenceContract {
          |            "error",
          |            {
          |                "type": "invalidResultReference",
-         |                "description": "Failed resolving back-reference: List((,List(JsonValidationError(List(Expected path unknown was missing),ArraySeq()))))"
+         |                "description": "Failed resolving back-reference: List((,List(JsonValidationError(List(Expected path unknown was missing),List()))))"
          |            },
          |            "c2"
          |        ]
@@ -266,7 +266,7 @@ trait BackReferenceContract {
          |            "error",
          |            {
          |                "type": "invalidResultReference",
-         |                "description": "Failed resolving back-reference: List((,List(JsonValidationError(List(Expecting an array),ArraySeq()))))"
+         |                "description": "Failed resolving back-reference: List((,List(JsonValidationError(List(Expecting an array),List()))))"
          |            },
          |            "c2"
          |        ]
@@ -337,7 +337,7 @@ trait BackReferenceContract {
          |            "error",
          |            {
          |                "type": "invalidResultReference",
-         |                "description": "Failed resolving back-reference: List((,List(JsonValidationError(List(MethodCallId(c1) references a MethodName(Mailbox/get) method),ArraySeq()))))"
+         |                "description": "Failed resolving back-reference: List((,List(JsonValidationError(List(MethodCallId(c1) references a MethodName(Mailbox/get) method),List()))))"
          |            },
          |            "c2"
          |        ]
@@ -408,7 +408,7 @@ trait BackReferenceContract {
          |            "error",
          |            {
          |                "type": "invalidResultReference",
-         |                "description": "Failed resolving back-reference: List((,List(JsonValidationError(List(Back reference could not be resolved),ArraySeq()))))"
+         |                "description": "Failed resolving back-reference: List((,List(JsonValidationError(List(Back reference could not be resolved),List()))))"
          |            },
          |            "c2"
          |        ]

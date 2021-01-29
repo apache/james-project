@@ -19,8 +19,11 @@
 
 package org.apache.james.webadmin.utils;
 
+import java.text.SimpleDateFormat;
+import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -60,6 +63,8 @@ public class JsonTransformer implements ResponseTransformer {
             .registerModule(new JavaTimeModule())
             .registerModule(new GuavaModule())
             .registerModules(modules);
+        objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ"));
+        objectMapper.setTimeZone(TimeZone.getTimeZone(ZoneId.of("UTC")));
     }
 
     @Override

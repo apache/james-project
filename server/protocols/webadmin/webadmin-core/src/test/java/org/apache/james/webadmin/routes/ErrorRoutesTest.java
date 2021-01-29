@@ -92,7 +92,7 @@ class ErrorRoutesTest {
             .body("statusCode", equalTo(BAD_REQUEST_400))
             .body("type", equalTo(INVALID_ARGUMENT.getType()))
             .body("message", equalTo("JSON payload of the request is not valid"))
-            .body("details", containsString("Unrecognized token 'a': was expecting ('true', 'false' or 'null')"));
+            .body("details", containsString("Unrecognized token 'a': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')"));
     }
 
     @Test

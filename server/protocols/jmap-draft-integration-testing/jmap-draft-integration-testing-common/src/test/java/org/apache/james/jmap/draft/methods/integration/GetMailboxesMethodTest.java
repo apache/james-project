@@ -342,7 +342,7 @@ public abstract class GetMailboxesMethodTest {
             .statusCode(200)
             .body(NAME, equalTo("error"))
             .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
-            .body(ARGUMENTS + ".description", containsString("Cannot deserialize instance of `java.util.ArrayList` out of VALUE_TRUE token"))
+            .body(ARGUMENTS + ".description", containsString("Cannot deserialize value of type `java.util.ArrayList<org.apache.james.mailbox.model.MailboxId>` from Boolean value (token `JsonToken.VALUE_TRUE`)"))
             .body(ARGUMENTS + ".description", containsString("{\"ids\":true}"));
     }
 

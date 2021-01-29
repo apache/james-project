@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class JsonExtractor<RequestT> {
@@ -46,6 +47,7 @@ public class JsonExtractor<RequestT> {
     }
 
     public RequestT parse(String text) throws JsonExtractException {
+        Preconditions.checkNotNull(text);
         try {
             return objectMapper.readValue(text, type);
         } catch (IOException | IllegalArgumentException e) {

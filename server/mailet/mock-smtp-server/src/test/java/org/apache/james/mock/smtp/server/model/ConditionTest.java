@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
+import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -143,7 +143,7 @@ class ConditionTest {
             String json = "{\"operator\":\"matchAll\", \"matchingValue\":\"matchme\"}";
 
             assertThatThrownBy(() -> OBJECT_MAPPER.readValue(json, Condition.class))
-                .isInstanceOf(InvalidDefinitionException.class)
+                .isInstanceOf(ValueInstantiationException.class)
                 .hasMessageContaining("You should not specify a matchingValue with the matchAll operator");
         }
 
@@ -152,7 +152,7 @@ class ConditionTest {
             String json = "{\"operator\":\"contains\"}";
 
             assertThatThrownBy(() -> OBJECT_MAPPER.readValue(json, Condition.class))
-                .isInstanceOf(InvalidDefinitionException.class)
+                .isInstanceOf(ValueInstantiationException.class)
                 .hasMessageContaining("You need to specify a matchingValue with the contains operator");
         }
     }
