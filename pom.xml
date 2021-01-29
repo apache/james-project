@@ -2067,6 +2067,11 @@
                 <version>0.9.7</version>
             </dependency>
             <dependency>
+                <groupId>com.github.stefanbirkner</groupId>
+                <artifactId>system-lambda</artifactId>
+                <version>1.2.0</version>
+            </dependency>
+            <dependency>
                 <groupId>com.github.steveash.guavate</groupId>
                 <artifactId>guavate</artifactId>
                 <version>${guavate.version}</version>

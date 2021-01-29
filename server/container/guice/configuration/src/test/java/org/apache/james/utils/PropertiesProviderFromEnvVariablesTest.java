@@ -19,23 +19,19 @@
 
 package org.apache.james.utils;
 
+import static com.github.stefanbirkner.systemlambda.SystemLambda.withEnvironmentVariable;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.contrib.java.lang.system.EnvironmentVariables;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class PropertiesProviderFromEnvVariablesTest {
-
-    @Rule
-    public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
+class PropertiesProviderFromEnvVariablesTest {
 
     private PropertiesProvider testee;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         Configuration configuration = Configuration.builder()
             .workingDirectory("../")
@@ -47,19 +43,18 @@ public class PropertiesProviderFromEnvVariablesTest {
 
     @Test
     public void getListShouldLoadEnvVariables() throws Exception {
-        environmentVariables.set("PROPERTIES_PROVIDER_ENV_VARIABLES", "value1, value2, value3, value4, value5");
-
-        assertThat(testee.getConfiguration("env")
+        withEnvironmentVariable("PROPERTIES_PROVIDER_ENV_VARIABLES", "value1, value2, value3, value4, value5")
+            .execute(() -> assertThat(testee.getConfiguration("env")
                 .getList("keyByEnv"))
-            .containsExactly("value1", "value2", "value3", "value4", "value5");
+                .containsExactly("value1", "value2", "value3", "value4", "value5"));
     }
 
     @Test
     public void getArrayShouldLoadEnvVariables() throws Exception {
-        environmentVariables.set("PROPERTIES_PROVIDER_ENV_VARIABLES", "value1, value2, value3, value4, value5");
-
-        assertThat(testee.getConfiguration("env")
-                .getStringArray("keyByEnv"))
-            .containsExactly("value1", "value2", "value3", "value4", "value5");
+        withEnvironmentVariable("PROPERTIES_PROVIDER_ENV_VARIABLES", "value1, value2, value3, value4, value5")
+            .execute(() ->
+                assertThat(testee.getConfiguration("env")
+                    .getStringArray("keyByEnv"))
+                    .containsExactly("value1", "value2", "value3", "value4", "value5"));
     }
 }
