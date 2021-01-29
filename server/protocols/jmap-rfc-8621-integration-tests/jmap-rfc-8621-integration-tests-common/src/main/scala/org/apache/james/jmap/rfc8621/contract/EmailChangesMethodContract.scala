@@ -20,6 +20,7 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
@@ -46,13 +47,12 @@ import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility
-import org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS
 import org.junit.jupiter.api.{BeforeEach, Nested, Test}
 import play.api.libs.json.{JsString, Json}
 
 trait EmailChangesMethodContract {
 
-  private lazy val slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS
+  private lazy val slowPacedPollInterval = Duration.ofMillis(100)
   private lazy val calmlyAwait = Awaitility.`with`
     .pollInterval(slowPacedPollInterval)
     .and.`with`.pollDelay(slowPacedPollInterval)

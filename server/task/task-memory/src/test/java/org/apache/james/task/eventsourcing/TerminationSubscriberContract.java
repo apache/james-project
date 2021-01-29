@@ -21,7 +21,7 @@
 package org.apache.james.task.eventsourcing;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Duration.ONE_MINUTE;
+import static org.awaitility.Durations.ONE_MINUTE;
 
 import java.time.Duration;
 import java.util.ArrayList;

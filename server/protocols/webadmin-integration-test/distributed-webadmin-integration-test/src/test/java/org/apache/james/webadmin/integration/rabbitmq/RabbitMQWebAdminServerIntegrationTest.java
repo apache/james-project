@@ -24,6 +24,7 @@ import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
+import static org.awaitility.Durations.TEN_SECONDS;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
@@ -50,7 +51,6 @@ import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
 import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -127,7 +127,7 @@ class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTes
             .body("status", is("completed"));
 
         Awaitility.await()
-            .atMost(Duration.TEN_SECONDS)
+            .atMost(TEN_SECONDS)
             .await()
             .untilAsserted(() ->
                 when()

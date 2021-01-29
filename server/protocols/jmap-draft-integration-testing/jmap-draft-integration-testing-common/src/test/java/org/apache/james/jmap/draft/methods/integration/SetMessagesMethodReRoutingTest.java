@@ -32,6 +32,7 @@ import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
 import static org.apache.james.jmap.JmapCommonRequests.receiversOfMessage;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.FIVE_HUNDRED_MILLISECONDS;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 
@@ -48,7 +49,6 @@ import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
-import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -138,7 +138,7 @@ public abstract class SetMessagesMethodReRoutingTest {
             .body(ARGUMENTS + ".created", aMapWithSize(1));
 
         calmlyAwait
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .pollDelay(FIVE_HUNDRED_MILLISECONDS)
             .atMost(30, TimeUnit.SECONDS)
             .untilAsserted(() ->
                 assertThat(getLatestMessageId(receiverAtDestinationDomainToken, Role.INBOX))
@@ -182,7 +182,7 @@ public abstract class SetMessagesMethodReRoutingTest {
             .body(ARGUMENTS + ".created", aMapWithSize(1));
 
         calmlyAwait
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .pollDelay(FIVE_HUNDRED_MILLISECONDS)
             .atMost(30, TimeUnit.SECONDS)
             .untilAsserted(() ->
                 assertThat(getLatestMessageId(receiverAtDestinationDomainToken, Role.INBOX))
@@ -228,7 +228,7 @@ public abstract class SetMessagesMethodReRoutingTest {
             .body(ARGUMENTS + ".created", aMapWithSize(1));
 
         calmlyAwait
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .pollDelay(FIVE_HUNDRED_MILLISECONDS)
             .atMost(30, TimeUnit.SECONDS)
             .untilAsserted(() ->
                 assertThat(getLatestMessageId(senderAtDestinationDomainToken, Role.SENT))

@@ -20,6 +20,8 @@
 package org.apache.james;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.FIVE_HUNDRED_MILLISECONDS;
+import static org.awaitility.Durations.ONE_MINUTE;
 
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.modules.QuotaProbesImpl;
@@ -29,7 +31,6 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,9 +48,9 @@ class JPAJamesServerTest implements JamesServerContract {
         .build();
 
     private static final ConditionFactory AWAIT = Awaitility.await()
-        .atMost(Duration.ONE_MINUTE)
+        .atMost(ONE_MINUTE)
         .with()
-        .pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS);
+        .pollInterval(FIVE_HUNDRED_MILLISECONDS);
     static final String DOMAIN = "james.local";
     private static final String USER = "toto@" + DOMAIN;
     private static final String PASSWORD = "123456";

@@ -19,18 +19,17 @@
 
 package org.apache.james.mailets.configuration;
 
-import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
-import static org.awaitility.Duration.ONE_MINUTE;
+import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
+import static org.awaitility.Durations.ONE_MINUTE;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 
 public class Constants {
     public static Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
-    public static Duration ONE_MILLISECOND = new Duration(1, TimeUnit.MILLISECONDS);
+    public static Duration ONE_MILLISECOND = Duration.ofMillis(1);
 
     public static ConditionFactory calmlyAwait = Awaitility.with()
         .pollInterval(slowPacedPollInterval)

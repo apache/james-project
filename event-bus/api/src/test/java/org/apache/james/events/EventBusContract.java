@@ -19,10 +19,9 @@
 
 package org.apache.james.events;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.time.Duration.ZERO;
 import static org.awaitility.Awaitility.await;
-import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
-import static org.awaitility.Duration.ZERO;
+import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 
 import java.time.Duration;
 
@@ -53,13 +52,13 @@ public interface EventBusContract {
         public ConditionFactory shortWaitCondition() {
             return await().pollDelay(ZERO)
                 .pollInterval(ONE_HUNDRED_MILLISECONDS)
-                .timeout(new org.awaitility.Duration(this.getShortWaitTime().toMillis(), MILLISECONDS));
+                .timeout(getShortWaitTime());
         }
 
         public ConditionFactory longWaitCondition() {
             return await().pollDelay(ZERO)
                 .pollInterval(ONE_HUNDRED_MILLISECONDS)
-                .timeout(new org.awaitility.Duration(this.getLongWaitTime().toMillis(), MILLISECONDS));
+                .timeout(getLongWaitTime());
         }
     }
 

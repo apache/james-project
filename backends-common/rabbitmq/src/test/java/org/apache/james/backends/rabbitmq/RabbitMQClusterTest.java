@@ -27,6 +27,8 @@ import static org.apache.james.backends.rabbitmq.RabbitMQFixture.EXCHANGE_NAME;
 import static org.apache.james.backends.rabbitmq.RabbitMQFixture.ROUTING_KEY;
 import static org.apache.james.backends.rabbitmq.RabbitMQFixture.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.ONE_MINUTE;
+import static org.awaitility.Durations.ONE_SECOND;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -38,7 +40,6 @@ import java.util.stream.IntStream;
 
 import org.apache.james.backends.rabbitmq.DockerClusterRabbitMQExtension.DockerRabbitMQCluster;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -219,7 +220,7 @@ class RabbitMQClusterTest {
         }
 
         private void tryPublishWithRetry(byte[] bytes) {
-            Awaitility.waitAtMost(Duration.ONE_MINUTE).pollInterval(Duration.ONE_SECOND).until(() -> tryPublish(bytes));
+            Awaitility.waitAtMost(ONE_MINUTE).pollInterval(ONE_SECOND).until(() -> tryPublish(bytes));
         }
 
         private boolean tryPublish(byte[] bytes) {

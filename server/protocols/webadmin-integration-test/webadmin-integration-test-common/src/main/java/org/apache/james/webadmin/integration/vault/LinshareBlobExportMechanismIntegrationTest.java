@@ -37,6 +37,7 @@ import static org.apache.james.linshare.LinshareFixture.USER_1;
 import static org.apache.james.mailbox.backup.ZipAssert.assertThatZip;
 import static org.apache.james.webadmin.integration.vault.DeletedMessagesVaultRequests.exportVaultContent;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.TEN_SECONDS;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
@@ -57,7 +58,6 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -73,7 +73,7 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
     private static final String BART = "bart@" + DOMAIN;
     private static final String HOMER_PASSWORD = "homerPassword";
     private static final String BART_PASSWORD = "bartPassword";
-    private static final ConditionFactory WAIT_TEN_SECONDS = calmlyAwait.atMost(Duration.TEN_SECONDS);
+    private static final ConditionFactory WAIT_TEN_SECONDS = calmlyAwait.atMost(TEN_SECONDS);
     private static final String SUBJECT = "This mail will be restored from the vault!!";
     private static final ExportRequest EXPORT_ALL_HOMER_MESSAGES_TO_USER_1 = ExportRequest
         .userExportFrom(HOMER)

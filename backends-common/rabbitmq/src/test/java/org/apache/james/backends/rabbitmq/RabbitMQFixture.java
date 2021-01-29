@@ -19,13 +19,12 @@
 
 package org.apache.james.backends.rabbitmq;
 
-import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
-import static org.awaitility.Duration.ONE_MINUTE;
+import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
+import static org.awaitility.Durations.ONE_MINUTE;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 
 public interface RabbitMQFixture {
@@ -41,7 +40,7 @@ public interface RabbitMQFixture {
     RabbitMQConfiguration.ManagementCredentials DEFAULT_MANAGEMENT_CREDENTIAL = new RabbitMQConfiguration.ManagementCredentials(DEFAULT_USER, DEFAULT_PASSWORD);
 
     Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
-    Duration THIRTY_SECONDS = new Duration(30, TimeUnit.SECONDS);
+    Duration THIRTY_SECONDS = Duration.ofSeconds(30);
     ConditionFactory calmlyAwait = Awaitility.with()
         .pollInterval(slowPacedPollInterval)
         .and()

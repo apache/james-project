@@ -23,7 +23,9 @@ import static org.apache.james.user.ldap.DockerLdapSingleton.JAMES_USER;
 import static org.apache.james.user.ldap.DockerLdapSingleton.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
+import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
+
+import java.time.Duration;
 
 import org.apache.commons.net.imap.IMAPClient;
 import org.apache.james.core.Domain;
@@ -35,7 +37,6 @@ import org.apache.james.utils.SMTPSendingException;
 import org.apache.james.utils.SpoolerProbe;
 import org.apache.james.utils.TestIMAPClient;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;

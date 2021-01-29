@@ -21,6 +21,7 @@ package org.apache.james.backends.es.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.awaitility.Durations.FIVE_SECONDS;
 
 import java.io.IOException;
 
@@ -31,7 +32,6 @@ import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.NodeMappingFactory;
 import org.apache.james.backends.es.ReactorElasticSearchClient;
 import org.apache.james.backends.es.ReadAliasName;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
@@ -52,7 +52,7 @@ class ScrolledSearchTest {
     private static final IndexName INDEX_NAME = new IndexName("index");
     private static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
 
-    private static final ConditionFactory WAIT_CONDITION = await().timeout(Duration.FIVE_SECONDS);
+    private static final ConditionFactory WAIT_CONDITION = await().timeout(FIVE_SECONDS);
 
     @RegisterExtension
     public DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();

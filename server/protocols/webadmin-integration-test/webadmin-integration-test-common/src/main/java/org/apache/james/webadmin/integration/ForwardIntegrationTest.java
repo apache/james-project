@@ -40,6 +40,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.GuiceJamesServer;
@@ -53,7 +54,6 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.awaitility.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -125,7 +125,7 @@ public abstract class ForwardIntegrationTest {
 
         AccessToken bobAccessToken = authenticateJamesUser(baseUri(jmapPort), BOB, BOB_PASSWORD);
         calmlyAwait
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .pollDelay(Duration.ofMillis(500))
             .atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
         given()
             .header("Authorization", bobAccessToken.asString())
@@ -174,7 +174,7 @@ public abstract class ForwardIntegrationTest {
 
         AccessToken bobAccessToken = authenticateJamesUser(baseUri(jmapPort), BOB, BOB_PASSWORD);
         calmlyAwait
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .pollDelay(Duration.ofMillis(500))
             .atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
         given()
             .header("Authorization", bobAccessToken.asString())
@@ -210,7 +210,7 @@ public abstract class ForwardIntegrationTest {
 
         AccessToken bobAccessToken = authenticateJamesUser(baseUri(jmapPort), BOB, BOB_PASSWORD);
         calmlyAwait
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .pollDelay(Duration.ofMillis(500))
             .atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
         given()
             .header("Authorization", bobAccessToken.asString())
@@ -270,7 +270,7 @@ public abstract class ForwardIntegrationTest {
 
         AccessToken bobAccessToken = authenticateJamesUser(baseUri(jmapPort), BOB, BOB_PASSWORD);
         calmlyAwait
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .pollDelay(Duration.ofMillis(500))
             .atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
         given()
             .header("Authorization", bobAccessToken.asString())
@@ -319,7 +319,7 @@ public abstract class ForwardIntegrationTest {
         .post("/jmap");
 
         calmlyAwait
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .pollDelay(Duration.ofMillis(500))
             .atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(aliceAccessToken));
         given()
             .header("Authorization", aliceAccessToken.asString())
@@ -367,7 +367,7 @@ public abstract class ForwardIntegrationTest {
 
         AccessToken bobAccessToken = authenticateJamesUser(baseUri(jmapPort), BOB, BOB_PASSWORD);
         calmlyAwait
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .pollDelay(Duration.ofMillis(500))
             .atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
 
         given()

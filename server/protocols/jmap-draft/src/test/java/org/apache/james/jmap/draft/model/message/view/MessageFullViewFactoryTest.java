@@ -32,10 +32,10 @@ import static org.mockito.Mockito.spy;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import javax.mail.Flags;
 
@@ -93,7 +93,7 @@ class MessageFullViewFactoryTest {
     private static final String DEFAULT_PREVIEW_AS_STRING = "blabla bloblo";
     private static final Preview DEFAULT_PREVIEW = Preview.from(DEFAULT_PREVIEW_AS_STRING);
     private static final ConditionFactory AWAIT_CONDITION = await()
-            .timeout(new org.awaitility.Duration(5, TimeUnit.SECONDS));
+            .timeout(Duration.ofSeconds(5));
 
     private MessageIdManager messageIdManager;
     private MailboxSession session;

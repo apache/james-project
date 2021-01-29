@@ -20,6 +20,7 @@
 package org.apache.james;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 
 import java.io.IOException;
 
@@ -45,7 +46,6 @@ import org.apache.james.utils.SpoolerProbe;
 import org.apache.james.utils.TestIMAPClient;
 import org.apache.mailet.base.test.FakeMail;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -109,8 +109,8 @@ class CassandraCacheQueryTest {
     private static final String SENDER = "bob@apache.org";
     private static final String UNICODE_BODY = "Unicode €uro symbol.";
     private static final ConditionFactory CALMLY_AWAIT = Awaitility
-        .with().pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
-        .and().pollDelay(Duration.ONE_HUNDRED_MILLISECONDS)
+        .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
+        .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
         .await();
 
     private StatementRecorder statementRecorder;

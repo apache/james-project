@@ -21,7 +21,7 @@ package org.apache.james.util;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.awaitility.Duration.ONE_SECOND;
+import static org.awaitility.Durations.ONE_SECOND;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

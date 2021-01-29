@@ -37,6 +37,7 @@ import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsInMailbox;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.apache.james.transport.mailets.remote.delivery.HeloNameProvider.LOCALHOST;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.TEN_SECONDS;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -90,7 +91,6 @@ import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.date.ImapDateTimeFormatter;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.TestIMAPClient;
-import org.awaitility.Duration;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
@@ -257,7 +257,7 @@ public abstract class GetMessageListMethodTest {
             .body()
             .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
-        String searchedMessageId = calmlyAwait.atMost(Duration.TEN_SECONDS)
+        String searchedMessageId = calmlyAwait.atMost(TEN_SECONDS)
             .until(() -> searchFirstMessageByFromField(fromName), Matchers.notNullValue());
 
         assertThat(searchedMessageId)

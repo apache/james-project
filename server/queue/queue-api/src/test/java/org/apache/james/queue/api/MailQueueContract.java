@@ -27,6 +27,7 @@ import static org.apache.mailet.base.MailAddressFixture.RECIPIENT2;
 import static org.apache.mailet.base.MailAddressFixture.SENDER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Durations.ONE_MINUTE;
 
 import java.io.Serializable;
 import java.time.Duration;
@@ -561,7 +562,7 @@ public interface MailQueueContract {
             .subscribe();
 
         Awaitility.await()
-            .atMost(org.awaitility.Duration.ONE_MINUTE)
+            .atMost(ONE_MINUTE)
             .until(() -> dequeuedMails.size() >= nbMails);
 
     }

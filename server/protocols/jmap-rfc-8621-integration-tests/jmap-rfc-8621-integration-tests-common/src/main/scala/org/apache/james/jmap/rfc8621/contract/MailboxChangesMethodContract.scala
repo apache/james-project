@@ -33,8 +33,6 @@ import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.api.change.State
-import org.apache.james.core.Username
-import org.apache.james.jmap.api.change.{MailboxChange, State}
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.draft.JmapGuiceProbe
@@ -48,7 +46,7 @@ import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility
-import org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS
+import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
 import org.junit.jupiter.api.{BeforeEach, Nested, Test}
 import play.api.libs.json.{JsArray, JsString, Json}
 

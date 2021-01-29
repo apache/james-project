@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.ZoneId;
 import java.util.Date;
 
@@ -77,7 +78,6 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndexContract;
-import org.awaitility.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -261,7 +261,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
     @Test
     void addShouldPropagateExceptionWhenExceptionOccurs() throws Exception {
         elasticSearch.getDockerElasticSearch().pause();
-        Thread.sleep(Duration.FIVE_SECONDS.getValueInMS()); // Docker pause is asynchronous and we found no way to poll for it
+        Thread.sleep(Duration.ofSeconds(5).toMillis()); // Docker pause is asynchronous and we found no way to poll for it
 
         assertThatThrownBy(() -> testee.add(session, mailbox, MESSAGE_1).block())
             .hasCauseInstanceOf(IOException.class);
@@ -335,7 +335,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
     @Test
     void deleteShouldPropagateExceptionWhenExceptionOccurs() throws Exception {
         elasticSearch.getDockerElasticSearch().pause();
-        Thread.sleep(Duration.FIVE_SECONDS.getValueInMS()); // Docker pause is asynchronous and we found no way to poll for it
+        Thread.sleep(Duration.ofSeconds(5).toMillis()); // Docker pause is asynchronous and we found no way to poll for it
 
         assertThatThrownBy(() -> testee.delete(session, mailbox.getMailboxId(), Lists.newArrayList(MESSAGE_UID_1)).block())
             .hasCauseInstanceOf(IOException.class);
@@ -410,7 +410,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
     @Test
     void updateShouldPropagateExceptionWhenExceptionOccurs() throws Exception {
         elasticSearch.getDockerElasticSearch().pause();
-        Thread.sleep(Duration.FIVE_SECONDS.getValueInMS()); // Docker pause is asynchronous and we found no way to poll for it
+        Thread.sleep(Duration.ofSeconds(5).toMillis()); // Docker pause is asynchronous and we found no way to poll for it
 
         Flags newFlags = new Flags(Flags.Flag.ANSWERED);
         UpdatedFlags updatedFlags = UpdatedFlags.builder()

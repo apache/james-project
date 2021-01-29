@@ -63,6 +63,7 @@ import static org.hamcrest.collection.IsMapWithSize.anEmptyMap;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
@@ -120,7 +121,6 @@ import org.apache.james.utils.TestIMAPClient;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.assertj.core.api.SoftAssertions;
-import org.awaitility.Duration;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -1614,7 +1614,7 @@ public abstract class SetMessagesMethodTest {
         }
 
         calmlyAwait
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .pollDelay(Duration.ofMillis(500))
             .atMost(30, TimeUnit.SECONDS).until(() -> hasANewMailWithBody(accessToken, body));
     }
 
@@ -2360,7 +2360,7 @@ public abstract class SetMessagesMethodTest {
             .post("/jmap");
 
         calmlyAwait
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .pollDelay(Duration.ofMillis(500))
             .atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
     }
 
@@ -2414,7 +2414,7 @@ public abstract class SetMessagesMethodTest {
             .post("/jmap");
 
         calmlyAwait
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .pollDelay(Duration.ofMillis(500))
             .atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
     }
 
@@ -2794,7 +2794,7 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".created[\"" + messageCreationId + "\"].from.email", equalTo(ALIAS_OF_USERNAME_MAIL));
 
         calmlyAwait
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .pollDelay(Duration.ofMillis(500))
             .atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
 
     }
@@ -2838,7 +2838,7 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".created[\"" + messageCreationId + "\"].from.email", equalTo(alias));
 
         calmlyAwait
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .pollDelay(Duration.ofMillis(500))
             .atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
     }
 

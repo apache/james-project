@@ -27,7 +27,8 @@ import static org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueue.
 import static org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueue.ROUTING_KEY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.awaitility.Duration.FIVE_SECONDS;
+import static org.awaitility.Durations.FIVE_SECONDS;
+import static org.awaitility.Durations.ONE_SECOND;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -85,7 +86,6 @@ import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetai
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionDAO;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionModule;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -299,7 +299,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
              EventSourcingTaskManager taskManager2 = taskManager(HOSTNAME_2)) {
             TaskId taskId = taskManager1.submit(new CompletedTask());
             Awaitility.await()
-                .atMost(Duration.FIVE_SECONDS)
+                .atMost(FIVE_SECONDS)
                 .pollInterval(100L, TimeUnit.MILLISECONDS)
                 .until(() -> taskManager1.await(taskId, TIMEOUT).getStatus() == TaskManager.Status.COMPLETED);
 
@@ -326,7 +326,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
             waitingForFirstTaskLatch.countDown();
 
             Awaitility.await()
-                .atMost(Duration.ONE_SECOND)
+                .atMost(ONE_SECOND)
                 .pollInterval(100L, TimeUnit.MILLISECONDS)
                 .until(() -> taskManager1.await(waitingTaskId, TIMEOUT).getStatus() == TaskManager.Status.COMPLETED);
         }
@@ -341,7 +341,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
                 TaskId taskId = taskManager2.submit(new CompletedTask());
 
                 Awaitility.await()
-                    .atMost(Duration.ONE_SECOND)
+                    .atMost(ONE_SECOND)
                     .pollInterval(100L, TimeUnit.MILLISECONDS)
                     .until(() -> taskManager1.await(taskId, TIMEOUT).getStatus() == TaskManager.Status.COMPLETED);
 
@@ -417,7 +417,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
             TaskId taskId2 = taskManager2.submit(new CompletedTask());
 
             Awaitility.await()
-                .atMost(Duration.ONE_SECOND)
+                .atMost(ONE_SECOND)
                 .pollInterval(100L, TimeUnit.MILLISECONDS)
                 .untilAsserted(() -> {
                     List<TaskExecutionDetails> listOnTaskManager1 = taskManager1.list();

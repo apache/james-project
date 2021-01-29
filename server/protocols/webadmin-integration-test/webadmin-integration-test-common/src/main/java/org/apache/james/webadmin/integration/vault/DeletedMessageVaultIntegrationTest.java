@@ -41,6 +41,8 @@ import static org.apache.james.webadmin.integration.vault.DeletedMessagesVaultRe
 import static org.apache.james.webadmin.integration.vault.DeletedMessagesVaultRequests.purgeVault;
 import static org.apache.james.webadmin.integration.vault.DeletedMessagesVaultRequests.restoreMessagesForUserWithQuery;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.FIVE_SECONDS;
+import static org.awaitility.Durations.TWO_MINUTES;
 import static org.hamcrest.Matchers.hasItem;
 
 import java.io.FileInputStream;
@@ -69,7 +71,6 @@ import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -123,7 +124,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
     private static final String JACK = "jack@" + DOMAIN;
     private static final String PASSWORD = "password";
     private static final String BOB_PASSWORD = "bobPassword";
-    private static final ConditionFactory WAIT_TWO_MINUTES = calmlyAwait.atMost(Duration.TWO_MINUTES);
+    private static final ConditionFactory WAIT_TWO_MINUTES = calmlyAwait.atMost(TWO_MINUTES);
     private static final String SUBJECT = "This mail will be restored from the vault!!";
     private static final String MAILBOX_NAME = "toBeDeleted";
     private static final String MATCH_ALL_QUERY = "{" +
@@ -339,7 +340,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
         restoreMessagesForUserWithQuery(webAdminApi, HOMER, query);
 
 
-        Thread.sleep(Duration.FIVE_SECONDS.getValueInMS());
+        Thread.sleep(FIVE_SECONDS.toMillis());
 
         // No additional had been restored for Bart as the vault is empty
         assertThat(listMessageIdsForAccount(homerAccessToken).size())

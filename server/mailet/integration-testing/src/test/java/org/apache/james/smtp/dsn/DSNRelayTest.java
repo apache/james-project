@@ -26,7 +26,7 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
 import static org.apache.james.util.docker.Images.MOCK_SMTP_SERVER;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Duration.TEN_SECONDS;
+import static org.awaitility.Durations.TEN_SECONDS;
 
 import java.io.File;
 
@@ -57,10 +57,10 @@ import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;

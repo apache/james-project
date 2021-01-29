@@ -30,6 +30,7 @@ import static org.apache.james.jmap.JMAPTestingConstants.NAME;
 import static org.apache.james.jmap.JMAPTestingConstants.calmlyAwait;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.ONE_MINUTE;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
@@ -47,7 +48,6 @@ import org.apache.james.spamassassin.SpamAssassinExtension;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SpoolerProbe;
 import org.apache.james.utils.TestIMAPClient;
-import org.awaitility.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -89,7 +89,7 @@ public interface SpamAssassinContract {
 
     @AfterEach
     default void tearDown(SpamAssassinExtension.SpamAssassin spamAssassin, GuiceJamesServer jamesServer) throws Exception {
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertEveryListenerGotCalled(jamesServer));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertEveryListenerGotCalled(jamesServer));
         spamAssassin.clear(ALICE);
     }
 
@@ -113,8 +113,8 @@ public interface SpamAssassinContract {
         .when()
             .post("/jmap");
 
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertEveryListenerGotCalled(jamesServer));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertEveryListenerGotCalled(jamesServer));
 
         // Alice is moving this message to Spam -> learning in SpamAssassin
         List<String> messageIds = with()
@@ -139,7 +139,7 @@ public interface SpamAssassinContract {
                 .statusCode(200)
                 .body(NAME, equalTo("messagesSet"))
                 .body(ARGUMENTS + ".updated", hasSize(1)));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
 
         // Bob is sending again the same message to Alice
         given()
@@ -149,7 +149,7 @@ public interface SpamAssassinContract {
             .post("/jmap");
 
         // This message is delivered in Alice Spam mailbox (she now must have 2 messages in her Spam mailbox)
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 2));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 2));
     }
 
     @Test
@@ -165,8 +165,8 @@ public interface SpamAssassinContract {
             .body(setMessageCreate(bobAccessToken))
         .when()
             .post("/jmap");
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertEveryListenerGotCalled(jamesServer));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertEveryListenerGotCalled(jamesServer));
 
 
         // Alice is copying this message to Spam -> learning in SpamAssassin
@@ -177,7 +177,7 @@ public interface SpamAssassinContract {
 
             testIMAPClient.copyFirstMessage("Spam");
         }
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
 
         // Bob is sending again the same message to Alice
         given()
@@ -187,7 +187,7 @@ public interface SpamAssassinContract {
             .post("/jmap");
 
         // This message is delivered in Alice Spam mailbox (she now must have 2 messages in her Spam mailbox)
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 2));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 2));
     }
 
     @Test
@@ -203,8 +203,8 @@ public interface SpamAssassinContract {
             .body(setMessageCreate(bobAccessToken))
         .when()
             .post("/jmap");
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertEveryListenerGotCalled(jamesServer));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertEveryListenerGotCalled(jamesServer));
 
         try (TestIMAPClient testIMAPClient = new TestIMAPClient()) {
             testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
@@ -213,7 +213,7 @@ public interface SpamAssassinContract {
 
             testIMAPClient.moveFirstMessage("Spam");
         }
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
 
         // Bob is sending again the same message to Alice
         given()
@@ -223,7 +223,7 @@ public interface SpamAssassinContract {
             .post("/jmap");
 
         // This message is delivered in Alice Spam mailbox (she now must have 2 messages in her Spam mailbox)
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 2));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 2));
     }
 
     @Test
@@ -239,8 +239,8 @@ public interface SpamAssassinContract {
             .body(setMessageCreate(bobAccessToken))
             .when()
             .post("/jmap");
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertEveryListenerGotCalled(jamesServer));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertEveryListenerGotCalled(jamesServer));
 
         // Alice is moving this message to Spam -> learning in SpamAssassin
         List<String> messageIds = with()
@@ -265,7 +265,7 @@ public interface SpamAssassinContract {
                 .statusCode(200)
                 .body(NAME, equalTo("messagesSet"))
                 .body(ARGUMENTS + ".updated", hasSize(1)));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
 
         // Alice is moving this message out of Spam -> forgetting in SpamAssassin
         messageIds
@@ -278,7 +278,7 @@ public interface SpamAssassinContract {
                 .statusCode(200)
                 .body(NAME, equalTo("messagesSet"))
                 .body(ARGUMENTS + ".updated", hasSize(1)));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
 
         // Bob is sending again the same message to Alice
         given()
@@ -288,7 +288,7 @@ public interface SpamAssassinContract {
             .post("/jmap");
 
         // This message is delivered in Alice INBOX mailbox (she now must have 2 messages in her Inbox mailbox)
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 2));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 2));
     }
 
     @Test
@@ -304,8 +304,8 @@ public interface SpamAssassinContract {
             .body(setMessageCreate(bobAccessToken))
             .when()
             .post("/jmap");
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertEveryListenerGotCalled(jamesServer));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertEveryListenerGotCalled(jamesServer));
 
         // Alice is moving this message to Spam -> learning in SpamAssassin
         List<String> messageIds = with()
@@ -330,7 +330,7 @@ public interface SpamAssassinContract {
                 .statusCode(200)
                 .body(NAME, equalTo("messagesSet"))
                 .body(ARGUMENTS + ".updated", hasSize(1)));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
 
         // Alice is moving this message to trash
         messageIds
@@ -343,7 +343,7 @@ public interface SpamAssassinContract {
                 .statusCode(200)
                 .body(NAME, equalTo("messagesSet"))
                 .body(ARGUMENTS + ".updated", hasSize(1)));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getTrashId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getTrashId(aliceAccessToken), 1));
 
         // Bob is sending again the same message to Alice
         given()
@@ -353,7 +353,7 @@ public interface SpamAssassinContract {
             .post("/jmap");
 
         // This message is delivered in Alice Spam mailbox (she now must have 1 messages in her Spam mailbox)
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
     }
 
     @Test
@@ -369,8 +369,8 @@ public interface SpamAssassinContract {
             .body(setMessageCreate(bobAccessToken))
             .when()
             .post("/jmap");
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertEveryListenerGotCalled(jamesServer));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertEveryListenerGotCalled(jamesServer));
 
         // Alice is moving this message to Spam -> learning in SpamAssassin
         List<String> messageIds = with()
@@ -395,7 +395,7 @@ public interface SpamAssassinContract {
                 .statusCode(200)
                 .body(NAME, equalTo("messagesSet"))
                 .body(ARGUMENTS + ".updated", hasSize(1)));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
 
         // Alice is moving this message out of Spam -> forgetting in SpamAssassin
         try (TestIMAPClient testIMAPClient = new TestIMAPClient()) {
@@ -405,7 +405,7 @@ public interface SpamAssassinContract {
 
             testIMAPClient.moveFirstMessage(TestIMAPClient.INBOX);
         }
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
 
         // Bob is sending again the same message to Alice
         given()
@@ -415,7 +415,7 @@ public interface SpamAssassinContract {
             .post("/jmap");
 
         // This message is delivered in Alice INBOX mailbox (she now must have 2 messages in her Inbox mailbox)
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 2));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 2));
     }
 
     @Test
@@ -431,8 +431,8 @@ public interface SpamAssassinContract {
             .body(setMessageCreate(bobAccessToken))
             .when()
             .post("/jmap");
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertEveryListenerGotCalled(jamesServer));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertEveryListenerGotCalled(jamesServer));
 
         // Alice is moving this message to Spam -> learning in SpamAssassin
         List<String> messageIds = with()
@@ -457,7 +457,7 @@ public interface SpamAssassinContract {
                 .statusCode(200)
                 .body(NAME, equalTo("messagesSet"))
                 .body(ARGUMENTS + ".updated", hasSize(1)));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
 
         // Alice is deleting this message
         try (TestIMAPClient testIMAPClient = new TestIMAPClient()) {
@@ -468,7 +468,7 @@ public interface SpamAssassinContract {
             testIMAPClient.setFlagsForAllMessagesInMailbox("\\Deleted");
             testIMAPClient.expunge();
         }
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 0));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 0));
 
         // Bob is sending again the same message to Alice
         given()
@@ -478,7 +478,7 @@ public interface SpamAssassinContract {
             .post("/jmap");
 
         // This message is delivered in Alice SPAM mailbox (she now must have 1 messages in her Spam mailbox)
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
     }
 
     @Test
@@ -494,8 +494,8 @@ public interface SpamAssassinContract {
             .body(setMessageCreate(bobAccessToken))
             .when()
             .post("/jmap");
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertEveryListenerGotCalled(jamesServer));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertEveryListenerGotCalled(jamesServer));
 
         // Alice is moving this message to Spam -> learning in SpamAssassin
         List<String> messageIds = with()
@@ -520,7 +520,7 @@ public interface SpamAssassinContract {
                 .statusCode(200)
                 .body(NAME, equalTo("messagesSet"))
                 .body(ARGUMENTS + ".updated", hasSize(1)));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
 
         // Alice is deleting this message
         messageIds
@@ -533,7 +533,7 @@ public interface SpamAssassinContract {
                 .statusCode(200)
                 .body(NAME, equalTo("messagesSet"))
                 .body(ARGUMENTS + ".destroyed", hasSize(1)));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 0));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 0));
 
         // Bob is sending again the same message to Alice
         given()
@@ -543,7 +543,7 @@ public interface SpamAssassinContract {
             .post("/jmap");
 
         // This message is delivered in Alice SPAM mailbox (she now must have 1 messages in her Spam mailbox)
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
     }
 
     default String setMessageCreate(AccessToken accessToken) {
@@ -578,8 +578,8 @@ public interface SpamAssassinContract {
             .body(setMessageCreateToMultipleRecipients(bobAccessToken))
         .when()
             .post("/jmap");
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(paulAccessToken, getInboxId(paulAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(paulAccessToken, getInboxId(paulAccessToken), 1));
 
         // Alice is moving this message to Spam -> learning in SpamAssassin
         List<String> messageIds = with()
@@ -604,7 +604,7 @@ public interface SpamAssassinContract {
                 .statusCode(200)
                 .body(NAME, equalTo("messagesSet"))
                 .body(ARGUMENTS + ".updated", hasSize(1)));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
 
         // Bob is sending again the same message to Alice & Paul
         given()
@@ -614,11 +614,11 @@ public interface SpamAssassinContract {
             .post("/jmap");
 
         // This message is delivered in Alice Spam mailbox (she now must have 2 messages in her Spam mailbox)
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 2));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 0));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 2));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 0));
         // This message is delivered in Paul Inbox (he now must have 2 messages in his Inbox)
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(paulAccessToken, getInboxId(paulAccessToken), 2));
-        calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(paulAccessToken, getSpamId(paulAccessToken), 0));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(paulAccessToken, getInboxId(paulAccessToken), 2));
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(paulAccessToken, getSpamId(paulAccessToken), 0));
     }
 
     default String setMessageCreateToMultipleRecipients(AccessToken accessToken) {

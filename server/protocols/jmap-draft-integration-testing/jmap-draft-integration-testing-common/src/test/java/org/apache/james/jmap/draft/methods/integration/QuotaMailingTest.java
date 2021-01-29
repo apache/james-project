@@ -30,6 +30,7 @@ import static org.apache.james.jmap.JmapCommonRequests.concatMessageIds;
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
 import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsForAccount;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
+import static org.awaitility.Durations.TWO_MINUTES;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 
@@ -49,7 +50,6 @@ import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.QuotaProbesImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.After;
 import org.junit.Before;
@@ -66,7 +66,7 @@ public abstract class QuotaMailingTest {
     private static final Username BART = Username.of("bart@" + DOMAIN);
     private static final String PASSWORD = "password";
     private static final String BOB_PASSWORD = "bobPassword";
-    private static final ConditionFactory WAIT_TWO_MINUTES = calmlyAwait.atMost(Duration.TWO_MINUTES);
+    private static final ConditionFactory WAIT_TWO_MINUTES = calmlyAwait.atMost(TWO_MINUTES);
     private QuotaProbesImpl quotaProbe;
 
     protected abstract GuiceJamesServer createJmapServer() throws IOException;

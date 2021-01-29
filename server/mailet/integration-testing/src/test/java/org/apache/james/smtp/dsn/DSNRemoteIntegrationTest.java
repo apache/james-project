@@ -30,9 +30,10 @@ import static org.apache.james.mock.smtp.server.model.Condition.MATCH_ALL;
 import static org.apache.james.mock.smtp.server.model.SMTPCommand.RCPT_TO;
 import static org.apache.james.util.docker.Images.MOCK_SMTP_SERVER;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.FIVE_SECONDS;
 
 import java.io.File;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import org.apache.commons.net.smtp.AuthenticatingSMTPClient;
 import org.apache.james.dnsservice.api.DNSService;
@@ -70,7 +71,6 @@ import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
 import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -87,7 +87,7 @@ class DSNRemoteIntegrationTest {
     private static final String ANOTHER_DOMAIN = "other.com";
     private static final String FROM = "from@" + DEFAULT_DOMAIN;
     private static final String RECIPIENT = "touser@" + ANOTHER_DOMAIN;
-    private static final ConditionFactory AWAIT_NO_MESSAGE = Awaitility.with().pollDelay(new Duration(2, TimeUnit.SECONDS)).timeout(Duration.FIVE_SECONDS);
+    private static final ConditionFactory AWAIT_NO_MESSAGE = Awaitility.with().pollDelay(Duration.ofSeconds(2)).timeout(FIVE_SECONDS);
 
     private InMemoryDNSService inMemoryDNSService;
     private ConfigurationClient mockSMTPConfiguration;

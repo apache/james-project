@@ -23,24 +23,20 @@ import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
 
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import org.apache.james.core.Username;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 
 public interface JMAPTestingConstants {
-    Duration slowPacedPollInterval = Duration.ONE_HUNDRED_MILLISECONDS;
-    Duration ONE_MILLISECOND = new Duration(1, TimeUnit.MILLISECONDS);
-
     ConditionFactory calmlyAwait = Awaitility.with()
-        .pollInterval(slowPacedPollInterval)
+        .pollInterval(Duration.ofMillis(100))
         .and().with()
-        .pollDelay(ONE_MILLISECOND)
+        .pollDelay(Duration.ofMillis(1))
         .await();
 
     RequestSpecBuilder jmapRequestSpecBuilder = new RequestSpecBuilder()

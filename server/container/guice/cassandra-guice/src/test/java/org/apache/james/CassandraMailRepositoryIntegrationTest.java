@@ -19,9 +19,9 @@
 
 package org.apache.james;
 
-import static org.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
+import static org.awaitility.Durations.FIVE_HUNDRED_MILLISECONDS;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -30,14 +30,13 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraMailRepositoryIntegrationTest {
     private static final MailRepositoryUrl SENDER_DENIED_URL = MailRepositoryUrl.from("cassandra://var/mail/sender-denied/");
-    private static final Duration ONE_MILLISECOND = new Duration(1, TimeUnit.MILLISECONDS);
+    private static final Duration ONE_MILLISECOND = Duration.ofMillis(1);
     private static ConditionFactory await = Awaitility.with()
         .pollInterval(FIVE_HUNDRED_MILLISECONDS)
         .and()

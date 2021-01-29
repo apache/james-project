@@ -21,13 +21,15 @@ package org.apache.james.blob.cassandra.cache;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.awaitility.Awaitility.await;
+import static org.awaitility.Durations.FIVE_HUNDRED_MILLISECONDS;
+import static org.awaitility.Durations.ONE_SECOND;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Optional;
 
 import org.apache.james.blob.api.BlobId;
-import org.awaitility.Duration;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Strings;
@@ -95,7 +97,7 @@ public interface BlobStoreCacheContract {
         assertThatCode(Mono.from(testee().cache(blobId, EIGHT_KILOBYTES))::block)
             .doesNotThrowAnyException();
 
-        await().atMost(Duration.ONE_SECOND).await().untilAsserted(()
+        await().atMost(ONE_SECOND).await().untilAsserted(()
             -> assertThat(Mono.from(testee().read(blobId)).block()).containsExactly(EIGHT_KILOBYTES));
     }
 
@@ -105,7 +107,7 @@ public interface BlobStoreCacheContract {
         assertThatCode(Mono.from(testee().cache(blobId, EIGHT_KILOBYTES))::block)
             .doesNotThrowAnyException();
         //add some time after the TTL to avoid threshold effect
-        await().atMost(Duration.TWO_SECONDS.plus(Duration.FIVE_HUNDRED_MILLISECONDS)).await().untilAsserted(()
+        await().atMost(Duration.ofSeconds(2).plus(FIVE_HUNDRED_MILLISECONDS)).await().untilAsserted(()
             -> assertThat(Mono.from(testee().read(blobId)).blockOptional()).isEmpty());
     }
 

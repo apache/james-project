@@ -28,12 +28,12 @@ import static org.apache.james.blob.api.MetricableBlobStore.SAVE_BYTES_TIMER_NAM
 import static org.apache.james.blob.api.MetricableBlobStore.SAVE_INPUT_STREAM_TIMER_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.awaitility.Durations.FIVE_SECONDS;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.awaitility.Duration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -69,7 +69,7 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
         Mono.from(store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST)).block();
         Mono.from(store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST)).block();
 
-        await().atMost(Duration.FIVE_SECONDS)
+        await().atMost(FIVE_SECONDS)
             .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(SAVE_BYTES_TIMER_NAME))
                 .hasSize(2));
     }
@@ -81,7 +81,7 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
         Mono.from(store.save(store.getDefaultBucketName(), STRING_CONTENT, LOW_COST)).block();
         Mono.from(store.save(store.getDefaultBucketName(), STRING_CONTENT, LOW_COST)).block();
 
-        await().atMost(Duration.FIVE_SECONDS)
+        await().atMost(FIVE_SECONDS)
             .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(SAVE_BYTES_TIMER_NAME))
                 .hasSize(2));
     }
@@ -93,7 +93,7 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
         Mono.from(store.save(store.getDefaultBucketName(), new ByteArrayInputStream(BYTES_CONTENT), LOW_COST)).block();
         Mono.from(store.save(store.getDefaultBucketName(), new ByteArrayInputStream(BYTES_CONTENT), LOW_COST)).block();
 
-        await().atMost(Duration.FIVE_SECONDS)
+        await().atMost(FIVE_SECONDS)
             .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(SAVE_INPUT_STREAM_TIMER_NAME))
                 .hasSize(2));
     }
@@ -106,7 +106,7 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
         Mono.from(store.readBytes(store.getDefaultBucketName(), blobId)).block();
         Mono.from(store.readBytes(store.getDefaultBucketName(), blobId)).block();
 
-        await().atMost(Duration.FIVE_SECONDS)
+        await().atMost(FIVE_SECONDS)
             .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(READ_BYTES_TIMER_NAME))
                 .hasSize(2));
     }
@@ -119,7 +119,7 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
         store.read(store.getDefaultBucketName(), blobId);
         store.read(store.getDefaultBucketName(), blobId);
 
-        await().atMost(Duration.FIVE_SECONDS)
+        await().atMost(FIVE_SECONDS)
             .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(READ_TIMER_NAME))
                 .hasSize(2));
     }
@@ -134,7 +134,7 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
 
         Mono.from(store.deleteBucket(bucketName)).block();
 
-        await().atMost(Duration.FIVE_SECONDS)
+        await().atMost(FIVE_SECONDS)
             .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(DELETE_BUCKET_TIMER_NAME))
                 .hasSize(1));
     }
@@ -149,7 +149,7 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
         Mono.from(store.delete(BucketName.DEFAULT, blobId1)).block();
         Mono.from(store.delete(BucketName.DEFAULT, blobId2)).block();
 
-        await().atMost(Duration.FIVE_SECONDS)
+        await().atMost(FIVE_SECONDS)
             .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(DELETE_TIMER_NAME))
                 .hasSize(2));
     }

@@ -19,10 +19,11 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.ONE_SECOND;
 
+import java.time.Duration;
 import java.util.Iterator;
 import java.util.Optional;
 
@@ -45,7 +46,6 @@ import org.apache.james.mailbox.store.mail.model.MessageMapperTest;
 import org.apache.james.util.streams.Limit;
 import org.assertj.core.api.SoftAssertions;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -373,8 +373,8 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
             // 100 poll with a 0.1 probability to trigger read repair
             Awaitility.await()
-                .pollInterval(new Duration(10, MILLISECONDS))
-                .atMost(Duration.ONE_SECOND)
+                .pollInterval(Duration.ofMillis(10))
+                .atMost(ONE_SECOND)
                 .untilAsserted(() ->
                     assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(4));
         }
@@ -393,8 +393,8 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
             // 100 poll with a 0.1 probability to trigger read repair
             Awaitility.await()
-                .pollInterval(new Duration(10, MILLISECONDS))
-                .atMost(Duration.ONE_SECOND)
+                .pollInterval(Duration.ofMillis(10))
+                .atMost(ONE_SECOND)
                 .untilAsserted(() ->
                     assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(4));
         }

@@ -31,6 +31,7 @@ import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
 import static org.apache.mailet.base.MailAddressFixture.SENDER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.awaitility.Durations.TEN_SECONDS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -39,10 +40,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -703,7 +702,7 @@ class RabbitMQMailQueueTest {
                 .doOnNext(Throwing.consumer(item -> item.done(true)))
                 .subscribe();
 
-            Awaitility.await().atMost(org.awaitility.Duration.TEN_SECONDS)
+            Awaitility.await().atMost(TEN_SECONDS)
                 .untilAsserted(() -> assertThat(dequeuedMailNames)
                     .containsExactly(name1, name2, name3));
         }
@@ -742,7 +741,7 @@ class RabbitMQMailQueueTest {
                 .doOnNext(Throwing.consumer(item -> item.done(true)))
                 .subscribe();
 
-            Awaitility.await().atMost(org.awaitility.Duration.TEN_SECONDS)
+            Awaitility.await().atMost(TEN_SECONDS)
                 .untilAsserted(() -> assertThat(dequeuedMailNames)
                     .containsExactly(name1, name2, name3));
         }
@@ -770,7 +769,7 @@ class RabbitMQMailQueueTest {
                 .subscribe();
 
 
-            Awaitility.await().atMost(org.awaitility.Duration.TEN_SECONDS)
+            Awaitility.await().atMost(TEN_SECONDS)
                 .untilAsserted(() -> assertThat(deadLetteredCount.get()).isEqualTo(1));
         }
 

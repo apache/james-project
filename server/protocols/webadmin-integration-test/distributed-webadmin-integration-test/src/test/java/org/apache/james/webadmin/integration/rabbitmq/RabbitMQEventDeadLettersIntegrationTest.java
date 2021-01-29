@@ -23,12 +23,12 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
-import static org.awaitility.Duration.ONE_MINUTE;
+import static org.awaitility.Durations.ONE_MINUTE;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -68,7 +68,6 @@ import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.apache.james.webadmin.routes.EventDeadLettersRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -234,7 +233,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
     private static final String DISPATCHING_FAILURE_GROUP_ID = DispatchingFailureGroup.INSTANCE.getClass().getName();
     private static final MailboxPath BOB_INBOX_PATH = MailboxPath.inbox(Username.of(BOB));
 
-    private Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
+    private Duration slowPacedPollInterval = Duration.ofMillis(100);
     private ConditionFactory calmlyAwait = Awaitility.with()
         .pollInterval(slowPacedPollInterval)
         .and()

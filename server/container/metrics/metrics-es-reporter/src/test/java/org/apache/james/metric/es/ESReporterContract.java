@@ -21,6 +21,8 @@ package org.apache.james.metric.es;
 
 import static io.restassured.RestAssured.when;
 import static org.awaitility.Awaitility.await;
+import static org.awaitility.Durations.ONE_MINUTE;
+import static org.awaitility.Durations.TEN_MINUTES;
 import static org.hamcrest.Matchers.greaterThan;
 
 import java.util.Timer;
@@ -33,7 +35,6 @@ import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.metrics.dropwizard.DropWizardMetricFactory;
 import org.apache.james.metrics.es.ESMetricReporter;
 import org.apache.james.metrics.es.ESReporterConfiguration;
-import org.awaitility.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,7 +57,7 @@ abstract class ESReporterContract {
     void setUp(DockerElasticSearch elasticSearch) {
         RestAssured.baseURI = String.format("http://%s:%d",
             elasticSearch.getHttpHost().getHostName(), elasticSearch.getHttpHost().getPort());
-        await().atMost(Duration.ONE_MINUTE)
+        await().atMost(ONE_MINUTE)
             .untilAsserted(this::elasticSearchStarted);
 
         registry = new MetricRegistry();
@@ -90,8 +91,8 @@ abstract class ESReporterContract {
         };
         timer.schedule(timerTask, DELAY_IN_MS, PERIOD_IN_MS);
 
-        await().atMost(Duration.TEN_MINUTES)
-            .untilAsserted(() -> done());
+        await().atMost(TEN_MINUTES)
+            .untilAsserted(this::done);
     }
 
     @Test
@@ -105,8 +106,8 @@ abstract class ESReporterContract {
         };
         timer.schedule(timerTask, DELAY_IN_MS, PERIOD_IN_MS);
 
-        await().atMost(Duration.TEN_MINUTES)
-            .untilAsserted(() -> done());
+        await().atMost(TEN_MINUTES)
+            .untilAsserted(this::done);
     }
 
     private void elasticSearchStarted() {

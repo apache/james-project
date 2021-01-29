@@ -21,6 +21,7 @@ package org.apache.james;
 
 import static io.restassured.config.ParamConfig.UpdateStrategy.REPLACE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.ONE_MINUTE;
 
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
@@ -33,7 +34,6 @@ import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,7 +45,7 @@ import io.restassured.parsing.Parser;
 import io.restassured.specification.RequestSpecification;
 
 class RabbitMQJamesServerReprocessingTest {
-    private static final ConditionFactory AWAIT = Awaitility.await().atMost(Duration.ONE_MINUTE);
+    private static final ConditionFactory AWAIT = Awaitility.await().atMost(ONE_MINUTE);
     private static final MailRepositoryUrl SENDER_DENIED = MailRepositoryUrl.from("cassandra://var/mail/sender-denied/");
     private RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
     private RequestSpecification webAdminApi;

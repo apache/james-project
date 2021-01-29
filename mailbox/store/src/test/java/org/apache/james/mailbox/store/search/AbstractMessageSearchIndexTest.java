@@ -22,10 +22,12 @@ package org.apache.james.mailbox.store.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
@@ -62,7 +64,6 @@ import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.mime4j.message.SingleBodyBuilder;
 import org.apache.james.util.ClassLoaderUtils;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -1473,9 +1474,9 @@ public abstract class AbstractMessageSearchIndexTest {
         StoreMessageManager newBox = (StoreMessageManager) storeMailboxManager.getMailbox(newBoxId, session);
 
         Awaitility.with()
-            .pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
+            .pollInterval(ONE_HUNDRED_MILLISECONDS)
             .and().with()
-            .pollDelay(new Duration(1, TimeUnit.MILLISECONDS))
+            .pollDelay(Duration.ofMillis(1))
             .await()
             .atMost(30, TimeUnit.SECONDS)
             .until(

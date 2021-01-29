@@ -39,6 +39,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
+import static org.awaitility.Durations.FIVE_SECONDS;
+import static org.awaitility.Durations.TEN_MINUTES;
+import static org.awaitility.Durations.TEN_SECONDS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -194,7 +197,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
         eventBus.dispatch(EVENT, NO_KEYS).block();
         await()
-            .timeout(org.awaitility.Duration.TEN_SECONDS).untilAsserted(() ->
+            .timeout(TEN_SECONDS).untilAsserted(() ->
                 assertThat(listener.getEvents()).containsOnly(EVENT));
     }
 
@@ -213,7 +216,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
         eventBus.dispatch(EVENT, NO_KEYS).block();
         await()
-            .timeout(org.awaitility.Duration.TEN_SECONDS).untilAsserted(() ->
+            .timeout(TEN_SECONDS).untilAsserted(() ->
             assertThat(listener.getEvents()).containsOnly(EVENT));
     }
 
@@ -238,7 +241,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             .subscribeOn(Schedulers.elastic())
             .subscribe();
 
-        Awaitility.await().atMost(org.awaitility.Duration.TEN_SECONDS)
+        Awaitility.await().atMost(TEN_SECONDS)
             .untilAsserted(() -> assertThat(deadLetteredCount.get()).isEqualTo(1));
     }
 
@@ -254,7 +257,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             .block();
 
         eventBus.dispatch(EVENT, KEY_1).block();
-        await().timeout(org.awaitility.Duration.TEN_SECONDS)
+        await().timeout(TEN_SECONDS)
             .untilAsserted(() -> assertThat(listener.getEvents()).containsOnly(EVENT));
     }
 
@@ -271,7 +274,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 .block());
 
         eventBus.dispatch(EVENT, KEY_1).block();
-        await().timeout(org.awaitility.Duration.TEN_SECONDS)
+        await().timeout(TEN_SECONDS)
             .untilAsserted(() -> assertThat(listener.getEvents()).containsOnly(EVENT));
     }
 
@@ -318,8 +321,8 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 .runSuccessfullyWithin(Duration.ofMinutes(3));
 
             await()
-                .pollInterval(org.awaitility.Duration.FIVE_SECONDS)
-                .timeout(org.awaitility.Duration.TEN_MINUTES).untilAsserted(() ->
+                .pollInterval(FIVE_SECONDS)
+                .timeout(TEN_MINUTES).untilAsserted(() ->
                     assertThat(countingListener1.numberOfEventCalls()).isEqualTo((totalGlobalRegistrations * totalDispatchOperations)));
         }
 

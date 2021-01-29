@@ -20,6 +20,8 @@
 package org.apache.james;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.FIVE_MINUTES;
+import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -46,7 +48,6 @@ import org.apache.james.utils.SpoolerProbe;
 import org.apache.james.utils.TestIMAPClient;
 import org.apache.mailet.base.test.FakeMail;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.Test;
 
@@ -68,11 +69,11 @@ interface MailsShouldBeWellReceived {
     String PASSWORD = "secret";
     String PASSWORD_OTHER = "other-secret";
     ConditionFactory CALMLY_AWAIT = Awaitility
-        .with().pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
-        .and().pollDelay(Duration.ONE_HUNDRED_MILLISECONDS)
+        .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
+        .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
         .await();
 
-    ConditionFactory CALMLY_AWAIT_FIVE_MINUTE = CALMLY_AWAIT.timeout(Duration.FIVE_MINUTES);
+    ConditionFactory CALMLY_AWAIT_FIVE_MINUTE = CALMLY_AWAIT.timeout(FIVE_MINUTES);
     String SENDER = "bob@apache.org";
     String UNICODE_BODY = "Unicode €uro symbol.";
 

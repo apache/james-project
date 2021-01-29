@@ -41,7 +41,7 @@ import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.awaitility.Awaitility
-import org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS
+import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
 import org.junit.jupiter.api.{BeforeEach, Test}
 
 trait EmailSubmissionSetMethodContract {

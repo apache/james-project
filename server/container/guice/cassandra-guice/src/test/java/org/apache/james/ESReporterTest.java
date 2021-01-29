@@ -24,6 +24,7 @@ import static io.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.awaitility.Awaitility.await;
+import static org.awaitility.Durations.TEN_MINUTES;
 
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
@@ -41,7 +42,6 @@ import org.apache.james.modules.TestDockerESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
-import org.awaitility.Duration;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -120,7 +120,7 @@ class ESReporterTest {
         };
         timer.schedule(timerTask, DELAY_IN_MS, PERIOD_IN_MS);
 
-        await().atMost(Duration.TEN_MINUTES)
+        await().atMost(TEN_MINUTES)
             .until(this::checkMetricRecordedInElasticSearch);
     }
 
@@ -142,7 +142,7 @@ class ESReporterTest {
         };
         timer.schedule(timerTask, DELAY_IN_MS, PERIOD_IN_MS);
 
-        await().atMost(Duration.TEN_MINUTES)
+        await().atMost(TEN_MINUTES)
             .until(this::checkMetricRecordedInElasticSearch);
     }
 

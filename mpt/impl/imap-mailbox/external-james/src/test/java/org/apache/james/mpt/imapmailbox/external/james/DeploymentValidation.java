@@ -19,10 +19,12 @@
 
 package org.apache.james.mpt.imapmailbox.external.james;
 
-import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
-import static org.awaitility.Duration.TEN_SECONDS;
+
+import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
+import static org.awaitility.Durations.TEN_SECONDS;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Locale;
 
 import org.apache.commons.net.imap.IMAPClient;
@@ -32,10 +34,9 @@ import org.apache.james.mpt.imapmailbox.external.james.host.external.ExternalJam
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
 import org.apache.james.utils.SMTPMessageSender;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public abstract class DeploymentValidation {
 

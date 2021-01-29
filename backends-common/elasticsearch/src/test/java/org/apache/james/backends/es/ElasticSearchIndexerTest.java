@@ -22,13 +22,12 @@ package org.apache.james.backends.es;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 import java.io.IOException;
+import java.time.Duration;
 
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -53,8 +52,8 @@ class ElasticSearchIndexerTest {
     private static final WriteAliasName ALIAS_NAME = new WriteAliasName("alias_name");
 
     private static final ConditionFactory CALMLY_AWAIT = Awaitility
-        .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
-        .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
+        .with().pollInterval(Duration.ofMillis(100))
+        .and().pollDelay(Duration.ofMillis(100))
         .await();
     private static final RoutingKey ROUTING = RoutingKey.fromString("routing");
     private static final DocumentId DOCUMENT_ID = DocumentId.fromString("1");
@@ -167,7 +166,7 @@ class ElasticSearchIndexerTest {
         testee.deleteAllMatchingQuery(termQuery("property", "1"), routingKey).block();
         elasticSearch.awaitForElasticSearch();
         
-        CALMLY_AWAIT.atMost(Duration.TEN_SECONDS)
+        CALMLY_AWAIT.atMost(Duration.ofSeconds(10))
             .until(() -> client.search(
                     new SearchRequest(INDEX_NAME.getValue())
                         .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
@@ -197,7 +196,7 @@ class ElasticSearchIndexerTest {
         testee.deleteAllMatchingQuery(termQuery("property", "1"), ROUTING).block();
         elasticSearch.awaitForElasticSearch();
         
-        CALMLY_AWAIT.atMost(Duration.TEN_SECONDS)
+        CALMLY_AWAIT.atMost(Duration.ofSeconds(10))
             .until(() -> client.search(
                     new SearchRequest(INDEX_NAME.getValue())
                         .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),

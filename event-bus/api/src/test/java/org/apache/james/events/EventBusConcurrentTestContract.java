@@ -29,7 +29,6 @@ import static org.awaitility.Awaitility.await;
 
 import java.time.Duration;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.james.events.EventBusTestFixture.EventListenerCountingSuccessfulExecution;
 import org.apache.james.events.EventBusTestFixture.GroupA;
@@ -47,7 +46,7 @@ import reactor.core.publisher.Mono;
 public interface EventBusConcurrentTestContract {
 
     Duration FIVE_SECONDS = Duration.ofSeconds(5);
-    ConditionFactory AWAIT_CONDITION = await().timeout(new org.awaitility.Duration(5, TimeUnit.SECONDS));
+    ConditionFactory AWAIT_CONDITION = await().timeout(Duration.ofSeconds(5));
 
     int THREAD_COUNT = 10;
     int OPERATION_COUNT = 30;

@@ -26,8 +26,8 @@ import static org.apache.james.task.eventsourcing.distributed.RabbitMQTerminatio
 import static org.apache.james.task.eventsourcing.distributed.RabbitMQTerminationSubscriber.ROUTING_KEY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.awaitility.Duration.ONE_MINUTE;
-import static org.awaitility.Duration.TEN_SECONDS;
+import static org.awaitility.Durations.ONE_MINUTE;
+import static org.awaitility.Durations.TEN_SECONDS;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

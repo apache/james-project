@@ -18,17 +18,17 @@
  ****************************************************************/
 package org.apache.james.mpt.smtp;
 
-import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
-import static org.awaitility.Duration.TWO_MINUTES;
+import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
+import static org.awaitility.Durations.TWO_MINUTES;
 import static org.hamcrest.Matchers.equalTo;
 
+import java.time.Duration;
 import java.util.Locale;
 
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
 import org.apache.james.utils.FakeSmtpExtension;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;

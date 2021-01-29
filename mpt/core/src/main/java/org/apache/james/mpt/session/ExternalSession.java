@@ -20,10 +20,12 @@
 package org.apache.james.mpt.session;
 
 import static java.nio.charset.StandardCharsets.US_ASCII;
+import static org.awaitility.Durations.ONE_MINUTE;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -31,7 +33,6 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.james.mpt.api.Monitor;
 import org.apache.james.mpt.api.Session;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 
 public final class ExternalSession implements Session {
 
@@ -122,8 +123,8 @@ public final class ExternalSession implements Session {
     private boolean tryReadFromSocket() throws IOException, InterruptedException {
         final MutableInt status = new MutableInt(0);
         Awaitility
-            .waitAtMost(Duration.ONE_MINUTE)
-            .pollDelay(new Duration(10, TimeUnit.MILLISECONDS))
+            .waitAtMost(ONE_MINUTE)
+            .pollDelay(Duration.ofMillis(10))
             .until(() -> {
                 int read = socket.read(readBuffer);
                 status.setValue(read);

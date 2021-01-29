@@ -31,6 +31,7 @@ import static org.apache.james.mock.smtp.server.model.SMTPCommand.RCPT_TO;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Durations.TEN_SECONDS;
 
 import java.io.IOException;
 import java.net.ConnectException;
@@ -55,7 +56,6 @@ import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.SMTPSendingException;
 import org.apache.mailet.base.test.FakeMail;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -121,7 +121,7 @@ class MockSMTPServerTest {
 
             sender.sendMessage(mail);
 
-            Awaitility.await().atMost(Duration.TEN_SECONDS)
+            Awaitility.await().atMost(TEN_SECONDS)
                 .untilAsserted(() -> {
                     List<Mail> mails = mailRepository.list();
                     Mail.Envelope expectedEnvelope = Mail.Envelope.ofAddresses(
@@ -186,7 +186,7 @@ class MockSMTPServerTest {
                 .addRecipientMailAddress(new MailAddress(ALICE))
                 .build();
 
-            Awaitility.await().atMost(Duration.TEN_SECONDS)
+            Awaitility.await().atMost(TEN_SECONDS)
                 .untilAsserted(() -> {
                     List<Mail> mails = mailRepository.list();
                     assertThat(mails)
@@ -237,7 +237,7 @@ class MockSMTPServerTest {
                     .build())
                 .build();
 
-            Awaitility.await().atMost(Duration.TEN_SECONDS)
+            Awaitility.await().atMost(TEN_SECONDS)
                 .untilAsserted(() -> {
                     List<Mail> mails = mailRepository.list();
                     assertThat(mails)
@@ -341,7 +341,7 @@ class MockSMTPServerTest {
             sendMessageIgnoreError(mail1);
 
             sendMessageIgnoreError(mail1);
-            Awaitility.await().atMost(Duration.TEN_SECONDS)
+            Awaitility.await().atMost(TEN_SECONDS)
                 .untilAsserted(() -> assertThat(mailRepository.list()).hasSize(1));
         }
 

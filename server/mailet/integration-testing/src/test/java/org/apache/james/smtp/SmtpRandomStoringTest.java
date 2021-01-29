@@ -24,6 +24,7 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.TEN_SECONDS;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,7 +55,6 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
 import org.apache.mailet.Mail;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,7 +71,7 @@ class SmtpRandomStoringTest {
     private static final String TO = "to@any.com";
     private static final Long USERS_NUMBERS = 10L;
     private static final ConditionFactory awaitAtMostTenSeconds = calmlyAwait
-        .atMost(Duration.TEN_SECONDS);
+        .atMost(TEN_SECONDS);
 
     private static final ImmutableList<String> USERS = LongStream.range(0L, USERS_NUMBERS)
         .boxed()

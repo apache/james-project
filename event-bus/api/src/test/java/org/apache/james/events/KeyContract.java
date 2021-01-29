@@ -29,6 +29,8 @@ import static org.apache.james.events.EventBusTestFixture.NO_KEYS;
 import static org.apache.james.events.EventBusTestFixture.ONE_SECOND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.awaitility.Durations.TEN_MINUTES;
+import static org.awaitility.Durations.TEN_SECONDS;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.after;
@@ -79,7 +81,7 @@ public interface KeyContract extends EventBusContract {
             IntStream.range(0, eventCount)
                 .forEach(i -> eventBus().dispatch(EVENT, KEY_1).block());
 
-            getSpeedProfile().shortWaitCondition().atMost(org.awaitility.Duration.TEN_MINUTES)
+            getSpeedProfile().shortWaitCondition().atMost(TEN_MINUTES)
                 .untilAsserted(() -> assertThat(finishedExecutions.get()).isEqualTo(eventCount));
             assertThat(rateExceeded).isFalse();
         }
@@ -105,7 +107,7 @@ public interface KeyContract extends EventBusContract {
                 eventBus().dispatch(EVENT, KEY_1).subscribeOn(Schedulers.elastic()).subscribe();
 
 
-                getSpeedProfile().shortWaitCondition().atMost(org.awaitility.Duration.TEN_SECONDS)
+                getSpeedProfile().shortWaitCondition().atMost(TEN_SECONDS)
                     .untilAsserted(() -> assertThat(threads).hasSize(3));
                 assertThat(threads).doesNotHaveDuplicates();
             } finally {

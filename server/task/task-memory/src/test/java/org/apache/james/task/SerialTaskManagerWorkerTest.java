@@ -19,6 +19,7 @@
 package org.apache.james.task;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.TEN_SECONDS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.notNull;
@@ -187,7 +188,7 @@ class SerialTaskManagerWorkerTest {
         TaskWithId taskWithId = new TaskWithId(id, tickTask);
         Mono<Task.Result> resultMono = worker.executeTask(taskWithId).cache();
         resultMono.subscribe();
-        Awaitility.waitAtMost(org.awaitility.Duration.TEN_SECONDS)
+        Awaitility.waitAtMost(TEN_SECONDS)
             .untilAsserted(() -> verify(listener, atLeastOnce()).started(id));
 
         worker.cancelTask(id);
@@ -218,7 +219,7 @@ class SerialTaskManagerWorkerTest {
         Mono<Task.Result> resultMono = worker.executeTask(taskWithId).cache();
         resultMono.subscribe();
 
-        Awaitility.waitAtMost(org.awaitility.Duration.TEN_SECONDS)
+        Awaitility.waitAtMost(TEN_SECONDS)
             .untilAsserted(() -> verify(listener, atLeastOnce()).started(id));
 
         worker.cancelTask(id);
