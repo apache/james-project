@@ -25,7 +25,6 @@ import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backends.rabbitmq.Constants.REQUEUE;
 import static org.apache.james.backends.rabbitmq.Constants.deadLetterQueue;
-import static org.apache.james.events.RabbitMQEventBus.MAILBOX_EVENT;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -53,21 +52,17 @@ import reactor.util.retry.Retry;
 
 class GroupRegistration implements Registration {
     static class WorkQueueName {
-        static WorkQueueName of(Group group) {
-            return new WorkQueueName(group);
-        }
-
-        static final String MAILBOX_EVENT_WORK_QUEUE_PREFIX = MAILBOX_EVENT + "-workQueue-";
-
+        private final String prefix;
         private final Group group;
 
-        private WorkQueueName(Group group) {
+        WorkQueueName(String prefix, Group group) {
+            this.prefix = prefix;
             Preconditions.checkNotNull(group, "Group must be specified");
             this.group = group;
         }
 
         String asString() {
-            return MAILBOX_EVENT_WORK_QUEUE_PREFIX + group.asString();
+            return prefix + "-workQueue-" + group.asString();
         }
     }
 
@@ -75,6 +70,7 @@ class GroupRegistration implements Registration {
     static final String RETRY_COUNT = "retry-count";
     static final int DEFAULT_RETRY_COUNT = 0;
 
+    private final NamingStrategy namingStrategy;
     private final ReactorRabbitMQChannelPool channelPool;
     private final EventListener.ReactiveEventListener listener;
     private final WorkQueueName queueName;
@@ -89,21 +85,22 @@ class GroupRegistration implements Registration {
     private final ListenerExecutor listenerExecutor;
     private Optional<Disposable> receiverSubscriber;
 
-    GroupRegistration(ReactorRabbitMQChannelPool channelPool, Sender sender, ReceiverProvider receiverProvider, EventSerializer eventSerializer,
+    GroupRegistration(NamingStrategy namingStrategy, ReactorRabbitMQChannelPool channelPool, Sender sender, ReceiverProvider receiverProvider, EventSerializer eventSerializer,
                       EventListener.ReactiveEventListener listener, Group group, RetryBackoffConfiguration retryBackoff,
                       EventDeadLetters eventDeadLetters,
                       Runnable unregisterGroup, ListenerExecutor listenerExecutor) {
+        this.namingStrategy = namingStrategy;
         this.channelPool = channelPool;
         this.eventSerializer = eventSerializer;
         this.listener = listener;
-        this.queueName = WorkQueueName.of(group);
+        this.queueName = namingStrategy.workQueue(group);
         this.sender = sender;
         this.receiver = receiverProvider.createReceiver();
         this.retryBackoff = retryBackoff;
         this.listenerExecutor = listenerExecutor;
         this.receiverSubscriber = Optional.empty();
         this.unregisterGroup = unregisterGroup;
-        this.retryHandler = new GroupConsumerRetry(sender, group, retryBackoff, eventDeadLetters, eventSerializer);
+        this.retryHandler = new GroupConsumerRetry(namingStrategy, sender, group, retryBackoff, eventDeadLetters, eventSerializer);
         this.delayGenerator = WaitDelayGenerator.of(retryBackoff);
         this.group = group;
     }
@@ -124,9 +121,9 @@ class GroupRegistration implements Registration {
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(!AUTO_DELETE)
-                .arguments(deadLetterQueue(RabbitMQEventBus.MAILBOX_EVENT_DEAD_LETTER_EXCHANGE_NAME)),
+                .arguments(deadLetterQueue(namingStrategy.deadLetterExchange())),
             BindingSpecification.binding()
-                .exchange(RabbitMQEventBus.MAILBOX_EVENT_EXCHANGE_NAME)
+                .exchange(namingStrategy.exchange())
                 .queue(queueName.asString())
                 .routingKey(EMPTY_ROUTING_KEY));
     }

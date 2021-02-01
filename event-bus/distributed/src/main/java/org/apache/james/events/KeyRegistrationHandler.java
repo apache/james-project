@@ -53,12 +53,12 @@ import reactor.util.retry.Retry;
 
 class KeyRegistrationHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyRegistrationHandler.class);
-    static final String EVENTBUS_QUEUE_NAME_PREFIX = "eventbus-";
     private static final Duration EXPIRATION_TIMEOUT = Duration.ofMinutes(30);
     static final Map<String, Object> QUEUE_ARGUMENTS = ImmutableMap.of("x-expires", EXPIRATION_TIMEOUT.toMillis());
 
     private static final Duration TOPOLOGY_CHANGES_TIMEOUT = Duration.ofMinutes(1);
 
+    private final NamingStrategy namingStrategy;
     private final EventBusId eventBusId;
     private final LocalListenerRegistry localListenerRegistry;
     private final EventSerializer eventSerializer;
@@ -71,10 +71,11 @@ class KeyRegistrationHandler {
     private final RetryBackoffConfiguration retryBackoff;
     private Optional<Disposable> receiverSubscriber;
 
-    KeyRegistrationHandler(EventBusId eventBusId, EventSerializer eventSerializer,
+    KeyRegistrationHandler(NamingStrategy namingStrategy, EventBusId eventBusId, EventSerializer eventSerializer,
                            Sender sender, ReceiverProvider receiverProvider,
                            RoutingKeyConverter routingKeyConverter, LocalListenerRegistry localListenerRegistry,
                            ListenerExecutor listenerExecutor, RetryBackoffConfiguration retryBackoff) {
+        this.namingStrategy = namingStrategy;
         this.eventBusId = eventBusId;
         this.eventSerializer = eventSerializer;
         this.sender = sender;
@@ -83,8 +84,8 @@ class KeyRegistrationHandler {
         this.receiver = receiverProvider.createReceiver();
         this.listenerExecutor = listenerExecutor;
         this.retryBackoff = retryBackoff;
-        this.registrationQueue = new RegistrationQueueName(EVENTBUS_QUEUE_NAME_PREFIX + eventBusId.asString());
-        this.registrationBinder = new RegistrationBinder(sender, registrationQueue);
+        this.registrationQueue = namingStrategy.queueName(eventBusId);
+        this.registrationBinder = new RegistrationBinder(namingStrategy, sender, registrationQueue);
         this.receiverSubscriber = Optional.empty();
 
     }
@@ -105,7 +106,7 @@ class KeyRegistrationHandler {
 
     private void declareQueue(Sender sender) {
         sender.declareQueue(
-            QueueSpecification.queue(EVENTBUS_QUEUE_NAME_PREFIX + eventBusId.asString())
+            QueueSpecification.queue(registrationQueue.asString())
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(AUTO_DELETE)

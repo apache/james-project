@@ -35,10 +35,6 @@ import static org.apache.james.events.EventBusTestFixture.KEY_1;
 import static org.apache.james.events.EventBusTestFixture.NO_KEYS;
 import static org.apache.james.events.EventBusTestFixture.newAsyncListener;
 import static org.apache.james.events.EventBusTestFixture.newListener;
-import static org.apache.james.events.GroupRegistration.WorkQueueName.MAILBOX_EVENT_WORK_QUEUE_PREFIX;
-import static org.apache.james.events.RabbitMQEventBus.MAILBOX_EVENT;
-import static org.apache.james.events.RabbitMQEventBus.MAILBOX_EVENT_DEAD_LETTER_QUEUE;
-import static org.apache.james.events.RabbitMQEventBus.MAILBOX_EVENT_EXCHANGE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -95,6 +91,7 @@ import reactor.rabbitmq.Sender;
 class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract, GroupContract.MultipleEventBusGroupContract,
     KeyContract.SingleEventBusKeyContract, KeyContract.MultipleEventBusKeyContract,
     ErrorHandlingContract {
+    static NamingStrategy TEST_NAMING_STRATEGY = new NamingStrategy("test");
 
     @RegisterExtension
     static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ()
@@ -138,13 +135,13 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         eventBus3.stop();
         eventBusWithKeyHandlerNotStarted.stop();
         ALL_GROUPS.stream()
-            .map(GroupRegistration.WorkQueueName::of)
+            .map(TEST_NAMING_STRATEGY::workQueue)
             .forEach(queueName -> rabbitMQExtension.getSender().delete(QueueSpecification.queue(queueName.asString())).block());
         rabbitMQExtension.getSender()
-            .delete(ExchangeSpecification.exchange(MAILBOX_EVENT_EXCHANGE_NAME))
+            .delete(ExchangeSpecification.exchange(TEST_NAMING_STRATEGY.exchange()))
             .block();
         rabbitMQExtension.getSender()
-            .delete(QueueSpecification.queue().name(MAILBOX_EVENT_DEAD_LETTER_QUEUE))
+            .delete(TEST_NAMING_STRATEGY.deadLetterQueue())
             .block();
     }
 
@@ -153,7 +150,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     }
 
     private RabbitMQEventBus newEventBus(Sender sender, ReceiverProvider receiverProvider) {
-        return new RabbitMQEventBus(sender, receiverProvider, eventSerializer,
+        return new RabbitMQEventBus(TEST_NAMING_STRATEGY, sender, receiverProvider, eventSerializer,
             EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, routingKeyConverter,
             memoryEventDeadLetters, new RecordingMetricFactory(),
             rabbitMQExtension.getRabbitChannelPool(), EventBusId.random());
@@ -189,7 +186,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
         String emptyRoutingKey = "";
         rabbitMQExtension.getSender()
-            .send(Mono.just(new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME,
+            .send(Mono.just(new OutboundMessage(TEST_NAMING_STRATEGY.exchange(),
                 emptyRoutingKey,
                 "BAD_PAYLOAD!".getBytes(StandardCharsets.UTF_8))))
             .block();
@@ -208,7 +205,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
         String emptyRoutingKey = "";
         IntStream.range(0, 10).forEach(i -> rabbitMQExtension.getSender()
-            .send(Mono.just(new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME,
+            .send(Mono.just(new OutboundMessage(TEST_NAMING_STRATEGY.exchange(),
                 emptyRoutingKey,
                 "BAD_PAYLOAD!".getBytes(StandardCharsets.UTF_8))))
             .block());
@@ -227,7 +224,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
         String emptyRoutingKey = "";
         rabbitMQExtension.getSender()
-            .send(Mono.just(new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME,
+            .send(Mono.just(new OutboundMessage(TEST_NAMING_STRATEGY.exchange(),
                 emptyRoutingKey,
                 "BAD_PAYLOAD!".getBytes(StandardCharsets.UTF_8))))
             .block();
@@ -235,7 +232,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         AtomicInteger deadLetteredCount = new AtomicInteger();
         rabbitMQExtension.getRabbitChannelPool()
             .createReceiver()
-            .consumeAutoAck(MAILBOX_EVENT_DEAD_LETTER_QUEUE)
+            .consumeAutoAck(TEST_NAMING_STRATEGY.deadLetterQueue().getName())
             .doOnNext(next -> deadLetteredCount.incrementAndGet())
             .subscribeOn(Schedulers.elastic())
             .subscribe();
@@ -250,7 +247,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         Mono.from(eventBus.register(listener, KEY_1)).block();
 
         rabbitMQExtension.getSender()
-            .send(Mono.just(new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME,
+            .send(Mono.just(new OutboundMessage(TEST_NAMING_STRATEGY.exchange(),
                 RoutingKey.of(KEY_1).asString(),
                 "BAD_PAYLOAD!".getBytes(StandardCharsets.UTF_8))))
             .block();
@@ -267,7 +264,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
         IntStream.range(0, 100)
             .forEach(i -> rabbitMQExtension.getSender()
-                .send(Mono.just(new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME,
+                .send(Mono.just(new OutboundMessage(TEST_NAMING_STRATEGY.exchange(),
                     RoutingKey.of(KEY_1).asString(),
                     "BAD_PAYLOAD!".getBytes(StandardCharsets.UTF_8))))
                 .block());
@@ -289,7 +286,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         GroupA registeredGroup = new GroupA();
         eventBus.register(listener, registeredGroup);
 
-        GroupConsumerRetry.RetryExchangeName retryExchangeName = GroupConsumerRetry.RetryExchangeName.of(registeredGroup);
+        GroupConsumerRetry.RetryExchangeName retryExchangeName = TEST_NAMING_STRATEGY.retryExchange(registeredGroup);
         assertThat(rabbitMQExtension.managementAPI().listExchanges())
             .anyMatch(exchange -> exchange.getName().equals(retryExchangeName.asString()));
     }
@@ -378,21 +375,21 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
     @Nested
     class PublishingTest {
-        private static final String MAILBOX_WORK_QUEUE_NAME = MAILBOX_EVENT + "-workQueue";
+        private static final String WORK_QUEUE_NAME = "test-workQueue";
 
         @BeforeEach
         void setUp() {
             Sender sender = rabbitMQExtension.getSender();
 
-            sender.declareQueue(QueueSpecification.queue(MAILBOX_WORK_QUEUE_NAME)
+            sender.declareQueue(QueueSpecification.queue(WORK_QUEUE_NAME)
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(!AUTO_DELETE)
                 .arguments(NO_ARGUMENTS))
                 .block();
             sender.bind(BindingSpecification.binding()
-                .exchange(MAILBOX_EVENT_EXCHANGE_NAME)
-                .queue(MAILBOX_WORK_QUEUE_NAME)
+                .exchange(TEST_NAMING_STRATEGY.exchange())
+                .queue(WORK_QUEUE_NAME)
                 .routingKey(EMPTY_ROUTING_KEY))
                 .block();
         }
@@ -413,7 +410,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
         private Event dequeueEvent() {
             try (Receiver receiver = rabbitMQExtension.getReceiverProvider().createReceiver()) {
-                byte[] eventInBytes = receiver.consumeAutoAck(MAILBOX_WORK_QUEUE_NAME)
+                byte[] eventInBytes = receiver.consumeAutoAck(WORK_QUEUE_NAME)
                     .blockFirst()
                     .getBody();
 
@@ -480,7 +477,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             void startShouldCreateEventExchange() {
                 eventBus.start();
                 assertThat(rabbitManagementAPI.listExchanges())
-                    .filteredOn(exchange -> exchange.getName().equals(MAILBOX_EVENT_EXCHANGE_NAME))
+                    .filteredOn(exchange -> exchange.getName().equals(TEST_NAMING_STRATEGY.exchange()))
                     .hasOnlyOneElementSatisfying(exchange -> {
                         assertThat(exchange.isDurable()).isTrue();
                         assertThat(exchange.getType()).isEqualTo(DIRECT_EXCHANGE);
@@ -659,7 +656,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 eventBus.stop();
 
                 assertThat(rabbitManagementAPI.listExchanges())
-                    .anySatisfy(exchange -> assertThat(exchange.getName()).isEqualTo(MAILBOX_EVENT_EXCHANGE_NAME));
+                    .anySatisfy(exchange -> assertThat(exchange.getName()).isEqualTo(TEST_NAMING_STRATEGY.exchange()));
             }
 
             @Test
@@ -719,7 +716,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             @Test
             void multipleEventBusStartShouldCreateOnlyOneEventExchange() {
                 assertThat(rabbitManagementAPI.listExchanges())
-                    .filteredOn(exchange -> exchange.getName().equals(MAILBOX_EVENT_EXCHANGE_NAME))
+                    .filteredOn(exchange -> exchange.getName().equals(TEST_NAMING_STRATEGY.exchange()))
                     .hasSize(1);
             }
 
@@ -752,7 +749,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 eventBusWithKeyHandlerNotStarted.stop();
 
                 assertThat(rabbitManagementAPI.listExchanges())
-                    .anySatisfy(exchange -> assertThat(exchange.getName()).isEqualTo(MAILBOX_EVENT_EXCHANGE_NAME));
+                    .anySatisfy(exchange -> assertThat(exchange.getName()).isEqualTo(TEST_NAMING_STRATEGY.exchange()));
             }
 
             @Test
@@ -776,8 +773,8 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 eventBusWithKeyHandlerNotStarted.stop();
 
                 assertThat(rabbitManagementAPI.listQueues())
-                    .filteredOn(queue -> !queue.getName().startsWith(MAILBOX_EVENT_WORK_QUEUE_PREFIX)
-                        && !queue.getName().startsWith(MAILBOX_EVENT_DEAD_LETTER_QUEUE))
+                    .filteredOn(queue -> !queue.getName().startsWith("test-")
+                        && !queue.getName().startsWith("test-dead-letter-queue"))
                     .isEmpty();
             }
 

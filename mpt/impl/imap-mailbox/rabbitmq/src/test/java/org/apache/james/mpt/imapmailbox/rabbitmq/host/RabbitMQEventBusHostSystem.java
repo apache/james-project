@@ -33,6 +33,7 @@ import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.event.json.MailboxEventSerializer;
 import org.apache.james.events.EventBusId;
 import org.apache.james.events.MemoryEventDeadLetters;
+import org.apache.james.events.NamingStrategy;
 import org.apache.james.events.RabbitMQEventBus;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.events.RoutingKeyConverter;
@@ -117,7 +118,7 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
         InMemoryId.Factory mailboxIdFactory = new InMemoryId.Factory();
         MailboxEventSerializer eventSerializer = new MailboxEventSerializer(mailboxIdFactory, messageIdFactory, new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
         RoutingKeyConverter routingKeyConverter = new RoutingKeyConverter(ImmutableSet.of(new MailboxIdRegistrationKey.Factory(mailboxIdFactory)));
-        return new RabbitMQEventBus(reactorRabbitMQChannelPool.getSender(), reactorRabbitMQChannelPool::createReceiver,
+        return new RabbitMQEventBus(new NamingStrategy("mailboxEvent-"), reactorRabbitMQChannelPool.getSender(), reactorRabbitMQChannelPool::createReceiver,
             eventSerializer, RetryBackoffConfiguration.DEFAULT, routingKeyConverter, new MemoryEventDeadLetters(),
             new RecordingMetricFactory(),
             reactorRabbitMQChannelPool, EventBusId.random());

@@ -27,9 +27,6 @@ import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backends.rabbitmq.Constants.NO_ARGUMENTS;
 import static org.apache.james.events.RabbitMQEventBus.EVENT_BUS_ID;
-import static org.apache.james.events.RabbitMQEventBus.MAILBOX_EVENT_DEAD_LETTER_EXCHANGE_NAME;
-import static org.apache.james.events.RabbitMQEventBus.MAILBOX_EVENT_DEAD_LETTER_QUEUE;
-import static org.apache.james.events.RabbitMQEventBus.MAILBOX_EVENT_EXCHANGE_NAME;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -54,7 +51,6 @@ import reactor.core.publisher.MonoProcessor;
 import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ExchangeSpecification;
 import reactor.rabbitmq.OutboundMessage;
-import reactor.rabbitmq.QueueSpecification;
 import reactor.rabbitmq.Sender;
 import reactor.util.function.Tuples;
 
@@ -65,6 +61,7 @@ public class EventDispatcher {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EventDispatcher.class);
 
+    private final NamingStrategy namingStrategy;
     private final EventSerializer eventSerializer;
     private final Sender sender;
     private final LocalListenerRegistry localListenerRegistry;
@@ -72,10 +69,11 @@ public class EventDispatcher {
     private final ListenerExecutor listenerExecutor;
     private final EventDeadLetters deadLetters;
 
-    EventDispatcher(EventBusId eventBusId, EventSerializer eventSerializer, Sender sender,
+    EventDispatcher(NamingStrategy namingStrategy, EventBusId eventBusId, EventSerializer eventSerializer, Sender sender,
                     LocalListenerRegistry localListenerRegistry,
                     ListenerExecutor listenerExecutor,
                     EventDeadLetters deadLetters) {
+        this.namingStrategy = namingStrategy;
         this.eventSerializer = eventSerializer;
         this.sender = sender;
         this.localListenerRegistry = localListenerRegistry;
@@ -91,20 +89,20 @@ public class EventDispatcher {
 
     void start() {
         Flux.concat(
-            sender.declareExchange(ExchangeSpecification.exchange(MAILBOX_EVENT_EXCHANGE_NAME)
+            sender.declareExchange(ExchangeSpecification.exchange(namingStrategy.exchange())
                 .durable(DURABLE)
                 .type(DIRECT_EXCHANGE)),
-            sender.declareExchange(ExchangeSpecification.exchange(MAILBOX_EVENT_DEAD_LETTER_EXCHANGE_NAME)
+            sender.declareExchange(ExchangeSpecification.exchange(namingStrategy.deadLetterExchange())
                 .durable(DURABLE)
                 .type(DIRECT_EXCHANGE)),
-            sender.declareQueue(QueueSpecification.queue(MAILBOX_EVENT_DEAD_LETTER_QUEUE)
+            sender.declareQueue(namingStrategy.deadLetterQueue()
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(!AUTO_DELETE)
                 .arguments(NO_ARGUMENTS)),
             sender.bind(BindingSpecification.binding()
-                .exchange(MAILBOX_EVENT_DEAD_LETTER_EXCHANGE_NAME)
-                .queue(MAILBOX_EVENT_DEAD_LETTER_QUEUE)
+                .exchange(namingStrategy.deadLetterExchange())
+                .queue(namingStrategy.deadLetterQueue().getName())
                 .routingKey(EMPTY_ROUTING_KEY)))
             .then()
             .block();
@@ -185,7 +183,7 @@ public class EventDispatcher {
 
     private Flux<OutboundMessage> toMessages(byte[] serializedEvent, Collection<RoutingKey> routingKeys) {
         return Flux.fromIterable(routingKeys)
-                .map(routingKey -> new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME, routingKey.asString(), basicProperties, serializedEvent));
+                .map(routingKey -> new OutboundMessage(namingStrategy.exchange(), routingKey.asString(), basicProperties, serializedEvent));
     }
 
     private byte[] serializeEvent(Event event) {

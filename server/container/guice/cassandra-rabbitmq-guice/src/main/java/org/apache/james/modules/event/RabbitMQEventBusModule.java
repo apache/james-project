@@ -25,6 +25,7 @@ import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusId;
 import org.apache.james.events.EventSerializer;
 import org.apache.james.events.KeyReconnectionHandler;
+import org.apache.james.events.NamingStrategy;
 import org.apache.james.events.RabbitMQEventBus;
 import org.apache.james.events.RegistrationKey;
 import org.apache.james.events.RetryBackoffConfiguration;
@@ -44,6 +45,7 @@ public class RabbitMQEventBusModule extends AbstractModule {
         bind(MailboxEventSerializer.class).in(Scopes.SINGLETON);
         bind(EventSerializer.class).to(MailboxEventSerializer.class);
 
+        bind(NamingStrategy.class).toInstance(new NamingStrategy("mailboxEvent"));
         bind(RabbitMQEventBus.class).in(Scopes.SINGLETON);
         bind(EventBus.class).to(RabbitMQEventBus.class);
 

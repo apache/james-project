@@ -29,6 +29,7 @@ import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import reactor.rabbitmq.Sender;
 
 class GroupRegistrationHandler {
+    private final NamingStrategy namingStrategy;
     private final Map<Group, GroupRegistration> groupRegistrations;
     private final EventSerializer eventSerializer;
     private final ReactorRabbitMQChannelPool channelPool;
@@ -38,9 +39,10 @@ class GroupRegistrationHandler {
     private final EventDeadLetters eventDeadLetters;
     private final ListenerExecutor listenerExecutor;
 
-    GroupRegistrationHandler(EventSerializer eventSerializer, ReactorRabbitMQChannelPool channelPool, Sender sender, ReceiverProvider receiverProvider,
+    GroupRegistrationHandler(NamingStrategy namingStrategy, EventSerializer eventSerializer, ReactorRabbitMQChannelPool channelPool, Sender sender, ReceiverProvider receiverProvider,
                              RetryBackoffConfiguration retryBackoff,
                              EventDeadLetters eventDeadLetters, ListenerExecutor listenerExecutor) {
+        this.namingStrategy = namingStrategy;
         this.eventSerializer = eventSerializer;
         this.channelPool = channelPool;
         this.sender = sender;
@@ -73,7 +75,7 @@ class GroupRegistrationHandler {
 
     private GroupRegistration newGroupRegistration(EventListener.ReactiveEventListener listener, Group group) {
         return new GroupRegistration(
-            channelPool, sender,
+            namingStrategy, channelPool, sender,
             receiverProvider,
             eventSerializer,
             listener,

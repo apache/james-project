@@ -51,7 +51,7 @@ class NetworkErrorTest {
         EventSerializer eventSerializer = new TestEventSerializer();
         RoutingKeyConverter routingKeyConverter = RoutingKeyConverter.forFactories(new EventBusTestFixture.TestRegistrationKeyFactory());
 
-        eventBus = new RabbitMQEventBus(rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(),
+        eventBus = new RabbitMQEventBus(new NamingStrategy("test"), rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(),
             eventSerializer, RETRY_BACKOFF_CONFIGURATION, routingKeyConverter,
             memoryEventDeadLetters, new RecordingMetricFactory(), rabbitMQExtension.getRabbitChannelPool(),
             EventBusId.random());

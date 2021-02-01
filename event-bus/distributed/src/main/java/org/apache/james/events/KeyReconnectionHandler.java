@@ -22,7 +22,6 @@ package org.apache.james.events;
 import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
-import static org.apache.james.events.KeyRegistrationHandler.EVENTBUS_QUEUE_NAME_PREFIX;
 import static org.apache.james.events.KeyRegistrationHandler.QUEUE_ARGUMENTS;
 
 import javax.inject.Inject;
@@ -40,10 +39,12 @@ import reactor.core.publisher.Mono;
 public class KeyReconnectionHandler implements SimpleConnectionPool.ReconnectionHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyReconnectionHandler.class);
 
+    private final NamingStrategy namingStrategy;
     private final EventBusId eventBusId;
 
     @Inject
-    public KeyReconnectionHandler(EventBusId eventBusId) {
+    public KeyReconnectionHandler(NamingStrategy namingStrategy, EventBusId eventBusId) {
+        this.namingStrategy = namingStrategy;
         this.eventBusId = eventBusId;
     }
 
@@ -51,7 +52,7 @@ public class KeyReconnectionHandler implements SimpleConnectionPool.Reconnection
     public Publisher<Void> handleReconnection(Connection connection) {
         return Mono.fromRunnable(() -> {
             try (Channel channel = connection.createChannel()) {
-                channel.queueDeclare(EVENTBUS_QUEUE_NAME_PREFIX + eventBusId.asString(), DURABLE, !EXCLUSIVE, AUTO_DELETE, QUEUE_ARGUMENTS);
+                channel.queueDeclare(namingStrategy.queueName(eventBusId).asString(), DURABLE, !EXCLUSIVE, AUTO_DELETE, QUEUE_ARGUMENTS);
             } catch (Exception e) {
                 LOGGER.error("Error recovering connection", e);
             }

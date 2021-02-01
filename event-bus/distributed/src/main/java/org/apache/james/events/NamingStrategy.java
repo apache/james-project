@@ -19,36 +19,36 @@
 
 package org.apache.james.events;
 
-import reactor.core.publisher.Mono;
-import reactor.rabbitmq.BindingSpecification;
-import reactor.rabbitmq.Sender;
+import reactor.rabbitmq.QueueSpecification;
 
-class RegistrationBinder {
-    private final NamingStrategy namingStrategy;
-    private final Sender sender;
-    private final RegistrationQueueName registrationQueue;
+public class NamingStrategy {
+    private final String prefix;
 
-    RegistrationBinder(NamingStrategy namingStrategy, Sender sender, RegistrationQueueName registrationQueue) {
-        this.namingStrategy = namingStrategy;
-        this.sender = sender;
-        this.registrationQueue = registrationQueue;
+    public NamingStrategy(String prefix) {
+        this.prefix = prefix;
     }
 
-    Mono<Void> bind(RegistrationKey key) {
-        return sender.bind(bindingSpecification(key))
-            .then();
+    public RegistrationQueueName queueName(EventBusId eventBusId) {
+        return new RegistrationQueueName(prefix + "-eventbus-" + eventBusId.asString());
     }
 
-    Mono<Void> unbind(RegistrationKey key) {
-        return sender.unbind(bindingSpecification(key))
-            .then();
+    public QueueSpecification deadLetterQueue() {
+        return QueueSpecification.queue(prefix + "-dead-letter-queue");
     }
 
-    private BindingSpecification bindingSpecification(RegistrationKey key) {
-        RoutingKeyConverter.RoutingKey routingKey = RoutingKeyConverter.RoutingKey.of(key);
-        return BindingSpecification.binding()
-            .exchange(namingStrategy.exchange())
-            .queue(registrationQueue.asString())
-            .routingKey(routingKey.asString());
+    public String exchange() {
+        return prefix + "-exchange";
+    }
+
+    public String deadLetterExchange() {
+        return prefix + "-dead-letter-exchange";
+    }
+
+    public GroupConsumerRetry.RetryExchangeName retryExchange(Group group) {
+        return new GroupConsumerRetry.RetryExchangeName(prefix, group);
+    }
+
+    public GroupRegistration.WorkQueueName workQueue(Group group) {
+        return new GroupRegistration.WorkQueueName(prefix, group);
     }
 }

@@ -24,7 +24,6 @@ import static org.apache.james.backends.rabbitmq.Constants.DIRECT_EXCHANGE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.events.GroupRegistration.RETRY_COUNT;
-import static org.apache.james.events.RabbitMQEventBus.MAILBOX_EVENT;
 
 import java.nio.charset.StandardCharsets;
 
@@ -33,8 +32,6 @@ import org.apache.james.util.StructuredLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.AMQP;
 
@@ -46,23 +43,17 @@ import reactor.rabbitmq.OutboundMessage;
 import reactor.rabbitmq.Sender;
 
 class GroupConsumerRetry {
-
     static class RetryExchangeName {
-        static RetryExchangeName of(Group group) {
-            return new RetryExchangeName(group.asString());
-        }
+        private final String prefix;
+        private final Group group;
 
-        static final String MAILBOX_EVENT_RETRY_EXCHANGE_PREFIX = MAILBOX_EVENT + "-retryExchange-";
-
-        private final String name;
-
-        private RetryExchangeName(String name) {
-            Preconditions.checkArgument(!Strings.isNullOrEmpty(name), "Exchange name must be specified");
-            this.name = name;
+        RetryExchangeName(String prefix, Group group) {
+            this.prefix = prefix;
+            this.group = group;
         }
 
         String asString() {
-            return MAILBOX_EVENT_RETRY_EXCHANGE_PREFIX + name;
+            return prefix + "-retryExchange-" + group.asString();
         }
     }
 
@@ -75,10 +66,10 @@ class GroupConsumerRetry {
     private final Group group;
     private final EventSerializer eventSerializer;
 
-    GroupConsumerRetry(Sender sender, Group group, RetryBackoffConfiguration retryBackoff,
+    GroupConsumerRetry(NamingStrategy namingStrategy, Sender sender, Group group, RetryBackoffConfiguration retryBackoff,
                        EventDeadLetters eventDeadLetters, EventSerializer eventSerializer) {
         this.sender = sender;
-        this.retryExchangeName = RetryExchangeName.of(group);
+        this.retryExchangeName = namingStrategy.retryExchange(group);
         this.retryBackoff = retryBackoff;
         this.eventDeadLetters = eventDeadLetters;
         this.group = group;
