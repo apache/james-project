@@ -383,13 +383,13 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void crossEventBusRegistrationShouldBeAllowed() throws Exception {
-            EventListener mailboxListener = EventBusTestFixture.newListener();
+            EventListener listener = EventBusTestFixture.newListener();
 
-            Mono.from(eventBus().register(mailboxListener, KEY_1)).block();
+            Mono.from(eventBus().register(listener, KEY_1)).block();
 
             eventBus2().dispatch(EVENT, KEY_1).block();
 
-            verify(mailboxListener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
@@ -406,16 +406,16 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void allRegisteredListenersShouldBeDispatched() throws Exception {
-            EventListener mailboxListener1 = EventBusTestFixture.newListener();
-            EventListener mailboxListener2 = EventBusTestFixture.newListener();
+            EventListener listener1 = EventBusTestFixture.newListener();
+            EventListener listener2 = EventBusTestFixture.newListener();
 
-            Mono.from(eventBus().register(mailboxListener1, KEY_1)).block();
-            Mono.from(eventBus2().register(mailboxListener2, KEY_1)).block();
+            Mono.from(eventBus().register(listener1, KEY_1)).block();
+            Mono.from(eventBus2().register(listener2, KEY_1)).block();
 
             eventBus2().dispatch(EVENT, KEY_1).block();
 
-            verify(mailboxListener1, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
-            verify(mailboxListener2, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener1, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener2, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
@@ -432,16 +432,16 @@ public interface KeyContract extends EventBusContract {
 
         @Test
         default void localDispatchedListenersShouldBeDispatchedWithoutDelay() throws Exception {
-            EventListener mailboxListener1 = EventBusTestFixture.newListener();
-            EventListener mailboxListener2 = EventBusTestFixture.newListener();
+            EventListener listener1 = EventBusTestFixture.newListener();
+            EventListener listener2 = EventBusTestFixture.newListener();
 
-            Mono.from(eventBus().register(mailboxListener1, KEY_1)).block();
-            Mono.from(eventBus2().register(mailboxListener2, KEY_1)).block();
+            Mono.from(eventBus().register(listener1, KEY_1)).block();
+            Mono.from(eventBus2().register(listener2, KEY_1)).block();
 
             eventBus2().dispatch(EVENT, KEY_1).block();
 
-            verify(mailboxListener2, times(1)).event(any());
-            verify(mailboxListener1, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener2, times(1)).event(any());
+            verify(listener1, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
     }

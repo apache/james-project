@@ -104,7 +104,7 @@ class GroupTest {
 
     @Test
     void deserializeShouldThrowWhenClassNotFound() {
-        assertThatThrownBy(() -> Group.deserialize("org.apache.james.mailbox.events.Noone"))
+        assertThatThrownBy(() -> Group.deserialize("org.apache.james.events.Noone"))
             .isInstanceOf(Group.GroupDeserializationException.class);
     }
 

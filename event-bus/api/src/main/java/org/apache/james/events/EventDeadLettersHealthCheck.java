@@ -47,7 +47,7 @@ public class EventDeadLettersHealthCheck implements HealthCheck {
         return eventDeadLetters.containEvents()
             .map(containEvents -> {
                 if (containEvents) {
-                    return Result.degraded(COMPONENT_NAME, "EventDeadLetters contain events. This might indicate transient failure on mailbox event processing.");
+                    return Result.degraded(COMPONENT_NAME, "EventDeadLetters contain events. This might indicate transient failure on event processing.");
                 }
 
                 return Result.healthy(COMPONENT_NAME);

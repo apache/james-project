@@ -418,20 +418,20 @@ public interface GroupContract {
 
         @Test
         default void groupsDefinedOnlyOnSomeNodesShouldBeNotifiedWhenDispatch() throws Exception {
-            EventListener mailboxListener = EventBusTestFixture.newListener();
+            EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus().register(mailboxListener, GROUP_A);
+            eventBus().register(listener, GROUP_A);
 
             eventBus2().dispatch(EVENT, NO_KEYS).block();
 
-            verify(mailboxListener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
         default void groupsDefinedOnlyOnSomeNodesShouldNotBeNotifiedWhenRedeliver() {
-            EventListener mailboxListener = EventBusTestFixture.newListener();
+            EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus().register(mailboxListener, GROUP_A);
+            eventBus().register(listener, GROUP_A);
 
             assertThatThrownBy(() -> eventBus2().reDeliver(GROUP_A, EVENT).block())
                 .isInstanceOf(GroupRegistrationNotFound.class);
@@ -439,38 +439,38 @@ public interface GroupContract {
 
         @Test
         default void groupListenersShouldBeExecutedOnceWhenRedeliverInADistributedEnvironment() throws Exception {
-            EventListener mailboxListener = EventBusTestFixture.newListener();
+            EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus().register(mailboxListener, GROUP_A);
-            eventBus2().register(mailboxListener, GROUP_A);
+            eventBus().register(listener, GROUP_A);
+            eventBus2().register(listener, GROUP_A);
 
             eventBus2().reDeliver(GROUP_A, EVENT).block();
 
-            verify(mailboxListener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
         default void groupListenersShouldBeExecutedOnceInAControlledEnvironment() throws Exception {
-            EventListener mailboxListener = EventBusTestFixture.newListener();
+            EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus().register(mailboxListener, GROUP_A);
-            eventBus2().register(mailboxListener, GROUP_A);
+            eventBus().register(listener, GROUP_A);
+            eventBus2().register(listener, GROUP_A);
 
             eventBus2().dispatch(EVENT, NO_KEYS).block();
 
-            verify(mailboxListener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
+            verify(listener, timeout(ONE_SECOND.toMillis()).times(1)).event(any());
         }
 
         @Test
         default void unregisterShouldStopNotificationForDistantGroups() throws Exception {
-            EventListener mailboxListener = EventBusTestFixture.newListener();
+            EventListener listener = EventBusTestFixture.newListener();
 
-            eventBus().register(mailboxListener, GROUP_A).unregister();
+            eventBus().register(listener, GROUP_A).unregister();
 
             eventBus2().dispatch(EVENT, NO_KEYS).block();
 
 
-            verify(mailboxListener, after(FIVE_HUNDRED_MS.toMillis()).never())
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
         }
 

@@ -67,21 +67,21 @@ class KeyRegistrationHandler {
     private final Receiver receiver;
     private final RegistrationQueueName registrationQueue;
     private final RegistrationBinder registrationBinder;
-    private final MailboxListenerExecutor mailboxListenerExecutor;
+    private final ListenerExecutor listenerExecutor;
     private final RetryBackoffConfiguration retryBackoff;
     private Optional<Disposable> receiverSubscriber;
 
     KeyRegistrationHandler(EventBusId eventBusId, EventSerializer eventSerializer,
                            Sender sender, ReceiverProvider receiverProvider,
                            RoutingKeyConverter routingKeyConverter, LocalListenerRegistry localListenerRegistry,
-                           MailboxListenerExecutor mailboxListenerExecutor, RetryBackoffConfiguration retryBackoff) {
+                           ListenerExecutor listenerExecutor, RetryBackoffConfiguration retryBackoff) {
         this.eventBusId = eventBusId;
         this.eventSerializer = eventSerializer;
         this.sender = sender;
         this.routingKeyConverter = routingKeyConverter;
         this.localListenerRegistry = localListenerRegistry;
         this.receiver = receiverProvider.createReceiver();
-        this.mailboxListenerExecutor = mailboxListenerExecutor;
+        this.listenerExecutor = listenerExecutor;
         this.retryBackoff = retryBackoff;
         this.registrationQueue = new RegistrationQueueName(EVENTBUS_QUEUE_NAME_PREFIX + eventBusId.asString());
         this.registrationBinder = new RegistrationBinder(sender, registrationQueue);
@@ -162,7 +162,7 @@ class KeyRegistrationHandler {
         RegistrationKey registrationKey = routingKeyConverter.toRegistrationKey(routingKey);
         Event event = toEvent(delivery);
 
-        return localListenerRegistry.getLocalMailboxListeners(registrationKey)
+        return localListenerRegistry.getLocalListeners(registrationKey)
             .filter(listener -> !isLocalSynchronousListeners(eventBusId, listener))
             .flatMap(listener -> executeListener(listener, event, registrationKey), EventBus.EXECUTION_RATE)
             .then();
@@ -172,7 +172,7 @@ class KeyRegistrationHandler {
         MDCBuilder mdcBuilder = MDCBuilder.create()
             .addContext(EventBus.StructuredLoggingFields.REGISTRATION_KEY, key);
 
-        return mailboxListenerExecutor.execute(listener, mdcBuilder, event)
+        return listenerExecutor.execute(listener, mdcBuilder, event)
             .doOnError(e -> structuredLogger(event, key)
                 .log(logger -> logger.error("Exception happens when handling event", e)))
             .onErrorResume(e -> Mono.empty())

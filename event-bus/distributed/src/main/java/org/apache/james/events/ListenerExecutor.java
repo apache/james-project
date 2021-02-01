@@ -27,10 +27,10 @@ import org.apache.james.util.ReactorUtils;
 
 import reactor.core.publisher.Mono;
 
-class MailboxListenerExecutor {
+class ListenerExecutor {
     private final MetricFactory metricFactory;
 
-    MailboxListenerExecutor(MetricFactory metricFactory) {
+    ListenerExecutor(MetricFactory metricFactory) {
         this.metricFactory = metricFactory;
     }
 
@@ -38,7 +38,7 @@ class MailboxListenerExecutor {
         if (listener.isHandling(event)) {
             return Mono.from(metricFactory.decoratePublisherWithTimerMetric(timerName(listener),
                 Mono.from(listener.reactiveEvent(event))
-                    .subscriberContext(ReactorUtils.context("MailboxListenerExecutor", mdc(listener, mdcBuilder, event)))));
+                    .subscriberContext(ReactorUtils.context("ListenerExecutor", mdc(listener, mdcBuilder, event)))));
         }
         return Mono.empty();
     }

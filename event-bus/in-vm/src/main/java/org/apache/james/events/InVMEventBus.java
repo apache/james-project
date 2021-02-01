@@ -102,12 +102,12 @@ public class InVMEventBus implements EventBus {
             .then();
     }
 
-    private Mono<Void> groupDelivery(Event event, EventListener.ReactiveEventListener mailboxListener, Group group) {
+    private Mono<Void> groupDelivery(Event event, EventListener.ReactiveEventListener listener, Group group) {
         return eventDelivery.deliver(
-            mailboxListener,
+            listener,
             event,
             EventDelivery.DeliveryOption.of(
-                EventDelivery.Retryer.BackoffRetryer.of(retryBackoff, mailboxListener),
+                EventDelivery.Retryer.BackoffRetryer.of(retryBackoff, listener),
                 EventDelivery.PermanentFailureHandler.StoreToDeadLetters.of(group, eventDeadLetters)));
     }
 

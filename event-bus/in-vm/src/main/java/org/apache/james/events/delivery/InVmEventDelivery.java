@@ -77,28 +77,28 @@ public class InVmEventDelivery implements EventDelivery {
             .then();
     }
 
-    private Mono<Void> doDeliverToListener(EventListener.ReactiveEventListener mailboxListener, Event event) {
-        if (mailboxListener.isHandling(event)) {
-            return Mono.defer(() -> Mono.from(metricFactory.decoratePublisherWithTimerMetric(timerName(mailboxListener),
-                    mailboxListener.reactiveEvent(event))))
-                .subscriberContext(context("deliver", buildMDC(mailboxListener, event)));
+    private Mono<Void> doDeliverToListener(EventListener.ReactiveEventListener listener, Event event) {
+        if (listener.isHandling(event)) {
+            return Mono.defer(() -> Mono.from(metricFactory.decoratePublisherWithTimerMetric(timerName(listener),
+                    listener.reactiveEvent(event))))
+                .subscriberContext(context("deliver", buildMDC(listener, event)));
         }
         return Mono.empty();
     }
 
-    private MDCBuilder buildMDC(EventListener mailboxListener, Event event) {
+    private MDCBuilder buildMDC(EventListener listener, Event event) {
         return MDCBuilder.create()
             .addContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
             .addContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
             .addContext(EventBus.StructuredLoggingFields.USER, event.getUsername())
-            .addContext(EventBus.StructuredLoggingFields.LISTENER_CLASS, mailboxListener.getClass());
+            .addContext(EventBus.StructuredLoggingFields.LISTENER_CLASS, listener.getClass());
     }
 
-    private StructuredLogger structuredLogger(Event event, EventListener mailboxListener) {
+    private StructuredLogger structuredLogger(Event event, EventListener listener) {
         return MDCStructuredLogger.forLogger(LOGGER)
             .addField(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
             .addField(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
             .addField(EventBus.StructuredLoggingFields.USER, event.getUsername())
-            .addField(EventBus.StructuredLoggingFields.LISTENER_CLASS, mailboxListener.getClass());
+            .addField(EventBus.StructuredLoggingFields.LISTENER_CLASS, listener.getClass());
     }
 }

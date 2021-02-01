@@ -69,18 +69,18 @@ public interface EventDelivery {
 
         class BackoffRetryer implements Retryer {
 
-            public static BackoffRetryer of(RetryBackoffConfiguration retryBackoff, EventListener mailboxListener) {
-                return new BackoffRetryer(retryBackoff, mailboxListener);
+            public static BackoffRetryer of(RetryBackoffConfiguration retryBackoff, EventListener listener) {
+                return new BackoffRetryer(retryBackoff, listener);
             }
 
             private static final Logger LOGGER = LoggerFactory.getLogger(BackoffRetryer.class);
 
             private final RetryBackoffConfiguration retryBackoff;
-            private final EventListener mailboxListener;
+            private final EventListener listener;
 
-            public BackoffRetryer(RetryBackoffConfiguration retryBackoff, EventListener mailboxListener) {
+            public BackoffRetryer(RetryBackoffConfiguration retryBackoff, EventListener listener) {
                 this.retryBackoff = retryBackoff;
-                this.mailboxListener = mailboxListener;
+                this.listener = listener;
             }
 
             @Override
@@ -88,7 +88,7 @@ public interface EventDelivery {
                 return executionResult
                     .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))
                     .doOnError(throwable -> LOGGER.error("listener {} exceeded maximum retry({}) to handle event {}",
-                        mailboxListener.getClass().getCanonicalName(),
+                        listener.getClass().getCanonicalName(),
                         retryBackoff.getMaxRetries(),
                         event.getClass().getCanonicalName(),
                         throwable))

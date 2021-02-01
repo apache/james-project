@@ -103,7 +103,7 @@ class LocalListenerRegistry {
         return remainingListeners;
     }
 
-    Flux<EventListener.ReactiveEventListener> getLocalMailboxListeners(RegistrationKey registrationKey) {
+    Flux<EventListener.ReactiveEventListener> getLocalListeners(RegistrationKey registrationKey) {
         return Flux.fromIterable(listenersByKey.getOrDefault(registrationKey, ImmutableSet.of()));
     }
 }

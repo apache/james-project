@@ -76,7 +76,7 @@ class GroupRegistration implements Registration {
     static final int DEFAULT_RETRY_COUNT = 0;
 
     private final ReactorRabbitMQChannelPool channelPool;
-    private final EventListener.ReactiveEventListener mailboxListener;
+    private final EventListener.ReactiveEventListener listener;
     private final WorkQueueName queueName;
     private final Receiver receiver;
     private final Runnable unregisterGroup;
@@ -86,21 +86,21 @@ class GroupRegistration implements Registration {
     private final WaitDelayGenerator delayGenerator;
     private final Group group;
     private final RetryBackoffConfiguration retryBackoff;
-    private final MailboxListenerExecutor mailboxListenerExecutor;
+    private final ListenerExecutor listenerExecutor;
     private Optional<Disposable> receiverSubscriber;
 
     GroupRegistration(ReactorRabbitMQChannelPool channelPool, Sender sender, ReceiverProvider receiverProvider, EventSerializer eventSerializer,
-                      EventListener.ReactiveEventListener mailboxListener, Group group, RetryBackoffConfiguration retryBackoff,
+                      EventListener.ReactiveEventListener listener, Group group, RetryBackoffConfiguration retryBackoff,
                       EventDeadLetters eventDeadLetters,
-                      Runnable unregisterGroup, MailboxListenerExecutor mailboxListenerExecutor) {
+                      Runnable unregisterGroup, ListenerExecutor listenerExecutor) {
         this.channelPool = channelPool;
         this.eventSerializer = eventSerializer;
-        this.mailboxListener = mailboxListener;
+        this.listener = listener;
         this.queueName = WorkQueueName.of(group);
         this.sender = sender;
         this.receiver = receiverProvider.createReceiver();
         this.retryBackoff = retryBackoff;
-        this.mailboxListenerExecutor = mailboxListenerExecutor;
+        this.listenerExecutor = listenerExecutor;
         this.receiverSubscriber = Optional.empty();
         this.unregisterGroup = unregisterGroup;
         this.retryHandler = new GroupConsumerRetry(sender, group, retryBackoff, eventDeadLetters, eventSerializer);
@@ -164,8 +164,8 @@ class GroupRegistration implements Registration {
     }
 
     private Mono<Void> runListener(Event event) {
-        return mailboxListenerExecutor.execute(
-            mailboxListener,
+        return listenerExecutor.execute(
+            listener,
             MDCBuilder.create()
                 .addContext(EventBus.StructuredLoggingFields.GROUP, group),
             event);

@@ -120,8 +120,8 @@ public interface EventListener {
         return new ReactiveWrapper<>(listener);
     }
 
-    static ReactiveGroupEventListener wrapReactive(GroupEventListener groupMailboxListener) {
-        return new ReactiveGroupWrapper(groupMailboxListener);
+    static ReactiveGroupEventListener wrapReactive(GroupEventListener groupEventListener) {
+        return new ReactiveGroupWrapper(groupEventListener);
     }
 
     default ExecutionMode getExecutionMode() {

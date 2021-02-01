@@ -41,8 +41,8 @@ public interface EventBus {
     }
 
     interface Metrics {
-        static String timerName(EventListener mailboxListener) {
-            return "mailbox-listener-" + mailboxListener.getClass().getSimpleName();
+        static String timerName(EventListener listener) {
+            return "mailbox-listener-" + listener.getClass().getSimpleName();
         }
     }
 
@@ -66,11 +66,11 @@ public interface EventBus {
         return dispatch(event, ImmutableSet.of(key));
     }
 
-    default Registration register(EventListener.GroupEventListener groupMailboxListener) {
-        return register(EventListener.wrapReactive(groupMailboxListener));
+    default Registration register(EventListener.GroupEventListener groupListener) {
+        return register(EventListener.wrapReactive(groupListener));
     }
 
-    default Registration register(EventListener.ReactiveGroupEventListener groupMailboxListener) {
-        return register(groupMailboxListener, groupMailboxListener.getDefaultGroup());
+    default Registration register(EventListener.ReactiveGroupEventListener groupListener) {
+        return register(groupListener, groupListener.getDefaultGroup());
     }
 }

@@ -69,12 +69,12 @@ public class EventDispatcher {
     private final Sender sender;
     private final LocalListenerRegistry localListenerRegistry;
     private final AMQP.BasicProperties basicProperties;
-    private final MailboxListenerExecutor mailboxListenerExecutor;
+    private final ListenerExecutor listenerExecutor;
     private final EventDeadLetters deadLetters;
 
     EventDispatcher(EventBusId eventBusId, EventSerializer eventSerializer, Sender sender,
                     LocalListenerRegistry localListenerRegistry,
-                    MailboxListenerExecutor mailboxListenerExecutor,
+                    ListenerExecutor listenerExecutor,
                     EventDeadLetters deadLetters) {
         this.eventSerializer = eventSerializer;
         this.sender = sender;
@@ -85,7 +85,7 @@ public class EventDispatcher {
             .priority(PERSISTENT_TEXT_PLAIN.getPriority())
             .contentType(PERSISTENT_TEXT_PLAIN.getContentType())
             .build();
-        this.mailboxListenerExecutor = mailboxListenerExecutor;
+        this.listenerExecutor = listenerExecutor;
         this.deadLetters = deadLetters;
     }
 
@@ -122,15 +122,15 @@ public class EventDispatcher {
 
     private Mono<Void> dispatchToLocalListeners(Event event, Set<RegistrationKey> keys) {
         return Flux.fromIterable(keys)
-            .flatMap(key -> localListenerRegistry.getLocalMailboxListeners(key)
+            .flatMap(key -> localListenerRegistry.getLocalListeners(key)
                 .map(listener -> Tuples.of(key, listener)), EventBus.EXECUTION_RATE)
             .filter(pair -> pair.getT2().getExecutionMode() == EventListener.ExecutionMode.SYNCHRONOUS)
             .flatMap(pair -> executeListener(event, pair.getT2(), pair.getT1()), EventBus.EXECUTION_RATE)
             .then();
     }
 
-    private Mono<Void> executeListener(Event event, EventListener.ReactiveEventListener mailboxListener, RegistrationKey registrationKey) {
-        return mailboxListenerExecutor.execute(mailboxListener,
+    private Mono<Void> executeListener(Event event, EventListener.ReactiveEventListener listener, RegistrationKey registrationKey) {
+        return listenerExecutor.execute(listener,
                     MDCBuilder.create()
                         .addContext(EventBus.StructuredLoggingFields.REGISTRATION_KEY, registrationKey),
                     event)

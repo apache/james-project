@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 interface EventDeadLettersHealthCheckContract {
 
     ComponentName COMPONENT_NAME = new ComponentName("EventDeadLettersHealthCheck");
-    String EXPECTED_DEGRADED_MESSAGE = "EventDeadLetters contain events. This might indicate transient failure on mailbox event processing.";
+    String EXPECTED_DEGRADED_MESSAGE = "EventDeadLetters contain events. This might indicate transient failure on event processing.";
 
     Username USERNAME = Username.of("user");
 

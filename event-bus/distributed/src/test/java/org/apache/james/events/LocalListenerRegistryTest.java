@@ -45,33 +45,33 @@ class LocalListenerRegistryTest {
     }
 
     @Test
-    void getLocalMailboxListenersShouldReturnEmptyWhenNone() {
-        assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
+    void getLocalListenersShouldReturnEmptyWhenNone() {
+        assertThat(testee.getLocalListeners(KEY_1).collectList().block())
             .isEmpty();
     }
 
     @Test
-    void getLocalMailboxListenersShouldReturnPreviouslyAddedListener() {
+    void getLocalListenersShouldReturnPreviouslyAddedListener() {
         EventListener listener = event -> { };
         testee.addListener(KEY_1, listener);
 
-        assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
+        assertThat(testee.getLocalListeners(KEY_1).collectList().block())
             .containsOnly(wrapReactive(listener));
     }
 
     @Test
-    void getLocalMailboxListenersShouldReturnPreviouslyAddedListeners() {
+    void getLocalListenersShouldReturnPreviouslyAddedListeners() {
         EventListener listener1 = event -> { };
         EventListener listener2 = event -> { };
         testee.addListener(KEY_1, listener1);
         testee.addListener(KEY_1, listener2);
 
-        assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
+        assertThat(testee.getLocalListeners(KEY_1).collectList().block())
             .containsOnly(wrapReactive(listener1), wrapReactive(listener2));
     }
 
     @Test
-    void getLocalMailboxListenersShouldNotReturnRemovedListeners() {
+    void getLocalListenersShouldNotReturnRemovedListeners() {
         EventListener listener1 = event -> { };
         EventListener listener2 = event -> { };
         testee.addListener(KEY_1, listener1);
@@ -79,7 +79,7 @@ class LocalListenerRegistryTest {
 
         registration.unregister();
 
-        assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
+        assertThat(testee.getLocalListeners(KEY_1).collectList().block())
             .containsOnly(wrapReactive(listener1));
     }
 
@@ -126,7 +126,7 @@ class LocalListenerRegistryTest {
         private final Duration oneSecond = Duration.ofSeconds(1);
 
         @Test
-        void getLocalMailboxListenersShouldReturnPreviousAddedListener() throws Exception {
+        void getLocalListenersShouldReturnPreviousAddedListener() throws Exception {
             EventListener listener = event -> { };
 
             ConcurrentTestRunner.builder()
@@ -135,12 +135,12 @@ class LocalListenerRegistryTest {
                 .operationCount(10)
                 .runSuccessfullyWithin(oneSecond);
 
-            assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
+            assertThat(testee.getLocalListeners(KEY_1).collectList().block())
                 .containsOnly(wrapReactive(listener));
         }
 
         @Test
-        void getLocalMailboxListenersShouldReturnAllPreviousAddedListeners() throws Exception {
+        void getLocalListenersShouldReturnAllPreviousAddedListeners() throws Exception {
             EventListener listener1 = event -> { };
             EventListener listener2 = event -> { };
             EventListener listener3 = event -> { };
@@ -154,12 +154,12 @@ class LocalListenerRegistryTest {
                 .operationCount(10)
                 .runSuccessfullyWithin(oneSecond);
 
-            assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
+            assertThat(testee.getLocalListeners(KEY_1).collectList().block())
                 .containsOnly(wrapReactive(listener1), wrapReactive(listener2), wrapReactive(listener3));
         }
 
         @Test
-        void getLocalMailboxListenersShouldReturnEmptyWhenRemoveAddedListener() throws Exception {
+        void getLocalListenersShouldReturnEmptyWhenRemoveAddedListener() throws Exception {
             EventListener listener1 = event -> { };
 
             LocalListenerRegistry.LocalRegistration registration = testee.addListener(KEY_1, listener1);
@@ -170,7 +170,7 @@ class LocalListenerRegistryTest {
                 .operationCount(10)
                 .runSuccessfullyWithin(oneSecond);
 
-            assertThat(testee.getLocalMailboxListeners(KEY_1).collectList().block())
+            assertThat(testee.getLocalListeners(KEY_1).collectList().block())
                 .isEmpty();
         }
 
@@ -241,7 +241,7 @@ class LocalListenerRegistryTest {
             testee.addListener(KEY_1, listener4);
             LocalListenerRegistry.LocalRegistration registration5 = testee.addListener(KEY_1, listener5);
 
-            Mono<List<EventListener.ReactiveEventListener>> listeners = testee.getLocalMailboxListeners(KEY_1)
+            Mono<List<EventListener.ReactiveEventListener>> listeners = testee.getLocalListeners(KEY_1)
                 .publishOn(Schedulers.elastic())
                 .delayElements(Duration.ofMillis(100))
                 .collectList();

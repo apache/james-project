@@ -36,18 +36,18 @@ class GroupRegistrationHandler {
     private final ReceiverProvider receiverProvider;
     private final RetryBackoffConfiguration retryBackoff;
     private final EventDeadLetters eventDeadLetters;
-    private final MailboxListenerExecutor mailboxListenerExecutor;
+    private final ListenerExecutor listenerExecutor;
 
     GroupRegistrationHandler(EventSerializer eventSerializer, ReactorRabbitMQChannelPool channelPool, Sender sender, ReceiverProvider receiverProvider,
                              RetryBackoffConfiguration retryBackoff,
-                             EventDeadLetters eventDeadLetters, MailboxListenerExecutor mailboxListenerExecutor) {
+                             EventDeadLetters eventDeadLetters, ListenerExecutor listenerExecutor) {
         this.eventSerializer = eventSerializer;
         this.channelPool = channelPool;
         this.sender = sender;
         this.receiverProvider = receiverProvider;
         this.retryBackoff = retryBackoff;
         this.eventDeadLetters = eventDeadLetters;
-        this.mailboxListenerExecutor = mailboxListenerExecutor;
+        this.listenerExecutor = listenerExecutor;
         this.groupRegistrations = new ConcurrentHashMap<>();
     }
 
@@ -81,6 +81,6 @@ class GroupRegistrationHandler {
             retryBackoff,
             eventDeadLetters,
             () -> groupRegistrations.remove(group),
-            mailboxListenerExecutor);
+            listenerExecutor);
     }
 }
