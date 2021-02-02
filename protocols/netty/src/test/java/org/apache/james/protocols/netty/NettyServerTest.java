@@ -19,6 +19,7 @@
 
 package org.apache.james.protocols.netty;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 import javax.net.ssl.SSLContext;
@@ -26,40 +27,34 @@ import javax.net.ssl.SSLContext;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
 import org.jboss.netty.util.HashedWheelTimer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class NettyServerTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     private HashedWheelTimer hashedWheelTimer;
 
-    @Before
+    @BeforeEach
     public void setup() {
         hashedWheelTimer = new HashedWheelTimer();
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         hashedWheelTimer.stop();
     }
 
     @Test
     public void protocolShouldThrowWhenProtocolIsNull() {
-        expectedException.expect(NullPointerException.class);
-        new NettyServer.Factory(hashedWheelTimer).protocol(null);
+        assertThatThrownBy(() -> new NettyServer.Factory(hashedWheelTimer).protocol(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void buildShouldThrowWhenProtocolIsNotGiven() {
-        expectedException.expect(IllegalStateException.class);
-        new NettyServer.Factory(hashedWheelTimer)
-            .build();
+        assertThatThrownBy(() -> new NettyServer.Factory(hashedWheelTimer)
+            .build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
