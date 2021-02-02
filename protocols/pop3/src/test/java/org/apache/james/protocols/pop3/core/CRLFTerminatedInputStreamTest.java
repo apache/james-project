@@ -22,12 +22,11 @@ package org.apache.james.protocols.pop3.core;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class CRLFTerminatedInputStreamTest extends AbstractInputStreamTest {
-
+class CRLFTerminatedInputStreamTest extends AbstractInputStreamTest {
     @Test
-    public void testCRLFPresent() throws IOException {
+    void testCRLFPresent() throws IOException {
         String data = "Subject: test\r\n\r\ndata\r\n";
         checkRead(new CRLFTerminatedInputStream(new ByteArrayInputStream(data.getBytes())), data);
         checkReadViaArray(new CRLFTerminatedInputStream(new ByteArrayInputStream(data.getBytes())), data);
@@ -35,7 +34,7 @@ public class CRLFTerminatedInputStreamTest extends AbstractInputStreamTest {
     }
 
     @Test
-    public void testCRPresent() throws IOException {
+    void testCRPresent() throws IOException {
         String data = "Subject: test\r\n\r\ndata\r";
         String expected = data + "\n";
         checkRead(new CRLFTerminatedInputStream(new ByteArrayInputStream(data.getBytes())), expected);
@@ -43,12 +42,10 @@ public class CRLFTerminatedInputStreamTest extends AbstractInputStreamTest {
     }
 
     @Test
-    public void testNonPresent() throws IOException {
+    void testNonPresent() throws IOException {
         String data = "Subject: test\r\n\r\ndata";
         String expected = data + "\r\n";
         checkRead(new CRLFTerminatedInputStream(new ByteArrayInputStream(data.getBytes())), expected);
         checkReadViaArray(new CRLFTerminatedInputStream(new ByteArrayInputStream(data.getBytes())), expected);
-
     }
-
 }

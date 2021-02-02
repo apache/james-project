@@ -26,19 +26,19 @@ import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.netty.NettyServer;
 import org.apache.james.protocols.pop3.AbstractStartTlsPOP3ServerTest;
 import org.jboss.netty.util.HashedWheelTimer;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 public class NettyStartTlsPOP3ServerTest extends AbstractStartTlsPOP3ServerTest {
 
     private HashedWheelTimer hashedWheelTimer;
 
-    @Before
+    @BeforeEach
     public void setup() {
         hashedWheelTimer = new HashedWheelTimer();
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         hashedWheelTimer.stop();
     }

@@ -42,7 +42,7 @@ import org.apache.james.protocols.pop3.mailbox.Mailbox;
 import org.apache.james.protocols.pop3.utils.MockMailbox;
 import org.apache.james.protocols.pop3.utils.MockMailbox.Message;
 import org.apache.james.protocols.pop3.utils.TestPassCmdHandler;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public abstract class AbstractPOP3ServerTest {
 

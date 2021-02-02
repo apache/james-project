@@ -35,7 +35,7 @@ import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.pop3.core.AbstractPassCmdHandler;
 import org.apache.james.protocols.pop3.utils.MockMailbox;
 import org.apache.james.protocols.pop3.utils.TestPassCmdHandler;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public abstract class AbstractStartTlsPOP3ServerTest {
 

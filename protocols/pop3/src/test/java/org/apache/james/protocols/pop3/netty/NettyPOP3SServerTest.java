@@ -26,22 +26,21 @@ import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.netty.NettyServer;
 import org.apache.james.protocols.pop3.AbstractPOP3SServerTest;
 import org.jboss.netty.util.HashedWheelTimer;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 public class NettyPOP3SServerTest extends AbstractPOP3SServerTest {
-
     private static final String LOCALHOST_IP = "127.0.0.1";
     private static final int RANDOM_PORT = 0;
 
     private HashedWheelTimer hashedWheelTimer;
 
-    @Before
+    @BeforeEach
     public void setup() {
         hashedWheelTimer = new HashedWheelTimer();
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         hashedWheelTimer.stop();
     }
@@ -55,7 +54,4 @@ public class NettyPOP3SServerTest extends AbstractPOP3SServerTest {
         server.setListenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT));
         return server;
     }
-
-
-
 }

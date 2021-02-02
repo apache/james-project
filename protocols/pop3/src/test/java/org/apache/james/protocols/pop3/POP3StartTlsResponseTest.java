@@ -22,16 +22,14 @@ package org.apache.james.protocols.pop3;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.protocols.api.StartTlsResponse;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class POP3StartTlsResponseTest {
-
-
+class POP3StartTlsResponseTest {
     /**
      * Test for PROTOCOLS-89
      */
     @Test
-    public void testImmutable() {
+    void testImmutable() {
         POP3StartTlsResponse response = new POP3StartTlsResponse(POP3Response.OK_RESPONSE);
         assertThat(response).isInstanceOf(StartTlsResponse.class);
         assertThat(response.immutable()).isInstanceOf(StartTlsResponse.class);
