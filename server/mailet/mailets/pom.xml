@@ -33,7 +33,7 @@
     <name>Apache James :: Server :: Mailets</name>
 
     <properties>
-        <spec2.version>4.9.4</spec2.version>
+        <spec2.version>4.10.6</spec2.version>
     </properties>
 
     <dependencies>
