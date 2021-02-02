@@ -21,124 +21,132 @@
 package org.apache.james.managesieve.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.managesieve.api.ArgumentException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ParserUtilsTest {
-
-    @Test(expected = ArgumentException.class)
-    public void getSizeShouldThrowOnNullInput() throws Exception {
-        ParserUtils.getSize(null);
-    }
-
-    @Test(expected = ArgumentException.class)
-    public void getSizeShouldThrowOnEmptyInput() throws Exception {
-        ParserUtils.getSize("");
-    }
-
-    @Test(expected = ArgumentException.class)
-    public void getSizeShouldThrowOnMalformedData1() throws Exception {
-        ParserUtils.getSize("abc");
-    }
-
-    @Test(expected = ArgumentException.class)
-    public void getSizeShouldThrowOnMalformedData2() throws Exception {
-        ParserUtils.getSize("{ab");
-    }
-
-    @Test(expected = ArgumentException.class)
-    public void getSizeShouldThrowOnMalformedData3() throws Exception {
-        ParserUtils.getSize("{ab}");
-    }
-
-    @Test(expected = ArgumentException.class)
-    public void getSizeShouldThrowOnMalformedData4() throws Exception {
-        ParserUtils.getSize("{ab+}");
-    }
-
-    @Test(expected = ArgumentException.class)
-    public void getSizeShouldThrowOnMalformedData5() throws Exception {
-        ParserUtils.getSize("{ab125+}");
+class ParserUtilsTest {
+    @Test
+    void getSizeShouldThrowOnNullInput() {
+        assertThatThrownBy(() -> ParserUtils.getSize(null))
+            .isInstanceOf(ArgumentException.class);
     }
 
     @Test
-    public void getSizeShouldWork() throws Exception {
+    void getSizeShouldThrowOnEmptyInput() {
+        assertThatThrownBy(() -> ParserUtils.getSize(""))
+            .isInstanceOf(ArgumentException.class);
+    }
+
+    @Test
+    void getSizeShouldThrowOnMalformedData1()  {
+        assertThatThrownBy(() -> ParserUtils.getSize("abc"))
+            .isInstanceOf(ArgumentException.class);
+    }
+
+    @Test
+    void getSizeShouldThrowOnMalformedData2() {
+        assertThatThrownBy(() -> ParserUtils.getSize("{ab"))
+            .isInstanceOf(ArgumentException.class);
+    }
+
+    @Test
+    void getSizeShouldThrowOnMalformedData3() {
+        assertThatThrownBy(() -> ParserUtils.getSize("{ab}"))
+            .isInstanceOf(ArgumentException.class);
+    }
+
+    @Test
+    void getSizeShouldThrowOnMalformedData4() {
+        assertThatThrownBy(() -> ParserUtils.getSize("{ab+}"))
+            .isInstanceOf(ArgumentException.class);
+    }
+
+    @Test
+    void getSizeShouldThrowOnMalformedData5() {
+        assertThatThrownBy(() -> ParserUtils.getSize("{ab125+}"))
+            .isInstanceOf(ArgumentException.class);
+    }
+
+    @Test
+    void getSizeShouldWork() throws Exception {
         assertThat(ParserUtils.getSize("{45+}")).isEqualTo(45);
     }
 
-    @Test(expected = ArgumentException.class)
-    public void getSizeShouldThrowOnExtraArguments() throws Exception {
-        ParserUtils.getSize("{45+} extra");
+    @Test
+    void getSizeShouldThrowOnExtraArguments() {
+        assertThatThrownBy(() -> ParserUtils.getSize("{45+} extra"))
+            .isInstanceOf(ArgumentException.class);
     }
 
     @Test
-    public void unquoteShouldReturnNullOnNullInput() {
+    void unquoteShouldReturnNullOnNullInput() {
         assertThat(ParserUtils.unquote(null)).isEqualTo(null);
     }
 
     @Test
-    public void unquoteShouldReturnEmptyStringOnEmptyInput() {
+    void unquoteShouldReturnEmptyStringOnEmptyInput() {
         assertThat(ParserUtils.unquote("")).isEqualTo("");
     }
 
     @Test
-    public void unquoteShouldNotUnquoteUnquotedQuotes() {
+    void unquoteShouldNotUnquoteUnquotedQuotes() {
         assertThat(ParserUtils.unquote("a")).isEqualTo("a");
     }
 
     @Test
-    public void unquoteShouldNotUnquoteNonStartingQuotes() {
+    void unquoteShouldNotUnquoteNonStartingQuotes() {
         assertThat(ParserUtils.unquote("a\"")).isEqualTo("a\"");
     }
 
     @Test
-    public void unquoteShouldNotUnquoteNonEndingQuotes() {
+    void unquoteShouldNotUnquoteNonEndingQuotes() {
         assertThat(ParserUtils.unquote("\"a")).isEqualTo("\"a");
     }
 
     @Test
-    public void unquoteShouldNotUnquoteQuotesThatDoNotEnglobeWallString() {
+    void unquoteShouldNotUnquoteQuotesThatDoNotEnglobeWallString() {
         assertThat(ParserUtils.unquote("a\"b\"c")).isEqualTo("a\"b\"c");
     }
 
     @Test
-    public void unquoteShouldNotUnquoteQuotesThatDoNotEnglobeWallString1() {
+    void unquoteShouldNotUnquoteQuotesThatDoNotEnglobeWallString1() {
         assertThat(ParserUtils.unquote("\"b\"c")).isEqualTo("\"b\"c");
     }
 
     @Test
-    public void unquoteShouldNotUnquoteQuotesThatDoNotEnglobeWallString2() {
+    void unquoteShouldNotUnquoteQuotesThatDoNotEnglobeWallString2() {
         assertThat(ParserUtils.unquote("a\"b\"")).isEqualTo("a\"b\"");
     }
 
     @Test
-    public void unquoteShouldWorkWithDoubleQuote() {
+    void unquoteShouldWorkWithDoubleQuote() {
         assertThat(ParserUtils.unquote("\"a\"")).isEqualTo("a");
     }
 
     @Test
-    public void unquoteShouldNotUnquoteNonTrimmedData() {
+    void unquoteShouldNotUnquoteNonTrimmedData() {
         assertThat(ParserUtils.unquote(" \"a\"")).isEqualTo(" \"a\"");
     }
 
     @Test
-    public void unquoteShouldManageSingleQuotes() {
+    void unquoteShouldManageSingleQuotes() {
         assertThat(ParserUtils.unquote("a'")).isEqualTo("a'");
     }
 
     @Test
-    public void unquoteShouldManageSingleQuotes1() {
+    void unquoteShouldManageSingleQuotes1() {
         assertThat(ParserUtils.unquote("'a")).isEqualTo("'a");
     }
 
     @Test
-    public void unquoteShouldManageSingleQuotes2() {
+    void unquoteShouldManageSingleQuotes2() {
         assertThat(ParserUtils.unquote("a'b")).isEqualTo("a'b");
     }
 
     @Test
-    public void unquoteShouldWorkWithSingleQuotes() {
+    void unquoteShouldWorkWithSingleQuotes() {
         assertThat(ParserUtils.unquote("'a'")).isEqualTo("a");
     }
 }
