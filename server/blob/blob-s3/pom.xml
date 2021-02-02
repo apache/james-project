@@ -76,12 +76,12 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec</artifactId>
-            <version>4.1.56.Final</version>
+            <version>4.1.58.Final</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-handler</artifactId>
-            <version>4.1.56.Final</version>
+            <version>4.1.58.Final</version>
         </dependency>
         <dependency>
             <groupId>io.projectreactor.addons</groupId>
