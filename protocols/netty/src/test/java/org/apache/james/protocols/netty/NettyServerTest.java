@@ -31,34 +31,34 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class NettyServerTest {
+class NettyServerTest {
     private HashedWheelTimer hashedWheelTimer;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         hashedWheelTimer = new HashedWheelTimer();
     }
 
     @AfterEach
-    public void teardown() {
+    void teardown() {
         hashedWheelTimer.stop();
     }
 
     @Test
-    public void protocolShouldThrowWhenProtocolIsNull() {
+    void protocolShouldThrowWhenProtocolIsNull() {
         assertThatThrownBy(() -> new NettyServer.Factory(hashedWheelTimer).protocol(null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void buildShouldThrowWhenProtocolIsNotGiven() {
+    void buildShouldThrowWhenProtocolIsNotGiven() {
         assertThatThrownBy(() -> new NettyServer.Factory(hashedWheelTimer)
             .build())
             .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void buildShouldWorkWhenProtocolIsGiven() {
+    void buildShouldWorkWhenProtocolIsGiven() {
         Protocol protocol = mock(Protocol.class);
         new NettyServer.Factory(hashedWheelTimer)
             .protocol(protocol)
@@ -66,7 +66,7 @@ public class NettyServerTest {
     }
 
     @Test
-    public void buildShouldWorkWhenEverythingIsGiven() throws Exception {
+    void buildShouldWorkWhenEverythingIsGiven() throws Exception {
         Protocol protocol = mock(Protocol.class);
         Encryption encryption = Encryption.createStartTls(SSLContext.getDefault());
         ChannelHandlerFactory channelHandlerFactory = mock(ChannelHandlerFactory.class);
