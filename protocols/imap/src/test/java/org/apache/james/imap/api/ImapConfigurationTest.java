@@ -20,36 +20,32 @@
 package org.apache.james.imap.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.imap.api.message.Capability;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class ImapConfigurationTest {
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
+class ImapConfigurationTest {
     @Test
-    public void shouldRespectBeanContract() {
+    void shouldRespectBeanContract() {
         EqualsVerifier.forClass(ImapConfiguration.class).verify();
     }
 
     @Test
-    public void idleKeepAliveShouldBeDefaultValueWhenNoSetting() {
+    void idleKeepAliveShouldBeDefaultValueWhenNoSetting() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder().build();
 
         assertThat(imapConfiguration.getIdleTimeInterval()).isEqualTo(ImapConfiguration.DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS);
     }
 
     @Test
-    public void idleKeepAliveShouldReturnSetValue() {
+    void idleKeepAliveShouldReturnSetValue() {
         long idleValue  = 1;
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .idleTimeInterval(idleValue)
@@ -59,32 +55,32 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void idleKeepAliveShouldThrowWhenRezo() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        ImapConfiguration.builder()
+    void idleKeepAliveShouldThrowWhenRezo() {
+        assertThatThrownBy(() ->
+            ImapConfiguration.builder()
                 .idleTimeInterval(0L)
-                .build();
+                .build())
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void idleKeepAliveShouldThrowWhenNegative() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        ImapConfiguration.builder()
+    void idleKeepAliveShouldThrowWhenNegative() {
+        assertThatThrownBy(() ->
+            ImapConfiguration.builder()
                 .idleTimeInterval(-1)
-                .build();
+                .build())
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void millisecondsShouldBeDefaultValueWhenNoSetting() {
+    void millisecondsShouldBeDefaultValueWhenNoSetting() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder().build();
 
         assertThat(imapConfiguration.getIdleTimeIntervalUnit()).isEqualTo(ImapConfiguration.DEFAULT_HEARTBEAT_INTERVAL_UNIT);
     }
 
     @Test
-    public void millisecondsShouldReturnSetValue() {
+    void millisecondsShouldReturnSetValue() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .idleTimeIntervalUnit(TimeUnit.MINUTES)
                 .build();
@@ -93,7 +89,7 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void disabledCapsShouldBeEmptyAsDefault() {
+    void disabledCapsShouldBeEmptyAsDefault() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .build();
 
@@ -101,7 +97,7 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void disabledCapsShouldReturnSetValue() {
+    void disabledCapsShouldReturnSetValue() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .disabledCaps(ImmutableSet.of("AnyValue"))
                 .build();
@@ -110,7 +106,7 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void disabledCapsShouldReturnMultipleSetValues() {
+    void disabledCapsShouldReturnMultipleSetValues() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .disabledCaps(ImmutableSet.of("AnyValue", "OtherValue"))
                 .build();
@@ -119,7 +115,7 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void disabledCapsShouldReturnMultipleSetValuesWithNormalizeValue() {
+    void disabledCapsShouldReturnMultipleSetValuesWithNormalizeValue() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .disabledCaps(ImmutableSet.of("   AnyValue   ", "  OtherValue   "))
                 .build();
@@ -128,7 +124,7 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void disabledCapsFromStringArrayShouldReturnMultipleSetValuesWithNormalizeValue() {
+    void disabledCapsFromStringArrayShouldReturnMultipleSetValuesWithNormalizeValue() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .disabledCaps("   AnyValue   ", "  OtherValue   ")
                 .build();
@@ -137,7 +133,7 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void disabledCapShouldReturnMultipleStringWithNormalizeValue() {
+    void disabledCapShouldReturnMultipleStringWithNormalizeValue() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .disabledCap("   AnyValue   ")
                 .build();
@@ -146,7 +142,7 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void idleShouldEnableByDefault() {
+    void idleShouldEnableByDefault() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .build();
 
@@ -154,7 +150,7 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void idleShouldBeDisable() {
+    void idleShouldBeDisable() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .enableIdle(false)
                 .build();
@@ -163,14 +159,14 @@ public class ImapConfigurationTest {
     }
 
     @Test
-    public void isCondstoreEnableShouldBeFalseWhenNoSetting() {
+    void isCondstoreEnableShouldBeFalseWhenNoSetting() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder().build();
 
         assertThat(imapConfiguration.isCondstoreEnable()).isFalse();
    }
 
     @Test
-    public void isCondstoreEnableShouldBeTrueWhenValueIsTrue() {
+    void isCondstoreEnableShouldBeTrueWhenValueIsTrue() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .isCondstoreEnable(true)
                 .build();
@@ -179,7 +175,7 @@ public class ImapConfigurationTest {
    }
 
     @Test
-    public void isCondstoreEnableShouldBeFalseWhenValueIsFalse() {
+    void isCondstoreEnableShouldBeFalseWhenValueIsFalse() {
         ImapConfiguration imapConfiguration = ImapConfiguration.builder()
                 .isCondstoreEnable(false)
                 .build();

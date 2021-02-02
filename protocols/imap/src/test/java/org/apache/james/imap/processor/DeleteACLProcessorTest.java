@@ -49,15 +49,14 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 /**
  * DeleteACLProcessor Test.
  */
-public class DeleteACLProcessorTest {
-
+class DeleteACLProcessorTest {
     private static final String MAILBOX_NAME = ImapConstants.INBOX_NAME;
     private static final Username USER_1 = Username.of("user1");
 
@@ -72,8 +71,8 @@ public class DeleteACLProcessorTest {
     private Responder responder;
     private ArgumentCaptor<ImapResponseMessage> argumentCaptor;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         path = MailboxPath.forUser(USER_1, MAILBOX_NAME);
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         mailboxManager = mock(MailboxManager.class);
@@ -102,7 +101,7 @@ public class DeleteACLProcessorTest {
     }
     
     @Test
-    public void testNoListRight() throws Exception {
+    void testNoListRight() throws Exception {
         when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
             .thenReturn(false);
 
@@ -118,7 +117,7 @@ public class DeleteACLProcessorTest {
     }
 
     @Test
-    public void testNoAdminRight() throws Exception {
+    void testNoAdminRight() throws Exception {
         when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
             .thenReturn(true);
         when(mailboxManager.hasRight(path, MailboxACL.Right.Administer, mailboxSession))
@@ -136,7 +135,7 @@ public class DeleteACLProcessorTest {
     }
 
     @Test
-    public void testNonExistentMailboxName() throws Exception {
+    void testNonExistentMailboxName() throws Exception {
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenThrow(new MailboxNotFoundException(""));
 
@@ -153,7 +152,7 @@ public class DeleteACLProcessorTest {
 
     
     @Test
-    public void testDelete() throws MailboxException {
+    void testDelete() throws MailboxException {
         MailboxACL acl = MailboxACL.OWNER_FULL_ACL;
         when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
             .thenReturn(true);

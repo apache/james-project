@@ -24,15 +24,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.QuotaRootResponse;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * QUOTAROOT response encoder
  */
-public class QuotaRootResponseEncoderTest {
-
+class QuotaRootResponseEncoderTest {
     @Test
-    public void test() throws Exception {
+    void test() throws Exception {
         QuotaRootResponse response = new QuotaRootResponse("INBOX", "root");
         ByteImapResponseWriter byteImapResponseWriter = new ByteImapResponseWriter();
         ImapResponseComposer composer = new ImapResponseComposerImpl(byteImapResponseWriter, 1024);
@@ -41,5 +40,4 @@ public class QuotaRootResponseEncoderTest {
         String responseString = byteImapResponseWriter.getString();
         assertThat(responseString).isEqualTo("* QUOTAROOT \"INBOX\" root\r\n");
     }
-
 }

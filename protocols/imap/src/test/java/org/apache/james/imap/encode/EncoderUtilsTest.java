@@ -23,12 +23,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Date;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-
-public class EncoderUtilsTest {
-
-
+class EncoderUtilsTest {
     @Test
     public void testSimpleEncodeDateTime() {
         assertThat(EncoderUtils

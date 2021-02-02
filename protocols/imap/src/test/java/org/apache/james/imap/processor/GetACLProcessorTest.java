@@ -48,15 +48,15 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 /**
  * GetACLProcessor Test.
  * 
  */
-public class GetACLProcessorTest {
+class GetACLProcessorTest {
 
     private static final String MAILBOX_NAME = ImapConstants.INBOX_NAME;
     private static final Username USER_1 = Username.of("user1");
@@ -71,7 +71,7 @@ public class GetACLProcessorTest {
     private ArgumentCaptor<ImapResponseMessage> argumentCaptor;
     private Responder responder;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         path = MailboxPath.forUser(USER_1, MAILBOX_NAME);
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
@@ -96,7 +96,7 @@ public class GetACLProcessorTest {
     }
 
     @Test
-    public void testNoListRight() throws Exception {
+    void testNoListRight() throws Exception {
         when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
             .thenReturn(false);
 
@@ -112,7 +112,7 @@ public class GetACLProcessorTest {
     }
     
     @Test
-    public void testNoAdminRight() throws Exception {
+    void testNoAdminRight() throws Exception {
         when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
             .thenReturn(true);
         when(mailboxManager.hasRight(path, MailboxACL.Right.Administer, mailboxSession))
@@ -130,7 +130,7 @@ public class GetACLProcessorTest {
     }
     
     @Test
-    public void testInexistentMailboxName() throws Exception {
+    void testInexistentMailboxName() throws Exception {
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenThrow(new MailboxNotFoundException(""));
 
@@ -146,7 +146,7 @@ public class GetACLProcessorTest {
     }
 
     @Test
-    public void testSufficientRights() throws Exception {
+    void testSufficientRights() throws Exception {
         MailboxACL acl = MailboxACL.OWNER_FULL_ACL;
         when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
             .thenReturn(true);

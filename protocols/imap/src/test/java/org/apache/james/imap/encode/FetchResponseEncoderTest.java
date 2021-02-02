@@ -28,29 +28,29 @@ import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.mailbox.MessageSequenceNumber;
 import org.apache.james.mailbox.MessageUid;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class FetchResponseEncoderTest  {
+class FetchResponseEncoderTest  {
     private static final MessageSequenceNumber MSN = MessageSequenceNumber.of(100);
     private ByteImapResponseWriter writer = new ByteImapResponseWriter();
     private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
     private Flags flags;
     private FetchResponseEncoder encoder;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         encoder = new FetchResponseEncoder(false);
         flags = new Flags(Flags.Flag.DELETED);
     }
 
     @Test
-    public void testShouldAcceptFetchResponse() {
+    void testShouldAcceptFetchResponse() {
         assertThat(encoder.acceptableMessages()).isEqualTo(FetchResponse.class);
     }
 
     @Test
-    public void testShouldEncodeFlagsResponse() throws Exception {
+    void testShouldEncodeFlagsResponse() throws Exception {
         FetchResponse message = new FetchResponse(MSN, flags, null, null, null, null,
                 null, null, null, null);
         encoder.encode(message, composer);
@@ -60,7 +60,7 @@ public class FetchResponseEncoderTest  {
     }
 
     @Test
-    public void testShouldEncodeUidResponse() throws Exception {
+    void testShouldEncodeUidResponse() throws Exception {
         FetchResponse message = new FetchResponse(MSN, null, MessageUid.of(72), null,
                 null, null, null, null, null, null); 
         encoder.encode(message, composer);
@@ -70,7 +70,7 @@ public class FetchResponseEncoderTest  {
     }
 
     @Test
-    public void testShouldEncodeAllResponse() throws Exception {
+    void testShouldEncodeAllResponse() throws Exception {
         FetchResponse message = new FetchResponse(MSN, flags, MessageUid.of(72), null,
                 null, null, null, null, null, null);
         encoder.encode(message, composer);

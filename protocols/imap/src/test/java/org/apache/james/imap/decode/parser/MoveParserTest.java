@@ -31,11 +31,11 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.message.request.MoveRequest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class MoveParserTest {
+class MoveParserTest {
     @Test
-    public void testQuotaParsing() throws DecodingException {
+    void testQuotaParsing() throws DecodingException {
         MoveCommandParser parser = new MoveCommandParser(mock(StatusResponseFactory.class));
         String commandString = " 42:69 foo \n";
 

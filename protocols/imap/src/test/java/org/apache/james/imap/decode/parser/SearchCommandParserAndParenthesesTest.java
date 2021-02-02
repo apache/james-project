@@ -39,10 +39,10 @@ import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.mailbox.MessageUid;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SearchCommandParserAndParenthesesTest {
+class SearchCommandParserAndParenthesesTest {
 
     Input[] variety = { sequence(), uid(), fromHeader(), since(),
             stringQuoted(), stringUnquoted(), draft(), mailingListHeader(),
@@ -151,19 +151,19 @@ public class SearchCommandParserAndParenthesesTest {
     SearchCommandParser parser;
     ImapCommand command;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         parser = new SearchCommandParser(mock(StatusResponseFactory.class));
         command = ImapCommand.anyStateCommand("Command");
     }
 
     @Test
-    public void testShouldParseTopLevelParentheses() throws Exception {
+    void testShouldParseTopLevelParentheses() throws Exception {
         check(and(variety, true));
     }
 
     @Test
-    public void testShouldParseDeepParentheses() throws Exception {
+    void testShouldParseDeepParentheses() throws Exception {
         Input[] deep = { and(variety, true), and(variety, true), sequence(),
                 and(variety, true), draft(), mailingListHeader() };
         Input[] mid = { and(deep, true), since(), and(variety, true),
@@ -174,7 +174,7 @@ public class SearchCommandParserAndParenthesesTest {
     }
 
     @Test
-    public void testShouldParseParenthesesOnTopLevel() throws Exception {
+    void testShouldParseParenthesesOnTopLevel() throws Exception {
         Input[] deep = { and(variety, true), and(variety, true), sequence(),
                 and(variety, true), draft(), mailingListHeader() };
         Input[] mid = { and(deep, true), since(), and(variety, true),

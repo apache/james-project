@@ -45,10 +45,10 @@ import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class LSubProcessorTest {
+class LSubProcessorTest {
 
     private static final String ROOT = "ROOT";
     
@@ -83,8 +83,8 @@ public class LSubProcessorTest {
     Collection<String> subscriptions;
     private ImapProcessor.Responder responderImpl;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         subscriptions = new ArrayList<>();
         serverResponseFactory = mock(StatusResponseFactory.class);
         session = new FakeImapSession();
@@ -100,7 +100,7 @@ public class LSubProcessorTest {
     }
 
     @Test
-    public void testShouldRespondToRegexWithSubscribedMailboxes()
+    void testShouldRespondToRegexWithSubscribedMailboxes()
             throws Exception {
         subscriptions.add(MAILBOX_A);
         subscriptions.add(MAILBOX_B);
@@ -122,7 +122,7 @@ public class LSubProcessorTest {
     }
 
     @Test
-    public void testShouldRespondNoSelectToRegexWithParentsOfSubscribedMailboxes()
+    void testShouldRespondNoSelectToRegexWithParentsOfSubscribedMailboxes()
             throws Exception {
         subscriptions.add(MAILBOX_A);
         subscriptions.add(MAILBOX_B);
@@ -143,7 +143,7 @@ public class LSubProcessorTest {
     }
 
     @Test
-    public void testShouldRespondSelectToRegexWithParentOfSubscribedMailboxesWhenParentSubscribed()
+    void testShouldRespondSelectToRegexWithParentOfSubscribedMailboxesWhenParentSubscribed()
             throws Exception {
         subscriptions.add(MAILBOX_A);
         subscriptions.add(MAILBOX_B);
@@ -165,7 +165,7 @@ public class LSubProcessorTest {
     }
 
     @Test
-    public void testSelectAll() throws Exception {
+    void testSelectAll() throws Exception {
         subscriptions.add(MAILBOX_A);
         subscriptions.add(MAILBOX_B);
         subscriptions.add(MAILBOX_C);

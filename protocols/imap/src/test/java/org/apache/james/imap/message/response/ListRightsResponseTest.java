@@ -19,13 +19,13 @@
 
 package org.apache.james.imap.message.response;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class ListRightsResponseTest {
+class ListRightsResponseTest {
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(ListRightsResponse.class)
             .verify();
     }

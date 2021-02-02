@@ -59,12 +59,12 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Flux;
 
-public class MailboxEventAnalyserTest {
+class MailboxEventAnalyserTest {
     private static final MessageUid UID = MessageUid.of(900);
     private static final UpdatedFlags ADD_RECENT_UPDATED_FLAGS = UpdatedFlags.builder()
         .uid(UID)
@@ -134,8 +134,8 @@ public class MailboxEventAnalyserTest {
 
     private SelectedMailboxImpl testee;
 
-    @Before
-    public void setUp() throws MailboxException {
+    @BeforeEach
+    void setUp() throws MailboxException {
         FakeImapSession imapSession = new FakeImapSession();
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
         imapSession.setMailboxSession(MAILBOX_SESSION);
@@ -166,8 +166,8 @@ public class MailboxEventAnalyserTest {
     }
 
     @Test
-    public void testShouldBeNoSizeChangeOnOtherEvent() {
-        MailboxEvent event = new MailboxAdded(MAILBOX_SESSION.getSessionId(),
+    void testShouldBeNoSizeChangeOnOtherEvent() {
+            MailboxEvent event = new MailboxAdded(MAILBOX_SESSION.getSessionId(),
             MAILBOX_SESSION.getUser(), MAILBOX_PATH, MAILBOX_ID, Event.EventId.random());
       
         testee.event(event);
@@ -176,14 +176,14 @@ public class MailboxEventAnalyserTest {
     }
 
     @Test
-    public void testShouldBeNoSizeChangeOnAdded() {
+    void testShouldBeNoSizeChangeOnAdded() {
         testee.event(ADDED);
 
         assertThat(testee.isSizeChanged()).isTrue();
     }
 
     @Test
-    public void testShouldNoSizeChangeAfterReset() {
+    void testShouldNoSizeChangeAfterReset() {
         testee.event(ADDED);
         testee.resetEvents();
 
@@ -191,7 +191,7 @@ public class MailboxEventAnalyserTest {
     }
 
     @Test
-    public void testShouldNotSetUidWhenNoSystemFlagChange() {
+    void testShouldNotSetUidWhenNoSystemFlagChange() {
         FlagsUpdated update = EventFactory.flagsUpdated()
             .randomEventId()
             .mailboxSession(MAILBOX_SESSION)
@@ -205,7 +205,7 @@ public class MailboxEventAnalyserTest {
     }
 
     @Test
-    public void testShouldSetUidWhenSystemFlagChange() {
+    void testShouldSetUidWhenSystemFlagChange() {
         FlagsUpdated update = EventFactory.flagsUpdated()
             .randomEventId()
             .mailboxSession(OTHER_MAILBOX_SESSION)
@@ -220,7 +220,7 @@ public class MailboxEventAnalyserTest {
     }
 
     @Test
-    public void testShouldClearFlagUidsUponReset() {
+    void testShouldClearFlagUidsUponReset() {
         SelectedMailboxImpl analyser = this.testee;
 
         FlagsUpdated update = EventFactory.flagsUpdated()
@@ -238,7 +238,7 @@ public class MailboxEventAnalyserTest {
     }
 
     @Test
-    public void testShouldSetUidWhenSystemFlagChangeDifferentSessionInSilentMode() {
+    void testShouldSetUidWhenSystemFlagChangeDifferentSessionInSilentMode() {
         FlagsUpdated update = EventFactory.flagsUpdated()
             .randomEventId()
             .mailboxSession(OTHER_MAILBOX_SESSION)
@@ -255,7 +255,7 @@ public class MailboxEventAnalyserTest {
     }
 
     @Test
-    public void testShouldNotSetUidWhenSystemFlagChangeSameSessionInSilentMode() {
+    void testShouldNotSetUidWhenSystemFlagChangeSameSessionInSilentMode() {
         FlagsUpdated update = EventFactory.flagsUpdated()
             .randomEventId()
             .mailboxSession(MAILBOX_SESSION)
@@ -272,7 +272,7 @@ public class MailboxEventAnalyserTest {
     }
 
     @Test
-    public void testShouldNotSetUidWhenOnlyRecentFlagUpdated() {
+    void testShouldNotSetUidWhenOnlyRecentFlagUpdated() {
         FlagsUpdated update = EventFactory.flagsUpdated()
             .randomEventId()
             .mailboxSession(MAILBOX_SESSION)

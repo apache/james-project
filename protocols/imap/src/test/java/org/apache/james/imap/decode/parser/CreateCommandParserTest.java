@@ -37,16 +37,16 @@ import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.message.request.CreateRequest;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class CreateCommandParserTest {
+class CreateCommandParserTest {
     private static final OutputStream outputStream = null;
 
     private FakeImapSession imapSession;
     private CreateCommandParser parser;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         MailboxSession mailboxSession = MailboxSessionUtil.create(Username.of("userName"));
         imapSession = new FakeImapSession();
@@ -56,7 +56,7 @@ public class CreateCommandParserTest {
     }
 
     @Test
-    public void decodeShouldThrowWhenCommandHasEmptyMailbox() {
+    void decodeShouldThrowWhenCommandHasEmptyMailbox() {
         InputStream inputStream = new ByteArrayInputStream(" \n".getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
@@ -65,7 +65,7 @@ public class CreateCommandParserTest {
     }
 
     @Test
-    public void decodeShouldThrowWhenCommandHasOnlySeparatorMailbox() {
+    void decodeShouldThrowWhenCommandHasOnlySeparatorMailbox() {
         InputStream inputStream = new ByteArrayInputStream("..\n".getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
@@ -74,7 +74,7 @@ public class CreateCommandParserTest {
     }
 
     @Test
-    public void decodeShouldReturnCreateRequestWhenValidMailboxName() throws Exception {
+    void decodeShouldReturnCreateRequestWhenValidMailboxName() throws Exception {
         InputStream inputStream = new ByteArrayInputStream(".AnyMailbox.\n".getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 

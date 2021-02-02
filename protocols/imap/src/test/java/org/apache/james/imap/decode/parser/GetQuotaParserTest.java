@@ -30,15 +30,14 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.message.request.GetQuotaRequest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * GetQuotaRootParser Test
  */
-public class GetQuotaParserTest {
-
+class GetQuotaParserTest {
     @Test
-    public void testQuotaParsing() throws DecodingException {
+    void testQuotaParsing() throws DecodingException {
         GetQuotaCommandParser parser = new GetQuotaCommandParser(mock(StatusResponseFactory.class));
         String commandString = "quotaRoot \n";
         InputStream inputStream = new ByteArrayInputStream(commandString.getBytes());

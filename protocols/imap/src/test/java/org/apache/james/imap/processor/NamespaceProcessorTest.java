@@ -48,11 +48,10 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class NamespaceProcessorTest {
-
+class NamespaceProcessorTest {
     private static final String SHARED_PREFIX = "SharedPrefix";
     private static final String USERS_PREFIX = "UsersPrefix";
     private static final String PERSONAL_PREFIX = "PersonalPrefix";
@@ -66,8 +65,8 @@ public class NamespaceProcessorTest {
     Collection<String> sharedSpaces;
     MailboxManager mailboxManagerStub;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         sharedSpaces = new ArrayList<>();
         statusResponseStub = mock(StatusResponseFactory.class);
         mailboxManagerStub = mock(MailboxManager.class);
@@ -80,7 +79,7 @@ public class NamespaceProcessorTest {
     }
 
     @Test
-    public void testNamespaceResponseShouldContainPersonalAndUserSpaces() {
+    void testNamespaceResponseShouldContainPersonalAndUserSpaces() {
         when(imapSession.supportMultipleNamespaces()).thenReturn(true);
 
         when(mailboxSession.getPersonalSpace()).thenReturn(PERSONAL_PREFIX);
@@ -103,7 +102,7 @@ public class NamespaceProcessorTest {
     }
     
     @Test
-    public void testNamespaceResponseShouldContainSharedSpaces() {
+    void testNamespaceResponseShouldContainSharedSpaces() {
         when(imapSession.supportMultipleNamespaces()).thenReturn(true);
 
         when(mailboxSession.getPersonalSpace()).thenReturn(PERSONAL_PREFIX);

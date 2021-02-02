@@ -20,22 +20,22 @@
 package org.apache.james.imap.decode;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ImapRequestLineReaderTest {
-
+class ImapRequestLineReaderTest {
     private final OutputStream outputStream = null;
     private InputStream inputStream;
     private ImapRequestStreamLineReader lineReader;
 
     @Test
-    public void nextNonSpaceCharShouldReturnTheFirstCharacter() throws Exception {
+    void nextNonSpaceCharShouldReturnTheFirstCharacter() throws Exception {
         inputStream = new ByteArrayInputStream(("anyString \n").getBytes(StandardCharsets.US_ASCII));
         lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
@@ -43,18 +43,18 @@ public class ImapRequestLineReaderTest {
     }
 
     @Test
-    public void nextNonSpaceCharShouldIgnoreTheSpaceAndReturnTheFirstNonSpaceCharacter() throws Exception {
+    void nextNonSpaceCharShouldIgnoreTheSpaceAndReturnTheFirstNonSpaceCharacter() throws Exception {
         inputStream = new ByteArrayInputStream(("    anyString \n").getBytes(StandardCharsets.US_ASCII));
         lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
         assertThat(lineReader.nextNonSpaceChar()).isEqualTo('a');
     }
 
-    @Test(expected = DecodingException.class)
-    public void nextNonSpaceCharShouldThrowExceptionWhenNotFound() throws Exception {
+    @Test
+    void nextNonSpaceCharShouldThrowExceptionWhenNotFound() {
         inputStream = new ByteArrayInputStream(("    ").getBytes(StandardCharsets.US_ASCII));
         lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        lineReader.nextNonSpaceChar();
+        assertThatThrownBy(() -> lineReader.nextNonSpaceChar()).isInstanceOf(DecodingException.class);
     }
 }

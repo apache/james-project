@@ -26,12 +26,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.james.mailbox.model.Header;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class MailboxMessageResultUtilsTest {
+class MailboxMessageResultUtilsTest {
 
     private static final ImmutableList<String> NAMES = ImmutableList.of("One", "Three");
 
@@ -43,8 +43,8 @@ public class MailboxMessageResultUtilsTest {
 
     List<Header> headers;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         headerOne = new Header("One", "Value");
         headerTwo = new Header("Two", "Value");
         headerThree = new Header("Three", "Value");
@@ -55,7 +55,7 @@ public class MailboxMessageResultUtilsTest {
     }
 
     @Test
-    public void testGetAllContent() {
+    void testGetAllContent() {
         List<Header> results = MessageResultUtils.getAll(headers.iterator());
         assertThat(results.size()).isEqualTo(3);
         assertThat(results.get(0)).isEqualTo(headerOne);
@@ -64,7 +64,7 @@ public class MailboxMessageResultUtilsTest {
     }
 
     @Test
-    public void testGetMatching() {
+    void testGetMatching() {
         List<Header> results = MessageResultUtils
                 .getMatching(NAMES, headers.iterator());
         assertThat(results.size()).isEqualTo(2);
@@ -73,7 +73,7 @@ public class MailboxMessageResultUtilsTest {
     }
 
     @Test
-    public void testGetNotMatching() {
+    void testGetNotMatching() {
         List<Header> results = MessageResultUtils.getNotMatching(NAMES, headers
                 .iterator());
         assertThat(results.size()).isEqualTo(1);
@@ -81,7 +81,7 @@ public class MailboxMessageResultUtilsTest {
     }
 
     @Test
-    public void testGetMatchingSingle() {
+    void testGetMatchingSingle() {
         assertThat(MessageResultUtils.getMatching("One", headers
                 .iterator())).isEqualTo(headerOne);
         assertThat(MessageResultUtils.getMatching("Three",

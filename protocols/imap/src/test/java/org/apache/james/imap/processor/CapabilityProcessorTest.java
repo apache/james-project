@@ -30,15 +30,14 @@ import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.processor.base.UnknownRequestProcessor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class CapabilityProcessorTest {
-
+class CapabilityProcessorTest {
     private CapabilityProcessor testee;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         StatusResponseFactory statusResponseFactory = null;
         ImapProcessor imapProcessor = new UnknownRequestProcessor(statusResponseFactory);
         MailboxManager mailboxManager = null;
@@ -47,7 +46,7 @@ public class CapabilityProcessorTest {
     }
 
     @Test
-    public void condstoreShouldBeSupportedWhenSelectedFor() {
+    void condstoreShouldBeSupportedWhenSelectedFor() {
         testee.configure(ImapConfiguration.builder().isCondstoreEnable(true).build());
 
         Set<Capability> supportedCapabilities = testee.getSupportedCapabilities(null);
@@ -55,7 +54,7 @@ public class CapabilityProcessorTest {
     }
 
     @Test
-    public void condstoreShouldBeNotSupportedByDefault() {
+    void condstoreShouldBeNotSupportedByDefault() {
         testee.configure(ImapConfiguration.builder().build());
 
         Set<Capability> supportedCapabilities = testee.getSupportedCapabilities(null);

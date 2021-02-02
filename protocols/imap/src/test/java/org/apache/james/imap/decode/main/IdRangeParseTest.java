@@ -29,17 +29,14 @@ import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class IdRangeParseTest  {
-
-
+class IdRangeParseTest  {
     /**
      * Test for https://issues.apache.org/jira/browse/IMAP-212
-     * @throws DecodingException
      */
     @Test
-    public void testRangeInRandomOrder() throws DecodingException {
+    void testRangeInRandomOrder() throws Exception {
         int val1 = 1;
         int val2 = 3;
 
@@ -55,7 +52,7 @@ public class IdRangeParseTest  {
     }
 
     @Test
-    public void testRangeUnsigned() throws DecodingException {
+    void testRangeUnsigned() throws Exception {
         int val1 = 1;
 
         try {

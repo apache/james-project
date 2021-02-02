@@ -29,21 +29,21 @@ import java.util.stream.IntStream;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.NullableMessageSequenceNumber;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class UidMsnConverterTest {
+class UidMsnConverterTest {
     private UidMsnConverter testee;
     private MessageUid messageUid1;
     private MessageUid messageUid2;
     private MessageUid messageUid3;
     private MessageUid messageUid4;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         testee = new UidMsnConverter();
         messageUid1 = MessageUid.of(1);
         messageUid2 = MessageUid.of(2);
@@ -52,19 +52,19 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void getUidShouldReturnEmptyIfNoMessageWithTheGivenMessageNumber() {
+    void getUidShouldReturnEmptyIfNoMessageWithTheGivenMessageNumber() {
         assertThat(testee.getUid(1))
             .isEmpty();
     }
 
     @Test
-    public void getUidShouldReturnEmptyIfZero() {
+    void getUidShouldReturnEmptyIfZero() {
         assertThat(testee.getUid(0))
             .isEmpty();
     }
 
     @Test
-    public void loopingGetMSNShouldSucceedForAMillionItems() {
+    void loopingGetMSNShouldSucceedForAMillionItems() {
         int count = 1000;
         testee.addAll(IntStream.range(0, count)
             .mapToObj(i -> MessageUid.of(i + 1))
@@ -75,7 +75,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void getUidShouldTheCorrespondingUidIfItExist() {
+    void getUidShouldTheCorrespondingUidIfItExist() {
         testee.addUid(messageUid1);
 
         assertThat(testee.getUid(1))
@@ -83,17 +83,17 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void getFirstUidShouldReturnEmptyIfNoMessage() {
+    void getFirstUidShouldReturnEmptyIfNoMessage() {
         assertThat(testee.getFirstUid()).isEmpty();
     }
 
     @Test
-    public void getLastUidShouldReturnEmptyIfNoMessage() {
+    void getLastUidShouldReturnEmptyIfNoMessage() {
         assertThat(testee.getLastUid()).isEmpty();
     }
 
     @Test
-    public void getFirstUidShouldReturnFirstUidIfAtLeastOneMessage() {
+    void getFirstUidShouldReturnFirstUidIfAtLeastOneMessage() {
         testee.addUid(messageUid1);
         testee.addUid(messageUid2);
 
@@ -101,7 +101,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void getLastUidShouldReturnLastUidIfAtLeastOneMessage() {
+    void getLastUidShouldReturnLastUidIfAtLeastOneMessage() {
         testee.addUid(messageUid1);
         testee.addUid(messageUid2);
 
@@ -109,14 +109,14 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void getMsnShouldReturnAbsentIfNoCorrespondingMessage() {
+    void getMsnShouldReturnAbsentIfNoCorrespondingMessage() {
         testee.addUid(messageUid1);
 
         assertThat(testee.getMsn(messageUid2)).isEqualTo(NullableMessageSequenceNumber.noMessage());
     }
 
     @Test
-    public void getMsnShouldReturnMessageNumberIfUidIsThere() {
+    void getMsnShouldReturnMessageNumberIfUidIsThere() {
         testee.addUid(messageUid1);
         testee.addUid(messageUid2);
 
@@ -125,13 +125,13 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void getNumMessageShouldReturnZeroIfNoMapping() {
+    void getNumMessageShouldReturnZeroIfNoMapping() {
         assertThat(testee.getNumMessage())
             .isEqualTo(0);
     }
 
     @Test
-    public void getNumMessageShouldReturnTheNumOfMessage() {
+    void getNumMessageShouldReturnTheNumOfMessage() {
         testee.addUid(messageUid1);
         testee.addUid(messageUid2);
 
@@ -140,13 +140,13 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void isEmptyShouldReturnTrueIfNoMapping() {
+    void isEmptyShouldReturnTrueIfNoMapping() {
         assertThat(testee.isEmpty())
             .isTrue();
     }
 
     @Test
-    public void isEmptyShouldReturnFalseIfMapping() {
+    void isEmptyShouldReturnFalseIfMapping() {
         testee.addUid(messageUid1);
 
         assertThat(testee.isEmpty())
@@ -154,7 +154,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void clearShouldClearMapping() {
+    void clearShouldClearMapping() {
         testee.addUid(messageUid1);
 
         testee.clear();
@@ -164,7 +164,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void addUidShouldKeepMessageNumberContiguous() {
+    void addUidShouldKeepMessageNumberContiguous() {
         testee.addUid(messageUid1);
         testee.addUid(messageUid2);
         testee.addUid(messageUid3);
@@ -180,7 +180,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void addUidShouldNotOverridePreviousMapping() {
+    void addUidShouldNotOverridePreviousMapping() {
         testee.addUid(messageUid1);
         testee.addUid(messageUid2);
         testee.addUid(messageUid3);
@@ -191,7 +191,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void removeShouldKeepAMonoticMSNToUIDConversionMappingWhenDeletingBeginning() {
+    void removeShouldKeepAMonoticMSNToUIDConversionMappingWhenDeletingBeginning() {
         testee.addUid(messageUid1);
         testee.addUid(messageUid2);
         testee.addUid(messageUid3);
@@ -207,7 +207,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void removeShouldKeepAMonoticMSNToUIDConversionMappingWhenDeletingEnd() {
+    void removeShouldKeepAMonoticMSNToUIDConversionMappingWhenDeletingEnd() {
         testee.addUid(messageUid1);
         testee.addUid(messageUid2);
         testee.addUid(messageUid3);
@@ -223,7 +223,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void removeShouldKeepAMonoticMSNToUIDConversionMappingWhenDeletingMiddle() {
+    void removeShouldKeepAMonoticMSNToUIDConversionMappingWhenDeletingMiddle() {
         testee.addUid(messageUid1);
         testee.addUid(messageUid2);
         testee.addUid(messageUid3);
@@ -239,7 +239,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void addUidShouldSupportOutOfOrderUpdates() {
+    void addUidShouldSupportOutOfOrderUpdates() {
         testee.addUid(messageUid1);
         testee.addUid(messageUid3);
         testee.addUid(messageUid2);
@@ -254,7 +254,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void addUidShouldLeadToMonoticMSNToUIDConversionWhenInsertInFirstPosition() {
+    void addUidShouldLeadToMonoticMSNToUIDConversionWhenInsertInFirstPosition() {
         testee.addUid(messageUid2);
         testee.addUid(messageUid3);
         testee.addUid(messageUid4);
@@ -269,7 +269,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void addAllShouldLeadToMonoticMSNToUIDConversion() {
+    void addAllShouldLeadToMonoticMSNToUIDConversion() {
         testee.addAll(ImmutableList.of(
             messageUid1,
             messageUid2,
@@ -285,7 +285,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void addAllShouldRemoveDuplicates() {
+    void addAllShouldRemoveDuplicates() {
         testee.addAll(ImmutableList.of(
             messageUid1,
             messageUid2,
@@ -302,7 +302,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void addAllShouldDeduplicateElements() {
+    void addAllShouldDeduplicateElements() {
         testee.addUid(messageUid1);
 
         testee.addAll(ImmutableList.of(
@@ -320,7 +320,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void addAllShouldMergeWithPreviousData() {
+    void addAllShouldMergeWithPreviousData() {
         testee.addUid(messageUid1);
 
         testee.addAll(ImmutableList.of(messageUid2,
@@ -336,7 +336,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void addAllShouldMergeAndDeduplicatePreviousData() {
+    void addAllShouldMergeAndDeduplicatePreviousData() {
         testee.addUid(messageUid1);
         testee.addUid(messageUid3);
 
@@ -353,7 +353,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void addAllWithOutOfOrderIteratorShouldLeadToMonoticMSNToUIDConversion() {
+    void addAllWithOutOfOrderIteratorShouldLeadToMonoticMSNToUIDConversion() {
         testee.addAll(ImmutableList.of(
             messageUid2,
             messageUid3,
@@ -369,7 +369,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void addUidShouldBeIdempotent() {
+    void addUidShouldBeIdempotent() {
         testee.addUid(messageUid1);
         testee.addUid(messageUid1);
 
@@ -378,7 +378,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void removeShouldBeIdempotent() {
+    void removeShouldBeIdempotent() {
         testee.addUid(messageUid1);
         testee.addUid(messageUid2);
         testee.addUid(messageUid3);
@@ -392,7 +392,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void addAndRemoveShouldLeadToMonoticMSNToUIDConversionWhenMixed() throws Exception {
+    void addAndRemoveShouldLeadToMonoticMSNToUIDConversionWhenMixed() throws Exception {
         int initialCount = 1000;
         for (int i = 1; i <= initialCount; i++) {
             testee.addUid(MessageUid.of(i));
@@ -419,7 +419,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void addShouldLeadToMonoticMSNToUIDConversionWhenConcurrent() throws Exception {
+    void addShouldLeadToMonoticMSNToUIDConversionWhenConcurrent() throws Exception {
         int operationCount = 1000;
         int threadCount = 2;
 
@@ -438,7 +438,7 @@ public class UidMsnConverterTest {
     }
 
     @Test
-    public void removeShouldLeadToMonoticMSNToUIDConversionWhenConcurrent() throws Exception {
+    void removeShouldLeadToMonoticMSNToUIDConversionWhenConcurrent() throws Exception {
         int operationCount = 1000;
         int threadCount = 2;
         for (int i = 1; i <= operationCount * (threadCount + 1); i++) {

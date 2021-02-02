@@ -52,14 +52,14 @@ import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 /**
  * ListRightsProcessor Test.
  */
-public class ListRightsProcessorTest {
+class ListRightsProcessorTest {
 
     private static final String MAILBOX_NAME = ImapConstants.INBOX_NAME;
     private static final Username USER_1 = Username.of("user1");
@@ -76,7 +76,7 @@ public class ListRightsProcessorTest {
     private Responder responder;
     private ArgumentCaptor<ImapResponseMessage> argumentCaptor;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         path = MailboxPath.forUser(USER_1, MAILBOX_NAME);
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
@@ -107,7 +107,7 @@ public class ListRightsProcessorTest {
     }
     
     @Test
-    public void testNoListRight() throws Exception {
+    void testNoListRight() throws Exception {
         when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
             .thenReturn(false);
 
@@ -123,7 +123,7 @@ public class ListRightsProcessorTest {
     }
     
     @Test
-    public void testNoAdminRight() throws Exception {
+    void testNoAdminRight() throws Exception {
         when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
             .thenReturn(true);
         when(mailboxManager.hasRight(path, MailboxACL.Right.Administer, mailboxSession))
@@ -141,7 +141,7 @@ public class ListRightsProcessorTest {
     }
     
     @Test
-    public void testInexistentMailboxName() throws Exception {
+    void testInexistentMailboxName() throws Exception {
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenThrow(new MailboxNotFoundException(""));
 
@@ -158,7 +158,7 @@ public class ListRightsProcessorTest {
 
     
     @Test
-    public void testListRights() throws MailboxException {
+    void testListRights() throws MailboxException {
         MailboxACL acl = MailboxACL.OWNER_FULL_ACL;
         when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
             .thenReturn(true);

@@ -35,10 +35,10 @@ import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.mailbox.MessageSequenceNumber;
 import org.apache.james.mailbox.MessageUid;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class FetchResponseEncoderNoExtensionsTest {
+class FetchResponseEncoderNoExtensionsTest {
     private static final MessageSequenceNumber MSN = MessageSequenceNumber.of(100);
     private ByteImapResponseWriter writer = new ByteImapResponseWriter();
     private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
@@ -48,15 +48,15 @@ public class FetchResponseEncoderNoExtensionsTest {
     private ImapEncoder mockNextEncoder;
     private FetchResponseEncoder encoder;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         encoder = new FetchResponseEncoder(true);
         flags = new Flags(Flags.Flag.DELETED);
         stubStructure = mock(FetchResponse.Structure.class);
     }
 
     @Test
-    public void testShouldEncodeFlagsResponse() throws Exception {
+    void testShouldEncodeFlagsResponse() throws Exception {
         FetchResponse message = new FetchResponse(MSN, flags, null, null, null, null,
                 null, null, null, null);
         encoder.encode(message, composer);
@@ -64,7 +64,7 @@ public class FetchResponseEncoderNoExtensionsTest {
     }
 
     @Test
-    public void testShouldEncodeUidResponse() throws Exception {
+    void testShouldEncodeUidResponse() throws Exception {
         FetchResponse message = new FetchResponse(MSN, null, MessageUid.of(72), null,
                 null, null, null, null, null, null);
         encoder.encode(message, composer);
@@ -73,7 +73,7 @@ public class FetchResponseEncoderNoExtensionsTest {
     }
 
     @Test
-    public void testShouldEncodeAllResponse() throws Exception {
+    void testShouldEncodeAllResponse() throws Exception {
         FetchResponse message = new FetchResponse(MSN, flags, MessageUid.of(72), null,
                 null, null, null, null, null, null);
         encoder.encode(message, composer);
@@ -82,7 +82,7 @@ public class FetchResponseEncoderNoExtensionsTest {
     }
 
     @Test
-    public void testShouldNotAddExtensionsWithEncodingBodyStructure() throws Exception {
+    void testShouldNotAddExtensionsWithEncodingBodyStructure() throws Exception {
         FetchResponse message = new FetchResponse(MSN, flags, MessageUid.of(72), null,
                 null, null, null, null, stubStructure, null);
         final Map<String, String> parameters = new HashMap<>();

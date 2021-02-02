@@ -52,14 +52,14 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.Lists;
 
 import reactor.core.publisher.Mono;
 
-public class CopyProcessorTest {
+class CopyProcessorTest {
     private static final Username USERNAME = Username.of("username");
     private static final MailboxPath INBOX = MailboxPath.inbox(USERNAME);
     private static final UidValidity UID_VALIDITY = UidValidity.of(58L);
@@ -72,8 +72,8 @@ public class CopyProcessorTest {
     private FakeImapSession imapSession;
     private MailboxSession mailboxSession;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         mockNextProcessor = mock(ImapProcessor.class);
         mockMailboxManager = mock(MailboxManager.class);
         mockStatusResponseFactory = mock(StatusResponseFactory.class);
@@ -88,7 +88,7 @@ public class CopyProcessorTest {
     }
 
     @Test
-    public void processShouldWork() throws Exception {
+    void processShouldWork() throws Exception {
         CopyRequest copyRequest = new CopyRequest(new IdRange[] {new IdRange(4, 6)}, ImapConstants.INBOX_NAME, true, TAG);
 
         MailboxPath selected = new MailboxPath(INBOX, "selected");
@@ -121,7 +121,7 @@ public class CopyProcessorTest {
 
 
     @Test
-    public void processShouldWorkWithMultipleRanges() throws Exception {
+    void processShouldWorkWithMultipleRanges() throws Exception {
         CopyRequest copyRequest = new CopyRequest(new IdRange[] {new IdRange(5, 6), new IdRange(1, 3)}, ImapConstants.INBOX_NAME, true, TAG);
 
         MailboxPath selected = new MailboxPath(INBOX, "selected");
@@ -153,7 +153,7 @@ public class CopyProcessorTest {
     }
 
     @Test
-    public void processShouldRespondNoOnUnExistingTargetMailbox() throws Exception {
+    void processShouldRespondNoOnUnExistingTargetMailbox() throws Exception {
         CopyRequest copyRequest = new CopyRequest(new IdRange[] {new IdRange(4, 6)}, ImapConstants.INBOX_NAME, true, TAG);
 
         MailboxPath selected = new MailboxPath(INBOX, "selected");
@@ -177,7 +177,7 @@ public class CopyProcessorTest {
     }
 
     @Test
-    public void processShouldRespondNoOnMailboxException() throws Exception {
+    void processShouldRespondNoOnMailboxException() throws Exception {
         CopyRequest copyRequest = new CopyRequest(new IdRange[] {new IdRange(4, 6)}, ImapConstants.INBOX_NAME, true, TAG);
 
         MailboxPath selected = new MailboxPath(INBOX, "selected");
@@ -201,7 +201,7 @@ public class CopyProcessorTest {
     }
 
     @Test
-    public void processShouldNotHandleMoveRequests() {
+    void processShouldNotHandleMoveRequests() {
         MoveRequest moveRequest = new MoveRequest(new IdRange[] {new IdRange(4, 6)}, ImapConstants.INBOX_NAME, true, TAG);
 
         testee.process(moveRequest, mockResponder, imapSession);
@@ -209,5 +209,4 @@ public class CopyProcessorTest {
         verify(mockNextProcessor).process(moveRequest, mockResponder, imapSession);
         verifyNoMoreInteractions(mockMailboxManager, mockResponder, mockNextProcessor);
     }
-
 }

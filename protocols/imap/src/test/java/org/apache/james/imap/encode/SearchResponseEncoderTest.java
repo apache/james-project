@@ -24,11 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.SearchResponse;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SearchResponseEncoderTest {
-
+class SearchResponseEncoderTest {
     private static final long[] IDS = { 1, 4, 9, 16 };
 
     private SearchResponse response;
@@ -36,19 +35,19 @@ public class SearchResponseEncoderTest {
     private ByteImapResponseWriter writer = new ByteImapResponseWriter();
     private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         response = new SearchResponse(IDS, null);
         encoder = new SearchResponseEncoder();
     }
 
     @Test
-    public void acceptableMessagesShouldReturnSearchResponseClass() {
+    void acceptableMessagesShouldReturnSearchResponseClass() {
         assertThat(encoder.acceptableMessages()).isEqualTo(SearchResponse.class);
     }
 
     @Test
-    public void testEncode() throws Exception {
+    void testEncode() throws Exception {
         encoder.encode(response, composer);
         assertThat(writer.getString()).isEqualTo("* SEARCH 1 4 9 16\r\n");
     }

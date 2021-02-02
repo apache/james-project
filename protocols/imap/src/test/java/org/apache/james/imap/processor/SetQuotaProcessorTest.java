@@ -35,8 +35,8 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 public class SetQuotaProcessorTest {
@@ -44,8 +44,8 @@ public class SetQuotaProcessorTest {
     private FakeImapSession imapSession;
     private ImapProcessor.Responder mockedResponder;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         MailboxSession mailboxSession = MailboxSessionUtil.create(Username.of("plop"));
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         imapSession = new FakeImapSession();
@@ -57,7 +57,7 @@ public class SetQuotaProcessorTest {
     }
 
     @Test
-    public void processorShouldWorkOnNoRights() {
+    void processorShouldWorkOnNoRights() {
         SetQuotaRequest setQuotaRequest = new SetQuotaRequest(TAG, "quotaRoot");
 
         testee.doProcess(setQuotaRequest, mockedResponder, imapSession);
@@ -69,5 +69,4 @@ public class SetQuotaProcessorTest {
             .allMatch(StatusResponseTypeMatcher.NO_RESPONSE_MATCHER::matches);
         verifyNoMoreInteractions(mockedResponder);
     }
-
 }

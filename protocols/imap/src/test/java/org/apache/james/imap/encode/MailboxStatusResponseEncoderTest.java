@@ -26,28 +26,28 @@ import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.MailboxStatusResponse;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.UidValidity;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class MailboxStatusResponseEncoderTest  {
+class MailboxStatusResponseEncoderTest  {
 
     MailboxStatusResponseEncoder encoder;
 
     ByteImapResponseWriter writer = new ByteImapResponseWriter();
     ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         encoder = new MailboxStatusResponseEncoder();
     }
 
     @Test
-    public void acceptableMessagesShouldReturnMailboxStatusResponseClass() {
+    void acceptableMessagesShouldReturnMailboxStatusResponseClass() {
         assertThat(encoder.acceptableMessages()).isEqualTo(MailboxStatusResponse.class);
     }
 
     @Test
-    public void testDoEncode() throws Exception {
+    void testDoEncode() throws Exception {
         final Long messages = 2L;
         final Long recent = 3L;
         final MessageUid uidNext = MessageUid.of(5);

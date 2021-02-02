@@ -34,23 +34,23 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class StoreCommandParserTest {
+class StoreCommandParserTest {
 
     StoreCommandParser parser;
 
     private ImapSession session;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         parser = new StoreCommandParser(mock(StatusResponseFactory.class));
         session = mock(ImapSession.class);
     }
 
     @Test
-    public void testShouldParseSilentDraftFlagged() throws Exception {
+    void testShouldParseSilentDraftFlagged() throws Exception {
         IdRange[] ranges = { new IdRange(1) };
         Flags flags = new Flags();
         flags.add(Flags.Flag.DRAFT);
@@ -61,7 +61,7 @@ public class StoreCommandParserTest {
 
 
     @Test
-    public void testShouldParseUnchangedSince() throws Exception {
+    void testShouldParseUnchangedSince() throws Exception {
         IdRange[] ranges = { new IdRange(1) };
         Flags flags = new Flags();
         flags.add(Flags.Flag.DRAFT);

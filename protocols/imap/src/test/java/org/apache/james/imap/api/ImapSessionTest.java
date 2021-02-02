@@ -25,27 +25,27 @@ import org.apache.james.core.Username;
 import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class ImapSessionTest {
+class ImapSessionTest {
     private static final Username USERNAME = Username.of("username");
     private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(USERNAME);
     private FakeImapSession fakeImapSession;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         fakeImapSession = new FakeImapSession();
     }
 
     @Test
-    public void getUserNameShouldReturnNullWhenNoMailboxSession() {
+    void getUserNameShouldReturnNullWhenNoMailboxSession() {
         assertThat(fakeImapSession.getUserName())
             .isNull();
     }
 
     @Test
-    public void getUserNameShouldReturnUserWhenMailboxSession() {
+    void getUserNameShouldReturnUserWhenMailboxSession() {
         fakeImapSession.setMailboxSession(MAILBOX_SESSION);
         assertThat(fakeImapSession.getUserName())
             .isEqualTo(USERNAME);

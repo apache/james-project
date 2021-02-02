@@ -29,10 +29,10 @@ import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.decode.main.ImapRequestStreamHandler;
 import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.encode.ImapEncoder;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class ImapRequestHandlerAdandonConnectionTest {
+class ImapRequestHandlerAdandonConnectionTest {
 
     /** System under test */
     ImapRequestStreamHandler subject;
@@ -46,8 +46,8 @@ public class ImapRequestHandlerAdandonConnectionTest {
     ImapProcessor processorStub;
     ImapEncoder encoderStub;
     
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         // Fakes
         fakeOutput = new ByteArrayOutputStream();
         // Stubs
@@ -59,7 +59,7 @@ public class ImapRequestHandlerAdandonConnectionTest {
     }
     
     @Test
-    public void testWhenConsumeLineFailsShouldAbandonConnection() {
+    void testWhenConsumeLineFailsShouldAbandonConnection() {
         // Create input stream that will throw IOException after first read
         byte[] endOfStreamAfterOneCharacter = {'0'};
         ByteArrayInputStream fakeInput = new ByteArrayInputStream(endOfStreamAfterOneCharacter);

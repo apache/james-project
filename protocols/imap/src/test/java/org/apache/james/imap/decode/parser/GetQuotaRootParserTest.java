@@ -30,14 +30,14 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.message.request.GetQuotaRootRequest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for GetQuotaRootCommandParser
  */
-public class GetQuotaRootParserTest {
+class GetQuotaRootParserTest {
     @Test
-    public void testNonQuotedMailbox() throws DecodingException {
+    void testNonQuotedMailbox() throws DecodingException {
         GetQuotaRootCommandParser parser = new GetQuotaRootCommandParser(mock(StatusResponseFactory.class));
         String commandString = "INBOX\n";
         InputStream inputStream = new ByteArrayInputStream(commandString.getBytes());
@@ -48,7 +48,7 @@ public class GetQuotaRootParserTest {
     }
 
     @Test
-    public void testQuotedMailbox() throws DecodingException {
+    void testQuotedMailbox() throws DecodingException {
         GetQuotaRootCommandParser parser = new GetQuotaRootCommandParser(mock(StatusResponseFactory.class));
         String commandString = "\"INBOX\" \n";
         InputStream inputStream = new ByteArrayInputStream(commandString.getBytes());

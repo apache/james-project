@@ -37,22 +37,22 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.mailbox.MessageUid;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SearchCommandParserNotTest {
+class SearchCommandParserNotTest {
 
     SearchCommandParser parser;
     ImapCommand command;
     
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         parser = new SearchCommandParser(mock(StatusResponseFactory.class));
         command = ImapCommand.anyStateCommand("Command");
     }
 
     @Test
-    public void testShouldParseNotSequence() throws Exception {
+    void testShouldParseNotSequence() throws Exception {
         IdRange[] range = { new IdRange(100, Long.MAX_VALUE), new IdRange(110),
                 new IdRange(200, 201), new IdRange(400, Long.MAX_VALUE) };
         SearchKey notdKey = SearchKey.buildSequenceSet(IdRange.mergeRanges(Arrays.asList(range)).toArray(IdRange[]::new));
@@ -61,7 +61,7 @@ public class SearchCommandParserNotTest {
     }
 
     @Test
-    public void testShouldParseNotUid() throws Exception {
+    void testShouldParseNotUid() throws Exception {
         UidRange[] range = { 
                 new UidRange(MessageUid.of(100), MessageUid.MAX_VALUE), 
                 new UidRange(MessageUid.of(110)),
@@ -74,7 +74,7 @@ public class SearchCommandParserNotTest {
     }
 
     @Test
-    public void testShouldParseNotHeaderKey() throws Exception {
+    void testShouldParseNotHeaderKey() throws Exception {
         SearchKey notdKey = SearchKey.buildHeader("FROM", "Smith");
         SearchKey key = SearchKey.buildNot(notdKey);
         checkValid("NOT HEADER FROM Smith\r\n", key);
@@ -82,7 +82,7 @@ public class SearchCommandParserNotTest {
     }
 
     @Test
-    public void testShouldParseNotDateParameterKey() throws Exception {
+    void testShouldParseNotDateParameterKey() throws Exception {
         SearchKey notdKey = SearchKey.buildSince(new DayMonthYear(11, 1, 2001));
         SearchKey key = SearchKey.buildNot(notdKey);
         checkValid("NOT since 11-Jan-2001\r\n", key);
@@ -90,7 +90,7 @@ public class SearchCommandParserNotTest {
     }
 
     @Test
-    public void testShouldParseNotStringParameterKey() throws Exception {
+    void testShouldParseNotStringParameterKey() throws Exception {
         SearchKey notdKey = SearchKey.buildFrom("Smith");
         SearchKey key = SearchKey.buildNot(notdKey);
         checkValid("NOT FROM Smith\r\n", key);
@@ -98,14 +98,14 @@ public class SearchCommandParserNotTest {
     }
 
     @Test
-    public void testShouldParseNotStringQuotedParameterKey() throws Exception {
+    void testShouldParseNotStringQuotedParameterKey() throws Exception {
         SearchKey notdKey = SearchKey.buildFrom("Smith And Jones");
         SearchKey key = SearchKey.buildNot(notdKey);
         checkValid("NOT FROM \"Smith And Jones\"\r\n", key);
     }
 
     @Test
-    public void testShouldParseNotNoParameterKey() throws Exception {
+    void testShouldParseNotNoParameterKey() throws Exception {
         SearchKey notdKey = SearchKey.buildNew();
         SearchKey key = SearchKey.buildNot(notdKey);
         checkValid("NOT NEW\r\n", key);

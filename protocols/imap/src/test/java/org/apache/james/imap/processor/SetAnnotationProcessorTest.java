@@ -51,11 +51,9 @@ import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
 import com.google.common.collect.ImmutableList;
@@ -63,7 +61,6 @@ import com.google.common.collect.ImmutableList;
 public class SetAnnotationProcessorTest {
     private static final int FIRST_ELEMENT_INDEX = 0;
 
-    @InjectMocks
     private SetAnnotationProcessor processor;
 
     private ImapProcessor mockNextProcessor;
@@ -100,25 +97,20 @@ public class SetAnnotationProcessorTest {
         imapSession.setMailboxSession(mockMailboxSession);
     }
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         MockitoAnnotations.initMocks(this);
         initAndMockData();
         processor = new SetAnnotationProcessor(mockNextProcessor, mockMailboxManager, mockStatusResponseFactory, new RecordingMetricFactory());
     }
-    
-    @After
-    public void tearDown() {
-        processor = null;
-    }
 
     @Test
-    public void getImplementedCapabilitiesShouldContainSupportAnnotationWhenMailboxManagerHasAnnotationCapability() {
+    void getImplementedCapabilitiesShouldContainSupportAnnotationWhenMailboxManagerHasAnnotationCapability() {
         assertThat(processor.getImplementedCapabilities(new FakeImapSession())).containsExactly(ImapConstants.SUPPORTS_ANNOTATION);
     }
 
     @Test
-    public void processShouldResponseNoWithNoSuchMailboxWhenManagerThrowMailboxNotFoundException() throws Exception {
+    void processShouldResponseNoWithNoSuchMailboxWhenManagerThrowMailboxNotFoundException() throws Exception {
         doThrow(MailboxNotFoundException.class).when(mockMailboxManager).updateAnnotations(eq(inbox),
             eq(mockMailboxSession), eq(mailboxAnnotations));
 
@@ -131,7 +123,7 @@ public class SetAnnotationProcessorTest {
     }
 
     @Test
-    public void processShouldResponseNoWithGenericFailureWhenManagerThrowMailboxException() throws Exception {
+    void processShouldResponseNoWithGenericFailureWhenManagerThrowMailboxException() throws Exception {
         doThrow(MailboxException.class).when(mockMailboxManager).updateAnnotations(eq(inbox), eq(mockMailboxSession), eq(mailboxAnnotations));
 
         processor.process(request, mockResponder, imapSession);
@@ -142,7 +134,7 @@ public class SetAnnotationProcessorTest {
     }
 
     @Test
-    public void processShouldWorkWithCompleteResponse() throws Exception {
+    void processShouldWorkWithCompleteResponse() throws Exception {
         when(mockStatusResponseFactory.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class)))
             .thenReturn(okResponse);
 
@@ -156,7 +148,7 @@ public class SetAnnotationProcessorTest {
     }
 
     @Test
-    public void processShouldResponseNoWhenManagerThrowsAnnotationException() throws Exception {
+    void processShouldResponseNoWhenManagerThrowsAnnotationException() throws Exception {
         doThrow(AnnotationException.class).when(mockMailboxManager).updateAnnotations(eq(inbox), eq(mockMailboxSession), eq(mailboxAnnotations));
 
         processor.process(request, mockResponder, imapSession);

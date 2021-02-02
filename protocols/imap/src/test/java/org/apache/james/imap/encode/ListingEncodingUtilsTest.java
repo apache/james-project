@@ -30,7 +30,7 @@ import org.apache.james.imap.message.response.XListResponse;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxMetaData.Children;
 import org.apache.james.mailbox.model.MailboxMetaData.Selectability;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ListingEncodingUtilsTest  {
 
@@ -40,7 +40,7 @@ public class ListingEncodingUtilsTest  {
     private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
 
     @Test
-    public void encodeShouldWriteNilDelimiterWhenUnassigned() throws Exception {
+    void encodeShouldWriteNilDelimiterWhenUnassigned() throws Exception {
         ListResponse input = new ListResponse(Children.HAS_CHILDREN, Selectability.NONE, nameParameter, ((char) Character.UNASSIGNED));
 
         ListingEncodingUtils.encodeListingResponse(LIST_COMMAND, composer, input);
@@ -48,7 +48,7 @@ public class ListingEncodingUtilsTest  {
     }
 
     @Test
-    public void encodeShouldWriteAnyDelimiter() throws Exception {
+    void encodeShouldWriteAnyDelimiter() throws Exception {
         ListResponse input = new ListResponse(Children.HAS_CHILDREN, Selectability.NONE, nameParameter, '#');
 
         ListingEncodingUtils.encodeListingResponse(LIST_COMMAND, composer, input);
@@ -56,7 +56,7 @@ public class ListingEncodingUtilsTest  {
     }
 
     @Test
-    public void encodeShouldNotIncludeAttributeWhenNone() throws Exception {
+    void encodeShouldNotIncludeAttributeWhenNone() throws Exception {
         ListResponse input = new ListResponse(Children.CHILDREN_ALLOWED_BUT_UNKNOWN, MailboxMetaData.Selectability.NONE, nameParameter, '.');
 
         ListingEncodingUtils.encodeListingResponse(LIST_COMMAND, composer, input);
@@ -64,7 +64,7 @@ public class ListingEncodingUtilsTest  {
     }
 
     @Test
-    public void encodeShouldAddHasChildrenToAttributes() throws Exception {
+    void encodeShouldAddHasChildrenToAttributes() throws Exception {
         ListResponse input = new ListResponse(Children.HAS_CHILDREN, Selectability.NONE, nameParameter, '.');
             
         ListingEncodingUtils.encodeListingResponse(LIST_COMMAND, composer, input);
@@ -72,7 +72,7 @@ public class ListingEncodingUtilsTest  {
     }
     
     @Test
-    public void encodeShouldAddHasNoChildrenToAttributes() throws Exception {
+    void encodeShouldAddHasNoChildrenToAttributes() throws Exception {
         ListResponse input = new ListResponse(Children.HAS_NO_CHILDREN, Selectability.NONE, nameParameter, '.');
             
         ListingEncodingUtils.encodeListingResponse(LIST_COMMAND, composer, input);
@@ -80,7 +80,7 @@ public class ListingEncodingUtilsTest  {
     }
 
     @Test
-    public void encodeShouldAddSeveralAttributes() throws Exception {
+    void encodeShouldAddSeveralAttributes() throws Exception {
         ListResponse input = new ListResponse(Children.NO_INFERIORS, Selectability.NOSELECT, nameParameter, '.');
 
         ListingEncodingUtils.encodeListingResponse(LIST_COMMAND, composer, input);
@@ -88,7 +88,7 @@ public class ListingEncodingUtilsTest  {
     }
 
     @Test
-    public void encodeShouldAddMarkedAttribute() throws Exception {
+    void encodeShouldAddMarkedAttribute() throws Exception {
         ListResponse input = new ListResponse(Children.CHILDREN_ALLOWED_BUT_UNKNOWN, Selectability.MARKED, nameParameter, '.');
 
         ListingEncodingUtils.encodeListingResponse(LIST_COMMAND, composer, input);
@@ -96,7 +96,7 @@ public class ListingEncodingUtilsTest  {
     }
 
     @Test
-    public void encodeShouldAddUnmarkedAttribute() throws Exception {
+    void encodeShouldAddUnmarkedAttribute() throws Exception {
         ListResponse input = new ListResponse(Children.CHILDREN_ALLOWED_BUT_UNKNOWN, Selectability.UNMARKED, nameParameter, '.');
 
         ListingEncodingUtils.encodeListingResponse(LIST_COMMAND, composer, input);
@@ -104,7 +104,7 @@ public class ListingEncodingUtilsTest  {
     }
 
     @Test
-    public void encodeShouldAddXListAttributeWhenTypeIsInbox() throws Exception {
+    void encodeShouldAddXListAttributeWhenTypeIsInbox() throws Exception {
         XListResponse input = new XListResponse(Children.HAS_CHILDREN, Selectability.NONE, nameParameter, '.', MailboxType.INBOX);
 
         ListingEncodingUtils.encodeListingResponse(XLIST_COMMAND, composer, input);

@@ -34,19 +34,19 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.mailbox.MessageUid;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SearchCommandParserSearchKeySequenceSetTest {
+class SearchCommandParserSearchKeySequenceSetTest {
     SearchCommandParser parser;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         parser = new SearchCommandParser(mock(StatusResponseFactory.class));
     }
     
     @Test
-    public void testAllNumbersSequence() throws Exception {
+    void testAllNumbersSequence() throws Exception {
 
         IdRange[] range = { new IdRange(2), new IdRange(4), new IdRange(9),
                 new IdRange(16), new IdRange(25), new IdRange(36),
@@ -56,14 +56,14 @@ public class SearchCommandParserSearchKeySequenceSetTest {
     }
 
     @Test
-    public void testEndStarSequence() throws Exception {
+    void testEndStarSequence() throws Exception {
         IdRange[] range = { new IdRange(8), new IdRange(10,11),
                 new IdRange(17), new IdRange(100, Long.MAX_VALUE) };
         checkSequence("8,10:11,17,100:*", IdRange.mergeRanges(Arrays.asList(range)).toArray(IdRange[]::new));
     }
 
     @Test
-    public void testStartStarSequence() throws Exception {
+    void testStartStarSequence() throws Exception {
         IdRange[] range = { 
                 new IdRange(9,Long.MAX_VALUE), 
                 new IdRange(15),
@@ -74,7 +74,7 @@ public class SearchCommandParserSearchKeySequenceSetTest {
 
 
     @Test
-    public void testAllNumbersUids() throws Exception {
+    void testAllNumbersUids() throws Exception {
 
         UidRange[] range = { 
                 new UidRange(MessageUid.of(2)),
@@ -91,7 +91,7 @@ public class SearchCommandParserSearchKeySequenceSetTest {
     }
 
     @Test
-    public void testEndStarUids() throws Exception {
+    void testEndStarUids() throws Exception {
         UidRange[] range = { 
                 new UidRange(MessageUid.of(8)), 
                 new UidRange(MessageUid.of(10),MessageUid.of(11)),
@@ -101,7 +101,7 @@ public class SearchCommandParserSearchKeySequenceSetTest {
     }
 
     @Test
-    public void testStartStarUids() throws Exception {
+    void testStartStarUids() throws Exception {
         UidRange[] range = { 
                 new UidRange(MessageUid.of(9), MessageUid.MAX_VALUE), 
                 new UidRange(MessageUid.of(15)),

@@ -24,65 +24,65 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Date;
 import java.util.Locale;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-public class EncoderUtilsDateTimeLocaleTest  {
+class EncoderUtilsDateTimeLocaleTest  {
 
     private static final Locale BASE_DEFAULT_LOCALE = Locale.getDefault();
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() throws Exception {
         Locale.setDefault(BASE_DEFAULT_LOCALE);
     }
 
     @Test
-    public void testUS() {
+    void testUS() {
         runTests(Locale.US);
     }
     
     @Test
-    public void testUK() {
+    void testUK() {
         runTests(Locale.UK);
     }
 
     @Test
-    public void testITALY() {
+    void testITALY() {
         runTests(Locale.ITALY);
     }
 
     @Test
-    public void testGERMANY() {
+    void testGERMANY() {
         runTests(Locale.GERMANY);
     }
 
     @Test
-    public void testFRANCE() {
+    void testFRANCE() {
         runTests(Locale.FRANCE);
     }
 
     @Test
-    public void testCANADA() {
+    void testCANADA() {
         runTests(Locale.CANADA);
     }
 
     @Test
-    public void testCHINA() {
+    void testCHINA() {
         runTests(Locale.CHINA);
     }
 
     @Test
-    public void testJAPAN() {
+    void testJAPAN() {
         runTests(Locale.JAPAN);
     }
 
     @Test
-    public void testKOREA() {
+    void testKOREA() {
         runTests(Locale.KOREA);
     }
 
     @Test
-    public void testTAIWAN() {
+    void testTAIWAN() {
         runTests(Locale.TAIWAN);
     }
 

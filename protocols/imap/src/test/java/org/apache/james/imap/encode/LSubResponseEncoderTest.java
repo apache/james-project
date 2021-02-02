@@ -24,27 +24,27 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.LSubResponse;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class LSubResponseEncoderTest  {
+class LSubResponseEncoderTest  {
     private LSubResponseEncoder encoder;
 
     private ByteImapResponseWriter writer = new ByteImapResponseWriter();
     private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         encoder = new LSubResponseEncoder();
     }
 
     @Test
-    public void encoderShouldAcceptLSubResponse() {
+    void encoderShouldAcceptLSubResponse() {
         assertThat(encoder.acceptableMessages()).isEqualTo(LSubResponse.class);
     }
 
     @Test
-    public void encoderShouldIncludeLSUBCommand() throws Exception {
+    void encoderShouldIncludeLSUBCommand() throws Exception {
         encoder.encode(new LSubResponse("name", true, '.'), composer);
         assertThat(writer.getString()).startsWith("* LSUB");
     }

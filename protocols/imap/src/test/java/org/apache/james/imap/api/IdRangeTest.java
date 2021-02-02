@@ -25,12 +25,11 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.james.imap.api.message.IdRange;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class IdRangeTest {
-
+class IdRangeTest {
     @Test
-    public void testNotMerge() {
+    void testNotMerge() {
         IdRange r = new IdRange(0, 2);
         IdRange r2 = new IdRange(4, 5);
         IdRange r3 = new IdRange(7, 10);
@@ -51,7 +50,7 @@ public class IdRangeTest {
 
 
     @Test
-    public void testMerge() {
+    void testMerge() {
         IdRange r = new IdRange(0, 2);
         IdRange r2 = new IdRange(1, 4);
         IdRange r3 = new IdRange(6, 7);
@@ -71,7 +70,7 @@ public class IdRangeTest {
     
 
     @Test
-    public void testMerge2() {
+    void testMerge2() {
         IdRange r = new IdRange(0, 10);
         IdRange r2 = new IdRange(1, 4);
         IdRange r3 = new IdRange(5, 7);
@@ -89,7 +88,7 @@ public class IdRangeTest {
     }
     
     @Test
-    public void testMerge3() {
+    void testMerge3() {
         IdRange r = new IdRange(0, 10);
         IdRange r2 = new IdRange(1, 4);
         IdRange r3 = new IdRange(10, 15);
@@ -107,7 +106,7 @@ public class IdRangeTest {
     }
     
     @Test
-    public void testMerge4() {
+    void testMerge4() {
         IdRange r = new IdRange(0, 1);
         IdRange r2 = new IdRange(1, 1);
         IdRange r3 = new IdRange(2, 2);

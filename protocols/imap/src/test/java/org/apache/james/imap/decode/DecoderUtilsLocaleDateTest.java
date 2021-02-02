@@ -28,7 +28,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.stream.Stream;
 
-import org.junit.After;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -37,11 +37,11 @@ import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
 
-public class DecoderUtilsLocaleDateTest {
+class DecoderUtilsLocaleDateTest {
 
     private static final Locale BASE_DEFAULT_LOCALE = Locale.getDefault();
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         Locale.setDefault(BASE_DEFAULT_LOCALE);
     }

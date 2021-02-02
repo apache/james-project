@@ -24,12 +24,10 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.junit.jupiter.api.BeforeEach;
 
 class UnpooledStatusResponseFactoryTest implements AbstractStatusResponseFactoryTest {
-
     StatusResponseFactory factory;
 
-
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         factory = new UnpooledStatusResponseFactory();
     }
 

@@ -31,14 +31,14 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.message.request.SetQuotaRequest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * SETQUOTA command parser test...
  */
-public class SetQuotaCommandParserTest {
+class SetQuotaCommandParserTest {
     @Test
-    public void testQuotaParsing() throws DecodingException {
+    void testQuotaParsing() throws DecodingException {
         SetQuotaCommandParser parser = new SetQuotaCommandParser(mock(StatusResponseFactory.class));
         String commandString = "quotaRoot (STORAGE 512) ( MESSAGE  1024  ) \n";
         InputStream inputStream = new ByteArrayInputStream(commandString.getBytes());

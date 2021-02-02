@@ -21,13 +21,12 @@ package org.apache.james.imap.api.message.response;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
-public class StatusResponseTest  {
-
+class StatusResponseTest  {
     @Test
-    public void testResponseCodeExtension() {
+    void testResponseCodeExtension() {
         assertThat(StatusResponse.ResponseCode.createExtension("XEXTENSION")
                         .getCode()).describedAs("Preserve names beginning with X").isEqualTo("XEXTENSION");
         assertThat(StatusResponse.ResponseCode.createExtension("EXTENSION")
@@ -35,7 +34,7 @@ public class StatusResponseTest  {
     }
 
     @Test
-    public void responseCodeShouldBuildTheLongestEntryForMetadata() {
+    void responseCodeShouldBuildTheLongestEntryForMetadata() {
         assertThat(StatusResponse.ResponseCode.longestMetadataEntry(1024).getCode()).isEqualTo("METADATA LONGENTRIES");
         assertThat(StatusResponse.ResponseCode.longestMetadataEntry(1024).getNumber()).isEqualTo(1024);
     }

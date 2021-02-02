@@ -26,21 +26,21 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.james.imap.api.message.SectionType;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 
-public class FetchPartPathDecoderTest {
+class FetchPartPathDecoderTest {
 
     FetchPartPathDecoder decoder;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         decoder = new FetchPartPathDecoder();
     }
 
     @Test
-    public void testShouldDetectText() throws Exception {
+    void testShouldDetectText() throws Exception {
         assertThat(decoder.decode("TEXT")).isEqualTo(SectionType.TEXT);
         assertThat(decoder.decode("3.TEXT")).isEqualTo(SectionType.TEXT);
         assertThat(decoder.decode("3.1.TEXT")).isEqualTo(SectionType.TEXT);
@@ -49,7 +49,7 @@ public class FetchPartPathDecoderTest {
     }
 
     @Test
-    public void testShouldDetectHeader() throws Exception {
+    void testShouldDetectHeader() throws Exception {
         assertThat(decoder.decode("HEADER")).isEqualTo(SectionType.HEADER);
         assertThat(decoder.decode("4.HEADER")).isEqualTo(SectionType.HEADER);
         assertThat(decoder.decode("10.1.HEADER")).isEqualTo(SectionType.HEADER);
@@ -58,7 +58,7 @@ public class FetchPartPathDecoderTest {
     }
 
     @Test
-    public void testShouldDetectHeaderFields() throws Exception {
+    void testShouldDetectHeaderFields() throws Exception {
         assertThat(decoder
                 .decode("HEADER.FIELDS ()")).isEqualTo(SectionType.HEADER_FIELDS);
         assertThat(decoder
@@ -70,7 +70,7 @@ public class FetchPartPathDecoderTest {
     }
 
     @Test
-    public void testShouldDetectHeaderFieldsNot() throws Exception {
+    void testShouldDetectHeaderFieldsNot() throws Exception {
         assertThat(decoder
                 .decode("HEADER.FIELDS.NOT ()")).isEqualTo(SectionType.HEADER_NOT_FIELDS);
         assertThat(decoder
@@ -82,7 +82,7 @@ public class FetchPartPathDecoderTest {
     }
 
     @Test
-    public void testShouldDetectMime() throws Exception {
+    void testShouldDetectMime() throws Exception {
         assertThat(decoder.decode("MIME")).isEqualTo(SectionType.MIME);
         assertThat(decoder.decode("6.MIME")).isEqualTo(SectionType.MIME);
         assertThat(decoder.decode("2.88.MIME")).isEqualTo(SectionType.MIME);
@@ -91,7 +91,7 @@ public class FetchPartPathDecoderTest {
     }
 
     @Test
-    public void testShouldDetectContent() throws Exception {
+    void testShouldDetectContent() throws Exception {
         assertThat(decoder.decode("34")).isEqualTo(SectionType.CONTENT);
         assertThat(decoder.decode("6")).isEqualTo(SectionType.CONTENT);
         assertThat(decoder.decode("9.88")).isEqualTo(SectionType.CONTENT);
@@ -99,7 +99,7 @@ public class FetchPartPathDecoderTest {
     }
 
     @Test
-    public void testShouldIgnoreCase() throws Exception {
+    void testShouldIgnoreCase() throws Exception {
         assertThat(decoder.decode("6.MIME")).isEqualTo(SectionType.MIME);
         assertThat(decoder.decode("6.mime")).isEqualTo(SectionType.MIME);
         assertThat(decoder.decode("6.miME")).isEqualTo(SectionType.MIME);
@@ -115,19 +115,19 @@ public class FetchPartPathDecoderTest {
     }
 
     @Test
-    public void testMimimalPath() throws Exception {
+    void testMimimalPath() throws Exception {
         int[] values = { 6 };
         checkEndingPermutations(values);
     }
 
     @Test
-    public void testLongPath() throws Exception {
+    void testLongPath() throws Exception {
         int[] values = { 3, 11, 345, 231, 11, 3, 1, 1, 1, 3, 8, 8 };
         checkEndingPermutations(values);
     }
 
     @Test
-    public void testShouldThrowProtocolExceptionWhenSpecifierBogus() {
+    void testShouldThrowProtocolExceptionWhenSpecifierBogus() {
         try {
             decoder.decode("1.34.BOGUS");
             fail("Expected protocol exception to be thrown");
@@ -137,7 +137,7 @@ public class FetchPartPathDecoderTest {
     }
 
     @Test
-    public void testShouldThrowProtocolExceptionWhenPathBogus() {
+    void testShouldThrowProtocolExceptionWhenPathBogus() {
         try {
             decoder.decode("1.34.BOGUS.44.34234.324");
             fail("Expected protocol exception to be thrown");
@@ -147,37 +147,37 @@ public class FetchPartPathDecoderTest {
     }
 
     @Test
-    public void testShouldReadShortFieldNames() throws Exception {
+    void testShouldReadShortFieldNames() throws Exception {
         String[] names = { "A", "B", "C", "D", "E", "F" };
         checkReadNames("1.8.HEADER.FIELDS", names);
     }
 
     @Test
-    public void testShouldReadShortFieldNotNames() throws Exception {
+    void testShouldReadShortFieldNotNames() throws Exception {
         String[] names = { "A", "B", "C", "D", "E", "F" };
         checkReadNames("1.8.9.HEADER.FIELDS.NOT", names);
     }
 
     @Test
-    public void testShouldReadOneFieldNames() throws Exception {
+    void testShouldReadOneFieldNames() throws Exception {
         String[] names = { "AFieldName" };
         checkReadNames("1.8.HEADER.FIELDS", names);
     }
 
     @Test
-    public void testShouldReadOneFieldNotNames() throws Exception {
+    void testShouldReadOneFieldNotNames() throws Exception {
         String[] names = { "AFieldName" };
         checkReadNames("1.8.9.HEADER.FIELDS.NOT", names);
     }
 
     @Test
-    public void testShouldReadManyFieldNames() throws Exception {
+    void testShouldReadManyFieldNames() throws Exception {
         String[] names = { "ONE", "TWO", "THREE", "FOUR", "FIVE", "345345" };
         checkReadNames("1.8.HEADER.FIELDS", names);
     }
 
     @Test
-    public void testShouldReadManyFieldNotNames() throws Exception {
+    void testShouldReadManyFieldNotNames() throws Exception {
         String[] names = { "ONE", "TWO", "THREE", "FOUR", "FIVE", "345345" };
         checkReadNames("1.8.HEADER.FIELDS.NOT", names);
     }

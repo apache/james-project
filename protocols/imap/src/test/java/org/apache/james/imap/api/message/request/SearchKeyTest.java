@@ -23,19 +23,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class SearchKeyTest {
-
+class SearchKeyTest {
     private static final SearchKey RED = SearchKey.buildFrom("red");
     private static final SearchKey BLACK = SearchKey.buildTo("black");
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(SearchKey.class)
             .withPrefabValues(SearchKey.class, RED, BLACK)
             .withPrefabValues(List.class, ImmutableList.of(RED), ImmutableList.of(BLACK))
@@ -43,7 +42,7 @@ public class SearchKeyTest {
     }
 
     @Test
-    public void modSeqSearchKeyShouldBeOfTypeModSeq() {
+    void modSeqSearchKeyShouldBeOfTypeModSeq() {
         SearchKey searchKey = SearchKey.buildModSeq(36);
 
         assertThat(searchKey.getType()).isEqualTo(SearchKey.Type.TYPE_MODSEQ);

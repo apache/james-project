@@ -56,11 +56,11 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-public class GetQuotaRootProcessorTest {
+class GetQuotaRootProcessorTest {
 
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("plop", Optional.empty());
     private static final Username PLOP = Username.of("plop");
@@ -78,8 +78,8 @@ public class GetQuotaRootProcessorTest {
     private MailboxManager mockedMailboxManager;
     private MailboxSession mailboxSession;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         mailboxSession = MailboxSessionUtil.create(PLOP);
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         imapSession = new FakeImapSession();
@@ -92,7 +92,7 @@ public class GetQuotaRootProcessorTest {
     }
 
     @Test
-    public void processorShouldWorkOnValidRights() throws Exception {
+    void processorShouldWorkOnValidRights() throws Exception {
         GetQuotaRootRequest getQuotaRootRequest = new GetQuotaRootRequest(TAG, "INBOX");
 
         imapSession.authenticated();
@@ -122,7 +122,7 @@ public class GetQuotaRootProcessorTest {
     }
 
     @Test
-    public void processorShouldWorkOnErrorThrown() throws Exception {
+    void processorShouldWorkOnErrorThrown() throws Exception {
         GetQuotaRootRequest getQuotaRootRequest = new GetQuotaRootRequest(TAG, "INBOX");
 
         imapSession.authenticated();
@@ -143,7 +143,7 @@ public class GetQuotaRootProcessorTest {
     }
 
     @Test
-    public void processorShouldWorkOnNonValidRights() throws Exception {
+    void processorShouldWorkOnNonValidRights() throws Exception {
         GetQuotaRootRequest getQuotaRootRequest = new GetQuotaRootRequest(TAG, "INBOX");
 
         imapSession.authenticated();
@@ -162,5 +162,4 @@ public class GetQuotaRootProcessorTest {
             .extracting(StatusResponse::getServerResponseType)
             .isEqualTo(StatusResponse.Type.NO);
     }
-
 }

@@ -55,8 +55,8 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import reactor.core.publisher.Flux;
@@ -80,8 +80,8 @@ public class GetQuotaProcessorTest {
     private MailboxSession mailboxSession;
     private Mailbox mailbox;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         mailboxSession = MailboxSessionUtil.create(PLOP);
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         imapSession = new FakeImapSession();
@@ -99,7 +99,7 @@ public class GetQuotaProcessorTest {
     }
 
     @Test
-    public void processorShouldWorkOnValidRights() throws Exception {
+    void processorShouldWorkOnValidRights() throws Exception {
         GetQuotaRequest getQuotaRequest = new GetQuotaRequest(TAG, QUOTA_ROOT.getValue());
 
         when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession))
@@ -126,7 +126,7 @@ public class GetQuotaProcessorTest {
     }
 
     @Test
-    public void processorShouldWorkOnExceptionThrown() throws Exception {
+    void processorShouldWorkOnExceptionThrown() throws Exception {
         GetQuotaRequest getQuotaRequest = new GetQuotaRequest(TAG, QUOTA_ROOT.getValue());
 
         when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession))
@@ -148,7 +148,7 @@ public class GetQuotaProcessorTest {
     }
 
     @Test
-    public void processorShouldWorkOnNoRights() throws Exception {
+    void processorShouldWorkOnNoRights() throws Exception {
         GetQuotaRequest getQuotaRequest = new GetQuotaRequest(TAG, QUOTA_ROOT.getValue());
 
         when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession))

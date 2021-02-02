@@ -27,8 +27,8 @@ import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.message.response.NamespaceResponse;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 
@@ -36,7 +36,7 @@ public class NamespaceResponseEncoderTest {
     ImapResponseComposer mockComposer;
     NamespaceResponseEncoder subject;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         subject = new NamespaceResponseEncoder();
         mockComposer = mock(ImapResponseComposer.class);

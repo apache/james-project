@@ -38,22 +38,22 @@ import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.encode.FakeImapSession;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class FetchCommandParserPartialFetchTest  {
+class FetchCommandParserPartialFetchTest  {
 
     FetchCommandParser parser;
     ImapSession session;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         parser = new FetchCommandParser(mock(StatusResponseFactory.class));
         session = new FakeImapSession();
     }
 
     @Test
-    public void testShouldParseZeroAndLength() throws Exception {
+    void testShouldParseZeroAndLength() throws Exception {
         IdRange[] ranges = { new IdRange(1) };
         FetchData data = FetchData.builder()
             .add(new BodyFetchElement("BODY[]", SectionType.CONTENT, null,
@@ -63,7 +63,7 @@ public class FetchCommandParserPartialFetchTest  {
     }
 
     @Test
-    public void testShouldParseNonZeroAndLength() throws Exception {
+    void testShouldParseNonZeroAndLength() throws Exception {
         IdRange[] ranges = { new IdRange(1) };
         FetchData data = FetchData.builder()
             .add(new BodyFetchElement("BODY[]", SectionType.CONTENT, null,
@@ -73,7 +73,7 @@ public class FetchCommandParserPartialFetchTest  {
     }
 
     @Test
-    public void testShouldNotParseZeroLength() {
+    void testShouldNotParseZeroLength() {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream("1 (BODY[]<20.0>)\r\n"
                         .getBytes(StandardCharsets.US_ASCII)), new ByteArrayOutputStream());

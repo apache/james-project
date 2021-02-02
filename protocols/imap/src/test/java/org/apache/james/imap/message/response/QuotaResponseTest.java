@@ -22,13 +22,13 @@ package org.apache.james.imap.message.response;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.mailbox.model.Quota;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class QuotaResponseTest {
+class QuotaResponseTest {
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         Quota<QuotaCountLimit, QuotaCountUsage> red = Quota.<QuotaCountLimit, QuotaCountUsage>builder()
             .computedLimit(QuotaCountLimit.count(36))
             .used(QuotaCountUsage.count(22))

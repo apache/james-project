@@ -21,6 +21,7 @@ package org.apache.james.imap.decode.parser;
 
 import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
@@ -37,8 +38,8 @@ import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.message.request.GetAnnotationRequest;
 import org.apache.james.imap.message.request.GetAnnotationRequest.Depth;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class GetAnnotationCommandParserTest {
     private static final String INBOX = "anyInboxName";
@@ -49,21 +50,22 @@ public class GetAnnotationCommandParserTest {
 
     private GetAnnotationCommandParser parser;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         parser = new GetAnnotationCommandParser(mock(StatusResponseFactory.class));
     }
 
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowsExceptionWhenCommandHasNotMailbox() throws DecodingException {
+    @Test
+    void decodeMessageShouldThrowsExceptionWhenCommandHasNotMailbox() {
         InputStream inputStream = new ByteArrayInputStream(" \n".getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(lineReader, TAG, session);
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
     }
 
     @Test
-    public void decodeMessageShouldReturnRequestWhenCommandHasMailboxOnly() throws DecodingException {
+    void decodeMessageShouldReturnRequestWhenCommandHasMailboxOnly() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + "    \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
@@ -77,16 +79,17 @@ public class GetAnnotationCommandParserTest {
         assertThat(request.getMaxsize()).isEmpty();
     }
 
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowExceptionWhenCommandHasOneKeyButInWrongFormat() throws DecodingException {
+    @Test
+    void decodeMessageShouldThrowExceptionWhenCommandHasOneKeyButInWrongFormat() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " /private/comment extrastring \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(lineReader, TAG, session);
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
     }
 
     @Test
-    public void decodeMessageShouldReturnRequestWhenCommandHasOnlyOneKey() throws DecodingException {
+    void decodeMessageShouldReturnRequestWhenCommandHasOnlyOneKey() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " /private/comment \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
@@ -100,16 +103,17 @@ public class GetAnnotationCommandParserTest {
         assertThat(request.getMaxsize()).isEmpty();
     }
 
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowExceptionWhenCommandHasOneInvalidKey() throws DecodingException {
+    @Test
+    void decodeMessageShouldThrowExceptionWhenCommandHasOneInvalidKey() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + "/shared/comment private/comment \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(lineReader, TAG, session);
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
     }
 
     @Test
-    public void decodeMessageShouldReturnRequestWhenCommandHasMultiKeys() throws DecodingException {
+    void decodeMessageShouldReturnRequestWhenCommandHasMultiKeys() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
@@ -123,80 +127,89 @@ public class GetAnnotationCommandParserTest {
         assertThat(request.getMaxsize()).isEmpty();
     }
 
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowExceptionWhenCommandHasMultiKeysButInWrongFormat() throws DecodingException {
+    @Test
+    void decodeMessageShouldThrowExceptionWhenCommandHasMultiKeysButInWrongFormat() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/shared/comment /private/comment) (/another/key/group)\n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(lineReader, TAG, session);
-    }
-
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowExceptionWhenCommandHasMultiKeysAndSingleKey() throws DecodingException {
-        InputStream inputStream = new ByteArrayInputStream((INBOX + " (/shared/comment /private/comment) /another/key \n").getBytes(StandardCharsets.US_ASCII));
-        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
-
-        parser.decode(lineReader, TAG, session);
-    }
-
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowExceptionWhenCommandHasMultiKeysButNotOpenQuote() throws DecodingException {
-        InputStream inputStream = new ByteArrayInputStream((INBOX + " /shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
-        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
-
-        parser.decode(lineReader, TAG, session);
-    }
-
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowExceptionWhenCommandHasMultiKeysButNotCloseQuote() throws DecodingException {
-        InputStream inputStream = new ByteArrayInputStream((INBOX + " (/shared/comment /private/comment \n").getBytes(StandardCharsets.US_ASCII));
-        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
-
-        parser.decode(lineReader, TAG, session);
-    }
-
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowExceptionWhenCommandHasMaxsizeOptButInWrongPlace() throws DecodingException {
-        InputStream inputStream = new ByteArrayInputStream((INBOX + " (/shared/comment /private/comment) (MAXSIZE 1024) \n").getBytes(StandardCharsets.US_ASCII));
-        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
-
-        parser.decode(lineReader, TAG, session);
-    }
-
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowExceptionWhenCommandHasMaxsizeWithWrongValue() throws DecodingException {
-        InputStream inputStream = new ByteArrayInputStream((INBOX + " (MAXSIZE invalid) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
-        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
-
-        parser.decode(lineReader, TAG, session);
-    }
-
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowExceptionWhenCommandHasMaxsizeWithoutValue() throws DecodingException {
-        InputStream inputStream = new ByteArrayInputStream((INBOX + " (MAXSIZE) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
-        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
-
-        parser.decode(lineReader, TAG, session);
-    }
-
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowExceptionWhenCommandHasMaxsizeDoesNotInParenthesis() throws DecodingException {
-        InputStream inputStream = new ByteArrayInputStream((INBOX + " MAXSIZE 1024 (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
-        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
-
-        parser.decode(lineReader, TAG, session);
-    }
-
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowExceptionWhenCommandHasMaxsizeDoesNotInParenthesisAndNoValue() throws DecodingException {
-        InputStream inputStream = new ByteArrayInputStream((INBOX + " MAXSIZE (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
-        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
-
-        parser.decode(lineReader, TAG, session);
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
     }
 
     @Test
-    public void decodeMessageShouldReturnRequestWhenCommandHasMaxsizeOption() throws DecodingException {
+    void decodeMessageShouldThrowExceptionWhenCommandHasMultiKeysAndSingleKey() throws DecodingException {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " (/shared/comment /private/comment) /another/key \n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeMessageShouldThrowExceptionWhenCommandHasMultiKeysButNotOpenQuote() throws DecodingException {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " /shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeMessageShouldThrowExceptionWhenCommandHasMultiKeysButNotCloseQuote() throws DecodingException {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " (/shared/comment /private/comment \n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeMessageShouldThrowExceptionWhenCommandHasMaxsizeOptButInWrongPlace() throws DecodingException {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " (/shared/comment /private/comment) (MAXSIZE 1024) \n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeMessageShouldThrowExceptionWhenCommandHasMaxsizeWithWrongValue() throws DecodingException {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " (MAXSIZE invalid) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeMessageShouldThrowExceptionWhenCommandHasMaxsizeWithoutValue() throws DecodingException {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " (MAXSIZE) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeMessageShouldThrowExceptionWhenCommandHasMaxsizeDoesNotInParenthesis() throws DecodingException {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " MAXSIZE 1024 (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeMessageShouldThrowExceptionWhenCommandHasMaxsizeDoesNotInParenthesisAndNoValue() throws DecodingException {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " MAXSIZE (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeMessageShouldReturnRequestWhenCommandHasMaxsizeOption() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
@@ -210,72 +223,80 @@ public class GetAnnotationCommandParserTest {
         assertThat(request.getMaxsize()).contains(1024);
     }
 
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldReturnRequestWhenCommandHasWrongMaxsizeOption() throws DecodingException {
+    @Test
+    void decodeMessageShouldReturnRequestWhenCommandHasWrongMaxsizeOption() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (MAXSIZErr 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(lineReader, TAG, session);
-    }
-
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldReturnRequestWhenCommandHasWrongMaxsizeValue() throws DecodingException {
-        InputStream inputStream = new ByteArrayInputStream((INBOX + " (MAXSIZE 0) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
-        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
-
-        parser.decode(lineReader, TAG, session);
-    }
-
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldReturnRequestWhenCommandHasWrongDepthOption() throws DecodingException {
-        InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH -1) (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
-        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
-
-        parser.decode(lineReader, TAG, session);
-    }
-
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldReturnRequestWhenCommandHasWrongDepthOptionName() throws DecodingException {
-        InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTHerr 1) (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
-        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
-
-        parser.decode(lineReader, TAG, session);
-    }
-
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldReturnRequestWhenCommandHasDepthOptionButNoValue() throws DecodingException {
-        InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH) (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
-        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
-
-        parser.decode(lineReader, TAG, session);
-    }
-
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldReturnRequestWhenCommandHasDepthOptionButInvalidValue() throws DecodingException {
-        InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH invalid) (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
-        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
-
-        parser.decode(lineReader, TAG, session);
-    }
-
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldReturnRequestWhenCommandHasDepthOptionButNotInParenthesis() throws DecodingException {
-        InputStream inputStream = new ByteArrayInputStream((INBOX + " DEPTH (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
-        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
-
-        parser.decode(lineReader, TAG, session);
-    }
-
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldReturnRequestWhenCommandHasDepthOptionAndValueButNotInParenthesis() throws DecodingException {
-        InputStream inputStream = new ByteArrayInputStream((INBOX + " DEPTH 1 (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
-        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
-
-        parser.decode(lineReader, TAG, session);
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
     }
 
     @Test
-    public void decodeMessageShouldReturnRequestWithZeroDepthOption() throws DecodingException {
+    void decodeMessageShouldReturnRequestWhenCommandHasWrongMaxsizeValue() throws DecodingException {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " (MAXSIZE 0) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeMessageShouldReturnRequestWhenCommandHasWrongDepthOption() throws DecodingException {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH -1) (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeMessageShouldReturnRequestWhenCommandHasWrongDepthOptionName() throws DecodingException {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTHerr 1) (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeMessageShouldReturnRequestWhenCommandHasDepthOptionButNoValue() throws DecodingException {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH) (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeMessageShouldReturnRequestWhenCommandHasDepthOptionButInvalidValue() {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH invalid) (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeMessageShouldReturnRequestWhenCommandHasDepthOptionButNotInParenthesis() {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " DEPTH (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeMessageShouldReturnRequestWhenCommandHasDepthOptionAndValueButNotInParenthesis() {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " DEPTH 1 (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeMessageShouldReturnRequestWithZeroDepthOption() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH 0) (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
@@ -290,7 +311,7 @@ public class GetAnnotationCommandParserTest {
     }
 
     @Test
-    public void decodeMessageShouldReturnRequestWithOneDepthOption() throws DecodingException {
+    void decodeMessageShouldReturnRequestWithOneDepthOption() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH 1) (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
@@ -305,7 +326,7 @@ public class GetAnnotationCommandParserTest {
     }
 
     @Test
-    public void decodeMessageShouldReturnRequestWhenCommandHasOptionsInAnyOrder() throws DecodingException {
+    void decodeMessageShouldReturnRequestWhenCommandHasOptionsInAnyOrder() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (MAXSIZE 1024) (DEPTH 1) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
@@ -320,7 +341,7 @@ public class GetAnnotationCommandParserTest {
     }
 
     @Test
-    public void decodeMessageShouldReturnRequestWithInfinityDepthOption() throws DecodingException {
+    void decodeMessageShouldReturnRequestWithInfinityDepthOption() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH infinity) (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
@@ -335,7 +356,7 @@ public class GetAnnotationCommandParserTest {
     }
 
     @Test
-    public void decodeMessageShouldReturnRequestWithOnlyInfinityDepthOption() throws DecodingException {
+    void decodeMessageShouldReturnRequestWithOnlyInfinityDepthOption() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH infinity) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
@@ -350,7 +371,7 @@ public class GetAnnotationCommandParserTest {
     }
 
     @Test
-    public void decodeMessageShouldReturnRequestWithDefaultDepthOptionWhenCommandHasDoesNotHaveDepthOption() throws DecodingException {
+    void decodeMessageShouldReturnRequestWithDefaultDepthOptionWhenCommandHasDoesNotHaveDepthOption() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
@@ -364,27 +385,30 @@ public class GetAnnotationCommandParserTest {
         assertThat(request.getKeys()).contains(SHARED_KEY, PRIVATE_KEY);
     }
 
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowExceptionWhenCommandHasOneDepthButWithoutKey() throws DecodingException {
+    @Test
+    void decodeMessageShouldThrowExceptionWhenCommandHasOneDepthButWithoutKey() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH 1) (MAXSIZE 1024) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(lineReader, TAG, session);
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
     }
 
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowExceptionWhenCommandHasInfinityDepthButWithoutKey() throws DecodingException {
+    @Test
+    void decodeMessageShouldThrowExceptionWhenCommandHasInfinityDepthButWithoutKey() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH infinity) (MAXSIZE 1024) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(lineReader, TAG, session);
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
     }
 
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowExceptionWhenCommandHasDepthOptionInWrongPlace() throws DecodingException {
+    @Test
+    void decodeMessageShouldThrowExceptionWhenCommandHasDepthOptionInWrongPlace() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/shared/comment /private/comment) (DEPTH infinity) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(lineReader, TAG, session);
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, session))
+            .isInstanceOf(DecodingException.class);
     }
 }

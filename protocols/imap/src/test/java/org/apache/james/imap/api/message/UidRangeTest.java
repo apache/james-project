@@ -19,23 +19,19 @@
 package org.apache.james.imap.api.message;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MessageRange;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class UidRangeTest {
-
-    @Rule public ExpectedException exception = ExpectedException.none();
-    
+class UidRangeTest {
     private static final MessageUid _1 = MessageUid.of(1);
     private static final MessageUid _2 = MessageUid.of(2);
     private static final MessageUid _3 = MessageUid.of(3);
@@ -44,90 +40,90 @@ public class UidRangeTest {
     private static final MessageUid _10 = MessageUid.of(10);
 
     @Test
-    public void singleArgConstructorShouldBuildSingletonRange() {
+    void singleArgConstructorShouldBuildSingletonRange() {
         assertThat(new UidRange(_1)).containsOnly(_1);
     }
 
     @Test
-    public void lowBoundArgShouldBeGreaterThanHighBound() {
-        exception.expect(IllegalArgumentException.class);
-        new UidRange(_2, _1);
+    void lowBoundArgShouldBeGreaterThanHighBound() {
+        assertThatThrownBy(() -> new UidRange(_2, _1))
+            .isInstanceOf(IllegalArgumentException.class);
     }
     
     @Test
-    public void identicalLowBoundAndHighBoundShouldBuildASingleton() {
+    void identicalLowBoundAndHighBoundShouldBuildASingleton() {
         assertThat(new UidRange(_2, _2)).hasSize(1);
     }
 
     
     @Test
-    public void regularRangeShouldBuild() {
+    void regularRangeShouldBuild() {
         assertThat(new UidRange(_1, _2)).hasSize(2);
     }
 
     @Test
-    public void includesShouldReturnFalseWhenSmallerValue() {
+    void includesShouldReturnFalseWhenSmallerValue() {
         assertThat(new UidRange(_2, _3).includes(_1)).isFalse();
     }
 
     @Test
-    public void includesShouldReturnFalseWhenGreaterValue() {
+    void includesShouldReturnFalseWhenGreaterValue() {
         assertThat(new UidRange(_2, _3).includes(_4)).isFalse();
     }
 
     @Test
-    public void includesShouldReturnTrueWhenLowBoundValue() {
+    void includesShouldReturnTrueWhenLowBoundValue() {
         assertThat(new UidRange(_2, _3).includes(_2)).isTrue();
     }
 
     @Test
-    public void includesShouldReturnTrueWhenHighBoundValue() {
+    void includesShouldReturnTrueWhenHighBoundValue() {
         assertThat(new UidRange(_2, _3).includes(_3)).isTrue();
     }
 
     @Test
-    public void includesShouldReturnTrueWhenInRange() {
+    void includesShouldReturnTrueWhenInRange() {
         assertThat(new UidRange(_2, _4).includes(_3)).isTrue();
     }
     
     @Test
-    public void shouldRespectBeanContract() {
+    void shouldRespectBeanContract() {
         EqualsVerifier.forClass(UidRange.class).verify();
     }
     
     @Test
-    public void toMessageRangeShouldContainSameValues() {
+    void toMessageRangeShouldContainSameValues() {
         assertThat(new UidRange(_1, _4).toMessageRange()).isEqualTo(MessageRange.range(_1, _4));
     }
     
     @Test
-    public void formattedStringShouldUseImapRangeNotationForRange() {
+    void formattedStringShouldUseImapRangeNotationForRange() {
         assertThat(new UidRange(_1, _3).getFormattedString()).isEqualTo("1:3");
     }
     
     @Test
-    public void formattedStringShouldUseImapRangeNotationForSingleton() {
+    void formattedStringShouldUseImapRangeNotationForSingleton() {
         assertThat(new UidRange(_2).getFormattedString()).isEqualTo("2");
     }
 
     @Test
-    public void shouldBeIterable() {
+    void shouldBeIterable() {
         assertThat(new UidRange(_1, _4)).containsExactly(_1, _2, _3, _4);
     }
     
     @Test
-    public void mergeZeroRangeShouldOutputZeroRange() {
+    void mergeZeroRangeShouldOutputZeroRange() {
         assertThat(UidRange.mergeRanges(ImmutableList.of())).isEmpty();
     }
 
     @Test
-    public void mergeSingleRangeShouldOutputSameRange() {
+    void mergeSingleRangeShouldOutputSameRange() {
         List<UidRange> actual = UidRange.mergeRanges(ImmutableList.of(new UidRange(_1, _4)));
         assertThat(actual).containsOnly(new UidRange(_1, _4));
     }
 
     @Test
-    public void mergeContiguousRangeShouldOutputMergedRange() {
+    void mergeContiguousRangeShouldOutputMergedRange() {
         List<UidRange> actual = UidRange
                 .mergeRanges(
                         ImmutableList.of(
@@ -138,7 +134,7 @@ public class UidRangeTest {
     
 
     @Test
-    public void mergeContiguousRangesShouldOutputMergedRange() {
+    void mergeContiguousRangesShouldOutputMergedRange() {
         List<UidRange> actual = UidRange
                 .mergeRanges(
                         ImmutableList.of(
@@ -150,7 +146,7 @@ public class UidRangeTest {
     }
     
     @Test
-    public void mergeOverlappingRangeShouldOutputMergedRange() {
+    void mergeOverlappingRangeShouldOutputMergedRange() {
         List<UidRange> actual = UidRange
                 .mergeRanges(
                         ImmutableList.of(
@@ -160,7 +156,7 @@ public class UidRangeTest {
     }
     
     @Test
-    public void mergeShouldNotMergeRangeWithDistanceGreaterThen1() {
+    void mergeShouldNotMergeRangeWithDistanceGreaterThen1() {
         List<UidRange> actual = UidRange
                 .mergeRanges(
                         ImmutableList.of(
@@ -171,7 +167,7 @@ public class UidRangeTest {
     
 
     @Test
-    public void mergeShouldMergeRangeWhenOverlappingRangesAreNotSorted() {
+    void mergeShouldMergeRangeWhenOverlappingRangesAreNotSorted() {
         List<UidRange> actual = UidRange
                 .mergeRanges(
                         ImmutableList.of(

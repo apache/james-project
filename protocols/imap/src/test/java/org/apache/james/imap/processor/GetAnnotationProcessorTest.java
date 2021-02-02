@@ -55,15 +55,15 @@ import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockitoAnnotations;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-public class GetAnnotationProcessorTest {
+class GetAnnotationProcessorTest {
     private static final int FIRST_ELEMENT_INDEX = 0;
 
     private static final MailboxAnnotationKey PRIVATE_KEY = new MailboxAnnotationKey("/private/comment");
@@ -117,8 +117,8 @@ public class GetAnnotationProcessorTest {
         imapSession.setMailboxSession(mailboxSession);
     }
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         MockitoAnnotations.initMocks(this);
         initAndMockData();
 
@@ -126,12 +126,12 @@ public class GetAnnotationProcessorTest {
     }
 
     @Test
-    public void getImplementedCapabilitiesShouldContainSupportAnnotationWhenSupportedByMailboxManager() {
+    void getImplementedCapabilitiesShouldContainSupportAnnotationWhenSupportedByMailboxManager() {
         assertThat(processor.getImplementedCapabilities(new FakeImapSession())).containsExactly(ImapConstants.SUPPORTS_ANNOTATION);
     }
 
     @Test
-    public void processShouldResponseNoWithFailureWhenMailboxDoesNotExist() throws Exception {
+    void processShouldResponseNoWithFailureWhenMailboxDoesNotExist() throws Exception {
         doThrow(MailboxNotFoundException.class).when(mockMailboxManager).getAllAnnotations(eq(inbox), eq(mailboxSession));
         when(mockStatusResponseFactory.taggedNo(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class), any(ResponseCode.class)))
             .thenReturn(statusResponse);
@@ -147,7 +147,7 @@ public class GetAnnotationProcessorTest {
     }
 
     @Test
-    public void processShouldResponseNoWithGenericFailureWhenManagerThrowMailboxException() throws Exception {
+    void processShouldResponseNoWithGenericFailureWhenManagerThrowMailboxException() throws Exception {
         doThrow(MailboxException.class).when(mockMailboxManager).getAllAnnotations(eq(inbox), eq(mailboxSession));
         when(mockStatusResponseFactory.taggedNo(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class)))
             .thenReturn(statusResponse);
@@ -162,7 +162,7 @@ public class GetAnnotationProcessorTest {
     }
 
     @Test
-    public void processShouldGetAllAnnotationsAndReturnCompleteResponse() throws Exception {
+    void processShouldGetAllAnnotationsAndReturnCompleteResponse() throws Exception {
         processor.process(annotationRequestBuilder.build(), mockResponder, imapSession);
 
         verify(mockMailboxManager, times(1)).getAllAnnotations(inbox, mailboxSession);
@@ -175,7 +175,7 @@ public class GetAnnotationProcessorTest {
     }
 
     @Test
-    public void processShouldGetAnnotationsByKeysAndReturnCompleteResponse() throws Exception {
+    void processShouldGetAnnotationsByKeysAndReturnCompleteResponse() throws Exception {
         processor.process(annotationRequestBuilder.keys(keys).build(), mockResponder, imapSession);
 
         verify(mockMailboxManager, times(1)).getAnnotationsByKeys(eq(inbox), eq(mailboxSession), eq(keys));
@@ -187,7 +187,7 @@ public class GetAnnotationProcessorTest {
     }
 
     @Test
-    public void processShouldGetAnnotationsAndReturnCompleteResponseWithTheLongestEntryInfoWhenLimitMaxsize() throws Exception {
+    void processShouldGetAnnotationsAndReturnCompleteResponseWithTheLongestEntryInfoWhenLimitMaxsize() throws Exception {
         when(mockMailboxManager.getAllAnnotations(inbox, mailboxSession)).thenReturn(ImmutableList.of(PRIVATE_ANNOTATION, SHARED_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION));
 
         processor.process(annotationRequestBuilder.maxsize(Optional.of(10)).build(), mockResponder, imapSession);
@@ -204,7 +204,7 @@ public class GetAnnotationProcessorTest {
     }
 
     @Test
-    public void processShouldGetAnnotationsAndReturnCompleteResponseDoesNotTruncateDataByMaxsize() throws Exception {
+    void processShouldGetAnnotationsAndReturnCompleteResponseDoesNotTruncateDataByMaxsize() throws Exception {
         when(mockMailboxManager.getAllAnnotations(inbox, mailboxSession)).thenReturn(ImmutableList.of(PRIVATE_ANNOTATION, SHARED_ANNOTATION));
 
         processor.process(annotationRequestBuilder.maxsize(Optional.of(100)).build(), mockResponder, imapSession);
@@ -219,7 +219,7 @@ public class GetAnnotationProcessorTest {
     }
 
     @Test
-    public void processShouldGetAnnotationsAndReturnCompleteResponseWithTruncateDataByMaxsize() throws Exception {
+    void processShouldGetAnnotationsAndReturnCompleteResponseWithTruncateDataByMaxsize() throws Exception {
         when(mockMailboxManager.getAllAnnotations(inbox, mailboxSession)).thenReturn(ImmutableList.of(SHARED_ANNOTATION, PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION));
 
         processor.process(annotationRequestBuilder.maxsize(Optional.of(15)).build(), mockResponder, imapSession);
@@ -236,7 +236,7 @@ public class GetAnnotationProcessorTest {
     }
 
     @Test
-    public void processShouldGetAnnotationsAndReturnCompleteResponseDoesnotTruncateDataByMaxsizeWhenNoMoreOverSizeItem() throws Exception {
+    void processShouldGetAnnotationsAndReturnCompleteResponseDoesnotTruncateDataByMaxsizeWhenNoMoreOverSizeItem() throws Exception {
         when(mockMailboxManager.getAllAnnotations(inbox, mailboxSession)).thenReturn(ImmutableList.of(SHARED_ANNOTATION, PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION));
 
         processor.process(annotationRequestBuilder.maxsize(Optional.of(100)).build(), mockResponder, imapSession);
@@ -252,7 +252,7 @@ public class GetAnnotationProcessorTest {
     }
 
     @Test
-    public void processShouldGetAnnotationsByOneDepthAndReturnCompleteResponseWithTruncateDataByMaxsize() throws Exception {
+    void processShouldGetAnnotationsByOneDepthAndReturnCompleteResponseWithTruncateDataByMaxsize() throws Exception {
         when(mockMailboxManager.getAnnotationsByKeysWithOneDepth(inbox, mailboxSession, keys)).thenReturn(ImmutableList.of(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION));
 
         processor.process(annotationRequestBuilder.maxsize(Optional.of(14)).depth(Depth.ONE).keys(keys).build(), mockResponder, imapSession);
@@ -270,7 +270,7 @@ public class GetAnnotationProcessorTest {
     }
 
     @Test
-    public void processShouldGetAnnotationsAndReturnCompleteResponseWithTruncateDataByLessThenOrEqualMaxsize() throws Exception {
+    void processShouldGetAnnotationsAndReturnCompleteResponseWithTruncateDataByLessThenOrEqualMaxsize() throws Exception {
         when(mockMailboxManager.getAllAnnotations(inbox, mailboxSession)).thenReturn(ImmutableList.of(PRIVATE_ANNOTATION, SHARED_ANNOTATION));
 
         processor.process(annotationRequestBuilder.maxsize(Optional.of(15)).build(), mockResponder, imapSession);
@@ -288,7 +288,7 @@ public class GetAnnotationProcessorTest {
     }
 
     @Test
-    public void processShouldGetAnnotationsByInfinityDepthAndReturnCompleteResponseWithTruncateDataByMaxsize() throws Exception {
+    void processShouldGetAnnotationsByInfinityDepthAndReturnCompleteResponseWithTruncateDataByMaxsize() throws Exception {
         when(mockMailboxManager.getAnnotationsByKeysWithAllDepth(inbox, mailboxSession, keys)).thenReturn(ImmutableList.of(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION));
 
         processor.process(annotationRequestBuilder.maxsize(Optional.of(14)).depth(Depth.INFINITY).keys(keys).build(), mockResponder, imapSession);
@@ -307,7 +307,7 @@ public class GetAnnotationProcessorTest {
     }
 
     @Test
-    public void processShouldGetAnnotationsByInfinityDepthAndReturnCompleteResponse() throws Exception {
+    void processShouldGetAnnotationsByInfinityDepthAndReturnCompleteResponse() throws Exception {
         when(mockMailboxManager.getAnnotationsByKeysWithAllDepth(inbox, mailboxSession, keys)).thenReturn(ImmutableList.of(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION));
 
         processor.process(annotationRequestBuilder.depth(Depth.INFINITY).keys(keys).build(), mockResponder, imapSession);

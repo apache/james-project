@@ -25,26 +25,26 @@ import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.ListResponse;
 import org.apache.james.mailbox.model.MailboxMetaData;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class ListResponseEncoderTest {
+class ListResponseEncoderTest {
     private ListResponseEncoder encoder;
     private ByteImapResponseWriter writer = new ByteImapResponseWriter();
     private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         encoder = new ListResponseEncoder();
     }
 
     @Test
-    public void encoderShouldAcceptListResponse() {
+    void encoderShouldAcceptListResponse() {
         assertThat(encoder.acceptableMessages()).isEqualTo(ListResponse.class);
     }
 
     @Test
-    public void encoderShouldIncludeListCommand() throws Exception {
+    void encoderShouldIncludeListCommand() throws Exception {
         encoder.encode(new ListResponse(MailboxMetaData.Children.HAS_CHILDREN, MailboxMetaData.Selectability.NONE, "name", '.'), composer);
         assertThat(writer.getString()).startsWith("* LIST");
     }

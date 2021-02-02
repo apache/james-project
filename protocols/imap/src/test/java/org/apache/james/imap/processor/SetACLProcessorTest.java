@@ -51,14 +51,14 @@ import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 /**
  * SetACLProcessor Test.
  */
-public class SetACLProcessorTest {
+class SetACLProcessorTest {
 
     private static final String MAILBOX_NAME = ImapConstants.INBOX_NAME;
     private static final Username USER_1 = Username.of("user1");
@@ -76,8 +76,8 @@ public class SetACLProcessorTest {
     private SetACLRequest replaceAclRequest;
     private Rfc4314Rights setRights;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         path = MailboxPath.forUser(USER_1, MAILBOX_NAME);
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         mailboxManager = mock(MailboxManager.class);
@@ -104,7 +104,7 @@ public class SetACLProcessorTest {
     }
     
     @Test
-    public void testUnsupportedRight() throws Exception {
+    void testUnsupportedRight() throws Exception {
         SetACLRequest setACLRequest = new SetACLRequest(TAG, MAILBOX_NAME, USER_1.asString(), UNSUPPORTED_RIGHT);
 
         when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
@@ -122,7 +122,7 @@ public class SetACLProcessorTest {
     }
     
     @Test
-    public void testNoAdminRight() throws Exception {
+    void testNoAdminRight() throws Exception {
         when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
             .thenReturn(true);
         when(mailboxManager.hasRight(path, MailboxACL.Right.Administer, mailboxSession))
@@ -140,7 +140,7 @@ public class SetACLProcessorTest {
     }
     
     @Test
-    public void testInexistentMailboxName() throws Exception {
+    void testInexistentMailboxName() throws Exception {
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenThrow(new MailboxNotFoundException(""));
 
@@ -156,17 +156,17 @@ public class SetACLProcessorTest {
     }
 
     @Test
-    public void testAddRights() throws Exception {
+    void testAddRights() throws Exception {
         testOp("+", EditMode.ADD);
     }
 
     @Test
-    public void testRemoveRights() throws Exception {
+    void testRemoveRights() throws Exception {
         testOp("-", EditMode.REMOVE);
     }
 
     @Test
-    public void testReplaceRights() throws Exception {
+    void testReplaceRights() throws Exception {
         testOp("", EditMode.REPLACE);
     }
     

@@ -21,6 +21,7 @@ package org.apache.james.imap.decode.parser;
 
 import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
@@ -33,10 +34,9 @@ import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.message.request.SetAnnotationRequest;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class SetAnnotationCommandParserTest {
-
+class SetAnnotationCommandParserTest {
     private static final String INBOX = "anyMailboxName";
     private static final MailboxAnnotationKey PRIVATE_KEY = new MailboxAnnotationKey("/private/comment");
     private static final MailboxAnnotationKey SHARED_KEY = new MailboxAnnotationKey("/shared/comment");
@@ -48,7 +48,7 @@ public class SetAnnotationCommandParserTest {
     private SetAnnotationCommandParser parser = new SetAnnotationCommandParser(mock(StatusResponseFactory.class));
 
     @Test
-    public void decodeMessageShouldReturnRequestContainsOneAnnotation() throws DecodingException {
+    void decodeMessageShouldReturnRequestContainsOneAnnotation() throws Exception {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment \"This is my comment\") \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
         SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(lineReader, TAG, null);
@@ -57,16 +57,17 @@ public class SetAnnotationCommandParserTest {
         assertThat(request.getMailboxAnnotations()).containsOnly(PRIVATE_ANNOTATION);
     }
 
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowDecodingExceptionWhenContainsInvalidAnnotationKey() throws DecodingException {
+    @Test
+    void decodeMessageShouldThrowDecodingExceptionWhenContainsInvalidAnnotationKey() {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/pri*vate/comment \"This is my comment\") \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
 
-        parser.decode(lineReader, TAG, null);
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, null))
+            .isInstanceOf(DecodingException.class);
     }
 
     @Test
-    public void decodeMessageShouldReturnRequestContainsOneNilAnnotation() throws DecodingException {
+    void decodeMessageShouldReturnRequestContainsOneNilAnnotation() throws Exception {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment NIL) \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
         SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(lineReader, TAG, null);
@@ -76,7 +77,7 @@ public class SetAnnotationCommandParserTest {
     }
 
     @Test
-    public void decodeMessageShouldReturnRequestContainsOneAnnotationWithMultiLinesValue() throws DecodingException {
+    void decodeMessageShouldReturnRequestContainsOneAnnotationWithMultiLinesValue() throws Exception {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment {32}\nMy new comment across two lines.) \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, new ByteArrayOutputStream());
         SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(lineReader, TAG, null);
@@ -86,7 +87,7 @@ public class SetAnnotationCommandParserTest {
     }
 
     @Test
-    public void decodeMessageShouldReturnRequestContainsMultiAnnotations() throws DecodingException {
+    void decodeMessageShouldReturnRequestContainsMultiAnnotations() throws Exception {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment \"This is my comment\" /shared/comment \"This one is for you!\") \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, new ByteArrayOutputStream());
         SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(lineReader, TAG, null);
@@ -96,7 +97,7 @@ public class SetAnnotationCommandParserTest {
     }
 
     @Test
-    public void decodeMessageShouldReturnRequestContainsMultiAnnotationsWithNil() throws DecodingException {
+    void decodeMessageShouldReturnRequestContainsMultiAnnotationsWithNil() throws Exception {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment NIL /shared/comment \"This one is for you!\") \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, new ByteArrayOutputStream());
         SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(lineReader, TAG, null);
@@ -105,32 +106,35 @@ public class SetAnnotationCommandParserTest {
         assertThat(request.getMailboxAnnotations()).containsExactly(NIL_ANNOTATION, SHARED_ANNOTATION);
     }
 
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowDecodingExceptionWhenCommandDoesNotStartWithSlash() throws DecodingException {
+    @Test
+    void decodeMessageShouldThrowDecodingExceptionWhenCommandDoesNotStartWithSlash() {
         InputStream inputStream = new ByteArrayInputStream("INBOX /private/comment \"This is my comment\") \n".getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
 
-        parser.decode(lineReader, TAG, null);
-    }
-
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowDecodingExceptionWhenCommandDoesNotEndWithSlash() throws DecodingException {
-        InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment \"This is my comment\" \n").getBytes());
-        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
-
-        parser.decode(lineReader, TAG, null);
-    }
-
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowDecodingExceptionWhenCommandDoesNotHaveAnnotationValue() throws DecodingException {
-        InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment) \n").getBytes());
-        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
-
-        parser.decode(lineReader, TAG, null);
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, null))
+            .isInstanceOf(DecodingException.class);
     }
 
     @Test
-    public void decodeMessageShouldReturnRequestWhenCommandHasEmptyAnnotationValue() throws DecodingException {
+    void decodeMessageShouldThrowDecodingExceptionWhenCommandDoesNotEndWithSlash() {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment \"This is my comment\" \n").getBytes());
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, null))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeMessageShouldThrowDecodingExceptionWhenCommandDoesNotHaveAnnotationValue() {
+        InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment) \n").getBytes());
+        ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
+
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, null))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void decodeMessageShouldReturnRequestWhenCommandHasEmptyAnnotationValue() throws Exception {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment \"   \") \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
 
@@ -139,16 +143,17 @@ public class SetAnnotationCommandParserTest {
         assertThat(request.getMailboxAnnotations().get(0).getValue()).isPresent();
     }
 
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowDecodingExceptionWhenCommandAnnotationValueNotInQuote() throws DecodingException {
+    @Test
+    void decodeMessageShouldThrowDecodingExceptionWhenCommandAnnotationValueNotInQuote() {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment This is my comment) \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
 
-        parser.decode(lineReader, TAG, null);
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, null))
+            .isInstanceOf(DecodingException.class);
     }
 
     @Test
-    public void decodeMessageShouldReturnRequestWhenCommandAnnotationValueIsNILString() throws DecodingException {
+    void decodeMessageShouldReturnRequestWhenCommandAnnotationValueIsNILString() throws Exception {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment \"NIL\") \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
 
@@ -157,11 +162,12 @@ public class SetAnnotationCommandParserTest {
         assertThat(request.getMailboxAnnotations().get(0).getValue()).isPresent();
     }
 
-    @Test(expected = DecodingException.class)
-    public void decodeMessageShouldThrowDecodingExceptionWhenCommandMissingAnnotations() throws DecodingException {
+    @Test
+    void decodeMessageShouldThrowDecodingExceptionWhenCommandMissingAnnotations() {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " () \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
 
-        parser.decode(lineReader, TAG, null);
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, null))
+            .isInstanceOf(DecodingException.class);
     }
 }

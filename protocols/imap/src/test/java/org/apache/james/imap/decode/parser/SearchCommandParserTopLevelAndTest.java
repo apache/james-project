@@ -39,10 +39,10 @@ import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.mailbox.MessageUid;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SearchCommandParserTopLevelAndTest {
+class SearchCommandParserTopLevelAndTest {
 
     Input[] one = { sequence() };
 
@@ -137,20 +137,20 @@ public class SearchCommandParserTopLevelAndTest {
     SearchCommandParser parser;
     ImapCommand command;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         parser = new SearchCommandParser(mock(StatusResponseFactory.class));
         command = ImapCommand.anyStateCommand("Command");
     }
 
     @Test
-    public void testLargePermutations() throws Exception {
+    void testLargePermutations() throws Exception {
         permute(16, one);
         permute(32, one);
     }
 
     @Test
-    public void testBasePermutations() throws Exception {
+    void testBasePermutations() throws Exception {
         permute(2, base);
         permute(3, base);
         permute(4, base);
@@ -158,7 +158,7 @@ public class SearchCommandParserTopLevelAndTest {
     }
 
     @Test
-    public void testVarietyPermutations() throws Exception {
+    void testVarietyPermutations() throws Exception {
         permute(5, variety);
     }
 

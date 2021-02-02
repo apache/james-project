@@ -36,15 +36,15 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.mailbox.MessageUid;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SearchCommandParserOrTest {
+class SearchCommandParserOrTest {
 
     SearchCommandParser parser;
     ImapCommand command;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         parser = new SearchCommandParser(mock(StatusResponseFactory.class));
         command = ImapCommand.anyStateCommand("Command");
@@ -94,7 +94,7 @@ public class SearchCommandParserOrTest {
     }
 
     @Test
-    public void testDraftPermutations() throws Exception {
+    void testDraftPermutations() throws Exception {
         checkValid(draft(), draft());
         checkValid(draft(), stringQuoted());
         checkValid(draft(), stringUnquoted());
@@ -105,7 +105,7 @@ public class SearchCommandParserOrTest {
     }
 
     @Test
-    public void testDatePermutations() throws Exception {
+    void testDatePermutations() throws Exception {
         checkValid(date(), draft());
         checkValid(date(), stringQuoted());
         checkValid(date(), stringUnquoted());
@@ -116,7 +116,7 @@ public class SearchCommandParserOrTest {
     }
 
     @Test
-    public void testHeaderPermutations() throws Exception {
+    void testHeaderPermutations() throws Exception {
         checkValid(header(), draft());
         checkValid(header(), stringQuoted());
         checkValid(header(), stringUnquoted());
@@ -127,7 +127,7 @@ public class SearchCommandParserOrTest {
     }
 
     @Test
-    public void testSequencePermutations() throws Exception {
+    void testSequencePermutations() throws Exception {
         checkValid(sequence(), draft());
         checkValid(sequence(), stringQuoted());
         checkValid(sequence(), stringUnquoted());
@@ -138,7 +138,7 @@ public class SearchCommandParserOrTest {
     }
 
     @Test
-    public void testStringQuotedPermutations() throws Exception {
+    void testStringQuotedPermutations() throws Exception {
         checkValid(stringQuoted(), draft());
         checkValid(stringQuoted(), stringQuoted());
         checkValid(stringQuoted(), stringUnquoted());
@@ -149,7 +149,7 @@ public class SearchCommandParserOrTest {
     }
 
     @Test
-    public void testStringUnquotedPermutations() throws Exception {
+    void testStringUnquotedPermutations() throws Exception {
         checkValid(stringUnquoted(), draft());
         checkValid(stringUnquoted(), stringQuoted());
         checkValid(stringUnquoted(), stringUnquoted());
@@ -160,7 +160,7 @@ public class SearchCommandParserOrTest {
     }
 
     @Test
-    public void testUidPermutations() throws Exception {
+    void testUidPermutations() throws Exception {
         checkValid(uid(), draft());
         checkValid(uid(), stringQuoted());
         checkValid(uid(), stringUnquoted());

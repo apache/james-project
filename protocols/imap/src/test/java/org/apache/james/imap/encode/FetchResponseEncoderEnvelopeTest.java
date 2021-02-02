@@ -28,8 +28,8 @@ import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.imap.message.response.FetchResponse.Envelope.Address;
 import org.apache.james.mailbox.MessageSequenceNumber;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 
 public class FetchResponseEncoderEnvelopeTest {
@@ -82,8 +82,8 @@ public class FetchResponseEncoderEnvelopeTest {
     private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
     
     
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         envelope = mock(FetchResponse.Envelope.class);
 
         bcc = null;
@@ -139,7 +139,7 @@ public class FetchResponseEncoderEnvelopeTest {
     }
 
     @Test
-    public void testShouldNilAllNullProperties() throws Exception {
+    void testShouldNilAllNullProperties() throws Exception {
         envelopExpects();
         encoder.encode(message, composer);
         
@@ -147,7 +147,7 @@ public class FetchResponseEncoderEnvelopeTest {
     }
 
     @Test
-    public void testShouldComposeDate() throws Exception {
+    void testShouldComposeDate() throws Exception {
         date = "a date";
         envelopExpects();
         
@@ -158,7 +158,7 @@ public class FetchResponseEncoderEnvelopeTest {
     }
     
     @Test
-    public void testShouldComposeSubject() throws Exception {
+    void testShouldComposeSubject() throws Exception {
         subject = "some subject";
         envelopExpects();
         
@@ -168,7 +168,7 @@ public class FetchResponseEncoderEnvelopeTest {
     }
 
     @Test
-    public void testShouldComposeInReplyTo() throws Exception {
+    void testShouldComposeInReplyTo() throws Exception {
         inReplyTo = "some reply to";
         envelopExpects();
        
@@ -177,7 +177,7 @@ public class FetchResponseEncoderEnvelopeTest {
     }
 
     @Test
-    public void testShouldComposeMessageId() throws Exception {
+    void testShouldComposeMessageId() throws Exception {
         messageId = "some message id";
         envelopExpects();
         
@@ -187,7 +187,7 @@ public class FetchResponseEncoderEnvelopeTest {
     }
 
     @Test
-    public void testShouldComposeOneFromAddress() throws Exception {
+    void testShouldComposeOneFromAddress() throws Exception {
         from = mockOneAddress();
         envelopExpects();
         encoder.encode(message, composer);
@@ -196,7 +196,7 @@ public class FetchResponseEncoderEnvelopeTest {
     }
 
     @Test
-    public void testShouldComposeManyFromAddress() throws Exception {
+    void testShouldComposeManyFromAddress() throws Exception {
         from = mockManyAddresses();
         envelopExpects();
         
@@ -206,7 +206,7 @@ public class FetchResponseEncoderEnvelopeTest {
     }
 
     @Test
-    public void testShouldComposeOneSenderAddress() throws Exception {
+    void testShouldComposeOneSenderAddress() throws Exception {
         sender = mockOneAddress();
         envelopExpects();
      
@@ -216,7 +216,7 @@ public class FetchResponseEncoderEnvelopeTest {
     }
 
     @Test
-    public void testShouldComposeManySenderAddress() throws Exception {
+    void testShouldComposeManySenderAddress() throws Exception {
         sender = mockManyAddresses();
         envelopExpects();
      
@@ -227,7 +227,7 @@ public class FetchResponseEncoderEnvelopeTest {
     
 
     @Test
-    public void testShouldComposeOneReplyToAddress() throws Exception {
+    void testShouldComposeOneReplyToAddress() throws Exception {
         replyTo = mockOneAddress();
         envelopExpects();
        
@@ -237,7 +237,7 @@ public class FetchResponseEncoderEnvelopeTest {
     }
 
     @Test
-    public void testShouldComposeManyReplyToAddress() throws Exception {
+    void testShouldComposeManyReplyToAddress() throws Exception {
         replyTo = mockManyAddresses();
         envelopExpects();
        
@@ -247,7 +247,7 @@ public class FetchResponseEncoderEnvelopeTest {
     }
 
     @Test
-    public void testShouldComposeOneToAddress() throws Exception {
+    void testShouldComposeOneToAddress() throws Exception {
         to = mockOneAddress();
         envelopExpects();
        
@@ -257,7 +257,7 @@ public class FetchResponseEncoderEnvelopeTest {
     }
 
     @Test
-    public void testShouldComposeManyToAddress() throws Exception {
+    void testShouldComposeManyToAddress() throws Exception {
         to = mockManyAddresses();
         envelopExpects();
        
@@ -267,7 +267,7 @@ public class FetchResponseEncoderEnvelopeTest {
     }
 
     @Test
-    public void testShouldComposeOneCcAddress() throws Exception {
+    void testShouldComposeOneCcAddress() throws Exception {
         cc = mockOneAddress();
         envelopExpects();
 
@@ -277,7 +277,7 @@ public class FetchResponseEncoderEnvelopeTest {
     }
 
     @Test
-    public void testShouldComposeManyCcAddress() throws Exception {
+    void testShouldComposeManyCcAddress() throws Exception {
         cc = mockManyAddresses();
         envelopExpects();
        
@@ -287,7 +287,7 @@ public class FetchResponseEncoderEnvelopeTest {
     }
     
     @Test
-    public void testShouldComposeOneBccAddress() throws Exception {
+    void testShouldComposeOneBccAddress() throws Exception {
         bcc = mockOneAddress();
         envelopExpects();
        
@@ -297,7 +297,7 @@ public class FetchResponseEncoderEnvelopeTest {
     }
 
     @Test
-    public void testShouldComposeManyBccAddress() throws Exception {
+    void testShouldComposeManyBccAddress() throws Exception {
         bcc = mockManyAddresses();
         envelopExpects();
        

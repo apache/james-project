@@ -26,12 +26,12 @@ import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.AnnotationResponse;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class AnnotationResponseEncoderTest {
+class AnnotationResponseEncoderTest {
     private static final MailboxAnnotationKey PRIVATE_KEY = new MailboxAnnotationKey("/private/comment");
     private static final MailboxAnnotationKey SHARED_KEY = new MailboxAnnotationKey("/shared/comment");
 
@@ -42,8 +42,8 @@ public class AnnotationResponseEncoderTest {
     private ImapResponseComposer composer;
     private AnnotationResponseEncoder encoder;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         byteImapResponseWriter = new ByteImapResponseWriter();
 
         composer = new ImapResponseComposerImpl(byteImapResponseWriter, 1024);
@@ -51,7 +51,7 @@ public class AnnotationResponseEncoderTest {
     }
 
     @Test
-    public void encodingShouldWellFormEmptyRequest() throws Exception {
+    void encodingShouldWellFormEmptyRequest() throws Exception {
         AnnotationResponse response = new AnnotationResponse(null, ImmutableList.of());
 
         encoder.encode(response, composer);
@@ -60,7 +60,7 @@ public class AnnotationResponseEncoderTest {
     }
 
     @Test
-    public void encodingShouldWellFormWhenEmptyReturnedAnnotation() throws Exception {
+    void encodingShouldWellFormWhenEmptyReturnedAnnotation() throws Exception {
         AnnotationResponse response = new AnnotationResponse("INBOX", ImmutableList.of());
 
         encoder.encode(response, composer);
@@ -69,7 +69,7 @@ public class AnnotationResponseEncoderTest {
     }
 
     @Test
-    public void encodingShouldWellFormWhenOnlyOneReturnedAnnotation() throws Exception {
+    void encodingShouldWellFormWhenOnlyOneReturnedAnnotation() throws Exception {
         AnnotationResponse response = new AnnotationResponse("INBOX", ImmutableList.of(PRIVATE_ANNOTATION));
 
         encoder.encode(response, composer);
@@ -78,7 +78,7 @@ public class AnnotationResponseEncoderTest {
     }
 
     @Test
-    public void encodingShouldWellFormWhenManyReturnedAnnotations() throws Exception {
+    void encodingShouldWellFormWhenManyReturnedAnnotations() throws Exception {
         AnnotationResponse response = new AnnotationResponse("INBOX", ImmutableList.of(PRIVATE_ANNOTATION, SHARED_ANNOTATION));
         encoder.encode(response, composer);
 
@@ -86,7 +86,7 @@ public class AnnotationResponseEncoderTest {
     }
 
     @Test
-    public void encodingShouldWellFormWhenNilReturnedAnnotation() throws Exception {
+    void encodingShouldWellFormWhenNilReturnedAnnotation() throws Exception {
         AnnotationResponse response = new AnnotationResponse("INBOX", ImmutableList.of(MailboxAnnotation.nil(PRIVATE_KEY)));
 
         encoder.encode(response, composer);
