@@ -185,10 +185,17 @@ object ResponseSerializer {
       }
     case _ => JsError("Expecting a JsObject to represent a webSocket inbound request")
   }
+  private implicit val typeNameReads: Reads[TypeName] = {
+    case JsString(value) if value.equals(MailboxTypeName.asString()) => JsSuccess(MailboxTypeName)
+    case JsString(value) if value.equals(EmailTypeName.asString()) => JsSuccess(EmailTypeName)
+    case _ => JsError("Expecting a JsString as typeName")
+  }
+  private implicit val webSocketPushEnableReads: Reads[WebSocketPushEnable] = Json.reads[WebSocketPushEnable]
   private implicit val webSocketInboundReads: Reads[WebSocketInboundMessage] = {
     case json: JsObject =>
       json.value.get("@type") match {
         case Some(JsString("Request")) => webSocketRequestReads.reads(json)
+        case Some(JsString("WebSocketPushEnable")) => webSocketPushEnableReads.reads(json)
         case Some(JsString(unknownType)) => JsError(s"Unknown @type field on a webSocket inbound message: $unknownType")
         case Some(invalidType) => JsError(s"Invalid @type field on a webSocket inbound message: expecting a JsString, got $invalidType")
         case None => JsError(s"Missing @type field on a webSocket inbound message")

@@ -80,6 +80,12 @@ object State {
 
   val INSTANCE: State = fromJava(JavaState.INITIAL)
 
+  def fromStringUnchecked(value: String): State = 
+    refineV[Uuid](value)
+      .fold(
+        failure => throw new IllegalArgumentException(failure),
+        success => State.fromString(success))
+
   def fromString(value: UUIDString): State = State(UUID.fromString(value.value))
 
   def fromMailboxChanges(mailboxChanges: MailboxChanges): State = fromJava(mailboxChanges.getNewState)
