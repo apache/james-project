@@ -32,7 +32,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.stream.IntStream;
 
 import org.apache.james.protocols.api.handler.LineHandler;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.github.steveash.guavate.Guavate;
 
@@ -45,7 +45,7 @@ public class AbstractProtocolTransportTest {
     private static final String US_ASCII = "US-ASCII";
     
     @Test
-    public void testWriteOrder() throws InterruptedException, UnsupportedEncodingException {
+    void testWriteOrder() throws InterruptedException, UnsupportedEncodingException {
         final List<Response> messages = IntStream.range(0, 2000)
             .mapToObj(i -> new TestResponse())
             .collect(Guavate.toImmutableList());
