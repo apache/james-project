@@ -22,14 +22,12 @@ package org.apache.james.jmap.change
 import java.util.Optional
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import javax.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
 import org.apache.james.events.{Event, EventSerializer}
 import org.apache.james.jmap.core.State
 import org.apache.james.json.JsonGenericSerializer
 
-import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 
 object StateChangeEventDTO {
@@ -60,17 +58,14 @@ case class StateChangeEventDTO(@JsonProperty("type") getType: String,
     emailState = getEmailState.toScala.map(State.fromStringUnchecked))
 }
 
-case class JmapEventSerializer(dtoModules: Set[EventDTOModule[Event, EventDTO]]) extends EventSerializer {
-  @Inject
-  def this(javaModules: java.util.Set[EventDTOModule[Event, EventDTO]]) {
-    this(javaModules.asScala.toSet)
-  }
-
-  private val genericSerializer: JsonGenericSerializer[Event, EventDTO] = JsonGenericSerializer
-    .forModules(dtoModules.asJava)
+case class JmapEventSerializer() extends EventSerializer {
+  private val genericSerializer: JsonGenericSerializer[StateChangeEvent, StateChangeEventDTO] = JsonGenericSerializer
+    .forModules(StateChangeEventDTO.dtoModule)
     .withoutNestedType()
 
-  override def toJson(event: Event): String = genericSerializer.serialize(event)
+  override def toJson(event: Event): String = event match {
+    case stateChangeEvent: StateChangeEvent => genericSerializer.serialize(stateChangeEvent)
+  }
 
   override def asEvent(serialized: String): Event = genericSerializer.deserialize(serialized)
 }

@@ -21,13 +21,16 @@ package org.apache.james.jmap.change
 
 import java.time.{Clock, ZonedDateTime}
 
-import javax.inject.Inject
+import javax.inject.{Inject, Named}
 import org.apache.james.core.Username
+import org.apache.james.events.Event.EventId
 import org.apache.james.events.EventListener.ReactiveGroupEventListener
-import org.apache.james.events.{Event, Group}
+import org.apache.james.events.{Event, EventBus, Group, RegistrationKey}
+import org.apache.james.jmap.InjectionKeys
 import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, JmapChange, MailboxChange, MailboxChangeRepository}
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.change.MailboxChangeListener.LOGGER
+import org.apache.james.jmap.core.State
 import org.apache.james.mailbox.events.MailboxEvents.{Added, Expunged, FlagsUpdated, MailboxACLUpdated, MailboxAdded, MailboxDeletion, MailboxEvent, MailboxRenamed}
 import org.apache.james.mailbox.exception.MailboxException
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId}
@@ -45,7 +48,8 @@ object MailboxChangeListener {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[MailboxChangeListener])
 }
 
-case class MailboxChangeListener @Inject() (mailboxChangeRepository: MailboxChangeRepository,
+case class MailboxChangeListener @Inject() (@Named(InjectionKeys.JMAP) eventBus: EventBus,
+                                            mailboxChangeRepository: MailboxChangeRepository,
                                             mailboxChangeFactory: MailboxChange.Factory,
                                             emailChangeRepository: EmailChangeRepository,
                                             emailChangeFactory: EmailChange.Factory,
@@ -94,10 +98,11 @@ case class MailboxChangeListener @Inject() (mailboxChangeRepository: MailboxChan
   }
 
   private def saveChangeEvent(jmapChange: JmapChange): Publisher[Void] =
-    jmapChange match {
+    SMono(jmapChange match {
       case mailboxChange: MailboxChange => mailboxChangeRepository.save(mailboxChange)
       case emailChange: EmailChange => emailChangeRepository.save(emailChange)
-    }
+    }).`then`(SMono(eventBus.dispatch(toStateChangeEvent(jmapChange), Set[RegistrationKey]().asJava)))
+
 
   private def getSharees(mailboxId: MailboxId, username: Username): List[AccountId] = {
     val mailboxSession: MailboxSession = mailboxManager.createSystemSession(username)
@@ -115,5 +120,18 @@ case class MailboxChangeListener @Inject() (mailboxChangeRepository: MailboxChan
         LOGGER.warn("Could not get sharees for mailbox [%s] when listening to change events", mailboxId)
         List.empty
     }
+  }
+
+  private def toStateChangeEvent(jmapChange: JmapChange): StateChangeEvent = jmapChange match {
+    case emailChange: EmailChange => StateChangeEvent(
+      eventId = EventId.random(),
+      username = Username.of(emailChange.getAccountId.getIdentifier),
+      emailState = Some(State.fromJava(emailChange.getState)),
+      mailboxState = None)
+    case mailboxChange: MailboxChange => StateChangeEvent(
+      eventId = EventId.random(),
+      username = Username.of(mailboxChange.getAccountId.getIdentifier),
+      emailState = Some(State.fromJava(mailboxChange.getState)),
+      mailboxState = None)
   }
 }

@@ -20,10 +20,11 @@
 package org.apache.james.jmap.change
 
 import java.time.{Clock, ZonedDateTime}
+import java.util
 
 import javax.mail.Flags
 import org.apache.james.events.delivery.InVmEventDelivery
-import org.apache.james.events.{InVMEventBus, MemoryEventDeadLetters, RetryBackoffConfiguration}
+import org.apache.james.events.{Event, EventBus, EventListener, Group, InVMEventBus, MemoryEventDeadLetters, Registration, RegistrationKey, RetryBackoffConfiguration}
 import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, MailboxChange, MailboxChangeRepository, State}
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.change.MailboxChangeListenerTest.ACCOUNT_ID
@@ -36,6 +37,8 @@ import org.apache.james.mailbox.{MailboxManager, MailboxSessionUtil, MessageMana
 import org.apache.james.metrics.tests.RecordingMetricFactory
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{BeforeEach, Nested, Test}
+import org.reactivestreams.Publisher
+import reactor.core.publisher.Mono
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
@@ -71,7 +74,16 @@ class MailboxChangeListenerTest {
     mailboxChangeRepository = new MemoryMailboxChangeRepository()
     emailChangeFactory = new EmailChange.Factory(stateFactory)
     emailChangeRepository = new MemoryEmailChangeRepository()
-    listener = MailboxChangeListener(mailboxChangeRepository, mailboxChangeFactory, emailChangeRepository, emailChangeFactory, mailboxManager, clock)
+    val eventBus = new EventBus {
+      override def register(listener: EventListener.ReactiveEventListener, key: RegistrationKey): Publisher[Registration] = Mono.empty()
+
+      override def register(listener: EventListener.ReactiveEventListener, group: Group): Registration = () => {}
+
+      override def dispatch(event: Event, key: util.Set[RegistrationKey]): Mono[Void] = Mono.empty()
+
+      override def reDeliver(group: Group, event: Event): Mono[Void] = Mono.empty()
+    }
+    listener = MailboxChangeListener(eventBus, mailboxChangeRepository, mailboxChangeFactory, emailChangeRepository, emailChangeFactory, mailboxManager, clock)
     resources.getEventBus.register(listener)
   }
 

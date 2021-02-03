@@ -32,6 +32,7 @@ import org.apache.james.modules.eventstore.MemoryEventStoreModule;
 import org.apache.james.modules.mailbox.MemoryMailboxModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
 import org.apache.james.modules.protocols.JMAPServerModule;
+import org.apache.james.modules.protocols.JmapEventBusModule;
 import org.apache.james.modules.protocols.LMTPServerModule;
 import org.apache.james.modules.protocols.ManageSieveServerModule;
 import org.apache.james.modules.protocols.POP3ServerModule;
@@ -99,6 +100,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
         new SpamAssassinListenerModule());
 
     public static final Module JMAP = Modules.combine(
+        new JmapEventBusModule(),
         new JmapTasksModule(),
         new MemoryDataJmapModule(),
         new JMAPServerModule());

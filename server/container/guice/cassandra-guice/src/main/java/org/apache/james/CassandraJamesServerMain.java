@@ -46,6 +46,7 @@ import org.apache.james.modules.mailrepository.CassandraMailRepositoryModule;
 import org.apache.james.modules.metrics.CassandraMetricsModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
 import org.apache.james.modules.protocols.JMAPServerModule;
+import org.apache.james.modules.protocols.JmapEventBusModule;
 import org.apache.james.modules.protocols.LMTPServerModule;
 import org.apache.james.modules.protocols.ManageSieveServerModule;
 import org.apache.james.modules.protocols.POP3ServerModule;
@@ -111,6 +112,7 @@ public class CassandraJamesServerMain implements JamesServerMain {
         new ProtocolHandlerModule(),
         new SMTPServerModule(),
         new JMAPServerModule(),
+        new JmapEventBusModule(),
         WEBADMIN);
 
     public static final Module PLUGINS = Modules.combine(
