@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.core
 
+import org.apache.james.jmap.change.TypeState
+
 sealed trait WebSocketInboundMessage
 
 sealed trait WebSocketOutboundMessage
@@ -30,3 +32,5 @@ case class WebSocketRequest(requestId: Option[RequestId], requestObject: Request
 case class WebSocketResponse(requestId: Option[RequestId], responseObject: ResponseObject) extends WebSocketOutboundMessage
 
 case class WebSocketError(requestId: Option[RequestId], problemDetails: ProblemDetails) extends WebSocketOutboundMessage
+
+case class StateChange(changes: Map[AccountId, TypeState]) extends WebSocketOutboundMessage

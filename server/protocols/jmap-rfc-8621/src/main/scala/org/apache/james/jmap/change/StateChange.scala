@@ -22,17 +22,21 @@ package org.apache.james.jmap.change
 import org.apache.james.core.Username
 import org.apache.james.events.Event
 import org.apache.james.events.Event.EventId
-import org.apache.james.jmap.core.{AccountId, State}
+import org.apache.james.jmap.core.{AccountId, State, StateChange}
 
 sealed trait TypeName {
   def asMap(maybeState: Option[State]): Map[TypeName, State] =
     maybeState.map(state => Map[TypeName, State](this -> state))
       .getOrElse(Map())
-}
-case object MailboxTypeName extends TypeName
-case object EmailTypeName extends TypeName
 
-case class StateChange(changes: Map[AccountId, TypeState])
+  def asString(): String
+}
+case object MailboxTypeName extends TypeName {
+  override def asString(): String = "Mailbox"
+}
+case object EmailTypeName extends TypeName {
+  override def asString(): String = "Email"
+}
 
 case class TypeState(changes: Map[TypeName, State])
 
@@ -51,7 +55,7 @@ case class StateChangeEvent(eventId: EventId,
 
   override def getUsername: Username = username
 
-  override def isNoop: Boolean = false
+  override def isNoop: Boolean = mailboxState.isEmpty && emailState.isEmpty
 
   override def getEventId: EventId = eventId
 }

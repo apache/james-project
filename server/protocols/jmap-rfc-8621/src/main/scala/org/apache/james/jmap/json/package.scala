@@ -43,7 +43,7 @@ package object json {
     case _ => JsError("Expecting mailboxId value to be a boolean")
   }
 
-  def mapWrites[K, V](keyWriter: K => String, valueWriter: Writes[V]): Writes[Map[K, V]] =
+  def mapWrites[K, V](keyWriter: K => String, valueWriter: Writes[V]): OWrites[Map[K, V]] =
     (ids: Map[K, V]) => {
       ids.foldLeft(JsObject.empty)((jsObject, kv) => {
         val (key: K, value: V) = kv
