@@ -28,7 +28,7 @@ import org.apache.james.jmap.core.State
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{mock, verify, when}
+import org.mockito.Mockito.{mock, verify, verifyZeroInteractions, when}
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
 import reactor.netty.NettyOutbound
@@ -43,7 +43,7 @@ class StateChangeListenerTest {
       username = Username.of("bob"),
       mailboxState = Some(State.fromStringUnchecked("2f9f1b12-b35a-43e6-9af2-0106fb53a943")),
       emailState = Some(State.fromStringUnchecked("2d9f1b12-b35a-43e6-9af2-0106fb53a943")))
-    val listener = StateChangeListener(outbound)
+    val listener = StateChangeListener(Set(MailboxTypeName, EmailTypeName), outbound)
     val nettyOutbound = mock(classOf[NettyOutbound])
     when(outbound.sendString(any(), any())).thenReturn(nettyOutbound)
 
@@ -63,5 +63,47 @@ class StateChangeListenerTest {
         |  }
         |}
         |""".stripMargin)
+  }
+
+  @Test
+  def reactiveEventShouldOmitUnwantedTypes(): Unit = {
+    val event = StateChangeEvent(eventId = EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4"),
+      username = Username.of("bob"),
+      mailboxState = Some(State.fromStringUnchecked("2f9f1b12-b35a-43e6-9af2-0106fb53a943")),
+      emailState = Some(State.fromStringUnchecked("2d9f1b12-b35a-43e6-9af2-0106fb53a943")))
+    val listener = StateChangeListener(Set(MailboxTypeName), outbound)
+    val nettyOutbound = mock(classOf[NettyOutbound])
+    when(outbound.sendString(any(), any())).thenReturn(nettyOutbound)
+
+    listener.reactiveEvent(event)
+
+    val captor: ArgumentCaptor[Publisher[String]] = ArgumentCaptor.forClass(classOf[Publisher[String]])
+    verify(outbound).sendString(captor.capture(), any(classOf[Charset]))
+    assertThatJson(SMono(captor.getValue).block()).isEqualTo(
+      """
+        |{
+        |  "@type":"StateChange",
+        |  "changed":{
+        |    "81b637d8fcd2c6da6359e6963113a1170de795e4b725b84d1e0b4cfd9ec58ce9":{
+        |      "Mailbox":"2f9f1b12-b35a-43e6-9af2-0106fb53a943"
+        |    }
+        |  }
+        |}
+        |""".stripMargin)
+  }
+
+  @Test
+  def reactiveEventShouldFilterOutUnwantedEvents(): Unit = {
+    val event = StateChangeEvent(eventId = EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4"),
+      username = Username.of("bob"),
+      mailboxState = None,
+      emailState = Some(State.fromStringUnchecked("2d9f1b12-b35a-43e6-9af2-0106fb53a943")))
+    val listener = StateChangeListener(Set(MailboxTypeName), outbound)
+    val nettyOutbound = mock(classOf[NettyOutbound])
+    when(outbound.sendString(any(), any())).thenReturn(nettyOutbound)
+
+    listener.reactiveEvent(event)
+
+    verifyZeroInteractions(outbound)
   }
 }

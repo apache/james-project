@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.core
 
-import org.apache.james.jmap.change.TypeState
+import org.apache.james.jmap.change.{TypeName, TypeState}
 
 sealed trait WebSocketInboundMessage
 
@@ -33,4 +33,12 @@ case class WebSocketResponse(requestId: Option[RequestId], responseObject: Respo
 
 case class WebSocketError(requestId: Option[RequestId], problemDetails: ProblemDetails) extends WebSocketOutboundMessage
 
-case class StateChange(changes: Map[AccountId, TypeState]) extends WebSocketOutboundMessage
+case class StateChange(changes: Map[AccountId, TypeState]) extends WebSocketOutboundMessage {
+
+  def filter(types: Set[TypeName]): Option[StateChange] =
+    Option(changes.flatMap {
+      case (accountId, typeState) => typeState.filter(types).map(typeState => (accountId, typeState))
+    })
+    .filter(_.nonEmpty)
+    .map(StateChange)
+}

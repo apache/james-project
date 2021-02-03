@@ -38,7 +38,14 @@ case object EmailTypeName extends TypeName {
   override def asString(): String = "Email"
 }
 
-case class TypeState(changes: Map[TypeName, State])
+case class TypeState(changes: Map[TypeName, State]) {
+
+  def filter(types: Set[TypeName]): Option[TypeState] = Option(changes.filter {
+    case (typeName, _) => types.contains(typeName)
+  })
+    .filter(_.nonEmpty)
+    .map(TypeState)
+}
 
 case class StateChangeEvent(eventId: EventId,
                             username: Username,

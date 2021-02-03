@@ -30,13 +30,14 @@ import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.websocket.WebsocketOutbound
 
-case class StateChangeListener(outbound: WebsocketOutbound) extends ReactiveEventListener {
+case class StateChangeListener(types: Set[TypeName], outbound: WebsocketOutbound) extends ReactiveEventListener {
   override def reactiveEvent(event: Event): Publisher[Void] = event match {
     case stateChangeEvent: StateChangeEvent =>
-      val stateChange = stateChangeEvent.asStateChange
-      val jsonString = Json.stringify(ResponseSerializer.serialize(stateChange))
-      SMono(outbound.sendString(SMono.just[String](jsonString), StandardCharsets.UTF_8))
-        .subscribeOn(Schedulers.elastic)
+      val stateChange = stateChangeEvent.asStateChange.filter(types)
+      val jsonString = stateChange.map(ResponseSerializer.serialize).map(Json.stringify)
+      jsonString.map(json => SMono(outbound.sendString(SMono.just[String](json), StandardCharsets.UTF_8))
+        .subscribeOn(Schedulers.elastic))
+        .getOrElse(SMono.empty)
     case _ => SMono.empty
   }
 
