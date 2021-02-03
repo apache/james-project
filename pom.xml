@@ -591,7 +591,7 @@
         <activemq.version>5.16.1</activemq.version>
         <apache-mime4j.version>0.8.3</apache-mime4j.version>
         <apache.openjpa.version>3.1.2</apache.openjpa.version>
-        <camel.version>2.24.1</camel.version>
+        <camel.version>2.25.3</camel.version>
         <derby.version>10.14.2.0</derby.version>
         <log4j2.version>2.14.0</log4j2.version>
         <javax.inject.version>1</javax.inject.version>
