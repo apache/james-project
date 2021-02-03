@@ -92,7 +92,6 @@ pipeline {
         stage('Stable Tests') {
             steps {
                 echo 'Running tests'
-                // all tests run is very very long (10 hours on Apache Jenkins)
                 sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS}'
             }
             post {
@@ -119,6 +118,7 @@ pipeline {
                     junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
                 }
                 failure {
+                    archiveArtifacts artifacts: '**/target/test-run.log' , fingerprint: true
                     archiveArtifacts artifacts: '**/surefire-reports/*' , fingerprint: true
                 }
             }
