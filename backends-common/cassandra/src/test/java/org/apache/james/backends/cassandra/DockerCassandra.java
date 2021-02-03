@@ -19,6 +19,10 @@
 
 package org.apache.james.backends.cassandra;
 
+import com.github.dockerjava.api.async.ResultCallback;
+import com.github.dockerjava.api.command.EventsCmd;
+import com.github.dockerjava.api.model.Event;
+import com.github.dockerjava.api.model.EventType;
 import org.apache.james.backends.cassandra.init.ClusterFactory;
 import org.apache.james.backends.cassandra.init.KeyspaceFactory;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
@@ -38,6 +42,8 @@ import com.datastax.driver.core.Session;
 import com.github.dockerjava.api.DockerClient;
 import com.google.common.collect.ImmutableMap;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.UUID;
 
 public class DockerCassandra {
@@ -123,8 +129,33 @@ public class DockerCassandra {
         this("cassandra_3_11_3-"+ UUID.randomUUID().toString(), AdditionalDockerFileStep.IDENTITY);
     }
 
-    public DockerCassandra(String imageName, AdditionalDockerFileStep additionalSteps) {
+    private DockerCassandra(String imageName, AdditionalDockerFileStep additionalSteps) {
         client = DockerClientFactory.instance().client();
+        EventsCmd eventsCmd = client.eventsCmd().withEventTypeFilter(EventType.IMAGE).withImageFilter(imageName);
+        eventsCmd.exec(new ResultCallback<Event>() {
+            @Override
+            public void onStart(Closeable closeable) {
+
+            }
+
+            @Override
+            public void onNext(Event object) {
+                logger.info(object.toString());
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                logger.error("event stream failure",throwable);
+            }
+
+            @Override
+            public void onComplete() {
+            }
+
+            @Override
+            public void close() throws IOException {
+            }
+        });
         boolean doNotDeleteImageAfterUsage = false;
         cassandraContainer = new GenericContainer<>(
             new ImageFromDockerfile(imageName,doNotDeleteImageAfterUsage)
