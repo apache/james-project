@@ -24,6 +24,7 @@ import static io.restassured.config.RestAssuredConfig.newConfig;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.UUID;
 
 import org.apache.james.util.docker.Images;
 import org.slf4j.Logger;
@@ -130,7 +131,7 @@ public class Linshare {
     @SuppressWarnings("resource")
     private GenericContainer<?> createDockerBackend() {
         return new GenericContainer<>(
-            new ImageFromDockerfile()
+            new ImageFromDockerfile("linshare-backend-"+ UUID.randomUUID().toString())
                 .withFileFromClasspath("conf/log4j.properties", "backend/conf/log4j.properties")
                 .withFileFromClasspath("conf/catalina.properties", "backend/conf/catalina.properties")
                 .withFileFromClasspath("conf/id_rsa", "backend/conf/id_rsa.pri")
