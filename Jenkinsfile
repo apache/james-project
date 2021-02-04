@@ -100,6 +100,7 @@ pipeline {
                     junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
                 }
                 failure {
+                    archiveArtifacts artifacts: '**/target/test-run.log' , fingerprint: true
                     archiveArtifacts artifacts: '**/surefire-reports/*' , fingerprint: true
                 }
             }
