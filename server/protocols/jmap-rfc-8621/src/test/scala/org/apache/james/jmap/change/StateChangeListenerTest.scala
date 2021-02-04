@@ -19,91 +19,69 @@
 
 package org.apache.james.jmap.change
 
-import java.nio.charset.Charset
-
-import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
-import org.apache.james.jmap.core.State
+import org.apache.james.jmap.core.{AccountId, State, StateChange}
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{mock, verify, verifyZeroInteractions, when}
-import org.reactivestreams.Publisher
+import reactor.core.publisher.Sinks
+import reactor.core.publisher.Sinks.EmitFailureHandler
 import reactor.core.scala.publisher.SMono
-import reactor.netty.NettyOutbound
-import reactor.netty.http.websocket.WebsocketOutbound
+import reactor.core.scheduler.Schedulers
 
 class StateChangeListenerTest {
-  private val outbound: WebsocketOutbound = mock(classOf[WebsocketOutbound])
+  private val mailboxState = State.fromStringUnchecked("2f9f1b12-b35a-43e6-9af2-0106fb53a943")
+  private val emailState = State.fromStringUnchecked("2d9f1b12-b35a-43e6-9af2-0106fb53a943")
+  private val eventId = EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4")
 
   @Test
   def reactiveEventShouldSendAnOutboundMessage(): Unit = {
-    val event = StateChangeEvent(eventId = EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4"),
+    val sink: Sinks.Many[StateChange] = Sinks.many().unicast().onBackpressureBuffer()
+    val event = StateChangeEvent(eventId = eventId,
       username = Username.of("bob"),
-      mailboxState = Some(State.fromStringUnchecked("2f9f1b12-b35a-43e6-9af2-0106fb53a943")),
-      emailState = Some(State.fromStringUnchecked("2d9f1b12-b35a-43e6-9af2-0106fb53a943")))
-    val listener = StateChangeListener(Set(MailboxTypeName, EmailTypeName), outbound)
-    val nettyOutbound = mock(classOf[NettyOutbound])
-    when(outbound.sendString(any(), any())).thenReturn(nettyOutbound)
+      mailboxState = Some(mailboxState),
+      emailState = Some(emailState))
+    val listener = StateChangeListener(Set(MailboxTypeName, EmailTypeName), sink)
 
-    listener.reactiveEvent(event)
+    SMono(listener.reactiveEvent(event)).subscribeOn(Schedulers.elastic()).block()
+    sink.emitComplete(EmitFailureHandler.FAIL_FAST)
 
-    val captor: ArgumentCaptor[Publisher[String]] = ArgumentCaptor.forClass(classOf[Publisher[String]])
-    verify(outbound).sendString(captor.capture(), any(classOf[Charset]))
-    assertThatJson(SMono(captor.getValue).block()).isEqualTo(
-      """
-        |{
-        |  "@type":"StateChange",
-        |  "changed":{
-        |    "81b637d8fcd2c6da6359e6963113a1170de795e4b725b84d1e0b4cfd9ec58ce9":{
-        |      "Mailbox":"2f9f1b12-b35a-43e6-9af2-0106fb53a943",
-        |      "Email":"2d9f1b12-b35a-43e6-9af2-0106fb53a943"
-        |    }
-        |  }
-        |}
-        |""".stripMargin)
+    assertThat(sink.asFlux().collectList().block())
+      .containsExactly(StateChange(Map(AccountId.from(Username.of("bob")).toOption.get  -> TypeState(Map(
+        MailboxTypeName -> mailboxState,
+        EmailTypeName -> emailState)))))
   }
 
   @Test
   def reactiveEventShouldOmitUnwantedTypes(): Unit = {
-    val event = StateChangeEvent(eventId = EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4"),
+    val sink: Sinks.Many[StateChange] = Sinks.many().unicast().onBackpressureBuffer()
+    val event = StateChangeEvent(eventId = eventId,
       username = Username.of("bob"),
-      mailboxState = Some(State.fromStringUnchecked("2f9f1b12-b35a-43e6-9af2-0106fb53a943")),
-      emailState = Some(State.fromStringUnchecked("2d9f1b12-b35a-43e6-9af2-0106fb53a943")))
-    val listener = StateChangeListener(Set(MailboxTypeName), outbound)
-    val nettyOutbound = mock(classOf[NettyOutbound])
-    when(outbound.sendString(any(), any())).thenReturn(nettyOutbound)
+      mailboxState = Some(mailboxState),
+      emailState = Some(emailState))
+    val listener = StateChangeListener(Set(MailboxTypeName), sink)
 
-    listener.reactiveEvent(event)
+    SMono(listener.reactiveEvent(event)).subscribeOn(Schedulers.elastic()).block()
+    sink.emitComplete(EmitFailureHandler.FAIL_FAST)
 
-    val captor: ArgumentCaptor[Publisher[String]] = ArgumentCaptor.forClass(classOf[Publisher[String]])
-    verify(outbound).sendString(captor.capture(), any(classOf[Charset]))
-    assertThatJson(SMono(captor.getValue).block()).isEqualTo(
-      """
-        |{
-        |  "@type":"StateChange",
-        |  "changed":{
-        |    "81b637d8fcd2c6da6359e6963113a1170de795e4b725b84d1e0b4cfd9ec58ce9":{
-        |      "Mailbox":"2f9f1b12-b35a-43e6-9af2-0106fb53a943"
-        |    }
-        |  }
-        |}
-        |""".stripMargin)
+    assertThat(sink.asFlux().collectList().block())
+      .containsExactly(StateChange(Map(AccountId.from(Username.of("bob")).toOption.get -> TypeState(Map(
+        MailboxTypeName -> mailboxState)))))
   }
 
   @Test
   def reactiveEventShouldFilterOutUnwantedEvents(): Unit = {
-    val event = StateChangeEvent(eventId = EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4"),
+    val sink: Sinks.Many[StateChange] = Sinks.many().unicast().onBackpressureBuffer()
+    val event = StateChangeEvent(eventId = eventId,
       username = Username.of("bob"),
       mailboxState = None,
-      emailState = Some(State.fromStringUnchecked("2d9f1b12-b35a-43e6-9af2-0106fb53a943")))
-    val listener = StateChangeListener(Set(MailboxTypeName), outbound)
-    val nettyOutbound = mock(classOf[NettyOutbound])
-    when(outbound.sendString(any(), any())).thenReturn(nettyOutbound)
+      emailState = Some(emailState))
+    val listener = StateChangeListener(Set(MailboxTypeName), sink)
 
-    listener.reactiveEvent(event)
+    SMono(listener.reactiveEvent(event)).subscribeOn(Schedulers.elastic()).block()
+    sink.emitComplete(EmitFailureHandler.FAIL_FAST)
 
-    verifyZeroInteractions(outbound)
+    assertThat(sink.asFlux().collectList().block())
+      .isEmpty()
   }
 }

@@ -19,25 +19,21 @@
 
 package org.apache.james.jmap.change
 
-import java.nio.charset.StandardCharsets
-
 import org.apache.james.events.Event
 import org.apache.james.events.EventListener.ReactiveEventListener
-import org.apache.james.jmap.json.ResponseSerializer
+import org.apache.james.jmap.core.StateChange
 import org.reactivestreams.Publisher
-import play.api.libs.json.Json
+import reactor.core.publisher.Sinks
+import reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST
 import reactor.core.scala.publisher.SMono
-import reactor.core.scheduler.Schedulers
-import reactor.netty.http.websocket.WebsocketOutbound
 
-case class StateChangeListener(types: Set[TypeName], outbound: WebsocketOutbound) extends ReactiveEventListener {
+case class StateChangeListener(types: Set[TypeName], sink: Sinks.Many[StateChange]) extends ReactiveEventListener {
   override def reactiveEvent(event: Event): Publisher[Void] = event match {
     case stateChangeEvent: StateChangeEvent =>
-      val stateChange = stateChangeEvent.asStateChange.filter(types)
-      val jsonString = stateChange.map(ResponseSerializer.serialize).map(Json.stringify)
-      jsonString.map(json => SMono(outbound.sendString(SMono.just[String](json), StandardCharsets.UTF_8))
-        .subscribeOn(Schedulers.elastic))
-        .getOrElse(SMono.empty)
+      SMono.fromCallable(() => {
+        val stateChange = stateChangeEvent.asStateChange.filter(types)
+        stateChange.foreach(next => sink.emitNext(next, FAIL_FAST))
+      }).asJava().`then`()
     case _ => SMono.empty
   }
 

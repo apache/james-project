@@ -30,14 +30,14 @@ import org.apache.james.events.{EventBus, Registration}
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.JMAP_WS
 import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeListener}
-import org.apache.james.jmap.core.{ProblemDetails, RequestId, WebSocketError, WebSocketOutboundMessage, WebSocketPushEnable, WebSocketRequest, WebSocketResponse}
+import org.apache.james.jmap.core.{ProblemDetails, RequestId, StateChange, WebSocketError, WebSocketOutboundMessage, WebSocketPushEnable, WebSocketRequest, WebSocketResponse}
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
 import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes, InjectionKeys => JMAPInjectionKeys}
 import org.apache.james.mailbox.MailboxSession
 import org.slf4j.{Logger, LoggerFactory}
-import reactor.core.publisher.Mono
+import reactor.core.publisher.{Mono, Sinks}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
@@ -121,10 +121,17 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
               .flatMap(response => SMono(clientContext.outbound.sendString(SMono.just(response), StandardCharsets.UTF_8).`then`()))
               .`then`(SMono.just(clientContext))
           case pushEnable: WebSocketPushEnable =>
+            val sink: Sinks.Many[StateChange] = Sinks.many().unicast().onBackpressureError()
             SMono(eventBus.register(
-                StateChangeListener(pushEnable.dataTypes, clientContext.outbound),
+                StateChangeListener(pushEnable.dataTypes, sink),
                 AccountIdRegistrationKey.of(clientContext.session.getUser)))
               .map((registration: Registration) => ClientContext(clientContext.outbound, Some(registration), clientContext.session))
+              .doOnNext(context => sink.asFlux()
+                .map(ResponseSerializer.serialize)
+                .map(_.toString)
+                .flatMap(response => SMono(context.outbound.sendString(SMono.just(response), StandardCharsets.UTF_8).`then`()))
+                .subscribeOn(Schedulers.elastic())
+                .subscribe())
       })
 
   private def handleHttpHandshakeError(throwable: Throwable, response: HttpServerResponse): SMono[Void] =
