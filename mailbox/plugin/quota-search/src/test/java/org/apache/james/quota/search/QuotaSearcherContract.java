@@ -45,7 +45,6 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Strings;
 
-@Disabled
 public interface QuotaSearcherContract {
 
     String PASSWORD = "any";
