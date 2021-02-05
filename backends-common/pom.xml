@@ -36,6 +36,7 @@
     <modules>
         <module>cassandra</module>
         <module>elasticsearch</module>
+        <module>elasticsearch-v7</module>
         <module>jpa</module>
         <module>rabbitmq</module>
     </modules>
