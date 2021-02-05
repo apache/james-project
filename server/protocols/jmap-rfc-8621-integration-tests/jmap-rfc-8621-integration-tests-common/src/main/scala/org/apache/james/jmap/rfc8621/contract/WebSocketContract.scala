@@ -19,14 +19,18 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import java.net.{ProtocolException, URI}
+import java.nio.charset.StandardCharsets
 
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.draft.JmapGuiceProbe
 import org.apache.james.jmap.rfc8621.contract.Fixture._
-import org.apache.james.mailbox.model.MailboxPath
-import org.apache.james.modules.MailboxProbeImpl
+import org.apache.james.mailbox.MessageManager.AppendCommand
+import org.apache.james.mailbox.model.MailboxACL.Right
+import org.apache.james.mailbox.model.{MailboxACL, MailboxPath}
+import org.apache.james.mime4j.dom.Message
+import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
 import org.junit.jupiter.api.{BeforeEach, Test}
@@ -51,6 +55,7 @@ trait WebSocketContract {
     server.getProbe(classOf[DataProbeImpl])
       .fluent()
       .addDomain(DOMAIN.asString())
+      .addUser(ANDRE.asString(), ANDRE_PASSWORD)
       .addUser(BOB.asString(), BOB_PASSWORD)
   }
 
@@ -634,6 +639,66 @@ trait WebSocketContract {
       .hasSize(2) // No Email notification
       .contains(mailboxStateChange)
       .doesNotContain(emailStateChange)
+  }
+
+  @Test
+  def pushShouldSupportDelegation(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
+    val andrePath = MailboxPath.inbox(ANDRE)
+    mailboxProbe.createMailbox(andrePath)
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(andrePath, BOB.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+
+    Thread.sleep(100)
+
+    val response: Either[String, List[String]] =
+      authenticatedRequest(server)
+        .response(asWebSocket[Identity, List[String]] {
+          ws =>
+            ws.send(WebSocketFrame.text(
+              """{
+                |  "@type": "WebSocketPushEnable",
+                |  "dataTypes": ["Mailbox", "Email"]
+                |}""".stripMargin))
+
+            Thread.sleep(100)
+
+            val message: Message = Message.Builder
+              .of
+              .setSubject("test")
+              .setBody("testmail", StandardCharsets.UTF_8)
+              .build
+            mailboxProbe.appendMessage(ANDRE.asString(), andrePath, AppendCommand.from(message))
+
+            Thread.sleep(100)
+
+            List(
+              ws.receive()
+                .map { case t: Text =>
+                  t.payload
+                },
+              ws.receive()
+                .map { case t: Text =>
+                  t.payload
+                })
+        })
+        .send(backend)
+        .body
+
+    Thread.sleep(100)
+
+    val jmapGuiceProbe: JmapGuiceProbe = server.getProbe(classOf[JmapGuiceProbe])
+    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val emailState: String = jmapGuiceProbe.getLatestEmailStateWithDelegation(accountId).getValue.toString
+    val mailboxState: String = jmapGuiceProbe.getLatestMailboxStateWithDelegation(accountId).getValue.toString
+
+    val mailboxStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Mailbox":"$mailboxState"}}}"""
+    val emailStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Email":"$emailState"}}}"""
+
+    assertThat(response.toOption.get.asJava)
+      .hasSize(2) // email notification + mailbox notification
+      .contains(mailboxStateChange, emailStateChange)
   }
 
   private def authenticatedRequest(server: GuiceJamesServer): RequestT[Identity, Either[String, String], Any] = {
