@@ -38,6 +38,7 @@ import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
@@ -74,6 +75,7 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
         private HttpAsyncClientBuilder configure(HttpAsyncClientBuilder builder) {
             configureAuthentication(builder);
             configureHostScheme(builder);
+            configureTimeout(builder);
 
             return builder;
         }
@@ -101,6 +103,10 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
             } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException | CertificateException | IOException e) {
                 throw new RuntimeException("Cannot set SSL options to the builder", e);
             }
+        }
+
+        private void configureTimeout(HttpAsyncClientBuilder builder) {
+            builder.setDefaultRequestConfig(requestConfig());
         }
 
         private SSLContext sslContext() throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException,
@@ -139,6 +145,12 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
                     throw new NotImplementedException(
                         String.format("unrecognized HostNameVerifier '%s'", hostnameVerifier.name()));
             }
+        }
+
+        private RequestConfig requestConfig() {
+            return RequestConfig.custom()
+                    .setConnectTimeout(Math.toIntExact(configuration.getRequestTimeout().toMillis()))
+                    .build();
         }
 
         private SSLContextBuilder applyTrustStore(SSLContextBuilder sslContextBuilder) throws CertificateException, NoSuchAlgorithmException,
@@ -197,8 +209,7 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
         return new RestHighLevelClient(
             RestClient
                 .builder(hostsToHttpHosts())
-                .setHttpClientConfigCallback(httpAsyncClientConfigurer::configure)
-                .setMaxRetryTimeoutMillis(Math.toIntExact(configuration.getRequestTimeout().toMillis())));
+                .setHttpClientConfigCallback(httpAsyncClientConfigurer::configure));
     }
 
     private HttpHost[] hostsToHttpHosts() {
