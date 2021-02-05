@@ -35,6 +35,8 @@ import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
 import org.junit.jupiter.api.{BeforeEach, Test, Timeout}
 import play.api.libs.json.{JsString, Json}
+import reactor.core.scala.publisher.SMono
+import reactor.core.scheduler.Schedulers
 import sttp.capabilities.WebSockets
 import sttp.client3.monad.IdMonad
 import sttp.client3.okhttp.OkHttpSyncBackend
@@ -964,6 +966,106 @@ trait WebSocketContract {
     assertThat(response.toOption.get.asJava)
       .hasSize(2) // email notification + mailbox notification
       .contains(mailboxStateChange, emailStateChange)
+  }
+
+  @Test
+  @Timeout(180)
+  def pushCancelRequestsShouldDisableNotification(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    Thread.sleep(100)
+
+    val response: Either[String, List[String]] =
+      authenticatedRequest(server)
+        .response(asWebSocket[Identity, List[String]] {
+          ws =>
+            ws.send(WebSocketFrame.text(
+              """{
+                |  "@type": "WebSocketPushEnable",
+                |  "dataTypes": ["Mailbox", "Email"]
+                |}""".stripMargin))
+
+            Thread.sleep(100)
+
+                ws.send(WebSocketFrame.text(
+              """{
+                |  "@type": "WebSocketPushDisable"
+                |}""".stripMargin))
+
+            Thread.sleep(100)
+
+            ws.send(WebSocketFrame.text(
+              s"""{
+                 |  "@type": "Request",
+                 |  "requestId": "req-36",
+                 |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+                 |  "methodCalls": [
+                 |    ["Email/set", {
+                 |      "accountId": "$ACCOUNT_ID",
+                 |      "create": {
+                 |        "aaaaaa":{
+                 |          "mailboxIds": {
+                 |             "${mailboxId.serialize}": true
+                 |          }
+                 |        }
+                 |      }
+                 |    }, "c1"]]
+                 |}""".stripMargin))
+
+            val response = ws.receive()
+              .map { case t: Text =>
+                t.payload
+              }
+
+            val maybeNotification: String = SMono.fromCallable(() =>
+            ws.receive()
+              .map { case t: Text =>
+                t.payload
+              })
+              .timeout(scala.concurrent.duration.Duration.fromNanos(100000000), Some(SMono.just("No notification received")))
+              .subscribeOn(Schedulers.elastic())
+              .block()
+
+          List(response, maybeNotification)
+        })
+        .send(backend)
+        .body
+
+      Thread.sleep(100)
+      val jmapGuiceProbe: JmapGuiceProbe = server.getProbe(classOf[JmapGuiceProbe])
+      val emailState: String = jmapGuiceProbe.getLatestEmailState(accountId).getValue.toString
+      val mailboxState: String = jmapGuiceProbe.getLatestMailboxState(accountId).getValue.toString
+
+      val mailboxStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Mailbox":"$mailboxState"}}}"""
+      val emailStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Email":"$emailState"}}}"""
+
+      assertThat(response.toOption.get.asJava)
+        .hasSize(2) // Email create response + no notification message
+        .contains("No notification received")
+        .doesNotContain(mailboxStateChange, emailStateChange)
+  }
+
+  @Test
+  @Timeout(180)
+  def pushCancelRequestAsFirstMessageShouldBeProcessedNormally(server: GuiceJamesServer): Unit = {
+    Thread.sleep(100)
+
+    authenticatedRequest(server)
+      .response(asWebSocket[Identity, Unit] {
+        ws =>
+          ws.send(WebSocketFrame.text(
+            """{
+              |  "@type": "WebSocketPushDisable"
+              |}""".stripMargin))
+
+          Thread.sleep(100)
+
+          assertThat(ws.isOpen()).isTrue
+      })
+      .send(backend)
+      .body
   }
 
   private def authenticatedRequest(server: GuiceJamesServer): RequestT[Identity, Either[String, String], Any] = {

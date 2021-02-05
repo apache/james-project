@@ -44,3 +44,4 @@ case class StateChange(changes: Map[AccountId, TypeState]) extends WebSocketOutb
 }
 
 case class WebSocketPushEnable(dataTypes: Option[Set[TypeName]]) extends WebSocketInboundMessage
+case object WebSocketPushDisable extends WebSocketInboundMessage

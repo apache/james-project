@@ -202,6 +202,7 @@ object ResponseSerializer {
       json.value.get("@type") match {
         case Some(JsString("Request")) => webSocketRequestReads.reads(json)
         case Some(JsString("WebSocketPushEnable")) => webSocketPushEnableReads.reads(json)
+        case Some(JsString("WebSocketPushDisable")) => JsSuccess(WebSocketPushDisable)
         case Some(JsString(unknownType)) => JsError(s"Unknown @type field on a webSocket inbound message: $unknownType")
         case Some(invalidType) => JsError(s"Invalid @type field on a webSocket inbound message: expecting a JsString, got $invalidType")
         case None => JsError(s"Missing @type field on a webSocket inbound message")
