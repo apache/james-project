@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.metrics.es;
+package org.apache.james.metrics.es.v7;
 
 import java.util.Optional;
 
