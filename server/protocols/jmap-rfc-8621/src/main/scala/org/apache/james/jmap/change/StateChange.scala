@@ -51,7 +51,6 @@ case class StateChangeEvent(eventId: EventId,
                             username: Username,
                             mailboxState: Option[State],
                             emailState: Option[State]) extends Event {
-
   def asStateChange: StateChange =
     StateChange(Map(AccountId.from(username).fold(
       failure => throw new IllegalArgumentException(failure),
@@ -60,9 +59,9 @@ case class StateChangeEvent(eventId: EventId,
         MailboxTypeName.asMap(mailboxState) ++
           EmailTypeName.asMap(emailState))))
 
-  override def getUsername: Username = username
+  override val getUsername: Username = username
 
-  override def isNoop: Boolean = mailboxState.isEmpty && emailState.isEmpty
+  override val isNoop: Boolean = mailboxState.isEmpty && emailState.isEmpty
 
-  override def getEventId: EventId = eventId
+  override val getEventId: EventId = eventId
 }
