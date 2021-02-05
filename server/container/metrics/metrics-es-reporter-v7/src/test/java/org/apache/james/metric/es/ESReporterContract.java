@@ -27,7 +27,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.apache.http.HttpStatus;
-import org.apache.james.backends.es.DockerElasticSearch;
+import org.apache.james.backends.es.v7.DockerElasticSearch;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.metrics.dropwizard.DropWizardMetricFactory;
