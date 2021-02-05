@@ -17,12 +17,33 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.quota.search.elasticsearch.json;
+package org.apache.james.quota.search.elasticsearch.v7.json;
 
-public interface JsonMessageConstants {
+import javax.inject.Inject;
 
-    String USER = "user";
-    String DOMAIN = "domain";
-    String QUOTA_RATIO = "quotaRatio";
+import org.apache.james.core.Domain;
+import org.apache.james.mailbox.events.MailboxListener.QuotaUsageUpdatedEvent;
+import org.apache.james.mailbox.model.QuotaRatio;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+
+public class QuotaRatioToElasticSearchJson {
+
+    private final ObjectMapper mapper;
+
+    @Inject
+    public QuotaRatioToElasticSearchJson() {
+        this.mapper = new ObjectMapper();
+        this.mapper.registerModule(new Jdk8Module());
+    }
+
+    public String convertToJson(QuotaUsageUpdatedEvent event) throws JsonProcessingException {
+        return mapper.writeValueAsString(QuotaRatioAsJson.builder()
+                .user(event.getUsername().asString())
+                .domain(event.getQuotaRoot().getDomain().map(Domain::asString))
+                .quotaRatio(QuotaRatio.from(event.getSizeQuota(), event.getCountQuota()))
+                .build());
+    }
 }

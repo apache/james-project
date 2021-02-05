@@ -17,17 +17,17 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.quota.search.elasticsearch;
+package org.apache.james.quota.search.elasticsearch.v7;
 
-import static org.apache.james.backends.es.NodeMappingFactory.DOUBLE;
-import static org.apache.james.backends.es.NodeMappingFactory.KEYWORD;
-import static org.apache.james.backends.es.NodeMappingFactory.PROPERTIES;
-import static org.apache.james.backends.es.NodeMappingFactory.REQUIRED;
-import static org.apache.james.backends.es.NodeMappingFactory.ROUTING;
-import static org.apache.james.backends.es.NodeMappingFactory.TYPE;
-import static org.apache.james.quota.search.elasticsearch.json.JsonMessageConstants.DOMAIN;
-import static org.apache.james.quota.search.elasticsearch.json.JsonMessageConstants.QUOTA_RATIO;
-import static org.apache.james.quota.search.elasticsearch.json.JsonMessageConstants.USER;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.DOUBLE;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.KEYWORD;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.PROPERTIES;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.REQUIRED;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.ROUTING;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.TYPE;
+import static org.apache.james.quota.search.elasticsearch.v7.json.JsonMessageConstants.DOMAIN;
+import static org.apache.james.quota.search.elasticsearch.v7.json.JsonMessageConstants.QUOTA_RATIO;
+import static org.apache.james.quota.search.elasticsearch.v7.json.JsonMessageConstants.USER;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;

@@ -17,33 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.quota.search.elasticsearch.json;
+package org.apache.james.quota.search.elasticsearch.v7;
 
-import javax.inject.Inject;
+import org.apache.james.backends.es.v7.RoutingKey;
+import org.apache.james.core.Username;
 
-import org.apache.james.core.Domain;
-import org.apache.james.mailbox.events.MailboxListener.QuotaUsageUpdatedEvent;
-import org.apache.james.mailbox.model.QuotaRatio;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-
-public class QuotaRatioToElasticSearchJson {
-
-    private final ObjectMapper mapper;
-
-    @Inject
-    public QuotaRatioToElasticSearchJson() {
-        this.mapper = new ObjectMapper();
-        this.mapper.registerModule(new Jdk8Module());
-    }
-
-    public String convertToJson(QuotaUsageUpdatedEvent event) throws JsonProcessingException {
-        return mapper.writeValueAsString(QuotaRatioAsJson.builder()
-                .user(event.getUsername().asString())
-                .domain(event.getQuotaRoot().getDomain().map(Domain::asString))
-                .quotaRatio(QuotaRatio.from(event.getSizeQuota(), event.getCountQuota()))
-                .build());
+public class UserRoutingKeyFactory implements RoutingKey.Factory<Username> {
+    @Override
+    public RoutingKey from(Username user) {
+        return RoutingKey.fromString(user.asString());
     }
 }
