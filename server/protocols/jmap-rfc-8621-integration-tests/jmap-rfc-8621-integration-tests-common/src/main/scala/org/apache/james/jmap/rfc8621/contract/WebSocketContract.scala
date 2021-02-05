@@ -33,7 +33,8 @@ import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
-import org.junit.jupiter.api.{BeforeEach, Test}
+import org.junit.jupiter.api.{BeforeEach, Test, Timeout}
+import play.api.libs.json.{JsString, Json}
 import sttp.capabilities.WebSockets
 import sttp.client3.monad.IdMonad
 import sttp.client3.okhttp.OkHttpSyncBackend
@@ -60,6 +61,7 @@ trait WebSocketContract {
   }
 
   @Test
+  @Timeout(180)
   def apiRequestsShouldBeProcessed(server: GuiceJamesServer): Unit = {
     val response: Either[String, String] =
       authenticatedRequest(server)
@@ -105,6 +107,7 @@ trait WebSocketContract {
   }
 
   @Test
+  @Timeout(180)
   def executingSeveralAPICallsShouldBePossible(server: GuiceJamesServer): Unit = {
     val response: Either[String, List[String]] =
       authenticatedRequest(server)
@@ -165,6 +168,7 @@ trait WebSocketContract {
   }
 
   @Test
+  @Timeout(180)
   def apiRequestsShouldBeProcessedWhenNoRequestId(server: GuiceJamesServer): Unit = {
     val response: Either[String, String] =
       authenticatedRequest(server)
@@ -202,6 +206,7 @@ trait WebSocketContract {
   }
 
   @Test
+  @Timeout(180)
   def nonJsonPayloadShouldTriggerError(server: GuiceJamesServer): Unit = {
     val response: Either[String, String] =
       authenticatedRequest(server)
@@ -226,6 +231,7 @@ trait WebSocketContract {
   }
 
   @Test
+  @Timeout(180)
   def handshakeShouldBeAuthenticated(server: GuiceJamesServer): Unit = {
     assertThatThrownBy(() =>
       unauthenticatedRequest(server)
@@ -242,6 +248,7 @@ trait WebSocketContract {
   }
 
   @Test
+  @Timeout(180)
   def noTypeFieldShouldTriggerError(server: GuiceJamesServer): Unit = {
     val response: Either[String, String] =
       authenticatedRequest(server)
@@ -280,6 +287,7 @@ trait WebSocketContract {
   }
 
   @Test
+  @Timeout(180)
   def badTypeFieldShouldTriggerError(server: GuiceJamesServer): Unit = {
     val response: Either[String, String] =
       authenticatedRequest(server)
@@ -319,6 +327,7 @@ trait WebSocketContract {
   }
 
   @Test
+  @Timeout(180)
   def unknownTypeFieldShouldTriggerError(server: GuiceJamesServer): Unit = {
     val response: Either[String, String] =
       authenticatedRequest(server)
@@ -358,6 +367,7 @@ trait WebSocketContract {
   }
 
   @Test
+  @Timeout(180)
   def clientSendingARespondTypeFieldShouldTriggerError(server: GuiceJamesServer): Unit = {
     val response: Either[String, String] =
       authenticatedRequest(server)
@@ -397,6 +407,7 @@ trait WebSocketContract {
   }
 
   @Test
+  @Timeout(180)
   def requestLevelErrorShouldReturnAPIError(server: GuiceJamesServer): Unit = {
     val response: Either[String, String] =
       authenticatedRequest(server)
@@ -433,6 +444,7 @@ trait WebSocketContract {
   }
 
   @Test
+  @Timeout(180)
   def pushEnableRequestsShouldBeProcessed(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(BOB)
     val accountId: AccountId = AccountId.fromUsername(BOB)
@@ -502,6 +514,7 @@ trait WebSocketContract {
   }
 
   @Test
+  @Timeout(180)
   // For client compatibility purposes
   def specifiedUnHandledDataTypesShouldNotBeRejected(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(BOB)
@@ -572,6 +585,7 @@ trait WebSocketContract {
   }
 
   @Test
+  @Timeout(180)
   def dataTypesShouldDefaultToAll(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(BOB)
     val accountId: AccountId = AccountId.fromUsername(BOB)
@@ -641,6 +655,7 @@ trait WebSocketContract {
   }
 
   @Test
+  @Timeout(180)
   def pushEnableShouldUpdatePreviousSubscriptions(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(BOB)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
@@ -712,6 +727,7 @@ trait WebSocketContract {
   }
 
   @Test
+  @Timeout(180)
   def pushShouldSupportDelegation(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
     val andrePath = MailboxPath.inbox(ANDRE)
