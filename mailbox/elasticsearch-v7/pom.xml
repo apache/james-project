@@ -27,18 +27,18 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>apache-james-mailbox-elasticsearch</artifactId>
+    <artifactId>apache-james-mailbox-elasticsearch-v7</artifactId>
     <name>Apache James :: Mailbox :: ElasticSearch</name>
     <description>Apache James Mailbox IMAP search implementation using ElasticSearch</description>
 
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-backends-es</artifactId>
+            <artifactId>apache-james-backends-es-v7</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-backends-es</artifactId>
+            <artifactId>apache-james-backends-es-v7</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
