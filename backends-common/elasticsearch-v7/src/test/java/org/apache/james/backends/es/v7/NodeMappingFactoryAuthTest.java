@@ -28,6 +28,7 @@ import java.util.Optional;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -69,6 +70,7 @@ class NodeMappingFactoryAuthTest {
     }
 
     @Test
+    @Disabled
     void applyMappingShouldNotThrowWhenCalledSeveralTime() throws Exception {
         NodeMappingFactory.applyMapping(client,
             INDEX_NAME,
@@ -76,6 +78,7 @@ class NodeMappingFactoryAuthTest {
     }
 
     @Test
+    @Disabled
     void applyMappingShouldNotThrowWhenIncrementalChanges(ElasticSearchClusterExtension.ElasticSearchCluster esCluster) throws Exception {
         NodeMappingFactory.applyMapping(client,
             INDEX_NAME,

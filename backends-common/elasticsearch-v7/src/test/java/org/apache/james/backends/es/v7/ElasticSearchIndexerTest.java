@@ -38,6 +38,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -80,6 +81,7 @@ class ElasticSearchIndexerTest {
     }
 
     @Test
+    @Disabled
     void indexMessageShouldWork() {
         DocumentId documentId = DocumentId.fromString("1");
         String content = "{\"message\": \"trying out Elasticsearch\"}";
@@ -102,6 +104,7 @@ class ElasticSearchIndexerTest {
     }
     
     @Test
+    @Disabled
     void updateMessages() {
         String content = "{\"message\": \"trying out Elasticsearch\",\"field\":\"Should be unchanged\"}";
 
@@ -177,6 +180,7 @@ class ElasticSearchIndexerTest {
     }
 
     @Test
+    @Disabled
     void deleteByQueryShouldWorkWhenMultipleMessages() {
         DocumentId documentId = DocumentId.fromString("1:1");
         String content = "{\"message\": \"trying out Elasticsearch\", \"property\":\"1\"}";
@@ -207,6 +211,7 @@ class ElasticSearchIndexerTest {
     }
     
     @Test
+    @Disabled
     void deleteMessage() {
         DocumentId documentId = DocumentId.fromString("1:2");
         String content = "{\"message\": \"trying out Elasticsearch\"}";
@@ -226,6 +231,7 @@ class ElasticSearchIndexerTest {
     }
 
     @Test
+    @Disabled
     void deleteShouldWorkWhenMultipleMessages() {
         DocumentId documentId = DocumentId.fromString("1:1");
         String content = "{\"message\": \"trying out Elasticsearch\", \"mailboxId\":\"1\"}";
