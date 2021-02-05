@@ -81,7 +81,8 @@ The public key can be referenced as `jwt.publickeypem.url` of the `jmap.properti
 == Annotated specification
 
 The [annotated documentation](https://github.com/apache/james-project/tree/master/server/protocols/jmap-rfc-8621/doc/specs/spec)
-presents the limits of the JMAP RFC-8621 implementation part of the Apache James project.
+presents the limits of the JMAP RFC-8621 implementation part of the Apache James project. We furthermore implement
+[JSON Meta Application Protocol (JMAP) Subprotocol for WebSocket](https://tools.ietf.org/html/rfc8887).
 
 Some methods / types are not yet implemented, some implementations are naive, and the PUSH is not supported yet.
 

@@ -107,7 +107,8 @@
 
             <subsection name="Annotated specification">
                 <p>The <a href="https://github.com/apache/james-project/tree/master/server/protocols/jmap-rfc-8621/doc/specs/spec">annotated documentation</a>
-                presents the limits of the JMAP RFC-8621 implementation part of the Apache James project.</p>
+                presents the limits of the JMAP RFC-8621 implementation part of the Apache James project. We furthermore implement
+                    <a href="https://tools.ietf.org/html/rfc8887">JSON Meta Application Protocol (JMAP) Subprotocol for WebSocket</a>.</p>
 
                 <p>Some methods / types are not yet implemented, some implementations are naive, and the PUSH is not supported yet.</p>
 
