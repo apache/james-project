@@ -173,7 +173,7 @@ class ElasticSearchIndexerTest {
                         .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
                     RequestOptions.DEFAULT)
                 .block()
-                .getHits().getTotalHits() == 0);
+                .getHits().getTotalHits().value == 0);
     }
 
     @Test
@@ -203,7 +203,7 @@ class ElasticSearchIndexerTest {
                         .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
                     RequestOptions.DEFAULT)
                 .block()
-                .getHits().getTotalHits() == 1);
+                .getHits().getTotalHits().value == 1);
     }
     
     @Test
