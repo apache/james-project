@@ -30,7 +30,7 @@ import javax.inject.{Inject, Named}
 import org.apache.james.events.{EventBus, Registration}
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.JMAP_WS
-import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeListener}
+import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeListener, TypeName}
 import org.apache.james.jmap.core.{ProblemDetails, RequestId, WebSocketError, WebSocketOutboundMessage, WebSocketPushEnable, WebSocketRequest, WebSocketResponse}
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
@@ -129,7 +129,7 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
               .`then`()
           case pushEnable: WebSocketPushEnable =>
             SMono(eventBus.register(
-                StateChangeListener(pushEnable.dataTypes, clientContext.outbound),
+                StateChangeListener(pushEnable.dataTypes.getOrElse(TypeName.ALL), clientContext.outbound),
                 AccountIdRegistrationKey.of(clientContext.session.getUser)))
               .doOnNext(newRegistration => clientContext.withRegistration(newRegistration))
               .`then`()
