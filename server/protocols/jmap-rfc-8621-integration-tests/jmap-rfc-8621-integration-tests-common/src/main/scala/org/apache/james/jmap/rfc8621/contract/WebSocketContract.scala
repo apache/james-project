@@ -577,11 +577,135 @@ trait WebSocketContract {
     val mailboxState: String = jmapGuiceProbe.getLatestMailboxState(accountId).getValue.toString
 
     val mailboxStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Mailbox":"$mailboxState"}}}"""
-    val emailStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Email":"$emailState"}}}"""
+    val emailStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"EmailDelivery":"$emailState","Email":"$emailState"}}}"""
 
     assertThat(response.toOption.get.asJava)
       .hasSize(3) // email notification + mailbox notification + API response
       .contains(mailboxStateChange, emailStateChange)
+  }
+
+  @Test
+  @Timeout(180)
+  // For client compatibility purposes
+  def emailDeliveryShouldNotIncludeFlagUpdatesAndDeletes(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    Thread.sleep(100)
+
+    val response: Either[String, List[String]] =
+      authenticatedRequest(server)
+        .response(asWebSocket[Identity, List[String]] {
+          ws =>
+            ws.send(WebSocketFrame.text(
+              s"""{
+                 |  "@type": "Request",
+                 |  "requestId": "req-36",
+                 |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+                 |  "methodCalls": [
+                 |    ["Email/set", {
+                 |      "accountId": "$ACCOUNT_ID",
+                 |      "create": {
+                 |        "aaaaaa":{
+                 |          "mailboxIds": {
+                 |             "${mailboxId.serialize}": true
+                 |          }
+                 |        }
+                 |      }
+                 |    }, "c1"]]
+                 |}""".stripMargin))
+
+            val responseAsJson = Json.parse(ws.receive()
+              .map { case t: Text =>
+                t.payload
+              })
+              .\("methodResponses")
+              .\(0).\(1)
+              .\("created")
+              .\("aaaaaa")
+
+            val messageId = responseAsJson
+              .\("id")
+              .get.asInstanceOf[JsString].value
+
+            Thread.sleep(100)
+
+            ws.send(WebSocketFrame.text(
+              """{
+                |  "@type": "WebSocketPushEnable",
+                |  "dataTypes": ["Mailbox", "Email", "VacationResponse", "Thread", "Identity", "EmailSubmission", "EmailDelivery"]
+                |}""".stripMargin))
+
+            Thread.sleep(100)
+
+            ws.send(WebSocketFrame.text(
+              s"""{
+                 |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+                 |  "@type": "Request",
+                 |  "methodCalls": [
+                 |    ["Email/set", {
+                 |      "accountId": "$ACCOUNT_ID",
+                 |      "update": {
+                 |        "$messageId":{
+                 |          "keywords": {
+                 |             "music": true
+                 |          }
+                 |        }
+                 |      }
+                 |    }, "c1"]]
+                 |}""".stripMargin))
+
+            val stateChange1 = ws.receive()
+              .map { case t: Text =>
+                t.payload
+              }
+            val response1 =
+              ws.receive()
+                .map { case t: Text =>
+                  t.payload
+                }
+
+            Thread.sleep(100)
+
+            ws.send(WebSocketFrame.text(
+              s"""{
+                 |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+                 |  "@type": "Request",
+                 |  "methodCalls": [
+                 |    ["Email/set", {
+                 |      "accountId": "$ACCOUNT_ID",
+                 |      "destroy": ["$messageId"]
+                 |    }, "c1"]]
+                 |}""".stripMargin))
+
+            Thread.sleep(100)
+
+            val stateChange2 = ws.receive()
+              .map { case t: Text =>
+                t.payload
+              }
+            val stateChange3 =
+              ws.receive()
+                .map { case t: Text =>
+                  t.payload
+                }
+            val response2 =
+              ws.receive()
+                .map { case t: Text =>
+                  t.payload
+                }
+
+            List(response1, response2, stateChange1, stateChange2, stateChange3)
+        })
+        .send(backend)
+        .body
+
+    assertThat(response.toOption.get.asJava)
+      .hasSize(5) // update flags response + email state change notif + destroy response + email state change notif + mailbox state change notif (count)
+    assertThat(response.toOption.get.filter(s => s.startsWith("{\"@type\":\"StateChange\"")).asJava)
+      .hasSize(3)
+      .noneMatch(s => s.contains("EmailDelivery"))
   }
 
   @Test
@@ -647,7 +771,7 @@ trait WebSocketContract {
     val mailboxState: String = jmapGuiceProbe.getLatestMailboxState(accountId).getValue.toString
 
     val mailboxStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Mailbox":"$mailboxState"}}}"""
-    val emailStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Email":"$emailState"}}}"""
+    val emailStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"EmailDelivery":"$emailState","Email":"$emailState"}}}"""
 
     assertThat(response.toOption.get.asJava)
       .hasSize(3) // email notification + mailbox notification + API response

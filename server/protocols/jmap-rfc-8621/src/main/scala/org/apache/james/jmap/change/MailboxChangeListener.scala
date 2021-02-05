@@ -127,11 +127,14 @@ case class MailboxChangeListener @Inject() (@Named(InjectionKeys.JMAP) eventBus:
       eventId = EventId.random(),
       username = Username.of(emailChange.getAccountId.getIdentifier),
       emailState = Some(State.fromJava(emailChange.getState)),
+      emailDeliveryState = Some(State.fromJava(emailChange.getState))
+        .filter(_ => !emailChange.getCreated.isEmpty),
       mailboxState = None)
     case mailboxChange: MailboxChange => StateChangeEvent(
       eventId = EventId.random(),
       username = Username.of(mailboxChange.getAccountId.getIdentifier),
       emailState = None,
+      emailDeliveryState = None,
       mailboxState = Some(State.fromJava(mailboxChange.getState)))
   }
 }

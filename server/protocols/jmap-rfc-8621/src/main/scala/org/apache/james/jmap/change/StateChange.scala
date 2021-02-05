@@ -69,13 +69,15 @@ case class TypeState(changes: Map[TypeName, State]) {
 case class StateChangeEvent(eventId: EventId,
                             username: Username,
                             mailboxState: Option[State],
-                            emailState: Option[State]) extends Event {
+                            emailState: Option[State],
+                            emailDeliveryState: Option[State]) extends Event {
   def asStateChange: StateChange =
     StateChange(Map(AccountId.from(username).fold(
       failure => throw new IllegalArgumentException(failure),
       success => success) ->
       TypeState(
         MailboxTypeName.asMap(mailboxState) ++
+          EmailDeliveryTypeName.asMap(emailDeliveryState) ++
           EmailTypeName.asMap(emailState))))
 
   override val getUsername: Username = username
