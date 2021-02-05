@@ -21,13 +21,13 @@ package org.apache.james.mailbox.elasticsearch.v7;
 
 import java.io.IOException;
 
-import org.apache.james.backends.es.ElasticSearchConfiguration;
-import org.apache.james.backends.es.IndexCreationFactory;
-import org.apache.james.backends.es.IndexName;
-import org.apache.james.backends.es.NodeMappingFactory;
-import org.apache.james.backends.es.ReactorElasticSearchClient;
-import org.apache.james.backends.es.ReadAliasName;
-import org.apache.james.backends.es.WriteAliasName;
+import org.apache.james.backends.es.v7.ElasticSearchConfiguration;
+import org.apache.james.backends.es.v7.IndexCreationFactory;
+import org.apache.james.backends.es.v7.IndexName;
+import org.apache.james.backends.es.v7.NodeMappingFactory;
+import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
+import org.apache.james.backends.es.v7.ReadAliasName;
+import org.apache.james.backends.es.v7.WriteAliasName;
 
 public class MailboxIndexCreationUtil {
 

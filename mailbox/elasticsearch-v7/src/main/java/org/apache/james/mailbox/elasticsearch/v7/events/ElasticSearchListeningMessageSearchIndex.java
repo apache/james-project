@@ -39,10 +39,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.mail.Flags;
 
-import org.apache.james.backends.es.DocumentId;
-import org.apache.james.backends.es.ElasticSearchIndexer;
-import org.apache.james.backends.es.RoutingKey;
-import org.apache.james.backends.es.UpdatedRepresentation;
+import org.apache.james.backends.es.v7.DocumentId;
+import org.apache.james.backends.es.v7.ElasticSearchIndexer;
+import org.apache.james.backends.es.v7.RoutingKey;
+import org.apache.james.backends.es.v7.UpdatedRepresentation;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;

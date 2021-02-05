@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.elasticsearch.v7;
 
-import org.apache.james.backends.es.RoutingKey;
+import org.apache.james.backends.es.v7.RoutingKey;
 import org.apache.james.mailbox.model.MailboxId;
 
 public class MailboxIdRoutingKeyFactory implements RoutingKey.Factory<MailboxId> {

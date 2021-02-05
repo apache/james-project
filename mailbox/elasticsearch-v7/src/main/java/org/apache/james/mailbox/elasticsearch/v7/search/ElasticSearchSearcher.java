@@ -24,12 +24,12 @@ import static org.apache.james.util.ReactorUtils.publishIfPresent;
 import java.util.Collection;
 import java.util.Optional;
 
-import org.apache.james.backends.es.AliasName;
-import org.apache.james.backends.es.NodeMappingFactory;
-import org.apache.james.backends.es.ReactorElasticSearchClient;
-import org.apache.james.backends.es.ReadAliasName;
-import org.apache.james.backends.es.RoutingKey;
-import org.apache.james.backends.es.search.ScrolledSearch;
+import org.apache.james.backends.es.v7.AliasName;
+import org.apache.james.backends.es.v7.NodeMappingFactory;
+import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
+import org.apache.james.backends.es.v7.ReadAliasName;
+import org.apache.james.backends.es.v7.RoutingKey;
+import org.apache.james.backends.es.v7.search.ScrolledSearch;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants;
 import org.apache.james.mailbox.elasticsearch.v7.query.QueryConverter;
