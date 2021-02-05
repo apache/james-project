@@ -125,7 +125,7 @@ public class AmqpExtension implements BeforeAllCallback, AfterAllCallback, After
     private void waitingForRabbitToBeReady(ConnectionFactory factory) {
         Awaitility
             .await()
-            .atMost(30, TimeUnit.SECONDS)
+            .atMost(60, TimeUnit.SECONDS)
             .with()
             .pollInterval(10, TimeUnit.MILLISECONDS)
             .until(() -> isReady(factory));
