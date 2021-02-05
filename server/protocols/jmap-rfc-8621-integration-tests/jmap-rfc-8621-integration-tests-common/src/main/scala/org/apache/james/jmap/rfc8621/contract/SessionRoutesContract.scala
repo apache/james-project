@@ -64,7 +64,7 @@ object SessionRoutesContract {
                          |      "mayCreateTopLevelMailbox" : true
                          |    },
                          |    "urn:ietf:params:jmap:websocket": {
-                         |      "supportsPush": false,
+                         |      "supportsPush": true,
                          |      "url": "http://domain.com/jmap/ws"
                          |    },
                          |    "urn:apache:james:params:jmap:mail:quota": {},
@@ -82,7 +82,7 @@ object SessionRoutesContract {
                          |          "submissionExtensions": []
                          |        },
                          |        "urn:ietf:params:jmap:websocket": {
-                         |            "supportsPush": false,
+                         |            "supportsPush": true,
                          |            "url": "http://domain.com/jmap/ws"
                          |        },
                          |        "urn:ietf:params:jmap:core" : {

@@ -71,7 +71,7 @@ object CustomMethodContract {
       |      "mayCreateTopLevelMailbox" : true
       |    },
       |    "urn:ietf:params:jmap:websocket": {
-      |      "supportsPush": false,
+      |      "supportsPush": true,
       |      "url": "http://domain.com/jmap/ws"
       |    },
       |    "urn:apache:james:params:jmap:mail:quota": {},
@@ -90,7 +90,7 @@ object CustomMethodContract {
       |          "submissionExtensions": []
       |        },
       |        "urn:ietf:params:jmap:websocket": {
-      |            "supportsPush": false,
+      |            "supportsPush": true,
       |            "url": "http://domain.com/jmap/ws"
       |        },
       |        "urn:ietf:params:jmap:core" : {

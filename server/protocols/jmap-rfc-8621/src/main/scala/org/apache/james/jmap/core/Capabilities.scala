@@ -36,7 +36,7 @@ object DefaultCapabilities {
       collationAlgorithms = List("i;unicode-casemap")))
 
   def webSocketCapability(url: URL) = WebSocketCapability(
-    properties = WebSocketCapabilityProperties(SupportsPush(false), url))
+    properties = WebSocketCapabilityProperties(SupportsPush(true), url))
 
   val MAIL_CAPABILITY = MailCapability(
     properties = MailCapabilityProperties(
