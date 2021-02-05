@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.api.change;
 
-public interface JmapChange {
+import org.apache.james.jmap.api.model.AccountId;
 
+public interface JmapChange {
+    AccountId getAccountId();
 }

@@ -32,10 +32,10 @@ sealed trait TypeName {
   def asString(): String
 }
 case object MailboxTypeName extends TypeName {
-  override def asString(): String = "Mailbox"
+  override val asString: String = "Mailbox"
 }
 case object EmailTypeName extends TypeName {
-  override def asString(): String = "Email"
+  override val asString: String = "Email"
 }
 
 case class TypeState(changes: Map[TypeName, State]) {

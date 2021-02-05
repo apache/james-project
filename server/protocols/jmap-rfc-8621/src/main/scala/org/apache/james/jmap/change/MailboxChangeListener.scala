@@ -25,7 +25,7 @@ import javax.inject.{Inject, Named}
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
 import org.apache.james.events.EventListener.ReactiveGroupEventListener
-import org.apache.james.events.{Event, EventBus, Group, RegistrationKey}
+import org.apache.james.events.{Event, EventBus, Group}
 import org.apache.james.jmap.InjectionKeys
 import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, JmapChange, MailboxChange, MailboxChangeRepository}
 import org.apache.james.jmap.api.model.AccountId
@@ -101,7 +101,7 @@ case class MailboxChangeListener @Inject() (@Named(InjectionKeys.JMAP) eventBus:
     SMono(jmapChange match {
       case mailboxChange: MailboxChange => mailboxChangeRepository.save(mailboxChange)
       case emailChange: EmailChange => emailChangeRepository.save(emailChange)
-    }).`then`(SMono(eventBus.dispatch(toStateChangeEvent(jmapChange), Set[RegistrationKey]().asJava)))
+    }).`then`(SMono(eventBus.dispatch(toStateChangeEvent(jmapChange), AccountIdRegistrationKey(jmapChange.getAccountId))))
 
 
   private def getSharees(mailboxId: MailboxId, username: Username): List[AccountId] = {
@@ -131,7 +131,7 @@ case class MailboxChangeListener @Inject() (@Named(InjectionKeys.JMAP) eventBus:
     case mailboxChange: MailboxChange => StateChangeEvent(
       eventId = EventId.random(),
       username = Username.of(mailboxChange.getAccountId.getIdentifier),
-      emailState = Some(State.fromJava(mailboxChange.getState)),
-      mailboxState = None)
+      emailState = None,
+      mailboxState = Some(State.fromJava(mailboxChange.getState)))
   }
 }

@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.change
 
+import org.apache.james.core.Username
 import org.apache.james.events.RegistrationKey
 import org.apache.james.jmap.api.model.AccountId
 
@@ -26,6 +27,10 @@ case class Factory() extends RegistrationKey.Factory {
   override val forClass: Class[_ <: RegistrationKey] = classOf[AccountIdRegistrationKey]
 
   override def fromString(asString: String): RegistrationKey = AccountIdRegistrationKey(AccountId.fromString(asString))
+}
+
+object AccountIdRegistrationKey {
+  def of(username: Username): AccountIdRegistrationKey = AccountIdRegistrationKey(AccountId.fromUsername(username))
 }
 
 case class AccountIdRegistrationKey(accountId: AccountId) extends RegistrationKey {

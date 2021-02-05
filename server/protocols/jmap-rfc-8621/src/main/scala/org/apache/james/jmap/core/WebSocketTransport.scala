@@ -42,3 +42,5 @@ case class StateChange(changes: Map[AccountId, TypeState]) extends WebSocketOutb
     .filter(_.nonEmpty)
     .map(StateChange)
 }
+
+case class WebSocketPushEnable(dataTypes: Set[TypeName]) extends WebSocketInboundMessage
