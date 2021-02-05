@@ -68,7 +68,7 @@ class ElasticSearchHealthCheckTest {
             super("fake-cluster", new String[0],
                 new ClusterState(new ClusterName("fake-cluster"), 0, null, null, RoutingTable.builder().build(),
                     DiscoveryNodes.builder().build(),
-                    ClusterBlocks.builder().build(), null, false));
+                    ClusterBlocks.builder().build(), null, 0, false));
             this.status = clusterHealthStatus;
         }
 
