@@ -20,12 +20,10 @@
 package org.apache.james.metric.es.v7;
 
 import org.apache.james.backends.es.v7.DockerElasticSearch;
-import org.apache.james.util.docker.Images;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class ES6ReporterTest extends ESReporterContract {
+class ES7ReporterTest extends ESReporterContract {
 
     @RegisterExtension
-    static DockerElasticSearchExtension testExtension = new DockerElasticSearchExtension(
-            new DockerElasticSearch.NoAuth(Images.ELASTICSEARCH_6));
+    static DockerElasticSearchExtension testExtension = new DockerElasticSearchExtension(new DockerElasticSearch.NoAuth());
 }
