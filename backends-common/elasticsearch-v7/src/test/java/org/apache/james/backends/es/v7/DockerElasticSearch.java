@@ -140,7 +140,7 @@ public interface DockerElasticSearch {
         private final DockerContainer eSContainer;
 
         public NoAuth() {
-            this(Images.ELASTICSEARCH_6);
+            this(Images.ELASTICSEARCH_7);
         }
 
         public NoAuth(String imageName) {
@@ -201,7 +201,7 @@ public interface DockerElasticSearch {
         private final Network network;
 
         public WithAuth() {
-            this(Images.ELASTICSEARCH_6);
+            this(Images.ELASTICSEARCH_7);
         }
 
         WithAuth(String imageName) {
