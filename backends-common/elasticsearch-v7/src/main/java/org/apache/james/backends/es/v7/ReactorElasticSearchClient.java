@@ -26,7 +26,6 @@ import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.storedscripts.DeleteStoredScriptRequest;
-import org.elasticsearch.action.admin.cluster.storedscripts.DeleteStoredScriptResponse;
 import org.elasticsearch.action.admin.cluster.storedscripts.GetStoredScriptRequest;
 import org.elasticsearch.action.admin.cluster.storedscripts.GetStoredScriptResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -41,7 +40,6 @@ import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.main.MainResponse;
 import org.elasticsearch.action.search.ClearScrollRequest;
 import org.elasticsearch.action.search.ClearScrollResponse;
 import org.elasticsearch.action.search.MultiSearchRequest;
@@ -49,10 +47,12 @@ import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.core.MainResponse;
 import org.elasticsearch.index.rankeval.RankEvalRequest;
 import org.elasticsearch.index.rankeval.RankEvalResponse;
 import org.elasticsearch.script.mustache.MultiSearchTemplateRequest;
@@ -83,7 +83,7 @@ public class ReactorElasticSearchClient implements AutoCloseable {
         return client.delete(deleteRequest, options);
     }
 
-    public Mono<DeleteStoredScriptResponse> deleteScript(DeleteStoredScriptRequest request, RequestOptions options) {
+    public Mono<AcknowledgedResponse> deleteScript(DeleteStoredScriptRequest request, RequestOptions options) {
         return toReactor(listener -> client.deleteScriptAsync(request, options, listener));
     }
 
@@ -133,7 +133,7 @@ public class ReactorElasticSearchClient implements AutoCloseable {
 
     @Deprecated
     public Mono<SearchResponse> search(SearchRequest searchRequest) {
-        return toReactor(listener -> client.searchAsync(searchRequest, listener));
+        return toReactor(listener -> client.searchAsync(searchRequest, RequestOptions.DEFAULT, listener));
     }
 
     public Mono<SearchResponse> search(SearchRequest searchRequest, RequestOptions options) {
