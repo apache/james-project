@@ -25,7 +25,7 @@ import java.net.URL
 import eu.timepit.refined.refineV
 import io.netty.handler.codec.http.HttpResponseStatus
 import org.apache.james.core.Username
-import org.apache.james.jmap.change.{EmailTypeName, MailboxTypeName, TypeName, TypeState}
+import org.apache.james.jmap.change.{EmailDeliveryTypeName, EmailSubmissionTypeName, EmailTypeName, IdentityTypeName, MailboxTypeName, ThreadTypeName, TypeName, TypeState, VacationResponseTypeName}
 import org.apache.james.jmap.core
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.IdConstraint
@@ -189,6 +189,11 @@ object ResponseSerializer {
   private implicit val typeNameReads: Reads[TypeName] = {
     case JsString(MailboxTypeName.asString) => JsSuccess(MailboxTypeName)
     case JsString(EmailTypeName.asString) => JsSuccess(EmailTypeName)
+    case JsString(ThreadTypeName.asString) => JsSuccess(ThreadTypeName)
+    case JsString(IdentityTypeName.asString) => JsSuccess(IdentityTypeName)
+    case JsString(EmailSubmissionTypeName.asString) => JsSuccess(EmailSubmissionTypeName)
+    case JsString(EmailDeliveryTypeName.asString) => JsSuccess(EmailDeliveryTypeName)
+    case JsString(VacationResponseTypeName.asString) => JsSuccess(VacationResponseTypeName)
     case _ => JsError("Expecting a JsString as typeName")
   }
   private implicit val webSocketPushEnableReads: Reads[WebSocketPushEnable] = Json.reads[WebSocketPushEnable]

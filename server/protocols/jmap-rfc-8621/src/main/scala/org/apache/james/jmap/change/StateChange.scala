@@ -25,7 +25,7 @@ import org.apache.james.events.Event.EventId
 import org.apache.james.jmap.core.{AccountId, State, StateChange}
 
 object TypeName {
-  val ALL: Set[TypeName] = Set(EmailTypeName, MailboxTypeName)
+  val ALL: Set[TypeName] = Set(EmailTypeName, MailboxTypeName, ThreadTypeName, IdentityTypeName, EmailSubmissionTypeName, EmailDeliveryTypeName)
 }
 
 sealed trait TypeName {
@@ -40,6 +40,21 @@ case object MailboxTypeName extends TypeName {
 }
 case object EmailTypeName extends TypeName {
   override val asString: String = "Email"
+}
+case object ThreadTypeName extends TypeName {
+  override val asString: String = "Thread"
+}
+case object IdentityTypeName extends TypeName {
+  override val asString: String = "Identity"
+}
+case object EmailSubmissionTypeName extends TypeName {
+  override val asString: String = "EmailSubmission"
+}
+case object EmailDeliveryTypeName extends TypeName {
+  override val asString: String = "EmailDelivery"
+}
+case object VacationResponseTypeName extends TypeName {
+  override val asString: String = "VacationResponse"
 }
 
 case class TypeState(changes: Map[TypeName, State]) {
