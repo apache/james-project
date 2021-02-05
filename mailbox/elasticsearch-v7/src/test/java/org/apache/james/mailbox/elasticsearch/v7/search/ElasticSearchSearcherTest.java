@@ -61,12 +61,14 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.mime4j.dom.Message;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 
+@Disabled("Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
 class ElasticSearchSearcherTest {
 
     static final int BATCH_SIZE = 1;
