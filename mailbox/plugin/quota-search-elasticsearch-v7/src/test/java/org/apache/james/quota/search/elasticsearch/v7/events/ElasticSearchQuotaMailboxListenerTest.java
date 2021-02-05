@@ -46,6 +46,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -82,12 +83,14 @@ class ElasticSearchQuotaMailboxListenerTest {
     }
 
     @Test
+    @Disabled
     void deserializeElasticSearchQuotaMailboxListenerGroup() throws Exception {
         assertThat(Group.deserialize("org.apache.james.quota.search.elasticsearch.v7.events.ElasticSearchQuotaMailboxListener$ElasticSearchQuotaMailboxListenerGroup"))
             .isEqualTo(new ElasticSearchQuotaMailboxListener.ElasticSearchQuotaMailboxListenerGroup());
     }
 
     @Test
+    @Disabled
     void eventShouldIndexEventWhenQuotaEvent() throws Exception {
         quotaMailboxListener.event(EventFactory.quotaUpdated()
             .eventId(EVENT_ID)

@@ -40,10 +40,12 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Strings;
 
+@Disabled
 public interface QuotaSearcherContract {
 
     String PASSWORD = "any";
