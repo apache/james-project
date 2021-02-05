@@ -1,0 +1,26 @@
+Linked Applications OpenPaas-Linagora Stash - OpenPaas Jenkins - OpenPaas Configure… Dashboards Projects Issues Agile More Create Help Online Help JIRA Agile Help Keyboard Shortcuts About JIRA JIRA Credits Administration JIRA administration Projects Issues User management System Add-ons Profile Atlassian Marketplace My JIRA Home Dashboard Agile Issue Navigator Disable new project navigation Log Out OpenPaaS RSE OR-2349 Docker-compose doesn't activate attachments and dwld/upld url are wrongly populated Edit Comment Assign More Agile Board Rank to Top Rank to Bottom Log Work Attach Files Attach Screenshot Add Drawio Diagram Voters Stop Watching Watchers Create Sub-Task Convert to Sub-Task Create branch Move Link Clone Labels Delete Stop Progress Resolve Issue Close Issue Admin Add field Where is my field? Permission Helper Notification Helper Export XML Word Printable Details Type: Bug Status: Progressing (View Workflow) Priority: Major Resolution: Unresolved Affects Version/s: None Fix Version/s: None Component/s: None Labels: None Labels Rank (Obsolete): 9223372036854775807 Acceptance Criteria: 0/1 Hide checkedShow checked Tested show more show less Description                {
+                    "name" : "uploadUrl",
+                    "value" : "http://10.69.0.163:1080/jmap/upload",
+                    "_id" : ObjectId("5785f85cd7f4033c00fc606d")
+                }, 
+                {
+                    "name" : "downloadUrl",
+                    "value" : "http://10.69.0.163:1080/jmap/download",
+                    "_id" : ObjectId("5785f85cd7f4033c00fc606c")
+                }, 
+ should be replaced with               {
+                    "name" : "uploadUrl",
+                    "value" : "http://10.69.0.163:1080/upload",
+                    "_id" : ObjectId("5785f85cd7f4033c00fc606d")
+                }, 
+                {
+                    "name" : "downloadUrl",
+                    "value" : "http://10.69.0.163:1080/download",
+                    "_id" : ObjectId("5785f85cd7f4033c00fc606c")
+                }, 
+               {
+                   "name" : "composer.attachments",
+                    "value" : true
+               }
+
+ Activity All Comments Work Log History Activity There are no comments yet on this issue. Comment Paragraph Heading 1 Heading 2 Heading 3 Heading 4 Heading 5 Heading 6 Preformatted Paragraph quote Block quote Strikethrough Superscript Subscript Citation External link Mail link Anchor link Attachment link Attachment link External image Attached image Attached image User mention Table Code Preformatted Panel Horizontal ruler Style BoldItalicUnderlineText colorMore colorsMore LinkImage Bullet listNumbered list IconsOther Lock / Unlock Preview comment This comment will be Viewable by All Users All Users Administrators Developers Users Viewable by All Users Cancel Comment People Assignee: Stephane COLSON Reporter: Stephane COLSON Votes: 0 Watchers: 1 Stop watching this issue Dates Created: 4 hours ago Updated: 4 hours ago Development 1 branch Updated 33 minutes ago 1 pull request OPEN Updated 33 minutes ago Create branch Agile View on Board Issue deployment Atlassian JIRA Project Management Software (v6.4.5#64020-sha1:78acd6c) About JIRA Report a problem Powered by a free Atlassian JIRA open source license for OpenPaas. Try JIRA - bug tracking software for your team. Atlassian
