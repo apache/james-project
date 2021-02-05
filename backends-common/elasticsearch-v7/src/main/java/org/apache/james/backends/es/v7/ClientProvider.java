@@ -150,6 +150,8 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
         private RequestConfig requestConfig() {
             return RequestConfig.custom()
                     .setConnectTimeout(Math.toIntExact(configuration.getRequestTimeout().toMillis()))
+                    .setConnectionRequestTimeout(Math.toIntExact(configuration.getRequestTimeout().toMillis()))
+                    .setSocketTimeout(Math.toIntExact(configuration.getRequestTimeout().toMillis()))
                     .build();
         }
 
