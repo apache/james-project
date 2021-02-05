@@ -17,18 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.quota.search.elasticsearch;
+package org.apache.james.quota.search.elasticsearch.v7.json;
 
-import static org.assertj.core.api.Assertions.assertThat;
+public interface JsonMessageConstants {
 
-import org.apache.james.backends.es.RoutingKey;
-import org.apache.james.core.Username;
-import org.junit.jupiter.api.Test;
+    String USER = "user";
+    String DOMAIN = "domain";
+    String QUOTA_RATIO = "quotaRatio";
 
-class UserRoutingKeyFactoryTest {
-    @Test
-    void fromShouldRelyOnUsername() {
-        assertThat(new UserRoutingKeyFactory().from(Username.of("bob")))
-            .isEqualTo(RoutingKey.fromString("bob"));
-    }
 }

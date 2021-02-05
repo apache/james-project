@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.quota.search.elasticsearch.json;
+package org.apache.james.quota.search.elasticsearch.v7.json;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;

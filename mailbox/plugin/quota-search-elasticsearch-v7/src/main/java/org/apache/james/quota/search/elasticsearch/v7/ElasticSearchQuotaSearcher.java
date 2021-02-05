@@ -17,17 +17,17 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.quota.search.elasticsearch;
+package org.apache.james.quota.search.elasticsearch.v7;
 
-import static org.apache.james.quota.search.elasticsearch.json.JsonMessageConstants.USER;
+import static org.apache.james.quota.search.elasticsearch.v7.json.JsonMessageConstants.USER;
 
 import java.util.List;
 
-import org.apache.james.backends.es.AliasName;
-import org.apache.james.backends.es.NodeMappingFactory;
-import org.apache.james.backends.es.ReactorElasticSearchClient;
-import org.apache.james.backends.es.ReadAliasName;
-import org.apache.james.backends.es.search.ScrolledSearch;
+import org.apache.james.backends.es.v7.AliasName;
+import org.apache.james.backends.es.v7.NodeMappingFactory;
+import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
+import org.apache.james.backends.es.v7.ReadAliasName;
+import org.apache.james.backends.es.v7.search.ScrolledSearch;
 import org.apache.james.core.Username;
 import org.apache.james.quota.search.QuotaQuery;
 import org.apache.james.quota.search.QuotaSearcher;

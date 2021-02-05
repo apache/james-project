@@ -17,14 +17,14 @@
  * under the License.
  */
 
-package org.apache.james.quota.search.elasticsearch;
+package org.apache.james.quota.search.elasticsearch.v7;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.james.backends.es.IndexName;
-import org.apache.james.backends.es.ReadAliasName;
-import org.apache.james.backends.es.WriteAliasName;
+import org.apache.james.backends.es.v7.IndexName;
+import org.apache.james.backends.es.v7.ReadAliasName;
+import org.apache.james.backends.es.v7.WriteAliasName;
 import org.junit.jupiter.api.Test;
 
 class ElasticSearchQuotaConfigurationTest {

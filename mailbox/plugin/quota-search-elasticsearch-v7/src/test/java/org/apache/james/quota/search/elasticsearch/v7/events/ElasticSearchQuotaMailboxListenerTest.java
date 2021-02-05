@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.quota.search.elasticsearch.events;
+package org.apache.james.quota.search.elasticsearch.v7.events;
 
 import static org.apache.james.quota.search.QuotaSearchFixture.TestConstants.BOB_USERNAME;
 import static org.apache.james.quota.search.QuotaSearchFixture.TestConstants.NOW;
@@ -26,20 +26,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 
-import org.apache.james.backends.es.DockerElasticSearchExtension;
-import org.apache.james.backends.es.ElasticSearchConfiguration;
-import org.apache.james.backends.es.ElasticSearchIndexer;
-import org.apache.james.backends.es.NodeMappingFactory;
-import org.apache.james.backends.es.ReactorElasticSearchClient;
+import org.apache.james.backends.es.v7.DockerElasticSearchExtension;
+import org.apache.james.backends.es.v7.ElasticSearchConfiguration;
+import org.apache.james.backends.es.v7.ElasticSearchIndexer;
+import org.apache.james.backends.es.v7.NodeMappingFactory;
+import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.quota.QuotaFixture.Counts;
 import org.apache.james.mailbox.quota.QuotaFixture.Sizes;
 import org.apache.james.mailbox.store.event.EventFactory;
-import org.apache.james.quota.search.elasticsearch.QuotaRatioElasticSearchConstants;
-import org.apache.james.quota.search.elasticsearch.QuotaSearchIndexCreationUtil;
-import org.apache.james.quota.search.elasticsearch.UserRoutingKeyFactory;
-import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
+import org.apache.james.quota.search.elasticsearch.v7.QuotaRatioElasticSearchConstants;
+import org.apache.james.quota.search.elasticsearch.v7.QuotaSearchIndexCreationUtil;
+import org.apache.james.quota.search.elasticsearch.v7.UserRoutingKeyFactory;
+import org.apache.james.quota.search.elasticsearch.v7.json.QuotaRatioToElasticSearchJson;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -83,7 +83,7 @@ class ElasticSearchQuotaMailboxListenerTest {
 
     @Test
     void deserializeElasticSearchQuotaMailboxListenerGroup() throws Exception {
-        assertThat(Group.deserialize("org.apache.james.quota.search.elasticsearch.events.ElasticSearchQuotaMailboxListener$ElasticSearchQuotaMailboxListenerGroup"))
+        assertThat(Group.deserialize("org.apache.james.quota.search.elasticsearch.v7.events.ElasticSearchQuotaMailboxListener$ElasticSearchQuotaMailboxListenerGroup"))
             .isEqualTo(new ElasticSearchQuotaMailboxListener.ElasticSearchQuotaMailboxListenerGroup());
     }
 

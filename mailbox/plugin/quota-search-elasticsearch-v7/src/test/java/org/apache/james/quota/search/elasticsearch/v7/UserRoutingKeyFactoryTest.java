@@ -17,14 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.quota.search.elasticsearch;
+package org.apache.james.quota.search.elasticsearch.v7;
 
-import org.apache.james.backends.es.RoutingKey;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.apache.james.backends.es.v7.RoutingKey;
 import org.apache.james.core.Username;
+import org.junit.jupiter.api.Test;
 
-public class UserRoutingKeyFactory implements RoutingKey.Factory<Username> {
-    @Override
-    public RoutingKey from(Username user) {
-        return RoutingKey.fromString(user.asString());
+class UserRoutingKeyFactoryTest {
+    @Test
+    void fromShouldRelyOnUsername() {
+        assertThat(new UserRoutingKeyFactory().from(Username.of("bob")))
+            .isEqualTo(RoutingKey.fromString("bob"));
     }
 }
