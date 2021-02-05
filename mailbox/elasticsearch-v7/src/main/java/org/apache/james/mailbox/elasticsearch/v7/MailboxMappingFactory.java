@@ -19,22 +19,22 @@
 
 package org.apache.james.mailbox.elasticsearch.v7;
 
-import static org.apache.james.backends.es.IndexCreationFactory.CASE_INSENSITIVE;
-import static org.apache.james.backends.es.IndexCreationFactory.KEEP_MAIL_AND_URL;
-import static org.apache.james.backends.es.NodeMappingFactory.ANALYZER;
-import static org.apache.james.backends.es.NodeMappingFactory.BOOLEAN;
-import static org.apache.james.backends.es.NodeMappingFactory.FIELDS;
-import static org.apache.james.backends.es.NodeMappingFactory.FORMAT;
-import static org.apache.james.backends.es.NodeMappingFactory.KEYWORD;
-import static org.apache.james.backends.es.NodeMappingFactory.LONG;
-import static org.apache.james.backends.es.NodeMappingFactory.NESTED;
-import static org.apache.james.backends.es.NodeMappingFactory.NORMALIZER;
-import static org.apache.james.backends.es.NodeMappingFactory.PROPERTIES;
-import static org.apache.james.backends.es.NodeMappingFactory.RAW;
-import static org.apache.james.backends.es.NodeMappingFactory.REQUIRED;
-import static org.apache.james.backends.es.NodeMappingFactory.ROUTING;
-import static org.apache.james.backends.es.NodeMappingFactory.SEARCH_ANALYZER;
-import static org.apache.james.backends.es.NodeMappingFactory.TYPE;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.CASE_INSENSITIVE;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.KEEP_MAIL_AND_URL;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.ANALYZER;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.BOOLEAN;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.FIELDS;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.FORMAT;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.KEYWORD;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.LONG;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.NESTED;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.NORMALIZER;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.PROPERTIES;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.RAW;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.REQUIRED;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.ROUTING;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.SEARCH_ANALYZER;
+import static org.apache.james.backends.es.v7.NodeMappingFactory.TYPE;
 import static org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.ATTACHMENTS;
 import static org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.BCC;
 import static org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.CC;
@@ -67,7 +67,7 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
 
-import org.apache.james.backends.es.NodeMappingFactory;
+import org.apache.james.backends.es.v7.NodeMappingFactory;
 import org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.Attachment;
 import org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.EMailer;
 import org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.HEADER;

@@ -26,9 +26,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 
-import org.apache.james.backends.es.DockerElasticSearchExtension;
-import org.apache.james.backends.es.ElasticSearchIndexer;
-import org.apache.james.backends.es.ReactorElasticSearchClient;
+import org.apache.james.backends.es.v7.DockerElasticSearchExtension;
+import org.apache.james.backends.es.v7.ElasticSearchIndexer;
+import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
