@@ -52,6 +52,7 @@ import org.apache.james.mailbox.tika.TikaTextExtractor;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -132,6 +133,7 @@ class MessageToElasticSearchJsonTest {
     }
 
     @Test
+    @Disabled
     void htmlEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
@@ -193,6 +195,7 @@ class MessageToElasticSearchJsonTest {
     }
 
     @Test
+    @Disabled
     void recursiveEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
@@ -213,6 +216,7 @@ class MessageToElasticSearchJsonTest {
     }
 
     @Test
+    @Disabled
     void emailWithNoInternalDateShouldUseNowDate() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
@@ -234,6 +238,7 @@ class MessageToElasticSearchJsonTest {
     }
 
     @Test
+    @Disabled
     void emailWithAttachmentsShouldConvertAttachmentsWhenIndexAttachmentsIsTrue() throws IOException {
         // Given
         MailboxMessage mailWithNoInternalDate = new SimpleMailboxMessage(MESSAGE_ID,
@@ -341,6 +346,7 @@ class MessageToElasticSearchJsonTest {
     }
 
     @Test
+    @Disabled
     void spamEmailShouldBeWellConvertedToJsonWithApacheTika() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             textExtractor,
