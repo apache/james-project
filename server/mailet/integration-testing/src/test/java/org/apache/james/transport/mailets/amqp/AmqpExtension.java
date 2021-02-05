@@ -35,6 +35,9 @@ import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.rules.ExternalResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
 import com.rabbitmq.client.BuiltinExchangeType;
@@ -45,6 +48,7 @@ import com.rabbitmq.client.GetResponse;
 
 public class AmqpExtension implements BeforeAllCallback, AfterAllCallback, AfterEachCallback {
     private static final boolean AUTO_ACK = true;
+    private static final Logger logger = LoggerFactory.getLogger(AmqpExtension.class);
 
     private final DockerContainer rabbitMqContainer;
     private final String exchangeName;
@@ -58,9 +62,14 @@ public class AmqpExtension implements BeforeAllCallback, AfterAllCallback, After
         this.rabbitMqContainer = DockerContainer.fromName(Images.RABBITMQ)
             .withAffinityToContainer()
             .waitingFor(new HostPortWaitStrategy()
-                .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));;
+                .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND))
+                .withLogConsumer(AmqpExtension::displayDockerLog);
         this.exchangeName = exchangeName;
         this.routingKey = routingKey;
+    }
+
+    private static void displayDockerLog(OutputFrame outputFrame) {
+        logger.debug(outputFrame.getUtf8String().trim());
     }
 
     @Override
