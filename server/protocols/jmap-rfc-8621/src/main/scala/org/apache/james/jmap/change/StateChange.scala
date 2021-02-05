@@ -68,6 +68,7 @@ case class TypeState(changes: Map[TypeName, State]) {
 
 case class StateChangeEvent(eventId: EventId,
                             username: Username,
+                            vacationResponseState: Option[State],
                             mailboxState: Option[State],
                             emailState: Option[State],
                             emailDeliveryState: Option[State]) extends Event {
@@ -76,13 +77,17 @@ case class StateChangeEvent(eventId: EventId,
       failure => throw new IllegalArgumentException(failure),
       success => success) ->
       TypeState(
-        MailboxTypeName.asMap(mailboxState) ++
+        VacationResponseTypeName.asMap(vacationResponseState) ++
+          MailboxTypeName.asMap(mailboxState) ++
           EmailDeliveryTypeName.asMap(emailDeliveryState) ++
           EmailTypeName.asMap(emailState))))
 
   override val getUsername: Username = username
 
-  override val isNoop: Boolean = mailboxState.isEmpty && emailState.isEmpty
+  override val isNoop: Boolean = mailboxState.isEmpty &&
+    emailState.isEmpty &&
+    vacationResponseState.isEmpty &&
+    emailDeliveryState.isEmpty
 
   override val getEventId: EventId = eventId
 }

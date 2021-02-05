@@ -19,11 +19,17 @@
 
 package org.apache.james.jmap.method
 
+import java.util.UUID
+
 import eu.timepit.refined.auto._
-import javax.inject.Inject
+import javax.inject.{Inject, Named}
+import org.apache.james.events.Event.EventId
+import org.apache.james.events.EventBus
+import org.apache.james.jmap.InjectionKeys
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.api.vacation.{VacationPatch, VacationRepository}
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
+import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeEvent}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_VACATION_RESPONSE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Invocation, State}
@@ -70,7 +76,8 @@ object VacationResponseSetMethod {
   val VACATION_RESPONSE_PATCH_OBJECT_KEY = "singleton"
 }
 
-class VacationResponseSetMethod @Inject()(vacationRepository: VacationRepository,
+class VacationResponseSetMethod @Inject()(@Named(InjectionKeys.JMAP) eventBus: EventBus,
+                                          vacationRepository: VacationRepository,
                                           val metricFactory: MetricFactory,
                                           val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[VacationResponseSetRequest] {
   override val methodName: MethodName = MethodName("VacationResponse/set")
@@ -79,6 +86,17 @@ class VacationResponseSetMethod @Inject()(vacationRepository: VacationRepository
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: VacationResponseSetRequest): SMono[InvocationWithContext] = {
     update(mailboxSession, request)
       .map(updateResult => createResponse(invocation.invocation, request, updateResult))
+      .flatMap(next => {
+        val event = StateChangeEvent(eventId = EventId.random(),
+          mailboxState = None,
+          emailState = None,
+          emailDeliveryState = None,
+          username = mailboxSession.getUser,
+          vacationResponseState = Some(State(UUID.randomUUID())))
+        val accountId = AccountId.fromUsername(mailboxSession.getUser)
+        SMono(eventBus.dispatch(event, AccountIdRegistrationKey(accountId)))
+          .`then`(SMono.just(next))
+      })
       .map(InvocationWithContext(_, invocation.processingContext))
   }
 

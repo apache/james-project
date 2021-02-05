@@ -515,6 +515,61 @@ trait WebSocketContract {
 
   @Test
   @Timeout(180)
+  def pushShouldHandleVacationResponses(server: GuiceJamesServer): Unit = {
+    val response: Either[String, List[String]] =
+      authenticatedRequest(server)
+        .response(asWebSocket[Identity, List[String]] {
+          ws =>
+            ws.send(WebSocketFrame.text(
+              """{
+                |  "@type": "WebSocketPushEnable",
+                |  "dataTypes": ["VacationResponse"]
+                |}""".stripMargin))
+
+            Thread.sleep(100)
+
+            ws.send(WebSocketFrame.text(
+              s"""{
+                 |  "@type": "Request",
+                 |  "requestId": "req-36",
+                 |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:vacationresponse"],
+                 |  "methodCalls": [
+                 |    ["VacationResponse/set", {
+                 |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                 |      "update": {
+                 |        "singleton": {
+                 |          "isEnabled": true,
+                 |          "fromDate": "2014-10-30T14:12:00Z",
+                 |          "toDate": "2014-11-30T14:12:00Z",
+                 |          "subject": "I am in vacation",
+                 |          "textBody": "I'm currently enjoying life. Please disturb me later",
+                 |          "htmlBody": "I'm currently enjoying <b>life</b>. <br/>Please disturb me later"
+                 |        }
+                 |      }
+                 |    }, "c1"]]
+                 |}""".stripMargin))
+
+            List(
+              ws.receive()
+                .map { case t: Text =>
+                  t.payload
+                },
+              ws.receive()
+                .map { case t: Text =>
+                  t.payload
+                })
+        })
+        .send(backend)
+        .body
+
+    assertThat(response.toOption.get.asJava).hasSize(2) // vacation notification + API response
+    assertThat(response.toOption.get.filter(s => s.contains(""""@type":"StateChange"""")).asJava)
+      .hasSize(1)
+      .allMatch(s => s.contains("VacationResponse"))
+  }
+
+  @Test
+  @Timeout(180)
   // For client compatibility purposes
   def specifiedUnHandledDataTypesShouldNotBeRejected(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(BOB)

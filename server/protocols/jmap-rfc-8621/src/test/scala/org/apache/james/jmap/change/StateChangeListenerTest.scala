@@ -40,7 +40,9 @@ class StateChangeListenerTest {
     val event = StateChangeEvent(eventId = eventId,
       username = Username.of("bob"),
       mailboxState = Some(mailboxState),
-      emailState = Some(emailState))
+      emailState = Some(emailState),
+      vacationResponseState = None,
+      emailDeliveryState = None)
     val listener = StateChangeListener(Set(MailboxTypeName, EmailTypeName), sink)
 
     SMono(listener.reactiveEvent(event)).subscribeOn(Schedulers.elastic()).block()
@@ -58,7 +60,9 @@ class StateChangeListenerTest {
     val event = StateChangeEvent(eventId = eventId,
       username = Username.of("bob"),
       mailboxState = Some(mailboxState),
-      emailState = Some(emailState))
+      emailState = Some(emailState),
+      vacationResponseState = None,
+      emailDeliveryState = None)
     val listener = StateChangeListener(Set(MailboxTypeName), sink)
 
     SMono(listener.reactiveEvent(event)).subscribeOn(Schedulers.elastic()).block()
@@ -75,7 +79,9 @@ class StateChangeListenerTest {
     val event = StateChangeEvent(eventId = eventId,
       username = Username.of("bob"),
       mailboxState = None,
-      emailState = Some(emailState))
+      emailState = Some(emailState),
+      vacationResponseState = None,
+      emailDeliveryState = None)
     val listener = StateChangeListener(Set(MailboxTypeName), sink)
 
     SMono(listener.reactiveEvent(event)).subscribeOn(Schedulers.elastic()).block()

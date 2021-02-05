@@ -44,18 +44,21 @@ object StateChangeEventDTO {
     getUsername = event.username.asString(),
     getMailboxState = event.mailboxState.map(_.value).map(_.toString).toJava,
     getEmailState = event.emailState.map(_.value).map(_.toString).toJava,
+    getVacationResponseState = event.vacationResponseState.map(_.value).map(_.toString).toJava,
     getEmailDeliveryState = event.emailDeliveryState.map(_.value).map(_.toString).toJava)
 }
 
 case class StateChangeEventDTO(@JsonProperty("type") getType: String,
                                @JsonProperty("eventId") getEventId: String,
                                @JsonProperty("username") getUsername: String,
+                               @JsonProperty("vacationResponseState") getVacationResponseState: Optional[String],
                                @JsonProperty("mailboxState") getMailboxState: Optional[String],
                                @JsonProperty("emailState") getEmailState: Optional[String],
                                @JsonProperty("emailDeliveryState") getEmailDeliveryState: Optional[String]) extends EventDTO {
   def toDomainObject: StateChangeEvent = StateChangeEvent(
     eventId = EventId.of(getEventId),
     username = Username.of(getUsername),
+    vacationResponseState = getVacationResponseState.toScala.map(State.fromStringUnchecked),
     mailboxState = getMailboxState.toScala.map(State.fromStringUnchecked),
     emailState = getEmailState.toScala.map(State.fromStringUnchecked),
     emailDeliveryState = getEmailDeliveryState.toScala.map(State.fromStringUnchecked))
