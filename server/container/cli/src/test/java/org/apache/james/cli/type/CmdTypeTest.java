@@ -20,7 +20,7 @@ package org.apache.james.cli.type;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test class for the CmdType enum.
@@ -28,234 +28,234 @@ import org.junit.Test;
 public class CmdTypeTest {
 
     @Test
-    public void hasCorrectArgumentShouldBeFalseOnNegativeInput() {
+    void hasCorrectArgumentShouldBeFalseOnNegativeInput() {
         assertThat(CmdType.ADDDOMAIN.hasCorrectArguments(-1)).isFalse();
     }
     
     @Test
-    public void hasCorrectArgumentShouldBeTrueOnRightArgumentNumber() {
+    void hasCorrectArgumentShouldBeTrueOnRightArgumentNumber() {
         assertThat(CmdType.ADDDOMAIN.hasCorrectArguments(2)).isTrue();
     }
     
 
     @Test
-    public void hasCorrectArgumentShouldBeFalseOnIncorrectArgumentNumber() {
+    void hasCorrectArgumentShouldBeFalseOnIncorrectArgumentNumber() {
         assertThat(CmdType.ADDDOMAIN.hasCorrectArguments(1)).isFalse();
     }
 
     @Test 
-    public void lookupAddUserShouldReturnEnumValue() {
+    void lookupAddUserShouldReturnEnumValue() {
         assertThat(CmdType.lookup("adduser")).isEqualTo(CmdType.ADDUSER);
     }
     
     @Test 
-    public void lookupRemoveUserShouldReturnEnumValue() {
+    void lookupRemoveUserShouldReturnEnumValue() {
         assertThat(CmdType.lookup("removeuser")).isEqualTo(CmdType.REMOVEUSER);
     }
     
     @Test 
-    public void lookupListUsersShouldReturnEnumValue() {
+    void lookupListUsersShouldReturnEnumValue() {
         assertThat(CmdType.lookup("listusers")).isEqualTo(CmdType.LISTUSERS);
     }
     
     @Test 
-    public void lookupAddDomainShouldReturnEnumValue() {
+    void lookupAddDomainShouldReturnEnumValue() {
         assertThat(CmdType.lookup("adddomain")).isEqualTo(CmdType.ADDDOMAIN);
     }
     
     @Test 
-    public void lookupRemoveDomainShouldReturnEnumValue() {
+    void lookupRemoveDomainShouldReturnEnumValue() {
         assertThat(CmdType.lookup("removedomain")).isEqualTo(CmdType.REMOVEDOMAIN);
     }
     
     @Test 
-    public void lookupContainsDomainShouldReturnEnumValue() {
+    void lookupContainsDomainShouldReturnEnumValue() {
         assertThat(CmdType.lookup("containsdomain")).isEqualTo(CmdType.CONTAINSDOMAIN);
     }
     
     @Test 
-    public void lookupListDomainsShouldReturnEnumValue() {
+    void lookupListDomainsShouldReturnEnumValue() {
         assertThat(CmdType.lookup("listdomains")).isEqualTo(CmdType.LISTDOMAINS);
     }
     
     @Test 
-    public void lookupListMappingsShouldReturnEnumValue() {
+    void lookupListMappingsShouldReturnEnumValue() {
         assertThat(CmdType.lookup("listmappings")).isEqualTo(CmdType.LISTMAPPINGS);
     }
     
     @Test 
-    public void lookupListUserDomainMappingsShouldReturnEnumValue() {
+    void lookupListUserDomainMappingsShouldReturnEnumValue() {
         assertThat(CmdType.lookup("listuserdomainmappings")).isEqualTo(CmdType.LISTUSERDOMAINMAPPINGS);
     }
     
     @Test 
-    public void lookupAddAddressMappingShouldReturnEnumValue() {
+    void lookupAddAddressMappingShouldReturnEnumValue() {
         assertThat(CmdType.lookup("addaddressmapping")).isEqualTo(CmdType.ADDADDRESSMAPPING);
     }
     
     @Test 
-    public void lookupRemoveAddressMappingShouldReturnEnumValue() {
+    void lookupRemoveAddressMappingShouldReturnEnumValue() {
         assertThat(CmdType.lookup("removeaddressmapping")).isEqualTo(CmdType.REMOVEADDRESSMAPPING);
     }
     
     @Test 
-    public void lookupAddRegexMappingShouldReturnEnumValue() {
+    void lookupAddRegexMappingShouldReturnEnumValue() {
         assertThat(CmdType.lookup("addregexmapping")).isEqualTo(CmdType.ADDREGEXMAPPING);
     }
     
     @Test 
-    public void lookupRemoveRegexMappingShouldReturnEnumValue() {
+    void lookupRemoveRegexMappingShouldReturnEnumValue() {
         assertThat(CmdType.lookup("removeregexmapping")).isEqualTo(CmdType.REMOVEREGEXMAPPING);
     }
     
     @Test 
-    public void lookupSetPasswordShouldReturnEnumValue() {
+    void lookupSetPasswordShouldReturnEnumValue() {
         assertThat(CmdType.lookup("setpassword")).isEqualTo(CmdType.SETPASSWORD);
     }
     
     @Test 
-    public void lookupCopyMailboxShouldReturnEnumValue() {
+    void lookupCopyMailboxShouldReturnEnumValue() {
         assertThat(CmdType.lookup("copymailbox")).isEqualTo(CmdType.COPYMAILBOX);
     }
     
     @Test 
-    public void lookupDeleteUserMailboxesShouldReturnEnumValue() {
+    void lookupDeleteUserMailboxesShouldReturnEnumValue() {
         assertThat(CmdType.lookup("deleteusermailboxes")).isEqualTo(CmdType.DELETEUSERMAILBOXES);
     }
 
     @Test 
-    public void lookupCreateMailboxShouldReturnEnumValue() {
+    void lookupCreateMailboxShouldReturnEnumValue() {
         assertThat(CmdType.lookup("createmailbox")).isEqualTo(CmdType.CREATEMAILBOX);
     }
 
     @Test 
-    public void lookupListUserMailboxesShouldReturnEnumValue() {
+    void lookupListUserMailboxesShouldReturnEnumValue() {
         assertThat(CmdType.lookup("listusermailboxes")).isEqualTo(CmdType.LISTUSERMAILBOXES);
     }
 
     @Test 
-    public void lookupDeleteMailboxShouldReturnEnumValue() {
+    void lookupDeleteMailboxShouldReturnEnumValue() {
         assertThat(CmdType.lookup("deletemailbox")).isEqualTo(CmdType.DELETEMAILBOX);
     }
 
     @Test
-    public void lookupImportEmlFileToMailboxShouldReturnEnumValue() {
+    void lookupImportEmlFileToMailboxShouldReturnEnumValue() {
         assertThat(CmdType.lookup("ImportEml"))
             .isEqualTo(CmdType.IMPORTEML);
     }
 
     @Test
-    public void lookupSetGlobalMaxStorageQuotaShouldReturnEnumValue() {
+    void lookupSetGlobalMaxStorageQuotaShouldReturnEnumValue() {
         assertThat(CmdType.lookup("setglobalmaxstoragequota")).isEqualTo(CmdType.SETGLOBALMAXSTORAGEQUOTA);
     }
 
     @Test
-    public void lookupSetGlobalMaxMessageCountQuotaShouldReturnEnumValue() {
+    void lookupSetGlobalMaxMessageCountQuotaShouldReturnEnumValue() {
         assertThat(CmdType.lookup("setglobalmaxmessagecountquota")).isEqualTo(CmdType.SETGLOBALMAXMESSAGECOUNTQUOTA);
     }
 
     @Test
-    public void lookupGetGlobalMaxStorageQuotaShouldReturnEnumValue() {
+    void lookupGetGlobalMaxStorageQuotaShouldReturnEnumValue() {
         assertThat(CmdType.lookup("getglobalmaxstoragequota")).isEqualTo(CmdType.GETGLOBALMAXSTORAGEQUOTA);
     }
 
     @Test
-    public void lookupGetGlobalMaxMessageCountQuotaShouldReturnEnumValue() {
+    void lookupGetGlobalMaxMessageCountQuotaShouldReturnEnumValue() {
         assertThat(CmdType.lookup("getglobalmaxmessagecountquota")).isEqualTo(CmdType.GETGLOBALMAXMESSAGECOUNTQUOTA);
     }
 
     @Test
-    public void lookupSetMaxStorageQuotaShouldReturnEnumValue() {
+    void lookupSetMaxStorageQuotaShouldReturnEnumValue() {
         assertThat(CmdType.lookup("setmaxstoragequota")).isEqualTo(CmdType.SETMAXSTORAGEQUOTA);
     }
 
     @Test
-    public void lookupSetMaxMessageCountQuotaShouldReturnEnumValue() {
+    void lookupSetMaxMessageCountQuotaShouldReturnEnumValue() {
         assertThat(CmdType.lookup("setmaxmessagecountquota")).isEqualTo(CmdType.SETMAXMESSAGECOUNTQUOTA);
     }
 
     @Test
-    public void lookupGetMaxStorageQuotaShouldReturnEnumValue() {
+    void lookupGetMaxStorageQuotaShouldReturnEnumValue() {
         assertThat(CmdType.lookup("getmaxstoragequota")).isEqualTo(CmdType.GETMAXSTORAGEQUOTA);
     }
 
     @Test
-    public void lookupGetMaxMessageCountQuotaShouldReturnEnumValue() {
+    void lookupGetMaxMessageCountQuotaShouldReturnEnumValue() {
         assertThat(CmdType.lookup("getmaxmessagecountquota")).isEqualTo(CmdType.GETMAXMESSAGECOUNTQUOTA);
     }
 
     @Test
-    public void lookupGetStorageQuotaShouldReturnEnumValue() {
+    void lookupGetStorageQuotaShouldReturnEnumValue() {
         assertThat(CmdType.lookup("getstoragequota")).isEqualTo(CmdType.GETSTORAGEQUOTA);
     }
 
     @Test
-    public void lookupGetMessageCountQuotaShouldReturnEnumValue() {
+    void lookupGetMessageCountQuotaShouldReturnEnumValue() {
         assertThat(CmdType.lookup("getmessagecountquota")).isEqualTo(CmdType.GETMESSAGECOUNTQUOTA);
     }
 
     @Test
-    public void lookupReIndexMailboxShouldReturnEnumValue() {
+    void lookupReIndexMailboxShouldReturnEnumValue() {
         assertThat(CmdType.lookup("reindexall")).isEqualTo(CmdType.REINDEXALL);
     }
 
     @Test
-    public void lookupReIndexAllShouldReturnEnumValue() {
+    void lookupReIndexAllShouldReturnEnumValue() {
         assertThat(CmdType.lookup("reindexmailbox")).isEqualTo(CmdType.REINDEXMAILBOX);
     }
 
     @Test
-    public void lookupGetSieveQuotaShouldReturnEnumValue() {
+    void lookupGetSieveQuotaShouldReturnEnumValue() {
         assertThat(CmdType.lookup("getsievequota")).isEqualTo(CmdType.GETSIEVEQUOTA);
     }
 
     @Test
-    public void lookupGetSieveUserQuotaShouldReturnEnumValue() {
+    void lookupGetSieveUserQuotaShouldReturnEnumValue() {
         assertThat(CmdType.lookup("getsieveuserquota")).isEqualTo(CmdType.GETSIEVEUSERQUOTA);
     }
 
     @Test
-    public void lookupSetSieveQuotaShouldReturnEnumValue() {
+    void lookupSetSieveQuotaShouldReturnEnumValue() {
         assertThat(CmdType.lookup("setsievequota")).isEqualTo(CmdType.SETSIEVEQUOTA);
     }
 
     @Test
-    public void lookupSetSieveUserQuotaShouldReturnEnumValue() {
+    void lookupSetSieveUserQuotaShouldReturnEnumValue() {
         assertThat(CmdType.lookup("setsieveuserquota")).isEqualTo(CmdType.SETSIEVEUSERQUOTA);
     }
 
     @Test
-    public void lookupRemoveSieveQuotaShouldReturnEnumValue() {
+    void lookupRemoveSieveQuotaShouldReturnEnumValue() {
         assertThat(CmdType.lookup("removesievequota")).isEqualTo(CmdType.REMOVESIEVEQUOTA);
     }
 
     @Test
-    public void lookupRemoveSieveUserQuotaShouldReturnEnumValue() {
+    void lookupRemoveSieveUserQuotaShouldReturnEnumValue() {
         assertThat(CmdType.lookup("removesieveuserquota")).isEqualTo(CmdType.REMOVESIEVEUSERQUOTA);
     }
 
     @Test
-    public void addSieveScriptShouldReturnEnumValue() {
+    void addSieveScriptShouldReturnEnumValue() {
         assertThat(CmdType.lookup("addactivesievescript")).isEqualTo(CmdType.ADDACTIVESIEVESCRIPT);
     }
 
     @Test 
-    public void lookupEmptyStringShouldReturnNull() {
+    void lookupEmptyStringShouldReturnNull() {
         assertThat(CmdType.lookup("")).isNull();
     }
 
     @Test 
-    public void lookupUnknownStringShouldReturnNull() {
+    void lookupUnknownStringShouldReturnNull() {
         assertThat(CmdType.lookup("error")).isNull();
     }
 
     @Test 
-    public void lookupNullShouldReturnNull() {
+    void lookupNullShouldReturnNull() {
         assertThat(CmdType.lookup(null)).isNull();
     }
     
     @Test
-    public void usageShouldOutputCommandNamesAndArguments() {
+    void usageShouldOutputCommandNamesAndArguments() {
         assertThat(CmdType.CREATEMAILBOX.getUsage()).isEqualTo("CreateMailbox <namespace> <user> <name>");
     }
     

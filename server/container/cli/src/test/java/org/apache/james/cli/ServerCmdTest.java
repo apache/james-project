@@ -46,12 +46,12 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.SerializableQuota;
 import org.apache.james.mailbox.model.SerializableQuotaLimitValue;
 import org.apache.james.rrt.lib.MappingsImpl;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class ServerCmdTest {
+class ServerCmdTest {
 
     private static final String ADDITIONAL_ARGUMENT = "additionalArgument";
 
@@ -62,8 +62,8 @@ public class ServerCmdTest {
 
     private ServerCmd testee;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         dataProbe = mock(JmxDataProbe.class);
         mailboxProbe = mock(JmxMailboxProbe.class);
         quotaProbe = mock(JmxQuotaProbe.class);
@@ -72,7 +72,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void addDomainCommandShouldWork() throws Exception {
+    void addDomainCommandShouldWork() throws Exception {
         String domain = "example.com";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDDOMAIN.getCommand(), domain};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -83,7 +83,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void removeDomainCommandShouldWork() throws Exception {
+    void removeDomainCommandShouldWork() throws Exception {
         String domain = "example.com";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEDOMAIN.getCommand(), domain};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -94,7 +94,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void containsDomainCommandShouldWork() throws Exception {
+    void containsDomainCommandShouldWork() throws Exception {
         String domain = "example.com";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.CONTAINSDOMAIN.getCommand(), domain};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -105,7 +105,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void listDomainsCommandShouldWork() throws Exception {
+    void listDomainsCommandShouldWork() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTDOMAINS.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -115,7 +115,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void addUserCommandShouldWork() throws Exception {
+    void addUserCommandShouldWork() throws Exception {
         String user = "user@domain";
         String password = "password";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDUSER.getCommand(), user, password};
@@ -127,7 +127,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void removeUserCommandShouldWork() throws Exception {
+    void removeUserCommandShouldWork() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEUSER.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -138,7 +138,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void listUsersCommandShouldWork() throws Exception {
+    void listUsersCommandShouldWork() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERS.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -149,7 +149,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void listMappingsCommandShouldWork() throws Exception {
+    void listMappingsCommandShouldWork() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTMAPPINGS.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -159,7 +159,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void listUserDomainMappingsCommandShouldWork() throws Exception {
+    void listUserDomainMappingsCommandShouldWork() throws Exception {
         String user = "user@domain";
         String domain = "domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERDOMAINMAPPINGS.getCommand(), user, domain};
@@ -171,7 +171,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void addAddressCommandShouldWork() throws Exception {
+    void addAddressCommandShouldWork() throws Exception {
         String user = "user@domain";
         String domain = "domain";
         String address = "bis@apache.org";
@@ -184,7 +184,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void removeAddressCommandShouldWork() throws Exception {
+    void removeAddressCommandShouldWork() throws Exception {
         String user = "user@domain";
         String domain = "domain";
         String address = "bis@apache.org";
@@ -197,7 +197,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void addRegexMappingCommandShouldWork() throws Exception {
+    void addRegexMappingCommandShouldWork() throws Exception {
         String user = "user@domain";
         String domain = "domain";
         String regex = "bis.*@apache.org";
@@ -210,7 +210,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void removeRegexMappingCommandShouldWork() throws Exception {
+    void removeRegexMappingCommandShouldWork() throws Exception {
         String user = "user@domain";
         String domain = "domain";
         String regex = "bis.*@apache.org";
@@ -223,7 +223,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void setPasswordMappingCommandShouldWork() throws Exception {
+    void setPasswordMappingCommandShouldWork() throws Exception {
         String user = "user@domain";
         String password = "pass";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETPASSWORD.getCommand(), user, password};
@@ -235,7 +235,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void copyMailboxMappingCommandShouldWork() throws Exception {
+    void copyMailboxMappingCommandShouldWork() throws Exception {
         String srcBean = "srcBean";
         String dstBean = "dstBean";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.COPYMAILBOX.getCommand(), srcBean, dstBean};
@@ -247,7 +247,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void deleteUserMailboxesMappingCommandShouldWork() throws Exception {
+    void deleteUserMailboxesMappingCommandShouldWork() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.DELETEUSERMAILBOXES.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -258,7 +258,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void createMailboxMappingCommandShouldWork() throws Exception {
+    void createMailboxMappingCommandShouldWork() throws Exception {
         String user = "user@domain";
         String namespace = "#private";
         String name = "INBOX.test";
@@ -271,7 +271,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void deleteMailboxMappingCommandShouldWork() throws Exception {
+    void deleteMailboxMappingCommandShouldWork() throws Exception {
         String user = "user@domain";
         String namespace = "#private";
         String name = "INBOX.test";
@@ -284,7 +284,7 @@ public class ServerCmdTest {
     }
     
     @Test
-    public void importEmlFileToMailboxCommandShouldWork() throws Exception {
+    void importEmlFileToMailboxCommandShouldWork() throws Exception {
         String user = "user@domain";
         String namespace = "#private";
         String name = "INBOX.test";
@@ -298,7 +298,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void listUserMailboxesMappingsCommandShouldWork() throws Exception {
+    void listUserMailboxesMappingsCommandShouldWork() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERMAILBOXES.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -309,7 +309,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void getQuotaRootCommandShouldWork() throws Exception {
+    void getQuotaRootCommandShouldWork() throws Exception {
         String namespace = "#private";
         String user = "user@domain";
         String name = "INBOX";
@@ -322,7 +322,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void getGlobalMaxMessageCountCommandShouldWork() throws Exception {
+    void getGlobalMaxMessageCountCommandShouldWork() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETGLOBALMAXMESSAGECOUNTQUOTA.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -332,7 +332,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void getGlobalMaxStorageCommandShouldWork() throws Exception {
+    void getGlobalMaxStorageCommandShouldWork() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETGLOBALMAXSTORAGEQUOTA.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -342,7 +342,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void setGlobalMaxMessageCountCommandShouldWork() throws Exception {
+    void setGlobalMaxMessageCountCommandShouldWork() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETGLOBALMAXMESSAGECOUNTQUOTA.getCommand(), "1054"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -352,7 +352,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void setGlobalMaxMessageCountCommandShouldWorkWhenUnlimited() throws Exception {
+    void setGlobalMaxMessageCountCommandShouldWorkWhenUnlimited() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "--", CmdType.SETGLOBALMAXMESSAGECOUNTQUOTA.getCommand(), "-1"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -362,7 +362,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void setGlobalMaxMessageCountCommandShouldThrowWhenNegativeAndNotUnlimited() throws Exception {
+    void setGlobalMaxMessageCountCommandShouldThrowWhenNegativeAndNotUnlimited() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "--", CmdType.SETGLOBALMAXMESSAGECOUNTQUOTA.getCommand(), "-2"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -371,7 +371,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void setGlobalMaxStorageCommandShouldWork() throws Exception {
+    void setGlobalMaxStorageCommandShouldWork() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETGLOBALMAXSTORAGEQUOTA.getCommand(), "1G"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -381,7 +381,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void setGlobalMaxStorageCommandShouldWorkWhenUnlimited() throws Exception {
+    void setGlobalMaxStorageCommandShouldWorkWhenUnlimited() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "--", CmdType.SETGLOBALMAXSTORAGEQUOTA.getCommand(), "-1"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -391,7 +391,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void setGlobalMaxStorageCommandShouldThrowWhenNegativeAndNotUnlimited() throws Exception {
+    void setGlobalMaxStorageCommandShouldThrowWhenNegativeAndNotUnlimited() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "--", CmdType.SETGLOBALMAXSTORAGEQUOTA.getCommand(), "-2"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -400,7 +400,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void setMaxMessageCountCommandShouldWork() throws Exception {
+    void setMaxMessageCountCommandShouldWork() throws Exception {
         String quotaroot = "#private&user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETMAXMESSAGECOUNTQUOTA.getCommand(), quotaroot, "1000"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -411,7 +411,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void setMaxMessageCountCommandShouldWorkWhenUnlimited() throws Exception {
+    void setMaxMessageCountCommandShouldWorkWhenUnlimited() throws Exception {
         String quotaroot = "#private&user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "--", CmdType.SETMAXMESSAGECOUNTQUOTA.getCommand(), quotaroot, "-1"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -422,7 +422,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void setMaxMessageCountCommandShouldThrowWhenNegativeAndNotUnlimited() throws Exception {
+    void setMaxMessageCountCommandShouldThrowWhenNegativeAndNotUnlimited() throws Exception {
         String quotaroot = "#private&user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "--", CmdType.SETMAXMESSAGECOUNTQUOTA.getCommand(), quotaroot, "-2"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -432,7 +432,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void setMaxStorageCommandShouldWork() throws Exception {
+    void setMaxStorageCommandShouldWork() throws Exception {
         String quotaroot = "#private&user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETMAXSTORAGEQUOTA.getCommand(), quotaroot, "5M"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -443,7 +443,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void setMaxStorageCommandShouldWorkWhenUnlimited() throws Exception {
+    void setMaxStorageCommandShouldWorkWhenUnlimited() throws Exception {
         String quotaroot = "#private&user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "--", CmdType.SETMAXSTORAGEQUOTA.getCommand(), quotaroot, "-1"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -454,7 +454,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void setMaxStorageCommandShouldThrowWhenNegativeAndNotUnlimited() throws Exception {
+    void setMaxStorageCommandShouldThrowWhenNegativeAndNotUnlimited() throws Exception {
         String quotaroot = "#private&user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "--", CmdType.SETMAXSTORAGEQUOTA.getCommand(), quotaroot, "-2"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -464,7 +464,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void getMaxMessageCountCommandShouldWork() throws Exception {
+    void getMaxMessageCountCommandShouldWork() throws Exception {
         String quotaroot = "#private&user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETMAXMESSAGECOUNTQUOTA.getCommand(), quotaroot};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -475,7 +475,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void getMaxStorageQuotaCommandShouldWork() throws Exception {
+    void getMaxStorageQuotaCommandShouldWork() throws Exception {
         String quotaroot = "#private&user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETMAXSTORAGEQUOTA.getCommand(), quotaroot};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -486,7 +486,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void getStorageQuotaCommandShouldWork() throws Exception {
+    void getStorageQuotaCommandShouldWork() throws Exception {
         String quotaroot = "#private&user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETSTORAGEQUOTA.getCommand(), quotaroot};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -497,7 +497,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void getMessageCountQuotaCommandShouldWork() throws Exception {
+    void getMessageCountQuotaCommandShouldWork() throws Exception {
         String quotaroot = "#private&user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETMESSAGECOUNTQUOTA.getCommand(), quotaroot};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -508,7 +508,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void reIndexAllQuotaCommandShouldWork() throws Exception {
+    void reIndexAllQuotaCommandShouldWork() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REINDEXALL.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -518,7 +518,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void reIndexMailboxCommandShouldWork() throws Exception {
+    void reIndexMailboxCommandShouldWork() throws Exception {
         String namespace = "#private";
         String user = "btellier@apache.org";
         String name = "INBOX";
@@ -531,7 +531,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void setSieveQuotaCommandShouldWork() throws Exception {
+    void setSieveQuotaCommandShouldWork() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETSIEVEQUOTA.getCommand(), "2K"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -541,7 +541,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void setSieveUserQuotaCommandShouldWork() throws Exception {
+    void setSieveUserQuotaCommandShouldWork() throws Exception {
         String user = "btellier@apache.org";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETSIEVEUSERQUOTA.getCommand(), user, "1K"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -552,7 +552,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void getSieveQuotaCommandShouldWork() throws Exception {
+    void getSieveQuotaCommandShouldWork() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETSIEVEQUOTA.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -564,7 +564,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void getSieveUserQuotaCommandShouldWork() throws Exception {
+    void getSieveUserQuotaCommandShouldWork() throws Exception {
         String user = "btellier@apache.org";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETSIEVEUSERQUOTA.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -577,7 +577,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void removeSieveQuotaCommandShouldWork() throws Exception {
+    void removeSieveQuotaCommandShouldWork() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVESIEVEQUOTA.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -587,7 +587,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void removeSieveUserQuotaCommandShouldWork() throws Exception {
+    void removeSieveUserQuotaCommandShouldWork() throws Exception {
         String user = "btellier@apache.org";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVESIEVEUSERQUOTA.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -598,7 +598,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void addDomainCommandShouldThrowOnMissingArguments() throws Exception {
+    void addDomainCommandShouldThrowOnMissingArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDDOMAIN.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -607,7 +607,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void removeDomainCommandShouldThrowOnMissingArguments() throws Exception {
+    void removeDomainCommandShouldThrowOnMissingArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEDOMAIN.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
         
@@ -616,7 +616,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void containsDomainCommandShouldThrowOnMissingArguments() throws Exception {
+    void containsDomainCommandShouldThrowOnMissingArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.CONTAINSDOMAIN.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -625,7 +625,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void addUserCommandShouldThrowOnMissingArguments() throws Exception {
+    void addUserCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDUSER.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -635,7 +635,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void removeUserCommandShouldThrowOnMissingArguments() throws Exception {
+    void removeUserCommandShouldThrowOnMissingArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEUSER.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -644,7 +644,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void listUserDomainMappingsCommandShouldThrowOnMissingArguments() throws Exception {
+    void listUserDomainMappingsCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERDOMAINMAPPINGS.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -654,7 +654,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void addAddressCommandShouldThrowOnMissingArguments() throws Exception {
+    void addAddressCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String domain = "domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDADDRESSMAPPING.getCommand(), user, domain};
@@ -665,7 +665,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void removeAddressCommandShouldThrowOnMissingArguments() throws Exception {
+    void removeAddressCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String domain = "domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEADDRESSMAPPING.getCommand(), user, domain};
@@ -676,7 +676,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void addRegexMappingCommandShouldThrowOnMissingArguments() throws Exception {
+    void addRegexMappingCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String domain = "domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDREGEXMAPPING.getCommand(), user, domain};
@@ -687,7 +687,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void removeRegexMappingCommandShouldThrowOnMissingArguments() throws Exception {
+    void removeRegexMappingCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String domain = "domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEREGEXMAPPING.getCommand(), user, domain};
@@ -698,7 +698,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void setPasswordMappingCommandShouldThrowOnMissingArguments() throws Exception {
+    void setPasswordMappingCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETPASSWORD.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -708,7 +708,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void copyMailboxMappingCommandShouldThrowOnMissingArguments() throws Exception {
+    void copyMailboxMappingCommandShouldThrowOnMissingArguments() throws Exception {
         String srcBean = "srcBean";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.COPYMAILBOX.getCommand(), srcBean};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -718,7 +718,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void deleteUserMailboxesMappingCommandShouldThrowOnMissingArguments() throws Exception {
+    void deleteUserMailboxesMappingCommandShouldThrowOnMissingArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.DELETEUSERMAILBOXES.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -727,7 +727,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void createMailboxMappingCommandShouldThrowOnMissingArguments() throws Exception {
+    void createMailboxMappingCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String namespace = "#private";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.CREATEMAILBOX.getCommand(), namespace, user};
@@ -738,7 +738,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void deleteMailboxMappingCommandShouldThrowOnMissingArguments() throws Exception {
+    void deleteMailboxMappingCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String namespace = "#private";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.DELETEMAILBOX.getCommand(), namespace, user};
@@ -750,7 +750,7 @@ public class ServerCmdTest {
 
 
     @Test
-    public void importEmlFileToMailboxCommandShouldThrowOnMissingArguments() throws Exception {
+    void importEmlFileToMailboxCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String namespace = "#private";
         String name = "INBOX.test";
@@ -762,7 +762,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void listUserMailboxesMappingsCommandShouldThrowOnMissingArguments() throws Exception {
+    void listUserMailboxesMappingsCommandShouldThrowOnMissingArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERMAILBOXES.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -771,7 +771,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void addDomainCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void addDomainCommandShouldThrowOnAdditionalArguments() throws Exception {
         String domain = "example.com";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDDOMAIN.getCommand(), domain, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -781,7 +781,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void removeDomainCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void removeDomainCommandShouldThrowOnAdditionalArguments() throws Exception {
         String domain = "example.com";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEDOMAIN.getCommand(), domain, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -791,7 +791,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void containsDomainCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void containsDomainCommandShouldThrowOnAdditionalArguments() throws Exception {
         String domain = "example.com";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.CONTAINSDOMAIN.getCommand(), domain, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -801,7 +801,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void listDomainsCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void listDomainsCommandShouldThrowOnAdditionalArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTDOMAINS.getCommand(), ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -810,7 +810,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void addUserCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void addUserCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String password = "password";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDUSER.getCommand(), user, password, ADDITIONAL_ARGUMENT };
@@ -821,7 +821,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void removeUserCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void removeUserCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEUSER.getCommand(), user, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -831,7 +831,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void listUsersCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void listUsersCommandShouldThrowOnAdditionalArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERS.getCommand(), ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -840,7 +840,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void listMappingsCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void listMappingsCommandShouldThrowOnAdditionalArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTMAPPINGS.getCommand(), ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -849,7 +849,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void listUserDomainMappingsCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void listUserDomainMappingsCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String domain = "domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERDOMAINMAPPINGS.getCommand(), user, domain, ADDITIONAL_ARGUMENT };
@@ -860,7 +860,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void addAddressCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void addAddressCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String domain = "domain";
         String address = "bis@apache.org";
@@ -872,7 +872,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void removeAddressCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void removeAddressCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String domain = "domain";
         String address = "bis@apache.org";
@@ -884,7 +884,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void addRegexMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void addRegexMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String domain = "domain";
         String regex = "bis.*@apache.org";
@@ -896,7 +896,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void removeRegexMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void removeRegexMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String domain = "domain";
         String regex = "bis.*@apache.org";
@@ -908,7 +908,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void setPasswordMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void setPasswordMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String password = "pass";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETPASSWORD.getCommand(), user, password, ADDITIONAL_ARGUMENT };
@@ -919,7 +919,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void copyMailboxMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void copyMailboxMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
         String srcBean = "srcBean";
         String dstBean = "dstBean";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.COPYMAILBOX.getCommand(), srcBean, dstBean, ADDITIONAL_ARGUMENT };
@@ -930,7 +930,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void deleteUserMailboxesMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void deleteUserMailboxesMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.DELETEUSERMAILBOXES.getCommand(), user, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -940,7 +940,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void createMailboxMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void createMailboxMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String namespace = "#private";
         String name = "INBOX.test";
@@ -952,7 +952,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void deleteMailboxMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void deleteMailboxMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String namespace = "#private";
         String name = "INBOX.test";
@@ -964,7 +964,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void importEmlFileToMailboxCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void importEmlFileToMailboxCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String namespace = "#private";
         String name = "INBOX.test";
@@ -977,7 +977,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void listUserMailboxesMappingsCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void listUserMailboxesMappingsCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERMAILBOXES.getCommand(), user, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -987,7 +987,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void reIndexAllCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void reIndexAllCommandShouldThrowOnAdditionalArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REINDEXALL.getCommand(), ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -996,7 +996,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void reIndexMailboxCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void reIndexMailboxCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String namespace = "#private";
         String name = "INBOX.test";
@@ -1008,7 +1008,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void removeSieveQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void removeSieveQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVESIEVEQUOTA.getCommand(), ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -1017,7 +1017,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void removeSieveUserQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void removeSieveUserQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVESIEVEUSERQUOTA.getCommand(), user, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -1027,7 +1027,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void getSieveQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void getSieveQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETSIEVEQUOTA.getCommand(), ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -1036,7 +1036,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void setSieveQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void setSieveQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETSIEVEQUOTA.getCommand(), "64K", ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -1045,7 +1045,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void getSieveUserQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void getSieveUserQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETSIEVEUSERQUOTA.getCommand(), user, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -1055,7 +1055,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void setSieveUserQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void setSieveUserQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETSIEVEUSERQUOTA.getCommand(), user, "64K", ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
@@ -1065,7 +1065,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void addActiveSieveScriptCommandShouldThrowOnAdditionalArguments() throws Exception {
+    void addActiveSieveScriptCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String scriptName = "sieve_script";
         String scriptPath = "./src/test/resources/sieve/sieve_script";
@@ -1078,7 +1078,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void executeCommandLineShouldThrowOnUnrecognizedCommands() throws Exception {
+    void executeCommandLineShouldThrowOnUnrecognizedCommands() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "wrongCommand"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -1087,7 +1087,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void parseCommandLineShouldThrowWhenOnlyOptionAreProvided() throws Exception {
+    void parseCommandLineShouldThrowWhenOnlyOptionAreProvided() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999" };
 
         assertThatThrownBy(() -> ServerCmd.parseCommandLine(arguments))
@@ -1095,7 +1095,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void parseCommandLineShouldThrowWhenInvalidOptionIsProvided() throws Exception {
+    void parseCommandLineShouldThrowWhenInvalidOptionIsProvided() throws Exception {
         String[] arguments = { "-v", "-h", "127.0.0.1", "-p", "9999" };
 
         assertThatThrownBy(() -> ServerCmd.parseCommandLine(arguments))
@@ -1103,7 +1103,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void parseCommandLineShouldThrowWhenMandatoryOptionIsMissing() throws Exception {
+    void parseCommandLineShouldThrowWhenMandatoryOptionIsMissing() throws Exception {
         String[] arguments = { "-v", "-h", "127.0.0.1", "-p", "9999" };
 
         assertThatThrownBy(() -> ServerCmd.parseCommandLine(arguments))
@@ -1111,70 +1111,70 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void parseCommandLineShouldReturnACommandLineWithCorrectArguments() throws Exception {
+    void parseCommandLineShouldReturnACommandLineWithCorrectArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "command", "arg1", "arg2", "arg3" };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
         assertThat(commandLine.getArgs()).containsExactly("command", "arg1", "arg2", "arg3");
     }
 
     @Test
-    public void parseCommandLineShouldReturnACommandLineWithCorrectPortOption() throws Exception {
+    void parseCommandLineShouldReturnACommandLineWithCorrectPortOption() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "command", "arg1", "arg2", "arg3" };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
         assertThat(commandLine.getOptionValue(ServerCmd.PORT_OPT_LONG)).isEqualTo("9999");
     }
 
     @Test
-    public void parseCommandLineShouldReturnACommandLineWithCorrectHostOption() throws Exception {
+    void parseCommandLineShouldReturnACommandLineWithCorrectHostOption() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "command", "arg1", "arg2", "arg3" };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
         assertThat(commandLine.getOptionValue(ServerCmd.HOST_OPT_LONG)).isEqualTo("127.0.0.1");
     }
 
     @Test
-    public void getHostShouldUseDefaultValueWhenNone() throws Exception {
+    void getHostShouldUseDefaultValueWhenNone() throws Exception {
         String[] arguments = { "-p", "9999", "command", "arg1", "arg2", "arg3" };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
         assertThat(ServerCmd.getHost(commandLine)).isEqualTo("127.0.0.1");
     }
 
     @Test
-    public void getHostShouldUseDefaultValueWhenEmpty() throws Exception {
+    void getHostShouldUseDefaultValueWhenEmpty() throws Exception {
         String[] arguments = { "-h", "", "-p", "9999", "command", "arg1", "arg2", "arg3" };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
         assertThat(ServerCmd.getHost(commandLine)).isEqualTo("127.0.0.1");
     }
 
     @Test
-    public void getHostShouldReturnValueWhenGiven() throws Exception {
+    void getHostShouldReturnValueWhenGiven() throws Exception {
         String[] arguments = { "-h", "123.4.5.6", "-p", "9999", "command", "arg1", "arg2", "arg3" };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
         assertThat(ServerCmd.getHost(commandLine)).isEqualTo("123.4.5.6");
     }
 
     @Test
-    public void getPortShouldUseDefaultValueWhenNone() throws Exception {
+    void getPortShouldUseDefaultValueWhenNone() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "command", "arg1", "arg2", "arg3" };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
         assertThat(ServerCmd.getPort(commandLine)).isEqualTo(9999);
     }
 
     @Test
-    public void getPortShouldUseDefaultValueWhenEmpty() throws Exception {
+    void getPortShouldUseDefaultValueWhenEmpty() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "", "command", "arg1", "arg2", "arg3" };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
         assertThat(ServerCmd.getPort(commandLine)).isEqualTo(9999);
     }
 
     @Test
-    public void getPortShouldRetrievePort() throws Exception {
+    void getPortShouldRetrievePort() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "command", "arg1", "arg2", "arg3" };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
         assertThat(ServerCmd.getPort(commandLine)).isEqualTo(9999);
     }
 
     @Test
-    public void getPortShouldThrowOnNullPortValueOption() throws Exception {
+    void getPortShouldThrowOnNullPortValueOption() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "0", "command", "arg1", "arg2", "arg3" };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -1183,7 +1183,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void getPortShouldThrowOnNegativePortValueOption() throws Exception {
+    void getPortShouldThrowOnNegativePortValueOption() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "-1", "command", "arg1", "arg2", "arg3" };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
@@ -1192,7 +1192,7 @@ public class ServerCmdTest {
     }
 
     @Test
-    public void getPortShouldThrowOnTooHighPortValueOption() throws Exception {
+    void getPortShouldThrowOnTooHighPortValueOption() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "99999", "command", "arg1", "arg2", "arg3" };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
