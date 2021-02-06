@@ -36,10 +36,10 @@ import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class MemoryMailRepositoryStoreTest {
+class MemoryMailRepositoryStoreTest {
     private static final MailRepositoryUrl MEMORY1_REPO = MailRepositoryUrl.from("memory1://repo");
     private static final MailRepositoryUrl UNKNOWN_PROTOCOL_REPO = MailRepositoryUrl.from("toto://repo");
     private static final MailRepositoryUrl MEMORY2_REPO = MailRepositoryUrl.from("memory2://repo");
@@ -52,8 +52,8 @@ public class MemoryMailRepositoryStoreTest {
     private FileSystemImpl fileSystem;
     private Configuration configuration;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         loader = new SimpleMailRepositoryLoader();
         configuration = Configuration.builder()
             .workingDirectory("../")
@@ -69,31 +69,32 @@ public class MemoryMailRepositoryStoreTest {
         repositoryStore.init();
     }
 
-    @Test(expected = MailRepositoryStore.UnsupportedRepositoryStoreException.class)
-    public void selectingANonRegisteredProtocolShouldFail() {
-        repositoryStore.select(MailRepositoryUrl.from("proto://repo"));
+    @Test
+    void selectingANonRegisteredProtocolShouldFail() {
+        assertThatThrownBy(() -> repositoryStore.select(MailRepositoryUrl.from("proto://repo")))
+            .isInstanceOf(MailRepositoryStore.UnsupportedRepositoryStoreException.class);
     }
 
     @Test
-    public void selectingARegisteredProtocolShouldWork() {
+    void selectingARegisteredProtocolShouldWork() {
         assertThat(repositoryStore.select(MEMORY1_REPO))
             .isInstanceOf(MemoryMailRepository.class);
     }
 
     @Test
-    public void selectingTwiceARegisteredProtocolWithSameDestinationShouldReturnTheSameResult() {
+    void selectingTwiceARegisteredProtocolWithSameDestinationShouldReturnTheSameResult() {
         assertThat(repositoryStore.select(MEMORY1_REPO))
             .isEqualTo(repositoryStore.select(MEMORY1_REPO));
     }
 
     @Test
-    public void selectingTwiceARegisteredProtocolWithDifferentDestinationShouldReturnDifferentResults() {
+    void selectingTwiceARegisteredProtocolWithDifferentDestinationShouldReturnDifferentResults() {
         assertThat(repositoryStore.select(MEMORY1_REPO))
             .isNotEqualTo(repositoryStore.select(MailRepositoryUrl.from("memory1://repo1")));
     }
 
     @Test
-    public void configureShouldThrowWhenNonValidClassesAreProvided() throws Exception {
+    void configureShouldThrowWhenNonValidClassesAreProvided() throws Exception {
         MailRepositoryStoreConfiguration storeConfiguration = MailRepositoryStoreConfiguration.parse(
             new FileConfigurationProvider(fileSystem, configuration).getConfiguration("fakemailrepositorystore"));
 
@@ -107,7 +108,7 @@ public class MemoryMailRepositoryStoreTest {
     }
 
     @Test
-    public void configureShouldNotThrowOnEmptyConfiguration() throws Exception {
+    void configureShouldNotThrowOnEmptyConfiguration() throws Exception {
         MailRepositoryStoreConfiguration configuration = MailRepositoryStoreConfiguration.parse(new BaseHierarchicalConfiguration());
 
         repositoryStore = new MemoryMailRepositoryStore(urlStore, loader, configuration);
@@ -116,12 +117,12 @@ public class MemoryMailRepositoryStoreTest {
     }
 
     @Test
-    public void getUrlsShouldBeEmptyIfNoSelectWerePerformed() {
+    void getUrlsShouldBeEmptyIfNoSelectWerePerformed() {
         assertThat(repositoryStore.getUrls()).isEmpty();
     }
 
     @Test
-    public void getUrlsShouldReturnUsedUrls() {
+    void getUrlsShouldReturnUsedUrls() {
         MailRepositoryUrl url1 = MailRepositoryUrl.from("memory1://repo1");
         MailRepositoryUrl url2 = MailRepositoryUrl.from("memory1://repo2");
         MailRepositoryUrl url3 = MailRepositoryUrl.from("memory1://repo3");
@@ -132,19 +133,19 @@ public class MemoryMailRepositoryStoreTest {
     }
 
     @Test
-    public void getUrlsResultsShouldNotBeDuplicated() {
+    void getUrlsResultsShouldNotBeDuplicated() {
         repositoryStore.select(MEMORY1_REPO);
         repositoryStore.select(MEMORY1_REPO);
         assertThat(repositoryStore.getUrls()).containsExactly(MEMORY1_REPO);
     }
 
     @Test
-    public void getPathsShouldBeEmptyIfNoSelectWerePerformed() {
+    void getPathsShouldBeEmptyIfNoSelectWerePerformed() {
         assertThat(repositoryStore.getPaths()).isEmpty();
     }
 
     @Test
-    public void getPathsShouldReturnUsedUrls() {
+    void getPathsShouldReturnUsedUrls() {
         MailRepositoryPath path1 = MailRepositoryPath.from("repo1");
         MailRepositoryPath path2 = MailRepositoryPath.from("repo1");
         MailRepositoryPath path3 = MailRepositoryPath.from("repo1");
@@ -155,27 +156,27 @@ public class MemoryMailRepositoryStoreTest {
     }
 
     @Test
-    public void getPathsResultsShouldNotBeDuplicatedWithTheSameProtocol() {
+    void getPathsResultsShouldNotBeDuplicatedWithTheSameProtocol() {
         repositoryStore.select(MEMORY1_REPO);
         repositoryStore.select(MEMORY1_REPO);
         assertThat(repositoryStore.getPaths()).containsExactly(PATH_REPO);
     }
 
     @Test
-    public void getPathsResultsShouldNotBeDuplicatedWithDifferentProtocols() {
+    void getPathsResultsShouldNotBeDuplicatedWithDifferentProtocols() {
         repositoryStore.select(MEMORY1_REPO);
         repositoryStore.select(MEMORY2_REPO);
         assertThat(repositoryStore.getPaths()).containsExactly(PATH_REPO);
     }
 
     @Test
-    public void getShouldReturnEmptyWhenUrlNotInUse() {
+    void getShouldReturnEmptyWhenUrlNotInUse() {
         assertThat(repositoryStore.get(MEMORY1_REPO))
             .isEmpty();
     }
 
     @Test
-    public void getShouldReturnRepositoryWhenUrlExists() {
+    void getShouldReturnRepositoryWhenUrlExists() {
         urlStore.add(MEMORY1_REPO);
 
         assertThat(repositoryStore.get(MEMORY1_REPO))
@@ -183,7 +184,7 @@ public class MemoryMailRepositoryStoreTest {
     }
 
     @Test
-    public void getByPathShouldReturnRepositoryWhenUrlExists() {
+    void getByPathShouldReturnRepositoryWhenUrlExists() {
         urlStore.add(MEMORY1_REPO);
 
         assertThat(repositoryStore.getByPath(MEMORY1_REPO.getPath()))
@@ -191,7 +192,7 @@ public class MemoryMailRepositoryStoreTest {
     }
 
     @Test
-    public void getShouldReturnPreviouslyCreatedMailRepository() {
+    void getShouldReturnPreviouslyCreatedMailRepository() {
         MailRepository mailRepository = repositoryStore.select(MEMORY1_REPO);
 
         assertThat(repositoryStore.get(MEMORY1_REPO))
@@ -199,13 +200,13 @@ public class MemoryMailRepositoryStoreTest {
     }
 
     @Test
-    public void getByPathShouldReturnEmptyWhenUrlNotInUse() {
+    void getByPathShouldReturnEmptyWhenUrlNotInUse() {
         assertThat(repositoryStore.getByPath(PATH_REPO))
             .isEmpty();
     }
 
     @Test
-    public void getByPathShouldReturnPreviouslyCreatedMatchingMailRepository() {
+    void getByPathShouldReturnPreviouslyCreatedMatchingMailRepository() {
         MailRepository mailRepository = repositoryStore.select(MEMORY1_REPO);
 
         assertThat(repositoryStore.getByPath(PATH_REPO))
@@ -213,7 +214,7 @@ public class MemoryMailRepositoryStoreTest {
     }
 
     @Test
-    public void getByPathShouldReturnPreviouslyCreatedMatchingMailRepositories() {
+    void getByPathShouldReturnPreviouslyCreatedMatchingMailRepositories() {
         MailRepository mailRepositoryFile = repositoryStore.select(MEMORY1_REPO);
         MailRepository mailRepositoryArbitrary = repositoryStore.select(MEMORY2_REPO);
 
@@ -223,7 +224,7 @@ public class MemoryMailRepositoryStoreTest {
     }
 
     @Test
-    public void getByPathShouldReturnEmptyWhenNoMailRepositoriesAreMatching() {
+    void getByPathShouldReturnEmptyWhenNoMailRepositoriesAreMatching() {
         repositoryStore.select(MEMORY1_REPO);
 
         assertThat(repositoryStore.getByPath(MailRepositoryPath.from("unknown")))
@@ -231,7 +232,7 @@ public class MemoryMailRepositoryStoreTest {
     }
 
     @Test
-    public void selectShouldNotReturnDifferentResultsWhenUsedInAConcurrentEnvironment() throws Exception {
+    void selectShouldNotReturnDifferentResultsWhenUsedInAConcurrentEnvironment() throws Exception {
         MailRepositoryUrl url = MailRepositoryUrl.from("memory1://repo");
         int threadCount = 10;
 
@@ -251,10 +252,9 @@ public class MemoryMailRepositoryStoreTest {
     }
 
     @Test
-    public void selectShouldNotAddUrlWhenProtocolDoNotExist() {
+    void selectShouldNotAddUrlWhenProtocolDoNotExist() {
         assertThatThrownBy(() -> repositoryStore.select(UNKNOWN_PROTOCOL_REPO));
 
         assertThat(urlStore.listDistinct()).isEmpty();
     }
-
 }
