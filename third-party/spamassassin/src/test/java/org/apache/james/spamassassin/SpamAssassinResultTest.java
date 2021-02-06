@@ -23,17 +23,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
-import org.assertj.core.api.JUnitSoftAssertions;
-import org.junit.Rule;
-import org.junit.Test;
+import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.Test;
 
 public class SpamAssassinResultTest {
-
-    @Rule
-    public JUnitSoftAssertions softly = new JUnitSoftAssertions();
-
     @Test
-    public void buildShouldThrowWhenHitsIsNotGiven() {
+    void buildShouldThrowWhenHitsIsNotGiven() {
         assertThatThrownBy(() -> SpamAssassinResult.asSpam()
                 .requiredHits("4.0")
                 .build())
@@ -41,7 +36,7 @@ public class SpamAssassinResultTest {
     }
 
     @Test
-    public void buildShouldThrowWhenRequiredHitsIsNotGiven() {
+    void buildShouldThrowWhenRequiredHitsIsNotGiven() {
         assertThatThrownBy(() -> SpamAssassinResult.asSpam()
                 .hits("4.0")
                 .build())
@@ -49,7 +44,7 @@ public class SpamAssassinResultTest {
     }
 
     @Test
-    public void buildShouldWork() {
+    void buildShouldWork() {
         String hits = "1.1";
         String requiredHits = "5.0";
 
@@ -58,16 +53,18 @@ public class SpamAssassinResultTest {
             .requiredHits(requiredHits)
             .build();
 
-        softly.assertThat(spamAssassinResult.getHits()).isEqualTo(hits);
-        softly.assertThat(spamAssassinResult.getRequiredHits()).isEqualTo(requiredHits);
-        softly.assertThat(spamAssassinResult.getHeadersAsAttributes())
-            .containsOnly(
-                new Attribute(SpamAssassinResult.FLAG_MAIL, AttributeValue.of("YES")),
-                new Attribute(SpamAssassinResult.STATUS_MAIL, AttributeValue.of("Yes, hits=1.1 required=5.0")));
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(spamAssassinResult.getHits()).isEqualTo(hits);
+            softly.assertThat(spamAssassinResult.getRequiredHits()).isEqualTo(requiredHits);
+            softly.assertThat(spamAssassinResult.getHeadersAsAttributes())
+                .containsOnly(
+                    new Attribute(SpamAssassinResult.FLAG_MAIL, AttributeValue.of("YES")),
+                    new Attribute(SpamAssassinResult.STATUS_MAIL, AttributeValue.of("Yes, hits=1.1 required=5.0")));
+        });
     }
 
     @Test
-    public void headersAsAttributeShouldContainSpamHeaderWithYESValueWhenBuiltAsSpam() {
+    void headersAsAttributeShouldContainSpamHeaderWithYESValueWhenBuiltAsSpam() {
         String hits = "1.1";
         String requiredHits = "5.0";
 
@@ -81,7 +78,7 @@ public class SpamAssassinResultTest {
     }
 
     @Test
-    public void headersAsAttributeShouldContainSpamHeaderWithNOValueWhenBuiltAsHam() {
+    void headersAsAttributeShouldContainSpamHeaderWithNOValueWhenBuiltAsHam() {
         String hits = "1.1";
         String requiredHits = "5.0";
 
