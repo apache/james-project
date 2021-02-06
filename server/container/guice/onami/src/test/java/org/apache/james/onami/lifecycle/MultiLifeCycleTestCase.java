@@ -28,16 +28,16 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
-public class MultiLifeCycleTestCase {
+class MultiLifeCycleTestCase {
     @Test
-    public void testOrdering() {
+    void testOrdering() {
         Module lifeCycleModule = new TestLifeCycleModule(asList(TestAnnotationA.class, TestAnnotationB.class, TestAnnotationC.class));
         MultiLifeCycleObject obj = Guice.createInjector(lifeCycleModule).getInstance(MultiLifeCycleObject.class);
         assertThat(obj.toString()).isEqualTo("aaabbbc");
@@ -51,7 +51,7 @@ public class MultiLifeCycleTestCase {
     }
 
     @Test
-    public void testStaging() {
+    void testStaging() {
         Module moduleA = new TestLifeCycleStageModule(new DefaultStager<>(TestAnnotationA.class));
         Module moduleB = new TestLifeCycleStageModule(new DefaultStager<>(TestAnnotationB.class));
         Module moduleC = new TestLifeCycleStageModule(new DefaultStager<>(TestAnnotationC.class));
@@ -72,7 +72,7 @@ public class MultiLifeCycleTestCase {
     }
 
     @Test
-    public void testStagingOrdering() {
+    void testStagingOrdering() {
         Module moduleA = new TestLifeCycleStageModule(new DefaultStager<>(TestAnnotationA.class, DefaultStager.Order.FIRST_IN_FIRST_OUT));
         Module moduleB = new TestLifeCycleStageModule(new DefaultStager<>(TestAnnotationB.class, DefaultStager.Order.FIRST_IN_LAST_OUT));
 

@@ -23,12 +23,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class DefaultStagerTestCase {
-
+class DefaultStagerTestCase {
     @Test
-    public void stagerShouldStageObjectsRegisteredWhileStaging() {
+    void stagerShouldStageObjectsRegisteredWhileStaging() {
         final Stager<TestAnnotationA> stager = new DefaultStager<>(TestAnnotationA.class);
         final AtomicBoolean staged = new AtomicBoolean();
         stager.register(stageHandler1 -> stager
@@ -47,7 +46,7 @@ public class DefaultStagerTestCase {
      * 3. the thread blocks on the lock in DefaultStager.register()
      */
     @Test
-    public void stagerShouldNotDeadlockWhileStagingObjectChains() {
+    void stagerShouldNotDeadlockWhileStagingObjectChains() {
         final AtomicBoolean staged = new AtomicBoolean();
         final Stager<TestAnnotationA> stager = new DefaultStager<>(TestAnnotationA.class);
         stager.register(stageHandler1 -> {

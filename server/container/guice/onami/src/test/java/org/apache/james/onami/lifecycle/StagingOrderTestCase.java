@@ -25,11 +25,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class StagingOrderTestCase {
+class StagingOrderTestCase {
     @Test
-    public void testFifo() {
+    void testFifo() {
         List<Integer> order = new ArrayList<>();
         DefaultStager<TestAnnotationA> stager = makeStager(order, DefaultStager.Order.FIRST_IN_FIRST_OUT);
         stager.stage();
@@ -38,7 +38,7 @@ public class StagingOrderTestCase {
     }
 
     @Test
-    public void testFilo() {
+    void testFilo() {
         List<Integer> order = new ArrayList<>();
         DefaultStager<TestAnnotationA> stager = makeStager(order, DefaultStager.Order.FIRST_IN_LAST_OUT);
         stager.stage();
