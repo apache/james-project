@@ -23,30 +23,29 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.james.mailbox.spamassassin.SpamAssassinConfiguration;
 import org.apache.james.util.Host;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class SpamAssassinConfigurationLoaderTest {
-
     @Test
-    public void isEnableShouldReturnFalseWhenDisable() {
+    void isEnableShouldReturnFalseWhenDisable() {
         SpamAssassinConfiguration configuration = SpamAssassinConfigurationLoader.disable();
         assertThat(configuration.isEnable()).isFalse();
     }
 
     @Test
-    public void isEnableShouldReturnTrueWhenEnable() {
+    void isEnableShouldReturnTrueWhenEnable() {
         SpamAssassinConfiguration configuration = SpamAssassinConfigurationLoader.fromProperties(new PropertiesConfiguration());
         assertThat(configuration.isEnable()).isTrue();
     }
 
     @Test
-    public void hostShouldReturnDefaultWhenConfigurationIsEmpty() {
+    void hostShouldReturnDefaultWhenConfigurationIsEmpty() {
         SpamAssassinConfiguration configuration = SpamAssassinConfigurationLoader.fromProperties(new PropertiesConfiguration());
         assertThat(configuration.getHost().get()).isEqualTo(Host.from(SpamAssassinConfigurationLoader.DEFAULT_HOST, SpamAssassinConfigurationLoader.DEFAULT_PORT));
     }
 
     @Test
-    public void hostShouldReturnCustomWhenConfigurationIsProvided() {
+    void hostShouldReturnCustomWhenConfigurationIsProvided() {
         PropertiesConfiguration propertiesConfiguration = new PropertiesConfiguration();
         String host = "10.69.1.123";
         propertiesConfiguration.addProperty("spamassassin.host", host);
