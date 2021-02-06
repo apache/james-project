@@ -29,6 +29,10 @@
     <name>Apache James :: Server :: JMAP RFC-8621 :: Contract for Integration Testing</name>
     <description>JMAP RFC-8621 integration test suite common to all products</description>
 
+    <properties>
+        <cxf-version>3.4.2</cxf-version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>

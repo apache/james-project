@@ -21,7 +21,7 @@ package org.apache.james.jmap.change
 
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
-import org.apache.james.jmap.core.{AccountId, State, StateChange, WebSocketOutboundMessage}
+import org.apache.james.jmap.core.{AccountId, OutboundMessage, State, StateChange}
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import reactor.core.publisher.Sinks
@@ -36,7 +36,7 @@ class StateChangeListenerTest {
 
   @Test
   def reactiveEventShouldSendAnOutboundMessage(): Unit = {
-    val sink: Sinks.Many[WebSocketOutboundMessage] = Sinks.many().unicast().onBackpressureBuffer()
+    val sink: Sinks.Many[OutboundMessage] = Sinks.many().unicast().onBackpressureBuffer()
     val event = StateChangeEvent(eventId = eventId,
       username = Username.of("bob"),
       mailboxState = Some(mailboxState),
@@ -56,7 +56,7 @@ class StateChangeListenerTest {
 
   @Test
   def reactiveEventShouldOmitUnwantedTypes(): Unit = {
-    val sink: Sinks.Many[WebSocketOutboundMessage] = Sinks.many().unicast().onBackpressureBuffer()
+    val sink: Sinks.Many[OutboundMessage] = Sinks.many().unicast().onBackpressureBuffer()
     val event = StateChangeEvent(eventId = eventId,
       username = Username.of("bob"),
       mailboxState = Some(mailboxState),
@@ -75,7 +75,7 @@ class StateChangeListenerTest {
 
   @Test
   def reactiveEventShouldFilterOutUnwantedEvents(): Unit = {
-    val sink: Sinks.Many[WebSocketOutboundMessage] = Sinks.many().unicast().onBackpressureBuffer()
+    val sink: Sinks.Many[OutboundMessage] = Sinks.many().unicast().onBackpressureBuffer()
     val event = StateChangeEvent(eventId = eventId,
       username = Username.of("bob"),
       mailboxState = None,

@@ -17,29 +17,22 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.change
+package org.apache.james.jmap.rfc8621.memory;
 
-import org.apache.james.events.Event
-import org.apache.james.events.EventListener.ReactiveEventListener
-import org.apache.james.jmap.core.OutboundMessage
-import org.reactivestreams.Publisher
-import reactor.core.publisher.Sinks
-import reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST
-import reactor.core.scala.publisher.SMono
+import static org.apache.james.MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE;
 
-case class StateChangeListener(types: Set[TypeName], sink: Sinks.Many[OutboundMessage]) extends ReactiveEventListener {
-  override def reactiveEvent(event: Event): Publisher[Void] =
-    event match {
-      case stateChangeEvent: StateChangeEvent =>
-        SMono.fromCallable(() =>
-          stateChangeEvent.asStateChange.filter(types)
-            .foreach(next => sink.emitNext(next, FAIL_FAST)))
-          .asJava().`then`()
-      case _ => SMono.empty
-    }
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.jmap.rfc8621.contract.EventSourceContract;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-  override def isHandling(event: Event): Boolean = event match {
-    case _: StateChangeEvent => true
-    case _ => false
-  }
+public class MemoryEventSourceTest implements EventSourceContract {
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE)
+            .overrideWith(new TestJMAPServerModule()))
+        .build();
 }

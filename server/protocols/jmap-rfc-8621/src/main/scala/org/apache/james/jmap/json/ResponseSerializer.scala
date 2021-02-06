@@ -25,7 +25,7 @@ import java.net.URL
 import eu.timepit.refined.refineV
 import io.netty.handler.codec.http.HttpResponseStatus
 import org.apache.james.core.Username
-import org.apache.james.jmap.change.{EmailDeliveryTypeName, EmailSubmissionTypeName, EmailTypeName, IdentityTypeName, MailboxTypeName, ThreadTypeName, TypeName, TypeState, VacationResponseTypeName}
+import org.apache.james.jmap.change.{TypeName, TypeState}
 import org.apache.james.jmap.core
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.IdConstraint
@@ -187,13 +187,8 @@ object ResponseSerializer {
     case _ => JsError("Expecting a JsObject to represent a webSocket inbound request")
   }
   private implicit val typeNameReads: Reads[TypeName] = {
-    case JsString(MailboxTypeName.asString) => JsSuccess(MailboxTypeName)
-    case JsString(EmailTypeName.asString) => JsSuccess(EmailTypeName)
-    case JsString(ThreadTypeName.asString) => JsSuccess(ThreadTypeName)
-    case JsString(IdentityTypeName.asString) => JsSuccess(IdentityTypeName)
-    case JsString(EmailSubmissionTypeName.asString) => JsSuccess(EmailSubmissionTypeName)
-    case JsString(EmailDeliveryTypeName.asString) => JsSuccess(EmailDeliveryTypeName)
-    case JsString(VacationResponseTypeName.asString) => JsSuccess(VacationResponseTypeName)
+    case JsString(string) => TypeName.parse(string)
+      .fold(errorMessage => JsError(errorMessage), JsSuccess(_))
     case _ => JsError("Expecting a JsString as typeName")
   }
   private implicit val webSocketPushEnableReads: Reads[WebSocketPushEnable] = Json.reads[WebSocketPushEnable]
@@ -232,7 +227,9 @@ object ResponseSerializer {
       "requestId" -> error.requestId.map(_.value).map(JsString).getOrElse(JsNull))
       ++ errorJson.value)
   }
-  private implicit val webSocketOutboundWrites: Writes[WebSocketOutboundMessage] = {
+  private implicit val pingWrites: Writes[PingMessage] = Json.writes[PingMessage]
+  private implicit val webSocketOutboundWrites: Writes[OutboundMessage] = {
+    case pingMessage: PingMessage => pingWrites.writes(pingMessage)
     case stateChange: StateChange => stateChangeWrites.writes(stateChange)
     case response: WebSocketResponse => webSocketResponseWrites.writes(response)
     case error: WebSocketError => webSocketErrorWrites.writes(error)
@@ -248,7 +245,7 @@ object ResponseSerializer {
 
   def serialize(errors: JsError): JsValue = Json.toJson(errors)
 
-  def serialize(outboundMessage: WebSocketOutboundMessage): JsValue = Json.toJson(outboundMessage)
+  def serialize(outboundMessage: OutboundMessage): JsValue = Json.toJson(outboundMessage)
 
   def deserializeRequestObject(input: String): JsResult[RequestObject] = Json.parse(input).validate[RequestObject]
 

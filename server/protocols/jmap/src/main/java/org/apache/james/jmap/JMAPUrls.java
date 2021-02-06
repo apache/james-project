@@ -25,5 +25,6 @@ public interface JMAPUrls {
     String AUTHENTICATION = "/authentication";
     String DOWNLOAD = "/download";
     String UPLOAD = "/upload";
+    String EVENT_SOURCE = "/eventSource";
     String NOT_IMPLEMENTED = "/notImplemented";
 }

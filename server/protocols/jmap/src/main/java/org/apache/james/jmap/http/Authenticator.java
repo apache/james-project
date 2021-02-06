@@ -23,8 +23,6 @@ import java.util.List;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -34,8 +32,6 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 
 public class Authenticator {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Authenticator.class);
-
     public static Authenticator of(MetricFactory metricFactory, AuthenticationStrategy... authenticationStrategies) {
         return new Authenticator(ImmutableList.copyOf(authenticationStrategies), metricFactory);
     }

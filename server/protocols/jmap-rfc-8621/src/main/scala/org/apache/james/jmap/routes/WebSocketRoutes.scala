@@ -31,7 +31,7 @@ import org.apache.james.events.{EventBus, Registration}
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.JMAP_WS
 import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeListener, TypeName}
-import org.apache.james.jmap.core.{ProblemDetails, RequestId, WebSocketError, WebSocketOutboundMessage, WebSocketPushDisable, WebSocketPushEnable, WebSocketRequest, WebSocketResponse}
+import org.apache.james.jmap.core.{OutboundMessage, ProblemDetails, RequestId, WebSocketError, WebSocketPushDisable, WebSocketPushEnable, WebSocketRequest, WebSocketResponse}
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
 import org.apache.james.jmap.json.ResponseSerializer
@@ -50,7 +50,7 @@ object WebSocketRoutes {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[WebSocketRoutes])
 }
 
-case class ClientContext(outbound: Sinks.Many[WebSocketOutboundMessage], pushRegistration: AtomicReference[Registration], session: MailboxSession) {
+case class ClientContext(outbound: Sinks.Many[OutboundMessage], pushRegistration: AtomicReference[Registration], session: MailboxSession) {
   def withRegistration(registration: Registration): Unit = withRegistration(Some(registration))
 
   def clean(): Unit = withRegistration(None)
@@ -88,7 +88,7 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
   }
 
   private def handleWebSocketConnection(session: MailboxSession)(in: WebsocketInbound, out: WebsocketOutbound): Mono[Void] = {
-    val sink: Sinks.Many[WebSocketOutboundMessage] = Sinks.many().unicast().onBackpressureBuffer()
+    val sink: Sinks.Many[OutboundMessage] = Sinks.many().unicast().onBackpressureBuffer()
 
     out.sendString(
       sink.asFlux()
@@ -121,10 +121,9 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
       }, {
           case request: WebSocketRequest =>
             jmapApi.process(request.requestObject, clientContext.session)
-              .map[WebSocketOutboundMessage](WebSocketResponse(request.requestId, _))
+              .map[OutboundMessage](WebSocketResponse(request.requestId, _))
               .onErrorResume(e => SMono.just(asError(request.requestId)(e)))
               .subscribeOn(Schedulers.elastic)
-              .onErrorResume(e => SMono.just[WebSocketOutboundMessage](asError(None)(e)))
               .doOnNext(next => clientContext.outbound.emitNext(next, FAIL_FAST))
               .`then`()
           case pushEnable: WebSocketPushEnable =>

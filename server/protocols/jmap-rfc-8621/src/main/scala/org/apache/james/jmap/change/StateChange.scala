@@ -26,6 +26,17 @@ import org.apache.james.jmap.core.{AccountId, State, StateChange}
 
 object TypeName {
   val ALL: Set[TypeName] = Set(EmailTypeName, MailboxTypeName, ThreadTypeName, IdentityTypeName, EmailSubmissionTypeName, EmailDeliveryTypeName)
+
+  def parse(string: String): Either[String, TypeName] = string match {
+    case MailboxTypeName.asString => Right(MailboxTypeName)
+    case EmailTypeName.asString => Right(EmailTypeName)
+    case ThreadTypeName.asString => Right(ThreadTypeName)
+    case IdentityTypeName.asString => Right(IdentityTypeName)
+    case EmailSubmissionTypeName.asString => Right(EmailSubmissionTypeName)
+    case EmailDeliveryTypeName.asString => Right(EmailDeliveryTypeName)
+    case VacationResponseTypeName.asString => Right(VacationResponseTypeName)
+    case _ => Left(s"Unknown typeName $string")
+  }
 }
 
 sealed trait TypeName {

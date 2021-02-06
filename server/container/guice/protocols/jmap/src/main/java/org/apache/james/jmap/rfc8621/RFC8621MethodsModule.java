@@ -51,6 +51,7 @@ import org.apache.james.jmap.method.VacationResponseGetMethod;
 import org.apache.james.jmap.method.VacationResponseSetMethod;
 import org.apache.james.jmap.method.ZoneIdProvider;
 import org.apache.james.jmap.routes.DownloadRoutes;
+import org.apache.james.jmap.routes.EventSourceRoutes;
 import org.apache.james.jmap.routes.JMAPApiRoutes;
 import org.apache.james.jmap.routes.SessionRoutes;
 import org.apache.james.jmap.routes.UploadRoutes;
@@ -102,8 +103,9 @@ public class RFC8621MethodsModule extends AbstractModule {
                                     JMAPApiRoutes jmapApiRoutes,
                                     DownloadRoutes downloadRoutes,
                                     UploadRoutes uploadRoutes,
-                                    WebSocketRoutes webSocketRoutes) {
-        return new JMAPRoutesHandler(Version.RFC8621, jmapApiRoutes, sessionRoutes, downloadRoutes, uploadRoutes, webSocketRoutes);
+                                    WebSocketRoutes webSocketRoutes,
+                                    EventSourceRoutes eventSourceRoutes) {
+        return new JMAPRoutesHandler(Version.RFC8621, jmapApiRoutes, sessionRoutes, downloadRoutes, uploadRoutes, webSocketRoutes, eventSourceRoutes);
     }
 
     @Provides

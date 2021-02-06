@@ -20,20 +20,23 @@
 package org.apache.james.jmap.core
 
 import org.apache.james.jmap.change.{TypeName, TypeState}
+import org.apache.james.jmap.routes.PingPolicy.Interval
 
 sealed trait WebSocketInboundMessage
 
-sealed trait WebSocketOutboundMessage
+sealed trait OutboundMessage
+
+case class PingMessage(interval: Interval) extends OutboundMessage
 
 case class RequestId(value: String) extends AnyVal
 
 case class WebSocketRequest(requestId: Option[RequestId], requestObject: RequestObject) extends WebSocketInboundMessage
 
-case class WebSocketResponse(requestId: Option[RequestId], responseObject: ResponseObject) extends WebSocketOutboundMessage
+case class WebSocketResponse(requestId: Option[RequestId], responseObject: ResponseObject) extends OutboundMessage
 
-case class WebSocketError(requestId: Option[RequestId], problemDetails: ProblemDetails) extends WebSocketOutboundMessage
+case class WebSocketError(requestId: Option[RequestId], problemDetails: ProblemDetails) extends OutboundMessage
 
-case class StateChange(changes: Map[AccountId, TypeState]) extends WebSocketOutboundMessage {
+case class StateChange(changes: Map[AccountId, TypeState]) extends OutboundMessage {
 
   def filter(types: Set[TypeName]): Option[StateChange] =
     Option(changes.flatMap {
