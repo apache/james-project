@@ -20,6 +20,7 @@
 package org.apache.james.adapter.mailbox;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -28,10 +29,8 @@ import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class UserRepositoryAuthorizatorTest {
     private static final Username ADMIN = Username.of("admin");
@@ -40,27 +39,23 @@ public class UserRepositoryAuthorizatorTest {
     private UsersRepository usersRepository;
     private UserRepositoryAuthorizator testee;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         usersRepository = mock(UsersRepository.class);
         testee = new UserRepositoryAuthorizator(usersRepository);
     }
 
     @Test
-    public void canLoginAsOtherUserShouldThrowMailboxExceptionWhenIsAdministratorThrows() throws Exception {
+    void canLoginAsOtherUserShouldThrowMailboxExceptionWhenIsAdministratorThrows() throws Exception {
         when(usersRepository.isAdministrator(ADMIN))
             .thenThrow(new UsersRepositoryException("expected error"));
 
-        expectedException.expect(MailboxException.class);
-
-        testee.canLoginAsOtherUser(ADMIN, USER);
+        assertThatThrownBy(() -> testee.canLoginAsOtherUser(ADMIN, USER))
+            .isInstanceOf(MailboxException.class);
     }
 
     @Test
-    public void canLoginAsOtherUserShouldReturnNotAdminWhenNotAdminAndNoUser() throws Exception {
+    void canLoginAsOtherUserShouldReturnNotAdminWhenNotAdminAndNoUser() throws Exception {
         when(usersRepository.isAdministrator(ADMIN))
             .thenReturn(false);
         when(usersRepository.contains(USER))
@@ -70,7 +65,7 @@ public class UserRepositoryAuthorizatorTest {
     }
 
     @Test
-    public void canLoginAsOtherUserShouldReturnNotAdminWhenNotAdminAndUser() throws Exception {
+    void canLoginAsOtherUserShouldReturnNotAdminWhenNotAdminAndUser() throws Exception {
         when(usersRepository.isAdministrator(ADMIN))
             .thenReturn(false);
         when(usersRepository.contains(USER))
@@ -80,7 +75,7 @@ public class UserRepositoryAuthorizatorTest {
     }
 
     @Test
-    public void canLoginAsOtherUserShouldReturnUnknownUserWhenUserIsNotInRepository() throws Exception {
+    void canLoginAsOtherUserShouldReturnUnknownUserWhenUserIsNotInRepository() throws Exception {
         when(usersRepository.isAdministrator(ADMIN))
             .thenReturn(true);
         when(usersRepository.contains(USER))
@@ -90,7 +85,7 @@ public class UserRepositoryAuthorizatorTest {
     }
 
     @Test
-    public void canLoginAsOtherUserShouldReturnAllowedWhenAdminAndUserIsInRepository() throws Exception {
+    void canLoginAsOtherUserShouldReturnAllowedWhenAdminAndUserIsInRepository() throws Exception {
         when(usersRepository.isAdministrator(ADMIN))
             .thenReturn(true);
         when(usersRepository.contains(USER))

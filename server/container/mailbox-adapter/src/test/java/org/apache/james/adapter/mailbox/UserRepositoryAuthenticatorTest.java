@@ -20,6 +20,7 @@
 package org.apache.james.adapter.mailbox;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -27,10 +28,8 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class UserRepositoryAuthenticatorTest {
 
@@ -41,43 +40,39 @@ public class UserRepositoryAuthenticatorTest {
     private UsersRepository usersRepository;
     private UserRepositoryAuthenticator testee;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         usersRepository = mock(UsersRepository.class);
         testee = new UserRepositoryAuthenticator(usersRepository);
     }
 
     @Test
-    public void isAuthenticShouldReturnTrueWhenGoodLoginPassword() throws Exception {
+    void isAuthenticShouldReturnTrueWhenGoodLoginPassword() throws Exception {
         when(usersRepository.test(USER, PASSWORD)).thenReturn(true);
 
         assertThat(testee.isAuthentic(USER, PASSWORD)).isTrue();
     }
 
     @Test
-    public void isAuthenticShouldReturnFalseWhenWrongPassword() throws Exception {
+    void isAuthenticShouldReturnFalseWhenWrongPassword() throws Exception {
         when(usersRepository.test(USER, BAD_PASSWORD)).thenReturn(false);
 
         assertThat(testee.isAuthentic(USER, BAD_PASSWORD)).isFalse();
     }
 
     @Test
-    public void isAuthenticShouldReturnFalseWhenBadUser() throws Exception {
+    void isAuthenticShouldReturnFalseWhenBadUser() throws Exception {
         when(usersRepository.test(USER, BAD_PASSWORD)).thenReturn(false);
 
         assertThat(testee.isAuthentic(BAD_USER, BAD_PASSWORD)).isFalse();
     }
 
     @Test
-    public void isAuthenticShouldFailOnUserRepositoryFailure() throws Exception {
+    void isAuthenticShouldFailOnUserRepositoryFailure() throws Exception {
         when(usersRepository.test(USER, PASSWORD)).thenThrow(new UsersRepositoryException(""));
 
-        expectedException.expect(MailboxException.class);
-
-        testee.isAuthentic(USER, PASSWORD);
+        assertThatThrownBy(() -> testee.isAuthentic(USER, PASSWORD))
+            .isInstanceOf(MailboxException.class);
     }
 
 }
