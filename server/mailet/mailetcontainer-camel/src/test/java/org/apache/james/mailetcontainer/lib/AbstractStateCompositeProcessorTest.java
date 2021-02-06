@@ -34,15 +34,9 @@ import org.apache.james.mailetcontainer.api.mock.MockMailProcessor;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.mailet.Mail;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 public abstract class AbstractStateCompositeProcessorTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Test
     public void testChooseRightProcessor() throws Exception {
         AbstractStateCompositeProcessor processor = new AbstractStateCompositeProcessor() {

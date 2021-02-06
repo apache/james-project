@@ -26,24 +26,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.apache.james.core.MailAddress;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class XorTest {
-
+class XorTest {
     private Xor testee;
     private Matcher matcher1;
     private Matcher matcher2;
     private Mail mail;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         matcher1 = mock(Matcher.class);
         matcher2 = mock(Matcher.class);
 
@@ -53,12 +51,12 @@ public class XorTest {
     }
 
     @Test
-    public void shouldReturnNoResultWhenNoMatcherSpecified() throws Exception {
+    void shouldReturnNoResultWhenNoMatcherSpecified() {
         assertThat(testee.match(mail)).isNull();
     }
 
     @Test
-    public void shouldReturnMatchResultWhenOnlyOneMatcher() throws Exception {
+    void shouldReturnMatchResultWhenOnlyOneMatcher() throws Exception {
         when(matcher1.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES, ANY_AT_JAMES2));
 
         testee.add(matcher1);
@@ -67,7 +65,7 @@ public class XorTest {
     }
 
     @Test
-    public void shouldPerformXorWhenTwoMatchers() throws Exception {
+    void shouldPerformXorWhenTwoMatchers() throws Exception {
         when(matcher1.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES, ANY_AT_JAMES2));
         when(matcher2.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES, OTHER_AT_JAMES));
 
@@ -78,9 +76,9 @@ public class XorTest {
     }
 
     @Test
-    public void shouldAcceptEmptyResults() throws Exception {
+    void shouldAcceptEmptyResults() throws Exception {
         when(matcher1.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES, ANY_AT_JAMES2));
-        when(matcher2.match(mail)).thenReturn(ImmutableList.<MailAddress>of());
+        when(matcher2.match(mail)).thenReturn(ImmutableList.of());
 
         testee.add(matcher1);
         testee.add(matcher2);
@@ -89,7 +87,7 @@ public class XorTest {
     }
 
     @Test
-    public void shouldAcceptNullResults() throws Exception {
+    void shouldAcceptNullResults() throws Exception {
         when(matcher1.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES, ANY_AT_JAMES2));
         when(matcher2.match(mail)).thenReturn(null);
 

@@ -29,19 +29,17 @@ import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.convert.DisabledListDelimiterHandler;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.io.FileHandler;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class MailetConfigImplTest {
-
+class MailetConfigImplTest {
     private XMLConfiguration xmlConfiguration;
     private FileHandler fileHandler;
     private MailetConfigImpl config;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         FileBasedConfigurationBuilder<XMLConfiguration> builder = new FileBasedConfigurationBuilder<>(XMLConfiguration.class)
             .configure(new Parameters()
                 .xml()
@@ -53,7 +51,7 @@ public class MailetConfigImplTest {
     }
 
     @Test
-    public void testDotParamsFromXML() throws Exception {
+    void testDotParamsFromXML() throws Exception {
         fileHandler.load(new ByteArrayInputStream("<mailet><mail.debug>true</mail.debug></mailet>".getBytes()));
 
         config.setConfiguration(xmlConfiguration);
@@ -64,7 +62,7 @@ public class MailetConfigImplTest {
     }
 
     @Test
-    public void testDotParamsFromConfig() throws ConfigurationException {
+    void testDotParamsFromConfig() {
         xmlConfiguration.addProperty("mail.debug", "true");
 
         config.setConfiguration(xmlConfiguration);
@@ -76,7 +74,7 @@ public class MailetConfigImplTest {
 
     // See JAMES-1232
     @Test
-    public void testParamWithComma() throws Exception {
+    void testParamWithComma() throws Exception {
         fileHandler.load(new ByteArrayInputStream("<mailet><whatever>value1,value2</whatever></mailet>".getBytes()));
 
         config.setConfiguration(xmlConfiguration);
@@ -87,7 +85,7 @@ public class MailetConfigImplTest {
     }
 
     @Test
-    public void testParamWithXmlSpace() throws Exception {
+    void testParamWithXmlSpace() throws Exception {
         fileHandler.load(new ByteArrayInputStream(
                 "<mailet><whatever xml:space=\"preserve\"> some text </whatever></mailet>".getBytes()));
 

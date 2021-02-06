@@ -31,20 +31,19 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class OrTest {
-
+class OrTest {
     private Or testee;
     private Matcher matcher1;
     private Matcher matcher2;
     private Mail mail;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         matcher1 = mock(Matcher.class);
         matcher2 = mock(Matcher.class);
 
@@ -54,12 +53,12 @@ public class OrTest {
     }
 
     @Test
-    public void shouldReturnNoResultWhenNoMatcherSpecified() throws Exception {
+    void shouldReturnNoResultWhenNoMatcherSpecified() throws Exception {
         assertThat(testee.match(mail)).isEmpty();
     }
 
     @Test
-    public void shouldReturnMatchResultWhenOnlyOneMatcher() throws Exception {
+    void shouldReturnMatchResultWhenOnlyOneMatcher() throws Exception {
         when(matcher1.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES, ANY_AT_JAMES2));
 
         testee.add(matcher1);
@@ -68,7 +67,7 @@ public class OrTest {
     }
 
     @Test
-    public void shouldReturnUnionWhenTwoMatchers() throws Exception {
+    void shouldReturnUnionWhenTwoMatchers() throws Exception {
         when(matcher1.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES, ANY_AT_JAMES2));
         when(matcher2.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES, OTHER_AT_JAMES));
 
@@ -79,7 +78,7 @@ public class OrTest {
     }
 
     @Test
-    public void shouldAcceptEmptyResults() throws Exception {
+    void shouldAcceptEmptyResults() throws Exception {
         when(matcher1.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES, ANY_AT_JAMES2));
         when(matcher2.match(mail)).thenReturn(ImmutableList.<MailAddress>of());
 
@@ -90,7 +89,7 @@ public class OrTest {
     }
 
     @Test
-    public void shouldAcceptNullResults() throws Exception {
+    void shouldAcceptNullResults() throws Exception {
         when(matcher1.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES, ANY_AT_JAMES2));
         when(matcher2.match(mail)).thenReturn(null);
 

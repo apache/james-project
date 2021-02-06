@@ -27,13 +27,12 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class NotTest {
-
+class NotTest {
     private Not testee;
     private Matcher matcher1;
     private Matcher matcher2;
@@ -43,8 +42,8 @@ public class NotTest {
     private MailAddress recipient3;
     private MailAddress recipient4;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         matcher1 = mock(Matcher.class);
         matcher2 = mock(Matcher.class);
 
@@ -58,12 +57,12 @@ public class NotTest {
     }
 
     @Test
-    public void shouldReturnAllAddressesWhenNoMatcherSpecified() throws Exception {
+    void shouldReturnAllAddressesWhenNoMatcherSpecified() throws Exception {
         assertThat(testee.match(mail)).containsOnly(recipient1, recipient2, recipient3, recipient4);
     }
 
     @Test
-    public void shouldNegateWhenOneMatcher() throws Exception {
+    void shouldNegateWhenOneMatcher() throws Exception {
         when(matcher1.match(mail)).thenReturn(ImmutableList.of(recipient1, recipient3));
 
         testee.add(matcher1);
@@ -72,7 +71,7 @@ public class NotTest {
     }
 
     @Test
-    public void shouldNegateUnionWhenTwoMatchers() throws Exception {
+    void shouldNegateUnionWhenTwoMatchers() throws Exception {
         when(matcher1.match(mail)).thenReturn(ImmutableList.of(recipient1, recipient3));
         when(matcher2.match(mail)).thenReturn(ImmutableList.of(recipient1, recipient2));
 
@@ -83,7 +82,7 @@ public class NotTest {
     }
 
     @Test
-    public void shouldAcceptEmptyResults() throws Exception {
+    void shouldAcceptEmptyResults() throws Exception {
         when(matcher1.match(mail)).thenReturn(ImmutableList.of(recipient1, recipient3));
         when(matcher2.match(mail)).thenReturn(ImmutableList.<MailAddress>of());
 
@@ -94,7 +93,7 @@ public class NotTest {
     }
 
     @Test
-    public void shouldAcceptNullResults() throws Exception {
+    void shouldAcceptNullResults() throws Exception {
         when(matcher1.match(mail)).thenReturn(ImmutableList.of(recipient1, recipient3));
         when(matcher2.match(mail)).thenReturn(null);
 

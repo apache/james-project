@@ -41,7 +41,7 @@ import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.Matcher;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
 public abstract class AbstractStateMailetProcessorTest {

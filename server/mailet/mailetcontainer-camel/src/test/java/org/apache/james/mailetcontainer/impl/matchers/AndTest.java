@@ -29,20 +29,19 @@ import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class AndTest {
-
+class AndTest {
     private And testee;
     private Matcher matcher1;
     private Matcher matcher2;
     private Mail mail;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         matcher1 = mock(Matcher.class);
         matcher2 = mock(Matcher.class);
 
@@ -52,12 +51,12 @@ public class AndTest {
     }
 
     @Test
-    public void shouldNotMatchWhenNoChild() throws Exception {
+    void shouldNotMatchWhenNoChild() throws Exception {
         assertThat(testee.match(mail)).isEmpty();
     }
 
     @Test
-    public void shouldMatchWhenSingleUnderlyingMatcherMatch() throws Exception {
+    void shouldMatchWhenSingleUnderlyingMatcherMatch() throws Exception {
         when(matcher1.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES));
 
         testee.add(matcher1);
@@ -66,7 +65,7 @@ public class AndTest {
     }
 
     @Test
-    public void shouldMatchWhenTwoUnderlyingMatcherMatch() throws Exception {
+    void shouldMatchWhenTwoUnderlyingMatcherMatch() throws Exception {
         when(matcher1.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES, OTHER_AT_JAMES));
         when(matcher2.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES, ANY_AT_JAMES2));
 
@@ -77,7 +76,7 @@ public class AndTest {
     }
 
     @Test
-    public void shouldMatchWhenAtLeastOneUnderlyingMatcherDoNotMatch() throws Exception {
+    void shouldMatchWhenAtLeastOneUnderlyingMatcherDoNotMatch() throws Exception {
         when(matcher1.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES, OTHER_AT_JAMES));
         when(matcher2.match(mail)).thenReturn(ImmutableList.<MailAddress>of());
 
@@ -88,7 +87,7 @@ public class AndTest {
     }
 
     @Test
-    public void shouldSupportNull() throws Exception {
+    void shouldSupportNull() throws Exception {
         when(matcher1.match(mail)).thenReturn(ImmutableList.of(ANY_AT_JAMES, OTHER_AT_JAMES));
         when(matcher2.match(mail)).thenReturn(null);
 

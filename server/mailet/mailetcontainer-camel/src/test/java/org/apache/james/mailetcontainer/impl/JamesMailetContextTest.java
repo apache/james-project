@@ -54,23 +54,19 @@ import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
-import org.assertj.core.api.JUnitSoftAssertions;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.google.common.collect.ImmutableList;
 
-public class JamesMailetContextTest {
+class JamesMailetContextTest {
     private static final Domain DOMAIN_COM = Domain.of("domain.com");
     private static final String USERNAME = "user";
     private static final Username USERMAIL = Username.of(USERNAME + "@" + DOMAIN_COM.name());
     private static final String PASSWORD = "password";
     private static final DNSService DNS_SERVICE = null;
-
-    @Rule
-    public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
     
     private MemoryDomainList domainList;
     private MemoryUsersRepository usersRepository;
@@ -79,9 +75,9 @@ public class JamesMailetContextTest {
     private MailQueue spoolMailQueue;
     private MemoryRecipientRewriteTable recipientRewriteTable;
 
-    @Before
+    @BeforeEach
     @SuppressWarnings("unchecked")
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         domainList = spy(new MemoryDomainList(DNS_SERVICE));
         domainList.configure(DomainListConfiguration.DEFAULT);
 
@@ -99,17 +95,17 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void isLocalUserShouldBeFalseOnNullUser() {
+    void isLocalUserShouldBeFalseOnNullUser() {
         assertThat(testee.isLocalUser(null)).isFalse();
     }
 
     @Test
-    public void isLocalServerShouldBeFalseWhenDomainDoNotExist() {
+    void isLocalServerShouldBeFalseWhenDomainDoNotExist() {
         assertThat(testee.isLocalServer(DOMAIN_COM)).isFalse();
     }
 
     @Test
-    public void isLocalServerShouldPropagateDomainExceptions() throws Exception {
+    void isLocalServerShouldPropagateDomainExceptions() throws Exception {
         when(domainList.getDomains()).thenThrow(new DomainListException("fail!"));
 
         assertThatThrownBy(() -> testee.isLocalServer(DOMAIN_COM))
@@ -117,7 +113,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void isLocalUserShouldPropagateDomainExceptions() throws Exception {
+    void isLocalUserShouldPropagateDomainExceptions() throws Exception {
         when(domainList.getDefaultDomain()).thenThrow(new DomainListException("fail!"));
 
         assertThatThrownBy(() -> testee.isLocalUser("user"))
@@ -125,7 +121,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void isLocalUserShouldPropagateUserExceptions() throws Exception {
+    void isLocalUserShouldPropagateUserExceptions() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
             .defaultDomain(Domain.of("any"))
             .build());
@@ -138,7 +134,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void isLocalUserShouldPropagateRrtExceptions() throws Exception {
+    void isLocalUserShouldPropagateRrtExceptions() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
             .defaultDomain(Domain.of("any"))
             .build());
@@ -151,14 +147,14 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void isLocalServerShouldBeTrueWhenDomainExist() throws Exception {
+    void isLocalServerShouldBeTrueWhenDomainExist() throws Exception {
         domainList.addDomain(DOMAIN_COM);
 
         assertThat(testee.isLocalServer(DOMAIN_COM)).isTrue();
     }
 
     @Test
-    public void isLocalUserShouldBeTrueWhenUsernameExist() throws Exception {
+    void isLocalUserShouldBeTrueWhenUsernameExist() throws Exception {
         domainList.addDomain(DOMAIN_COM);
         usersRepository.addUser(USERMAIL, PASSWORD);
 
@@ -166,7 +162,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void isLocalUserShouldReturnTrueWhenUsedWithLocalPartAndUserExistOnDefaultDomain() throws Exception {
+    void isLocalUserShouldReturnTrueWhenUsedWithLocalPartAndUserExistOnDefaultDomain() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
             .defaultDomain(DOMAIN_COM)
             .build());
@@ -177,7 +173,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void isLocalUserShouldReturnFalseWhenUsedWithLocalPartAndUserDoNotExistOnDefaultDomain() throws Exception {
+    void isLocalUserShouldReturnFalseWhenUsedWithLocalPartAndUserDoNotExistOnDefaultDomain() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
             .defaultDomain(Domain.of("any"))
             .build());
@@ -189,24 +185,24 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void isLocalUserShouldBeFalseWhenUsernameDoNotExist() {
+    void isLocalUserShouldBeFalseWhenUsernameDoNotExist() {
         assertThat(testee.isLocalUser(USERMAIL.asString())).isFalse();
     }
 
     @Test
-    public void isLocalEmailShouldBeFalseWhenUsernameDoNotExist() {
+    void isLocalEmailShouldBeFalseWhenUsernameDoNotExist() {
         assertThat(testee.isLocalEmail(mailAddress)).isFalse();
     }
 
     @Test
-    public void isLocalEmailShouldBeFalseWhenUsernameDoNotExistButDomainExists() throws Exception {
+    void isLocalEmailShouldBeFalseWhenUsernameDoNotExistButDomainExists() throws Exception {
         domainList.addDomain(DOMAIN_COM);
 
         assertThat(testee.isLocalEmail(mailAddress)).isFalse();
     }
 
     @Test
-    public void isLocalEmailShouldBeTrueWhenUsernameExists() throws Exception {
+    void isLocalEmailShouldBeTrueWhenUsernameExists() throws Exception {
         domainList.addDomain(DOMAIN_COM);
         usersRepository.addUser(USERMAIL, PASSWORD);
 
@@ -214,7 +210,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void localRecipientsShouldReturnAddressWhenUserExists() throws Exception {
+    void localRecipientsShouldReturnAddressWhenUserExists() throws Exception {
         domainList.addDomain(DOMAIN_COM);
         usersRepository.addUser(USERMAIL, PASSWORD);
 
@@ -222,7 +218,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void localRecipientsShouldReturnOnlyExistingUsers() throws Exception {
+    void localRecipientsShouldReturnOnlyExistingUsers() throws Exception {
         domainList.addDomain(DOMAIN_COM);
         usersRepository.addUser(USERMAIL, PASSWORD);
 
@@ -233,24 +229,24 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void localRecipientsShouldNotReturnAddressWhenUserDoNotExists() throws Exception {
+    void localRecipientsShouldNotReturnAddressWhenUserDoNotExists() throws Exception {
         domainList.addDomain(DOMAIN_COM);
 
         assertThat(testee.localRecipients(ImmutableList.of(mailAddress))).isEmpty();
     }
 
     @Test
-    public void localRecipientsShouldNotReturnAddressWhenDomainDoNotExists() throws Exception {
+    void localRecipientsShouldNotReturnAddressWhenDomainDoNotExists() throws Exception {
         assertThat(testee.localRecipients(ImmutableList.of(mailAddress))).isEmpty();
     }
 
     @Test
-    public void isLocalEmailShouldBeFalseWhenMailIsNull() {
+    void isLocalEmailShouldBeFalseWhenMailIsNull() {
         assertThat(testee.isLocalEmail(null)).isFalse();
     }
 
     @Test
-    public void isLocalEmailShouldPropagateDomainExceptions() throws Exception {
+    void isLocalEmailShouldPropagateDomainExceptions() throws Exception {
         when(domainList.getDomains()).thenThrow(new DomainListException("fail!"));
 
         assertThatThrownBy(() -> testee.isLocalEmail(mailAddress))
@@ -258,7 +254,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void isLocalEmailShouldPropagateUserExceptions() throws Exception {
+    void isLocalEmailShouldPropagateUserExceptions() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
             .defaultDomain(Domain.of("any"))
             .build());
@@ -271,7 +267,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void isLocalEmailShouldPropagateRrtExceptions() throws Exception {
+    void isLocalEmailShouldPropagateRrtExceptions() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
             .defaultDomain(Domain.of("any"))
             .build());
@@ -284,7 +280,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void bounceShouldNotFailWhenNonConfiguredPostmaster() throws Exception {
+    void bounceShouldNotFailWhenNonConfiguredPostmaster() throws Exception {
         MailImpl mail = MailImpl.builder()
             .name("mail1")
             .sender(mailAddress)
@@ -295,7 +291,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void bouncingToNullSenderShouldBeANoop() throws Exception {
+    void bouncingToNullSenderShouldBeANoop() throws Exception {
         MailImpl mail = MailImpl.builder()
             .name("mail1")
             .sender(MailAddress.nullSender())
@@ -309,7 +305,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void bouncingToNoSenderShouldBeANoop() throws Exception {
+    void bouncingToNoSenderShouldBeANoop() throws Exception {
         MailImpl mail = MailImpl.builder()
             .name("mail1")
             .addRecipient(mailAddress)
@@ -322,7 +318,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void bounceShouldEnqueueEmailWithRootState() throws Exception {
+    void bounceShouldEnqueueEmailWithRootState() throws Exception {
         MailImpl mail = MailImpl.builder()
             .name("mail1")
             .sender(mailAddress)
@@ -340,7 +336,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void sendMailShouldEnqueueEmailWithRootState() throws Exception {
+    void sendMailShouldEnqueueEmailWithRootState() throws Exception {
         MailImpl mail = MailImpl.builder()
             .name("mail1")
             .sender(mailAddress)
@@ -357,7 +353,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void sendMailShouldEnqueueEmailWithOtherStateWhenSpecified() throws Exception {
+    void sendMailShouldEnqueueEmailWithOtherStateWhenSpecified() throws Exception {
         MailImpl mail = MailImpl.builder()
             .name("mail1")
             .sender(mailAddress)
@@ -375,7 +371,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void sendMailShouldEnqueueEmailWithRootStateAndDelayWhenSpecified() throws Exception {
+    void sendMailShouldEnqueueEmailWithRootStateAndDelayWhenSpecified() throws Exception {
         MailImpl mail = MailImpl.builder()
             .name("mail1")
             .sender(mailAddress)
@@ -390,13 +386,15 @@ public class JamesMailetContextTest {
         verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture(), delayArgumentCaptor.capture(), timeUnitArgumentCaptor.capture());
         verifyNoMoreInteractions(spoolMailQueue);
 
-        softly.assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(Mail.DEFAULT);
-        softly.assertThat(delayArgumentCaptor.getValue()).isEqualTo(5L);
-        softly.assertThat(timeUnitArgumentCaptor.getValue()).isEqualTo(TimeUnit.MINUTES);
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(Mail.DEFAULT);
+            softly.assertThat(delayArgumentCaptor.getValue()).isEqualTo(5L);
+            softly.assertThat(timeUnitArgumentCaptor.getValue()).isEqualTo(TimeUnit.MINUTES);
+        });
     }
 
     @Test
-    public void sendMailShouldEnqueueEmailWithOtherStateAndDelayWhenSpecified() throws Exception {
+    void sendMailShouldEnqueueEmailWithOtherStateAndDelayWhenSpecified() throws Exception {
         MailImpl mail = MailImpl.builder()
             .name("mail1")
             .sender(mailAddress)
@@ -412,13 +410,15 @@ public class JamesMailetContextTest {
         verify(spoolMailQueue).enQueue(mailArgumentCaptor.capture(), delayArgumentCaptor.capture(), timeUnitArgumentCaptor.capture());
         verifyNoMoreInteractions(spoolMailQueue);
 
-        softly.assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(other);
-        softly.assertThat(delayArgumentCaptor.getValue()).isEqualTo(5L);
-        softly.assertThat(timeUnitArgumentCaptor.getValue()).isEqualTo(TimeUnit.MINUTES);
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(mailArgumentCaptor.getValue().getState()).isEqualTo(other);
+            softly.assertThat(delayArgumentCaptor.getValue()).isEqualTo(5L);
+            softly.assertThat(timeUnitArgumentCaptor.getValue()).isEqualTo(TimeUnit.MINUTES);
+        });
     }
 
     @Test
-    public void sendMailForMessageShouldEnqueueEmailWithRootState() throws Exception {
+    void sendMailForMessageShouldEnqueueEmailWithRootState() throws Exception {
         MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
             .addFrom(mailAddress.asString())
             .addToRecipient(mailAddress.asString())
@@ -435,7 +435,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void sendMailForMessageAndEnvelopeShouldEnqueueEmailWithRootState() throws Exception {
+    void sendMailForMessageAndEnvelopeShouldEnqueueEmailWithRootState() throws Exception {
         MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
             .addFrom(mailAddress.asString())
             .addToRecipient(mailAddress.asString())
@@ -454,7 +454,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void sendMailForMessageAndEnvelopeShouldEnqueueEmailWithOtherStateWhenSpecified() throws Exception {
+    void sendMailForMessageAndEnvelopeShouldEnqueueEmailWithOtherStateWhenSpecified() throws Exception {
         MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
             .addFrom(mailAddress.asString())
             .addToRecipient(mailAddress.asString())
@@ -474,7 +474,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void sendMailForMailShouldEnqueueEmailWithOtherStateWhenSpecified() throws Exception {
+    void sendMailForMailShouldEnqueueEmailWithOtherStateWhenSpecified() throws Exception {
         MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
             .addFrom(mailAddress.asString())
             .addToRecipient(mailAddress.asString())
@@ -498,7 +498,7 @@ public class JamesMailetContextTest {
     }
 
     @Test
-    public void sendMailForMailShouldEnqueueEmailWithDefaults() throws Exception {
+    void sendMailForMailShouldEnqueueEmailWithDefaults() throws Exception {
         MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
             .addFrom(mailAddress.asString())
             .addToRecipient(mailAddress.asString())
