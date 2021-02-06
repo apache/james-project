@@ -23,6 +23,7 @@ import static org.apache.james.filesystem.api.FileSystemFixture.CLASSPATH_FILE_S
 import static org.apache.james.filesystem.api.FileSystemFixture.RECURSIVE_CLASSPATH_FILE_SYSTEM;
 import static org.apache.james.filesystem.api.FileSystemFixture.THROWING_FILE_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.MessagingException;
 
@@ -30,17 +31,11 @@ import org.apache.james.transport.matchers.All;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-public class GuiceMatcherLoaderTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
+class GuiceMatcherLoaderTest {
     @Test
-    public void getMatcherShouldLoadClass() throws Exception {
+    void getMatcherShouldLoadClass() throws Exception {
         GuiceGenericLoader genericLoader = GuiceGenericLoader.forTesting(new ExtendedClassLoader(THROWING_FILE_SYSTEM));
         GuiceMatcherLoader guiceMailetLoader = new GuiceMatcherLoader(genericLoader);
 
@@ -53,7 +48,7 @@ public class GuiceMatcherLoaderTest {
     }
 
     @Test
-    public void getMatcherShouldLoadClassWhenInSubPackageFromDefaultPackage() throws Exception {
+    void getMatcherShouldLoadClassWhenInSubPackageFromDefaultPackage() throws Exception {
         GuiceGenericLoader genericLoader = GuiceGenericLoader.forTesting(new ExtendedClassLoader(THROWING_FILE_SYSTEM));
         GuiceMatcherLoader guiceMailetLoader = new GuiceMatcherLoader(genericLoader);
 
@@ -66,20 +61,20 @@ public class GuiceMatcherLoaderTest {
     }
 
     @Test
-    public void getMatcherShouldThrowOnBadType() throws Exception {
+    void getMatcherShouldThrowOnBadType() {
         GuiceGenericLoader genericLoader = GuiceGenericLoader.forTesting(new ExtendedClassLoader(THROWING_FILE_SYSTEM));
         GuiceMatcherLoader guiceMatcherLoader = new GuiceMatcherLoader(genericLoader);
 
-        expectedException.expect(MessagingException.class);
-
-        guiceMatcherLoader.getMatcher(FakeMatcherConfig.builder()
-            .matcherName("org.apache.james.transport.mailets.Null")
-            .mailetContext(FakeMailContext.defaultContext())
-            .build());
+        assertThatThrownBy(() ->
+            guiceMatcherLoader.getMatcher(FakeMatcherConfig.builder()
+                .matcherName("org.apache.james.transport.mailets.Null")
+                .mailetContext(FakeMailContext.defaultContext())
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void getMatcherShouldLoadClassWhenInExtensionsJars() throws Exception {
+    void getMatcherShouldLoadClassWhenInExtensionsJars() throws Exception {
         GuiceGenericLoader genericLoader = GuiceGenericLoader.forTesting(new ExtendedClassLoader(CLASSPATH_FILE_SYSTEM));
         GuiceMatcherLoader guiceMatcherLoader = new GuiceMatcherLoader(genericLoader);
 
@@ -93,7 +88,7 @@ public class GuiceMatcherLoaderTest {
     }
 
     @Test
-    public void getMatcherShouldBrowseRecursivelyExtensionJars() throws Exception {
+    void getMatcherShouldBrowseRecursivelyExtensionJars() throws Exception {
         GuiceGenericLoader genericLoader = GuiceGenericLoader.forTesting(new ExtendedClassLoader(RECURSIVE_CLASSPATH_FILE_SYSTEM));
         GuiceMatcherLoader guiceMatcherLoader = new GuiceMatcherLoader(genericLoader);
 
@@ -107,7 +102,7 @@ public class GuiceMatcherLoaderTest {
     }
 
     @Test
-    public void getMatcherShouldAllowCustomPackages() throws Exception {
+    void getMatcherShouldAllowCustomPackages() throws Exception {
         GuiceGenericLoader genericLoader = GuiceGenericLoader.forTesting(new ExtendedClassLoader(RECURSIVE_CLASSPATH_FILE_SYSTEM));
         GuiceMatcherLoader guiceMatcherLoader = new GuiceMatcherLoader(genericLoader);
 
@@ -121,16 +116,16 @@ public class GuiceMatcherLoaderTest {
     }
 
     @Test
-    public void getMatcherShouldThrowOnUnknownMailet() throws Exception {
+    void getMatcherShouldThrowOnUnknownMailet() {
         GuiceGenericLoader genericLoader = GuiceGenericLoader.forTesting(new ExtendedClassLoader(CLASSPATH_FILE_SYSTEM));
         GuiceMatcherLoader guiceMatcherLoader = new GuiceMatcherLoader(genericLoader);
 
-        expectedException.expect(MessagingException.class);
-
-        guiceMatcherLoader.getMatcher(FakeMatcherConfig.builder()
-            .matcherName("org.apache.james.transport.matchers.Unknown")
-            .mailetContext(FakeMailContext.defaultContext())
-            .build());
+        assertThatThrownBy(() ->
+            guiceMatcherLoader.getMatcher(FakeMatcherConfig.builder()
+                .matcherName("org.apache.james.transport.matchers.Unknown")
+                .mailetContext(FakeMailContext.defaultContext())
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
 }
