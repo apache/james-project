@@ -17,52 +17,47 @@
  * under the License.                                           *
  ****************************************************************/
 package org.apache.james.utils;
-import static  org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 
 public class GuiceProbeProviderTest {
-
     private GuiceProbeProvider guiceProbeProvider;
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
     private GuiceProbe1 guiceProbe1;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         guiceProbe1 = new GuiceProbe1();
         guiceProbeProvider = new GuiceProbeProvider(ImmutableSet.of(guiceProbe1));
     }
 
     @Test
-    public void getProveShouldThrowExcpetionWhenNull() {
-        expectedException.expect(NullPointerException.class);
-
-        guiceProbeProvider.getProbe(null);
+    void getProveShouldThrowExcpetionWhenNull() {
+        assertThatThrownBy(() -> guiceProbeProvider.getProbe(null))
+            .isInstanceOf(NullPointerException.class);
     }
     
     @Test
-    public void getProbeShouldThrowRuntimeExceptionWhenEmpty() {
-        expectedException.expect(RuntimeException.class);
-
-        guiceProbeProvider.getProbe(GuiceProbe2.class);
+    void getProbeShouldThrowRuntimeExceptionWhenEmpty() {
+        assertThatThrownBy(() -> guiceProbeProvider.getProbe(GuiceProbe2.class))
+            .isInstanceOf(RuntimeException.class);
     }
 
     @Test
-    public void getProbeShouldReturnRightProbe() {
+    void getProbeShouldReturnRightProbe() {
         assertThat(guiceProbeProvider.getProbe(GuiceProbe1.class)).isEqualTo(guiceProbe1);
     }
 
-    class GuiceProbe1 implements GuiceProbe {
+    static class GuiceProbe1 implements GuiceProbe {
 
     }
 
-    class GuiceProbe2 implements GuiceProbe {
+    static class GuiceProbe2 implements GuiceProbe {
 
     }
 }

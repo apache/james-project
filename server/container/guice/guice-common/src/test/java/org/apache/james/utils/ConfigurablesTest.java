@@ -25,20 +25,20 @@ import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Configurable;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ConfigurablesTest {
 
     private Startables sut;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         sut = new Startables();
     }
 
     @Test
-    public void addShouldNotStoreTwoTimesWhenSameConfigurable() {
+    void addShouldNotStoreTwoTimesWhenSameConfigurable() {
         sut.add(MyConfigurable.class);
         sut.add(MyConfigurable.class);
 
@@ -46,7 +46,7 @@ public class ConfigurablesTest {
     }
 
     @Test
-    public void configurablesShouldKeepTheAddedElementsOrder() {
+    void configurablesShouldKeepTheAddedElementsOrder() {
         sut.add(MyConfigurable.class);
         sut.add(MyConfigurable2.class);
 

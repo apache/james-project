@@ -30,17 +30,16 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitializationOperations;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 
-public class InitializationOperationsTest {
-
+class InitializationOperationsTest {
     @Test
-    public void initModulesShouldNotFailWhenBindingsInWrongOrder() throws Exception {
+    void initModulesShouldNotFailWhenBindingsInWrongOrder() throws Exception {
         Injector injector = Guice.createInjector(new StartablesModule(),
                 new UnorderedBindingsModule());
 
