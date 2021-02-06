@@ -24,8 +24,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.apache.james.GuiceJamesServer;
-import org.apache.james.MemoryJmapTestRule;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.indexer.ReIndexer.RunningOptions;
@@ -35,47 +36,39 @@ import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.task.MemoryReferenceTask;
 import org.apache.james.task.Task;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.inject.name.Names;
 
-public class ReindexCommandIntegrationTest {
+class ReindexCommandIntegrationTest {
     private static final String USER = "user";
-    private ReIndexer reIndexer;
+    private ReIndexer reIndexer = mock(ReIndexer.class);
 
-    @Rule
-    public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
-    private GuiceJamesServer guiceJamesServer;
+    @RegisterExtension
+    JamesServerExtension memoryJmap = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+        .server(conf -> MemoryJamesServerMain.createServer(conf)
+            .overrideWith(new JMXServerModule()).overrideWith(
+                binder -> binder.bind(ReIndexer.class).annotatedWith(Names.named("reindexer")).toInstance(reIndexer),
+                binder -> binder.bind(ListeningMessageSearchIndex.class).toInstance(mock(ListeningMessageSearchIndex.class))))
+        .build();
 
-    @Before
-    public void setUp() throws Exception {
-        reIndexer = mock(ReIndexer.class);
+    @BeforeEach
+    void setUp() throws Exception {
         when(reIndexer.reIndex(any(RunningOptions.class))).thenReturn(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
         when(reIndexer.reIndex(any(MailboxPath.class), any(RunningOptions.class))).thenReturn(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
-        guiceJamesServer = memoryJmap.jmapServer(new JMXServerModule(),
-            binder -> binder.bind(ListeningMessageSearchIndex.class).toInstance(mock(ListeningMessageSearchIndex.class)))
-            .overrideWith(binder -> binder.bind(ReIndexer.class)
-                .annotatedWith(Names.named("reindexer")).toInstance(reIndexer));
-        guiceJamesServer.start();
-    }
-
-    @After
-    public void tearDown() {
-        guiceJamesServer.stop();
     }
 
     @Test
-    public void reindexAllShouldWork() throws Exception {
+    void reindexAllShouldWork() throws Exception {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "reindexall"});
 
         verify(reIndexer).reIndex(ReIndexer.RunningOptions.DEFAULT);
     }
 
     @Test
-    public void reindexMailboxShouldWork() throws Exception {
+    void reindexMailboxShouldWork() throws Exception {
         String mailbox = "mailbox";
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "reindexmailbox", MailboxConstants.USER_NAMESPACE, USER, mailbox});
 

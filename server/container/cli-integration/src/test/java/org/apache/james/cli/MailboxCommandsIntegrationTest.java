@@ -23,50 +23,46 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.MemoryJmapTestRule;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.cli.util.OutputCapture;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.server.JMXServerModule;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class MailboxCommandsIntegrationTest {
+class MailboxCommandsIntegrationTest {
     public static final String USER = "user";
     public static final String MAILBOX = "mailboxExampleName";
 
-    @Rule
-    public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
-    private GuiceJamesServer guiceJamesServer;
+    @RegisterExtension
+    JamesServerExtension memoryJmap = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+        .server(conf -> MemoryJamesServerMain.createServer(conf)
+            .overrideWith(new JMXServerModule(),
+                binder -> binder.bind(ListeningMessageSearchIndex.class).toInstance(mock(ListeningMessageSearchIndex.class))))
+        .build();
     private MailboxProbeImpl mailboxProbe;
     private OutputCapture outputCapture;
 
-    @Before
-    public void setUp() throws Exception {
-        guiceJamesServer = memoryJmap.jmapServer(new JMXServerModule(),
-            binder -> binder.bind(ListeningMessageSearchIndex.class).toInstance(mock(ListeningMessageSearchIndex.class)));
-        guiceJamesServer.start();
+    @BeforeEach
+    void setUp(GuiceJamesServer guiceJamesServer) {
         outputCapture = new OutputCapture();
         mailboxProbe = guiceJamesServer.getProbe(MailboxProbeImpl.class);
     }
 
-    @After
-    public void tearDown() {
-        guiceJamesServer.stop();
-    }
-
     @Test
-    public void createMailboxShouldWork() throws Exception {
+    void createMailboxShouldWork() throws Exception {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "createmailbox", MailboxConstants.USER_NAMESPACE, USER, MAILBOX});
 
         assertThat(mailboxProbe.listUserMailboxes(USER)).containsOnly(MAILBOX);
     }
 
     @Test
-    public void deleteUserMailboxesShouldWork() throws Exception {
+    void deleteUserMailboxesShouldWork() throws Exception {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "createmailbox", MailboxConstants.USER_NAMESPACE, USER, MAILBOX});
 
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "deleteusermailboxes", USER});
@@ -75,7 +71,7 @@ public class MailboxCommandsIntegrationTest {
     }
 
     @Test
-    public void listUserMailboxesShouldWork() throws Exception {
+    void listUserMailboxesShouldWork() throws Exception {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "createmailbox", MailboxConstants.USER_NAMESPACE, USER, MAILBOX});
 
         ServerCmd.executeAndOutputToStream(new String[] {"-h", "127.0.0.1", "-p", "9999", "listusermailboxes", USER},
@@ -86,7 +82,7 @@ public class MailboxCommandsIntegrationTest {
     }
 
     @Test
-    public void deleteMailboxeShouldWork() throws Exception {
+    void deleteMailboxeShouldWork() throws Exception {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "createmailbox", MailboxConstants.USER_NAMESPACE, USER, MAILBOX});
 
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "deletemailbox", MailboxConstants.USER_NAMESPACE, USER, MAILBOX});
