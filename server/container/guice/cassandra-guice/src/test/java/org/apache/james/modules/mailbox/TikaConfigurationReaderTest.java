@@ -28,14 +28,13 @@ import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
 import org.apache.james.mailbox.model.ContentType.MimeType;
 import org.apache.james.mailbox.tika.TikaConfiguration;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 
-public class TikaConfigurationReaderTest {
-
+class TikaConfigurationReaderTest {
     @Test
-    public void readTikaConfigurationShouldAcceptMandatoryValues() throws Exception {
+    void readTikaConfigurationShouldAcceptMandatoryValues() throws Exception {
         PropertiesConfiguration configuration = newConfiguration();
         configuration.read(new StringReader(
                 "tika.enabled=true\n" +
@@ -57,7 +56,7 @@ public class TikaConfigurationReaderTest {
     }
 
     @Test
-    public void readTikaConfigurationShouldReturnDefaultOnMissingHost() throws Exception {
+    void readTikaConfigurationShouldReturnDefaultOnMissingHost() throws Exception {
         PropertiesConfiguration configuration = newConfiguration();
         configuration.read(new StringReader(
             "tika.enabled=true\n" +
@@ -75,7 +74,7 @@ public class TikaConfigurationReaderTest {
     }
 
     @Test
-    public void readTikaConfigurationShouldReturnDefaultOnMissingPort() throws Exception {
+    void readTikaConfigurationShouldReturnDefaultOnMissingPort() throws Exception {
         PropertiesConfiguration configuration = newConfiguration();
         configuration.read(new StringReader(
             "tika.enabled=true\n" +
@@ -93,7 +92,7 @@ public class TikaConfigurationReaderTest {
     }
 
     @Test
-    public void readTikaConfigurationShouldReturnDefaultOnMissingTimeout() throws Exception {
+    void readTikaConfigurationShouldReturnDefaultOnMissingTimeout() throws Exception {
         PropertiesConfiguration configuration = newConfiguration();
         configuration.read(new StringReader(
             "tika.enabled=true\n" +
@@ -111,7 +110,7 @@ public class TikaConfigurationReaderTest {
     }
 
     @Test
-    public void tikaShouldBeDisabledByDefault() throws Exception {
+    void tikaShouldBeDisabledByDefault() throws Exception {
         PropertiesConfiguration configuration = newConfiguration();
         configuration.read(new StringReader(""));
 
@@ -123,7 +122,7 @@ public class TikaConfigurationReaderTest {
     }
 
     @Test
-    public void readTikaConfigurationShouldParseUnitForCacheEvictionPeriod() throws Exception {
+    void readTikaConfigurationShouldParseUnitForCacheEvictionPeriod() throws Exception {
         PropertiesConfiguration configuration = newConfiguration();
         configuration.read(new StringReader(
             "tika.enabled=true\n" +
@@ -144,7 +143,7 @@ public class TikaConfigurationReaderTest {
     }
 
     @Test
-    public void readTikaConfigurationShouldDefaultToSecondWhenMissingUnitForCacheEvitionPeriod() throws Exception {
+    void readTikaConfigurationShouldDefaultToSecondWhenMissingUnitForCacheEvitionPeriod() throws Exception {
         PropertiesConfiguration configuration = newConfiguration();
         configuration.read(new StringReader(
             "tika.enabled=true\n" +
@@ -165,7 +164,7 @@ public class TikaConfigurationReaderTest {
     }
 
     @Test
-    public void readTikaConfigurationShouldParseUnitForCacheWeightMax() throws Exception {
+    void readTikaConfigurationShouldParseUnitForCacheWeightMax() throws Exception {
         PropertiesConfiguration configuration = newConfiguration();
         configuration.read(new StringReader(
             "tika.enabled=true\n" +
@@ -186,7 +185,7 @@ public class TikaConfigurationReaderTest {
     }
 
     @Test
-    public void readTikaConfigurationShouldDefaultToByteAsSizeUnit() throws Exception {
+    void readTikaConfigurationShouldDefaultToByteAsSizeUnit() throws Exception {
         PropertiesConfiguration configuration = newConfiguration();
         configuration.read(new StringReader(
             "tika.enabled=true\n" +
@@ -207,7 +206,7 @@ public class TikaConfigurationReaderTest {
     }
 
     @Test
-    public void readTikaConfigurationShouldEnableCacheWhenConfigured() throws Exception {
+    void readTikaConfigurationShouldEnableCacheWhenConfigured() throws Exception {
         PropertiesConfiguration configuration = newConfiguration();
         configuration.read(new StringReader(
             "tika.enabled=true\n" +
@@ -230,7 +229,7 @@ public class TikaConfigurationReaderTest {
     }
 
     @Test
-    public void readTikaConfigurationShouldNotHaveContentTypeBlacklist() throws Exception {
+    void readTikaConfigurationShouldNotHaveContentTypeBlacklist() throws Exception {
         PropertiesConfiguration configuration = newConfiguration();
         configuration.read(new StringReader(
             "tika.enabled=true\n" +
@@ -253,7 +252,7 @@ public class TikaConfigurationReaderTest {
     }
 
     @Test
-    public void readTikaConfigurationShouldHaveContentTypeBlacklist() throws Exception {
+    void readTikaConfigurationShouldHaveContentTypeBlacklist() throws Exception {
         PropertiesConfiguration configuration = newConfiguration();
         configuration.read(new StringReader(
             "tika.enabled=true\n" +
@@ -278,7 +277,7 @@ public class TikaConfigurationReaderTest {
     }
 
     @Test
-    public void readTikaConfigurationShouldHaveContentTypeBlacklistWithWhiteSpace() throws Exception {
+    void readTikaConfigurationShouldHaveContentTypeBlacklistWithWhiteSpace() throws Exception {
         PropertiesConfiguration configuration = newConfiguration();
         configuration.read(new StringReader(
             "tika.enabled=true\n" +
