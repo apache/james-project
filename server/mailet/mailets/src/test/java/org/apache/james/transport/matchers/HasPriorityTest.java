@@ -30,8 +30,8 @@ import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class HasPriorityTest {
     protected HasPriority matcher;
@@ -46,8 +46,8 @@ public class HasPriorityTest {
         return fakeMail;
     }
 
-    @Before
-    public void setup() throws MessagingException {
+    @BeforeEach
+    void setup() throws MessagingException {
         this.matcher = new HasPriority();
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
                 .matcherName(matcher.getPriorityMatcherName())
@@ -59,7 +59,7 @@ public class HasPriorityTest {
     }
 
     @Test
-    public void shouldMatchWhenPriorityMatch() throws MessagingException {
+    void shouldMatchWhenPriorityMatch() throws MessagingException {
         FakeMail fakeMail = this.createFakeMail(5);
 
         Collection<MailAddress> actual = matcher.match(fakeMail);
@@ -68,7 +68,7 @@ public class HasPriorityTest {
     }
 
     @Test
-    public void shouldNotMatchWhenPriorityDoesNotMatch() throws MessagingException {
+    void shouldNotMatchWhenPriorityDoesNotMatch() throws MessagingException {
         FakeMail fakeMail = this.createFakeMail(7);
 
         Collection<MailAddress> actual = matcher.match(fakeMail);

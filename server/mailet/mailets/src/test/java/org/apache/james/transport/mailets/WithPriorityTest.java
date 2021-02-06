@@ -30,21 +30,21 @@ import org.apache.mailet.MailetConfig;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class WithPriorityTest {
+class WithPriorityTest {
 
     private static final Attribute PROPERTY_PRIORITY = new Attribute(MailPrioritySupport.MAIL_PRIORITY, AttributeValue.of(7));
     private WithPriority mailet;
 
-    @Before
-    public void setup() throws Exception {
+    @BeforeEach
+    void setup() {
         mailet = new WithPriority();
     }
 
     @Test
-    public void getMailetInfoShouldReturnExpectedContent() {
+    void getMailetInfoShouldReturnExpectedContent() {
         String expected = "With Priority Mailet";
 
         String actual = mailet.getMailetInfo();
@@ -53,7 +53,7 @@ public class WithPriorityTest {
     }
 
     @Test
-    public void initShouldNotThrowWhenValidPriority() {
+    void initShouldNotThrowWhenValidPriority() {
         MailetConfig mockedMailetConfig = FakeMailetConfig.builder()
             .mailetContext(FakeMailContext.defaultContext())
             .setProperty("priority", "7")
@@ -64,7 +64,7 @@ public class WithPriorityTest {
     }
 
     @Test
-    public void initShouldThrowWhenInvalidPriority() {
+    void initShouldThrowWhenInvalidPriority() {
         MailetConfig mockedMailetConfig = FakeMailetConfig.builder()
             .mailetContext(FakeMailContext.defaultContext())
             .setProperty("priority", "-1")
@@ -75,7 +75,7 @@ public class WithPriorityTest {
     }
 
     @Test
-    public void initShouldThrowWhenPriorityIsNotANumber() {
+    void initShouldThrowWhenPriorityIsNotANumber() {
         MailetConfig mockedMailetConfig = FakeMailetConfig.builder()
                 .mailetContext(FakeMailContext.defaultContext())
                 .setProperty("priority", "k")
@@ -86,7 +86,7 @@ public class WithPriorityTest {
     }
 
     @Test
-    public void initShouldThrowWhenPriorityIsEmpty() {
+    void initShouldThrowWhenPriorityIsEmpty() {
         MailetConfig mockedMailetConfig = FakeMailetConfig.builder()
                 .mailetContext(FakeMailContext.defaultContext())
                 .setProperty("priority", "")
@@ -97,7 +97,7 @@ public class WithPriorityTest {
     }
 
     @Test
-    public void initShouldThrowWhenNoPriority() {
+    void initShouldThrowWhenNoPriority() {
         MailetConfig mockedMailetConfig = FakeMailetConfig.builder()
                 .mailetContext(FakeMailContext.defaultContext())
                 .build();
@@ -107,7 +107,7 @@ public class WithPriorityTest {
     }
 
     @Test
-    public void serviceShouldSetMailPriorityWhenNone() throws Exception {
+    void serviceShouldSetMailPriorityWhenNone() throws Exception {
         MailetConfig mockedMailetConfig = FakeMailetConfig.builder()
             .mailetContext(FakeMailContext.defaultContext())
             .setProperty("priority", PROPERTY_PRIORITY.getValue().value().toString())
@@ -121,7 +121,7 @@ public class WithPriorityTest {
     }
 
     @Test
-    public void serviceShouldSetMailPriorityWhenPriorityExists() throws Exception {
+    void serviceShouldSetMailPriorityWhenPriorityExists() throws Exception {
         MailetConfig mockedMailetConfig = FakeMailetConfig.builder()
             .mailetContext(FakeMailContext.defaultContext())
             .setProperty("priority", PROPERTY_PRIORITY.getValue().value().toString())

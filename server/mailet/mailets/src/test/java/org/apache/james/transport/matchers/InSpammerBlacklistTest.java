@@ -32,13 +32,13 @@ import org.apache.james.dnsservice.api.mock.MockDNSService;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class InSpammerBlacklistTest {
-
-    private InSpammerBlacklist matcher;
+class InSpammerBlacklistTest {
     private static final String BLACKLIST = "my.black.list.";
     private static final StringBuffer LISTED_HOST = new StringBuffer("111.222.111.222");
+
+    private InSpammerBlacklist matcher;
 
     private DNSService setUpDNSServer() {
         return new MockDNSService() {
@@ -75,7 +75,7 @@ public class InSpammerBlacklistTest {
     }
 
     @Test
-    public void testInBlackList() throws MessagingException {
+    void testInBlackList() throws MessagingException {
         Mail mail = createMail(LISTED_HOST.toString());
         setupMatcher(BLACKLIST);
 
@@ -86,7 +86,7 @@ public class InSpammerBlacklistTest {
     }
 
     @Test
-    public void testNotInBlackList() throws MessagingException {
+    void testNotInBlackList() throws MessagingException {
         Mail mail = createMail("212.12.14.1");
         setupMatcher(BLACKLIST);
 

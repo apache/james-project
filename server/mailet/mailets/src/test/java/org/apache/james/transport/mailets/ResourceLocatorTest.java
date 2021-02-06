@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -32,11 +33,10 @@ import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
 import org.apache.james.user.api.UsersRepository;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class ResourceLocatorTest {
-
+class ResourceLocatorTest {
     public static final String RECEIVER_LOCALHOST = "receiver@localhost";
     public static final Username USERNAME = Username.of(RECEIVER_LOCALHOST);
     private SieveRepository sieveRepository;
@@ -44,7 +44,7 @@ public class ResourceLocatorTest {
     private MailAddress mailAddress;
     private UsersRepository usersRepository;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         sieveRepository = mock(SieveRepository.class);
         usersRepository = mock(UsersRepository.class);
@@ -52,12 +52,13 @@ public class ResourceLocatorTest {
         mailAddress = new MailAddress(RECEIVER_LOCALHOST);
     }
 
-    @Test(expected = ScriptNotFoundException.class)
+    @Test
     public void resourceLocatorImplShouldPropagateScriptNotFound() throws Exception {
         when(sieveRepository.getActive(USERNAME)).thenThrow(new ScriptNotFoundException());
         when(usersRepository.getUsername(mailAddress)).thenReturn(Username.of(RECEIVER_LOCALHOST));
 
-        resourceLocator.get(mailAddress);
+        assertThatThrownBy(() -> resourceLocator.get(mailAddress))
+            .isInstanceOf(ScriptNotFoundException.class);
     }
 
     @Test

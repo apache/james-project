@@ -25,12 +25,11 @@ import java.util.Optional;
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class SenderUtilsTest {
-
+class SenderUtilsTest {
     @Test
-    public void getSenderShouldReturnAbsentWhenSenderIsAbsent() throws Exception {
+    void getSenderShouldReturnAbsentWhenSenderIsAbsent() throws Exception {
         SenderUtils testee = SenderUtils.from(Optional.empty());
 
         FakeMail fakeMail = FakeMail.defaultFakeMail();
@@ -41,7 +40,7 @@ public class SenderUtilsTest {
     }
 
     @Test
-    public void getSenderShouldReturnAbsentWhenSenderEqualsToUnaltered() throws Exception {
+    void getSenderShouldReturnAbsentWhenSenderEqualsToUnaltered() throws Exception {
         SenderUtils testee = SenderUtils.from(Optional.of(SpecialAddress.UNALTERED));
 
         FakeMail fakeMail = FakeMail.defaultFakeMail();
@@ -52,7 +51,7 @@ public class SenderUtilsTest {
     }
 
     @Test
-    public void getSenderShouldReturnAbsentWhenSenderEqualsToSender() throws Exception {
+    void getSenderShouldReturnAbsentWhenSenderEqualsToSender() throws Exception {
         SenderUtils testee = SenderUtils.from(Optional.of(SpecialAddress.SENDER));
 
         FakeMail fakeMail = FakeMail.defaultFakeMail();
@@ -63,7 +62,7 @@ public class SenderUtilsTest {
     }
 
     @Test
-    public void getSenderShouldReturnSenderWhenSenderIsCommon() throws Exception {
+    void getSenderShouldReturnSenderWhenSenderIsCommon() throws Exception {
         MailAddress expectedMailAddress = new MailAddress("sender", "james.org");
         SenderUtils testee = SenderUtils.from(Optional.of(expectedMailAddress));
 

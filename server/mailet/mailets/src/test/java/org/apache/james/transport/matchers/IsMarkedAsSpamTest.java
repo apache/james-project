@@ -26,20 +26,19 @@ import org.apache.james.core.MailAddress;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class IsMarkedAsSpamTest {
-
     private IsMarkedAsSpam matcher;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         matcher = new IsMarkedAsSpam();
     }
 
     @Test
-    public void isMarkedAsSpamShouldNotMatchWhenNoHeader() throws Exception {
+    void isMarkedAsSpamShouldNotMatchWhenNoHeader() throws Exception {
         FakeMail mail = FakeMail.builder()
             .name("name")
             .sender("sender@james.org")
@@ -51,24 +50,7 @@ public class IsMarkedAsSpamTest {
     }
 
     @Test
-    public void isMarkedAsSpamShouldNotMatchWhenHeaderButEmptyValue() throws Exception {
-        FakeMail mail = FakeMail.builder()
-            .name("name")
-            .sender("sender@james.org")
-            .recipient("to@james.org")
-            .addHeaderForRecipient(PerRecipientHeaders.Header.builder()
-                    .name("org.apache.james.spamassassin.status")
-                    .value("other")
-                    .build(),
-                new MailAddress("to@james.org"))
-            .build();
-
-        Collection<MailAddress> matches = matcher.match(mail);
-        assertThat(matches).isEmpty();
-    }
-
-    @Test
-    public void isMarkedAsSpamShouldNotMatchWhenHeaderButOtherValue() throws Exception {
+    void isMarkedAsSpamShouldNotMatchWhenHeaderButEmptyValue() throws Exception {
         FakeMail mail = FakeMail.builder()
             .name("name")
             .sender("sender@james.org")
@@ -85,7 +67,24 @@ public class IsMarkedAsSpamTest {
     }
 
     @Test
-    public void isMarkedAsSpamShouldNotMatchWhenHeaderButNoValue() throws Exception {
+    void isMarkedAsSpamShouldNotMatchWhenHeaderButOtherValue() throws Exception {
+        FakeMail mail = FakeMail.builder()
+            .name("name")
+            .sender("sender@james.org")
+            .recipient("to@james.org")
+            .addHeaderForRecipient(PerRecipientHeaders.Header.builder()
+                    .name("org.apache.james.spamassassin.status")
+                    .value("other")
+                    .build(),
+                new MailAddress("to@james.org"))
+            .build();
+
+        Collection<MailAddress> matches = matcher.match(mail);
+        assertThat(matches).isEmpty();
+    }
+
+    @Test
+    void isMarkedAsSpamShouldNotMatchWhenHeaderButNoValue() throws Exception {
         FakeMail mail = FakeMail.builder()
             .name("name")
             .sender("sender@james.org")
@@ -102,7 +101,7 @@ public class IsMarkedAsSpamTest {
     }
 
     @Test
-    public void isMarkedAsSpamShouldMatchWhenHeaderAndYesValue() throws Exception {
+    void isMarkedAsSpamShouldMatchWhenHeaderAndYesValue() throws Exception {
         FakeMail mail = FakeMail.builder()
             .name("name")
             .sender("sender@james.org")
@@ -120,7 +119,7 @@ public class IsMarkedAsSpamTest {
     }
 
     @Test
-    public void isMarkedAsSpamShouldMatchOnlyRecipientsWithHeaderAndYesValue() throws Exception {
+    void isMarkedAsSpamShouldMatchOnlyRecipientsWithHeaderAndYesValue() throws Exception {
         FakeMail mail = FakeMail.builder()
             .name("name")
             .sender("sender@james.org")
@@ -137,7 +136,7 @@ public class IsMarkedAsSpamTest {
     }
 
     @Test
-    public void isMarkedAsSpamShouldMatchWhenHeaderAndYesValueInOtherCase() throws Exception {
+    void isMarkedAsSpamShouldMatchWhenHeaderAndYesValueInOtherCase() throws Exception {
         FakeMail mail = FakeMail.builder()
             .name("name")
             .sender("sender@james.org")

@@ -42,13 +42,13 @@ import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.google.common.collect.ArrayListMultimap;
 
-public class MailDispatcherTest {
+class MailDispatcherTest {
     private static final String TEST_HEADER_NAME = "X-HEADER";
     private static final String VALUE_FOR_USER_1 = "value for user 1";
     private static final String VALUE_FOR_USER_2 = "value for user 2";
@@ -58,14 +58,14 @@ public class MailDispatcherTest {
     private FakeMailContext fakeMailContext;
     private MailStore mailStore;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         fakeMailContext = FakeMailContext.defaultContext();
         mailStore = mock(MailStore.class);
     }
 
     @Test
-    public void dispatchShouldStoreMail() throws Exception {
+    void dispatchShouldStoreMail() throws Exception {
         MailDispatcher testee = MailDispatcher.builder()
             .mailetContext(fakeMailContext)
             .mailStore(mailStore)
@@ -87,7 +87,7 @@ public class MailDispatcherTest {
     }
 
     @Test
-    public void dispatchShouldConsumeMailIfSpecified() throws Exception {
+    void dispatchShouldConsumeMailIfSpecified() throws Exception {
         MailDispatcher testee = MailDispatcher.builder()
             .mailetContext(fakeMailContext)
             .mailStore(mailStore)
@@ -106,7 +106,7 @@ public class MailDispatcherTest {
     }
 
     @Test
-    public void dispatchShouldNotConsumeMailIfNotSpecified() throws Exception {
+    void dispatchShouldNotConsumeMailIfNotSpecified() throws Exception {
         MailDispatcher testee = MailDispatcher.builder()
             .mailetContext(fakeMailContext)
             .mailStore(mailStore)
@@ -126,7 +126,7 @@ public class MailDispatcherTest {
     }
 
     @Test
-    public void errorsShouldBeWellHandled() throws Exception {
+    void errorsShouldBeWellHandled() throws Exception {
         MailDispatcher testee = MailDispatcher.builder()
             .mailetContext(fakeMailContext)
             .mailStore(mailStore)
@@ -162,7 +162,7 @@ public class MailDispatcherTest {
     }
 
     @Test
-    public void dispatchShouldUpdateReturnPath() throws Exception {
+    void dispatchShouldUpdateReturnPath() throws Exception {
         MailDispatcher testee = MailDispatcher.builder()
             .mailetContext(fakeMailContext)
             .mailStore(mailStore)
@@ -186,7 +186,7 @@ public class MailDispatcherTest {
     }
 
     @Test
-    public void dispatchShouldNotAddSpecificHeaderIfRecipientDoesNotMatch() throws Exception {
+    void dispatchShouldNotAddSpecificHeaderIfRecipientDoesNotMatch() throws Exception {
         AccumulatorHeaderMailStore accumulatorTestHeaderMailStore = new AccumulatorHeaderMailStore(TEST_HEADER_NAME);
         MailDispatcher testee = MailDispatcher.builder()
             .mailetContext(fakeMailContext)
@@ -209,7 +209,7 @@ public class MailDispatcherTest {
     }
 
     @Test
-    public void dispatchShouldAddSpecificHeaderIfRecipientMatches() throws Exception {
+    void dispatchShouldAddSpecificHeaderIfRecipientMatches() throws Exception {
         AccumulatorHeaderMailStore accumulatorTestHeaderMailStore = new AccumulatorHeaderMailStore(TEST_HEADER_NAME);
         MailDispatcher testee = MailDispatcher.builder()
             .mailetContext(fakeMailContext)
@@ -232,7 +232,7 @@ public class MailDispatcherTest {
     }
 
     @Test
-    public void dispatchShouldNotAddSpecificHeaderToOtherRecipients() throws Exception {
+    void dispatchShouldNotAddSpecificHeaderToOtherRecipients() throws Exception {
         AccumulatorHeaderMailStore accumulatorTestHeaderMailStore = new AccumulatorHeaderMailStore(TEST_HEADER_NAME);
         MailDispatcher testee = MailDispatcher.builder()
             .mailetContext(fakeMailContext)
@@ -257,7 +257,7 @@ public class MailDispatcherTest {
     }
 
     @Test
-    public void dispatchShouldAddSpecificHeaderToEachRecipients() throws Exception {
+    void dispatchShouldAddSpecificHeaderToEachRecipients() throws Exception {
         AccumulatorHeaderMailStore accumulatorTestHeaderMailStore = new AccumulatorHeaderMailStore(TEST_HEADER_NAME);
         MailDispatcher testee = MailDispatcher.builder()
             .mailetContext(fakeMailContext)
@@ -283,7 +283,7 @@ public class MailDispatcherTest {
     }
 
     @Test
-    public void dispatchShouldNotAlterOriginalMessageWhenPerRecipientHeaderDoesNotExist() throws Exception {
+    void dispatchShouldNotAlterOriginalMessageWhenPerRecipientHeaderDoesNotExist() throws Exception {
         AccumulatorHeaderMailStore accumulatorTestHeaderMailStore = new AccumulatorHeaderMailStore(TEST_HEADER_NAME);
         MailDispatcher testee = MailDispatcher.builder()
             .mailetContext(fakeMailContext)
@@ -306,7 +306,7 @@ public class MailDispatcherTest {
     }
 
     @Test
-    public void dispatchShouldNotAlterOriginalMessageWhenPerRecipientHeaderExists() throws Exception {
+    void dispatchShouldNotAlterOriginalMessageWhenPerRecipientHeaderExists() throws Exception {
         AccumulatorHeaderMailStore accumulatorTestHeaderMailStore = new AccumulatorHeaderMailStore(TEST_HEADER_NAME);
         MailDispatcher testee = MailDispatcher.builder()
             .mailetContext(fakeMailContext)

@@ -47,13 +47,13 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import reactor.core.publisher.Mono;
 
-public class LocalDeliveryTest {
+class LocalDeliveryTest {
 
     public static final String RECEIVER_DOMAIN_COM = "receiver@domain.com";
     private UsersRepository usersRepository;
@@ -62,8 +62,8 @@ public class LocalDeliveryTest {
     private LocalDelivery testee;
     private MailboxSession session;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         usersRepository = mock(UsersRepository.class);
         mailboxManager = mock(MailboxManager.class);
 
@@ -83,7 +83,7 @@ public class LocalDeliveryTest {
     }
 
     @Test
-    public void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOn() throws Exception {
+    void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOn() throws Exception {
         // Given
         Username username = Username.of("receiver@domain.com");
         MailboxPath inbox = MailboxPath.inbox(username);
@@ -105,7 +105,7 @@ public class LocalDeliveryTest {
     }
 
     @Test
-    public void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOff() throws Exception {
+    void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOff() throws Exception {
         // Given
         Username username = Username.of("receiver");
         MailboxPath inbox = MailboxPath.inbox(username);

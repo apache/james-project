@@ -47,8 +47,8 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -97,7 +97,7 @@ public class RemoteDeliveryTest {
     private RemoteDelivery remoteDelivery;
     private ManageableMailQueue mailQueue;
 
-    @Before
+    @BeforeEach
     public void setUp() throws ConfigurationException {
         MailQueueFactory<? extends ManageableMailQueue> queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
         mailQueue = queueFactory.createQueue(RemoteDeliveryConfiguration.DEFAULT_OUTGOING_QUEUE_NAME);
@@ -109,7 +109,7 @@ public class RemoteDeliveryTest {
     }
 
     @Test
-    public void remoteDeliveryShouldAddEmailToSpool() throws Exception {
+    void remoteDeliveryShouldAddEmailToSpool() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
             .build());
 
@@ -128,7 +128,7 @@ public class RemoteDeliveryTest {
     }
 
     @Test
-    public void remoteDeliveryShouldSplitMailsByServerWhenNoGateway() throws Exception {
+    void remoteDeliveryShouldSplitMailsByServerWhenNoGateway() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
             .build());
 
@@ -154,7 +154,7 @@ public class RemoteDeliveryTest {
     }
 
     @Test
-    public void remoteDeliveryShouldNotSplitMailsByServerWhenGateway() throws Exception {
+    void remoteDeliveryShouldNotSplitMailsByServerWhenGateway() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
             .setProperty(RemoteDeliveryConfiguration.GATEWAY, MailAddressFixture.JAMES_LOCAL)
             .build());
@@ -177,7 +177,7 @@ public class RemoteDeliveryTest {
     }
 
     @Test
-    public void remoteDeliveryShouldGhostMails() throws Exception {
+    void remoteDeliveryShouldGhostMails() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
             .build());
 
@@ -188,7 +188,7 @@ public class RemoteDeliveryTest {
     }
 
     @Test
-    public void remoteDeliveryShouldAddPriorityIfSpecified() throws Exception {
+    void remoteDeliveryShouldAddPriorityIfSpecified() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
             .setProperty(RemoteDeliveryConfiguration.USE_PRIORITY, "true")
             .build());
@@ -208,7 +208,7 @@ public class RemoteDeliveryTest {
     }
 
     @Test
-    public void remoteDeliveryShouldNotForwardMailsWithNoRecipients() throws Exception {
+    void remoteDeliveryShouldNotForwardMailsWithNoRecipients() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
             .build());
 
@@ -220,7 +220,7 @@ public class RemoteDeliveryTest {
     }
 
     @Test
-    public void remoteDeliveryShouldNotForwardMailsWithNoRecipientsWithGateway() throws Exception {
+    void remoteDeliveryShouldNotForwardMailsWithNoRecipientsWithGateway() throws Exception {
         remoteDelivery.init(FakeMailetConfig.builder()
             .setProperty(RemoteDeliveryConfiguration.GATEWAY, MailAddressFixture.JAMES_LOCAL)
             .build());

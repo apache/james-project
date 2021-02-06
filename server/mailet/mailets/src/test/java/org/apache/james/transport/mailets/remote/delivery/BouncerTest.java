@@ -41,12 +41,12 @@ import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.sun.mail.smtp.SMTPSendFailedException;
 
-public class BouncerTest {
+class BouncerTest {
     private static final String HELLO_NAME = "hello_name";
     private static final FakeMailetConfig DEFAULT_REMOTE_DELIVERY_CONFIG = FakeMailetConfig.builder()
         .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
@@ -56,13 +56,13 @@ public class BouncerTest {
 
     private FakeMailContext mailetContext;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         mailetContext = FakeMailContext.defaultContext();
     }
 
     @Test
-    public void bounceShouldCallMailetContextBounceByDefault() throws Exception {
+    void bounceShouldCallMailetContextBounceByDefault() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             DEFAULT_REMOTE_DELIVERY_CONFIG,
             mock(DomainList.class));
@@ -85,7 +85,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldIncludeMessagingExceptionMessageByDefault() throws Exception {
+    void bounceShouldIncludeMessagingExceptionMessageByDefault() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             DEFAULT_REMOTE_DELIVERY_CONFIG,
             mock(DomainList.class));
@@ -111,7 +111,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldCustomizeSendFailedExceptionByDefault() throws Exception {
+    void bounceShouldCustomizeSendFailedExceptionByDefault() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             DEFAULT_REMOTE_DELIVERY_CONFIG,
             mock(DomainList.class));
@@ -137,7 +137,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldCustomizeUnknownHostExceptionByDefault() throws Exception {
+    void bounceShouldCustomizeUnknownHostExceptionByDefault() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             DEFAULT_REMOTE_DELIVERY_CONFIG,
             mock(DomainList.class));
@@ -164,7 +164,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldCustomizeConnectionExceptionByDefault() throws Exception {
+    void bounceShouldCustomizeConnectionExceptionByDefault() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             DEFAULT_REMOTE_DELIVERY_CONFIG,
             mock(DomainList.class));
@@ -190,7 +190,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldCustomizeSocketExceptionByDefault() throws Exception {
+    void bounceShouldCustomizeSocketExceptionByDefault() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             DEFAULT_REMOTE_DELIVERY_CONFIG,
             mock(DomainList.class));
@@ -216,7 +216,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldCustomizeNestedMessagingExceptionByDefault() throws Exception {
+    void bounceShouldCustomizeNestedMessagingExceptionByDefault() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             DEFAULT_REMOTE_DELIVERY_CONFIG,
             mock(DomainList.class));
@@ -242,7 +242,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldNotBounceWithNoSenderByDefault() throws Exception {
+    void bounceShouldNotBounceWithNoSenderByDefault() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             DEFAULT_REMOTE_DELIVERY_CONFIG,
             mock(DomainList.class));
@@ -258,7 +258,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldSupportExceptionWithoutMessagesByDefault() throws Exception {
+    void bounceShouldSupportExceptionWithoutMessagesByDefault() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             DEFAULT_REMOTE_DELIVERY_CONFIG,
             mock(DomainList.class));
@@ -281,7 +281,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldNotSupportMessagingExceptionWithoutMessagesByDefault() throws Exception {
+    void bounceShouldNotSupportMessagingExceptionWithoutMessagesByDefault() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             DEFAULT_REMOTE_DELIVERY_CONFIG,
             mock(DomainList.class));
@@ -304,7 +304,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldWorkWhenProcessorSpecified() throws Exception {
+    void bounceShouldWorkWhenProcessorSpecified() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             FakeMailetConfig.builder()
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
@@ -330,7 +330,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldNotBounceWhenNoSenderWhenProcessorSpecified() throws Exception {
+    void bounceShouldNotBounceWhenNoSenderWhenProcessorSpecified() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             FakeMailetConfig.builder()
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
@@ -348,7 +348,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldDisplayAddressByDefault() throws Exception {
+    void bounceShouldDisplayAddressByDefault() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             DEFAULT_REMOTE_DELIVERY_CONFIG,
             mock(DomainList.class));
@@ -373,7 +373,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldDisplayAddressesByDefault() throws Exception {
+    void bounceShouldDisplayAddressesByDefault() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             DEFAULT_REMOTE_DELIVERY_CONFIG,
             mock(DomainList.class));
@@ -399,7 +399,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldWorkWhenProcessorSpecifiedAndNoExceptionMessage() throws Exception {
+    void bounceShouldWorkWhenProcessorSpecifiedAndNoExceptionMessage() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             FakeMailetConfig.builder()
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
@@ -424,7 +424,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldAttachErrorCodeWhenSmtpError() throws Exception {
+    void bounceShouldAttachErrorCodeWhenSmtpError() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             FakeMailetConfig.builder()
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
@@ -454,7 +454,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldNotAttachErrorCodeWhenNotMessagingException() throws Exception {
+    void bounceShouldNotAttachErrorCodeWhenNotMessagingException() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             FakeMailetConfig.builder()
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
@@ -480,7 +480,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldNotAttachErrorCodeWhenNotSmtpError() throws Exception {
+    void bounceShouldNotAttachErrorCodeWhenNotSmtpError() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             FakeMailetConfig.builder()
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
@@ -506,7 +506,7 @@ public class BouncerTest {
     }
 
     @Test
-    public void bounceShouldAttachNullErrorMessageWhenNoException() throws Exception {
+    void bounceShouldAttachNullErrorMessageWhenNoException() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             FakeMailetConfig.builder()
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)

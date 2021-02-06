@@ -23,12 +23,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class LoadedOnceInitParametersTest {
-
+class LoadedOnceInitParametersTest {
     @Test
-    public void fromShouldTakeValueFromInitParameters() {
+    void fromShouldTakeValueFromInitParameters() {
         InitParameters expectedParameters = new MyInitParameters();
 
         InitParameters parameters = LoadedOnceInitParameters.from(expectedParameters);

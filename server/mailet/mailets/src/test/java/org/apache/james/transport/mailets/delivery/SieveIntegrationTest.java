@@ -47,11 +47,11 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-public class SieveIntegrationTest {
+class SieveIntegrationTest {
 
     private static final String LOCAL_PART = "receiver";
     private static final String RECEIVER_DOMAIN_COM = LOCAL_PART + "@domain.com";
@@ -79,8 +79,8 @@ public class SieveIntegrationTest {
     private ResourceLocator resourceLocator;
     private FakeMailContext fakeMailContext;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         resourceLocator = mock(ResourceLocator.class);
         usersRepository = mock(UsersRepository.class);
         fakeMailContext = FakeMailContext.builder().logger(mock(Logger.class)).build();
@@ -90,7 +90,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void serviceShouldNotModifyEmailWhenErrorRetrievingScript() throws Exception {
+    void serviceShouldNotModifyEmailWhenErrorRetrievingScript() throws Exception {
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
         when(usersRepository.getUsername(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(Username.of(RECEIVER_DOMAIN_COM));
         when(resourceLocator.get(new MailAddress(RECEIVER_DOMAIN_COM))).thenThrow(new ScriptNotFoundException());
@@ -103,7 +103,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOn() throws Exception {
+    void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOn() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/keep.script");
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
         when(usersRepository.getUsername(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(Username.of(RECEIVER_DOMAIN_COM));
@@ -115,7 +115,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void mailShouldBeWellDeliveredByDefaultToUserWhenvirtualHostingIsTurnedOff() throws Exception {
+    void mailShouldBeWellDeliveredByDefaultToUserWhenvirtualHostingIsTurnedOff() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/keep.script");
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
         when(usersRepository.getUsername(new MailAddress("receiver@localhost"))).thenReturn(Username.of("receiver"));
@@ -127,7 +127,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void keepScriptShouldWork() throws Exception {
+    void keepScriptShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/keep.script");
 
         FakeMail mail = createMail();
@@ -137,7 +137,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void discardScriptShouldWork() throws Exception {
+    void discardScriptShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/discard.script");
 
         FakeMail mail = createMail();
@@ -147,7 +147,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void fileintoScriptShouldWork() throws Exception {
+    void fileintoScriptShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/fileinto.script");
 
         FakeMail mail = createMail();
@@ -157,7 +157,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void allOfAllFalseScriptShouldWork() throws Exception {
+    void allOfAllFalseScriptShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/allofAllFalse.script");
 
         FakeMail mail = createMail();
@@ -167,7 +167,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void allOfOneFalseScriptShouldWork() throws Exception {
+    void allOfOneFalseScriptShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/allofOneFalse.script");
 
         FakeMail mail = createMail();
@@ -177,7 +177,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void allOfAllTrueScriptShouldWork() throws Exception {
+    void allOfAllTrueScriptShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/allofAllTrue.script");
 
         FakeMail mail = createMail();
@@ -187,7 +187,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void anyOfAllFalseScriptShouldWork() throws Exception {
+    void anyOfAllFalseScriptShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/anyofAllFalse.script");
 
         FakeMail mail = createMail();
@@ -197,7 +197,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void falseScriptShouldWork() throws Exception {
+    void falseScriptShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/false.script");
 
         FakeMail mail = createMail();
@@ -207,7 +207,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void trueScriptShouldWork() throws Exception {
+    void trueScriptShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/true.script");
 
         FakeMail mail = createMail();
@@ -217,7 +217,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void notFalseScriptShouldWork() throws Exception {
+    void notFalseScriptShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/notFalse.script");
 
         FakeMail mail = createMail();
@@ -227,7 +227,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void notTrueScriptShouldWork() throws Exception {
+    void notTrueScriptShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/notTrue.script");
 
         FakeMail mail = createMail();
@@ -237,7 +237,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void anyOfOneFalseScriptShouldWork() throws Exception {
+    void anyOfOneFalseScriptShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/anyofOneFalse.script");
 
         FakeMail mail = createMail();
@@ -247,7 +247,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void anyOfAllTrueScriptShouldWork() throws Exception {
+    void anyOfAllTrueScriptShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/anyofAllTrue.script");
 
         FakeMail mail = createMail();
@@ -257,7 +257,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void stopScriptShouldWork() throws Exception {
+    void stopScriptShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/stop.script");
 
         FakeMail mail = createMail();
@@ -267,7 +267,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void headerScriptShouldWorkIfHeaderIsAbsent() throws Exception {
+    void headerScriptShouldWorkIfHeaderIsAbsent() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/header.script");
 
         FakeMail mail = createMail();
@@ -277,7 +277,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void headerInstructionShouldSupportFoldedEncodedHeaders() throws Exception {
+    void headerInstructionShouldSupportFoldedEncodedHeaders() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/headerEncodedFolded.script");
 
         FakeMail mail = FakeMail.builder()
@@ -296,7 +296,7 @@ public class SieveIntegrationTest {
 
 
     @Test
-    public void headerScriptShouldWorkIfHeaderIsPresent() throws Exception {
+    void headerScriptShouldWorkIfHeaderIsPresent() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/header.script");
 
         FakeMail mail = createMailWithSubject("JAMES-1620 revolution");
@@ -306,7 +306,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void sizeOverScriptShouldWorkIfUnderLimit() throws Exception {
+    void sizeOverScriptShouldWorkIfUnderLimit() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/sizeOver.script");
 
         FakeMail mail = createMail();
@@ -317,7 +317,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void sizeUnderScriptShouldWorkIfUnderLimit() throws Exception {
+    void sizeUnderScriptShouldWorkIfUnderLimit() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/sizeUnder.script");
 
         FakeMail mail = createMail();
@@ -328,7 +328,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void sizeOverScriptShouldWorkIfOverLimit() throws Exception {
+    void sizeOverScriptShouldWorkIfOverLimit() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/sizeOver.script");
 
         FakeMail mail = createMail();
@@ -339,7 +339,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void sizeUnderScriptShouldWorkIfOverLimit() throws Exception {
+    void sizeUnderScriptShouldWorkIfOverLimit() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/sizeUnder.script");
 
         FakeMail mail = createMail();
@@ -350,7 +350,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressLocalPartShouldWork() throws Exception {
+    void addressLocalPartShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressLocalPart.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source@any.com"));
@@ -361,7 +361,7 @@ public class SieveIntegrationTest {
 
 
     @Test
-    public void addressLocalPartShouldOnlyMatchLocalPart() throws Exception {
+    void addressLocalPartShouldOnlyMatchLocalPart() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressLocalPart.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source1@domain.com"));
@@ -372,7 +372,7 @@ public class SieveIntegrationTest {
 
 
     @Test
-    public void addressDomainShouldWork() throws Exception {
+    void addressDomainShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressDomain.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source1@domain.com"));
@@ -382,7 +382,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressDomainShouldOnlyMatchLocalPart() throws Exception {
+    void addressDomainShouldOnlyMatchLocalPart() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressDomain.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source@domain.org"));
@@ -392,7 +392,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressBccAllShouldNotMatchOtherHeaders() throws Exception {
+    void addressBccAllShouldNotMatchOtherHeaders() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllBcc.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source@domain.com"));
@@ -402,7 +402,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressBccAllShouldMatchSpecifiedAddress() throws Exception {
+    void addressBccAllShouldMatchSpecifiedAddress() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllBcc.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Bcc", "source@domain.com"));
@@ -412,7 +412,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressBccAllShouldNotMatchOtherAddress() throws Exception {
+    void addressBccAllShouldNotMatchOtherAddress() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllBcc.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Bcc", "source2@domain.com"));
@@ -422,7 +422,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressBccAllShouldNotMatchOtherDomain() throws Exception {
+    void addressBccAllShouldNotMatchOtherDomain() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllBcc.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Bcc", "source@domain.org"));
@@ -432,7 +432,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void redirectShouldWork() throws Exception {
+    void redirectShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/redirect.script");
 
         FakeMail mail = createMail();
@@ -449,7 +449,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressCcAllShouldNotMatchOtherHeaders() throws Exception {
+    void addressCcAllShouldNotMatchOtherHeaders() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllCc.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-From", "source@domain.com"));
@@ -459,7 +459,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressCcAllShouldMatchSpecifiedAddress() throws Exception {
+    void addressCcAllShouldMatchSpecifiedAddress() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllCc.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source@domain.com"));
@@ -469,7 +469,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressCcAllShouldNotMatchOtherAddress() throws Exception {
+    void addressCcAllShouldNotMatchOtherAddress() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllCc.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source2@domain.com"));
@@ -479,7 +479,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressCcAllShouldNotMatchOtherDomain() throws Exception {
+    void addressCcAllShouldNotMatchOtherDomain() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllCc.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source@domain.org"));
@@ -489,7 +489,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressFromAllShouldNotMatchOtherHeaders() throws Exception {
+    void addressFromAllShouldNotMatchOtherHeaders() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllFrom.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source@domain.com"));
@@ -499,7 +499,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressFromAllShouldMatchSpecifiedAddress() throws Exception {
+    void addressFromAllShouldMatchSpecifiedAddress() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllFrom.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("From", "source@domain.com"));
@@ -509,7 +509,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressFromAllShouldNotMatchOtherAddress() throws Exception {
+    void addressFromAllShouldNotMatchOtherAddress() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllFrom.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("From", "source2@domain.com"));
@@ -519,7 +519,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressFromAllShouldNotMatchOtherDomain() throws Exception {
+    void addressFromAllShouldNotMatchOtherDomain() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllFrom.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("From", "source@domain.org"));
@@ -529,7 +529,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressToAllShouldNotMatchOtherHeaders() throws Exception {
+    void addressToAllShouldNotMatchOtherHeaders() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllTo.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resent-To", "source@domain.com"));
@@ -539,7 +539,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressToAllShouldMatchSpecifiedAddress() throws Exception {
+    void addressToAllShouldMatchSpecifiedAddress() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllTo.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("To", "source@domain.com"));
@@ -549,7 +549,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressToAllShouldNotMatchOtherAddress() throws Exception {
+    void addressToAllShouldNotMatchOtherAddress() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllTo.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("To", "source2@domain.com"));
@@ -559,7 +559,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressToAllShouldNotMatchOtherDomain() throws Exception {
+    void addressToAllShouldNotMatchOtherDomain() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllTo.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("To", "source@domain.org"));
@@ -569,7 +569,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressSenderAllShouldNotMatchOtherHeaders() throws Exception {
+    void addressSenderAllShouldNotMatchOtherHeaders() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllSender.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("To", "source@domain.com"));
@@ -579,7 +579,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressSenderAllShouldMatchSpecifiedAddress() throws Exception {
+    void addressSenderAllShouldMatchSpecifiedAddress() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllSender.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Sender", "source@domain.com"));
@@ -589,7 +589,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressSenderAllShouldNotMatchOtherAddress() throws Exception {
+    void addressSenderAllShouldNotMatchOtherAddress() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllSender.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Sender", "source2@domain.com"));
@@ -599,7 +599,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressSenderAllShouldNotMatchOtherDomain() throws Exception {
+    void addressSenderAllShouldNotMatchOtherDomain() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllSender.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Sender", "source@domain.org"));
@@ -609,7 +609,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressResent_FromAllShouldNotMatchOtherHeaders() throws Exception {
+    void addressResent_FromAllShouldNotMatchOtherHeaders() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllResend-From.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("From", "source@domain.com"));
@@ -619,7 +619,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressResent_FromAllShouldMatchSpecifiedAddress() throws Exception {
+    void addressResent_FromAllShouldMatchSpecifiedAddress() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllResend-From.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-From", "source@domain.com"));
@@ -629,7 +629,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressResent_FromAllShouldNotMatchOtherAddress() throws Exception {
+    void addressResent_FromAllShouldNotMatchOtherAddress() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllResend-From.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-From", "source2@domain.com"));
@@ -639,7 +639,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressResent_FromAllShouldNotMatchOtherDomain() throws Exception {
+    void addressResent_FromAllShouldNotMatchOtherDomain() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllResend-From.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-From", "source@domain.org"));
@@ -649,7 +649,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressResent_ToAllShouldNotMatchOtherHeaders() throws Exception {
+    void addressResent_ToAllShouldNotMatchOtherHeaders() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllResend-To.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("To", "source@domain.com"));
@@ -659,7 +659,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressResent_ToAllShouldMatchSpecifiedAddress() throws Exception {
+    void addressResent_ToAllShouldMatchSpecifiedAddress() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllResend-To.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-To", "source@domain.com"));
@@ -669,7 +669,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressResent_ToAllShouldNotMatchOtherAddress() throws Exception {
+    void addressResent_ToAllShouldNotMatchOtherAddress() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllResend-To.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-To", "source2@domain.com"));
@@ -679,7 +679,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void addressResent_ToAllShouldNotMatchOtherDomain() throws Exception {
+    void addressResent_ToAllShouldNotMatchOtherDomain() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllResend-To.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-To", "source@domain.org"));
@@ -689,7 +689,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void envelopeFromShouldWork() throws Exception {
+    void envelopeFromShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/envelopeFrom.script");
 
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("From", "source@domain.com"));
@@ -699,7 +699,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void envelopeFromShouldNotMatchOtherAddress() throws Exception {
+    void envelopeFromShouldNotMatchOtherAddress() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/envelopeFromOtherSender.script");
 
         FakeMail mail = createMail();
@@ -709,7 +709,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void envelopeToShouldWork() throws Exception {
+    void envelopeToShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/envelopeTo.script");
 
         FakeMail mail = createMail();
@@ -719,7 +719,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void envelopeToShouldNotMatchOtherAddress() throws Exception {
+    void envelopeToShouldNotMatchOtherAddress() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/envelopeToOtherReceiver.script");
 
         FakeMail mail = createMail();
@@ -729,7 +729,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void bodyRawShouldNotMatchNotContainedData() throws Exception {
+    void bodyRawShouldNotMatchNotContainedData() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyRawInvalid.script");
 
         FakeMail mail = createMail();
@@ -739,7 +739,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void bodyRawShouldMatchContent() throws Exception {
+    void bodyRawShouldMatchContent() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyRawMatch.script");
 
         FakeMail mail = createMail();
@@ -749,7 +749,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void bodyContentShouldMatchContent() throws Exception {
+    void bodyContentShouldMatchContent() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyContentMatch.script");
 
         FakeMail mail = createMail();
@@ -759,7 +759,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void bodyContentShouldNotMatchNotContainedData() throws Exception {
+    void bodyContentShouldNotMatchNotContainedData() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyContentInvalid.script");
 
         FakeMail mail = createMail();
@@ -769,7 +769,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void bodyContentShouldNotMatchWhenWrongContentType() throws Exception {
+    void bodyContentShouldNotMatchWhenWrongContentType() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyContentWrongContentType.script");
 
         FakeMail mail = createMail();
@@ -779,7 +779,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void bodyTextShouldNotMatchNotContainedData() throws Exception {
+    void bodyTextShouldNotMatchNotContainedData() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyTextInvalid.script");
 
         FakeMail mail = createMail();
@@ -789,7 +789,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void bodyTextShouldMatchContent() throws Exception {
+    void bodyTextShouldMatchContent() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/bodyTextMatch.script");
 
         FakeMail mail = createMail();
@@ -799,7 +799,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void doubleVacationShouldNotBeExecutedAndReceiverShouldHaveANotificationAboutSieveError() throws Exception {
+    void doubleVacationShouldNotBeExecutedAndReceiverShouldHaveANotificationAboutSieveError() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/doubleVacation.script");
 
         FakeMail mail = createMail();
@@ -817,7 +817,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void vacationShouldWork() throws Exception {
+    void vacationShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
 
         FakeMail mail = createMail();
@@ -834,7 +834,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void vacationShouldNotSendNotificationToMailingLists() throws Exception {
+    void vacationShouldNotSendNotificationToMailingLists() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/vacationReason.script");
         Mail mail = createMail();
         mail.getMessage().addHeader("List-Id", "0123456789");
@@ -846,7 +846,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void vacationShouldNotGenerateNotificationIfTooOld() throws Exception {
+    void vacationShouldNotGenerateNotificationIfTooOld() throws Exception {
         prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationReason.script", DATE_OLD, DATE_NEW);
 
         FakeMail mail = createMail();
@@ -857,7 +857,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void vacationShouldNotCancelFileIntoActionIfNotExecuted() throws Exception {
+    void vacationShouldNotCancelFileIntoActionIfNotExecuted() throws Exception {
         prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationReasonAndFileInto.script", DATE_OLD, DATE_NEW);
 
         FakeMail mail = createMail();
@@ -868,7 +868,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void vacationDaysParameterShouldFilterTooOldDates() throws Exception {
+    void vacationDaysParameterShouldFilterTooOldDates() throws Exception {
         prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationDaysReason.script", DATE_DEFAULT, DATE_NEW);
 
         FakeMail mail = createMail();
@@ -879,7 +879,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void vacationDaysParameterShouldKeepDatesInRange() throws Exception {
+    void vacationDaysParameterShouldKeepDatesInRange() throws Exception {
         prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationDaysReason.script", DATE_CLOSE, DATE_NEW);
 
         FakeMail mail = createMail();
@@ -895,7 +895,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void vacationShouldNotCancelFileIntoActionIfExecuted() throws Exception {
+    void vacationShouldNotCancelFileIntoActionIfExecuted() throws Exception {
         prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationReasonAndFileInto.script", DATE_DEFAULT, DATE_NEW);
 
         FakeMail mail = createMail();
@@ -911,7 +911,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void vacationFromSubjectShouldWork() throws Exception {
+    void vacationFromSubjectShouldWork() throws Exception {
         prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationSubjectFromReason.script", DATE_DEFAULT, DATE_NEW);
 
         FakeMail mail = createMail();
@@ -927,7 +927,7 @@ public class SieveIntegrationTest {
     }
 
     @Test
-    public void vacationDaysAddressesShouldWork() throws Exception {
+    void vacationDaysAddressesShouldWork() throws Exception {
         prepareTestUsingScriptAndDates("org/apache/james/transport/mailets/delivery/vacationDaysAddressesReason.script", DATE_CLOSE, DATE_NEW);
 
         FakeMail mail = createMail();
@@ -943,7 +943,7 @@ public class SieveIntegrationTest {
     }
     
     @Test
-    public void sieveErrorNotificationEmailsShouldNotBeProcessed() throws Exception {
+    void sieveErrorNotificationEmailsShouldNotBeProcessed() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/keep.script");
 
         FakeMail mail = createMail();
@@ -974,7 +974,7 @@ public class SieveIntegrationTest {
         return createMailWithSubjectAndHeaders(subject);
     }
 
-    private FakeMail createMailWithSubjectAndHeaders(String subject, MimeMessageBuilder.Header... headers) throws MessagingException, IOException {
+    private FakeMail createMailWithSubjectAndHeaders(String subject, MimeMessageBuilder.Header... headers) throws MessagingException {
         return FakeMail.builder()
             .name("name")
             .mimeMessage(

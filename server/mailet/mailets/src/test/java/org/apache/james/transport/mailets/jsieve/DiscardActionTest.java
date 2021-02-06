@@ -26,12 +26,11 @@ import static org.mockito.Mockito.when;
 
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class DiscardActionTest {
-
+class DiscardActionTest {
     @Test
-    public void removeRecipientShouldWorkWhenOnlyOneRecipient() throws Exception {
+    void removeRecipientShouldWorkWhenOnlyOneRecipient() throws Exception {
         FakeMail mail = FakeMail.builder()
             .name("name")
             .recipients(MailAddressFixture.ANY_AT_JAMES)
@@ -45,7 +44,7 @@ public class DiscardActionTest {
     }
 
     @Test
-    public void removeRecipientShouldNotThrowWhenRecipientIsAbsent() throws Exception {
+    void removeRecipientShouldNotThrowWhenRecipientIsAbsent() throws Exception {
         FakeMail mail = FakeMail.builder()
             .name("name")
             .recipients(MailAddressFixture.ANY_AT_JAMES)
@@ -59,7 +58,7 @@ public class DiscardActionTest {
     }
 
     @Test
-    public void removeRecipientShouldNotThrowWhenRecipientIsNull() throws Exception {
+    void removeRecipientShouldNotThrowWhenRecipientIsNull() throws Exception {
         FakeMail mail = FakeMail.builder()
             .name("name")
             .recipients(MailAddressFixture.ANY_AT_JAMES)
@@ -73,7 +72,7 @@ public class DiscardActionTest {
     }
 
     @Test
-    public void removeRecipientShouldRemoveOnlyTheConcernedRecipient() throws Exception {
+    void removeRecipientShouldRemoveOnlyTheConcernedRecipient() throws Exception {
         FakeMail mail = FakeMail.builder()
             .name("name")
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES)

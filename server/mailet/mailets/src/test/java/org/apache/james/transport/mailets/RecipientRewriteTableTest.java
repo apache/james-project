@@ -19,6 +19,8 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
 
 import javax.mail.internet.MimeMessage;
 
@@ -29,32 +31,25 @@ import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class RecipientRewriteTableTest {
-
+class RecipientRewriteTableTest {
     private RecipientRewriteTable mailet;
-
-    @Mock org.apache.james.rrt.api.RecipientRewriteTable virtualTableStore;
-    @Mock DomainList domainList;
-
     private FakeMail mail;
     private MimeMessage message;
     private FakeMailetConfig mailetConfig;
-    private MailetContext mailetContext;
 
-    @Before
-    public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
+    @BeforeEach
+    void setUp() throws Exception {
+        DomainList domainList = mock(DomainList.class);
+        org.apache.james.rrt.api.RecipientRewriteTable virtualTableStore = mock(org.apache.james.rrt.api.RecipientRewriteTable.class);
         
         mailet = new RecipientRewriteTable(virtualTableStore, domainList);
 
         message = MimeMessageUtil.defaultMimeMessage();
 
-        mailetContext = FakeMailContext.defaultContext();
+        MailetContext mailetContext = FakeMailContext.defaultContext();
 
         mailetConfig = FakeMailetConfig.builder()
             .mailetName("vut")
@@ -65,22 +60,23 @@ public class RecipientRewriteTableTest {
     }
 
     @Test
-    public void getMailetInfoShouldReturnCorrectInformation() throws Exception {
+    void getMailetInfoShouldReturnCorrectInformation() {
         assertThat(mailet.getMailetInfo()).isEqualTo("RecipientRewriteTable Mailet");
     }
 
-    @Test(expected = NullPointerException.class)
-    public void serviceShouldThrowExceptionWithNullMail() throws Exception {
-        mailet.service(null);
+    @Test
+    public void serviceShouldThrowExceptionWithNullMail() {
+        assertThatThrownBy(() -> mailet.service(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void serviceShouldDoNothingIfAbsentMessageInMail() throws Exception {
+    void serviceShouldDoNothingIfAbsentMessageInMail() throws Exception {
         mailet.service(mail);
     }
     
     @Test
-    public void serviceShouldWork() throws Exception {
+    void serviceShouldWork() throws Exception {
         mailet.init(mailetConfig);
         mail = FakeMail.builder()
             .name("name")

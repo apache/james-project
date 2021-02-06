@@ -22,62 +22,61 @@ package org.apache.james.transport.mailets.redirect;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.MailAddress;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class SpecialAddressTest {
-
+class SpecialAddressTest {
     @Test
-    public void senderSpecialAddressShouldMatchExpectedValue() {
+    void senderSpecialAddressShouldMatchExpectedValue() {
         assertThat(SpecialAddress.AddressMarker.SENDER).isEqualTo("sender@address.marker");
     }
 
     @Test
-    public void reverserPathSpecialAddressShouldMatchExpectedValue() {
+    void reverserPathSpecialAddressShouldMatchExpectedValue() {
         assertThat(SpecialAddress.AddressMarker.REVERSE_PATH).isEqualTo("reverse.path@address.marker");
     }
 
     @Test
-    public void fromSpecialAddressShouldMatchExpectedValue() {
+    void fromSpecialAddressShouldMatchExpectedValue() {
         assertThat(SpecialAddress.AddressMarker.FROM).isEqualTo("from@address.marker");
     }
 
     @Test
-    public void replyToSpecialAddressShouldMatchExpectedValue() {
+    void replyToSpecialAddressShouldMatchExpectedValue() {
         assertThat(SpecialAddress.AddressMarker.REPLY_TO).isEqualTo("reply.to@address.marker");
     }
 
     @Test
-    public void toSpecialAddressShouldMatchExpectedValue() {
+    void toSpecialAddressShouldMatchExpectedValue() {
         assertThat(SpecialAddress.AddressMarker.TO).isEqualTo("to@address.marker");
     }
 
     @Test
-    public void recipientsSpecialAddressShouldMatchExpectedValue() {
+    void recipientsSpecialAddressShouldMatchExpectedValue() {
         assertThat(SpecialAddress.AddressMarker.RECIPIENTS).isEqualTo("recipients@address.marker");
     }
 
     @Test
-    public void deleteSpecialAddressShouldMatchExpectedValue() {
+    void deleteSpecialAddressShouldMatchExpectedValue() {
         assertThat(SpecialAddress.AddressMarker.DELETE).isEqualTo("delete@address.marker");
     }
 
     @Test
-    public void unalteredSpecialAddressShouldMatchExpectedValue() {
+    void unalteredSpecialAddressShouldMatchExpectedValue() {
         assertThat(SpecialAddress.AddressMarker.UNALTERED).isEqualTo("unaltered@address.marker");
     }
 
     @Test
-    public void nullSpecialAddressShouldMatchExpectedValue() {
+    void nullSpecialAddressShouldMatchExpectedValue() {
         assertThat(SpecialAddress.AddressMarker.NULL).isEqualTo("null@address.marker");
     }
 
     @Test
-    public void isSpecialAddressShouldReturnTrueWhenMatchingSpecialDomain() throws Exception {
+    void isSpecialAddressShouldReturnTrueWhenMatchingSpecialDomain() throws Exception {
         assertThat(SpecialAddress.isSpecialAddress(new MailAddress("user", "address.marker"))).isTrue();
     }
 
     @Test
-    public void isSpecialAddressShouldReturnFalseWhenNotMatchingSpecialDomain() throws Exception {
+    void isSpecialAddressShouldReturnFalseWhenNotMatchingSpecialDomain() throws Exception {
         assertThat(SpecialAddress.isSpecialAddress(new MailAddress("user", "james.org"))).isFalse();
     }
 }

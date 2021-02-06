@@ -23,24 +23,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
-import javax.mail.MessagingException;
-
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class RedirectMailetInitParametersTest {
-
+class RedirectMailetInitParametersTest {
     private GenericMailet mailet;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         mailet = new GenericMailet() {
             
             @Override
-            public void service(Mail mail) throws MessagingException {
+            public void service(Mail mail) {
             }
         };
     }

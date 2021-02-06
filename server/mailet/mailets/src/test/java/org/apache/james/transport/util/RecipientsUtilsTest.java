@@ -29,24 +29,23 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class RecipientsUtilsTest {
-
+class RecipientsUtilsTest {
     private RedirectNotify mailet;
     private RecipientsUtils testee;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         mailet = mock(RedirectNotify.class);
         testee = RecipientsUtils.from(mailet);
     }
 
     @Test
-    public void getRecipientsShouldReturnEmptyWhenMailetRecipientsIsEmpty() throws Exception {
+    void getRecipientsShouldReturnEmptyWhenMailetRecipientsIsEmpty() throws Exception {
         when(mailet.getRecipients())
             .thenReturn(ImmutableList.<MailAddress>of());
 
@@ -58,7 +57,7 @@ public class RecipientsUtilsTest {
     }
 
     @Test
-    public void getRecipientsShouldReturnEmptyWhenMailetRecipientsContainsOnlyUnaltered() throws Exception {
+    void getRecipientsShouldReturnEmptyWhenMailetRecipientsContainsOnlyUnaltered() throws Exception {
         when(mailet.getRecipients())
             .thenReturn(ImmutableList.of(SpecialAddress.UNALTERED));
 
@@ -70,7 +69,7 @@ public class RecipientsUtilsTest {
     }
 
     @Test
-    public void getRecipientsShouldReturnEmptyWhenMailetRecipientsContainsOnlyRecipients() throws Exception {
+    void getRecipientsShouldReturnEmptyWhenMailetRecipientsContainsOnlyRecipients() throws Exception {
         when(mailet.getRecipients())
             .thenReturn(ImmutableList.of(SpecialAddress.RECIPIENTS));
 
@@ -82,7 +81,7 @@ public class RecipientsUtilsTest {
     }
 
     @Test
-    public void getRecipientsShouldReturnRecipientsWhenMailetRecipientsAreCommon() throws Exception {
+    void getRecipientsShouldReturnRecipientsWhenMailetRecipientsAreCommon() throws Exception {
         ImmutableList<MailAddress> expectedRecipients = ImmutableList.of(new MailAddress("test", "james.org"), new MailAddress("test2", "james.org"));
         when(mailet.getRecipients())
             .thenReturn(expectedRecipients);
@@ -95,7 +94,7 @@ public class RecipientsUtilsTest {
     }
 
     @Test
-    public void getRecipientsShouldReturnAddressesFromOriginalMailWhenMailetRecipientsAreSpecialAddresses() throws Exception {
+    void getRecipientsShouldReturnAddressesFromOriginalMailWhenMailetRecipientsAreSpecialAddresses() throws Exception {
         when(mailet.getRecipients())
             .thenReturn(ImmutableList.of(SpecialAddress.FROM, SpecialAddress.TO));
 

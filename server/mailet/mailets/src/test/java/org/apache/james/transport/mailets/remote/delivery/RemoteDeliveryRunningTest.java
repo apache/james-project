@@ -34,22 +34,22 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.transport.mailets.RemoteDelivery;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Flux;
 
-public class RemoteDeliveryRunningTest {
+class RemoteDeliveryRunningTest {
     private static final MailQueueName QUEUE_NAME = MailQueueName.of("queueName");
 
     private RemoteDelivery remoteDelivery;
     private MailQueue mailQueue;
     private CountDownLatch countDownLatch;
 
-    @Before
+    @BeforeEach
     @SuppressWarnings("unchecked")
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         countDownLatch = new CountDownLatch(1);
         MailQueueFactory<MailQueue> mailQueueFactory = mock(MailQueueFactory.class);
         remoteDelivery = new RemoteDelivery(mock(DNSService.class), mock(DomainList.class), mailQueueFactory,
@@ -60,7 +60,7 @@ public class RemoteDeliveryRunningTest {
     }
 
     @Test
-    public void remoteDeliveryShouldStart() throws Exception {
+    void remoteDeliveryShouldStart() throws Exception {
         when(mailQueue.deQueue()).thenAnswer(invocation -> {
             countDownLatch.countDown();
             Thread.sleep(TimeUnit.SECONDS.toMillis(2));
@@ -75,9 +75,8 @@ public class RemoteDeliveryRunningTest {
         verify(mailQueue).deQueue();
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         remoteDelivery.destroy();
     }
-
 }

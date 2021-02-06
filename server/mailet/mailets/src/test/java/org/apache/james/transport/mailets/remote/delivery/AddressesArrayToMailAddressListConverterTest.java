@@ -24,33 +24,31 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
 
-import org.apache.james.transport.mailets.remote.delivery.AddressesArrayToMailAddressListConverter;
 import org.apache.mailet.base.MailAddressFixture;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class AddressesArrayToMailAddressListConverterTest {
-
     private static final String WRONG_INTERNET_ADDRESS = "!!";
 
     @Test
-    public void getAddressesAsMailAddressShouldReturnEmptyOnNull() {
+    void getAddressesAsMailAddressShouldReturnEmptyOnNull() {
         assertThat(AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(null)).isEmpty();
     }
 
     @Test
-    public void getAddressesAsMailAddressShouldReturnEmptyOnEmpty() {
+    void getAddressesAsMailAddressShouldReturnEmptyOnEmpty() {
         assertThat(AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(new Address[]{})).isEmpty();
     }
 
     @Test
-    public void getAddressesAsMailAddressShouldWorkWithSingleValue() throws Exception {
+    void getAddressesAsMailAddressShouldWorkWithSingleValue() throws Exception {
         assertThat(AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(new Address[]{
             new InternetAddress(MailAddressFixture.ANY_AT_JAMES.toString())}))
             .containsOnly(MailAddressFixture.ANY_AT_JAMES);
     }
 
     @Test
-    public void getAddressesAsMailAddressShouldWorkWithTwoValues() throws Exception {
+    void getAddressesAsMailAddressShouldWorkWithTwoValues() throws Exception {
         assertThat(AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(new Address[]{
             new InternetAddress(MailAddressFixture.ANY_AT_JAMES.toString()),
             new InternetAddress(MailAddressFixture.OTHER_AT_JAMES.toString())}))
@@ -58,7 +56,7 @@ public class AddressesArrayToMailAddressListConverterTest {
     }
 
     @Test
-    public void getAddressesAsMailAddressShouldFilterErrorMailAddress() throws Exception {
+    void getAddressesAsMailAddressShouldFilterErrorMailAddress() throws Exception {
         assertThat(AddressesArrayToMailAddressListConverter.getAddressesAsMailAddress(new Address[]{
             new InternetAddress(MailAddressFixture.ANY_AT_JAMES.toString()),
             new InternetAddress(WRONG_INTERNET_ADDRESS)}))

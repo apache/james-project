@@ -25,12 +25,11 @@ import java.util.Optional;
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ReplyToUtilsTest {
-
+class ReplyToUtilsTest {
     @Test
-    public void getReplyToShouldReturnAbsentWhenReplyToIsNull() throws Exception {
+    void getReplyToShouldReturnAbsentWhenReplyToIsNull() throws Exception {
         ReplyToUtils testee = ReplyToUtils.from((MailAddress) null);
 
         FakeMail fakeMail = FakeMail.defaultFakeMail();
@@ -41,7 +40,7 @@ public class ReplyToUtilsTest {
     }
 
     @Test
-    public void getReplyToShouldReturnNullWhenReplyToEqualsToUnaltered() throws Exception {
+    void getReplyToShouldReturnNullWhenReplyToEqualsToUnaltered() throws Exception {
         ReplyToUtils testee = ReplyToUtils.from(SpecialAddress.UNALTERED);
 
         FakeMail fakeMail = FakeMail.defaultFakeMail();
@@ -52,7 +51,7 @@ public class ReplyToUtilsTest {
     }
 
     @Test
-    public void getReplyToShouldReturnSenderWhenReplyToIsCommon() throws Exception {
+    void getReplyToShouldReturnSenderWhenReplyToIsCommon() throws Exception {
         MailAddress mailAddress = new MailAddress("test", "james.org");
         ReplyToUtils testee = ReplyToUtils.from(mailAddress);
 

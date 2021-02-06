@@ -21,24 +21,22 @@ package org.apache.james.transport.mailets.remote.delivery;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.transport.mailets.remote.delivery.DeliveryRetriesHelper;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class DeliveryRetryHelperTest {
-
+class DeliveryRetryHelperTest {
     private static final Attribute INVALID_ATTRIBUTE = new Attribute(DeliveryRetriesHelper.DELIVERY_RETRY_COUNT, AttributeValue.of("invalid"));
 
     @Test
-    public void retrieveRetriesShouldBeZeroByDefault() throws Exception {
+    void retrieveRetriesShouldBeZeroByDefault() throws Exception {
         assertThat(DeliveryRetriesHelper.retrieveRetries(FakeMail.defaultFakeMail()))
             .isEqualTo(0);
     }
 
     @Test
-    public void retrieveRetriesShouldBeZeroAfterInit() throws Exception {
+    void retrieveRetriesShouldBeZeroAfterInit() throws Exception {
         FakeMail mail = FakeMail.defaultFakeMail();
 
         DeliveryRetriesHelper.initRetries(mail);
@@ -48,7 +46,7 @@ public class DeliveryRetryHelperTest {
     }
 
     @Test
-    public void retrieveRetriesShouldBeOneAfterIncrement() throws Exception {
+    void retrieveRetriesShouldBeOneAfterIncrement() throws Exception {
         FakeMail mail = FakeMail.defaultFakeMail();
 
         DeliveryRetriesHelper.initRetries(mail);
@@ -59,7 +57,7 @@ public class DeliveryRetryHelperTest {
     }
 
     @Test
-    public void incrementRetriesShouldWorkOnNonInitializedMails() throws Exception {
+    void incrementRetriesShouldWorkOnNonInitializedMails() throws Exception {
         FakeMail mail = FakeMail.defaultFakeMail();
 
         DeliveryRetriesHelper.incrementRetries(mail);
@@ -69,7 +67,7 @@ public class DeliveryRetryHelperTest {
     }
 
     @Test
-    public void retrieveRetriesShouldBeZeroOnInvalidValue() throws Exception {
+    void retrieveRetriesShouldBeZeroOnInvalidValue() throws Exception {
         FakeMail mail = FakeMail.builder().name("name").attribute(INVALID_ATTRIBUTE).build();
 
         assertThat(DeliveryRetriesHelper.retrieveRetries(mail))
@@ -77,7 +75,7 @@ public class DeliveryRetryHelperTest {
     }
 
     @Test
-    public void incrementRetriesShouldWorkOnInvalidMails() throws Exception {
+    void incrementRetriesShouldWorkOnInvalidMails() throws Exception {
         FakeMail mail = FakeMail.builder().name("name").attribute(INVALID_ATTRIBUTE).build();
 
         DeliveryRetriesHelper.incrementRetries(mail);

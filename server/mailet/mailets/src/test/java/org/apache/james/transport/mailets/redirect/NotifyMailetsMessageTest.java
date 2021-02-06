@@ -36,27 +36,26 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class NotifyMailetsMessageTest {
-
+class NotifyMailetsMessageTest {
     private TimeZone timeZone;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         timeZone = TimeZone.getDefault();
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         TimeZone.setDefault(timeZone);
     }
 
     @Test
-    public void generateMessageShouldReturnTheMessageWhenSimpleMimeMessage() throws Exception {
+    void generateMessageShouldReturnTheMessageWhenSimpleMimeMessage() throws Exception {
         FakeMail mail = FakeMail.builder()
                 .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
@@ -71,7 +70,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void generateMessageShouldAddErrorMessageWhenMimeMessageAsSome() throws Exception {
+    void generateMessageShouldAddErrorMessageWhenMimeMessageAsSome() throws Exception {
         FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder());
         String myErrorMessage = "my error message";
         mail.setErrorMessage(myErrorMessage);
@@ -84,7 +83,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void generateMessageShouldAddSubjectWhenMimeMessageAsSome() throws Exception {
+    void generateMessageShouldAddSubjectWhenMimeMessageAsSome() throws Exception {
         FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder()
             .setSubject("my subject"));
 
@@ -94,7 +93,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void generateMessageShouldAddSentDateWhenMimeMessageAsSome() throws Exception {
+    void generateMessageShouldAddSentDateWhenMimeMessageAsSome() throws Exception {
         MimeMessage message = MimeMessageUtil.defaultMimeMessage();
         message.setSentDate(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")));
         FakeMail mail = FakeMail.from(message);
@@ -105,7 +104,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void generateMessageShouldAddRecipientsWhenMimeMessageAsSome() throws Exception {
+    void generateMessageShouldAddRecipientsWhenMimeMessageAsSome() throws Exception {
         FakeMail mail = FakeMail.builder()
             .name("name")
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder())
@@ -119,7 +118,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void generateMessageShouldAddFromWhenMimeMessageAsSome() throws Exception {
+    void generateMessageShouldAddFromWhenMimeMessageAsSome() throws Exception {
         FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder()
             .addFrom("user@james.org"));
 
@@ -130,7 +129,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void generateMessageShouldAddToWhenMimeMessageAsSome() throws Exception {
+    void generateMessageShouldAddToWhenMimeMessageAsSome() throws Exception {
         FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder()
             .addToRecipient("user@james.org", "user2@james.org"));
 
@@ -142,7 +141,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void generateMessageShouldAddCCWhenMimeMessageAsSome() throws Exception {
+    void generateMessageShouldAddCCWhenMimeMessageAsSome() throws Exception {
         FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder()
             .addCcRecipient("user@james.org", "user2@james.org"));
 
@@ -154,7 +153,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void generateMessageShouldAddSizeWhenPossible() throws Exception {
+    void generateMessageShouldAddSizeWhenPossible() throws Exception {
         FakeMail mail = FakeMail.from(MimeMessageBuilder.mimeMessageBuilder());
         mail.setMessageSize(6);
 
@@ -164,7 +163,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void generateMessageShouldSpecifySizeInAReadableWay() throws Exception {
+    void generateMessageShouldSpecifySizeInAReadableWay() throws Exception {
         String content = "MIME-Version: 1.0\r\n" +
             "Content-Type: text/plain; charset=utf-8\r\n" +
             "\r\n" +
@@ -180,7 +179,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void getMessageInternalSizeShouldTransformMessagingErrorIntoEmpty() throws MessagingException {
+    void getMessageInternalSizeShouldTransformMessagingErrorIntoEmpty() throws MessagingException {
         Mail mail = mock(Mail.class);
         when(mail.getMessageSize()).thenThrow(new MessagingException());
 
@@ -189,7 +188,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void getMessageInternalSizeShouldTransformZeroSizeIntoEmpty() throws MessagingException {
+    void getMessageInternalSizeShouldTransformZeroSizeIntoEmpty() throws MessagingException {
         Mail mail = mock(Mail.class);
         when(mail.getMessageSize()).thenReturn(0L);
 
@@ -198,7 +197,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void getMessageInternalSizeShouldTransformNegativeIntoEmpty() throws MessagingException {
+    void getMessageInternalSizeShouldTransformNegativeIntoEmpty() throws MessagingException {
         Mail mail = mock(Mail.class);
         when(mail.getMessageSize()).thenReturn(-1L);
 
@@ -207,7 +206,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void getMessageInternalSizeShouldReturnSizeWhenAvailable() throws MessagingException {
+    void getMessageInternalSizeShouldReturnSizeWhenAvailable() throws MessagingException {
         long size = 42L;
 
         Mail mail = mock(Mail.class);
@@ -218,7 +217,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void generateMessageShouldDecodeEncodedSubject() throws Exception {
+    void generateMessageShouldDecodeEncodedSubject() throws Exception {
         String content = "MIME-Version: 1.0\r\n" +
             "Subject: =?UTF-8?Q?Cl=c3=b4ture_&_Paie_du_mois?=\r\n" +
             "Content-Type: text/plain; charset=utf-8\r\n" +
@@ -233,7 +232,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void generateMessageShouldDecodeEncodedFrom() throws Exception {
+    void generateMessageShouldDecodeEncodedFrom() throws Exception {
         String content = "MIME-Version: 1.0\r\n" +
             "From: =?UTF-8?Q?=F0=9F=90=83@linagora.com?=\r\n" +
             "Content-Type: text/plain; charset=utf-8\r\n" +
@@ -249,7 +248,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void generateMessageShouldDecodeEncodedTo() throws Exception {
+    void generateMessageShouldDecodeEncodedTo() throws Exception {
         String content = "MIME-Version: 1.0\r\n" +
             "To: =?UTF-8?Q?=F0=9F=9A=BE@linagora.com?=\r\n" +
             "Content-Type: text/plain; charset=utf-8\r\n" +
@@ -265,7 +264,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void generateMessageShouldDecodeEncodedCc() throws Exception {
+    void generateMessageShouldDecodeEncodedCc() throws Exception {
         String content = "MIME-Version: 1.0\r\n" +
             "Cc: =?UTF-8?Q?=F0=9F=9A=B2@linagora.com?=\r\n" +
             "Content-Type: text/plain; charset=utf-8\r\n" +
@@ -281,7 +280,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void safelyDecodeShouldReturnTextNotEncodedUnmodified() throws Exception {
+    void safelyDecodeShouldReturnTextNotEncodedUnmodified() {
         String text = "Why not unicode for Llama";
 
         assertThat(NotifyMailetsMessage.safelyDecode(text))
@@ -289,13 +288,13 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void safelyDecodeShouldCorrectlyDecodeQuotedPrintable() throws Exception {
+    void safelyDecodeShouldCorrectlyDecodeQuotedPrintable() {
         assertThat(NotifyMailetsMessage.safelyDecode("=?UTF-8?Q?=E2=99=A5=F0=9F=9A=B2?="))
             .isEqualTo("♥🚲");
     }
 
     @Test
-    public void safelyDecodeShouldReturnInvalidEncodedTextUnmodified() throws Exception {
+    void safelyDecodeShouldReturnInvalidEncodedTextUnmodified() {
         String invalidEncodedText = "=?UTF-8?Q?=E2=99=A5=FX=9F=9A=B2?=";
 
         assertThat(NotifyMailetsMessage.safelyDecode(invalidEncodedText))
@@ -303,7 +302,7 @@ public class NotifyMailetsMessageTest {
     }
 
     @Test
-    public void safelyDecodeShouldReturnEncodedTextUnmodifiedWhenUnknownCharset() throws Exception {
+    void safelyDecodeShouldReturnEncodedTextUnmodifiedWhenUnknownCharset() {
         String encodedTextWithUnknownCharset = "=?UTF-9?Q?=E2=99=A5=F0=9F=9A=B2?=";
 
         assertThat(NotifyMailetsMessage.safelyDecode(encodedTextWithUnknownCharset))

@@ -35,17 +35,17 @@ import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class IsSenderInRRTLoopTest {
-
+class IsSenderInRRTLoopTest {
     public static final Domain DOMAIN = Domain.of("domain.tld");
+
     private RecipientRewriteTable recipientRewriteTable;
     private IsSenderInRRTLoop testee;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         recipientRewriteTable = new MemoryRecipientRewriteTable();
         SimpleDomainList domainList = new SimpleDomainList();
         domainList.addDomain(DOMAIN);
@@ -56,7 +56,7 @@ public class IsSenderInRRTLoopTest {
     }
 
     @Test
-    public void matchShouldReturnEmptyWhenSenderHasNoRRT() throws Exception {
+    void matchShouldReturnEmptyWhenSenderHasNoRRT() throws Exception {
         Collection<MailAddress> result = testee.match(FakeMail.builder()
             .name("name")
             .sender(SENDER)
@@ -67,7 +67,7 @@ public class IsSenderInRRTLoopTest {
     }
 
     @Test
-    public void matchShouldNotFailWhenNoSender() throws Exception {
+    void matchShouldNotFailWhenNoSender() throws Exception {
         Collection<MailAddress> result = testee.match(FakeMail.builder()
             .name("name")
             .recipient(RECIPIENT1)
@@ -77,7 +77,7 @@ public class IsSenderInRRTLoopTest {
     }
 
     @Test
-    public void matchShouldReturnEmptyWhenNoRRTLoop() throws Exception {
+    void matchShouldReturnEmptyWhenNoRRTLoop() throws Exception {
         recipientRewriteTable.addAddressMapping(MappingSource.fromUser(SENDER.getLocalPart(), SENDER.getDomain()), RECIPIENT1.asString());
 
         Collection<MailAddress> result = testee.match(FakeMail.builder()
@@ -90,7 +90,7 @@ public class IsSenderInRRTLoopTest {
     }
 
     @Test
-    public void matchShouldReturnRecipientsWhenLoop() throws Exception {
+    void matchShouldReturnRecipientsWhenLoop() throws Exception {
         recipientRewriteTable.addAddressMapping(MappingSource.fromUser(SENDER.getLocalPart(), SENDER.getDomain()),"recipient1@domain.tld");
         recipientRewriteTable.addAddressMapping(MappingSource.fromUser(RECIPIENT1.getLocalPart(), RECIPIENT1.getDomain()), SENDER.asString());
         // required overwise the loop is detected upon insertion
@@ -106,7 +106,7 @@ public class IsSenderInRRTLoopTest {
     }
 
     @Test
-    public void matchShouldReturnEmptyWhenLoopButNoRecipient() throws Exception {
+    void matchShouldReturnEmptyWhenLoopButNoRecipient() throws Exception {
         recipientRewriteTable.addAddressMapping(MappingSource.fromUser(SENDER.getLocalPart(), SENDER.getDomain()),"recipient1@domain.tld");
         recipientRewriteTable.addAddressMapping(MappingSource.fromUser(RECIPIENT1.getLocalPart(), RECIPIENT1.getDomain()), SENDER.asString());
         // required overwise the loop is detected upon insertion

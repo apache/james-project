@@ -22,52 +22,51 @@ package org.apache.james.transport.util;
 import static org.apache.james.transport.util.SizeUtils.humanReadableSize;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class SizeUtilsTest {
-
+class SizeUtilsTest {
     @Test
-    public void humanSizeShouldAddByteUnitForSmallSize() {
+    void humanSizeShouldAddByteUnitForSmallSize() {
         assertThat(humanReadableSize(1000)).isEqualTo("1000 B");
     }
 
     @Test
-    public void humanSizeShouldScaleToKilobyteWhenSizeIsBetweenKilobyteAndMegabyte() {
+    void humanSizeShouldScaleToKilobyteWhenSizeIsBetweenKilobyteAndMegabyte() {
         assertThat(humanReadableSize(1024)).isEqualTo("1 KiB");
     }
 
     @Test
-    public void humanSizeShouldWorkWithZero() {
+    void humanSizeShouldWorkWithZero() {
         assertThat(humanReadableSize(0)).isEqualTo("0 B");
     }
 
     @Test
-    public void humanSizeShouldWorkWithNegative() {
+    void humanSizeShouldWorkWithNegative() {
         assertThat(humanReadableSize(-1)).isEqualTo("-1 B");
     }
 
     @Test
-    public void humanSizeShouldScaleToMegabyteWhenSizeIsBetweenMegabyteAndGigabyte() {
+    void humanSizeShouldScaleToMegabyteWhenSizeIsBetweenMegabyteAndGigabyte() {
         assertThat(humanReadableSize(1024 * 1024)).isEqualTo("1 MiB");
     }
 
     @Test
-    public void humanSizeShouldScaleToGigabyteWhenSizeIsBiggerThanGigabyte() {
+    void humanSizeShouldScaleToGigabyteWhenSizeIsBiggerThanGigabyte() {
         assertThat(humanReadableSize(1024 * 1024 * 1024)).isEqualTo("1 GiB");
     }
 
     @Test
-    public void humanSizeShouldCorrectlyCountKilobyte() {
+    void humanSizeShouldCorrectlyCountKilobyte() {
         assertThat(humanReadableSize(42 * 1024)).isEqualTo("42 KiB");
     }
 
     @Test
-    public void humanSizeShouldNotUseMoreThanOneDigitAfterComma() {
+    void humanSizeShouldNotUseMoreThanOneDigitAfterComma() {
         assertThat(humanReadableSize(1.42 * 1024)).isEqualTo("1.4 KiB");
     }
 
     @Test
-    public void humanSizeShouldNotUseMoreThanOneDigitAfterCommaAndRoundUpCorrectly() {
+    void humanSizeShouldNotUseMoreThanOneDigitAfterCommaAndRoundUpCorrectly() {
         assertThat(humanReadableSize(1.48 * 1024)).isEqualTo("1.5 KiB");
     }
 }

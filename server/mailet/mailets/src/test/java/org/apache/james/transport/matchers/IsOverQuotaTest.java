@@ -38,8 +38,8 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class IsOverQuotaTest {
     private IsOverQuota testee;
@@ -47,7 +47,7 @@ public class IsOverQuotaTest {
     private DefaultUserQuotaRootResolver quotaRootResolver;
     private UsersRepository usersRepository;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
 
@@ -64,7 +64,7 @@ public class IsOverQuotaTest {
     }
 
     @Test
-    public void matchShouldAcceptMailWhenNoQuota() throws Exception {
+    void matchShouldAcceptMailWhenNoQuota() throws Exception {
         FakeMail mail = FakeMail.builder()
             .name("name")
             .recipient(MailAddressFixture.ANY_AT_JAMES)
@@ -76,7 +76,7 @@ public class IsOverQuotaTest {
     }
 
     @Test
-    public void matchShouldKeepAddressesWithTooBigSize() throws Exception {
+    void matchShouldKeepAddressesWithTooBigSize() throws Exception {
         maxQuotaManager.setGlobalMaxStorage(QuotaSizeLimit.size(100));
 
         FakeMail fakeMail = FakeMail.builder()
@@ -90,7 +90,7 @@ public class IsOverQuotaTest {
     }
 
     @Test
-    public void matchShouldReturnEmptyAtSizeQuotaLimit() throws Exception {
+    void matchShouldReturnEmptyAtSizeQuotaLimit() throws Exception {
         maxQuotaManager.setGlobalMaxStorage(QuotaSizeLimit.size(1000));
 
         FakeMail fakeMail = FakeMail.builder()
@@ -104,7 +104,7 @@ public class IsOverQuotaTest {
     }
 
     @Test
-    public void matchShouldKeepAddressesWithTooMuchMessages() throws Exception {
+    void matchShouldKeepAddressesWithTooMuchMessages() throws Exception {
         maxQuotaManager.setGlobalMaxMessage(QuotaCountLimit.count(0));
 
         FakeMail fakeMail = FakeMail.builder()
@@ -117,7 +117,7 @@ public class IsOverQuotaTest {
     }
 
     @Test
-    public void matchShouldReturnEmptyOnMessageLimit() throws Exception {
+    void matchShouldReturnEmptyOnMessageLimit() throws Exception {
         maxQuotaManager.setGlobalMaxMessage(QuotaCountLimit.count(1));
 
         FakeMail fakeMail = FakeMail.builder()
@@ -130,7 +130,7 @@ public class IsOverQuotaTest {
     }
 
     @Test
-    public void matchShouldNotIncludeRecipientNotOverQuota() throws Exception {
+    void matchShouldNotIncludeRecipientNotOverQuota() throws Exception {
         Username username = Username.of(MailAddressFixture.ANY_AT_JAMES.getLocalPart());
         QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(MailboxPath.inbox(username));
         maxQuotaManager.setMaxStorage(quotaRoot, QuotaSizeLimit.size(100));
@@ -147,7 +147,7 @@ public class IsOverQuotaTest {
     }
 
     @Test
-    public void matchShouldSupportVirtualHosting() throws Exception {
+    void matchShouldSupportVirtualHosting() throws Exception {
         when(usersRepository.getUsername(MailAddressFixture.ANY_AT_JAMES)).thenReturn(Username.of(MailAddressFixture.ANY_AT_JAMES.asString()));
         when(usersRepository.getUsername(MailAddressFixture.OTHER_AT_JAMES)).thenReturn(Username.of(MailAddressFixture.OTHER_AT_JAMES.asString()));
         Username username = Username.of(MailAddressFixture.ANY_AT_JAMES.asString());

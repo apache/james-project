@@ -31,24 +31,23 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.transport.mailets.redirect.RedirectNotify;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class TosUtilsTest {
-
+class TosUtilsTest {
     private RedirectNotify mailet;
     private TosUtils testee;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         mailet = mock(RedirectNotify.class);
         testee = TosUtils.from(mailet);
     }
 
     @Test
-    public void getToShouldReturnEmptyWhenMailetToIsEmpty() throws Exception {
+    void getToShouldReturnEmptyWhenMailetToIsEmpty() throws Exception {
         when(mailet.getTo())
             .thenReturn(ImmutableList.<InternetAddress>of());
 
@@ -60,7 +59,7 @@ public class TosUtilsTest {
     }
 
     @Test
-    public void getToShouldReturnEmptyWhenMailetToContainsOnlyUnaltered() throws Exception {
+    void getToShouldReturnEmptyWhenMailetToContainsOnlyUnaltered() throws Exception {
         when(mailet.getTo())
             .thenReturn(ImmutableList.of(SpecialAddress.UNALTERED.toInternetAddress()));
 
@@ -72,7 +71,7 @@ public class TosUtilsTest {
     }
 
     @Test
-    public void getToShouldReturnEmptyWhenMailetToContainsOnlyRecipients() throws Exception {
+    void getToShouldReturnEmptyWhenMailetToContainsOnlyRecipients() throws Exception {
         when(mailet.getTo())
             .thenReturn(ImmutableList.of(SpecialAddress.RECIPIENTS.toInternetAddress()));
 
@@ -84,7 +83,7 @@ public class TosUtilsTest {
     }
 
     @Test
-    public void getToShouldReturnToWhenMailetToAreCommon() throws Exception {
+    void getToShouldReturnToWhenMailetToAreCommon() throws Exception {
         MailAddress mailAddress = new MailAddress("test", "james.org");
         MailAddress mailAddress2 = new MailAddress("test2", "james.org");
         when(mailet.getTo())
@@ -99,7 +98,7 @@ public class TosUtilsTest {
     }
 
     @Test
-    public void getToShouldReturnAddressesFromOriginalMailWhenMailetToAreSpecialAddresses() throws Exception {
+    void getToShouldReturnAddressesFromOriginalMailWhenMailetToAreSpecialAddresses() throws Exception {
         when(mailet.getTo())
             .thenReturn(ImmutableList.of(SpecialAddress.FROM.toInternetAddress(), SpecialAddress.TO.toInternetAddress()));
 

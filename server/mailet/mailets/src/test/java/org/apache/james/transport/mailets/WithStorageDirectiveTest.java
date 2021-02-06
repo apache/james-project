@@ -30,33 +30,29 @@ import org.apache.mailet.AttributeValue;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.assertj.core.api.JUnitSoftAssertions;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class WithStorageDirectiveTest {
+class WithStorageDirectiveTest {
     private static final DomainList NO_DOMAIN_LIST = null;
 
     private WithStorageDirective testee;
 
-    @Rule
-    public JUnitSoftAssertions softly = new JUnitSoftAssertions();
-
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         testee = new WithStorageDirective(MemoryUsersRepository.withVirtualHosting(NO_DOMAIN_LIST));
     }
 
     @Test
-    public void initShouldThrowWhenNoTargetFolderEntry() {
+    void initShouldThrowWhenNoTargetFolderEntry() {
         assertThatThrownBy(() -> testee.init(FakeMailetConfig.builder()
             .build()))
             .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void initShouldThrowWhenEmptyTargetFolderEntry() {
+    void initShouldThrowWhenEmptyTargetFolderEntry() {
         assertThatThrownBy(() -> testee.init(FakeMailetConfig.builder()
             .setProperty(WithStorageDirective.TARGET_FOLDER_NAME, "")
             .build()))
@@ -64,7 +60,7 @@ public class WithStorageDirectiveTest {
     }
 
     @Test
-    public void serviceShouldAddDeliveryPathForRecipients() throws Exception {
+    void serviceShouldAddDeliveryPathForRecipients() throws Exception {
         String targetFolderName = "Spam";
         testee.init(FakeMailetConfig.builder()
             .setProperty(WithStorageDirective.TARGET_FOLDER_NAME, targetFolderName)
@@ -79,14 +75,14 @@ public class WithStorageDirectiveTest {
 
         AttributeName recipient1 = AttributeName.of("DeliveryPath_recipient1@localhost");
         AttributeName recipient2 = AttributeName.of("DeliveryPath_recipient2@localhost");
-        softly.assertThat(mail.attributes())
+        assertThat(mail.attributes())
             .containsOnly(
                 new Attribute(recipient1, AttributeValue.of(targetFolderName)),
                 new Attribute(recipient2, AttributeValue.of(targetFolderName)));
     }
 
     @Test
-    public void serviceShouldNotThrowWhenNoRecipients() throws Exception {
+    void serviceShouldNotThrowWhenNoRecipients() throws Exception {
         String targetFolderName = "Spam";
         testee.init(FakeMailetConfig.builder()
             .setProperty(WithStorageDirective.TARGET_FOLDER_NAME, targetFolderName)
@@ -104,7 +100,7 @@ public class WithStorageDirectiveTest {
     }
 
     @Test
-    public void serviceShouldOverridePreviousStorageDirectives() throws Exception {
+    void serviceShouldOverridePreviousStorageDirectives() throws Exception {
         AttributeName name1 = AttributeName.of("DeliveryPath_recipient1@localhost");
         AttributeName name2 = AttributeName.of("DeliveryPath_recipient2@localhost");
         AttributeValue<String> targetFolderName = AttributeValue.of("Spam");
@@ -122,10 +118,12 @@ public class WithStorageDirectiveTest {
 
         testee.service(mail);
 
-        softly.assertThat(mail.attributes())
-            .containsExactlyInAnyOrder(attribute1, attribute2);
-        softly.assertThat(mail.getAttribute(name1)).contains(attribute1);
-        softly.assertThat(mail.getAttribute(name2)).contains(attribute2);
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(mail.attributes())
+                .containsExactlyInAnyOrder(attribute1, attribute2);
+            softly.assertThat(mail.getAttribute(name1)).contains(attribute1);
+            softly.assertThat(mail.getAttribute(name2)).contains(attribute2);
+        });
     }
 
 }

@@ -35,19 +35,18 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SimpleMailStoreTest {
-
+class SimpleMailStoreTest {
     public static final String FOLDER = "FOLDER";
     private SimpleMailStore testee;
     private MailboxAppender mailboxAppender;
     private UsersRepository usersRepository;
     private MimeMessage mimeMessage;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         mailboxAppender = mock(MailboxAppender.class);
         usersRepository = mock(UsersRepository.class);
         testee = SimpleMailStore.builder()
@@ -65,7 +64,7 @@ public class SimpleMailStoreTest {
     }
 
     @Test
-    public void storeMailShouldUseFullMailAddressWhenSupportsVirtualHosting() throws Exception {
+    void storeMailShouldUseFullMailAddressWhenSupportsVirtualHosting() throws Exception {
         MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
         when(usersRepository.getUsername(recipient)).thenReturn(Username.of(recipient.asString()));
         FakeMail mail = FakeMail.builder()
@@ -78,7 +77,7 @@ public class SimpleMailStoreTest {
     }
 
     @Test
-    public void storeMailShouldUseLocalPartWhenSupportsVirtualHosting() throws Exception {
+    void storeMailShouldUseLocalPartWhenSupportsVirtualHosting() throws Exception {
         MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
         when(usersRepository.getUsername(recipient)).thenReturn(Username.of(recipient.getLocalPart()));
         FakeMail mail = FakeMail.builder()
@@ -91,7 +90,7 @@ public class SimpleMailStoreTest {
     }
 
     @Test
-    public void storeMailShouldUseFullMailAddressWhenErrorReadingUsersRepository() throws Exception {
+    void storeMailShouldUseFullMailAddressWhenErrorReadingUsersRepository() throws Exception {
         MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
         when(usersRepository.getUsername(recipient)).thenThrow(new UsersRepositoryException("Any message"));
         FakeMail mail = FakeMail.builder()

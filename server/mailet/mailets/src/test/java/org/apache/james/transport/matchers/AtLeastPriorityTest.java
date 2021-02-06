@@ -30,10 +30,10 @@ import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class AtLeastPriorityTest {
+class AtLeastPriorityTest {
     protected AtLeastPriority matcher;
     protected MailAddress testRecipient;
     private final String condition = "5";
@@ -46,8 +46,8 @@ public class AtLeastPriorityTest {
         return fakeMail;
     }
 
-    @Before
-    public void setup() throws MessagingException {
+    @BeforeEach
+    void setup() throws MessagingException {
         this.matcher = new AtLeastPriority();
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
                 .matcherName(matcher.getPriorityMatcherName())
@@ -59,7 +59,7 @@ public class AtLeastPriorityTest {
     }
 
     @Test
-    public void shouldNotMatchWhenPriorityDoesNotMatch() throws MessagingException {
+    void shouldNotMatchWhenPriorityDoesNotMatch() throws MessagingException {
         FakeMail fakeMail = createFakeMail(3);
 
         Collection<MailAddress> actual = matcher.match(fakeMail);
@@ -68,7 +68,7 @@ public class AtLeastPriorityTest {
     }
 
     @Test
-    public void shouldMatchWhenPriorityMatch() throws MessagingException {
+    void shouldMatchWhenPriorityMatch() throws MessagingException {
         FakeMail fakeMail = createFakeMail(5);
 
         Collection<MailAddress> actual = matcher.match(fakeMail);
@@ -77,7 +77,7 @@ public class AtLeastPriorityTest {
     }
 
     @Test
-    public void shouldMatchWhenMailHasHigherPriority() throws MessagingException {
+    void shouldMatchWhenMailHasHigherPriority() throws MessagingException {
         FakeMail fakeMail = createFakeMail(7);
 
         Collection<MailAddress> actual = matcher.match(fakeMail);
