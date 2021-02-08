@@ -128,7 +128,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     }
 
     @Test
-	@Disabled("Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
+	@Disabled("JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     void termsBetweenElasticSearchAndLuceneLimitDueTuNonAsciiCharsShouldBeTruncated() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
@@ -148,7 +148,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     }
 
     @Test
-	@Disabled("Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
+	@Disabled("JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     void tooLongTermsShouldNotMakeIndexingFail() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
@@ -168,7 +168,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     }
 
     @Test
-	@Disabled("Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
+	@Disabled("JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     void fieldsExceedingLuceneLimitShouldNotBeIgnored() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
@@ -188,7 +188,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     }
 
     @Test
-	@Disabled("Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
+	@Disabled("JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     void fieldsWithTooLongTermShouldStillBeIndexed() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
@@ -208,7 +208,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     }
 
     @Test
-	@Disabled("Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
+	@Disabled("JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     void reasonableLongTermShouldNotBeIgnored() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
@@ -229,7 +229,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     }
 
     @Test
-	@Disabled("Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
+	@Disabled("JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     void headerSearchShouldIncludeMessageWhenDifferentTypesOnAnIndexedField() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
@@ -252,7 +252,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     }
 
     @Test
-	@Disabled("Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
+	@Disabled("JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     void messageShouldStillBeIndexedEvenAfterOneFieldFailsIndexation() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
@@ -275,7 +275,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     }
 
     @Test
-	@Disabled("Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
+	@Disabled("JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     void addressMatchesShouldBeExact() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
@@ -306,16 +306,14 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .containsOnly(messageId2.getUid());
     }
 
-    @Disabled("MAILBOX-403 Relaxed the matching constraints for email addresses in text bodies to reduce ElasticSearch disk space usage")
+    @Disabled("MAILBOX-403 Relaxed the matching constraints for email addresses in text bodies to reduce ElasticSearch disk space usage, JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     @Test
-	//@Disabled("Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     public void textShouldNotMatchOtherAddressesOfTheSameDomain() throws Exception {
 
     }
 
-    @Disabled("MAILBOX-401 '-' causes address matching to fail")
+    @Disabled("MAILBOX-401 '-' causes address matching to fail, JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     @Test
-	//@Disabled("Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     void localPartShouldBeMatchedWhenHyphen() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
@@ -346,9 +344,8 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .containsOnly(messageId2.getUid());
     }
 
-    @Disabled("MAILBOX-401 '-' causes address matching to fail")
+    @Disabled("MAILBOX-401 '-' causes address matching to fail, JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     @Test
-	//@Disabled("Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     void addressShouldBeMatchedWhenHyphen() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
@@ -379,9 +376,8 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .containsOnly(messageId1.getUid());
     }
 
-    @Disabled("MAILBOX-401 '-' causes address matching to fail")
+    @Disabled("MAILBOX-401 '-' causes address matching to fail, JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     @Test
-	//@Disabled("Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     void domainPartShouldBeMatchedWhenHyphen() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
