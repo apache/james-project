@@ -31,8 +31,8 @@ import javax.management.ObjectName;
 
 import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class AbstractMailQueueFactoryTest {
     private static final MailQueueName QUEUE_1 = MailQueueName.of("queue1");
@@ -42,8 +42,8 @@ public class AbstractMailQueueFactoryTest {
     private AbstractMailQueueFactory<?> abstractMailQueueFactory;
     private MBeanServer mBeanServer;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         mBeanServer = mock(MBeanServer.class);
         abstractMailQueueFactory = new AbstractMailQueueFactory<ManageableMailQueue>() {
             @Override
@@ -55,13 +55,13 @@ public class AbstractMailQueueFactoryTest {
     }
 
     @Test
-    public void destroyShouldRegisterManageableQueues() throws Exception {
+    void destroyShouldRegisterManageableQueues() throws Exception {
         abstractMailQueueFactory.createQueue(QUEUE_1);
         verify(mBeanServer).registerMBean(any(MailQueueManagement.class), eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1.asString())));
     }
 
     @Test
-    public void destroyShouldUnregisterAllRegisterQueue() throws Exception {
+    void destroyShouldUnregisterAllRegisterQueue() throws Exception {
         abstractMailQueueFactory.createQueue(QUEUE_1);
         abstractMailQueueFactory.createQueue(QUEUE_2);
         abstractMailQueueFactory.createQueue(QUEUE_3);
@@ -72,14 +72,14 @@ public class AbstractMailQueueFactoryTest {
     }
 
     @Test
-    public void unregisterMBeanShouldWork() throws Exception {
+    void unregisterMBeanShouldWork() throws Exception {
         abstractMailQueueFactory.createQueue(QUEUE_1);
         abstractMailQueueFactory.unregisterMBean(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1.asString());
         verify(mBeanServer).unregisterMBean(eq(new ObjectName(AbstractMailQueueFactory.MBEAN_NAME_QUEUE_PREFIX + QUEUE_1.asString())));
     }
 
     @Test
-    public void destroyShouldNotBeStoppedByExceptions() throws Exception {
+    void destroyShouldNotBeStoppedByExceptions() throws Exception {
         abstractMailQueueFactory.createQueue(QUEUE_1);
         abstractMailQueueFactory.createQueue(QUEUE_2);
         abstractMailQueueFactory.createQueue(QUEUE_3);
