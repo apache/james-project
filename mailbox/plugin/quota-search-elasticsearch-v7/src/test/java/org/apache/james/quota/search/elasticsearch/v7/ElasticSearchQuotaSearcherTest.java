@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(ElasticSearchQuotaSearchTestSystemExtension.class)
-@Disabled
+@Disabled("JAMES-3492")
 class ElasticSearchQuotaSearcherTest implements QuotaSearcherContract {
     @Test
     void searchShouldNotBeLimitedByElasticSearchDefaultSearchLimit(QuotaSearchTestSystem testSystem) throws Exception {
