@@ -899,17 +899,6 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>apache-james-mpt-antlib</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>apache-james-mpt-antlib</artifactId>
-                <version>${project.version}</version>
-                <classifier>tests</classifier>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mpt-app</artifactId>
                 <version>${project.version}</version>
             </dependency>
