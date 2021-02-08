@@ -25,17 +25,16 @@ import java.util.Arrays;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
 public class MXHostAddressIteratorTest {
-
     /**
      * Test case for JAMES-1251
      */
     @Test
-    public void testIteratorContainMultipleMX() throws Exception {
+    void testIteratorContainMultipleMX() throws Exception {
         InetAddress address = InetAddress.getLocalHost();
         ImmutableList<String> mxs = ImmutableList.of(address.getHostAddress());
         ImmutableList<String> noTxtRecord = ImmutableList.of();
@@ -60,7 +59,7 @@ public class MXHostAddressIteratorTest {
     }
 
     @Test
-    public void testIteratorWithInvalidMX() {
+    void testIteratorWithInvalidMX() {
 
         // See JAMES-1271
         MXHostAddressIterator it = new MXHostAddressIterator(Arrays.asList("localhost").iterator(), new InMemoryDNSService(), false);

@@ -24,23 +24,17 @@ import java.net.UnknownHostException;
 
 import org.apache.james.dnsservice.api.mock.DNSFixture;
 import org.apache.james.dnsservice.library.inetnetwork.model.InetNetwork;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-/**
- * Test the InetNetworkBuilder.
- */
 public class InetNetworkBuilderTest {
-
     private InetNetworkBuilder inetNetworkBuilder;
     private InetNetwork inetNetwork;
 
     /**
      * Verify that InetNetworkBuild return correctly initialized Inet4Network.
-     * 
-     * @throws UnknownHostException
      */
     @Test
-    public void testInetNetworkBuilderDnsV4() throws UnknownHostException {
+    void testInetNetworkBuilderDnsV4() throws UnknownHostException {
 
         inetNetworkBuilder = new InetNetworkBuilder(DNSFixture.DNS_SERVER_IPV4_MOCK);
 
@@ -54,11 +48,9 @@ public class InetNetworkBuilderTest {
 
     /**
      * Verify that InetNetworkBuild return correctly initialized Inet6Network.
-     * 
-     * @throws UnknownHostException
      */
     @Test
-    public void testInetNetworkBuilderDnsV6() throws UnknownHostException {
+    void testInetNetworkBuilderDnsV6() throws UnknownHostException {
 
         inetNetworkBuilder = new InetNetworkBuilder(DNSFixture.DNS_SERVER_IPV6_MOCK);
 

@@ -26,12 +26,12 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.StringTokenizer;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test the InetNetwork class with various IPv4 and IPv6 network specification.
  */
-public class InetNetworkTest {
+class InetNetworkTest {
 
     private static InetAddress address;
 
@@ -42,11 +42,9 @@ public class InetNetworkTest {
      * The InetAddress.toString() returns a string with format
      * "name/ip_address". It has no indication of subnetmask. The name is
      * optional.
-     * 
-     * @throws UnknownHostException
      */
     @Test
-    public void testInetAddress() throws UnknownHostException {
+    void testInetAddress() throws UnknownHostException {
 
         // Test name alone (can be IPv4 or IPv6 depending on the OS plaform
         // configuration).
@@ -62,11 +60,9 @@ public class InetNetworkTest {
      * The InetAddress.toString() returns a string with format
      * "name/ip_address". It has no indication of subnetmask. The returned name
      * is optional.
-     * 
-     * @throws UnknownHostException
      */
     @Test
-    public void testInet4Address() throws UnknownHostException {
+    void testInet4Address() throws UnknownHostException {
 
         // Test Bad IP V4 address.
         try {
@@ -99,11 +95,9 @@ public class InetNetworkTest {
      * The InetAddress.toString() returns a string with format
      * "name/ip_address". It has no indication of subnetmask. The returned name
      * is optional.
-     * 
-     * @throws UnknownHostException
      */
     @Test
-    public void testInet6Address() throws UnknownHostException {
+    void testInet6Address() throws UnknownHostException {
 
         // Test Bad IP V6 address.
         try {
@@ -128,11 +122,9 @@ public class InetNetworkTest {
 
     /**
      * Test the Inet4Network.
-     * 
-     * @throws UnknownHostException
      */
     @Test
-    public void testInet4Network() throws UnknownHostException {
+     void testInet4Network() throws UnknownHostException {
 
         // Test with null parameter.
         address = InetAddress.getByAddress(getBytesFromAddress("127.0.0.1"));
@@ -153,11 +145,9 @@ public class InetNetworkTest {
 
     /**
      * Test the Inet6Network.
-     * 
-     * @throws UnknownHostException
      */
     @Test
-    public void testInet6Network() throws UnknownHostException {
+    void testInet6Network() throws UnknownHostException {
 
         // Test with null parameter.
         address = InetAddress.getByAddress(getBytesFromAddress("2781:0db8:1234:8612:45ee:0000:f05e:0001"));

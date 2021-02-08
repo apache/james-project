@@ -25,8 +25,8 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 
 import org.apache.james.dnsservice.api.mock.MockDNSService;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
@@ -35,8 +35,7 @@ import com.google.common.collect.ImmutableList;
  * Basic tests for AbstractDNSServer. The goal is to verify that the interface
  * remains constants and that the built platform has access to the Internet.
  */
-public class AbstractDNSServiceTest {
-
+class AbstractDNSServiceTest {
     /**
      * Simple Mock DNSService relaying on InetAddress.
      */
@@ -65,11 +64,9 @@ public class AbstractDNSServiceTest {
 
     /**
      * Simple localhost resolution.
-     *
-     * @throws UnknownHostException
      */
     @Test
-    public void testLocalhost() throws UnknownHostException {
+    void testLocalhost() throws UnknownHostException {
 
         assertThat(DNS_SERVER.getByName("localhost").toString()).isEqualTo("localhost/127.0.0.1");
 
@@ -81,12 +78,10 @@ public class AbstractDNSServiceTest {
 
     /**
      * Simple apache.org resolution.
-     *
-     * @throws UnknownHostException
      */
     @Test
-    @Ignore(value = "It requires internet connection!")
-    public void testApache() throws UnknownHostException {
+    @Disabled(value = "It requires internet connection!")
+    void testApache() throws UnknownHostException {
         //TODO: move to some sort of Live tests
         assertThat(DNS_SERVER.getByName("www.apache.org").toString().startsWith("www.apache.org")).isTrue();
     }

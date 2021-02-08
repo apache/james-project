@@ -34,9 +34,9 @@ import java.util.List;
 
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xbill.DNS.Cache;
@@ -48,7 +48,7 @@ import org.xbill.DNS.Zone;
 
 import com.google.common.io.Resources;
 
-public class DNSJavaServiceTest {
+class DNSJavaServiceTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(DNSJavaServiceTest.class);
 
     private TestableDNSServer dnsServer;
@@ -63,8 +63,8 @@ public class DNSJavaServiceTest {
 
     private Cache mockedCache;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         dnsServer = new TestableDNSServer();
 
         dnsServer.configure(FileConfigurationProvider.getConfig(new ByteArrayInputStream(DNS_SERVER_CONFIG)));
@@ -81,8 +81,8 @@ public class DNSJavaServiceTest {
         mockedCache = mock(Cache.class);
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() {
         dnsServer.setCache(null);
         dnsServer = null;
         Lookup.setDefaultCache(defaultCache, DClass.IN);
@@ -91,7 +91,7 @@ public class DNSJavaServiceTest {
     }
 
     @Test
-    public void testNoMX() throws Exception {
+    void testNoMX() throws Exception {
         doAnswer(new ZoneCacheLookupRecordsAnswer(loadZone("dnstest.com.")))
                 .when(mockedCache).lookupRecords(any(Name.class), anyInt(), anyInt());
         dnsServer.setCache(mockedCache);
@@ -103,7 +103,7 @@ public class DNSJavaServiceTest {
     }
 
     @Test
-    public void testBadMX() throws Exception {
+    void testBadMX() throws Exception {
         doAnswer(new ZoneCacheLookupRecordsAnswer(loadZone("dnstest.com.")))
                 .when(mockedCache).lookupRecords(any(Name.class), anyInt(), anyInt());
         dnsServer.setCache(mockedCache);
@@ -118,7 +118,7 @@ public class DNSJavaServiceTest {
     }
 
     @Test
-    public void testINARecords() throws Exception {
+    void testINARecords() throws Exception {
         doAnswer(new ZoneCacheLookupRecordsAnswer(loadZone("pippo.com.")))
                 .when(mockedCache).lookupRecords(any(Name.class), anyInt(), anyInt());
         dnsServer.setCache(mockedCache);
@@ -130,7 +130,7 @@ public class DNSJavaServiceTest {
     }
 
     @Test
-    public void testMXCatches() throws Exception {
+    void testMXCatches() throws Exception {
         doAnswer(new ZoneCacheLookupRecordsAnswer(loadZone("test-zone.com.")))
                 .when(mockedCache).lookupRecords(any(Name.class), anyInt(), anyInt());
         dnsServer.setCache(mockedCache);
@@ -151,7 +151,7 @@ public class DNSJavaServiceTest {
      * Test for JAMES-1251
      */
     @Test
-    public void testTwoMXSamePrio() throws Exception {
+    void testTwoMXSamePrio() throws Exception {
         doAnswer(new ZoneCacheLookupRecordsAnswer(loadZone("two-mx.sameprio.")))
                 .when(mockedCache).lookupRecords(any(Name.class), anyInt(), anyInt());
         dnsServer.setCache(mockedCache);
@@ -164,7 +164,7 @@ public class DNSJavaServiceTest {
     }
 
     @Test
-    public void testThreeMX() throws Exception {
+    void testThreeMX() throws Exception {
         doAnswer(new ZoneCacheLookupRecordsAnswer(loadZone("three-mx.bar.")))
                 .when(mockedCache).lookupRecords(any(Name.class), anyInt(), anyInt());
         dnsServer.setCache(mockedCache);
@@ -182,7 +182,7 @@ public class DNSJavaServiceTest {
      * Test for JAMES-1251
      */
     @Test
-    public void testTwoMXDifferentPrio() throws Exception {
+    void testTwoMXDifferentPrio() throws Exception {
         doAnswer(new ZoneCacheLookupRecordsAnswer(loadZone("two-mx.differentprio.")))
                 .when(mockedCache).lookupRecords(any(Name.class), anyInt(), anyInt());
         dnsServer.setCache(mockedCache);
@@ -198,7 +198,7 @@ public class DNSJavaServiceTest {
      * Test for JAMES-1251
      */
     @Test
-    public void testOneMX() throws Exception {
+    void testOneMX() throws Exception {
         doAnswer(new ZoneCacheLookupRecordsAnswer(loadZone("one-mx.bar.")))
                 .when(mockedCache).lookupRecords(any(Name.class), anyInt(), anyInt());
         dnsServer.setCache(mockedCache);

@@ -20,24 +20,20 @@ package org.apache.james.dnsservice.library.netmatcher;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.net.UnknownHostException;
-
 import org.apache.james.dnsservice.api.mock.DNSFixture;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test the NetMatcher class with various IPv4 and IPv6 parameters.
- * 
  */
-public class NetMatcherTest {
-
+class NetMatcherTest {
     private static NetMatcher netMatcher;
 
     /**
      * Test ability to split expressions even when comma is not followed by a space.
      */
     @Test
-    public void testSplitterDoesNotRequireSpaceAfterComma() {
+    void testSplitterDoesNotRequireSpaceAfterComma() {
         netMatcher = new NetMatcher("127.0.0.1,192.168.100.14/24,10.*", DNSFixture.DNS_SERVER_IPV4_MOCK);
         assertThat(netMatcher.toString())
                 .isEqualTo("[10.0.0.0/255.0.0.0, 127.0.0.1/255.255.255.255, 192.168.100.0/255.255.255.0]");
@@ -47,7 +43,7 @@ public class NetMatcherTest {
      * Test for IPV4 uniqueness.
      */
     @Test
-    public void testIpV4NetworksUniqueness() {
+    void testIpV4NetworksUniqueness() {
         netMatcher = new NetMatcher(DNSFixture.LOCALHOST_IP_V4_ADDRESSES_DUPLICATE, DNSFixture.DNS_SERVER_IPV4_MOCK);
         assertThat(netMatcher.toString()).isEqualTo("[172.16.0.0/255.255.0.0, 192.168.1.0/255.255.255.0]");
     }
@@ -56,17 +52,16 @@ public class NetMatcherTest {
      * Test for IPV6 uniqueness.
      */
     @Test
-    public void testIpV6NetworksUniqueness() {
+    void testIpV6NetworksUniqueness() {
         netMatcher = new NetMatcher(DNSFixture.LOCALHOST_IP_V6_ADDRESSES_DUPLICATE, DNSFixture.DNS_SERVER_IPV6_MOCK);
         assertThat(netMatcher.toString()).isEqualTo("[0:0:0:0:0:0:0:1/32768, 2781:db8:1234:0:0:0:0:0/48]");
     }
 
     /**
      * Test for IPV4 matcher.
-     * @throws UnknownHostException
      */
     @Test
-    public void testIpV4Matcher() throws UnknownHostException {
+    void testIpV4Matcher() {
 
         netMatcher = new NetMatcher(DNSFixture.LOCALHOST_IP_V4_ADDRESSES, DNSFixture.DNS_SERVER_IPV4_MOCK);
 
@@ -77,11 +72,8 @@ public class NetMatcherTest {
         assertThat(netMatcher.matchInetNetwork("192.169.1.254")).isFalse();
     }
 
-    /**
-     * @throws UnknownHostException
-     */
     @Test
-    public void testIpV4MatcherWithIpV6() throws UnknownHostException {
+    void testIpV4MatcherWithIpV6() {
 
         netMatcher = new NetMatcher(DNSFixture.LOCALHOST_IP_V4_ADDRESSES, DNSFixture.DNS_SERVER_IPV4_MOCK);
 
@@ -92,11 +84,8 @@ public class NetMatcherTest {
         assertThat(netMatcher.matchInetNetwork("2781:0db8:1235:8612:45ee:ffff:fffe:0001")).isFalse();
     }
 
-    /**
-     * @throws UnknownHostException
-     */
     @Test
-    public void testIpV6Matcher() throws UnknownHostException {
+    void testIpV6Matcher() {
 
         netMatcher = new NetMatcher(DNSFixture.LOCALHOST_IP_V6_ADDRESSES, DNSFixture.DNS_SERVER_IPV6_MOCK);
 
@@ -107,11 +96,8 @@ public class NetMatcherTest {
         assertThat(netMatcher.matchInetNetwork("2781:0db8:1235:8612:45ee:ffff:fffe:0001")).isFalse();
     }
 
-    /**
-     * @throws UnknownHostException
-     */
     @Test
-    public void testIpV6MatcherWithIpV4() throws UnknownHostException {
+    void testIpV6MatcherWithIpV4() {
 
         netMatcher = new NetMatcher(DNSFixture.LOCALHOST_IP_V6_ADDRESSES, DNSFixture.DNS_SERVER_IPV6_MOCK);
 
