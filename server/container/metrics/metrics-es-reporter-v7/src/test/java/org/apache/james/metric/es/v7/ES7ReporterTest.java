@@ -24,8 +24,20 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 @Disabled
-class ES7ReporterTest { //TODO extends ESReporterContract {
+class ES7ReporterTest extends ESReporterContract {
 
     @RegisterExtension
     static DockerElasticSearchExtension testExtension = new DockerElasticSearchExtension(new DockerElasticSearch.NoAuth());
+
+    @Override
+    @Disabled("JAMES-3492")
+    void esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainer() {
+        super.esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainer();
+    }
+
+    @Override
+    @Disabled("JAMES-3492")
+    void esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainerWhenRecordingTimeMetric() {
+        super.esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainerWhenRecordingTimeMetric();
+    }
 }
