@@ -32,7 +32,7 @@ import com.google.common.primitives.Ints;
 
 public class CassandraWaitStrategy implements WaitStrategy {
 
-    private static final Duration DEFAULT_TIMEOUT = Duration.ofMinutes(1);
+    private static final Duration DEFAULT_TIMEOUT = Duration.ofMinutes(2);
     private final GenericContainer<?> cassandraContainer;
     private final Duration timeout;
 
