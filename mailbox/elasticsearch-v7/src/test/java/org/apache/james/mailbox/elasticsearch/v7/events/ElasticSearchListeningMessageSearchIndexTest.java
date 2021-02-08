@@ -88,7 +88,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-@Disabled("Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
+@Disabled("JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
 class ElasticSearchListeningMessageSearchIndexTest {
     static final int SIZE = 25;
     static final int BODY_START_OCTET = 100;

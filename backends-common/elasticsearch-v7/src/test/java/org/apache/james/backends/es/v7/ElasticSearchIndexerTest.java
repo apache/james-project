@@ -81,7 +81,7 @@ class ElasticSearchIndexerTest {
     }
 
     @Test
-    @Disabled
+    @Disabled("JAMES-3492")
     void indexMessageShouldWork() {
         DocumentId documentId = DocumentId.fromString("1");
         String content = "{\"message\": \"trying out Elasticsearch\"}";
@@ -104,7 +104,7 @@ class ElasticSearchIndexerTest {
     }
     
     @Test
-    @Disabled
+    @Disabled("JAMES-3492")
     void updateMessages() {
         String content = "{\"message\": \"trying out Elasticsearch\",\"field\":\"Should be unchanged\"}";
 
@@ -180,7 +180,7 @@ class ElasticSearchIndexerTest {
     }
 
     @Test
-    @Disabled
+    @Disabled("JAMES-3492")
     void deleteByQueryShouldWorkWhenMultipleMessages() {
         DocumentId documentId = DocumentId.fromString("1:1");
         String content = "{\"message\": \"trying out Elasticsearch\", \"property\":\"1\"}";
@@ -211,7 +211,7 @@ class ElasticSearchIndexerTest {
     }
     
     @Test
-    @Disabled
+    @Disabled("JAMES-3492")
     void deleteMessage() {
         DocumentId documentId = DocumentId.fromString("1:2");
         String content = "{\"message\": \"trying out Elasticsearch\"}";
@@ -231,7 +231,7 @@ class ElasticSearchIndexerTest {
     }
 
     @Test
-    @Disabled
+    @Disabled("JAMES-3492")
     void deleteShouldWorkWhenMultipleMessages() {
         DocumentId documentId = DocumentId.fromString("1:1");
         String content = "{\"message\": \"trying out Elasticsearch\", \"mailboxId\":\"1\"}";
