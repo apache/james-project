@@ -52,9 +52,5 @@
 
     <properties>
         <felix.plugin.version>3.3.0</felix.plugin.version>
-        <commons-lang.version>2.6</commons-lang.version>
-        <derby.version>10.14.2.0</derby.version>
-        <lucene-core.version>3.6.0</lucene-core.version>
-        <slf4j.version>1.7.25</slf4j.version>
     </properties>
 </project>
