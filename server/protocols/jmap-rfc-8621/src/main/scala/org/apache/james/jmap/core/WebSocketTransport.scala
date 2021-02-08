@@ -19,6 +19,10 @@
 
 package org.apache.james.jmap.core
 
+import java.nio.charset.StandardCharsets
+
+import com.google.common.hash.Hashing
+import org.apache.james.jmap.api.change.State
 import org.apache.james.jmap.change.{TypeName, TypeState}
 import org.apache.james.jmap.routes.PingPolicy.Interval
 
@@ -36,15 +40,30 @@ case class WebSocketResponse(requestId: Option[RequestId], responseObject: Respo
 
 case class WebSocketError(requestId: Option[RequestId], problemDetails: ProblemDetails) extends OutboundMessage
 
-case class StateChange(changes: Map[AccountId, TypeState]) extends OutboundMessage {
+object PushState {
+  def from(mailboxState: State, emailState: State): PushState =
+    PushState(hashStates(List(mailboxState, emailState)))
+
+  def fromOption(mailboxState: Option[State], emailState: Option[State]): Option[PushState] =
+    List(mailboxState, emailState).flatten match {
+      case Nil => None
+      case states => Some(PushState(hashStates(states)))
+    }
+
+  private def hashStates(states: List[State]): String = Hashing.sha256().hashString(states.mkString("_"), StandardCharsets.UTF_8).toString
+}
+
+case class PushState(value: String)
+
+case class StateChange(changes: Map[AccountId, TypeState], pushState: Option[PushState]) extends OutboundMessage {
 
   def filter(types: Set[TypeName]): Option[StateChange] =
     Option(changes.flatMap {
       case (accountId, typeState) => typeState.filter(types).map(typeState => (accountId, typeState))
     })
     .filter(_.nonEmpty)
-    .map(StateChange)
+    .map(changes => StateChange(changes, pushState))
 }
 
-case class WebSocketPushEnable(dataTypes: Option[Set[TypeName]]) extends WebSocketInboundMessage
+case class WebSocketPushEnable(dataTypes: Option[Set[TypeName]], pushState: Option[PushState]) extends WebSocketInboundMessage
 case object WebSocketPushDisable extends WebSocketInboundMessage

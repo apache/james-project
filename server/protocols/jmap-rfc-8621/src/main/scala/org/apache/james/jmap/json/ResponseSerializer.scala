@@ -191,6 +191,7 @@ object ResponseSerializer {
       .fold(errorMessage => JsError(errorMessage), JsSuccess(_))
     case _ => JsError("Expecting a JsString as typeName")
   }
+  private implicit val pushStateReads: Reads[PushState] = Json.valueReads[PushState]
   private implicit val webSocketPushEnableReads: Reads[WebSocketPushEnable] = Json.reads[WebSocketPushEnable]
   private implicit val webSocketInboundReads: Reads[WebSocketInboundMessage] = {
     case json: JsObject =>
@@ -208,10 +209,17 @@ object ResponseSerializer {
   private implicit val typeStateMapWrites: Writes[Map[TypeName, State]] = mapWrites[TypeName, State](_.asString(), stateWrites)
   private implicit val typeStateWrites: Writes[TypeState] = Json.valueWrites[TypeState]
   private implicit val changeWrites: OWrites[Map[AccountId, TypeState]] = mapWrites[AccountId, TypeState](_.id.value, typeStateWrites)
+  private implicit val pushStateWrites: Writes[PushState] = Json.valueWrites[PushState]
   private implicit val stateChangeWrites: Writes[StateChange] = stateChange =>
-    JsObject(Map(
-      "@type" -> JsString("StateChange"),
-      "changed" -> changeWrites.writes(stateChange.changes)))
+    stateChange.pushState.map(pushState =>
+      JsObject(Map(
+        "@type" -> JsString("StateChange"),
+        "changed" -> changeWrites.writes(stateChange.changes),
+        "pushState" -> pushStateWrites.writes(pushState))))
+      .getOrElse(
+        JsObject(Map(
+          "@type" -> JsString("StateChange"),
+          "changed" -> changeWrites.writes(stateChange.changes))))
 
   private implicit val webSocketResponseWrites: Writes[WebSocketResponse] = response => {
     val apiResponseJson: JsObject = responseObjectFormat.writes(response.responseObject)

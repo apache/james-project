@@ -22,7 +22,8 @@ package org.apache.james.jmap.change
 import org.apache.james.core.Username
 import org.apache.james.events.Event
 import org.apache.james.events.Event.EventId
-import org.apache.james.jmap.core.{AccountId, State, StateChange}
+import org.apache.james.jmap.api.change.{State => JavaState}
+import org.apache.james.jmap.core.{AccountId, PushState, State, StateChange}
 
 object TypeName {
   val ALL: Set[TypeName] = Set(EmailTypeName, MailboxTypeName, ThreadTypeName, IdentityTypeName, EmailSubmissionTypeName, EmailDeliveryTypeName)
@@ -91,7 +92,10 @@ case class StateChangeEvent(eventId: EventId,
         VacationResponseTypeName.asMap(vacationResponseState) ++
           MailboxTypeName.asMap(mailboxState) ++
           EmailDeliveryTypeName.asMap(emailDeliveryState) ++
-          EmailTypeName.asMap(emailState))))
+          EmailTypeName.asMap(emailState))),
+      PushState.fromOption(
+        mailboxState.map(state => JavaState.of(state.value)),
+        emailState.map(state => JavaState.of(state.value))))
 
   override val getUsername: Username = username
 

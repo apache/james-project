@@ -21,7 +21,8 @@ package org.apache.james.jmap.change
 
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
-import org.apache.james.jmap.core.{AccountId, OutboundMessage, State, StateChange}
+import org.apache.james.jmap.api.change.{State => JavaState}
+import org.apache.james.jmap.core.{AccountId, OutboundMessage, PushState, State, StateChange}
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import reactor.core.publisher.Sinks
@@ -48,10 +49,11 @@ class StateChangeListenerTest {
     SMono(listener.reactiveEvent(event)).subscribeOn(Schedulers.elastic()).block()
     sink.emitComplete(EmitFailureHandler.FAIL_FAST)
 
+    val globalState = PushState.from(JavaState.of(mailboxState.value), JavaState.of(emailState.value))
     assertThat(sink.asFlux().collectList().block())
       .containsExactly(StateChange(Map(AccountId.from(Username.of("bob")).toOption.get  -> TypeState(Map(
         MailboxTypeName -> mailboxState,
-        EmailTypeName -> emailState)))))
+        EmailTypeName -> emailState))), Some(globalState)))
   }
 
   @Test
@@ -68,9 +70,10 @@ class StateChangeListenerTest {
     SMono(listener.reactiveEvent(event)).subscribeOn(Schedulers.elastic()).block()
     sink.emitComplete(EmitFailureHandler.FAIL_FAST)
 
+    val globalState = PushState.from(JavaState.of(mailboxState.value), JavaState.of(emailState.value))
     assertThat(sink.asFlux().collectList().block())
       .containsExactly(StateChange(Map(AccountId.from(Username.of("bob")).toOption.get -> TypeState(Map(
-        MailboxTypeName -> mailboxState)))))
+        MailboxTypeName -> mailboxState))), Some(globalState)))
   }
 
   @Test
