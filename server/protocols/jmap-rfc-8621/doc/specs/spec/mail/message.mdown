@@ -856,10 +856,6 @@ Due to the format of the Email object, when creating an Email there are a number
 - Within an EmailBodyPart:
   - The client may specify a *partId* OR a *blobId*, but not both. If a *partId* is
     given, this *partId* MUST be present in the bodyValues property.
-
-> :warning:
-> htmlBody and textBody parts needs to have a *partId*. `attachments` parts need to specify *blobId*.
-
   - The charset property MUST be omitted if a partId is given (the part's
     content is included in bodyValues, and the server may choose any appropriate
     encoding).
@@ -869,7 +865,9 @@ Due to the format of the Email object, when creating an Email there are a number
   - A `Content-Transfer-Encoding` header field MUST NOT be given.
 
 > :warning:
-> EmailBodyPart specific headers are not supported for Email/set create.
+> The following limitations applies for the James implementation of EmailBodyPart:
+>  - htmlBody and textBody parts needs to have a *partId*. `attachments` parts need to specify *blobId*.
+>  - EmailBodyPart specific headers are not supported for Email/set create.
 
 - Within an EmailBodyValue object, isEncodingProblem and isTruncated MUST be
   either `false` or omitted.
