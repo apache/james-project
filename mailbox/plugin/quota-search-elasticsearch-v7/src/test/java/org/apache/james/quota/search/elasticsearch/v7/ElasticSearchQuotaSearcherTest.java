@@ -29,7 +29,11 @@ import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.quota.search.*;
+import org.apache.james.quota.search.Limit;
+import org.apache.james.quota.search.Offset;
+import org.apache.james.quota.search.QuotaQuery;
+import org.apache.james.quota.search.QuotaSearchTestSystem;
+import org.apache.james.quota.search.QuotaSearcherContract;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -45,17 +49,17 @@ class ElasticSearchQuotaSearcherTest implements QuotaSearcherContract {
         testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSizeLimit.size(100));
 
         IntStream.range(0, userCount)
-            .boxed()
-            .map(i -> Username.fromLocalPartWithDomain("user" + i, SIMPSON_COM))
-            .forEach(user -> provisionUser(testSystem, user));
+                .boxed()
+                .map(i -> Username.fromLocalPartWithDomain("user" + i, SIMPSON_COM))
+                .forEach(user -> provisionUser(testSystem, user));
         testSystem.await();
 
         assertThat(
-            testSystem.getQuotaSearcher()
-                .search(QuotaQuery.builder()
-                    .withLimit(Limit.unlimited())
-                    .build()))
-            .hasSize(userCount);
+                testSystem.getQuotaSearcher()
+                        .search(QuotaQuery.builder()
+                                .withLimit(Limit.unlimited())
+                                .build()))
+                .hasSize(userCount);
     }
 
     @Test
@@ -65,18 +69,18 @@ class ElasticSearchQuotaSearcherTest implements QuotaSearcherContract {
         testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSizeLimit.size(100));
 
         IntStream.range(0, userCount)
-            .boxed()
-            .map(i -> Username.fromLocalPartWithDomain("user" + i, SIMPSON_COM))
-            .forEach(user -> provisionUser(testSystem, user));
+                .boxed()
+                .map(i -> Username.fromLocalPartWithDomain("user" + i, SIMPSON_COM))
+                .forEach(user -> provisionUser(testSystem, user));
         testSystem.await();
 
         assertThat(
-            testSystem.getQuotaSearcher()
-                .search(QuotaQuery.builder()
-                    .withLimit(Limit.unlimited())
-                    .withOffset(Offset.of(1))
-                    .build()))
-            .hasSize(userCount - 1);
+                testSystem.getQuotaSearcher()
+                        .search(QuotaQuery.builder()
+                                .withLimit(Limit.unlimited())
+                                .withOffset(Offset.of(1))
+                                .build()))
+                .hasSize(userCount - 1);
     }
 
     private void provisionUser(QuotaSearchTestSystem testSystem, Username username) {
