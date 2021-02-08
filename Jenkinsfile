@@ -92,6 +92,14 @@ pipeline {
         stage('Stable Tests') {
             steps {
                 echo 'Running tests'
+                catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS'){
+                    sh 'sysbench --test=memory --memory-block-size=$size --memory-total-size=10G run'
+                    sh 'sysbench --test=cpu --num-threads=1 run'
+                }
+                catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS'){
+                    sh 'cat /proc/cpuinfo'
+                    sh 'free -h'
+                }
                 sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS}'
             }
             post {
