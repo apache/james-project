@@ -18,13 +18,11 @@
  ****************************************************************/
 package org.apache.james.app.spring;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class JamesAppSpringMainTest {
-
+class JamesAppSpringMainTest {
     @Test
-    public void testServer() throws Exception {
+    void testServer() throws Exception {
         JamesAppSpringMain.main(null);
     }
-
 }

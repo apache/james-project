@@ -26,28 +26,28 @@ import org.apache.james.events.InVMEventBus;
 import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class JamesSpringContextTest {
+class JamesSpringContextTest {
     private JamesServerApplicationContext context;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         context = new JamesServerApplicationContext(new String[] { "META-INF/org/apache/james/spring-server.xml" });
         context.registerShutdownHook();
         context.start();
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         context.stop();
         context.destroy();
     }
 
     @Test
-    public void springShouldLoadAndAddOnlyOneQuotaUpdaterListener() {
+    void springShouldLoadAndAddOnlyOneQuotaUpdaterListener() {
         InVMEventBus eventBus = context.getBean(InVMEventBus.class);
 
         assertThat(eventBus.registeredGroups())
