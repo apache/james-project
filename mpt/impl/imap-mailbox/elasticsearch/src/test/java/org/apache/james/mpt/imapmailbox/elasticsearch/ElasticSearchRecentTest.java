@@ -22,17 +22,17 @@ package org.apache.james.mpt.imapmailbox.elasticsearch;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.elasticsearch.host.ElasticSearchHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.Recent;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 
-@Ignore("MAILBOX-398 ElasticSearch backend do not take into account session recent messages")
+@Disabled("MAILBOX-398 ElasticSearch backend do not take into account session recent messages")
 public class ElasticSearchRecentTest extends Recent {
 
     private ImapHostSystem system;
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         system = new ElasticSearchHostSystem();
         system.beforeTest();
@@ -44,7 +44,7 @@ public class ElasticSearchRecentTest extends Recent {
         return system;
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         system.afterTest();
     }

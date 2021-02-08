@@ -24,8 +24,8 @@ import java.util.Locale;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public abstract class Recent extends BasicImapCommands {
     protected abstract ImapHostSystem createImapHostSystem();
@@ -33,7 +33,7 @@ public abstract class Recent extends BasicImapCommands {
     private ImapHostSystem system;
     private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         system = createImapHostSystem();
         simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)

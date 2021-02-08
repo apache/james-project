@@ -28,8 +28,8 @@ import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.GrantRightsOnHost;
 import org.apache.james.mpt.imapmailbox.ImapTestConstants;
 import org.apache.james.mpt.imapmailbox.MailboxMessageAppender;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public abstract class ACLIntegration implements ImapTestConstants {
     public static final Username OTHER_USER_NAME = Username.of("Boby");
@@ -49,7 +49,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
 
     private ACLScriptedTestProtocol scriptedTestProtocol;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         system = createImapHostSystem();
         grantRightsOnHost = createGrantRightsOnHost();

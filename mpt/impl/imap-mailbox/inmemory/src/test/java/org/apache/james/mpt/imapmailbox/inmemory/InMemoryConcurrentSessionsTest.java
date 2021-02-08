@@ -22,14 +22,13 @@ package org.apache.james.mpt.imapmailbox.inmemory;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.inmemory.host.InMemoryHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.ConcurrentSessions;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 public class InMemoryConcurrentSessionsTest extends ConcurrentSessions {
-
     private ImapHostSystem system;
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         system = new InMemoryHostSystem();
         system.beforeTest();
@@ -40,5 +39,4 @@ public class InMemoryConcurrentSessionsTest extends ConcurrentSessions {
     protected ImapHostSystem createImapHostSystem() {
         return system;
     }
-    
 }

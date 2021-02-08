@@ -22,15 +22,14 @@ package org.apache.james.mpt.imapmailbox.maildir;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.maildir.host.MaildirHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.Select;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 public class MaildirSelectTest extends Select {
-
     private ImapHostSystem system;
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         system = new MaildirHostSystem();
         system.beforeTest();
@@ -42,9 +41,8 @@ public class MaildirSelectTest extends Select {
         return system;
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         system.afterTest();
     }
-    
 }

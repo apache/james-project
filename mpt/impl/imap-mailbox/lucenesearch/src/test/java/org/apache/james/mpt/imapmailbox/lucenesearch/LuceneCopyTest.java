@@ -22,15 +22,15 @@ package org.apache.james.mpt.imapmailbox.lucenesearch;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.lucenesearch.host.LuceneSearchHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.Copy;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 public class LuceneCopyTest extends Copy {
 
     private ImapHostSystem system;
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         system = new LuceneSearchHostSystem();
         system.beforeTest();
@@ -42,7 +42,7 @@ public class LuceneCopyTest extends Copy {
         return system;
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         system.afterTest();
     }

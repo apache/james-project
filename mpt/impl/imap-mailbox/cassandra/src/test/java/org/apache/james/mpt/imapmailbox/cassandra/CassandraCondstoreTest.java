@@ -19,23 +19,17 @@
 
 package org.apache.james.mpt.imapmailbox.cassandra;
 
-import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mpt.host.JamesImapHostSystem;
-import org.apache.james.mpt.imapmailbox.cassandra.host.CassandraHostSystemRule;
+import org.apache.james.mpt.imapmailbox.cassandra.host.CassandraHostSystemExtension;
 import org.apache.james.mpt.imapmailbox.suite.Condstore;
-import org.junit.Rule;
-import org.junit.rules.RuleChain;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class CassandraCondstoreTest extends Condstore {
-    public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
-    public CassandraHostSystemRule cassandraHostSystemRule = new CassandraHostSystemRule(cassandraServer);
-
-    @Rule
-    public RuleChain ruleChain = RuleChain.outerRule(cassandraServer).around(cassandraHostSystemRule);
+    @RegisterExtension
+    static CassandraHostSystemExtension hostSystemExtension = new CassandraHostSystemExtension();
 
     @Override
     protected JamesImapHostSystem createJamesImapHostSystem() {
-        return cassandraHostSystemRule.getImapHostSystem();
+        return hostSystemExtension.getImapHostSystem();
     }
-
 }

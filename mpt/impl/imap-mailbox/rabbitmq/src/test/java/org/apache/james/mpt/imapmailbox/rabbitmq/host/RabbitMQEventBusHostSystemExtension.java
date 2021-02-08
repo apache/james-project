@@ -16,34 +16,40 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.backends.rabbitmq;
 
-import static org.apache.james.backends.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
+package org.apache.james.mpt.imapmailbox.rabbitmq.host;
 
-import org.junit.rules.ExternalResource;
+import org.apache.james.backends.rabbitmq.RabbitMQExtension;
+import org.apache.james.backends.rabbitmq.RabbitMQManagementAPI;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.github.fge.lambdas.runnable.ThrowingRunnable;
 
-public class DockerRabbitMQTestRule extends ExternalResource {
+public class RabbitMQEventBusHostSystemExtension implements BeforeEachCallback, AfterEachCallback {
+    private final RabbitMQExtension rabbitMQExtension;
+    private RabbitMQEventBusHostSystem hostSystem;
 
-    private DockerRabbitMQ dockerRabbitMQ;
-
-    public DockerRabbitMQTestRule() {
-        dockerRabbitMQ = DockerRabbitMQSingleton.SINGLETON;
+    public RabbitMQEventBusHostSystemExtension() {
+        rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ()
+            .isolationPolicy(RabbitMQExtension.IsolationPolicy.WEAK);
     }
 
     @Override
-    protected void before() throws Throwable {
-        dockerRabbitMQ.start();
-    }
-
-    @Override
-    protected void after() {
+    public void afterEach(ExtensionContext extensionContext) {
         performQuietly(() -> {
-            RabbitMQManagementAPI managementAPI = managementAPI();
+            RabbitMQManagementAPI managementAPI = rabbitMQExtension.managementAPI();
             managementAPI.listQueues()
                 .forEach(queue -> managementAPI.deleteQueue("/", queue.getName()));
         });
+        hostSystem.afterTest();
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext extensionContext) throws Exception {
+        hostSystem = new RabbitMQEventBusHostSystem(rabbitMQExtension.getRabbitMQ());
+        hostSystem.beforeTest();
     }
 
     private void performQuietly(ThrowingRunnable runnable) {
@@ -54,15 +60,7 @@ public class DockerRabbitMQTestRule extends ExternalResource {
         }
     }
 
-    private RabbitMQManagementAPI managementAPI() throws Exception {
-        return RabbitMQManagementAPI.from(RabbitMQConfiguration.builder()
-            .amqpUri(dockerRabbitMQ.amqpUri())
-            .managementUri(dockerRabbitMQ.managementUri())
-            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
-            .build());
-    }
-
-    public DockerRabbitMQ getDockerRabbitMQ() {
-        return dockerRabbitMQ;
+    public RabbitMQEventBusHostSystem getHostSystem() {
+        return hostSystem;
     }
 }

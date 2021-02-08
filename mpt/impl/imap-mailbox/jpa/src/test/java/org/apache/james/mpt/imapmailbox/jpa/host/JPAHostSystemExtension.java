@@ -20,12 +20,14 @@
 package org.apache.james.mpt.imapmailbox.jpa.host;
 
 import org.apache.james.mpt.host.JamesImapHostSystem;
-import org.junit.rules.ExternalResource;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
-public class JPAHostSystemRule extends ExternalResource {
+public class JPAHostSystemExtension implements BeforeEachCallback, AfterEachCallback {
     private final JamesImapHostSystem hostSystem;
 
-    public JPAHostSystemRule() {
+    public JPAHostSystemExtension() {
         try {
             hostSystem = JPAHostSystem.build();
         } catch (Exception e) {
@@ -34,17 +36,14 @@ public class JPAHostSystemRule extends ExternalResource {
     }
 
     @Override
-    protected void before() throws Throwable {
-        hostSystem.beforeTest();
+    public void afterEach(ExtensionContext extensionContext) throws Exception {
+
+        hostSystem.afterTest();
     }
 
     @Override
-    protected void after() {
-        try {
-            hostSystem.afterTest();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public void beforeEach(ExtensionContext extensionContext) throws Exception {
+        hostSystem.beforeTest();
     }
 
     public JamesImapHostSystem getHostSystem() {

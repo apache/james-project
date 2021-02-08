@@ -23,14 +23,13 @@ import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.lucenesearch.host.LuceneSearchHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.AuthenticatePlain;
 import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 public class LuceneAuthenticatePlainTest extends AuthenticatePlain {
-
     private ImapHostSystem system;
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         system = new LuceneSearchHostSystem();
         system.beforeTest();
@@ -46,5 +45,4 @@ public class LuceneAuthenticatePlainTest extends AuthenticatePlain {
     public void tearDown() throws Exception {
         system.afterTest();
     }
-    
 }

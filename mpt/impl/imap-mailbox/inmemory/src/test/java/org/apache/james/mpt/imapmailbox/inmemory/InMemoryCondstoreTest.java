@@ -22,14 +22,13 @@ package org.apache.james.mpt.imapmailbox.inmemory;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.inmemory.host.InMemoryHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.Condstore;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 public class InMemoryCondstoreTest extends Condstore {
-
     private JamesImapHostSystem system;
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         system = new InMemoryHostSystem();
         system.beforeTest();

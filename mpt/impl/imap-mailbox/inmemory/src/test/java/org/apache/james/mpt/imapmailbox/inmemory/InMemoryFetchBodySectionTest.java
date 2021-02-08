@@ -22,14 +22,13 @@ package org.apache.james.mpt.imapmailbox.inmemory;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.inmemory.host.InMemoryHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.FetchBodySection;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 public class InMemoryFetchBodySectionTest extends FetchBodySection {
-
     private ImapHostSystem system;
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         system = new InMemoryHostSystem();
         system.beforeTest();
@@ -40,5 +39,4 @@ public class InMemoryFetchBodySectionTest extends FetchBodySection {
     protected ImapHostSystem createImapHostSystem() {
         return system;
     }
-    
 }

@@ -24,17 +24,16 @@ import java.util.Locale;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.ImapTestConstants;
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public abstract class Security implements ImapTestConstants {
-
     protected abstract ImapHostSystem createImapHostSystem();
     
     private ImapHostSystem system;
     private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         system = createImapHostSystem();
         simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)

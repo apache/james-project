@@ -22,15 +22,14 @@ package org.apache.james.mpt.imapmailbox.lucenesearch;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.lucenesearch.host.LuceneSearchHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.Events;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 public class LuceneEventsTest extends Events {
-
     private ImapHostSystem system;
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         system = new LuceneSearchHostSystem();
         system.beforeTest();
@@ -42,9 +41,8 @@ public class LuceneEventsTest extends Events {
         return system;
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         system.afterTest();
     }
-    
 }

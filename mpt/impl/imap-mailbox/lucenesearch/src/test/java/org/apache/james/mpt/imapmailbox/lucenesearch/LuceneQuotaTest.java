@@ -22,14 +22,13 @@ package org.apache.james.mpt.imapmailbox.lucenesearch;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.lucenesearch.host.LuceneSearchHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.QuotaTest;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 public class LuceneQuotaTest extends QuotaTest {
-
     private ImapHostSystem system;
 
     @Override
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         system = new LuceneSearchHostSystem();
         system.beforeTest();
@@ -40,5 +39,4 @@ public class LuceneQuotaTest extends QuotaTest {
     protected ImapHostSystem createImapHostSystem() {
         return system;
     }
-
 }

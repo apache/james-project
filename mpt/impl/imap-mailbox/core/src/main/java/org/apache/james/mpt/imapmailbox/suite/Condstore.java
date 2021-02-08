@@ -26,8 +26,8 @@ import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.ImapTestConstants;
 import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public abstract class Condstore implements ImapTestConstants {
 
@@ -36,7 +36,7 @@ public abstract class Condstore implements ImapTestConstants {
     private JamesImapHostSystem system;
     private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         system = createJamesImapHostSystem();
         simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)

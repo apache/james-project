@@ -28,11 +28,10 @@ import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.GrantRightsOnHost;
 import org.apache.james.mpt.imapmailbox.ImapTestConstants;
 import org.apache.james.mpt.imapmailbox.MailboxMessageAppender;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public abstract class ACLCommands implements ImapTestConstants {
-    
     public static final Username OTHER_USER_NAME = Username.of("Boby");
     public static final String OTHER_USER_PASSWORD = "password";
     public static final MailboxPath OTHER_USER_MAILBOX = MailboxPath.forUser(OTHER_USER_NAME, "");
@@ -47,7 +46,7 @@ public abstract class ACLCommands implements ImapTestConstants {
     private MailboxACL.Rfc4314Rights readWriteSeenRight;
     private ACLScriptedTestProtocol scriptedTestProtocol;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         system = createImapHostSystem();
         grantRightsOnHost = createGrantRightsOnHost();

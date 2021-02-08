@@ -28,8 +28,8 @@ import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.ImapTestConstants;
 import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
 import org.apache.james.mpt.script.ImapScriptedTestProtocol;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public abstract class ListingWithSharingTest implements ImapTestConstants {
     public static final Username OTHER_USER_NAME = Username.of("Boby");
@@ -42,7 +42,7 @@ public abstract class ListingWithSharingTest implements ImapTestConstants {
     private ImapHostSystem system;
     private ImapScriptedTestProtocol scriptedTestProtocol;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         system = createImapHostSystem();
         scriptedTestProtocol = new ImapScriptedTestProtocol("/org/apache/james/imap/scripts/", system)

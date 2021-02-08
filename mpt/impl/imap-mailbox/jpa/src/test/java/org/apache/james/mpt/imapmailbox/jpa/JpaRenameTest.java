@@ -20,16 +20,16 @@
 package org.apache.james.mpt.imapmailbox.jpa;
 
 import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.imapmailbox.jpa.host.JPAHostSystemRule;
+import org.apache.james.mpt.imapmailbox.jpa.host.JPAHostSystemExtension;
 import org.apache.james.mpt.imapmailbox.suite.Rename;
-import org.junit.Rule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class JpaRenameTest extends Rename {
-    @Rule
-    public JPAHostSystemRule hostSystemRule = new JPAHostSystemRule();
+    @RegisterExtension
+    public JPAHostSystemExtension hostSystemExtension = new JPAHostSystemExtension();
 
     @Override
     protected ImapHostSystem createImapHostSystem() {
-        return hostSystemRule.getHostSystem();
+        return hostSystemExtension.getHostSystem();
     }
 }

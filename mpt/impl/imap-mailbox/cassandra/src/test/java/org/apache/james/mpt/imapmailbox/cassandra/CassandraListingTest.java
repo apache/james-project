@@ -23,26 +23,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Locale;
 
-import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.cassandra.host.CassandraHostSystem;
-import org.apache.james.mpt.imapmailbox.cassandra.host.CassandraHostSystemRule;
+import org.apache.james.mpt.imapmailbox.cassandra.host.CassandraHostSystemExtension;
 import org.apache.james.mpt.imapmailbox.suite.Listing;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class CassandraListingTest extends Listing {
-    public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
-    public CassandraHostSystemRule cassandraHostSystemRule = new CassandraHostSystemRule(cassandraServer);
-
-    @Rule
-    public RuleChain ruleChain = RuleChain.outerRule(cassandraServer).around(cassandraHostSystemRule);
+    @RegisterExtension
+    static CassandraHostSystemExtension hostSystemExtension = new CassandraHostSystemExtension();
 
     @Override
     protected ImapHostSystem createImapHostSystem() {
-        return cassandraHostSystemRule.getImapHostSystem();
+        return hostSystemExtension.getImapHostSystem();
     }
 
     @Test

@@ -21,8 +21,8 @@ package org.apache.james.mpt.smtp;
 import java.util.Locale;
 
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public abstract class SmtpAuthCommandTest {
 
@@ -36,7 +36,7 @@ public abstract class SmtpAuthCommandTest {
     private SmtpHostSystem hostSystem;
     private SimpleScriptedTestProtocol scriptedTest;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         hostSystem = createSmtpHostSystem();
         String scriptDir = "/org/apache/james/smtp/scripts/";

@@ -19,21 +19,17 @@
 
 package org.apache.james.mpt.imapmailbox.rabbitmq;
 
-import org.apache.james.backends.rabbitmq.DockerRabbitMQTestRule;
 import org.apache.james.mpt.host.JamesImapHostSystem;
-import org.apache.james.mpt.imapmailbox.rabbitmq.host.RabbitMQEventBusHostSystemRule;
+import org.apache.james.mpt.imapmailbox.rabbitmq.host.RabbitMQEventBusHostSystemExtension;
 import org.apache.james.mpt.imapmailbox.suite.Condstore;
-import org.junit.Rule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class RabbitMQCondstoreTest extends Condstore {
-    @Rule
-    public DockerRabbitMQTestRule rabbitMQRule = new DockerRabbitMQTestRule();
-
-    @Rule
-    public RabbitMQEventBusHostSystemRule hostSystemRule = new RabbitMQEventBusHostSystemRule(rabbitMQRule);
+    @RegisterExtension
+    static RabbitMQEventBusHostSystemExtension hostSystemExtension = new RabbitMQEventBusHostSystemExtension();
 
     @Override
     protected JamesImapHostSystem createJamesImapHostSystem() {
-        return hostSystemRule.getHostSystem();
+        return hostSystemExtension.getHostSystem();
     }
 }

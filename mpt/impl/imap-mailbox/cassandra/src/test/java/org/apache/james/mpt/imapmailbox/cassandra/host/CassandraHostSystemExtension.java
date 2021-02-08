@@ -18,31 +18,42 @@
  ****************************************************************/
 package org.apache.james.mpt.imapmailbox.cassandra.host;
 
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.DockerCassandraExtension;
 import org.apache.james.mpt.host.JamesImapHostSystem;
-import org.junit.rules.ExternalResource;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
-public class CassandraHostSystemRule extends ExternalResource {
-    private final DockerCassandraRule cassandraServer;
+public class CassandraHostSystemExtension implements BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback {
+    private final DockerCassandraExtension cassandraExtension;
     private CassandraHostSystem system;
 
-    public CassandraHostSystemRule(DockerCassandraRule cassandraServer) {
-        this.cassandraServer = cassandraServer;
+    public CassandraHostSystemExtension() {
+        this.cassandraExtension = new DockerCassandraExtension();
     }
 
     @Override
-    protected void before() throws Throwable {
-        system = new CassandraHostSystem(cassandraServer.getHost());
+    public void afterAll(ExtensionContext extensionContext) {
+        cassandraExtension.afterAll(extensionContext);
+    }
+
+    @Override
+    public void afterEach(ExtensionContext extensionContext) throws Exception {
+        system.afterTest();
+    }
+
+    @Override
+    public void beforeAll(ExtensionContext extensionContext) {
+        cassandraExtension.beforeAll(extensionContext);
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext extensionContext) throws Exception {
+        cassandraExtension.beforeEach(extensionContext);
+        system = new CassandraHostSystem(cassandraExtension.getDockerCassandra().getHost());
         system.beforeTest();
-    }
-
-    @Override
-    protected void after() {
-        try {
-            system.afterTest();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public JamesImapHostSystem getImapHostSystem() {
