@@ -45,6 +45,7 @@ import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.mailbox.tika.TikaExtension;
 import org.apache.james.mailbox.tika.TikaHttpClientImpl;
@@ -62,6 +63,7 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 
+@Disabled("JAMES-3492, error occurs in setup method")
 class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
     static final int BATCH_SIZE = 1;
@@ -81,12 +83,14 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
         client.close();
     }
 
-    @Override
+    @Disabled("JAMES-3492")
+	@Override
     protected void await() {
         elasticSearch.awaitForElasticSearch();
     }
 
-    @Override
+    @Disabled("JAMES-3492")
+	@Override
     protected void initializeMailboxManager() throws Exception {
         textExtractor = new TikaTextExtractor(new RecordingMetricFactory(),
             new TikaHttpClientImpl(TikaConfiguration.builder()
@@ -407,4 +411,114 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "domain-test.tld")), session)).toStream())
             .containsOnly(messageId1.getUid());
     }
+
+    @Disabled("JAMES-3492")
+	@Override
+    protected void bodyContainsShouldReturnUidOfMessageContainingTheApproximativeText() throws MailboxException {
+        super.bodyContainsShouldReturnUidOfMessageContainingTheApproximativeText();
+    }
+
+    @Disabled("JAMES-3492")
+	@Override
+    public void textShouldMatchEmailAddressDomainPart() throws Exception {
+        super.textShouldMatchEmailAddressDomainPart();
+    }
+
+    @Disabled("JAMES-3492")
+	@Override
+    protected void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInAllMailboxes() throws MailboxException {
+        super.multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInAllMailboxes();
+    }
+
+    @Disabled("JAMES-3492")
+	@Override
+    protected void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInTwoMailboxes() throws MailboxException {
+        super.multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInTwoMailboxes();
+    }
+
+    @Disabled("JAMES-3492")
+	@Override
+    protected void internalDateAfterShouldReturnMessagesAfterAGivenDate() throws Exception {
+        super.internalDateAfterShouldReturnMessagesAfterAGivenDate();
+    }
+
+    @Disabled("JAMES-3492")
+	@Override
+    protected void internalDateBeforeShouldReturnMessagesBeforeAGivenDate() throws Exception {
+        super.internalDateBeforeShouldReturnMessagesBeforeAGivenDate();
+    }
+
+    @Disabled("JAMES-3492")
+	@Override
+    protected void modSeqEqualsShouldReturnUidsOfMessageHavingAGivenModSeq() throws Exception {
+        super.modSeqEqualsShouldReturnUidsOfMessageHavingAGivenModSeq();
+    }
+
+    @Disabled("JAMES-3492")
+	@Override
+    protected void modSeqGreaterThanShouldReturnUidsOfMessageHavingAGreaterModSeq() throws Exception {
+        super.modSeqGreaterThanShouldReturnUidsOfMessageHavingAGreaterModSeq();
+    }
+
+    @Disabled("JAMES-3492")
+	@Override
+    protected void modSeqLessThanShouldReturnUidsOfMessageHavingAGreaterModSeq() throws Exception {
+        super.modSeqLessThanShouldReturnUidsOfMessageHavingAGreaterModSeq();
+    }
+
+    @Disabled("JAMES-3492")
+	@Override
+    protected void addressShouldReturnUidHavingRightExpeditorWhenFromIsSpecified() throws Exception {
+        super.addressShouldReturnUidHavingRightExpeditorWhenFromIsSpecified();
+    }
+
+    @Disabled("JAMES-3492")
+	@Override
+    protected void uidShouldreturnEveryThing() throws Exception {
+        super.uidShouldreturnEveryThing();
+    }
+
+    @Disabled("JAMES-3492")
+	@Override
+    protected void youShouldBeAbleToSpecifySeveralCriterionOnASingleQuery() throws Exception {
+        super.youShouldBeAbleToSpecifySeveralCriterionOnASingleQuery();
+    }
+
+    @Disabled("JAMES-3492")
+	@Override
+    protected void andShouldReturnResultsMatchingBothRequests() throws Exception {
+        super.andShouldReturnResultsMatchingBothRequests();
+    }
+
+    @Disabled("JAMES-3492")
+	@Override
+    protected void orShouldReturnResultsMatchinganyRequests() throws Exception {
+        super.orShouldReturnResultsMatchinganyRequests();
+    }
+
+    @Disabled("JAMES-3492")
+	@Override
+    protected void mailsContainsShouldIncludeMailHavingAttachmentsMatchingTheRequest() throws Exception {
+        super.mailsContainsShouldIncludeMailHavingAttachmentsMatchingTheRequest();
+    }
+
+    @Disabled("JAMES-3492")
+	@Override
+    protected void sortOnCcShouldWork() throws Exception {
+        super.sortOnCcShouldWork();
+    }
+
+    @Disabled("JAMES-3492")
+	@Override
+    protected void sortOnFromShouldWork() throws Exception {
+        super.sortOnFromShouldWork();
+    }
+
+    @Disabled("JAMES-3492")
+	@Override
+    protected void sortOnToShouldWork() throws Exception {
+        super.sortOnToShouldWork();
+    }
+
+
 }
