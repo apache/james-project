@@ -156,7 +156,8 @@ public class MessageMetadataView implements MessageView {
     }
 
     public boolean isIsForwarded() {
-        return keywords.contains(Keyword.FORWARDED);
+        return keywords.contains(Keyword.FORWARDED)
+            || keywords.contains(Keyword.of("$forwarded"));
     }
 
     public Number getSize() {

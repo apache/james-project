@@ -20,6 +20,7 @@
 package org.apache.james.jmap.draft.model.message.view;
 
 import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.BOB;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.Flags;
 
@@ -82,6 +83,28 @@ class MessageMetadataViewFactoryTest {
            softly.assertThat(actual.getKeywords()).isEqualTo(Keywords.strictFactory().from(Keyword.SEEN).asMap());
            softly.assertThat(actual.getBlobId()).isEqualTo(BlobId.of(message1.getMessageId().serialize()));
         });
+    }
+
+    @Test
+    void forwardedShouldBeReturnTrueWhenLowerCase() throws Exception {
+        ComposedMessageId message2 = bobInbox.appendMessage(MessageManager.AppendCommand.builder()
+                .withFlags(new Flags("$forwarded"))
+                .build("header: value\r\n\r\nbody"),
+            session).getId();
+
+        MessageMetadataView actual = testee.fromMessageIds(ImmutableList.of(message2.getMessageId()), session).collectList().block().get(0);
+        assertThat(actual.isIsForwarded()).isTrue();
+    }
+
+    @Test
+    void isForwardedShouldReturnTrueWhenUpperCase() throws Exception {
+        ComposedMessageId message2 = bobInbox.appendMessage(MessageManager.AppendCommand.builder()
+                .withFlags(new Flags("$Forwarded"))
+                .build("header: value\r\n\r\nbody"),
+            session).getId();
+
+        MessageMetadataView actual = testee.fromMessageIds(ImmutableList.of(message2.getMessageId()), session).collectList().block().get(0);
+        assertThat(actual.isIsForwarded()).isTrue();
     }
 
     @Test
