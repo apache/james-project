@@ -351,7 +351,13 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   private implicit val languagesWrites: Format[Languages] = Json.valueFormat[Languages]
   private implicit val locationReads: Reads[Location] = Json.valueReads[Location]
   private implicit val cidFormat: Format[ClientCid] = Json.valueFormat[ClientCid]
-  private implicit val attachmentReads: Reads[Attachment] = Json.reads[Attachment]
+  private implicit val attachmentReads: Reads[Attachment] = {
+    case JsObject(keys) if keys.keys.exists(_.contains("header:Content-Transfer-Encoding")) =>
+      JsError("Content-Transfer-Encoding should not be specified on attachment")
+    case JsObject(keys) if keys.keys.exists(_.startsWith("header:Content-Transfer-Encoding:")) =>
+      JsError("Content-Transfer-Encoding should not be specified on attachment")
+    case jsValue: JsValue => Json.reads[Attachment].reads(jsValue)
+  }
   private implicit val emailCreationRequestWithoutHeadersReads: Reads[EmailCreationRequestWithoutHeaders] = Json.reads[EmailCreationRequestWithoutHeaders]
   private implicit val emailCreationRequestReads: Reads[EmailCreationRequest] = {
     case o: JsObject =>

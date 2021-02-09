@@ -2106,6 +2106,74 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def rejectAttahmentCreationRequestWithContentTransferEncoding(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
+
+    val uploadResponse: String = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .contentType("text/plain")
+      .body(payload)
+    .when
+      .post(s"/upload/$ACCOUNT_ID/")
+    .`then`
+      .statusCode(SC_CREATED)
+      .extract
+      .body
+      .asString
+
+    val blobId: String = Json.parse(uploadResponse).\("blobId").get.asInstanceOf[JsString].value
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa": {
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "subject": "World domination",
+         |          "attachments": [
+         |            {
+         |              "blobId": "$blobId",
+         |              "type":"text/plain",
+         |              "charset":"UTF-8",
+         |              "header:Content-Transfer-Encoding:asText":"7bit"
+         |            }
+         |          ]
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post.prettyPeek()
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated.aaaaaa")
+      .isEqualTo(
+        s"""{
+           |  "type": "invalidArguments",
+           |  "description": "List((/attachments(0),List(JsonValidationError(List(Content-Transfer-Encoding should not be specified on attachment),List()))))"
+           |}""".stripMargin)
+  }
+
+  @Test
   def createShouldSupportAttachmentAndHtmlBody(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(BOB)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
