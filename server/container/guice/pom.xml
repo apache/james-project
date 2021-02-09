@@ -38,12 +38,15 @@
         <module>blob/export</module>
         <module>blob/memory</module>
         <module>blob/s3</module>
+        <module>cassandra</module>
         <module>cassandra-guice</module>
         <module>cassandra-ldap-guice</module>
         <module>cassandra-rabbitmq-guice</module>
         <module>cassandra-rabbitmq-ldap-guice</module>
         <module>configuration</module>
         <module>data-cassandra</module>
+        <module>distributed</module>
+        <module>elasticsearch</module>
         <module>es-metric-reporter</module>
         <module>guice-common</module>
         <module>guice-utils</module>
@@ -100,7 +103,22 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice-cassandra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-configuration</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice-distributed</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice-elasticsearch</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

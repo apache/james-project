@@ -35,7 +35,6 @@ import org.apache.james.jmap.api.change.State;
 import org.apache.james.jmap.cassandra.change.CassandraEmailChangeRepository;
 import org.apache.james.jmap.cassandra.change.CassandraMailboxChangeRepository;
 import org.apache.james.jmap.cassandra.change.CassandraStateFactory;
-import org.apache.james.jmap.change.MailboxChangeListener;
 import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.Authenticator;
@@ -220,7 +219,6 @@ public class CassandraMailboxModule extends AbstractModule {
         Multibinder<EventListener.GroupEventListener> mailboxListeners = Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class);
         mailboxListeners.addBinding().to(MailboxAnnotationListener.class);
         mailboxListeners.addBinding().to(DeleteMessageListener.class);
-        mailboxListeners.addBinding().to(MailboxChangeListener.class);
 
         bind(MailboxManager.class).annotatedWith(Names.named(MAILBOXMANAGER_NAME)).to(MailboxManager.class);
 
