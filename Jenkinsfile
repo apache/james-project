@@ -130,7 +130,7 @@ pipeline {
             when { branch 'master' }
             steps {
                 echo 'Deploying'
-                sh 'mvn -B -e deploy -Pdeploy -DskipTests'
+                sh 'mvn -B -e deploy -Pdeploy -DskipTests -T2C'
             }
         }
    }
