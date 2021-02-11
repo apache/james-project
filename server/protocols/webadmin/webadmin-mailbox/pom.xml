@@ -244,7 +244,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <argLine>-Xms512m -Xmx2048m</argLine>
-                    <reuseForks>false</reuseForks>
+                    <reuseForks>true</reuseForks>
                     <!-- Fail tests longer than 20 minutes, prevent form random locking tests -->
                     <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
                     <excludedGroups>unstable</excludedGroups>

@@ -162,8 +162,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <reuseForks>false</reuseForks>
-                    <forkCount>1C</forkCount>
+                    <reuseForks>true</reuseForks>
+                    <forkCount>2</forkCount>
                 </configuration>
             </plugin>
         </plugins>
