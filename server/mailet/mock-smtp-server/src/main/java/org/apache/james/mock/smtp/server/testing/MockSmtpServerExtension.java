@@ -32,6 +32,7 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.wait.strategy.Wait;
 
 public class MockSmtpServerExtension implements AfterEachCallback, BeforeAllCallback,
     AfterAllCallback, ParameterResolver {
@@ -43,7 +44,8 @@ public class MockSmtpServerExtension implements AfterEachCallback, BeforeAllCall
 
         DockerMockSmtp() {
             mockSmtpServer = DockerContainer.fromName(Images.MOCK_SMTP_SERVER)
-                .withLogConsumer(outputFrame -> LOGGER.debug("MockSMTP: " + outputFrame.getUtf8String()));
+                .withLogConsumer(outputFrame -> LOGGER.debug("MockSMTP: " + outputFrame.getUtf8String()))
+                .waitingFor(Wait.forListeningPort());
         }
 
         void start() {
@@ -94,6 +96,10 @@ public class MockSmtpServerExtension implements AfterEachCallback, BeforeAllCall
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return dockerMockSmtp;
+    }
+
+    public DockerMockSmtp getMockSmtp() {
         return dockerMockSmtp;
     }
 }

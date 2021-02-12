@@ -20,12 +20,15 @@
 package org.apache.james.mock.smtp.server;
 
 import org.apache.james.util.Port;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MockSMTPServerMain {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MockSMTPServerMain.class);
     private static final Port HTTP_PORT = new Port(8000);
     private static final Port SMTP_PORT = new Port(25);
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         SMTPBehaviorRepository behaviorRepository = new SMTPBehaviorRepository();
         ReceivedMailRepository receivedMailRepository = new ReceivedMailRepository();
 
@@ -33,5 +36,6 @@ public class MockSMTPServerMain {
         MockSMTPServer mockSMTPServer = MockSMTPServer.onPort(behaviorRepository, receivedMailRepository, SMTP_PORT);
         httpConfigurationServer.start();
         mockSMTPServer.start();
+        LOGGER.info("Mock SMTP server started");
     }
 }

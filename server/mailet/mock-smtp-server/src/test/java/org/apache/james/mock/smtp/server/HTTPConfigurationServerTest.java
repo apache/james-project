@@ -28,7 +28,6 @@ import static io.restassured.config.RestAssuredConfig.newConfig;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.mock.smtp.server.Fixture.JSON_BEHAVIORS;
 import static org.apache.james.mock.smtp.server.Fixture.JSON_MAIL;
-import static org.apache.james.mock.smtp.server.Fixture.JSON_MAILS_LIST;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
@@ -85,7 +84,7 @@ class HTTPConfigurationServerTest {
                 .basePath("/version")
                 .get()
             .then()
-                .body(equalTo("0.2"));
+                .body(equalTo("0.4"));
         }
 
         @Test
