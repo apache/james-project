@@ -58,9 +58,9 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <argLine>-Xms512m -Xmx2048m</argLine>
-                    <reuseForks>false</reuseForks>
+                    <reuseForks>true</reuseForks>
                     <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
-                    <forkCount>1C</forkCount>
+                    <forkCount>4</forkCount>
                 </configuration>
             </plugin>
         </plugins>
