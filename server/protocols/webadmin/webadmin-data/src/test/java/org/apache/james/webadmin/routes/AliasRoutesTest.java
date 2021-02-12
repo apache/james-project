@@ -88,7 +88,6 @@ class AliasRoutesTest {
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath("address/aliases")
-            .log(LogDetail.METHOD)
             .build();
     }
 

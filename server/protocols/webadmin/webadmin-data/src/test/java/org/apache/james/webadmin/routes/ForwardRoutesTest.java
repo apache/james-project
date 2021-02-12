@@ -87,7 +87,6 @@ class ForwardRoutesTest {
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath("address/forwards")
-            .log(LogDetail.METHOD)
             .build();
     }
 
