@@ -54,6 +54,10 @@
             <artifactId>testing-base</artifactId>
         </dependency>
         <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
@@ -119,6 +123,7 @@
             <plugin>
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>jib-maven-plugin</artifactId>
+                <version>2.7.0</version>
                 <configuration>
                     <from>
                         <image>adoptopenjdk:11-jre-hotspot</image>
@@ -126,7 +131,7 @@
                     <to>
                         <image>linagora/mock-smtp-server</image>
                         <tags>
-                            <tag>0.3</tag>
+                            <tag>0.4</tag>
                         </tags>
                     </to>
                     <container>
@@ -135,7 +140,18 @@
                             <port>25</port>
                             <port>8000</port>
                         </ports>
+                        <jvmFlags>
+                            <jvmFlag>-Dlogback.configurationFile=/root/logback.xml</jvmFlag>
+                        </jvmFlags>
                     </container>
+                    <extraDirectories>
+                        <paths>
+                            <path>
+                                <from>src/main/jib</from>
+                                <into>/root</into>
+                            </path>
+                        </paths>
+                    </extraDirectories>
                 </configuration>
             </plugin>
         </plugins>
