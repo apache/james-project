@@ -174,7 +174,7 @@ public class HTTPConfigurationServer {
 
     private Publisher<Void> getVersion(HttpServerRequest req, HttpServerResponse res) {
         return res.status(OK)
-            .sendString(Mono.just("0.2"));
+            .sendString(Mono.just("0.4"));
     }
 
     private Publisher<Void> putBehaviors(HttpServerRequest req, HttpServerResponse res) {

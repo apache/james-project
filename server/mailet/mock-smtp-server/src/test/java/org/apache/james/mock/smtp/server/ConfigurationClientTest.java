@@ -139,7 +139,7 @@ class ConfigurationClientTest {
         mailRepository.store(MailsFixutre.MAIL_2);
 
         assertThat(testee.version())
-            .isEqualTo("0.2");
+            .isEqualTo("0.4");
     }
 
     @Test

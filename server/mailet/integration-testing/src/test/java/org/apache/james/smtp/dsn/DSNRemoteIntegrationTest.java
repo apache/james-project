@@ -28,7 +28,6 @@ import static org.apache.james.mock.smtp.server.ConfigurationClient.BehaviorsPar
 import static org.apache.james.mock.smtp.server.ConfigurationClient.BehaviorsParamsBuilder.ResponseStep.serviceNotAvailable;
 import static org.apache.james.mock.smtp.server.model.Condition.MATCH_ALL;
 import static org.apache.james.mock.smtp.server.model.SMTPCommand.RCPT_TO;
-import static org.apache.james.util.docker.Images.MOCK_SMTP_SERVER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Durations.FIVE_SECONDS;
 
@@ -47,6 +46,8 @@ import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.mock.smtp.server.ConfigurationClient;
 import org.apache.james.mock.smtp.server.model.SMTPExtension;
 import org.apache.james.mock.smtp.server.model.SMTPExtensions;
+import org.apache.james.mock.smtp.server.testing.MockSmtpServerExtension;
+import org.apache.james.mock.smtp.server.testing.MockSmtpServerExtension.DockerMockSmtp;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.smtpserver.dsn.DSNEhloHook;
@@ -64,8 +65,6 @@ import org.apache.james.transport.matchers.DSNFailureRequested;
 import org.apache.james.transport.matchers.IsRemoteDeliveryPermanentError;
 import org.apache.james.transport.matchers.IsRemoteDeliveryTemporaryError;
 import org.apache.james.transport.matchers.RecipientIsLocal;
-import org.apache.james.util.Host;
-import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
@@ -92,10 +91,9 @@ class DSNRemoteIntegrationTest {
     private InMemoryDNSService inMemoryDNSService;
     private ConfigurationClient mockSMTPConfiguration;
 
-    @RegisterExtension
-    public static DockerContainer mockSmtp = DockerContainer.fromName(MOCK_SMTP_SERVER)
-        .withLogConsumer(outputFrame -> LOGGER.debug("MockSMTP 1: " + outputFrame.getUtf8String()));
 
+    @RegisterExtension
+    public static MockSmtpServerExtension mockSmtpExtension = new MockSmtpServerExtension();
     @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
     @RegisterExtension
@@ -104,10 +102,10 @@ class DSNRemoteIntegrationTest {
     private TemporaryJamesServer jamesServer;
 
     @BeforeEach
-    void setUp(@TempDir File temporaryFolder) throws Exception {
+    void setUp(@TempDir File temporaryFolder, DockerMockSmtp mockSmtp) throws Exception {
         inMemoryDNSService = new InMemoryDNSService()
             .registerMxRecord(DEFAULT_DOMAIN, LOCALHOST_IP)
-            .registerMxRecord(ANOTHER_DOMAIN, mockSmtp.getContainerIp());
+            .registerMxRecord(ANOTHER_DOMAIN, mockSmtp.getIPAddress());
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
@@ -157,10 +155,10 @@ class DSNRemoteIntegrationTest {
             .fluent()
             .addDomain(DEFAULT_DOMAIN)
             .addUser(FROM, PASSWORD);
-        mockSMTPConfiguration = configurationClient(mockSmtp);
+        mockSMTPConfiguration = mockSmtp.getConfigurationClient();
         mockSMTPConfiguration.setSMTPExtensions(SMTPExtensions.of(SMTPExtension.of("dsn")));
 
-        assertThat(mockSMTPConfiguration.version()).isEqualTo("0.2");
+        assertThat(mockSMTPConfiguration.version()).isEqualTo("0.4");
     }
 
     private ProcessorConfiguration.Builder directResolutionTransport() {
@@ -391,12 +389,5 @@ class DSNRemoteIntegrationTest {
     @AfterEach
     void tearDown() {
         jamesServer.shutdown();
-        mockSMTPConfiguration.cleanServer();
-    }
-
-    private ConfigurationClient configurationClient(DockerContainer mockSmtp) {
-        return ConfigurationClient.from(
-            Host.from(mockSmtp.getHostIp(),
-                mockSmtp.getMappedPort(8000)));
     }
 }

@@ -24,7 +24,6 @@ import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.calmlyAwait;
-import static org.apache.james.util.docker.Images.MOCK_SMTP_SERVER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Durations.TEN_SECONDS;
 
@@ -40,10 +39,11 @@ import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
-import org.apache.james.mock.smtp.server.ConfigurationClient;
 import org.apache.james.mock.smtp.server.model.Mail;
 import org.apache.james.mock.smtp.server.model.SMTPExtension;
 import org.apache.james.mock.smtp.server.model.SMTPExtensions;
+import org.apache.james.mock.smtp.server.testing.MockSmtpServerExtension;
+import org.apache.james.mock.smtp.server.testing.MockSmtpServerExtension.DockerMockSmtp;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.smtpserver.dsn.DSNEhloHook;
 import org.apache.james.smtpserver.dsn.DSNMailParameterHook;
@@ -52,8 +52,6 @@ import org.apache.james.smtpserver.dsn.DSNRcptParameterHook;
 import org.apache.james.transport.mailets.RecipientRewriteTable;
 import org.apache.james.transport.mailets.RemoteDelivery;
 import org.apache.james.transport.matchers.All;
-import org.apache.james.util.Host;
-import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
@@ -63,12 +61,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 class DSNRelayTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DSNRelayTest.class);
-
     private static final String ANOTHER_DOMAIN = "other.com";
     private static final String FROM = "from@" + DEFAULT_DOMAIN;
     private static final String RECIPIENT = "touser@" + ANOTHER_DOMAIN;
@@ -76,23 +70,21 @@ class DSNRelayTest {
     private static final String RECIPIENT2 = "touser2@" + ANOTHER_DOMAIN;
 
     private InMemoryDNSService inMemoryDNSService;
-    private ConfigurationClient mockSMTPConfiguration;
 
     @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
     @RegisterExtension
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
     @RegisterExtension
-    public static DockerContainer mockSmtp = DockerContainer.fromName(MOCK_SMTP_SERVER)
-        .withLogConsumer(outputFrame -> LOGGER.debug("MockSMTP 1: " + outputFrame.getUtf8String()));
+    public static MockSmtpServerExtension mockSmtpExtension = new MockSmtpServerExtension();
 
     private TemporaryJamesServer jamesServer;
 
     @BeforeEach
-    void setUp(@TempDir File temporaryFolder) throws Exception {
+    void setUp(@TempDir File temporaryFolder, DockerMockSmtp mockSmtp) throws Exception {
         inMemoryDNSService = new InMemoryDNSService()
             .registerMxRecord(DEFAULT_DOMAIN, LOCALHOST_IP)
-            .registerMxRecord(ANOTHER_DOMAIN, mockSmtp.getContainerIp());
+            .registerMxRecord(ANOTHER_DOMAIN, mockSmtp.getIPAddress());
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
@@ -115,22 +107,19 @@ class DSNRelayTest {
             .addDomain(DEFAULT_DOMAIN)
             .addUser(FROM, PASSWORD);
 
-        mockSMTPConfiguration = configurationClient(mockSmtp);
-        mockSMTPConfiguration.setSMTPExtensions(SMTPExtensions.of(SMTPExtension.of("dsn")));
+        mockSmtp.getConfigurationClient().setSMTPExtensions(SMTPExtensions.of(SMTPExtension.of("dsn")));
 
-        assertThat(mockSMTPConfiguration.version()).isEqualTo("0.2");
+        assertThat(mockSmtp.getConfigurationClient().version()).isEqualTo("0.4");
     }
 
     @AfterEach
     void tearDown() {
         jamesServer.shutdown();
-
-        mockSMTPConfiguration.cleanServer();
     }
 
     @Disabled("JAMES-3431 No javax.mail support for ORCPT DSN parameter...")
     @Test
-    void orcptIsUnsupported() throws Exception {
+    void orcptIsUnsupported(DockerMockSmtp mockSmtp) throws Exception {
         AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
 
         try {
@@ -143,7 +132,7 @@ class DSNRelayTest {
             smtpClient.disconnect();
         }
 
-        calmlyAwait.atMost(TEN_SECONDS).untilAsserted(() -> assertThat(mockSMTPConfiguration.listMails())
+        calmlyAwait.atMost(TEN_SECONDS).untilAsserted(() -> assertThat(mockSmtp.getConfigurationClient().listMails())
             .hasSize(3)
             .extracting(Mail::getEnvelope)
             .containsExactly(Mail.Envelope.builder()
@@ -171,7 +160,7 @@ class DSNRelayTest {
     }
 
     @Test
-    void remoteDeliveryShouldCarryOverDSNParameters() throws Exception {
+    void remoteDeliveryShouldCarryOverDSNParameters(DockerMockSmtp mockSmtp) throws Exception {
         AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
 
         try {
@@ -186,7 +175,7 @@ class DSNRelayTest {
             smtpClient.disconnect();
         }
 
-        calmlyAwait.atMost(TEN_SECONDS).untilAsserted(() -> assertThat(mockSMTPConfiguration.listMails())
+        calmlyAwait.atMost(TEN_SECONDS).untilAsserted(() -> assertThat(mockSmtp.getConfigurationClient().listMails())
             .hasSize(3)
             .extracting(Mail::getEnvelope)
             .containsOnly(Mail.Envelope.builder()
@@ -242,7 +231,7 @@ class DSNRelayTest {
     }
 
     @Test
-    void remoteDeliveryShouldDeliverSimilarDsnNotifyParametersTogether() throws Exception {
+    void remoteDeliveryShouldDeliverSimilarDsnNotifyParametersTogether(DockerMockSmtp mockSmtp) throws Exception {
         AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
 
         try {
@@ -257,7 +246,7 @@ class DSNRelayTest {
             smtpClient.disconnect();
         }
 
-        calmlyAwait.atMost(TEN_SECONDS).untilAsserted(() -> assertThat(mockSMTPConfiguration.listMails())
+        calmlyAwait.atMost(TEN_SECONDS).untilAsserted(() -> assertThat(mockSmtp.getConfigurationClient().listMails())
             .hasSize(2)
             .extracting(Mail::getEnvelope)
             .containsOnly(Mail.Envelope.builder()
@@ -290,7 +279,7 @@ class DSNRelayTest {
     }
 
     @Test
-    void remoteDeliveryShouldCarryOverDSNParametersWhenSingleRecipient() throws Exception {
+    void remoteDeliveryShouldCarryOverDSNParametersWhenSingleRecipient(DockerMockSmtp mockSmtp) throws Exception {
         AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
 
         try {
@@ -303,7 +292,7 @@ class DSNRelayTest {
             smtpClient.disconnect();
         }
 
-        calmlyAwait.atMost(TEN_SECONDS).untilAsserted(() -> assertThat(mockSMTPConfiguration.listMails())
+        calmlyAwait.atMost(TEN_SECONDS).untilAsserted(() -> assertThat(mockSmtp.getConfigurationClient().listMails())
             .hasSize(1)
             .extracting(Mail::getEnvelope)
             .containsExactly(Mail.Envelope.builder()
@@ -327,7 +316,7 @@ class DSNRelayTest {
     }
 
     @Test
-    void dsnShouldBeCarriedAfterRRT() throws Exception {
+    void dsnShouldBeCarriedAfterRRT(DockerMockSmtp mockSmtp) throws Exception {
         DataProbeImpl dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(ANOTHER_DOMAIN);
         dataProbe.addAddressMapping("touser", ANOTHER_DOMAIN, "touser-alias@other.com");
@@ -344,7 +333,7 @@ class DSNRelayTest {
             smtpClient.disconnect();
         }
 
-        calmlyAwait.atMost(TEN_SECONDS).untilAsserted(() -> assertThat(mockSMTPConfiguration.listMails())
+        calmlyAwait.atMost(TEN_SECONDS).untilAsserted(() -> assertThat(mockSmtp.getConfigurationClient().listMails())
             .hasSize(1)
             .extracting(Mail::getEnvelope)
             .containsExactly(Mail.Envelope.builder()
@@ -368,7 +357,7 @@ class DSNRelayTest {
     }
 
     @Test
-    void remoteDeliveryShouldCarryOverDSNMailParameters() throws Exception {
+    void remoteDeliveryShouldCarryOverDSNMailParameters(DockerMockSmtp mockSmtp) throws Exception {
         AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
 
         try {
@@ -381,7 +370,7 @@ class DSNRelayTest {
             smtpClient.disconnect();
         }
 
-        calmlyAwait.atMost(TEN_SECONDS).untilAsserted(() -> assertThat(mockSMTPConfiguration.listMails())
+        calmlyAwait.atMost(TEN_SECONDS).untilAsserted(() -> assertThat(mockSmtp.getConfigurationClient().listMails())
             .hasSize(1)
             .extracting(Mail::getEnvelope)
             .containsExactly(Mail.Envelope.builder()
@@ -415,11 +404,5 @@ class DSNRelayTest {
                 .addProperty("maxDnsProblemRetries", "0")
                 .addProperty("deliveryThreads", "2")
                 .addProperty("sendpartial", "true"));
-    }
-
-    private ConfigurationClient configurationClient(DockerContainer mockSmtp) {
-        return ConfigurationClient.from(
-            Host.from(mockSmtp.getHostIp(),
-                mockSmtp.getMappedPort(8000)));
     }
 }

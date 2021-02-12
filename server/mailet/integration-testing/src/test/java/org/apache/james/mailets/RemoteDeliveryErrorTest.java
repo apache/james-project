@@ -28,7 +28,6 @@ import static org.apache.james.mock.smtp.server.ConfigurationClient.BehaviorsPar
 import static org.apache.james.mock.smtp.server.ConfigurationClient.BehaviorsParamsBuilder.ConditionStep.inputContaining;
 import static org.apache.james.mock.smtp.server.ConfigurationClient.BehaviorsParamsBuilder.ResponseStep.doesNotAcceptAnyMail;
 import static org.apache.james.mock.smtp.server.ConfigurationClient.BehaviorsParamsBuilder.ResponseStep.serviceNotAvailable;
-import static org.apache.james.util.docker.Images.MOCK_SMTP_SERVER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
@@ -46,6 +45,7 @@ import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mock.smtp.server.ConfigurationClient;
 import org.apache.james.mock.smtp.server.model.Mail;
 import org.apache.james.mock.smtp.server.model.SMTPCommand;
+import org.apache.james.mock.smtp.server.testing.MockSmtpServerExtension;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.server.core.MailImpl;
@@ -63,15 +63,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
 class RemoteDeliveryErrorTest {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(RemoteDeliveryErrorTest.class);
-
     private static final String ANOTHER_DOMAIN = "other.com";
     private static final String FROM = "from@" + DEFAULT_DOMAIN;
     private static final String RECIPIENT = "touser@" + ANOTHER_DOMAIN;
@@ -107,11 +102,9 @@ class RemoteDeliveryErrorTest {
     @RegisterExtension
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
     @RegisterExtension
-    public static DockerContainer mockSmtp = DockerContainer.fromName(MOCK_SMTP_SERVER)
-        .withLogConsumer(outputFrame -> LOGGER.debug("MockSMTP 1: " + outputFrame.getUtf8String()));
+    public static MockSmtpServerExtension mockSmtp1 = new MockSmtpServerExtension();
     @RegisterExtension
-    public static DockerContainer mockSmtp2 = DockerContainer.fromName(MOCK_SMTP_SERVER)
-        .withLogConsumer(outputFrame -> LOGGER.debug("MockSMTP 2: " + outputFrame.getUtf8String()));
+    public static MockSmtpServerExtension mockSmtp2 = new MockSmtpServerExtension();
 
     private TemporaryJamesServer jamesServer;
 
@@ -131,7 +124,7 @@ class RemoteDeliveryErrorTest {
     void setUp(@TempDir File temporaryFolder) throws Exception {
         inMemoryDNSService = new InMemoryDNSService()
             .registerMxRecord(DEFAULT_DOMAIN, LOCALHOST_IP)
-            .registerMxRecord(ANOTHER_DOMAIN, mockSmtp.getContainerIp());
+            .registerMxRecord(ANOTHER_DOMAIN, mockSmtp1.getMockSmtp().getIPAddress());
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
@@ -149,19 +142,16 @@ class RemoteDeliveryErrorTest {
             .addDomain(DEFAULT_DOMAIN)
             .addUser(FROM, PASSWORD);
 
-        mockSMTP1Configuration = configurationClient(mockSmtp);
-        mockSMTP2Configuration = configurationClient(mockSmtp2);
+        mockSMTP1Configuration = mockSmtp1.getMockSmtp().getConfigurationClient();
+        mockSMTP2Configuration = mockSmtp2.getMockSmtp().getConfigurationClient();
 
-        assertThat(mockSMTP1Configuration.version()).isEqualTo("0.2");
-        assertThat(mockSMTP2Configuration.version()).isEqualTo("0.2");
+        assertThat(mockSMTP1Configuration.version()).isEqualTo("0.4");
+        assertThat(mockSMTP2Configuration.version()).isEqualTo("0.4");
     }
 
     @AfterEach
     void tearDown() {
         jamesServer.shutdown();
-
-        mockSMTP1Configuration.cleanServer();
-        mockSMTP2Configuration.cleanServer();
     }
 
     @Test
@@ -384,13 +374,13 @@ class RemoteDeliveryErrorTest {
 
     @Test
     void remoteDeliveryShouldNotDuplicateContentWhenSendPartialWhenFailover() throws Exception {
-        ImmutableList<InetAddress> addresses = ImmutableList.of(InetAddress.getByName(mockSmtp.getContainerIp()));
-        ImmutableList<String> mxs = ImmutableList.of(mockSmtp.getContainerIp(), mockSmtp2.getContainerIp());
+        ImmutableList<InetAddress> addresses = ImmutableList.of(InetAddress.getByName(mockSmtp1.getMockSmtp().getIPAddress()));
+        ImmutableList<String> mxs = ImmutableList.of(mockSmtp1.getMockSmtp().getIPAddress(), mockSmtp2.getMockSmtp().getIPAddress());
         ImmutableList<String> txtRecords = ImmutableList.of();
 
         inMemoryDNSService.registerRecord(ANOTHER_DOMAIN, addresses, mxs, txtRecords)
-            .registerMxRecord(mockSmtp.getContainerIp(), mockSmtp.getContainerIp())
-            .registerMxRecord(mockSmtp2.getContainerIp(), mockSmtp2.getContainerIp());
+            .registerMxRecord(mockSmtp1.getMockSmtp().getIPAddress(), mockSmtp1.getMockSmtp().getIPAddress())
+            .registerMxRecord(mockSmtp2.getMockSmtp().getIPAddress(), mockSmtp2.getMockSmtp().getIPAddress());
 
         mockSMTP1Configuration
             .addNewBehavior()
