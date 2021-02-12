@@ -86,7 +86,6 @@ class GroupsRoutesTest {
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath("address/groups")
-            .log(LogDetail.METHOD)
             .build();
     }
 

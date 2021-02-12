@@ -81,7 +81,6 @@ class DomainMappingsRoutesTest {
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(DOMAIN_MAPPINGS)
-            .log(LogDetail.METHOD)
             .build();
     }
 
