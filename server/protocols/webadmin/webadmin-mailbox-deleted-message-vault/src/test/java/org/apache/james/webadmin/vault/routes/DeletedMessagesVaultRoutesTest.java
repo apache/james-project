@@ -133,7 +133,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import com.google.common.collect.ImmutableList;
 
 import io.restassured.RestAssured;
-import io.restassured.filter.log.LogDetail;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -216,7 +215,6 @@ class DeletedMessagesVaultRoutesTest {
             .start();
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(DeletedMessagesVaultRoutes.ROOT_PATH)
-            .log(LogDetail.METHOD)
             .build();
     }
 
