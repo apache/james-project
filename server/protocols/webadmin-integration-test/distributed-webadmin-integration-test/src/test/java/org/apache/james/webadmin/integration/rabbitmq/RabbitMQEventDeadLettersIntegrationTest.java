@@ -53,6 +53,7 @@ import org.apache.james.events.EventListener;
 import org.apache.james.events.Group;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.junit.categories.BasicFeature;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -508,6 +509,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
             .body(".", hasSize(0));
     }
 
+    @Tag(Unstable.TAG)
     @Test
     void multipleFailedEventsShouldBeCorrectlyProcessedByListenerAfterSuccessfulGroupRedelivery(RetryEventsListener retryEventsListener) {
         retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
