@@ -27,6 +27,7 @@ import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.rabbitmq.DockerRabbitMQSingleton;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.LinshareGuiceExtension;
 import org.apache.james.modules.RabbitMQExtension;
@@ -36,8 +37,10 @@ import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
 import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.apache.james.webadmin.integration.vault.LinshareBlobExportMechanismIntegrationTest;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@Tag(Unstable.TAG)
 class RabbitMQLinshareBlobExportMechanismIntegrationTest extends LinshareBlobExportMechanismIntegrationTest {
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->

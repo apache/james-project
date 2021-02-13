@@ -22,13 +22,16 @@ package org.apache.james.webadmin.integration.memory.vault;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.modules.LinshareGuiceExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
 import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.apache.james.webadmin.integration.vault.LinshareBlobExportMechanismIntegrationTest;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@Tag(Unstable.TAG)
 class MemoryLinshareBlobExportMechanismIntegrationTest extends LinshareBlobExportMechanismIntegrationTest {
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
