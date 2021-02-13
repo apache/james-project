@@ -19,10 +19,11 @@
 
 package org.apache.james.backends.cassandra;
 
-import com.github.dockerjava.api.async.ResultCallback;
-import com.github.dockerjava.api.command.EventsCmd;
-import com.github.dockerjava.api.model.Event;
-import com.github.dockerjava.api.model.EventType;
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.apache.james.backends.cassandra.init.ClusterFactory;
 import org.apache.james.backends.cassandra.init.KeyspaceFactory;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
@@ -40,11 +41,11 @@ import org.testcontainers.images.builder.dockerfile.DockerfileBuilder;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.async.ResultCallback;
+import com.github.dockerjava.api.command.EventsCmd;
+import com.github.dockerjava.api.model.Event;
+import com.github.dockerjava.api.model.EventType;
 import com.google.common.collect.ImmutableMap;
-
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.UUID;
 
 public class DockerCassandra {
 
@@ -115,6 +116,18 @@ public class DockerCassandra {
         DockerfileBuilder applyStep(DockerfileBuilder builder);
     }
 
+    /**
+     * @return a string to append to image names in order to avoid conflict with concurrent builds
+     */
+    private static String buildSpecificImageDiscriminator() {
+        // If available try to access the image shared by all maven projects
+        // This avoids rebuilding one for each maven surefire fork.
+        // BUILD_ID should be set by the execution context, here JenkinsFile
+        return Optional.ofNullable(System.getenv("BUILD_ID"))
+            // Default to an image discriminator specific to this JVM
+            .orElse(UUID.randomUUID().toString());
+    }
+
     private static final int CASSANDRA_PORT = 9042;
     private static final int CASSANDRA_MEMORY = 650;
 
@@ -126,7 +139,7 @@ public class DockerCassandra {
 
     @SuppressWarnings("resource")
     public DockerCassandra() {
-        this("cassandra_3_11_3-"+ UUID.randomUUID().toString(), AdditionalDockerFileStep.IDENTITY);
+        this("cassandra_3_11_3-" + buildSpecificImageDiscriminator(), AdditionalDockerFileStep.IDENTITY);
     }
 
     private DockerCassandra(String imageName, AdditionalDockerFileStep additionalSteps) {

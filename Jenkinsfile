@@ -32,6 +32,7 @@ pipeline {
 
     environment {
         // ... setup any environment variables ...
+        BUILD_ID = UUID.randomUUID().toString()
         MVN_LOCAL_REPO_OPT = '-Dmaven.repo.local=.repository'
         MVN_TEST_FAIL_IGNORE = '-Dmaven.test.failure.ignore=true'
         MVN_SHOW_TIMESTAMPS="-Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS"
