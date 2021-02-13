@@ -210,9 +210,9 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <!-- Isolation issues with Derby inMemory database -->
-                    <reuseForks>false</reuseForks>
+                    <reuseForks>true</reuseForks>
                     <!-- Speed up a bit things -->
-                    <forkCount>1C</forkCount>
+                    <forkCount>4</forkCount>
                 </configuration>
             </plugin>
             <plugin>
