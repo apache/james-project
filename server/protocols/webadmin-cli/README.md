@@ -124,6 +124,24 @@ Show all domains' name on the list.
 {cli} domain list
 ```
 
+### List domain aliases for a domain
+Show all domains' name on the list.
+```
+{cli} domain listAliases <domain>
+```
+
+### Create a domain alias for a domain
+
+```
+{cli} domain addAlias <domain> <sourceOfTheAlias>
+```
+
+### Remove a domain alias for a domain
+
+```
+{cli} domain removeAlias <domain> <sourceOfTheAlias>
+```
+
 
 
 ## Manage Users

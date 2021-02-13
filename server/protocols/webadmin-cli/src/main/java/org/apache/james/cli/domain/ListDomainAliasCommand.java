@@ -19,7 +19,6 @@
 
 package org.apache.james.cli.domain;
 
-import java.io.PrintStream;
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
@@ -28,36 +27,26 @@ import org.apache.james.httpclient.DomainClient;
 import picocli.CommandLine;
 
 @CommandLine.Command(
-        name = "domain",
-        description = "Manage Domains",
-        subcommands = {
-            DomainListCommand.class,
-            DomainCreateCommand.class,
-            DomainDeleteCommand.class,
-            DomainExistCommand.class,
-            AddDomainAliasCommand.class,
-            ListDomainAliasCommand.class,
-            RemoveDomainAliasCommand.class
-        })
-public class DomainCommand implements Callable<Integer> {
+    name = "listAliases",
+    description = "List domain aliases for a given domain")
+public class ListDomainAliasCommand implements Callable<Integer> {
+    @CommandLine.ParentCommand DomainCommand domainCommand;
 
-    protected final WebAdminCli webAdminCli;
-    protected final PrintStream out;
-    protected final PrintStream err;
-
-    public DomainCommand(PrintStream out, WebAdminCli webAdminCli, PrintStream err) {
-        this.out = out;
-        this.webAdminCli = webAdminCli;
-        this.err = err;
-    }
+    @CommandLine.Parameters
+    String domainName;
 
     @Override
     public Integer call() {
-        return WebAdminCli.CLI_FINISHED_SUCCEED;
+        try {
+            DomainClient domainClient = domainCommand.fullyQualifiedURL("/domains");
+            domainClient.getDomainAliasList(domainName)
+                .stream()
+                .map(DomainClient.DomainAliasResponse::getSource)
+                .forEach(domainCommand.out::println);
+            return WebAdminCli.CLI_FINISHED_SUCCEED;
+        } catch (Exception e) {
+            e.printStackTrace(domainCommand.err);
+            return WebAdminCli.CLI_FINISHED_FAILED;
+        }
     }
-
-    public DomainClient fullyQualifiedURL(String partOfUrl) {
-        return webAdminCli.feignClientFactory(err).target(DomainClient.class, webAdminCli.jamesUrl + partOfUrl);
-    }
-
 }

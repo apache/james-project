@@ -19,45 +19,43 @@
 
 package org.apache.james.cli.domain;
 
-import java.io.PrintStream;
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
 import org.apache.james.httpclient.DomainClient;
 
+import feign.Response;
 import picocli.CommandLine;
 
 @CommandLine.Command(
-        name = "domain",
-        description = "Manage Domains",
-        subcommands = {
-            DomainListCommand.class,
-            DomainCreateCommand.class,
-            DomainDeleteCommand.class,
-            DomainExistCommand.class,
-            AddDomainAliasCommand.class,
-            ListDomainAliasCommand.class,
-            RemoveDomainAliasCommand.class
-        })
-public class DomainCommand implements Callable<Integer> {
+    name = "removeAlias",
+    description = "Remove a domain alias")
+public class RemoveDomainAliasCommand implements Callable<Integer> {
 
-    protected final WebAdminCli webAdminCli;
-    protected final PrintStream out;
-    protected final PrintStream err;
+    public static final int CREATED_CODE = 204;
 
-    public DomainCommand(PrintStream out, WebAdminCli webAdminCli, PrintStream err) {
-        this.out = out;
-        this.webAdminCli = webAdminCli;
-        this.err = err;
-    }
+    @CommandLine.ParentCommand DomainCommand domainCommand;
+
+    @CommandLine.Parameters(description = "Destination of the domain alias. This is the domain this alis belongs to.")
+    String destinationDomain;
+
+    @CommandLine.Parameters(description = "Source of the domain alis.")
+    String sourceDomain;
 
     @Override
     public Integer call() {
-        return WebAdminCli.CLI_FINISHED_SUCCEED;
-    }
-
-    public DomainClient fullyQualifiedURL(String partOfUrl) {
-        return webAdminCli.feignClientFactory(err).target(DomainClient.class, webAdminCli.jamesUrl + partOfUrl);
+        try {
+            DomainClient domainClient = domainCommand.fullyQualifiedURL("/domains");
+            Response rs = domainClient.deleteADomainAlias(destinationDomain, sourceDomain);
+            if (rs.status() == CREATED_CODE) {
+                return WebAdminCli.CLI_FINISHED_SUCCEED;
+            } else {
+                return WebAdminCli.CLI_FINISHED_FAILED;
+            }
+        } catch (Exception e) {
+            e.printStackTrace(domainCommand.err);
+            return WebAdminCli.CLI_FINISHED_FAILED;
+        }
     }
 
 }

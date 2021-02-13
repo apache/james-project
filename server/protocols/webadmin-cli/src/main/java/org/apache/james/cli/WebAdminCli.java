@@ -20,6 +20,7 @@
 package org.apache.james.cli;
 
 import java.io.PrintStream;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
@@ -82,6 +83,10 @@ public class WebAdminCli implements Callable<Integer> {
 
     public static int executeFluent(PrintStream out, PrintStream err, String... args) {
         return execute(out, err, args);
+    }
+
+    public static int executeFluent(PrintStream out, PrintStream err, Collection<String> args) {
+        return execute(out, err, args.stream().toArray(String[]::new));
     }
 
     public Feign.Builder feignClientFactory(PrintStream err) {
