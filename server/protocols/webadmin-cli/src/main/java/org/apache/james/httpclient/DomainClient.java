@@ -20,12 +20,43 @@
 package org.apache.james.httpclient;
 
 import java.util.List;
+import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import feign.Param;
 import feign.RequestLine;
 import feign.Response;
 
 public interface DomainClient {
+    class DomainAliasResponse {
+        private final String source;
+
+        @JsonCreator
+        public DomainAliasResponse(@JsonProperty("source") String source) {
+            this.source = source;
+        }
+
+        public String getSource() {
+            return source;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof DomainAliasResponse) {
+                DomainAliasResponse that = (DomainAliasResponse) o;
+
+                return Objects.equals(this.source, that.source);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(source);
+        }
+    }
 
     @RequestLine("GET")
     List<String> getDomainList();
@@ -39,4 +70,12 @@ public interface DomainClient {
     @RequestLine("GET /{domainName}")
     Response doesExist(@Param("domainName") String domainName);
 
+    @RequestLine("DELETE /{destinationDomain}/aliases/{sourceDomain}")
+    Response deleteADomainAlias(@Param("destinationDomain") String destinationDomain, @Param("sourceDomain") String sourceDomain);
+
+    @RequestLine("PUT /{destinationDomain}/aliases/{sourceDomain}")
+    Response addADomainAlias(@Param("destinationDomain") String destinationDomain, @Param("sourceDomain") String sourceDomain);
+
+    @RequestLine("GET /{domainName}/aliases")
+    List<DomainAliasResponse> getDomainAliasList(@Param("domainName") String domainName);
 }

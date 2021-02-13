@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
@@ -32,11 +33,16 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.util.Port;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
+import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class DomainManageTest {
+import com.google.common.collect.ImmutableList;
 
+class DomainManageTest {
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
@@ -48,113 +54,183 @@ public class DomainManageTest {
     private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
     private final ByteArrayOutputStream errorStreamCaptor = new ByteArrayOutputStream();
 
-    @Test
-    void domainListCommandShouldWShowOnlyDefaultDomain(GuiceJamesServer server) {
-        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
+    Port port;
 
-        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
-                "--url", "http://127.0.0.1:" + port.getValue(), "domain", "list");
-        assertThat(exitCode).isEqualTo(0);
-        assertThat(outputStreamCaptor.toString().trim().toCharArray()).containsOnly("localhost".toCharArray());
+    @BeforeEach
+    void setUp(GuiceJamesServer server) {
+        port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
+    }
+
+    @AfterEach
+    void tearDown() {
+        System.err.println(new String(errorStreamCaptor.toByteArray(), StandardCharsets.UTF_8));
     }
 
     @Test
-    void domainCreateCommandWithValidNameShouldSuccessfully(GuiceJamesServer server) {
-        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
+    void domainListCommandShouldWShowOnlyDefaultDomain() {
+        int exitCode = executeFluent("domain", "list");
 
-        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
-            "--url", "http://127.0.0.1:" + port.getValue(), "domain", "create", "linagora.com");
+        SoftAssertions.assertSoftly( softly -> {
+            assertThat(exitCode).isEqualTo(0);
+            assertThat(outputStreamCaptor.toString().trim().toCharArray()).containsOnly("localhost".toCharArray());
+        });
+    }
+
+    @Test
+    void domainCreateCommandWithValidNameShouldSuccessfully() {
+        int exitCode = executeFluent("domain", "create", "linagora.com");
+
+        executeFluent("domain", "list");
+
+        SoftAssertions.assertSoftly( softly -> {
+            assertThat(exitCode).isEqualTo(0);
+            assertThat(outputStreamCaptor.toString()).contains("linagora.com");
+        });
+    }
+
+    @Test
+    void domainCreateCommandWithInvalidNameShouldFailed() {
+        int exitCode1 = executeFluent("domain", "create", "@linagora.com");
+
+        int exitCode2 = executeFluent("domain", "create", "linagora.com/");
+
+        int exitCode3 = executeFluent("domain", "create", "");
 
         WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
             "--url", "http://127.0.0.1:" + port.getValue(), "domain", "list");
 
-        assertThat(exitCode).isEqualTo(0);
-        assertThat(outputStreamCaptor.toString()).contains("linagora.com");
+        SoftAssertions.assertSoftly( softly -> {
+            assertThat(exitCode1).isEqualTo(1);
+            assertThat(exitCode2).isEqualTo(1);
+            assertThat(exitCode3).isEqualTo(1);
+            assertThat(outputStreamCaptor.toString().trim().toCharArray()).containsOnly("localhost".toCharArray());
+        });
     }
 
     @Test
-    void domainCreateCommandWithInvalidNameShouldFailed(GuiceJamesServer server) {
-        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
+    void domainDeleteCommandWithValidDomainShouldSucceed() {
+        executeFluent("domain", "create", "linagora.com");
 
-        int exitCode1 = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
-            "--url", "http://127.0.0.1:" + port.getValue(), "domain", "create", "@linagora.com");
+        int exitCode = executeFluent("domain", "delete", "linagora.com");
 
-        int exitCode2 = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
-            "--url", "http://127.0.0.1:" + port.getValue(), "domain", "create", "linagora.com/");
+        executeFluent("domain", "list");
 
-        int exitCode3 = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
-            "--url", "http://127.0.0.1:" + port.getValue(), "domain", "create", "");
-
-        WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
-            "--url", "http://127.0.0.1:" + port.getValue(), "domain", "list");
-
-        assertThat(exitCode1).isEqualTo(1);
-        assertThat(exitCode2).isEqualTo(1);
-        assertThat(exitCode3).isEqualTo(1);
-        assertThat(outputStreamCaptor.toString().trim().toCharArray()).containsOnly("localhost".toCharArray());
+        SoftAssertions.assertSoftly( softly -> {
+            assertThat(exitCode).isEqualTo(0);
+            assertThat(outputStreamCaptor.toString().contains("linagora.com")).isFalse();
+        });
     }
 
     @Test
-    void domainDeleteCommandWithValidDomainShouldSucceed(GuiceJamesServer server) {
-        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
-
-        WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
-            "--url", "http://127.0.0.1:" + port.getValue(), "domain", "create", "linagora.com");
-
-        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
-            "--url", "http://127.0.0.1:" + port.getValue(), "domain", "delete", "linagora.com");
-
-        WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
-            "--url", "http://127.0.0.1:" + port.getValue(), "domain", "list");
-
-        assertThat(exitCode).isEqualTo(0);
-        assertThat(outputStreamCaptor.toString().contains("linagora.com")).isFalse();
-    }
-
-    @Test
-    void domainDeleteCommandWithDefaultDomainShouldFail(GuiceJamesServer server) {
-        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
-
-        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
-            "--url", "http://127.0.0.1:" + port.getValue(), "domain", "delete", "localhost");
+    void domainDeleteCommandWithDefaultDomainShouldFail() {
+        int exitCode = executeFluent("domain", "delete", "localhost");
 
         assertThat(exitCode).isEqualTo(1);
     }
 
     @Test
-    void domainExistCommandWithDefaultDomainShouldExist(GuiceJamesServer server) {
-        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
+    void domainExistCommandWithDefaultDomainShouldExist() {
+        int exitCode = executeFluent("domain", "exist", "localhost");
 
-        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
-            "--url", "http://127.0.0.1:" + port.getValue(), "domain", "exist", "localhost");
-
-        assertThat(exitCode).isEqualTo(0);
-        assertThat(outputStreamCaptor.toString().trim()).isEqualTo("localhost exists");
+        SoftAssertions.assertSoftly( softly -> {
+            assertThat(exitCode).isEqualTo(0);
+            assertThat(outputStreamCaptor.toString().trim()).isEqualTo("localhost exists");
+        });
     }
 
     @Test
-    void domainExistCommandWithNonExistingDomainShouldFail(GuiceJamesServer server) {
-        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
-
-        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
-            "--url", "http://127.0.0.1:" + port.getValue(), "domain", "exist", "linagora.com");
+    void domainExistCommandWithNonExistingDomainShouldFail() {
+        int exitCode = executeFluent("domain", "exist", "linagora.com");
 
         assertThat(exitCode).isEqualTo(0);
         assertThat(outputStreamCaptor.toString().trim()).isEqualTo("linagora.com does not exist");
     }
 
     @Test
-    void domainExistCommandWithAddedDomainShouldSucceed(GuiceJamesServer server) {
-        Port port = server.getProbe(WebAdminGuiceProbe.class).getWebAdminPort();
+    void domainExistCommandWithAddedDomainShouldSucceed() {
+        executeFluent("domain", "create", "linagora.com");
 
-        WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
-            "--url", "http://127.0.0.1:" + port.getValue(), "domain", "create", "linagora.com");
+        int exitCode = executeFluent("domain", "exist", "linagora.com");
 
-        int exitCode = WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
-            "--url", "http://127.0.0.1:" + port.getValue(), "domain", "exist", "linagora.com");
-
-        assertThat(exitCode).isEqualTo(0);
-        assertThat(outputStreamCaptor.toString().trim()).isEqualTo("linagora.com exists");
+        SoftAssertions.assertSoftly( softly -> {
+            assertThat(exitCode).isEqualTo(0);
+            assertThat(outputStreamCaptor.toString().trim()).isEqualTo("linagora.com exists");
+        });
     }
 
+    @Nested
+    class DomainAliases {
+        @BeforeEach
+        void setUp() {
+            executeFluent("domain", "create", "linagora.com");
+            executeFluent("domain", "create", "linagora-james.com");
+        }
+
+        @Test
+        void listDomainAliasShouldReturnEmptyByDefault() {
+            int exitCode = executeFluent("domain", "listAliases", "linagora.com");
+
+            SoftAssertions.assertSoftly( softly -> {
+                assertThat(exitCode).isEqualTo(0);
+                assertThat(outputStreamCaptor.toString().trim()).hasSize(0);
+            });
+        }
+
+        @Test
+        void addDomainAliasShouldBeIdempotent() {
+            executeFluent("domain", "addAlias", "linagora.com", "linagora-james.com");
+            int exitCode = executeFluent("domain", "addAlias", "linagora.com", "linagora-james.com");
+
+            assertThat(exitCode).isEqualTo(0);
+        }
+
+        @Test
+        void removeDomainAliasShouldBeIdempotent() {
+            int exitCode = executeFluent("domain", "removeAlias", "linagora.com", "linagora-james.com");
+
+            assertThat(exitCode).isEqualTo(0);
+        }
+
+        @Test
+        void listDomainAliasShouldNotReturnRemovedValues() {
+            executeFluent("domain", "addAlias", "linagora.com", "linagora-james.com");
+            executeFluent("domain", "removeAlias", "linagora.com", "linagora-james.com");
+
+            int exitCode = executeFluent("domain", "listAliases", "linagora.com");
+
+            SoftAssertions.assertSoftly( softly -> {
+                assertThat(exitCode).isEqualTo(0);
+                assertThat(outputStreamCaptor.toString().trim()).hasSize(0);
+            });
+        }
+
+        @Test
+        void listDomainAliasShouldReturnAddedValues() {
+            executeFluent("domain", "addAlias", "linagora.com", "linagora-james.com");
+
+            int exitCode = executeFluent("domain", "listAliases", "linagora.com");
+
+            SoftAssertions.assertSoftly( softly -> {
+                assertThat(exitCode).isEqualTo(0);
+                assertThat(outputStreamCaptor.toString().trim()).contains("linagora-james.com");
+            });
+        }
+
+        @Test
+        void addAliasShouldRequireAManageDomain() {
+            int exitCode = executeFluent("domain", "addAlias", "linagora.com", "unknown.com");
+
+            SoftAssertions.assertSoftly( softly -> {
+                assertThat(exitCode).isEqualTo(1);
+                assertThat(errorStreamCaptor.toString().trim()).isEqualTo("{\"statusCode\":404,\"type\":\"InvalidArgument\",\"message\":\"The domain list does not contain: unknown.com\",\"details\":null}");
+            });
+        }
+    }
+
+    private int executeFluent(String... args) {
+        return WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
+            ImmutableList.<String>builder().add("--url", "http://127.0.0.1:" + port.getValue())
+                .addAll(ImmutableList.copyOf(args))
+                .build());
+    }
 }
