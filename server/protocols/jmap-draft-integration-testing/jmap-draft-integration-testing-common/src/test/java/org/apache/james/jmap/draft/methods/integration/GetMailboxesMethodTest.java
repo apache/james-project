@@ -31,6 +31,7 @@ import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
 import static org.apache.james.jmap.JMAPTestingConstants.FIRST_MAILBOX;
 import static org.apache.james.jmap.JMAPTestingConstants.NAME;
 import static org.apache.james.jmap.JMAPTestingConstants.SECOND_MAILBOX;
+import static org.apache.james.jmap.JMAPTestingConstants.calmlyAwait;
 import static org.apache.james.jmap.JMAPTestingConstants.jmapRequestSpecBuilder;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -899,16 +900,17 @@ public abstract class GetMailboxesMethodTest {
 
         mailboxProbe.appendMessage(ALICE.asString(), MailboxPath.forUser(ALICE, DefaultMailboxes.INBOX), AppendCommand.from(message));
 
-        given()
-            .header("Authorization", accessToken.asString())
-            .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
-        .when()
-            .post("/jmap")
-        .then()
-            .statusCode(200)
-            .body(NAME, equalTo("mailboxes"))
-            .body(ARGUMENTS + ".list", hasSize(1))
-            .body(FIRST_MAILBOX + ".quotas['#private&alice@domain.tld']['STORAGE'].used", equalTo(85))
-            .body(FIRST_MAILBOX + ".quotas['#private&alice@domain.tld']['MESSAGE'].used", equalTo(1));
+        calmlyAwait.untilAsserted(() ->
+            given()
+                .header("Authorization", accessToken.asString())
+                .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
+            .when()
+                .post("/jmap")
+            .then()
+                .statusCode(200)
+                .body(NAME, equalTo("mailboxes"))
+                .body(ARGUMENTS + ".list", hasSize(1))
+                .body(FIRST_MAILBOX + ".quotas['#private&alice@domain.tld']['STORAGE'].used", equalTo(85))
+                .body(FIRST_MAILBOX + ".quotas['#private&alice@domain.tld']['MESSAGE'].used", equalTo(1)));
     }
 }
