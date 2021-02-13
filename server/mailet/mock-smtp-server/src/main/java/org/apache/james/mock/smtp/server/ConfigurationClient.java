@@ -42,6 +42,7 @@ import com.google.common.collect.ImmutableList;
 import feign.Feign;
 import feign.Logger;
 import feign.RequestLine;
+import feign.Retryer;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
@@ -168,6 +169,7 @@ public interface ConfigurationClient {
             .logLevel(Logger.Level.FULL)
             .encoder(new JacksonEncoder(OBJECT_MAPPER))
             .decoder(new JacksonDecoder(OBJECT_MAPPER))
+            .retryer(new Retryer.Default())
             .target(ConfigurationClient.class, "http://" + mockServerHttpHost.asString());
     }
 
