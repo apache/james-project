@@ -127,7 +127,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
         aliceAccessToken = authenticateJamesUser(LocalHostURIBuilder.baseUri(jmapPort), ALICE, ALICE_PASSWORD);
 
         dockerElasticSearch.getDockerES().pause();
-        Thread.sleep(Duration.ofSeconds(10).toMillis()); // Docker pause is asynchronous and we found no way to poll for it
+        Thread.sleep(Duration.ofSeconds(2).toMillis()); // Docker pause is asynchronous and we found no way to poll for it
     }
 
     @Disabled("JAMES-3011 It's already fails for a long time, but CI didn't detect this when it's not marked as BasicFeature")
@@ -155,7 +155,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
 
     private void unpauseElasticSearch() throws Exception {
         dockerElasticSearch.getDockerES().unpause();
-        Thread.sleep(Duration.ofSeconds(10).toMillis()); // Docker unpause is asynchronous and we found no way to poll for it
+        Thread.sleep(Duration.ofSeconds(2).toMillis()); // Docker unpause is asynchronous and we found no way to poll for it
     }
 
     private void aliceSavesADraft() {
