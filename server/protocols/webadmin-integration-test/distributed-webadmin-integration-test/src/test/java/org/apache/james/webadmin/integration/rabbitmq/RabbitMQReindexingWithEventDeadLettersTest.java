@@ -142,7 +142,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
     }
 
     @Test
-    void redeliverShouldReIndexFailedMessages() throws Exception {
+    void redeliverShouldReIndexFailedMessagesAndCleanEventDeadLetter() throws Exception {
         aliceSavesADraft();
         CALMLY_AWAIT.until(() -> listElasticSearchFailedEvents().size() == 1);
 
@@ -150,17 +150,6 @@ class RabbitMQReindexingWithEventDeadLettersTest {
         redeliverAllFailedEvents();
 
         CALMLY_AWAIT.until(() -> listMessageIdsForAccount(aliceAccessToken).size() == 1);
-    }
-
-    @Test
-    void redeliverShouldCleanEventDeadLetter() throws Exception {
-        aliceSavesADraft();
-        CALMLY_AWAIT.until(() -> listElasticSearchFailedEvents().size() == 1);
-
-        unpauseElasticSearch();
-        redeliverAllFailedEvents();
-        CALMLY_AWAIT.until(() -> listMessageIdsForAccount(aliceAccessToken).size() == 1);
-
         assertThat(listElasticSearchFailedEvents()).isEmpty();
     }
 
