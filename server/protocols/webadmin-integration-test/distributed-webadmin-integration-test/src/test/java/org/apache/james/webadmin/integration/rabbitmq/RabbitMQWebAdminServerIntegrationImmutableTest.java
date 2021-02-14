@@ -22,10 +22,9 @@ package org.apache.james.webadmin.integration.rabbitmq;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
+import static org.apache.james.JamesServerExtension.Lifecycle.PER_CLASS;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
-import static org.apache.james.webadmin.Constants.SEPARATOR;
-import static org.awaitility.Durations.TEN_SECONDS;
-import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
@@ -43,21 +42,17 @@ import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.webadmin.RandomPortSupplier;
 import org.apache.james.webadmin.WebAdminConfiguration;
-import org.apache.james.webadmin.integration.WebAdminServerIntegrationTest;
+import org.apache.james.webadmin.integration.WebAdminServerIntegrationImmutableTest;
 import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
-import org.apache.james.webadmin.routes.AliasRoutes;
-import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
-import org.awaitility.Awaitility;
+import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.restassured.http.ContentType;
-
 @Tag(BasicFeature.TAG)
-class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTest {
+class RabbitMQWebAdminServerIntegrationImmutableTest extends WebAdminServerIntegrationImmutableTest {
 
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
@@ -84,6 +79,7 @@ class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTes
                     .port(new RandomPortSupplier())
                     .additionalRoute("org.apache.james.webadmin.dropwizard.MetricsRoutes")
                     .build())))
+        .lifeCycle(PER_CLASS)
         .build();
 
     private static final String VERSION = "/cassandra/version";
@@ -92,53 +88,9 @@ class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTes
     private static final String UPGRADE_TO_LATEST_VERSION = UPGRADE_VERSION + "/latest";
 
     @Test
-    void getCurrentVersionShouldReturnNullForCurrentVersionAsBeginning() {
+    void getLatestVersionShouldReturnTheConfiguredLatestVersion() {
         when()
-            .get(VERSION)
-        .then()
-            .statusCode(HttpStatus.OK_200)
-            .contentType(JSON_CONTENT_TYPE)
-            .body(is("{\"version\":null}"));
-    }
-
-    @Test
-    void postShouldDoMigrationAndUpdateCurrentVersion() {
-        String taskId = with()
-            .body(String.valueOf(CassandraSchemaVersionManager.MAX_VERSION.getValue()))
-        .post(UPGRADE_VERSION)
-            .jsonPath()
-            .get("taskId");
-
-        with()
-            .get("/tasks/" + taskId + "/await")
-        .then()
-            .body("status", is("completed"));
-
-        Awaitility.await()
-            .atMost(TEN_SECONDS)
-            .await()
-            .untilAsserted(() ->
-                when()
-                    .get(VERSION)
-                .then()
-                    .statusCode(HttpStatus.OK_200)
-                    .contentType(JSON_CONTENT_TYPE)
-                    .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION.getValue() + "}")));
-    }
-
-    @Test
-    void postShouldDoMigrationAndUpdateToTheLatestVersion() {
-        String taskId = with().post(UPGRADE_TO_LATEST_VERSION)
-            .jsonPath()
-            .get("taskId");
-
-        with()
-            .get("/tasks/" + taskId + "/await")
-        .then()
-            .body("status", is("completed"));
-
-        when()
-            .get(VERSION)
+            .get(VERSION_LATEST)
         .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(JSON_CONTENT_TYPE)
@@ -146,36 +98,7 @@ class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTes
     }
 
     @Test
-    void cassandraMappingsEndpointShouldKeepDataConsistencyWhenDataValid() {
-        with()
-            .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME + "/sources/" + ALIAS_1);
-        with()
-            .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME + "/sources/" + ALIAS_2);
-
-        String taskId = with()
-            .queryParam("action", "SolveInconsistencies")
-        .post(CassandraMappingsRoutes.ROOT_PATH)
-            .jsonPath()
-            .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"));
-
-        when()
-            .get(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME)
-        .then()
-            .contentType(ContentType.JSON)
-        .statusCode(HttpStatus.OK_200)
-            .body("source", hasItems(ALIAS_1, ALIAS_2));
-    }
-
-    @Test
-    void solveMailboxInconsistenciesTaskShouldBeExposed() {
-        // schema version 6 or higher required to run solve mailbox inconsistencies task
+    void solveMessageInconsistenciesTasksShouldBeExposed() {
         String taskId = with().post(UPGRADE_TO_LATEST_VERSION)
             .jsonPath()
             .get("taskId");
@@ -186,9 +109,8 @@ class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTes
             .body("status", is("completed"));
 
         taskId = with()
-            .header("I-KNOW-WHAT-I-M-DOING", "ALL-SERVICES-ARE-OFFLINE")
             .queryParam("task", "SolveInconsistencies")
-        .post("/mailboxes")
+            .post("/messages")
             .jsonPath()
             .get("taskId");
 
@@ -198,11 +120,24 @@ class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTes
             .get(taskId + "/await")
         .then()
             .body("status", is("completed"))
-            .body("type", is("solve-mailbox-inconsistencies"))
-            .body("additionalInformation.processedMailboxEntries", is(0))
-            .body("additionalInformation.processedMailboxPathEntries", is(0))
-            .body("additionalInformation.errors", is(0))
+            .body("type", is("solve-message-inconsistencies"))
+            .body("additionalInformation.processedImapUidEntries", is(0))
+            .body("additionalInformation.processedMessageIdEntries", is(0))
+            .body("additionalInformation.addedMessageIdEntries", is(0))
+            .body("additionalInformation.updatedMessageIdEntries", is(0))
+            .body("additionalInformation.removedMessageIdEntries", is(0))
+            .body("additionalInformation.runningOptions.messagesPerSecond", is(100))
             .body("additionalInformation.fixedInconsistencies", hasSize(0))
-            .body("additionalInformation.conflictingEntries", hasSize(0));
+            .body("additionalInformation.errors", hasSize(0));
+    }
+
+    @Test
+    void getSwaggerShouldContainDistributedEndpoints() {
+        when()
+            .get(SwaggerRoutes.SWAGGER_ENDPOINT)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body(containsString("\"tags\":[\"Cassandra Mappings Operations\"]"))
+            .body(containsString("{\"name\":\"MessageIdReIndexing\"}"));
     }
 }

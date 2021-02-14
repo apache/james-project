@@ -24,24 +24,25 @@ import static org.apache.james.JamesServerExtension.Lifecycle.PER_CLASS;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesServerMain;
-import org.apache.james.jwt.JwtTokenVerifier;
-import org.apache.james.webadmin.authentication.AuthenticationFilter;
-import org.apache.james.webadmin.authentication.JwtFilter;
-import org.apache.james.webadmin.integration.JwtFilterIntegrationTest;
+import org.apache.james.webadmin.RandomPortSupplier;
+import org.apache.james.webadmin.WebAdminConfiguration;
+import org.apache.james.webadmin.integration.WebAdminServerIntegrationImmutableTest;
 import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.google.inject.name.Names;
-
-class MemoryJwtFilterIntegrationTest extends JwtFilterIntegrationTest {
+class MemoryWebAdminServerIntegrationImmutableTest extends WebAdminServerIntegrationImmutableTest {
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(new WebadminIntegrationTestModule())
-            .overrideWith(binder -> binder.bind(AuthenticationFilter.class).to(JwtFilter.class))
-            .overrideWith(binder -> binder.bind(JwtTokenVerifier.Factory.class)
-                .annotatedWith(Names.named("webadmin"))
-                .toInstance(() -> JwtTokenVerifier.create(jwtConfiguration()))))
+            .overrideWith(binder -> binder.bind(WebAdminConfiguration.class)
+                .toInstance(WebAdminConfiguration.builder()
+                    .enabled()
+                    .corsDisabled()
+                    .host("127.0.0.1")
+                    .port(new RandomPortSupplier())
+                    .additionalRoute("org.apache.james.webadmin.dropwizard.MetricsRoutes")
+                    .build())))
         .lifeCycle(PER_CLASS)
         .build();
 }

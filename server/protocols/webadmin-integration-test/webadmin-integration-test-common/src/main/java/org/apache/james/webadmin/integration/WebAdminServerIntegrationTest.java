@@ -95,6 +95,8 @@ public abstract class WebAdminServerIntegrationTest {
         assertThat(dataProbe.listDomains()).contains(DOMAIN);
     }
 
+
+    // Immutable
     @Test
     void mailQueueRoutesShouldBeExposed() {
         when()
@@ -104,6 +106,8 @@ public abstract class WebAdminServerIntegrationTest {
             .body("", containsInAnyOrder("spool", "outgoing"));
     }
 
+
+    // Immutable
     @Test
     void metricsRoutesShouldBeExposed() {
         String body = when()
@@ -117,6 +121,8 @@ public abstract class WebAdminServerIntegrationTest {
         assertThat(body).contains("outgoingMails_total 0.0");
     }
 
+
+    // Immutable
     @Test
     void healthCheckShouldReturn200WhenCalledRepeatedly() {
         given().get(HealthCheckRoutes.HEALTHCHECK);
@@ -131,6 +137,7 @@ public abstract class WebAdminServerIntegrationTest {
             .statusCode(HttpStatus.OK_200);
     }
 
+    // Immutable
     @Test
     void mailRepositoriesRoutesShouldBeExposed() {
         when()
@@ -143,6 +150,8 @@ public abstract class WebAdminServerIntegrationTest {
                 "var/mail/address-error"));
     }
 
+
+    // Immutable
     @Test
     void gettingANonExistingMailRepositoryShouldNotCreateIt() {
         given()
@@ -301,6 +310,7 @@ public abstract class WebAdminServerIntegrationTest {
         assertThat(members).containsOnly(USERNAME, USERNAME_2);
     }
 
+    // Immutable
     @Test
     void getSwaggerShouldReturnJsonDataForSwagger() {
         when()
@@ -323,6 +333,7 @@ public abstract class WebAdminServerIntegrationTest {
             .body(containsString("{\"name\":\"Mailboxes\"}"));
     }
 
+    // Immutable
     @Test
     void validateHealthChecksShouldReturnOk() {
         when()
@@ -331,6 +342,7 @@ public abstract class WebAdminServerIntegrationTest {
             .statusCode(HttpStatus.OK_200);
     }
 
+    // Immutable
     @Test
     void jmapTasksShouldBeExposed() {
         String taskId = with()

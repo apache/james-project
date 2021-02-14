@@ -26,7 +26,6 @@ import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes.MESSAGE_PATH_PARAM;
 import static org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes.USERS;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsMapWithSize.anEmptyMap;
@@ -45,8 +44,6 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
-import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.events.Event;
@@ -79,7 +76,6 @@ import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
-import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
 import org.apache.james.webadmin.routes.MailQueueRoutes;
 import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
@@ -137,26 +133,6 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    void fullReindexingShouldCompleteWhenNoMail() {
-        String taskId = with()
-            .post("/mailboxes?task=reIndex")
-            .jsonPath()
-            .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("taskId", is(notNullValue()))
-            .body("type", is("full-reindexing"))
-            .body("additionalInformation.successfullyReprocessedMailCount", is(0))
-            .body("additionalInformation.failedReprocessedMailCount", is(0))
-            .body("additionalInformation.messageFailures", is(anEmptyMap()));
-    }
-
-    @Test
     void recomputeFastViewProjectionItemsShouldComplete(GuiceJamesServer server) throws Exception {
         server.getProbe(DataProbeImpl.class).addUser(USERNAME, "secret");
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
@@ -183,6 +159,30 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("type", is("RecomputeAllFastViewProjectionItemsTask"))
             .body("additionalInformation.processedMessageCount", is(1))
             .body("additionalInformation.failedMessageCount", is(0));
+    }
+
+    @Test
+    void singleMailboxReindexingShouldComplete(GuiceJamesServer server) {
+        MailboxId mailboxId = server.getProbe(MailboxProbeImpl.class)
+            .createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
+
+        String taskId = when()
+            .post("/mailboxes/" + mailboxId.serialize() + "?task=reIndex")
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("taskId", is(Matchers.notNullValue()))
+            .body("type", is("mailbox-reindexing"))
+            .body("additionalInformation.successfullyReprocessedMailCount", is(0))
+            .body("additionalInformation.failedReprocessedMailCount", is(0))
+            .body("additionalInformation.mailboxId", is(mailboxId.serialize()))
+            .body("additionalInformation.messageFailures", is(anEmptyMap()));
     }
 
     @Test
@@ -598,92 +598,6 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    void clearMailQueueShouldCompleteWhenNoQueryParameters() {
-        String firstMailQueue = with()
-                .basePath(MailQueueRoutes.BASE_URL)
-            .get()
-            .then()
-                .statusCode(HttpStatus.OK_200)
-                .contentType(ContentType.JSON)
-                .extract()
-                .body()
-                .jsonPath()
-                .getString("[0]");
-
-        String taskId = with()
-                .basePath(MailQueueRoutes.BASE_URL)
-            .delete(firstMailQueue + "/mails")
-                .jsonPath()
-                .getString("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is("clear-mail-queue"))
-            .body("additionalInformation.mailQueueName", is(notNullValue()))
-            .body("additionalInformation.initialCount", is(0))
-            .body("additionalInformation.remainingCount", is(0));
-    }
-
-    @Test
-    void blobStoreVaultGarbageCollectionShouldComplete() {
-        String taskId =
-            with()
-                .basePath(DeletedMessagesVaultRoutes.ROOT_PATH)
-                .queryParam("scope", "expired")
-            .delete()
-                .jsonPath()
-                .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("taskId", is(taskId))
-            .body("type", is("deleted-messages-blob-store-based-garbage-collection"))
-            .body("additionalInformation.beginningOfRetentionPeriod", is(notNullValue()))
-            .body("additionalInformation.deletedBuckets", is(empty()));
-    }
-
-    @Test
-    void clearMailRepositoryShouldComplete() {
-        String escapedRepositoryPath = with()
-                .basePath(MailRepositoriesRoutes.MAIL_REPOSITORIES)
-            .get()
-            .then()
-                .statusCode(HttpStatus.OK_200)
-                .contentType(ContentType.JSON)
-                .extract()
-                .body()
-                .jsonPath()
-                .getString("[0].path");
-
-        String taskId = with()
-                .basePath(MailRepositoriesRoutes.MAIL_REPOSITORIES)
-            .delete(escapedRepositoryPath + "/mails")
-                .jsonPath()
-                .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("taskId", is(taskId))
-            .body("type", is("clear-mail-repository"))
-            .body("additionalInformation.repositoryPath", is(notNullValue()))
-            .body("additionalInformation.initialCount", is(0))
-            .body("additionalInformation.remainingCount", is(0));
-    }
-
-    @Test
     void mailboxMergingShouldComplete() {
         MailboxId origin = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
         MailboxId destination = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX + "2");
@@ -710,29 +624,6 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("additionalInformation.totalMessageCount", is(0))
             .body("additionalInformation.messageMovedCount", is(0))
             .body("additionalInformation.messageFailedCount", is(0));
-    }
-
-    @Test
-    void singleMailboxReindexingShouldComplete() {
-        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
-
-        String taskId = when()
-            .post("/mailboxes/" + mailboxId.serialize() + "?task=reIndex")
-                .jsonPath()
-                .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is("mailbox-reindexing"))
-            .body("additionalInformation.successfullyReprocessedMailCount", is(0))
-            .body("additionalInformation.failedReprocessedMailCount", is(0))
-            .body("additionalInformation.mailboxId", is(mailboxId.serialize()))
-            .body("additionalInformation.messageFailures", is(anEmptyMap()));
     }
 
     @Test
@@ -766,88 +657,6 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("additionalInformation.deleteMessageId", is(composedMessageId.getMessageId().serialize()));
     }
 
-    @Test
-    void cassandraMigrationShouldComplete() {
-        SchemaVersion toVersion = CassandraSchemaVersionManager.MAX_VERSION;
-        String taskId = with()
-                .body(String.valueOf(toVersion.getValue()))
-            .post("cassandra/version/upgrade")
-                .jsonPath()
-                .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("taskId", is(taskId))
-            .body("type", is("cassandra-migration"))
-            .body("additionalInformation.toVersion", is(toVersion.getValue()));
-    }
-
-    @Test
-    void cassandraMappingsSolveInconsistenciesShouldComplete() {
-        String taskId = with()
-                .basePath(CassandraMappingsRoutes.ROOT_PATH)
-                .queryParam("action", "SolveInconsistencies")
-            .post()
-                .jsonPath()
-                .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("taskId", is(taskId))
-            .body("type", is("cassandra-mappings-solve-inconsistencies"))
-            .body("additionalInformation.successfulMappingsCount", is(0))
-            .body("additionalInformation.errorMappingsCount", is(0));
-    }
-
-    @Test
-    void recomputeMailboxCountersShouldComplete() {
-        String taskId = with()
-                .basePath("/mailboxes")
-                .queryParam("task", "RecomputeMailboxCounters")
-            .post()
-                .jsonPath()
-                .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("taskId", is(taskId))
-            .body("type", is("recompute-mailbox-counters"))
-            .body("additionalInformation.processedMailboxes", is(0));
-    }
-
-    @Test
-    void recomputeCurrentQuotasShouldComplete() {
-        String taskId = with()
-            .basePath("/quota/users")
-            .queryParam("task", "RecomputeCurrentQuotas")
-        .post()
-            .jsonPath()
-            .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("taskId", is(taskId))
-            .body("type", is("recompute-current-quotas"))
-            .body("additionalInformation.processedQuotaRoots", is(0))
-            .body("additionalInformation.failedQuotaRoots", empty());
-    }
-
     private MailboxAdded createMailboxAdded() {
         String uuid = "6e0dd59d-660e-4d9b-b22f-0354479f47b4";
         return EventFactory.mailboxAdded()
@@ -857,26 +666,5 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .mailboxId(InMemoryId.of(453))
             .mailboxPath(MailboxPath.forUser(Username.of(USERNAME), "Important-mailbox"))
             .build();
-    }
-
-    @Test
-    void republishNotProcessedMailsOnSpoolShouldComplete() {
-        String taskId = with()
-            .basePath("/mailQueues/spool")
-            .queryParam("action", "RepublishNotProcessedMails")
-            .queryParam("olderThan", "2d")
-        .post()
-            .jsonPath()
-        .get("taskId");
-
-        given()
-            .basePath(TasksRoutes.BASE)
-        .when()
-            .get(taskId + "/await")
-        .then()
-            .body("status", is("completed"))
-            .body("taskId", is(taskId))
-            .body("type", is("republish-not-processed-mails"))
-            .body("additionalInformation.nbRequeuedMails", is(0));
     }
 }

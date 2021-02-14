@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.integration.rabbitmq;
 
+import static org.apache.james.JamesServerExtension.Lifecycle.PER_CLASS;
+
 import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesConfiguration;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
@@ -60,5 +62,6 @@ class RabbitMQJwtFilterIntegrationTest extends JwtFilterIntegrationTest {
                 .annotatedWith(Names.named("webadmin"))
                 .toInstance(() -> JwtTokenVerifier.create(jwtConfiguration())))
             .overrideWith(new WebadminIntegrationTestModule()))
+        .lifeCycle(PER_CLASS)
         .build();
 }
