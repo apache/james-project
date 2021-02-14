@@ -27,39 +27,6 @@
 
 <managesieveservers>
 
-   <managesieveserver enabled="true">
-
-     <jmxName>managesieveserver</jmxName>
-
-     <bind>0.0.0.0:0</bind>
-
-     <connectionBacklog>200</connectionBacklog>
-
-     <tls socketTLS="false" startTLS="false">
-       <!-- To create a new keystore execute:
-        keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore
-         -->
-       <keystore>file://conf/keystore</keystore>
-       <secret>james72laBalle</secret>
-       <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
-       <!-- The algorithm is optional and only needs to be specified when using something other
-        than the Sun JCE provider - You could use IbmX509 with IBM Java runtime. -->
-       <algorithm>SunX509</algorithm>
-     </tls>
-         
-        <!-- connection timeout in secconds -->
-        <connectiontimeout>360</connectiontimeout>
-
-        <!-- Set the maximum simultaneous incoming connections for this service -->
-        <connectionLimit>0</connectionLimit>
-         
-        <!-- Set the maximum simultaneous incoming connections per IP for this service -->
-        <connectionLimitPerIP>0</connectionLimitPerIP>
-        <maxmessagesize>0</maxmessagesize>
-        <addressBracketsEnforcement>true</addressBracketsEnforcement>
-  
-   </managesieveserver>
-
 </managesieveservers>
 
 

@@ -36,19 +36,4 @@ under the License.
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
     </imapserver>
-    <imapserver enabled="true">
-        <jmxName>imapserver-ssl</jmxName>
-        <bind>0.0.0.0:0</bind>
-        <connectionBacklog>200</connectionBacklog>
-        <tls socketTLS="false" startTLS="false">
-            <!-- To create a new keystore execute:
-              keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore
-             -->
-            <keystore>file://conf/keystore</keystore>
-            <secret>james72laBalle</secret>
-            <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
-        </tls>
-        <connectionLimit>0</connectionLimit>
-        <connectionLimitPerIP>0</connectionLimitPerIP>
-    </imapserver>
 </imapservers>
