@@ -20,6 +20,7 @@
 package org.apache.james;
 
 
+import static org.apache.james.PeriodicalHealthChecksTest.TestingHealthCheck.COMPONENT_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.atLeast;
@@ -86,6 +87,8 @@ public class PeriodicalHealthChecksTest {
     void setUp() {
         mockHealthCheck1 = Mockito.mock(EventDeadLettersHealthCheck.class);
         mockHealthCheck2 = Mockito.mock(GuiceLifecycleHealthCheck.class);
+        when(mockHealthCheck1.componentName()).thenReturn(new ComponentName("mockHealthCheck1"));
+        when(mockHealthCheck2.componentName()).thenReturn(new ComponentName("mockHealthCheck2"));
         when(mockHealthCheck1.check()).thenReturn(Mono.just(Result.healthy(new ComponentName("mockHealthCheck1"))));
         when(mockHealthCheck2.check()).thenReturn(Mono.just(Result.healthy(new ComponentName("mockHealthCheck2"))));
 
@@ -111,7 +114,7 @@ public class PeriodicalHealthChecksTest {
 
         testee.start();
 
-        assertThatCode(() -> scheduler.advanceTimeBy(PERIOD))
+        assertThatCode(() -> scheduler.advanceTimeBy(Duration.ofMillis(5)))
             .doesNotThrowAnyException();
     }
 
@@ -127,7 +130,7 @@ public class PeriodicalHealthChecksTest {
     void startShouldLogPeriodicallyWhenUnhealthy() {
         ListAppender<ILoggingEvent> loggingEvents = getListAppenderForClass(PeriodicalHealthChecks.class);
 
-        TestingHealthCheck unhealthy = () -> Mono.just(Result.unhealthy(TestingHealthCheck.COMPONENT_NAME, "cause"));
+        TestingHealthCheck unhealthy = () -> Mono.just(Result.unhealthy(COMPONENT_NAME, "cause"));
         testee = new PeriodicalHealthChecks(ImmutableSet.of(unhealthy),
             scheduler,
             new PeriodicalHealthChecksConfiguration(PERIOD));
@@ -145,7 +148,7 @@ public class PeriodicalHealthChecksTest {
     void startShouldLogPeriodicallyWhenDegraded() {
         ListAppender<ILoggingEvent> loggingEvents = getListAppenderForClass(PeriodicalHealthChecks.class);
 
-        TestingHealthCheck degraded = () -> Mono.just(Result.degraded(TestingHealthCheck.COMPONENT_NAME, "cause"));
+        TestingHealthCheck degraded = () -> Mono.just(Result.degraded(COMPONENT_NAME, "cause"));
         testee = new PeriodicalHealthChecks(ImmutableSet.of(degraded),
             scheduler,
             new PeriodicalHealthChecksConfiguration(PERIOD));
@@ -163,7 +166,7 @@ public class PeriodicalHealthChecksTest {
     void startShouldNotLogWhenHealthy() {
         ListAppender<ILoggingEvent> loggingEvents = getListAppenderForClass(PeriodicalHealthChecks.class);
 
-        TestingHealthCheck healthy = () -> Mono.just(Result.healthy(TestingHealthCheck.COMPONENT_NAME));
+        TestingHealthCheck healthy = () -> Mono.just(Result.healthy(COMPONENT_NAME));
         testee = new PeriodicalHealthChecks(ImmutableSet.of(healthy),
             scheduler,
             new PeriodicalHealthChecksConfiguration(PERIOD));
@@ -177,9 +180,9 @@ public class PeriodicalHealthChecksTest {
     void startShouldLogWhenMultipleHealthChecks() {
         ListAppender<ILoggingEvent> loggingEvents = getListAppenderForClass(PeriodicalHealthChecks.class);
 
-        TestingHealthCheck unhealthy = () -> Mono.just(Result.unhealthy(TestingHealthCheck.COMPONENT_NAME, "cause"));
-        TestingHealthCheck degraded = () -> Mono.just(Result.degraded(TestingHealthCheck.COMPONENT_NAME, "cause"));
-        TestingHealthCheck healthy = () -> Mono.just(Result.healthy(TestingHealthCheck.COMPONENT_NAME));
+        TestingHealthCheck unhealthy = () -> Mono.just(Result.unhealthy(COMPONENT_NAME, "cause"));
+        TestingHealthCheck degraded = () -> Mono.just(Result.degraded(COMPONENT_NAME, "cause"));
+        TestingHealthCheck healthy = () -> Mono.just(Result.healthy(COMPONENT_NAME));
 
         testee = new PeriodicalHealthChecks(ImmutableSet.of(unhealthy, degraded, healthy),
             scheduler,
