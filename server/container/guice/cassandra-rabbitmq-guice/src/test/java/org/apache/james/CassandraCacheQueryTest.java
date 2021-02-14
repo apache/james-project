@@ -47,7 +47,7 @@ import org.apache.james.utils.TestIMAPClient;
 import org.apache.mailet.base.test.FakeMail;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -97,7 +97,7 @@ class CassandraCacheQueryTest {
 
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = WithCacheImmutableTest.baseExtensionBuilder()
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .overrideServerModule(new TestingSessionModule())
         .build();
 
@@ -113,11 +113,11 @@ class CassandraCacheQueryTest {
         .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
         .await();
 
-    private StatementRecorder statementRecorder;
+    private static StatementRecorder statementRecorder;
 
-    @BeforeEach
-    void beforeEach(GuiceJamesServer server) throws Exception {
-        this.statementRecorder = new StatementRecorder();
+    @BeforeAll
+    static void beforeEach(GuiceJamesServer server) throws Exception {
+        statementRecorder = new StatementRecorder();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
             .addUser(JAMES_USER, PASSWORD);
@@ -145,7 +145,7 @@ class CassandraCacheQueryTest {
             .isNotEmpty();
     }
 
-    private void readAMail(GuiceJamesServer server) throws IOException {
+    private static void readAMail(GuiceJamesServer server) throws IOException {
         try (TestIMAPClient reader = new TestIMAPClient()) {
             int imapPort = server.getProbe(ImapGuiceProbe.class).getImapPort();
             reader.connect(JAMES_SERVER_HOST, imapPort)
@@ -158,7 +158,7 @@ class CassandraCacheQueryTest {
         }
     }
 
-    private void sendAMail(GuiceJamesServer server) throws IOException, MessagingException {
+    private static void sendAMail(GuiceJamesServer server) throws IOException, MessagingException {
         Port smtpPort = server.getProbe(SmtpGuiceProbe.class).getSmtpPort();
         try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
             sender.connect(JAMES_SERVER_HOST, smtpPort);
