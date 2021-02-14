@@ -48,7 +48,9 @@ public abstract class JwtFilterIntegrationTest {
     }
 
     private static final String DOMAIN = "domain";
+    private static final String DOMAIN2 = "other";
     private static final String SPECIFIC_DOMAIN = DomainsRoutes.DOMAINS + SEPARATOR + DOMAIN;
+    private static final String SPECIFIC_DOMAIN2 = DomainsRoutes.DOMAINS + SEPARATOR + DOMAIN2;
     private static final String VALID_TOKEN_ADMIN_TRUE = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBvcGVuL" +
         "XBhYXMub3JnIiwiYWRtaW4iOnRydWUsImlhdCI6MTQ4OTAzODQzOH0.rgxCkdWEa-92a4R-72a9Z49k4LRvQDShgci5Y7qWRUP9IGJCK-lMkrHF" +
         "4H0a6L87BYppxVW701zaZ6dNxRMvHnjLBBWnPsC2B0rkkr2hEL2zfz7sb-iNGV-J4ICx97t8-TfQ5rz3VOX0FwdusPL_rJtmlGEGRivPkR6_aBe1" +
@@ -90,12 +92,12 @@ public abstract class JwtFilterIntegrationTest {
         given()
             .header("Authorization", "Bearer " + VALID_TOKEN_ADMIN_FALSE)
         .when()
-            .put(SPECIFIC_DOMAIN)
+            .put(SPECIFIC_DOMAIN2)
         .then()
             .statusCode(HttpStatus.UNAUTHORIZED_401);
 
         assertThat(dataProbe.listDomains())
-            .doesNotContain(DOMAIN);
+            .doesNotContain(DOMAIN2);
     }
 
     @Test
@@ -103,12 +105,11 @@ public abstract class JwtFilterIntegrationTest {
         given()
             .header("Authorization", "Bearer invalid")
         .when()
-            .put(SPECIFIC_DOMAIN)
+            .put(SPECIFIC_DOMAIN2)
         .then()
             .statusCode(HttpStatus.UNAUTHORIZED_401);
 
         assertThat(dataProbe.listDomains())
-            .doesNotContain(DOMAIN);
+            .doesNotContain(DOMAIN2);
     }
-
 }
