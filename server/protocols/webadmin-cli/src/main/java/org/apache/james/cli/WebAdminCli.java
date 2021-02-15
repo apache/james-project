@@ -26,6 +26,7 @@ import java.util.concurrent.Callable;
 
 import org.apache.james.cli.domain.DomainCommand;
 import org.apache.james.cli.mailbox.MailboxCommand;
+import org.apache.james.cli.quota.QuotaCommand;
 import org.apache.james.cli.user.UserCommand;
 import org.apache.james.httpclient.FeignClientFactory;
 import org.apache.james.httpclient.JwtToken;
@@ -78,6 +79,7 @@ public class WebAdminCli implements Callable<Integer> {
             .addSubcommand(new DomainCommand(out, parent, err))
             .addSubcommand(new UserCommand(out, parent, err))
             .addSubcommand(new MailboxCommand(out, parent, err))
+            .addSubcommand(new QuotaCommand(out, parent, err))
             .execute(args);
     }
 
