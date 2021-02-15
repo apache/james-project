@@ -63,7 +63,7 @@ pipeline {
                             switch (params.PROFILE) {
                                 case "reference":
                                     sh "cd /srv && sudo btrfs subvolume snapshot bench-snapshot-s3 bench-running-docker"
-                                    sh 'docker run -d --name=cassandra -p 9042:9042 -v /srv/bench-running-docker/cassandra:/var/lib/cassandra cassandra:3.11.3'
+                                    sh 'docker run -d --name=cassandra -p 9042:9042 -v /srv/bench-running-docker/cassandra:/var/lib/cassandra cassandra:3.11.10'
 
                                     sh 'sleep 10'
 
@@ -86,7 +86,7 @@ pipeline {
                                     sh 'docker run -d --hostname HOSTNAME -p 25:25 -p 1080:80 -p 8000:8000 -p 110:110 -p 143:143 -p 465:465 -p 587:587 -p 993:993 --link cassandra:cassandra --link rabbitmq:rabbitmq --link elasticsearch:elasticsearch --link tika:tika --link s3:s3.docker.test --name james_run -t james_run'
                                     break
                                 case "s3-local":
-                                    sh 'docker run -d --name=cassandra -p 9042:9042 cassandra:3.11.3'
+                                    sh 'docker run -d --name=cassandra -p 9042:9042 cassandra:3.11.10'
                                     sh 'docker run -d --name=elasticsearch -p 9200:9200 --env "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:6.3.2'
                                     sh 'docker run -d --name=tika apache/tika:1.24'
                                     sh 'docker run -d --env "REMOTE_MANAGEMENT_DISABLE=1" --env "SCALITY_ACCESS_KEY_ID=accessKey1" --env "SCALITY_SECRET_ACCESS_KEY=secretKey1" --name=s3 zenko/cloudserver:8.2.6'
@@ -95,7 +95,7 @@ pipeline {
                                     sh 'docker run -d --hostname HOSTNAME -p 25:25 -p 1080:80 -p 8000:8000 -p 110:110 -p 143:143 -p 465:465 -p 587:587 -p 993:993 --link cassandra:cassandra --link rabbitmq:rabbitmq --link elasticsearch:elasticsearch --link s3:s3.docker.test --link tika:tika --name james_run -t james_run'
                                     break
                                 case "s3":
-                                    sh 'docker run -d --name=cassandra -p 9042:9042 cassandra:3.11.3'
+                                    sh 'docker run -d --name=cassandra -p 9042:9042 cassandra:3.11.10'
                                     sh 'docker run -d --name=elasticsearch -p 9200:9200 --env "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:6.3.2'
                                     sh 'docker run -d --name=tika apache/tika:1.24'
                                     sh 'docker run -d --name=rabbitmq -p 15672:15672 -p 5672:5672 rabbitmq:3.8.1-management'

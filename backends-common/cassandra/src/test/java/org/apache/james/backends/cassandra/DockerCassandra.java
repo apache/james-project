@@ -139,7 +139,7 @@ public class DockerCassandra {
 
     @SuppressWarnings("resource")
     public DockerCassandra() {
-        this("cassandra_3_11_3-" + buildSpecificImageDiscriminator(), AdditionalDockerFileStep.IDENTITY);
+        this("cassandra_3_11_10-" + buildSpecificImageDiscriminator(), AdditionalDockerFileStep.IDENTITY);
     }
 
     private DockerCassandra(String imageName, AdditionalDockerFileStep additionalSteps) {
@@ -174,7 +174,7 @@ public class DockerCassandra {
             new ImageFromDockerfile(imageName,doNotDeleteImageAfterUsage)
                 .withDockerfileFromBuilder(builder ->
                     additionalSteps.applyStep(builder
-                        .from("cassandra:3.11.3")
+                        .from("cassandra:3.11.10")
                         .env("ENV CASSANDRA_CONFIG", "/etc/cassandra")
                         .run("echo \"-Xms" + CASSANDRA_MEMORY + "M\" >> " + JVM_OPTIONS)
                         .run("echo \"-Xmx" + CASSANDRA_MEMORY + "M\" >> " + JVM_OPTIONS)
