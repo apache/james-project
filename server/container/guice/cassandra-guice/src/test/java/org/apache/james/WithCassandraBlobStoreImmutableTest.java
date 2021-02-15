@@ -20,7 +20,6 @@
 package org.apache.james;
 
 import org.apache.james.jmap.draft.JmapJamesServerContract;
-import org.apache.james.jmap.draft.methods.integration.SpamAssassinModuleExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -34,7 +33,6 @@ class WithCassandraBlobStoreImmutableTest implements JmapJamesServerContract, Ja
         return TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
-            .extension(new SpamAssassinModuleExtension())
             .server(configuration -> CassandraJamesServerMain.createServer(configuration)
                 .overrideWith(new TestJMAPServerModule()));
     }
