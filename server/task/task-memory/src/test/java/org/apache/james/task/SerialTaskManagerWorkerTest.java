@@ -45,7 +45,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 class SerialTaskManagerWorkerTest {
-    private  static final Duration UPDATE_INFORMATION_POLLING_DURATION = Duration.ofSeconds(1);
+    private  static final Duration UPDATE_INFORMATION_POLLING_DURATION = Duration.ofMillis(100);
 
     private TaskManagerWorker.Listener listener;
     private SerialTaskManagerWorker worker;
@@ -87,14 +87,14 @@ class SerialTaskManagerWorkerTest {
     void aRunningTaskShouldProvideInformationUpdatesDuringExecution() throws InterruptedException {
         TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), new MemoryReferenceWithCounterTask((counter) ->
             Mono.fromCallable(counter::incrementAndGet)
-                .delayElement(Duration.ofSeconds(2))
+                .delayElement(Duration.ofMillis(200))
                 .repeat(10)
                 .then(Mono.just(Task.Result.COMPLETED))
                 .block()));
 
         worker.executeTask(taskWithId).subscribe();
 
-        TimeUnit.SECONDS.sleep(2);
+        TimeUnit.MILLISECONDS.sleep(200);
 
         verify(listener, atLeastOnce()).updated(eq(taskWithId.getId()), notNull());
     }
@@ -103,7 +103,7 @@ class SerialTaskManagerWorkerTest {
     void aRunningTaskShouldHaveAFiniteNumberOfInformation() {
         TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), new MemoryReferenceWithCounterTask((counter) ->
             Mono.fromCallable(counter::incrementAndGet)
-                .delayElement(Duration.ofSeconds(1))
+                .delayElement(Duration.ofMillis(100))
                 .repeat(3)
                 .then(Mono.just(Task.Result.COMPLETED))
                 .block()));
@@ -114,10 +114,10 @@ class SerialTaskManagerWorkerTest {
     }
 
     @Test
-    void aRunningTaskShouldEmitAtMostOneInformationPerSecond() {
+    void aRunningTaskShouldEmitAtMostOneInformationPerPeriod() {
         TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), new MemoryReferenceWithCounterTask((counter) ->
             Mono.fromCallable(counter::incrementAndGet)
-                .delayElement(Duration.ofMillis(10))
+                .delayElement(Duration.ofMillis(1))
                 .repeat(200)
                 .then(Mono.just(Task.Result.COMPLETED))
                 .block()));
