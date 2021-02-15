@@ -410,7 +410,7 @@ echo -e "\nauthorizer: org.apache.cassandra.auth.CassandraAuthorizer" >> /etc/ca
 
 #### Create a role
 
-Have a look at [cassandra documentation](http://cassandra.apache.org/doc/3.11.3/cql/security.html) section `CREATE ROLE` for more information
+Have a look at [cassandra documentation](http://cassandra.apache.org/doc/3.11.10/cql/security.html) section `CREATE ROLE` for more information
 
 E.g.
 ```
@@ -418,7 +418,7 @@ CREATE ROLE james_one WITH PASSWORD = 'james_one' AND LOGIN = true;
 ```
 #### Create a keyspace
 
-Have a look at [cassandra documentation](http://cassandra.apache.org/doc/3.11.3/cql/ddl.html) section `CREATE KEYSPACE` for more information
+Have a look at [cassandra documentation](http://cassandra.apache.org/doc/3.11.10/cql/ddl.html) section `CREATE KEYSPACE` for more information
 
 #### Grant permissions on created keyspace to the role
 
@@ -460,7 +460,7 @@ describe any keyspace and table. There's no configuration that can make
 effect on that topic. Consequently, you have to accept that your data models 
 are still being exposed to anyone having credentials to Cassandra. 
 
-For more information, have a look at [cassandra documentation](http://cassandra.apache.org/doc/3.11.3/cql/security.html) section `REVOKE PERMISSION`. 
+For more information, have a look at [cassandra documentation](http://cassandra.apache.org/doc/3.11.10/cql/security.html) section `REVOKE PERMISSION`. 
 
 Except for the case above, the permissions are not auto available for 
 a specific role unless they are granted by `GRANT` command. Therefore, 

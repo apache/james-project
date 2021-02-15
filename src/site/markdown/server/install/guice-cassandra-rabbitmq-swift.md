@@ -5,7 +5,7 @@
 ### Requirements
 
  - Java 11 SDK
- - Docker ∕ ElasticSearch 6.3.2, RabbitMQ Management 3.8.1, compatible S3 ObjectStorage and Cassandra 3.11.3
+ - Docker ∕ ElasticSearch 6.3.2, RabbitMQ Management 3.8.1, compatible S3 ObjectStorage and Cassandra 3.11.10
  - Maven 3
 
 ### Building the artifacts
@@ -25,7 +25,7 @@ mvn clean install
 
 ### Requirements
 
- * Cassandra 3.11.3
+ * Cassandra 3.11.10
  * ElasticSearch 6.3.2
  * RabbitMQ-Management 3.8.1
  * Swift ObjectStorage 2.15.1 or Zenko Cloudserver or AWS S3
@@ -47,7 +47,7 @@ $ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
 You need to have a Cassandra, ElasticSearch, S3 and RabbitMQ instance running. You can either install the servers or launch them via docker:
 
 ```bash
-$ docker run -d -p 9042:9042 --name=cassandra cassandra:3.11.3
+$ docker run -d -p 9042:9042 --name=cassandra cassandra:3.11.10
 $ docker run -d -p 9200:9200 --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:6.3.2
 $ docker run -d -p 5672:5672 -p 15672:15672 --name=rabbitmq rabbitmq:3.8.1-management
 $ docker run -d --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 zenko/cloudserver:8.2.6

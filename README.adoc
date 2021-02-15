@@ -153,7 +153,7 @@ If you haven't already:
 ==== How to ?
 You need a running *cassandra* in docker. To achieve this run:
 
-    $ docker run -d --name=cassandra cassandra:3.11.3
+    $ docker run -d --name=cassandra cassandra:3.11.10
 
 You need a running *rabbitmq* in docker. To achieve this run:
 
@@ -233,7 +233,7 @@ If you haven't already:
 ==== How to ?
 You need a running *cassandra* in docker. To achieve this run:
 
-    $ docker run -d --name=cassandra cassandra:3.11.3
+    $ docker run -d --name=cassandra cassandra:3.11.10
 
 You need a running *ElasticSearch* in docker. To achieve this run:
 

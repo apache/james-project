@@ -29,7 +29,7 @@ services:
       - discovery.type=single-node
 
   cassandra:
-    image: cassandra:3.11.3
+    image: cassandra:3.11.10
     ports:
       - "9042:9042"
 
