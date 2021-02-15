@@ -89,10 +89,6 @@
         </processor>
 
         <processor state="local-delivery" enableJmx="true">
-            <mailet match="All" class="SpamAssassin">
-                <spamdHost>localhost</spamdHost>
-                <spamdPort>783</spamdPort>
-            </mailet>
             <mailet match="IsMarkedAsSpam" class="WithStorageDirective">
                 <targetFolderName>Spam</targetFolderName>
             </mailet>
