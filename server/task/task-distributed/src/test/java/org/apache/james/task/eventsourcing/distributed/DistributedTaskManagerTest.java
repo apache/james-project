@@ -367,7 +367,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         Pair<Hostname, TaskManager> remoteTaskManager = getOtherTaskManager(runningNode, Pair.of(HOSTNAME, taskManager1), Pair.of(HOSTNAME_2, taskManager2));
         remoteTaskManager.getValue().cancel(id);
 
-        awaitAtMostFiveSeconds.untilAsserted(() ->
+        awaitAtMostTwoSeconds.untilAsserted(() ->
             assertThat(taskManager1.getExecutionDetails(id).getStatus())
                 .isIn(TaskManager.Status.CANCELLED, TaskManager.Status.CANCEL_REQUESTED));
 
@@ -453,7 +453,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
             TaskId taskToExecuteAfterFirstNodeIsDown = taskManagerRunningFirstTask.submit(new CompletedTask());
             taskManagerRunningFirstTask.close();
 
-            awaitAtMostFiveSeconds.untilAsserted(() ->
+            awaitAtMostTwoSeconds.untilAsserted(() ->
                 assertThat(otherTaskManager.getExecutionDetails(taskToExecuteAfterFirstNodeIsDown).getStatus())
                     .isEqualTo(TaskManager.Status.COMPLETED));
             TaskExecutionDetails detailsSecondTask = otherTaskManager.getExecutionDetails(taskToExecuteAfterFirstNodeIsDown);
