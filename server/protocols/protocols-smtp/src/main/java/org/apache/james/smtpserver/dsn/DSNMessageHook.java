@@ -23,6 +23,7 @@ import static org.apache.james.smtpserver.dsn.DSNMailParameterHook.DSN_ENVID;
 import static org.apache.james.smtpserver.dsn.DSNMailParameterHook.DSN_RET;
 import static org.apache.james.smtpserver.dsn.DSNRcptParameterHook.DSN_RCPT_PARAMETERS;
 
+import java.time.ZonedDateTime;
 import java.util.Optional;
 
 import org.apache.james.core.MailAddress;
@@ -30,6 +31,9 @@ import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.smtpserver.JamesMessageHook;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
 
@@ -47,6 +51,7 @@ public class DSNMessageHook implements JamesMessageHook {
 
         DsnParameters.of(envId, ret, rcptParameters)
             .ifPresent(mail::setDsnParameters);
+        mail.setAttribute(new Attribute(AttributeName.of("dsn-arrival-date"), AttributeValue.of(ZonedDateTime.now())));
         return HookResult.DECLINED;
     }
 }
