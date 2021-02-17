@@ -22,6 +22,7 @@ package org.apache.mailet;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URL;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -71,6 +72,11 @@ public class AttributeValue<T> {
     public static AttributeValue<Float> of(Float value) {
         Preconditions.checkNotNull(value, "value should not be null");
         return new AttributeValue<>(value, Serializer.FLOAT_SERIALIZER);
+    }
+
+    public static AttributeValue<ZonedDateTime> of(ZonedDateTime value) {
+        Preconditions.checkNotNull(value, "value should not be null");
+        return new AttributeValue<>(value, Serializer.DATE_SERIALIZER);
     }
 
     public static AttributeValue<Double> of(Double value) {
@@ -135,6 +141,9 @@ public class AttributeValue<T> {
         }
         if (value instanceof Double) {
             return of((Double) value);
+        }
+        if (value instanceof ZonedDateTime) {
+            return of((ZonedDateTime) value);
         }
         if (value instanceof Collection<?>) {
             return of(((Collection<AttributeValue<?>>) value));

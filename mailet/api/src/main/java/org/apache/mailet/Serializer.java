@@ -19,11 +19,14 @@
 
 package org.apache.mailet;
 
+import static java.time.format.DateTimeFormatter.ISO_DATE_TIME;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +83,7 @@ public interface Serializer<T> {
                     LONG_SERIALIZER,
                     FLOAT_SERIALIZER,
                     DOUBLE_SERIALIZER,
+                    DATE_SERIALIZER,
                     MESSAGE_ID_DTO_SERIALIZER,
                     new Serializer.ArbitrarySerializableSerializer<>(),
                     URL_SERIALIZER,
@@ -266,6 +270,36 @@ public interface Serializer<T> {
     }
 
     Serializer<Double> DOUBLE_SERIALIZER = new DoubleSerializer();
+
+    class DateSerializer implements Serializer<ZonedDateTime> {
+        @Override
+        public JsonNode serialize(ZonedDateTime object) {
+            String serialized = object.format(ISO_DATE_TIME);
+            return TextNode.valueOf(serialized);
+        }
+
+        @Override
+        public Optional<ZonedDateTime> deserialize(JsonNode json) {
+            if (json instanceof TextNode) {
+                String serialized = json.asText();
+                return Optional.of(ZonedDateTime.parse(serialized, ISO_DATE_TIME));
+            } else {
+                return Optional.empty();
+            }
+        }
+
+        @Override
+        public String getName() {
+            return "DateSerializer";
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return this.getClass() == other.getClass();
+        }
+    }
+
+    Serializer<ZonedDateTime> DATE_SERIALIZER = new DateSerializer();
 
     class MessageIdDtoSerializer implements Serializer<MessageIdDto> {
 
