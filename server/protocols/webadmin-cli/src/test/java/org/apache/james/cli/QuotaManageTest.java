@@ -42,7 +42,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
 
-public class QuotaManageTest {
+class QuotaManageTest {
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
@@ -201,7 +201,7 @@ public class QuotaManageTest {
         }
     }
 
-    int executeFluent(String... args) {
+    private int executeFluent(String... args) {
         return WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
             ImmutableList.<String>builder().add("--url", "http://127.0.0.1:" + port.getValue())
                 .addAll(ImmutableList.copyOf(args))
