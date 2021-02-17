@@ -1280,7 +1280,7 @@ public class DSNBounceTest {
     }
 
     @Test
-    void ArrivalDateShouldBePositioned() throws Exception {
+    void arrivalDateShouldBePositioned() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .mailetName(MAILET_NAME)
             .mailetContext(fakeMailContext)
