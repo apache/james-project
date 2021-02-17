@@ -29,6 +29,7 @@ import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -45,6 +46,8 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.DateFormats;
@@ -1260,6 +1263,50 @@ public class DSNBounceTest {
         String expectedContent = "Reporting-MTA: dns; myhost\n" +
             "Received-From-MTA: dns; 111.222.333.444\n" +
             "Original-Envelope-Id: xyz\n" +
+            "\n" +
+            "Final-Recipient: rfc822; recipient@domain.com\n" +
+            "Action: failed\n" +
+            "Status: Delivery error\n" +
+            "Diagnostic-Code: X-James; Delivery error\n" +
+            "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 XXXXX (UTC)\n";
+
+        List<SentMail> sentMails = fakeMailContext.getSentMails();
+        assertThat(sentMails).hasSize(1);
+        SentMail sentMail = sentMails.get(0);
+        MimeMessage sentMessage = sentMail.getMsg();
+        MimeMultipart content = (MimeMultipart) sentMessage.getContent();
+        SharedByteArrayInputStream actualContent = (SharedByteArrayInputStream) content.getBodyPart(1).getContent();
+        assertThat(IOUtils.toString(actualContent, StandardCharsets.UTF_8)).isEqualTo(expectedContent);
+    }
+
+    @Test
+    void arrivalDateShouldBePositioned() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .mailetName(MAILET_NAME)
+            .mailetContext(fakeMailContext)
+            .build();
+        dsnBounce.init(mailetConfig);
+
+        MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+        FakeMail mail = FakeMail.builder()
+            .name(MAILET_NAME)
+            .sender(senderMailAddress)
+            .attribute(DELIVERY_ERROR_ATTRIBUTE)
+            .attribute(new Attribute(AttributeName.of("dsn-arrival-date"), AttributeValue.of(ZonedDateTime.parse("2015-10-30T16:12:00Z"))))
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setText("My content"))
+            .recipient("recipient@domain.com")
+            .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+            .remoteAddr("remoteHost")
+            .build();
+        mail.setDsnParameters(DsnParameters.builder().envId(DsnParameters.EnvId.of("xyz")).build().get());
+
+        dsnBounce.service(mail);
+
+        String expectedContent = "Reporting-MTA: dns; myhost\n" +
+            "Received-From-MTA: dns; 111.222.333.444\n" +
+            "Original-Envelope-Id: xyz\n" +
+            "Arrival-Date: Fri, 30 Oct 2015 16:12:00 XXXXX (UTC)\n" +
             "\n" +
             "Final-Recipient: rfc822; recipient@domain.com\n" +
             "Action: failed\n" +

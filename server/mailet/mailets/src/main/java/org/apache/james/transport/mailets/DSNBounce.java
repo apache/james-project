@@ -64,7 +64,10 @@ import org.apache.james.transport.util.ReplyToUtils;
 import org.apache.james.transport.util.SenderUtils;
 import org.apache.james.transport.util.SpecialAddressesUtils;
 import org.apache.james.transport.util.TosUtils;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeUtils;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.DateFormats;
@@ -469,6 +472,14 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
             .flatMap(DsnParameters::getEnvIdParameter)
             .ifPresent(envId -> buffer.append("Original-Envelope-Id: ")
                 .append(envId.asString())
+                .append(LINE_BREAK));
+        originalMail.getAttribute(AttributeName.of("dsn-arrival-date"))
+            .map(Attribute::getValue)
+            .map(AttributeValue::value)
+            .filter(ZonedDateTime.class::isInstance)
+            .map(ZonedDateTime.class::cast)
+            .ifPresent(arrivalDate -> buffer.append("Arrival-Date: ")
+                .append(arrivalDate.format(dateFormatter))
                 .append(LINE_BREAK));
 
         for (MailAddress rec : originalMail.getRecipients()) {
