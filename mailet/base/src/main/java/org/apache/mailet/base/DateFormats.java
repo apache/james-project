@@ -26,6 +26,6 @@ import java.util.Locale;
 public interface DateFormats {
 
     DateTimeFormatter RFC822_DATE_FORMAT =
-        DateTimeFormatter.ofPattern("EEE, d MMM yyyy HH:mm:ss 'XXXXX' (z)", Locale.US);
+        DateTimeFormatter.ofPattern("EEE, d MMM yyyy HH:mm:ss Z", Locale.US);
 }
 

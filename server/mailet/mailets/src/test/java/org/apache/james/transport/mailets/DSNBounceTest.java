@@ -761,7 +761,7 @@ public class DSNBounceTest {
                 "Action: failed\n" +
                 "Status: Delivery error\n" +
                 "Diagnostic-Code: X-James; Delivery error\n" +
-                "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 XXXXX (UTC)\n";
+                "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 +0000\n";
 
             List<SentMail> sentMails = fakeMailContext.getSentMails();
             assertThat(sentMails).hasSize(1);
@@ -876,7 +876,7 @@ public class DSNBounceTest {
                 "Final-Recipient: rfc822; recipient@domain.com\n" +
                 "Action: delivered\n" +
                 "Status: unknown\n" +
-                "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 XXXXX (UTC)\n";
+                "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 +0000\n";
 
             List<SentMail> sentMails = fakeMailContext.getSentMails();
             assertThat(sentMails).hasSize(1);
@@ -995,7 +995,7 @@ public class DSNBounceTest {
                 "Action: delayed\n" +
                 "Status: Delivery error\n" +
                 "Diagnostic-Code: X-James; Delivery error\n" +
-                "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 XXXXX (UTC)\n";
+                "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 +0000\n";
 
             List<SentMail> sentMails = fakeMailContext.getSentMails();
             assertThat(sentMails).hasSize(1);
@@ -1110,7 +1110,7 @@ public class DSNBounceTest {
                 "Final-Recipient: rfc822; recipient@domain.com\n" +
                 "Action: relayed\n" +
                 "Status: unknown\n" +
-                "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 XXXXX (UTC)\n";
+                "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 +0000\n";
 
             List<SentMail> sentMails = fakeMailContext.getSentMails();
             assertThat(sentMails).hasSize(1);
@@ -1225,7 +1225,7 @@ public class DSNBounceTest {
                 "Final-Recipient: rfc822; recipient@domain.com\n" +
                 "Action: expanded\n" +
                 "Status: unknown\n" +
-                "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 XXXXX (UTC)\n";
+                "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 +0000\n";
 
             List<SentMail> sentMails = fakeMailContext.getSentMails();
             assertThat(sentMails).hasSize(1);
@@ -1268,7 +1268,7 @@ public class DSNBounceTest {
             "Action: failed\n" +
             "Status: Delivery error\n" +
             "Diagnostic-Code: X-James; Delivery error\n" +
-            "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 XXXXX (UTC)\n";
+            "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 +0000\n";
 
         List<SentMail> sentMails = fakeMailContext.getSentMails();
         assertThat(sentMails).hasSize(1);
@@ -1306,13 +1306,13 @@ public class DSNBounceTest {
         String expectedContent = "Reporting-MTA: dns; myhost\n" +
             "Received-From-MTA: dns; 111.222.333.444\n" +
             "Original-Envelope-Id: xyz\n" +
-            "Arrival-Date: Fri, 30 Oct 2015 16:12:00 XXXXX (UTC)\n" +
+            "Arrival-Date: Fri, 30 Oct 2015 16:12:00 +0000\n" +
             "\n" +
             "Final-Recipient: rfc822; recipient@domain.com\n" +
             "Action: failed\n" +
             "Status: Delivery error\n" +
             "Diagnostic-Code: X-James; Delivery error\n" +
-            "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 XXXXX (UTC)\n";
+            "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 +0000\n";
 
         List<SentMail> sentMails = fakeMailContext.getSentMails();
         assertThat(sentMails).hasSize(1);
@@ -1354,7 +1354,7 @@ public class DSNBounceTest {
             "Action: failed\n" +
             "Status: 4.0.0\n" +
             "Diagnostic-Code: X-James; 4.0.0\n" +
-            "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 XXXXX (UTC)\n";
+            "Last-Attempt-Date: Thu, 8 Sep 2016 14:25:52 +0000\n";
 
         List<SentMail> sentMails = fakeMailContext.getSentMails();
         assertThat(sentMails).hasSize(1);
