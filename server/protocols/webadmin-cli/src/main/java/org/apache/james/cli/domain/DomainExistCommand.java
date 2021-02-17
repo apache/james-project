@@ -19,6 +19,9 @@
 
 package org.apache.james.cli.domain;
 
+import static org.apache.james.httpclient.Constants.NOT_FOUND;
+import static org.apache.james.httpclient.Constants.NO_CONTENT;
+
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
@@ -31,10 +34,6 @@ import picocli.CommandLine;
     name = "exist",
     description = "Check if a domain is exist")
 public class DomainExistCommand implements Callable<Integer> {
-
-    public static final int EXISTED_CODE = 204;
-    public static final int NOT_EXISTED_CODE = 404;
-
     @CommandLine.ParentCommand DomainCommand domainCommand;
 
     @CommandLine.Parameters
@@ -45,10 +44,10 @@ public class DomainExistCommand implements Callable<Integer> {
         try {
             DomainClient domainClient = domainCommand.fullyQualifiedURL("/domains");
             Response rs = domainClient.doesExist(domainName);
-            if (rs.status() == EXISTED_CODE) {
+            if (rs.status() == NO_CONTENT) {
                 domainCommand.out.println(domainName + " exists");
                 return WebAdminCli.CLI_FINISHED_SUCCEED;
-            } else if (rs.status() == NOT_EXISTED_CODE) {
+            } else if (rs.status() == NOT_FOUND) {
                 domainCommand.out.println(domainName + " does not exist");
                 return WebAdminCli.CLI_FINISHED_SUCCEED;
             }

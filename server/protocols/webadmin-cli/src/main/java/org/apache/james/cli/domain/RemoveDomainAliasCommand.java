@@ -19,6 +19,8 @@
 
 package org.apache.james.cli.domain;
 
+import static org.apache.james.httpclient.Constants.NO_CONTENT;
+
 import java.util.concurrent.Callable;
 
 import org.apache.james.cli.WebAdminCli;
@@ -31,9 +33,6 @@ import picocli.CommandLine;
     name = "removeAlias",
     description = "Remove a domain alias")
 public class RemoveDomainAliasCommand implements Callable<Integer> {
-
-    public static final int CREATED_CODE = 204;
-
     @CommandLine.ParentCommand DomainCommand domainCommand;
 
     @CommandLine.Parameters(description = "Destination of the domain alias. This is the domain this alias belongs to.")
@@ -47,7 +46,7 @@ public class RemoveDomainAliasCommand implements Callable<Integer> {
         try {
             DomainClient domainClient = domainCommand.fullyQualifiedURL("/domains");
             Response rs = domainClient.deleteADomainAlias(destinationDomain, sourceDomain);
-            if (rs.status() == CREATED_CODE) {
+            if (rs.status() == NO_CONTENT) {
                 return WebAdminCli.CLI_FINISHED_SUCCEED;
             } else {
                 return WebAdminCli.CLI_FINISHED_FAILED;

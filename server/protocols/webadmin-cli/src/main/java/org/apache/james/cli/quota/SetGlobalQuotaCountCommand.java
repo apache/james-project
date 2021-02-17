@@ -19,7 +19,7 @@
 
 package org.apache.james.cli.quota;
 
-import static org.apache.james.cli.domain.DomainDeleteCommand.DELETED_CODE;
+import static org.apache.james.httpclient.Constants.NO_CONTENT;
 
 import java.util.concurrent.Callable;
 
@@ -44,7 +44,7 @@ public class SetGlobalQuotaCountCommand implements Callable<Integer> {
         try {
             QuotaClient quotaClient = parentCommand.parentCommand.quotaCommand.fullyQualifiedURL();
             Response rs = quotaClient.setQuotaCount(count);
-            if (rs.status() == DELETED_CODE) {
+            if (rs.status() == NO_CONTENT) {
                 return WebAdminCli.CLI_FINISHED_SUCCEED;
             } else {
                 return WebAdminCli.CLI_FINISHED_FAILED;
