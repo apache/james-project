@@ -17,38 +17,9 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.cli.quota;
+package org.apache.james.httpclient;
 
-import static org.apache.james.httpclient.Constants.NO_CONTENT;
-
-import java.util.concurrent.Callable;
-
-import org.apache.james.cli.WebAdminCli;
-import org.apache.james.httpclient.QuotaClient;
-
-import feign.Response;
-import picocli.CommandLine;
-
-@CommandLine.Command(
-    name = "delete",
-    description = "Delete quota counts limit that applies for all users")
-public class DeleteGlobalQuotaCountCommand implements Callable<Integer> {
-    @CommandLine.ParentCommand
-    GlobalQuotaCountCommand parentCommand;
-
-    @Override
-    public Integer call() {
-        try {
-            QuotaClient quotaClient = parentCommand.parentCommand.quotaCommand.fullyQualifiedURL();
-            Response rs = quotaClient.deleteQuotaCount();
-            if (rs.status() == NO_CONTENT) {
-                return WebAdminCli.CLI_FINISHED_SUCCEED;
-            } else {
-                return WebAdminCli.CLI_FINISHED_FAILED;
-            }
-        } catch (Exception e) {
-            e.printStackTrace(parentCommand.parentCommand.quotaCommand.err);
-            return WebAdminCli.CLI_FINISHED_FAILED;
-        }
-    }
+public interface Constants {
+    int NO_CONTENT = 204;
+    int NOT_FOUND = 404;
 }

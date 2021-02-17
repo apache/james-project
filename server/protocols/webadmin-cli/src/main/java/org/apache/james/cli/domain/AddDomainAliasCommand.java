@@ -19,6 +19,8 @@
 
 package org.apache.james.cli.domain;
 
+import static org.apache.james.httpclient.Constants.NO_CONTENT;
+
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Callable;
 
@@ -33,9 +35,6 @@ import picocli.CommandLine;
     name = "addAlias",
     description = "Create a new domain alias")
 public class AddDomainAliasCommand implements Callable<Integer> {
-
-    public static final int CREATED_CODE = 204;
-
     @CommandLine.ParentCommand DomainCommand domainCommand;
 
     @CommandLine.Parameters(description = "Destination of the domain alias. This is the domain this alias belongs to.")
@@ -49,7 +48,7 @@ public class AddDomainAliasCommand implements Callable<Integer> {
         try {
             DomainClient domainClient = domainCommand.fullyQualifiedURL("/domains");
             Response rs = domainClient.addADomainAlias(destinationDomain, sourceDomain);
-            if (rs.status() == CREATED_CODE) {
+            if (rs.status() == NO_CONTENT) {
                 return WebAdminCli.CLI_FINISHED_SUCCEED;
             } else {
                 domainCommand.err.println(IOUtils.toString(rs.body().asInputStream(), StandardCharsets.UTF_8));
