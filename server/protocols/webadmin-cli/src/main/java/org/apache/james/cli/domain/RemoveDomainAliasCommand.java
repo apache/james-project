@@ -36,10 +36,10 @@ public class RemoveDomainAliasCommand implements Callable<Integer> {
 
     @CommandLine.ParentCommand DomainCommand domainCommand;
 
-    @CommandLine.Parameters(description = "Destination of the domain alias. This is the domain this alis belongs to.")
+    @CommandLine.Parameters(description = "Destination of the domain alias. This is the domain this alias belongs to.")
     String destinationDomain;
 
-    @CommandLine.Parameters(description = "Source of the domain alis.")
+    @CommandLine.Parameters(description = "Source of the domain alias.")
     String sourceDomain;
 
     @Override
