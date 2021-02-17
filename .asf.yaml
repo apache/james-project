@@ -12,4 +12,4 @@ notifications:
   commits:      notifications@james.apache.org
   issues:       notifications@james.apache.org
   pullrequests: notifications@james.apache.org
-  jira_options: link label comment
+  jira_options: link label worklog
