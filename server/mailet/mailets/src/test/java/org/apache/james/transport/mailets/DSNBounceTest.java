@@ -1364,4 +1364,102 @@ public class DSNBounceTest {
         SharedByteArrayInputStream actualContent = (SharedByteArrayInputStream) content.getBodyPart(1).getContent();
         assertThat(IOUtils.toString(actualContent, StandardCharsets.UTF_8)).isEqualTo(expectedContent);
     }
+
+    @Test
+    void errorMessagePartShouldNotBeAddedWhenNoError() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .mailetName(MAILET_NAME)
+            .mailetContext(fakeMailContext)
+            .setProperty("defaultStatus", "4.0.0")
+            .build();
+        dsnBounce.init(mailetConfig);
+
+        MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+        FakeMail mail = FakeMail.builder()
+            .name(MAILET_NAME)
+            .sender(senderMailAddress)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setText("My content"))
+            .recipient("recipient@domain.com")
+            .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+            .remoteAddr("remoteHost")
+            .build();
+        mail.setDsnParameters(DsnParameters.builder().envId(DsnParameters.EnvId.of("xyz")).build().get());
+
+        dsnBounce.service(mail);
+
+        List<SentMail> sentMails = fakeMailContext.getSentMails();
+        assertThat(sentMails).hasSize(1);
+        SentMail sentMail = sentMails.get(0);
+        MimeMessage sentMessage = sentMail.getMsg();
+
+        assertThat(MimeMessageUtil.asString(sentMessage))
+            .doesNotContain("Error message:");
+    }
+
+    @Test
+    void errorShouldBeAdded() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .mailetName(MAILET_NAME)
+            .mailetContext(fakeMailContext)
+            .setProperty("defaultStatus", "4.0.0")
+            .build();
+        dsnBounce.init(mailetConfig);
+
+        MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+        FakeMail mail = FakeMail.builder()
+            .name(MAILET_NAME)
+            .sender(senderMailAddress)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setText("My content"))
+            .recipient("recipient@domain.com")
+            .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+            .remoteAddr("remoteHost")
+            .errorMessage("This is what happen...")
+            .build();
+        mail.setDsnParameters(DsnParameters.builder().envId(DsnParameters.EnvId.of("xyz")).build().get());
+
+        dsnBounce.service(mail);
+
+        List<SentMail> sentMails = fakeMailContext.getSentMails();
+        assertThat(sentMails).hasSize(1);
+        SentMail sentMail = sentMails.get(0);
+        MimeMessage sentMessage = sentMail.getMsg();
+
+        assertThat(MimeMessageUtil.asString(sentMessage))
+            .contains("Error message:\nThis is what happen...");
+    }
+
+    @Test
+    void deliveryErrorShouldBeAdded() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .mailetName(MAILET_NAME)
+            .mailetContext(fakeMailContext)
+            .setProperty("defaultStatus", "4.0.0")
+            .build();
+        dsnBounce.init(mailetConfig);
+
+        MailAddress senderMailAddress = new MailAddress("sender@domain.com");
+        FakeMail mail = FakeMail.builder()
+            .name(MAILET_NAME)
+            .sender(senderMailAddress)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setText("My content"))
+            .recipient("recipient@domain.com")
+            .lastUpdated(Date.from(Instant.parse("2016-09-08T14:25:52.000Z")))
+            .remoteAddr("remoteHost")
+            .attribute(new Attribute(AttributeName.of("delivery-error"), AttributeValue.of("This is what happen...")))
+            .build();
+        mail.setDsnParameters(DsnParameters.builder().envId(DsnParameters.EnvId.of("xyz")).build().get());
+
+        dsnBounce.service(mail);
+
+        List<SentMail> sentMails = fakeMailContext.getSentMails();
+        assertThat(sentMails).hasSize(1);
+        SentMail sentMail = sentMails.get(0);
+        MimeMessage sentMessage = sentMail.getMsg();
+
+        assertThat(MimeMessageUtil.asString(sentMessage))
+            .contains("Error message:\nThis is what happen...");
+    }
 }
