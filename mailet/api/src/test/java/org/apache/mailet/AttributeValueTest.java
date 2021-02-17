@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -326,6 +327,46 @@ class AttributeValueTest {
         void fromJsonStringShouldThrowOnIntNode() {
             assertThatIllegalStateException()
                 .isThrownBy(() -> AttributeValue.fromJsonString("{\"serializer\":\"DoubleSerializer\",\"value\": 1}"));
+        }
+    }
+
+    @Nested
+    class DateSerialization {
+        @Test
+        void dateShouldBeSerializedAndBack() {
+            AttributeValue<ZonedDateTime> expected = AttributeValue.of(ZonedDateTime.parse("2015-10-30T16:12:00Z"));
+
+            JsonNode json = expected.toJson();
+            AttributeValue<?> actual = AttributeValue.fromJson(json);
+
+            assertThat(actual).isEqualTo(expected);
+        }
+
+        @Test
+        void nullDoubleShouldThrowAnException() {
+            assertThatNullPointerException()
+                .isThrownBy(() -> AttributeValue.of((Double) null));
+        }
+
+        @Test
+        void fromJsonStringShouldReturnDoubleAttributeValueWhenDouble() throws Exception {
+            AttributeValue<ZonedDateTime> expected = AttributeValue.of(ZonedDateTime.parse("2015-10-30T16:12:00Z"));
+
+            AttributeValue<?> actual = AttributeValue.fromJsonString("{\"serializer\":\"DateSerializer\",\"value\":\"2015-10-30T16:12:00Z\"}");
+
+            assertThat(actual).isEqualTo(expected);
+        }
+
+        @Test
+        void fromJsonStringShouldThrowOnMalformedFormattedJson() {
+            assertThatIllegalStateException()
+                .isThrownBy(() -> AttributeValue.fromJsonString("{\"serializer\":\"DateSerializer\",\"value\": []}"));
+        }
+
+        @Test
+        void fromJsonStringShouldThrowOnIntNode() {
+            assertThatIllegalStateException()
+                .isThrownBy(() -> AttributeValue.fromJsonString("{\"serializer\":\"DateSerializer\",\"value\": 1}"));
         }
     }
 
