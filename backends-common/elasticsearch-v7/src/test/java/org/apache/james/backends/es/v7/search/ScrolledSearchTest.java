@@ -31,7 +31,7 @@ import org.apache.james.backends.es.v7.IndexName;
 import org.apache.james.backends.es.v7.NodeMappingFactory;
 import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
 import org.apache.james.backends.es.v7.ReadAliasName;
-import org.awaitility.Duration;
+import org.awaitility.Durations;
 import org.awaitility.core.ConditionFactory;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
@@ -52,7 +52,7 @@ class ScrolledSearchTest {
     private static final IndexName INDEX_NAME = new IndexName("index");
     private static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
 
-    private static final ConditionFactory WAIT_CONDITION = await().timeout(Duration.FIVE_SECONDS);
+    private static final ConditionFactory WAIT_CONDITION = await().timeout(Durations.FIVE_SECONDS);
 
     @RegisterExtension
     public DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
