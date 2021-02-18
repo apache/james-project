@@ -19,17 +19,21 @@
 
 package org.apache.james;
 
+import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraLdapJmapJamesServerTest implements JmapJamesServerContract {
     @RegisterExtension
-    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
+    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder
+        .forConfiguration(configuration -> configuration
+            .searchConfiguration(SearchConfiguration.elasticSearch())
+            .usersRepository(UsersRepositoryModuleChooser.Implementation.LDAP))
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .extension(new LdapTestExtension())
-        .server(configuration -> CassandraLdapJamesServerMain.createServer(configuration)
+        .server(configuration -> CassandraJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))
         .build();
 }

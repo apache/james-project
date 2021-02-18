@@ -29,6 +29,7 @@ import java.time.Duration;
 
 import org.apache.commons.net.imap.IMAPClient;
 import org.apache.james.core.Domain;
+import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
@@ -57,11 +58,14 @@ class CassandraLdapJamesServerTest implements JamesServerContract {
     static LdapTestExtension ldap = new LdapTestExtension();
 
     @RegisterExtension
-    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.elasticSearch())
+    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder
+        .forConfiguration(configuration -> configuration
+            .searchConfiguration(SearchConfiguration.elasticSearch())
+            .usersRepository(UsersRepositoryModuleChooser.Implementation.LDAP))
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .extension(ldap)
-        .server(configuration -> CassandraLdapJamesServerMain.createServer(configuration)
+        .server(configuration -> CassandraJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))
         .build();
 

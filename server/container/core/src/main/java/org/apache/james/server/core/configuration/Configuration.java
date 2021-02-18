@@ -117,6 +117,10 @@ public interface Configuration {
             }
         }
 
+        public static Builder builder() {
+            return new Builder();
+        }
+
         private final ConfigurationPath configurationPath;
         private final JamesDirectoriesProvider directories;
 

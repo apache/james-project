@@ -21,6 +21,7 @@ package org.apache.james;
 
 import java.util.Set;
 
+import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.eventsourcing.eventstore.cassandra.EventNestedTypes;
 import org.apache.james.json.DTOModule;
 import org.apache.james.modules.BlobExportMechanismModule;
@@ -137,7 +138,6 @@ public class CassandraJamesServerMain implements JamesServerMain {
         new CassandraRecipientRewriteTableModule(),
         new CassandraSessionModule(),
         new CassandraSieveRepositoryModule(),
-        new CassandraUsersRepositoryModule(),
         new ElasticSearchMetricReporterModule(),
         BLOB_MODULE,
         CASSANDRA_EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE);
@@ -180,6 +180,8 @@ public class CassandraJamesServerMain implements JamesServerMain {
     public static GuiceJamesServer createServer(CassandraJamesServerConfiguration configuration) {
         return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
-            .combineWith(SearchModuleChooser.chooseModules(configuration.searchConfiguration()));
+            .combineWith(SearchModuleChooser.chooseModules(configuration.searchConfiguration()))
+            .combineWith(new UsersRepositoryModuleChooser(new CassandraUsersRepositoryModule())
+                .chooseModules(configuration.getUsersRepositoryImplementation()));
     }
 }
