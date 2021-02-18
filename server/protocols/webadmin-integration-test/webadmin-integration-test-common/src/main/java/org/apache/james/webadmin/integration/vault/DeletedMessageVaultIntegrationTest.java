@@ -847,7 +847,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
                 "    {" +
                 "      \"update\": {" +
                 "        \"" + otherMailboxId.serialize() + "\" : {" +
-                "          \"sharedWith\" : {\"" + BART + "\": [\"l\", \"w\", \"r\"]}" +
+                "          \"sharedWith\" : {\"" + BART + "\": [\"l\", \"w\", \"t\", \"r\"]}" +
                 "        }" +
                 "      }" +
                 "    }," +

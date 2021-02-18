@@ -221,17 +221,19 @@ public class StoreMessageIdManager implements MessageIdManager {
             .stream()
             .map(MailboxMessage::getMailboxId), Right.DeleteMessages);
 
-        ImmutableSet<MessageId> accessibleMessages = messageList.stream()
+        List<MailboxMessage> accessibleMessages = messageList.stream()
             .filter(message -> allowedMailboxIds.contains(message.getMailboxId()))
+            .collect(Guavate.toImmutableList());
+        ImmutableSet<MessageId> accessibleMessageIds = accessibleMessages.stream()
             .map(MailboxMessage::getMessageId)
             .distinct()
             .collect(Guavate.toImmutableSet());
-        Sets.SetView<MessageId> nonAccessibleMessages = Sets.difference(ImmutableSet.copyOf(messageIds), accessibleMessages);
+        Sets.SetView<MessageId> nonAccessibleMessages = Sets.difference(ImmutableSet.copyOf(messageIds), accessibleMessageIds);
 
-        deleteWithPreHooks(messageIdMapper, messageList, mailboxSession);
+        deleteWithPreHooks(messageIdMapper, accessibleMessages, mailboxSession);
 
         return DeleteResult.builder()
-            .addDestroyed(accessibleMessages)
+            .addDestroyed(accessibleMessageIds)
             .addNotFound(nonAccessibleMessages)
             .build();
     }
