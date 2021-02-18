@@ -116,6 +116,7 @@ public class ElasticSearchIndexer {
     }
 
     public Mono<Void> deleteAllMatchingQuery(QueryBuilder queryBuilder, RoutingKey routingKey) {
+        // TODO use https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete-by-query.html
         return deleteByQueryPerformer.perform(queryBuilder, routingKey);
     }
 

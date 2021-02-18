@@ -22,23 +22,22 @@ package org.apache.james.backends.es.v7;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
+import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 import java.io.IOException;
 
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
+import org.awaitility.Durations;
 import org.awaitility.core.ConditionFactory;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -81,20 +80,13 @@ class ElasticSearchIndexerTest {
     }
 
     @Test
-    @Disabled("JAMES-3492")
     void indexMessageShouldWork() {
         DocumentId documentId = DocumentId.fromString("1");
         String content = "{\"message\": \"trying out Elasticsearch\"}";
         
         testee.index(documentId, content, useDocumentId(documentId)).block();
-        elasticSearch.awaitForElasticSearch();
 
-        SearchResponse searchResponse = client.search(
-            new SearchRequest(INDEX_NAME.getValue())
-                .source(new SearchSourceBuilder().query(QueryBuilders.matchQuery("message", "trying"))),
-            RequestOptions.DEFAULT)
-            .block();
-        assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
+        awaitForElasticSearch(QueryBuilders.matchQuery("message", "trying"), 1L);
     }
     
     @Test
@@ -104,30 +96,16 @@ class ElasticSearchIndexerTest {
     }
     
     @Test
-    @Disabled("JAMES-3492")
     void updateMessages() {
         String content = "{\"message\": \"trying out Elasticsearch\",\"field\":\"Should be unchanged\"}";
 
         testee.index(DOCUMENT_ID, content, useDocumentId(DOCUMENT_ID)).block();
-        elasticSearch.awaitForElasticSearch();
+        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
 
         testee.update(ImmutableList.of(new UpdatedRepresentation(DOCUMENT_ID, "{\"message\": \"mastering out Elasticsearch\"}")), useDocumentId(DOCUMENT_ID)).block();
-        elasticSearch.awaitForElasticSearch();
+        awaitForElasticSearch(QueryBuilders.matchQuery("message", "mastering"), 1L);
 
-
-        SearchResponse searchResponse = client.search(
-            new SearchRequest(INDEX_NAME.getValue())
-                .source(new SearchSourceBuilder().query(QueryBuilders.matchQuery("message", "mastering"))),
-            RequestOptions.DEFAULT)
-            .block();
-        assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
-
-        SearchResponse searchResponse2 = client.search(
-            new SearchRequest(INDEX_NAME.getValue())
-                .source(new SearchSourceBuilder().query(QueryBuilders.matchQuery("field", "unchanged"))),
-            RequestOptions.DEFAULT)
-            .block();
-        assertThat(searchResponse2.getHits().getTotalHits()).isEqualTo(1);
+        awaitForElasticSearch(QueryBuilders.matchQuery("field", "unchanged"), 1L);
     }
 
     @Test
@@ -165,22 +143,14 @@ class ElasticSearchIndexerTest {
         RoutingKey routingKey = useDocumentId(documentId);
 
         testee.index(documentId, content, routingKey).block();
-        elasticSearch.awaitForElasticSearch();
-        
+        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
+
         testee.deleteAllMatchingQuery(termQuery("property", "1"), routingKey).block();
-        elasticSearch.awaitForElasticSearch();
-        
-        CALMLY_AWAIT.atMost(Duration.TEN_SECONDS)
-            .until(() -> client.search(
-                    new SearchRequest(INDEX_NAME.getValue())
-                        .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
-                    RequestOptions.DEFAULT)
-                .block()
-                .getHits().getTotalHits().value == 0);
+
+        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 0L);
     }
 
     @Test
-    @Disabled("JAMES-3492")
     void deleteByQueryShouldWorkWhenMultipleMessages() {
         DocumentId documentId = DocumentId.fromString("1:1");
         String content = "{\"message\": \"trying out Elasticsearch\", \"property\":\"1\"}";
@@ -196,68 +166,45 @@ class ElasticSearchIndexerTest {
         String content3 = "{\"message\": \"trying out Elasticsearch 3\", \"property\":\"2\"}";
         
         testee.index(documentId3, content3, ROUTING).block();
-        elasticSearch.awaitForElasticSearch();
+        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 3L);
 
         testee.deleteAllMatchingQuery(termQuery("property", "1"), ROUTING).block();
-        elasticSearch.awaitForElasticSearch();
-        
-        CALMLY_AWAIT.atMost(Duration.TEN_SECONDS)
-            .until(() -> client.search(
-                    new SearchRequest(INDEX_NAME.getValue())
-                        .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
-                    RequestOptions.DEFAULT)
-                .block()
-                .getHits().getTotalHits().value == 1);
+
+        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
     }
     
     @Test
-    @Disabled("JAMES-3492")
     void deleteMessage() {
         DocumentId documentId = DocumentId.fromString("1:2");
         String content = "{\"message\": \"trying out Elasticsearch\"}";
 
         testee.index(documentId, content, useDocumentId(documentId)).block();
-        elasticSearch.awaitForElasticSearch();
+        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
 
         testee.delete(ImmutableList.of(documentId), useDocumentId(documentId)).block();
-        elasticSearch.awaitForElasticSearch();
-        
-        SearchResponse searchResponse = client.search(
-            new SearchRequest(INDEX_NAME.getValue())
-                .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
-            RequestOptions.DEFAULT)
-            .block();
-        assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(0);
+
+        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 0L);
     }
 
     @Test
-    @Disabled("JAMES-3492")
     void deleteShouldWorkWhenMultipleMessages() {
         DocumentId documentId = DocumentId.fromString("1:1");
         String content = "{\"message\": \"trying out Elasticsearch\", \"mailboxId\":\"1\"}";
-
         testee.index(documentId, content, ROUTING).block();
 
         DocumentId documentId2 = DocumentId.fromString("1:2");
         String content2 = "{\"message\": \"trying out Elasticsearch 2\", \"mailboxId\":\"1\"}";
-
         testee.index(documentId2, content2, ROUTING).block();
 
         DocumentId documentId3 = DocumentId.fromString("2:3");
         String content3 = "{\"message\": \"trying out Elasticsearch 3\", \"mailboxId\":\"2\"}";
-
         testee.index(documentId3, content3, ROUTING).block();
-        elasticSearch.awaitForElasticSearch();
+
+        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 3L);
 
         testee.delete(ImmutableList.of(documentId, documentId3), ROUTING).block();
-        elasticSearch.awaitForElasticSearch();
 
-        SearchResponse searchResponse = client.search(
-            new SearchRequest(INDEX_NAME.getValue())
-                .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
-            RequestOptions.DEFAULT)
-            .block();
-        assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
+        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
     }
     
     @Test
@@ -278,7 +225,7 @@ class ElasticSearchIndexerTest {
         String content = "{\"message\":\"trying out Elasticsearch\"}";
 
         testee.index(documentId, content, useDocumentId(documentId)).block();
-        elasticSearch.awaitForElasticSearch();
+        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 1L);
 
         GetResponse getResponse = testee.get(documentId, useDocumentId(documentId)).block();
 
@@ -295,5 +242,15 @@ class ElasticSearchIndexerTest {
     void getShouldThrowWhenRoutingKeyIsNull() {
         assertThatThrownBy(() -> testee.get(DOCUMENT_ID, null).block())
             .isInstanceOf(NullPointerException.class);
+    }
+
+    private void awaitForElasticSearch(QueryBuilder query, long totalHits) {
+        CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
+            .untilAsserted(() -> assertThat(client.search(
+                new SearchRequest(INDEX_NAME.getValue())
+                    .source(new SearchSourceBuilder().query(query)),
+                RequestOptions.DEFAULT)
+                .block()
+                .getHits().getTotalHits().value).isEqualTo(totalHits));
     }
 }
