@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 
 import org.apache.commons.net.imap.IMAPClient;
+import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
@@ -83,12 +84,13 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
                 .configurationFromClasspath()
                 .blobStore(blobStoreConfiguration)
                 .searchConfiguration(SearchConfiguration.elasticSearch())
+                .usersRepository(UsersRepositoryModuleChooser.Implementation.LDAP)
                 .build())
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .extension(new RabbitMQExtension())
             .extension(new LdapTestExtension())
-            .server(configuration -> CassandraRabbitMQLdapJamesServerMain.createServer(configuration)
+            .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
                 .overrideWith(new TestJMAPServerModule()));
     }
 }

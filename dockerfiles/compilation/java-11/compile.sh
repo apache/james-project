@@ -73,8 +73,8 @@ unzip $GLOW_ROOT_ZIP
 if [ $? -eq 0 ]; then
    if [ -d "$CASSANDRA_RABBITMQ_LDAP_DESTINATION" ]; then
       echo "Copying cassandra - rabbitMQ - Ldap JARs"
-      cp server/container/guice/cassandra-rabbitmq-ldap-guice/target/james-server-cassandra-rabbitmq-ldap-guice.jar $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
-      cp -r server/container/guice/cassandra-rabbitmq-ldap-guice/target/james-server-cassandra-rabbitmq-ldap-guice.lib $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
+      cp server/container/guice/cassandra-rabbitmq-guice/target/james-server-cassandra-rabbitmq-guice.jar $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
+      cp -r server/container/guice/cassandra-rabbitmq-guice/target/james-server-cassandra-rabbitmq-guice.lib $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
       cp server/container/cli/target/james-server-cli.jar $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
       cp -r server/container/cli/target/james-server-cli.lib $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
       mkdir -p ${CASSANDRA_RABBITMQ_LDAP_DESTINATION}/glowroot
@@ -82,7 +82,7 @@ if [ $? -eq 0 ]; then
    fi
 
    if [ -d "$CASSANDRA_RABBITMQ_DESTINATION" ]; then
-      echo "Copying cassandra JARs"
+      echo "Copying cassandra RabbitMQ JARs"
       cp server/container/guice/cassandra-rabbitmq-guice/target/james-server-cassandra-rabbitmq-guice.jar $CASSANDRA_RABBITMQ_DESTINATION || true
       cp -r server/container/guice/cassandra-rabbitmq-guice/target/james-server-cassandra-rabbitmq-guice.lib $CASSANDRA_RABBITMQ_DESTINATION || true
       cp server/container/cli/target/james-server-cli.jar $CASSANDRA_RABBITMQ_DESTINATION || true
@@ -98,8 +98,8 @@ if [ $? -eq 0 ]; then
       cp server/container/cli/target/james-server-cli.jar $CASSANDRA_DESTINATION || true
       cp -r server/container/cli/target/james-server-cli.lib $CASSANDRA_DESTINATION || true
 
-      cp server/container/guice/cassandra-ldap-guice/target/james-server-cassandra-ldap-guice.jar $CASSANDRA_DESTINATION || true
-      cp -r server/container/guice/cassandra-ldap-guice/target/james-server-cassandra-ldap-guice.lib $CASSANDRA_DESTINATION || true
+      cp server/container/guice/cassandra-guice/target/james-server-cassandra-guice.jar $CASSANDRA_DESTINATION || true
+      cp -r server/container/guice/cassandra-guice/target/james-server-cassandra-guice.lib $CASSANDRA_DESTINATION || true
       mkdir -p ${CASSANDRA_DESTINATION}/glowroot
       cp -r ${GLOW_ROOT_DIR}/* ${CASSANDRA_DESTINATION}/glowroot || true
    fi

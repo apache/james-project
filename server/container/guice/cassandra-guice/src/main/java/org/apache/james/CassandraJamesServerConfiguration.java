@@ -22,11 +22,13 @@ package org.apache.james;
 import java.io.File;
 import java.util.Optional;
 
+import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.MissingArgumentException;
 import org.apache.james.server.core.configuration.Configuration;
+import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.utils.PropertiesProvider;
 
@@ -37,6 +39,7 @@ public class CassandraJamesServerConfiguration implements Configuration {
         private Optional<SearchConfiguration> searchConfiguration;
         private Optional<String> rootDirectory;
         private Optional<ConfigurationPath> configurationPath;
+        private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
 
         private Builder() {
             rootDirectory = Optional.empty();
@@ -77,16 +80,29 @@ public class CassandraJamesServerConfiguration implements Configuration {
             return this;
         }
 
+        public Builder usersRepository(UsersRepositoryModuleChooser.Implementation implementation) {
+            this.usersRepositoryImplementation = Optional.of(implementation);
+            return this;
+        }
+
         public CassandraJamesServerConfiguration build() {
             ConfigurationPath configurationPath = this.configurationPath.orElse(new ConfigurationPath(FileSystem.FILE_PROTOCOL_AND_CONF));
             JamesServerResourceLoader directories = new JamesServerResourceLoader(rootDirectory
                 .orElseThrow(() -> new MissingArgumentException("Server needs a working.directory env entry")));
 
+            FileSystemImpl fileSystem = new FileSystemImpl(directories);
             SearchConfiguration searchConfiguration = this.searchConfiguration.orElseGet(Throwing.supplier(
-                () -> SearchConfiguration.parse(
-                    new PropertiesProvider(new FileSystemImpl(directories), configurationPath))));
+                () -> SearchConfiguration.parse(new PropertiesProvider(fileSystem, configurationPath))));
 
-            return new CassandraJamesServerConfiguration(configurationPath, directories, searchConfiguration);
+
+            FileConfigurationProvider configurationProvider = new FileConfigurationProvider(fileSystem, Basic.builder()
+                .configurationPath(configurationPath)
+                .workingDirectory(directories.getRootDirectory())
+                .build());
+            UsersRepositoryModuleChooser.Implementation usersRepositoryChoice = usersRepositoryImplementation.orElseGet(
+                () -> UsersRepositoryModuleChooser.Implementation.parse(configurationProvider));
+
+            return new CassandraJamesServerConfiguration(configurationPath, directories, searchConfiguration, usersRepositoryChoice);
         }
     }
 
@@ -97,11 +113,13 @@ public class CassandraJamesServerConfiguration implements Configuration {
     private final ConfigurationPath configurationPath;
     private final JamesDirectoriesProvider directories;
     private final SearchConfiguration searchConfiguration;
+    private final UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation;
 
-    private CassandraJamesServerConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, SearchConfiguration searchConfiguration) {
+    private CassandraJamesServerConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, SearchConfiguration searchConfiguration, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.searchConfiguration = searchConfiguration;
+        this.usersRepositoryImplementation = usersRepositoryImplementation;
     }
 
     @Override
@@ -116,5 +134,9 @@ public class CassandraJamesServerConfiguration implements Configuration {
 
     public SearchConfiguration searchConfiguration() {
         return searchConfiguration;
+    }
+
+    public UsersRepositoryModuleChooser.Implementation getUsersRepositoryImplementation() {
+        return usersRepositoryImplementation;
     }
 }
