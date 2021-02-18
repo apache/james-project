@@ -4952,6 +4952,8 @@ trait EmailSetMethodContract {
            |      }, "c1"]
            |    ]
            |}""".stripMargin)
+    assertThat(server.getProbe(classOf[MessageIdProbe]).getMessages(messageId, ANDRE))
+      .hasSize(1)
   }
 
   @Test

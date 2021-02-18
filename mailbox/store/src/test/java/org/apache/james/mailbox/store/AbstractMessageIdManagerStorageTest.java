@@ -360,6 +360,15 @@ public abstract class AbstractMessageIdManagerStorageTest {
     }
 
     @Test
+    void deleteAllShouldReturnNotDeleteWhenDeletingOnOtherSession() throws Exception {
+        MessageId messageId = testingData.persist(bobMailbox1.getMailboxId(), messageUid1, FLAGS, bobSession);
+
+        messageIdManager.delete(ImmutableList.of(messageId), aliceSession);
+
+        assertThat(messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, bobSession)).hasSize(1);
+    }
+
+    @Test
     void deleteMessageShouldThrowExceptionWhenDeletingOnSystemSession() {
         MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
 
