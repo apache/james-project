@@ -1970,7 +1970,7 @@ trait EmailSetMethodContract {
       .isEqualTo(
         s"""{
            |  "type": "invalidArguments",
-           |  "description": "List((/htmlBody(0),List(JsonValidationError(List(Content-Transfer-Encoding must not be specified in htmlBody),List()))))"
+           |  "description": "List((/htmlBody(0),List(JsonValidationError(List(Content-Transfer-Encoding must not be specified in htmlBody or textBody),List()))))"
            |}""".stripMargin)
   }
 
@@ -2455,6 +2455,128 @@ trait EmailSetMethodContract {
            |    }
            |  }
            |}]""".stripMargin)
+  }
+
+  @Test
+  def textContentTransferEncodingShouldBeRejectedInTextBody(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val textBody: String = "Let me tell you all about it."
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa": {
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "subject": "World domination",
+         |          "attachments": [],
+         |          "textBody": [
+         |            {
+         |              "partId": "a49d",
+         |              "type": "text/plain",
+         |              "header:Content-Transfer-Encoding:asText": "gabou"
+         |            }
+         |          ],
+         |          "bodyValues": {
+         |            "a49d": {
+         |              "value": "$textBody",
+         |              "isTruncated": false,
+         |              "isEncodingProblem": false
+         |            }
+         |          }
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post.prettyPeek()
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    println(response)
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated.aaaaaa")
+      .isEqualTo(
+        s"""{
+           |  "type":"invalidArguments",
+           |  "description":"List((/textBody(0),List(JsonValidationError(List(Content-Transfer-Encoding must not be specified in htmlBody or textBody),List()))))"
+           |}""".stripMargin)
+  }
+
+  @Test
+  def binaryContentTransferEncodingShouldBeRejectedInTextBody(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val textBody: String = "Let me tell you all about it."
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa": {
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "subject": "World domination",
+         |          "attachments": [],
+         |          "textBody": [
+         |            {
+         |              "partId": "a49d",
+         |              "type": "text/plain",
+         |              "header:Content-Transfer-Encoding": " gabou"
+         |            }
+         |          ],
+         |          "bodyValues": {
+         |            "a49d": {
+         |              "value": "$textBody",
+         |              "isTruncated": false,
+         |              "isEncodingProblem": false
+         |            }
+         |          }
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post.prettyPeek()
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    println(response)
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated.aaaaaa")
+      .isEqualTo(
+        s"""{
+           |  "type":"invalidArguments",
+           |  "description":"List((/textBody(0),List(JsonValidationError(List(Content-Transfer-Encoding must not be specified in htmlBody or textBody),List()))))"
+           |}""".stripMargin)
   }
 
   @Test
