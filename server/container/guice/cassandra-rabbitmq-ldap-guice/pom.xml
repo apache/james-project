@@ -69,11 +69,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-data-ldap</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-cassandra-ldap-guice</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -100,6 +95,11 @@
             <artifactId>james-server-guice-common</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-guice-data-ldap</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
