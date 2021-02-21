@@ -36,14 +36,12 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Mono;
 
 public class ElasticSearchIndexer {
     private static final int DEBUG_MAX_LENGTH_CONTENT = 1000;
-    private static final int DEFAULT_BATCH_SIZE = 100;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchIndexer.class);
 
@@ -53,15 +51,8 @@ public class ElasticSearchIndexer {
 
     public ElasticSearchIndexer(ReactorElasticSearchClient client,
                                 WriteAliasName aliasName) {
-        this(client, aliasName, DEFAULT_BATCH_SIZE);
-    }
-
-    @VisibleForTesting
-    public ElasticSearchIndexer(ReactorElasticSearchClient client,
-                                WriteAliasName aliasName,
-                                int batchSize) {
         this.client = client;
-        this.deleteByQueryPerformer = new DeleteByQueryPerformer(client, batchSize, aliasName);
+        this.deleteByQueryPerformer = new DeleteByQueryPerformer(client, aliasName);
         this.aliasName = aliasName;
     }
 
@@ -116,7 +107,6 @@ public class ElasticSearchIndexer {
     }
 
     public Mono<Void> deleteAllMatchingQuery(QueryBuilder queryBuilder, RoutingKey routingKey) {
-        // TODO use https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete-by-query.html
         return deleteByQueryPerformer.perform(queryBuilder, routingKey);
     }
 

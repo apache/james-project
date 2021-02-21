@@ -48,7 +48,6 @@ class ElasticSearchIndexerTest {
         return RoutingKey.fromString(documentId.asString());
     }
 
-    private static final int MINIMUM_BATCH_SIZE = 1;
     private static final IndexName INDEX_NAME = new IndexName("index_name");
     private static final WriteAliasName ALIAS_NAME = new WriteAliasName("alias_name");
 
@@ -71,7 +70,7 @@ class ElasticSearchIndexerTest {
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .createIndexAndAliases(client);
-        testee = new ElasticSearchIndexer(client, ALIAS_NAME, MINIMUM_BATCH_SIZE);
+        testee = new ElasticSearchIndexer(client, ALIAS_NAME);
     }
 
     @AfterEach
