@@ -55,6 +55,8 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.core.MainResponse;
 import org.elasticsearch.index.rankeval.RankEvalRequest;
 import org.elasticsearch.index.rankeval.RankEvalResponse;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.script.mustache.MultiSearchTemplateRequest;
 import org.elasticsearch.script.mustache.MultiSearchTemplateResponse;
 import org.elasticsearch.script.mustache.SearchTemplateRequest;
@@ -81,6 +83,10 @@ public class ReactorElasticSearchClient implements AutoCloseable {
 
     public DeleteResponse delete(DeleteRequest deleteRequest, RequestOptions options) throws IOException {
         return client.delete(deleteRequest, options);
+    }
+
+    public Mono<BulkByScrollResponse> deleteByQuery(DeleteByQueryRequest deleteRequest, RequestOptions options) {
+        return toReactor(listener -> client.deleteByQueryAsync(deleteRequest, options, listener));
     }
 
     public Mono<AcknowledgedResponse> deleteScript(DeleteStoredScriptRequest request, RequestOptions options) {
