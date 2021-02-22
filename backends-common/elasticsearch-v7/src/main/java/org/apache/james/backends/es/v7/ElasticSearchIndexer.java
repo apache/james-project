@@ -60,7 +60,6 @@ public class ElasticSearchIndexer {
         checkArgument(content);
         logContent(id, content);
         return client.index(new IndexRequest(aliasName.getValue())
-                .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .id(id.asString())
                 .source(content, XContentType.JSON)
                 .routing(routingKey.asString()),
@@ -79,7 +78,6 @@ public class ElasticSearchIndexer {
         BulkRequest request = new BulkRequest();
         updatedDocumentParts.forEach(updatedDocumentPart -> request.add(
             new UpdateRequest(aliasName.getValue(),
-                NodeMappingFactory.DEFAULT_MAPPING_NAME,
                 updatedDocumentPart.getId().asString())
                 .doc(updatedDocumentPart.getUpdatedDocumentPart(), XContentType.JSON)
                 .routing(routingKey.asString())));
@@ -95,7 +93,6 @@ public class ElasticSearchIndexer {
         BulkRequest request = new BulkRequest();
         ids.forEach(id -> request.add(
             new DeleteRequest(aliasName.getValue())
-                .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .id(id.asString())
                 .routing(routingKey.asString())));
 
@@ -120,7 +117,6 @@ public class ElasticSearchIndexer {
                 Preconditions.checkNotNull(routingKey);
             })
             .then(client.get(new GetRequest(aliasName.getValue())
-                    .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                     .id(id.asString())
                     .routing(routingKey.asString()),
                 RequestOptions.DEFAULT));

@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.Optional;
 
 import org.apache.james.backends.es.v7.AliasName;
-import org.apache.james.backends.es.v7.NodeMappingFactory;
 import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
 import org.apache.james.backends.es.v7.ReadAliasName;
 import org.apache.james.backends.es.v7.RoutingKey;
@@ -102,7 +101,6 @@ public class ElasticSearchSearcher {
             .forEach(searchSourceBuilder::sort);
 
         SearchRequest request = new SearchRequest(aliasName.getValue())
-            .types(NodeMappingFactory.DEFAULT_MAPPING_NAME)
             .scroll(TIMEOUT)
             .source(searchSourceBuilder);
 

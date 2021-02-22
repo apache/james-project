@@ -70,7 +70,6 @@ class NodeMappingFactoryAuthTest {
     }
 
     @Test
-    @Disabled("JAMES-3492")
     void applyMappingShouldNotThrowWhenCalledSeveralTime() throws Exception {
         NodeMappingFactory.applyMapping(client,
             INDEX_NAME,
@@ -78,7 +77,6 @@ class NodeMappingFactoryAuthTest {
     }
 
     @Test
-    @Disabled("JAMES-3492")
     void applyMappingShouldNotThrowWhenIncrementalChanges(ElasticSearchClusterExtension.ElasticSearchCluster esCluster) throws Exception {
         NodeMappingFactory.applyMapping(client,
             INDEX_NAME,

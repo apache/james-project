@@ -22,15 +22,14 @@ package org.apache.james.backends.es.v7;
 import java.io.IOException;
 
 import org.apache.http.HttpStatus;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.ResponseException;
+import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 public class NodeMappingFactory {
 
-    public static final String DEFAULT_MAPPING_NAME = "_doc";
     public static final String BOOLEAN = "boolean";
     public static final String TYPE = "type";
     public static final String LONG = "long";
@@ -65,7 +64,7 @@ public class NodeMappingFactory {
     @SuppressWarnings("deprecation")
     public static boolean mappingAlreadyExist(ReactorElasticSearchClient client, IndexName indexName) throws IOException {
         try {
-            client.getLowLevelClient().performRequest(new Request("GET", "/" + indexName.getValue() + "/_mapping/" + NodeMappingFactory.DEFAULT_MAPPING_NAME));
+            client.getLowLevelClient().performRequest(new Request("GET", "/" + indexName.getValue() + "/_mapping/"));
             return true;
         } catch (ResponseException e) {
             if (e.getResponse().getStatusLine().getStatusCode() != HttpStatus.SC_NOT_FOUND) {
@@ -78,7 +77,6 @@ public class NodeMappingFactory {
     public static void createMapping(ReactorElasticSearchClient client, IndexName indexName, XContentBuilder mappingsSources) throws IOException {
         client.indices().putMapping(
             new PutMappingRequest(indexName.getValue())
-                .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .source(mappingsSources),
             RequestOptions.DEFAULT);
     }
