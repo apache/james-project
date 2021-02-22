@@ -45,6 +45,7 @@ public class CassandraJamesServerConfiguration implements Configuration {
             rootDirectory = Optional.empty();
             configurationPath = Optional.empty();
             searchConfiguration = Optional.empty();
+            usersRepositoryImplementation = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
