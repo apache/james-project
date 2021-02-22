@@ -89,7 +89,6 @@ class ScrolledSearchTest {
     void scrollIterableShouldWorkWhenOneElement() throws Exception {
         String id = "1";
         client.index(new IndexRequest(INDEX_NAME.getValue())
-                .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .id(id)
                 .source(MESSAGE, "Sample message"),
             RequestOptions.DEFAULT)
@@ -113,7 +112,6 @@ class ScrolledSearchTest {
     void scrollIterableShouldWorkWhenSizeElement() {
         String id1 = "1";
         client.index(new IndexRequest(INDEX_NAME.getValue())
-                .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .id(id1)
                 .source(MESSAGE, "Sample message"),
             RequestOptions.DEFAULT)
@@ -121,7 +119,6 @@ class ScrolledSearchTest {
 
         String id2 = "2";
         client.index(new IndexRequest(INDEX_NAME.getValue())
-                .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .id(id2)
                 .source(MESSAGE, "Sample message"),
             RequestOptions.DEFAULT)
@@ -145,7 +142,6 @@ class ScrolledSearchTest {
     void scrollIterableShouldWorkWhenMoreThanSizeElement() {
         String id1 = "1";
         client.index(new IndexRequest(INDEX_NAME.getValue())
-                .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .id(id1)
                 .source(MESSAGE, "Sample message"),
             RequestOptions.DEFAULT)
@@ -153,7 +149,6 @@ class ScrolledSearchTest {
 
         String id2 = "2";
         client.index(new IndexRequest(INDEX_NAME.getValue())
-                .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .id(id2)
                 .source(MESSAGE, "Sample message"),
             RequestOptions.DEFAULT)
@@ -161,7 +156,6 @@ class ScrolledSearchTest {
 
         String id3 = "3";
         client.index(new IndexRequest(INDEX_NAME.getValue())
-                .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .id(id3)
                 .source(MESSAGE, "Sample message"),
             RequestOptions.DEFAULT)

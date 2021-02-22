@@ -35,6 +35,7 @@ import org.apache.james.backends.es.v7.DockerElasticSearchExtension;
 import org.apache.james.backends.es.v7.ElasticSearchIndexer;
 import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
 import org.apache.james.core.Username;
+import org.apache.james.events.Group;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
@@ -48,7 +49,6 @@ import org.apache.james.mailbox.elasticsearch.v7.json.MessageToElasticSearchJson
 import org.apache.james.mailbox.elasticsearch.v7.query.CriterionConverter;
 import org.apache.james.mailbox.elasticsearch.v7.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.v7.search.ElasticSearchSearcher;
-import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
@@ -77,7 +77,7 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndexContract;
-import org.awaitility.Duration;
+import org.awaitility.Durations;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -264,7 +264,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
     @Test
     void addShouldPropagateExceptionWhenExceptionOccurs() throws Exception {
         elasticSearch.getDockerElasticSearch().pause();
-        Thread.sleep(Duration.FIVE_SECONDS.getValueInMS()); // Docker pause is asynchronous and we found no way to poll for it
+        Thread.sleep(Durations.FIVE_SECONDS.toMillis()); // Docker pause is asynchronous and we found no way to poll for it
 
         assertThatThrownBy(() -> testee.add(session, mailbox, MESSAGE_1).block())
             .hasCauseInstanceOf(IOException.class);
@@ -338,7 +338,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
     @Test
     void deleteShouldPropagateExceptionWhenExceptionOccurs() throws Exception {
         elasticSearch.getDockerElasticSearch().pause();
-        Thread.sleep(Duration.FIVE_SECONDS.getValueInMS()); // Docker pause is asynchronous and we found no way to poll for it
+        Thread.sleep(Durations.FIVE_SECONDS.toMillis()); // Docker pause is asynchronous and we found no way to poll for it
 
         assertThatThrownBy(() -> testee.delete(session, mailbox.getMailboxId(), Lists.newArrayList(MESSAGE_UID_1)).block())
             .hasCauseInstanceOf(IOException.class);
@@ -413,7 +413,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
     @Test
     void updateShouldPropagateExceptionWhenExceptionOccurs() throws Exception {
         elasticSearch.getDockerElasticSearch().pause();
-        Thread.sleep(Duration.FIVE_SECONDS.getValueInMS()); // Docker pause is asynchronous and we found no way to poll for it
+        Thread.sleep(Durations.FIVE_SECONDS.toMillis()); // Docker pause is asynchronous and we found no way to poll for it
 
         Flags newFlags = new Flags(Flags.Flag.ANSWERED);
         UpdatedFlags updatedFlags = UpdatedFlags.builder()

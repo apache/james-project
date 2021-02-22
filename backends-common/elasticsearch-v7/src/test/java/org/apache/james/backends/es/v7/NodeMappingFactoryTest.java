@@ -58,7 +58,6 @@ class NodeMappingFactoryTest {
     }
 
     @Test
-    @Disabled("JAMES-3492")
     void applyMappingShouldNotThrowWhenCalledSeveralTime() throws Exception {
         NodeMappingFactory.applyMapping(client,
             INDEX_NAME,
@@ -66,7 +65,6 @@ class NodeMappingFactoryTest {
     }
 
     @Test
-    @Disabled("JAMES-3492")
     void applyMappingShouldNotThrowWhenIncrementalChanges() throws Exception {
         NodeMappingFactory.applyMapping(client,
             INDEX_NAME,
