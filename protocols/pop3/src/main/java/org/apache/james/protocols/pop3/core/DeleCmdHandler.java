@@ -30,6 +30,7 @@ import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -49,6 +50,14 @@ public class DeleCmdHandler implements CommandHandler<POP3Session> {
     @Override
     @SuppressWarnings("unchecked")
     public Response onCommand(POP3Session session, Request request) {
+        return MDCBuilder.withMdc(MDCBuilder.create()
+                .addContext(MDCBuilder.ACTION, "DELE")
+                .addContext(MDCConstants.withSession(session))
+                .addContext(MDCConstants.forRequest(request)),
+            () -> delete(session, request));
+    }
+
+    private Response delete(POP3Session session, Request request) {
         if (session.getHandlerState() == POP3Session.TRANSACTION) {
             int num = 0;
             try {

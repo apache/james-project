@@ -30,6 +30,7 @@ import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
+import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +62,14 @@ public class QuitCmdHandler implements CommandHandler<POP3Session> {
      */
     @Override
     public Response onCommand(POP3Session session, Request request) {
+        return MDCBuilder.withMdc(
+            MDCBuilder.create()
+                .addContext(MDCBuilder.ACTION, "QUIT")
+                .addContext(MDCConstants.withSession(session)),
+            () -> quit(session));
+    }
+
+    private Response quit(POP3Session session) {
         Response response = null;
         if (session.getHandlerState() == POP3Session.AUTHENTICATION_READY || session.getHandlerState() == POP3Session.AUTHENTICATION_USERSET) {
             return SIGN_OFF;

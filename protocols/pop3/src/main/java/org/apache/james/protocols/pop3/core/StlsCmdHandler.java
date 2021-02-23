@@ -29,6 +29,7 @@ import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.POP3StartTlsResponse;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -45,6 +46,14 @@ public class StlsCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
 
     @Override
     public Response onCommand(POP3Session session, Request request) {
+        return MDCBuilder.withMdc(
+            MDCBuilder.create()
+                .addContext(MDCBuilder.ACTION, "START_TLS")
+                .addContext(MDCConstants.withSession(session)),
+            () -> stls(session));
+    }
+
+    private Response stls(POP3Session session) {
         // check if starttls is supported, the state is the right one and it was
         // not started before
         if (session.isStartTLSSupported() && session.getHandlerState() == POP3Session.AUTHENTICATION_READY && session.isTLSStarted() == false) {

@@ -26,6 +26,7 @@ import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -42,6 +43,14 @@ public class NoopCmdHandler implements CommandHandler<POP3Session> {
      */
     @Override
     public Response onCommand(POP3Session session, Request request) {
+        return MDCBuilder.withMdc(
+            MDCBuilder.create()
+                .addContext(MDCBuilder.ACTION, "NOOP")
+                .addContext(MDCConstants.withSession(session)),
+            () -> noop(session));
+    }
+
+    private Response noop(POP3Session session) {
         if (session.getHandlerState() == POP3Session.TRANSACTION) {
             return POP3Response.OK;
         } else {

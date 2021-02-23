@@ -32,6 +32,7 @@ import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -49,6 +50,15 @@ public class UidlCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
      */
     @Override
     public Response onCommand(POP3Session session, Request request) {
+        return MDCBuilder.withMdc(
+            MDCBuilder.create()
+                .addContext(MDCBuilder.ACTION, "UIDL")
+                .addContext(MDCConstants.withSession(session))
+                .addContext(MDCConstants.forRequest(request)),
+            () -> uidl(session, request));
+    }
+
+    private Response uidl(POP3Session session, Request request) {
         POP3Response response = null;
         String parameters = request.getArgument();
         if (session.getHandlerState() == POP3Session.TRANSACTION) {
@@ -72,7 +82,7 @@ public class UidlCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
                     int num = 0;
                     try {
                         num = Integer.parseInt(parameters);
-                        
+
                         MessageMetaData metadata = MessageMetaDataUtils.getMetaData(session, num);
 
                         if (metadata == null) {
@@ -98,7 +108,7 @@ public class UidlCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
             } catch (IOException e) {
                 return POP3Response.ERR;
             }
-            
+
         } else {
             return POP3Response.ERR;
         }

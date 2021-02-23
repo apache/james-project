@@ -31,6 +31,7 @@ import org.apache.james.protocols.api.handler.ExtensibleHandler;
 import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -44,6 +45,13 @@ public class CapaCmdHandler implements CommandHandler<POP3Session>, ExtensibleHa
 
     @Override
     public Response onCommand(POP3Session session, Request request) {
+        return MDCBuilder.withMdc(MDCBuilder.create()
+                .addContext(MDCBuilder.ACTION, "CAPA")
+                .addContext(MDCConstants.withSession(session)),
+            () -> capa(session));
+    }
+
+    private Response capa(POP3Session session) {
         POP3Response response = new POP3Response(POP3Response.OK_RESPONSE, "Capability list follows");
 
         for (CapaCapability capabilities : caps) {

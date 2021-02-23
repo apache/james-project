@@ -28,6 +28,7 @@ import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
+import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +49,14 @@ public abstract class AbstractPassCmdHandler extends RsetCmdHandler {
      */
     @Override
     public Response onCommand(POP3Session session, Request request) {
+        return MDCBuilder.withMdc(
+            MDCBuilder.create()
+                .addContext(MDCBuilder.ACTION, "AUTH")
+                .addContext(MDCConstants.withSession(session)),
+            () -> doAuth(session, request));
+    }
+
+    private Response doAuth(POP3Session session, Request request) {
         String parameters = request.getArgument();
         if (session.getHandlerState() == POP3Session.AUTHENTICATION_USERSET && parameters != null) {
             return doAuth(session, session.getUsername(), parameters);
@@ -56,8 +65,7 @@ public abstract class AbstractPassCmdHandler extends RsetCmdHandler {
             return AUTH_FAILED;
         }
     }
-    
-    
+
     /**
      * Authenticate a user and return the {@link Response}
      */
