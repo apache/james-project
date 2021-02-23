@@ -32,6 +32,7 @@ import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.POP3StreamResponse;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -54,6 +55,15 @@ public class RetrCmdHandler implements CommandHandler<POP3Session> {
     @Override
     @SuppressWarnings("unchecked")
     public Response onCommand(POP3Session session, Request request) {
+        return MDCBuilder.withMdc(
+            MDCBuilder.create()
+                .addContext(MDCBuilder.ACTION, "RETR")
+                .addContext(MDCConstants.withSession(session))
+                .addContext(MDCConstants.forRequest(request)),
+            () -> retr(session, request));
+    }
+
+    private Response retr(POP3Session session, Request request) {
         POP3Response response = null;
         String parameters = request.getArgument();
         if (session.getHandlerState() == POP3Session.TRANSACTION) {

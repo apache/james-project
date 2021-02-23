@@ -28,6 +28,7 @@ import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -45,6 +46,15 @@ public class UserCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
      */
     @Override
     public Response onCommand(POP3Session session, Request request) {
+        return MDCBuilder.withMdc(
+            MDCBuilder.create()
+                .addContext(MDCBuilder.ACTION, "USER")
+                .addContext(MDCConstants.withSession(session))
+                .addContext(MDCConstants.forRequest(request)),
+            () -> user(session, request));
+    }
+
+    private Response user(POP3Session session, Request request) {
         String parameters = request.getArgument();
         if (session.getHandlerState() == POP3Session.AUTHENTICATION_READY && parameters != null) {
             session.setUsername(Username.of(parameters));

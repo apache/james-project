@@ -30,6 +30,7 @@ import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
+import org.apache.james.util.MDCBuilder;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -46,6 +47,14 @@ public class StatCmdHandler implements CommandHandler<POP3Session> {
      */
     @Override
     public Response onCommand(POP3Session session, Request request) {
+        return MDCBuilder.withMdc(
+            MDCBuilder.create()
+                .addContext(MDCBuilder.ACTION, "STAT")
+                .addContext(MDCConstants.withSession(session)),
+            () -> stat(session));
+    }
+
+    private Response stat(POP3Session session) {
         if (session.getHandlerState() == POP3Session.TRANSACTION) {
 
             List<MessageMetaData> uidList = session.getAttachment(POP3Session.UID_LIST, State.Transaction).orElse(ImmutableList.of());

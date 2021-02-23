@@ -24,17 +24,28 @@ import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.UnknownCommandHandler;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
+import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Default command handler for handling unknown commands
  */
 public class UnknownCmdHandler extends UnknownCommandHandler<POP3Session> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UnknownCmdHandler.class);
+
     /**
      * Handler method called upon receipt of an unrecognized command. Returns an
      * error response and logs the command.
      */
     @Override
     public Response onCommand(POP3Session session, Request request) {
+        MDCBuilder.withMdc(
+            MDCBuilder.create()
+                .addContext(MDCBuilder.ACTION, request.getCommand())
+                .addContext(MDCConstants.withSession(session))
+                .addContext(MDCConstants.forRequest(request)),
+            () -> LOGGER.info("Unknown command received"));
         return POP3Response.ERR;
     }
 }
