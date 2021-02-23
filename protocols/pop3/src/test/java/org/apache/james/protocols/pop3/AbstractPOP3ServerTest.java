@@ -32,6 +32,8 @@ import org.apache.commons.net.pop3.POP3Client;
 import org.apache.commons.net.pop3.POP3MessageInfo;
 import org.apache.commons.net.pop3.POP3Reply;
 import org.apache.james.core.Username;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.handler.WiringException;
@@ -63,7 +65,7 @@ public abstract class AbstractPOP3ServerTest {
     public void testInvalidAuth() throws Exception {
         ProtocolServer server = null;
         try {
-            server = createServer(createProtocol(new TestPassCmdHandler()));
+            server = createServer(createProtocol(new TestPassCmdHandler(new RecordingMetricFactory())));
             server.bind();
             
             POP3Client client =  createClient();
@@ -86,7 +88,7 @@ public abstract class AbstractPOP3ServerTest {
         ProtocolServer server = null;
         try {
             String identifier = "id";
-            TestPassCmdHandler handler = new TestPassCmdHandler();
+            TestPassCmdHandler handler = new TestPassCmdHandler(new RecordingMetricFactory());
             
             handler.add("valid", new MockMailbox(identifier));
             server = createServer(createProtocol(handler));
@@ -117,7 +119,7 @@ public abstract class AbstractPOP3ServerTest {
         ProtocolServer server = null;
         try {
             String identifier = "id";
-            TestPassCmdHandler handler = new TestPassCmdHandler();
+            TestPassCmdHandler handler = new TestPassCmdHandler(new RecordingMetricFactory());
             
             handler.add("valid", new MockMailbox(identifier, MESSAGE1, MESSAGE2));
             server = createServer(createProtocol(handler));
@@ -173,7 +175,7 @@ public abstract class AbstractPOP3ServerTest {
         ProtocolServer server = null;
         try {
             String identifier = "id";
-            TestPassCmdHandler factory = new TestPassCmdHandler();
+            TestPassCmdHandler factory = new TestPassCmdHandler(new RecordingMetricFactory());
             
             factory.add("valid", new MockMailbox(identifier, MESSAGE1, MESSAGE2));
             server = createServer(createProtocol(factory));
@@ -215,7 +217,7 @@ public abstract class AbstractPOP3ServerTest {
         ProtocolServer server = null;
         try {
             String identifier = "id";
-            TestPassCmdHandler factory = new TestPassCmdHandler();
+            TestPassCmdHandler factory = new TestPassCmdHandler(new RecordingMetricFactory());
             
             factory.add("valid", new MockMailbox(identifier, MESSAGE1, MESSAGE2));
             server = createServer(createProtocol(factory));
@@ -260,7 +262,7 @@ public abstract class AbstractPOP3ServerTest {
         ProtocolServer server = null;
         try {
             String identifier = "id";
-            TestPassCmdHandler factory = new TestPassCmdHandler();
+            TestPassCmdHandler factory = new TestPassCmdHandler(new RecordingMetricFactory());
             
             factory.add("valid", new MockMailbox(identifier, MESSAGE1, MESSAGE2));
             server = createServer(createProtocol(factory));
@@ -312,7 +314,7 @@ public abstract class AbstractPOP3ServerTest {
         ProtocolServer server = null;
         try {
             String identifier = "id";
-            TestPassCmdHandler factory = new TestPassCmdHandler();
+            TestPassCmdHandler factory = new TestPassCmdHandler(new RecordingMetricFactory());
             
             factory.add("valid", new MockMailbox(identifier));
             server = createServer(createProtocol(factory));
@@ -339,7 +341,7 @@ public abstract class AbstractPOP3ServerTest {
         ProtocolServer server = null;
         try {
             String identifier = "id";
-            TestPassCmdHandler factory = new TestPassCmdHandler();
+            TestPassCmdHandler factory = new TestPassCmdHandler(new RecordingMetricFactory());
             
             factory.add("valid", new MockMailbox(identifier, MESSAGE1));
             server = createServer(createProtocol(factory));
@@ -373,7 +375,7 @@ public abstract class AbstractPOP3ServerTest {
         ProtocolServer server = null;
         try {
             String identifier = "id";
-            TestPassCmdHandler factory = new TestPassCmdHandler();
+            TestPassCmdHandler factory = new TestPassCmdHandler(new RecordingMetricFactory());
             
             factory.add("valid", new MockMailbox(identifier, MESSAGE1, MESSAGE2));
             server = createServer(createProtocol(factory));
@@ -402,7 +404,7 @@ public abstract class AbstractPOP3ServerTest {
         ProtocolServer server = null;
         try {
             String identifier = "id";
-            TestPassCmdHandler factory = new TestPassCmdHandler();
+            TestPassCmdHandler factory = new TestPassCmdHandler(new RecordingMetricFactory());
             
             factory.add("valid", new MockMailbox(identifier, MESSAGE1, MESSAGE2));
             server = createServer(createProtocol(factory));
@@ -451,7 +453,7 @@ public abstract class AbstractPOP3ServerTest {
     public void testAPop() throws Exception {
         ProtocolServer server = null;
         try {
-            TestApopCmdHandler handler = new TestApopCmdHandler();
+            TestApopCmdHandler handler = new TestApopCmdHandler(new RecordingMetricFactory());
             server = createServer(createProtocol(handler));
             server.bind();
             
@@ -515,7 +517,11 @@ public abstract class AbstractPOP3ServerTest {
 
     private final class TestApopCmdHandler extends AbstractApopCmdHandler {
         private final Map<String, Mailbox> mailboxes = new HashMap<>();
-       
+
+        public TestApopCmdHandler(MetricFactory metricFactory) {
+            super(metricFactory);
+        }
+
         public void add(String username, Mailbox mailbox) {
             mailboxes.put(username, mailbox);
         }

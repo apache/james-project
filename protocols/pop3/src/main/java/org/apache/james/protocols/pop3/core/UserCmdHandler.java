@@ -22,7 +22,10 @@ package org.apache.james.protocols.pop3.core;
 import java.util.Collection;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 import org.apache.james.core.Username;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;
@@ -42,18 +45,26 @@ public class UserCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
     private static final Collection<String> COMMANDS = ImmutableSet.of("USER");
     private static final Set<String> CAPS = ImmutableSet.of("USER");
 
+    private final MetricFactory metricFactory;
+
+    @Inject
+    public UserCmdHandler(MetricFactory metricFactory) {
+        this.metricFactory = metricFactory;
+    }
+
     /**
      * Handler method called upon receipt of a USER command. Reads in the user
      * id.
      */
     @Override
     public Response onCommand(POP3Session session, Request request) {
-        return MDCBuilder.withMdc(
-            MDCBuilder.create()
-                .addContext(MDCBuilder.ACTION, "USER")
-                .addContext(MDCConstants.withSession(session))
-                .addContext(MDCConstants.forRequest(request)),
-            () -> user(session, request));
+        return metricFactory.decorateSupplierWithTimerMetric("pop3-user", () ->
+            MDCBuilder.withMdc(
+                MDCBuilder.create()
+                    .addContext(MDCBuilder.ACTION, "USER")
+                    .addContext(MDCConstants.withSession(session))
+                    .addContext(MDCConstants.forRequest(request)),
+                () -> user(session, request)));
     }
 
     private Response user(POP3Session session, Request request) {

@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 import org.apache.james.core.Username;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.pop3.POP3Response;
@@ -43,17 +44,25 @@ public abstract class AbstractPassCmdHandler extends RsetCmdHandler {
     private static final Response UNEXPECTED_ERROR = new POP3Response(POP3Response.ERR_RESPONSE, "Unexpected error accessing mailbox").immutable();
     protected static final Response AUTH_FAILED = new POP3Response(POP3Response.ERR_RESPONSE, "Authentication failed.").immutable();
 
+    private final MetricFactory metricFactory;
+
+    public AbstractPassCmdHandler(MetricFactory metricFactory) {
+        super(metricFactory);
+        this.metricFactory = metricFactory;
+    }
+
     /**
      * Handler method called upon receipt of a PASS command. Reads in and
      * validates the password.
      */
     @Override
     public Response onCommand(POP3Session session, Request request) {
-        return MDCBuilder.withMdc(
+        return metricFactory.decorateSupplierWithTimerMetric("pop3-pass", () ->
+            MDCBuilder.withMdc(
             MDCBuilder.create()
                 .addContext(MDCBuilder.ACTION, "AUTH")
                 .addContext(MDCConstants.withSession(session)),
-            () -> doAuth(session, request));
+            () -> doAuth(session, request)));
     }
 
     private Response doAuth(POP3Session session, Request request) {

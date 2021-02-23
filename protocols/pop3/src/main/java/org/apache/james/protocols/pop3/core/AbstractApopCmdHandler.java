@@ -21,7 +21,10 @@ package org.apache.james.protocols.pop3.core;
 
 import java.util.Collection;
 
+import javax.inject.Inject;
+
 import org.apache.james.core.Username;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
@@ -38,6 +41,11 @@ public abstract class AbstractApopCmdHandler extends AbstractPassCmdHandler {
 
     private static final Collection<String> COMMANDS = ImmutableSet.of("APOP");
     private static final String MISSING_APOP_TIMESTAMP = "";
+
+    @Inject
+    public AbstractApopCmdHandler(MetricFactory metricFactory) {
+        super(metricFactory);
+    }
 
     @Override
     public Response onCommand(POP3Session session, Request request) {

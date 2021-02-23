@@ -24,6 +24,9 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 
+import javax.inject.Inject;
+
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
@@ -50,6 +53,13 @@ public class RetrCmdHandler implements CommandHandler<POP3Session> {
     static final Response SYNTAX_ERROR = new POP3Response(POP3Response.ERR_RESPONSE, "Usage: RETR [mail number]").immutable();
     private static final Response ERROR_MESSAGE_RETRIEVE = new POP3Response(POP3Response.ERR_RESPONSE, "Error while retrieving message.").immutable();
 
+    private final MetricFactory metricFactory;
+
+    @Inject
+    public RetrCmdHandler(MetricFactory metricFactory) {
+        this.metricFactory = metricFactory;
+    }
+
     /**
      * Handler method called upon receipt of a RETR command. This command
      * retrieves a particular mail message from the mailbox.
@@ -57,12 +67,13 @@ public class RetrCmdHandler implements CommandHandler<POP3Session> {
     @Override
     @SuppressWarnings("unchecked")
     public Response onCommand(POP3Session session, Request request) {
-        return MDCBuilder.withMdc(
-            MDCBuilder.create()
-                .addContext(MDCBuilder.ACTION, "RETR")
-                .addContext(MDCConstants.withSession(session))
-                .addContext(MDCConstants.forRequest(request)),
-            () -> retr(session, request));
+        return metricFactory.decorateSupplierWithTimerMetric("pop3-retr", () ->
+            MDCBuilder.withMdc(
+                MDCBuilder.create()
+                    .addContext(MDCBuilder.ACTION, "RETR")
+                    .addContext(MDCConstants.withSession(session))
+                    .addContext(MDCConstants.forRequest(request)),
+                () -> retr(session, request)));
     }
 
     private Response retr(POP3Session session, Request request) {

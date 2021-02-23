@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.junit.jupiter.api.Test;
@@ -44,7 +45,7 @@ class RetrCmdHandlerTest {
         String overflowedNumber = Collections.nCopies(pad, "\\xff").stream().collect(Collectors.joining());
         when(request.getArgument()).thenReturn(overflowedNumber);
 
-        assertThat(new RetrCmdHandler().onCommand(session, request))
+        assertThat(new RetrCmdHandler(new RecordingMetricFactory()).onCommand(session, request))
             .isEqualTo(RetrCmdHandler.SYNTAX_ERROR);
     }
 
@@ -57,7 +58,7 @@ class RetrCmdHandlerTest {
         String overflowedNumber = Long.toString(Long.MAX_VALUE);
         when(request.getArgument()).thenReturn(overflowedNumber);
 
-        assertThat(new RetrCmdHandler().onCommand(session, request))
+        assertThat(new RetrCmdHandler(new RecordingMetricFactory()).onCommand(session, request))
             .isEqualTo(RetrCmdHandler.SYNTAX_ERROR);
     }
 }

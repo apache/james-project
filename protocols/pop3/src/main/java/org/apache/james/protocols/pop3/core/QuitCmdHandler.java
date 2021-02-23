@@ -23,6 +23,9 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
+import javax.inject.Inject;
+
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
@@ -56,17 +59,25 @@ public class QuitCmdHandler implements CommandHandler<POP3Session> {
         SIGN_OFF_NOT_CLEAN = response.immutable();
     }
 
+    private final MetricFactory metricFactory;
+
+    @Inject
+    public QuitCmdHandler(MetricFactory metricFactory) {
+        this.metricFactory = metricFactory;
+    }
+
     /**
      * Handler method called upon receipt of a QUIT command. This method handles
      * cleanup of the POP3Handler state.
      */
     @Override
     public Response onCommand(POP3Session session, Request request) {
-        return MDCBuilder.withMdc(
-            MDCBuilder.create()
-                .addContext(MDCBuilder.ACTION, "QUIT")
-                .addContext(MDCConstants.withSession(session)),
-            () -> quit(session));
+        return metricFactory.decorateSupplierWithTimerMetric("pop3-quit", () ->
+            MDCBuilder.withMdc(
+                MDCBuilder.create()
+                    .addContext(MDCBuilder.ACTION, "QUIT")
+                    .addContext(MDCConstants.withSession(session)),
+                () -> quit(session)));
     }
 
     private Response quit(POP3Session session) {
