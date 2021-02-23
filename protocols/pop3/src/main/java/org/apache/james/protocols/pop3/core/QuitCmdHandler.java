@@ -70,6 +70,7 @@ public class QuitCmdHandler implements CommandHandler<POP3Session> {
     }
 
     private Response quit(POP3Session session) {
+        LOGGER.trace("QUIT command received");
         Response response = null;
         if (session.getHandlerState() == POP3Session.AUTHENTICATION_READY || session.getHandlerState() == POP3Session.AUTHENTICATION_USERSET) {
             return SIGN_OFF;
