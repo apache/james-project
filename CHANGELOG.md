@@ -103,6 +103,10 @@ Use BlobStore cache instead.
 - JAMES-3155 Limit the number of flags updated at the same time
 - JAMES-3264: MAILBOX details are read 3 times upon indexing
 
+### Third party softwares
+- James is no longer tested against Cassandra 3.11.3 but instead against Cassandra 3.11.10. Users are recommended to upgrade to this
+version as well. See related upgrade instructions.
+
 ## [3.5.0] - 2020-04-06
 
 ### Added
