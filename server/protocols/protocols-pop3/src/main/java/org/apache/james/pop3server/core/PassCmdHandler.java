@@ -93,7 +93,12 @@ public class PassCmdHandler extends AbstractPassCmdHandler  {
                 LOGGER.info("Provisioning INBOX. {} created.", mailboxId);
             }
             MessageManager mailbox = manager.getMailbox(MailboxPath.inbox(mSession), mSession);
-            return new MailboxAdapter(manager, mailbox, mSession);
+            MailboxAdapter mailboxAdapter = new MailboxAdapter(manager, mailbox, mSession);
+            LOGGER.info("Opening mailbox {} {} with mailbox session {}",
+                mailbox.getId().serialize(),
+                mailbox.getMailboxPath().asString(),
+                mSession.getSessionId().getValue());
+            return mailboxAdapter;
         } catch (BadCredentialsException e) {
             LOGGER.info("Bad credential supplied for {} with remote address {}",
                 session.getUsername().asString(),
