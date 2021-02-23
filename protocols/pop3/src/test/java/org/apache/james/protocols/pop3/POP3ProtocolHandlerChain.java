@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.protocols.api.handler.CommandDispatcher;
 import org.apache.james.protocols.api.handler.CommandHandlerResultLogger;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
@@ -50,6 +52,7 @@ import org.apache.james.protocols.pop3.core.WelcomeMessageHandler;
  *
  */
 public class POP3ProtocolHandlerChain extends ProtocolHandlerChainImpl {
+    private final MetricFactory metricFactory = new RecordingMetricFactory();
 
     /**
      * The {@link AbstractPassCmdHandler}'s to use. If at least one {@link AbstractPassCmdHandler} is given, the {@link POP3ProtocolHandlerChain}
@@ -67,20 +70,20 @@ public class POP3ProtocolHandlerChain extends ProtocolHandlerChainImpl {
         // add all pass handlers
         Collections.addAll(handlers, authHandlers);
         
-        handlers.add(new CapaCmdHandler());
-        handlers.add(new UserCmdHandler());
-        handlers.add(new ListCmdHandler());
-        handlers.add(new UidlCmdHandler());
-        handlers.add(new RsetCmdHandler());
-        handlers.add(new DeleCmdHandler());
-        handlers.add(new NoopCmdHandler());
-        handlers.add(new RetrCmdHandler());
-        handlers.add(new TopCmdHandler());
-        handlers.add(new StatCmdHandler());
-        handlers.add(new QuitCmdHandler());
+        handlers.add(new CapaCmdHandler(metricFactory));
+        handlers.add(new UserCmdHandler(metricFactory));
+        handlers.add(new ListCmdHandler(metricFactory));
+        handlers.add(new UidlCmdHandler(metricFactory));
+        handlers.add(new RsetCmdHandler(metricFactory));
+        handlers.add(new DeleCmdHandler(metricFactory));
+        handlers.add(new NoopCmdHandler(metricFactory));
+        handlers.add(new RetrCmdHandler(metricFactory));
+        handlers.add(new TopCmdHandler(metricFactory));
+        handlers.add(new StatCmdHandler(metricFactory));
+        handlers.add(new QuitCmdHandler(metricFactory));
+        handlers.add(new StlsCmdHandler(metricFactory));
         handlers.add(new WelcomeMessageHandler());
         handlers.add(new UnknownCmdHandler());
-        handlers.add(new StlsCmdHandler());
         handlers.add(new CommandDispatcher<POP3Session>());
         handlers.add(new CommandHandlerResultLogger());
        

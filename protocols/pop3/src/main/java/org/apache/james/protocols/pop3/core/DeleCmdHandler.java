@@ -23,6 +23,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.inject.Inject;
+
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
@@ -43,6 +46,13 @@ public class DeleCmdHandler implements CommandHandler<POP3Session> {
     private static final Response SYNTAX_ERROR = new POP3Response(POP3Response.ERR_RESPONSE, "Usage: DELE [mail number]").immutable();
     private static final Response DELETED = new POP3Response(POP3Response.OK_RESPONSE, "Message deleted").immutable();
 
+    private final MetricFactory metricFactory;
+
+    @Inject
+    public DeleCmdHandler(MetricFactory metricFactory) {
+        this.metricFactory = metricFactory;
+    }
+
     /**
      * Handler method called upon receipt of a DELE command. This command
      * deletes a particular mail message from the mailbox.
@@ -50,11 +60,12 @@ public class DeleCmdHandler implements CommandHandler<POP3Session> {
     @Override
     @SuppressWarnings("unchecked")
     public Response onCommand(POP3Session session, Request request) {
-        return MDCBuilder.withMdc(MDCBuilder.create()
-                .addContext(MDCBuilder.ACTION, "DELE")
-                .addContext(MDCConstants.withSession(session))
-                .addContext(MDCConstants.forRequest(request)),
-            () -> delete(session, request));
+        return metricFactory.decorateSupplierWithTimerMetric("pop3-dele", () ->
+            MDCBuilder.withMdc(MDCBuilder.create()
+                    .addContext(MDCBuilder.ACTION, "DELE")
+                    .addContext(MDCConstants.withSession(session))
+                    .addContext(MDCConstants.forRequest(request)),
+                () -> delete(session, request)));
     }
 
     private Response delete(POP3Session session, Request request) {

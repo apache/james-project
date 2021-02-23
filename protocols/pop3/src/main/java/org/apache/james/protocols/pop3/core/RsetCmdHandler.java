@@ -24,6 +24,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.inject.Inject;
+
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
@@ -44,18 +47,25 @@ public class RsetCmdHandler implements CommandHandler<POP3Session> {
     private static final Collection<String> COMMANDS = ImmutableSet.of("RSET");
     private static final Logger LOGGER = LoggerFactory.getLogger(RsetCmdHandler.class);
 
+    private final MetricFactory metricFactory;
+
+    @Inject
+    public RsetCmdHandler(MetricFactory metricFactory) {
+        this.metricFactory = metricFactory;
+    }
+
     /**
      * Handler method called upon receipt of a RSET command. Calls stat() to
      * reset the mailbox.
      */
     @Override
     public Response onCommand(POP3Session session, Request request) {
-        return MDCBuilder.withMdc(
-            MDCBuilder.create()
-                .addContext(MDCBuilder.ACTION, "RSET")
-                .addContext(MDCConstants.withSession(session)),
-            () -> rset(session));
-
+        return metricFactory.decorateSupplierWithTimerMetric("pop3-rset", () ->
+            MDCBuilder.withMdc(
+                MDCBuilder.create()
+                    .addContext(MDCBuilder.ACTION, "RSET")
+                    .addContext(MDCConstants.withSession(session)),
+                () -> rset(session)));
     }
 
     private Response rset(POP3Session session) {

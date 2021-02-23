@@ -27,6 +27,9 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import javax.inject.Inject;
+
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
@@ -52,6 +55,14 @@ public class TopCmdHandler extends RetrCmdHandler implements CapaCapability {
     private static final Response SYNTAX_ERROR = new POP3Response(POP3Response.ERR_RESPONSE, "Usage: TOP [mail number] [Line number]").immutable();
     private static final Response ERROR_MESSAGE_RETR = new POP3Response(POP3Response.ERR_RESPONSE, "Error while retrieving message.").immutable();
 
+    private final MetricFactory metricFactory;
+
+    @Inject
+    public TopCmdHandler(MetricFactory metricFactory) {
+        super(metricFactory);
+        this.metricFactory = metricFactory;
+    }
+
     /**
      * Handler method called upon receipt of a TOP command. This command
      * retrieves the top N lines of a specified message in the mailbox.
@@ -62,12 +73,13 @@ public class TopCmdHandler extends RetrCmdHandler implements CapaCapability {
     @SuppressWarnings("unchecked")
     @Override
     public Response onCommand(POP3Session session, Request request) {
-        return MDCBuilder.withMdc(
-            MDCBuilder.create()
-                .addContext(MDCBuilder.ACTION, "TOP")
-                .addContext(MDCConstants.withSession(session))
-                .addContext(MDCConstants.forRequest(request)),
-            () -> top(session, request));
+        return metricFactory.decorateSupplierWithTimerMetric("pop3-top", () ->
+            MDCBuilder.withMdc(
+                MDCBuilder.create()
+                    .addContext(MDCBuilder.ACTION, "TOP")
+                    .addContext(MDCConstants.withSession(session))
+                    .addContext(MDCConstants.forRequest(request)),
+                () -> top(session, request)));
     }
 
     private Response top(POP3Session session, Request request) {

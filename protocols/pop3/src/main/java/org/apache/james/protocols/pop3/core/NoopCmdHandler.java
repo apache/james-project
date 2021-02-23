@@ -21,6 +21,9 @@ package org.apache.james.protocols.pop3.core;
 
 import java.util.Collection;
 
+import javax.inject.Inject;
+
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;
@@ -39,17 +42,25 @@ public class NoopCmdHandler implements CommandHandler<POP3Session> {
     private static final Logger LOGGER = LoggerFactory.getLogger(NoopCmdHandler.class);
     private static final Collection<String> COMMANDS = ImmutableSet.of("NOOP");
 
+    private final MetricFactory metricFactory;
+
+    @Inject
+    public NoopCmdHandler(MetricFactory metricFactory) {
+        this.metricFactory = metricFactory;
+    }
+
     /**
      * Handler method called upon receipt of a NOOP command. Like all good
      * NOOPs, does nothing much.
      */
     @Override
     public Response onCommand(POP3Session session, Request request) {
-        return MDCBuilder.withMdc(
-            MDCBuilder.create()
-                .addContext(MDCBuilder.ACTION, "NOOP")
-                .addContext(MDCConstants.withSession(session)),
-            () -> noop(session));
+        return metricFactory.decorateSupplierWithTimerMetric("pop3-noop", () ->
+            MDCBuilder.withMdc(
+                MDCBuilder.create()
+                    .addContext(MDCBuilder.ACTION, "NOOP")
+                    .addContext(MDCConstants.withSession(session)),
+                () -> noop(session)));
     }
 
     private Response noop(POP3Session session) {

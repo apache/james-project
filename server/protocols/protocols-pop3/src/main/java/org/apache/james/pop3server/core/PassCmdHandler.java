@@ -32,6 +32,7 @@ import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.pop3server.mailbox.MailboxAdapter;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
@@ -58,7 +59,8 @@ public class PassCmdHandler extends AbstractPassCmdHandler  {
     private final MailboxManager manager;
 
     @Inject
-    public PassCmdHandler(@Named("mailboxmanager") MailboxManager manager) {
+    public PassCmdHandler(@Named("mailboxmanager") MailboxManager manager, MetricFactory metricFactory) {
+        super(metricFactory);
         this.manager = manager;
     }
 

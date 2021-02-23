@@ -22,13 +22,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.james.core.Username;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.core.AbstractPassCmdHandler;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
 
 public class TestPassCmdHandler extends AbstractPassCmdHandler {
     private final Map<String, Mailbox> mailboxes = new HashMap<>();
-   
+
+    public TestPassCmdHandler(MetricFactory metricFactory) {
+        super(metricFactory);
+    }
+
     public void add(String username, Mailbox mailbox) {
         mailboxes.put(username, mailbox);
     }

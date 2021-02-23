@@ -41,6 +41,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.pop3server.netty.POP3Server;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
@@ -738,6 +740,7 @@ class POP3ServerTest {
             .put(binder -> binder.bind(UsersRepository.class).toInstance(usersRepository))
             .put(binder -> binder.bind(MailboxManager.class).annotatedWith(Names.named("mailboxmanager")).toInstance(mailboxManager))
             .put(binder -> binder.bind(FileSystem.class).toInstance(fileSystem))
+            .put(binder -> binder.bind(MetricFactory.class).toInstance(new RecordingMetricFactory()))
             .build();
     }
 

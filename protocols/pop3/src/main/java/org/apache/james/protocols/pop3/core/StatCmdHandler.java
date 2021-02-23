@@ -23,6 +23,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.inject.Inject;
+
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
@@ -44,17 +47,25 @@ public class StatCmdHandler implements CommandHandler<POP3Session> {
     private static final Logger LOGGER = LoggerFactory.getLogger(StatCmdHandler.class);
     private static final Collection<String> COMMANDS = ImmutableSet.of("STAT");
 
+    private final MetricFactory metricFactory;
+
+    @Inject
+    public StatCmdHandler(MetricFactory metricFactory) {
+        this.metricFactory = metricFactory;
+    }
+
     /**
      * Handler method called upon receipt of a STAT command. Returns the number
      * of messages in the mailbox and its aggregate size.
      */
     @Override
     public Response onCommand(POP3Session session, Request request) {
-        return MDCBuilder.withMdc(
-            MDCBuilder.create()
-                .addContext(MDCBuilder.ACTION, "STAT")
-                .addContext(MDCConstants.withSession(session)),
-            () -> stat(session));
+        return metricFactory.decorateSupplierWithTimerMetric("pop3-stat", () ->
+            MDCBuilder.withMdc(
+                MDCBuilder.create()
+                    .addContext(MDCBuilder.ACTION, "STAT")
+                    .addContext(MDCConstants.withSession(session)),
+                () -> stat(session)));
     }
 
     private Response stat(POP3Session session) {

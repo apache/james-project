@@ -25,6 +25,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
@@ -47,18 +50,26 @@ public class UidlCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
     private static final Collection<String> COMMANDS = ImmutableSet.of("UIDL");
     private static final Set<String> CAPS = ImmutableSet.of("UIDL");
 
+    private final MetricFactory metricFactory;
+
+    @Inject
+    public UidlCmdHandler(MetricFactory metricFactory) {
+        this.metricFactory = metricFactory;
+    }
+
     /**
      * Handler method called upon receipt of a UIDL command. Returns a listing
      * of message ids to the client.
      */
     @Override
     public Response onCommand(POP3Session session, Request request) {
-        return MDCBuilder.withMdc(
-            MDCBuilder.create()
-                .addContext(MDCBuilder.ACTION, "UIDL")
-                .addContext(MDCConstants.withSession(session))
-                .addContext(MDCConstants.forRequest(request)),
-            () -> uidl(session, request));
+        return metricFactory.decorateSupplierWithTimerMetric("pop3-uidl", () ->
+            MDCBuilder.withMdc(
+                MDCBuilder.create()
+                    .addContext(MDCBuilder.ACTION, "UIDL")
+                    .addContext(MDCConstants.withSession(session))
+                    .addContext(MDCConstants.forRequest(request)),
+                () -> uidl(session, request)));
     }
 
     private Response uidl(POP3Session session, Request request) {
