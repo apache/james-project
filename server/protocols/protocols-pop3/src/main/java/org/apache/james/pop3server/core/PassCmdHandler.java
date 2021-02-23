@@ -95,6 +95,9 @@ public class PassCmdHandler extends AbstractPassCmdHandler  {
             MessageManager mailbox = manager.getMailbox(MailboxPath.inbox(mSession), mSession);
             return new MailboxAdapter(manager, mailbox, mSession);
         } catch (BadCredentialsException e) {
+            LOGGER.info("Bad credential supplied for {} with remote address {}",
+                session.getUsername().asString(),
+                session.getRemoteAddress().getAddress());
             return null;
         } catch (MailboxException e) {
             throw new IOException("Unable to access mailbox for user " + session.getUsername().asString(), e);
