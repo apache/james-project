@@ -35,6 +35,8 @@ import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.POP3StreamResponse;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -43,6 +45,7 @@ import com.google.common.collect.ImmutableSet;
  * Handles TOP command
  */
 public class TopCmdHandler extends RetrCmdHandler implements CapaCapability {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TopCmdHandler.class);
     private static final Collection<String> COMMANDS = ImmutableList.of("TOP");
     private static final Set<String> CAPS = ImmutableSet.of("TOP");
     
@@ -68,6 +71,7 @@ public class TopCmdHandler extends RetrCmdHandler implements CapaCapability {
     }
 
     private Response top(POP3Session session, Request request) {
+        LOGGER.trace("TOP command received");
         String parameters = request.getArgument();
         if (parameters == null) {
             return SYNTAX_ERROR;

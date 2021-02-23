@@ -59,6 +59,7 @@ public class RsetCmdHandler implements CommandHandler<POP3Session> {
     }
 
     private Response rset(POP3Session session) {
+        LOGGER.trace("RETR command received");
         if (session.getHandlerState() == POP3Session.TRANSACTION) {
             stat(session);
             return POP3Response.OK;

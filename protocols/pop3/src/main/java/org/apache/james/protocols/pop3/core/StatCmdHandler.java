@@ -31,6 +31,8 @@ import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -39,6 +41,7 @@ import com.google.common.collect.ImmutableSet;
  * Handles STAT command
  */
 public class StatCmdHandler implements CommandHandler<POP3Session> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StatCmdHandler.class);
     private static final Collection<String> COMMANDS = ImmutableSet.of("STAT");
 
     /**
@@ -55,6 +58,7 @@ public class StatCmdHandler implements CommandHandler<POP3Session> {
     }
 
     private Response stat(POP3Session session) {
+        LOGGER.trace("STAT command received");
         if (session.getHandlerState() == POP3Session.TRANSACTION) {
 
             List<MessageMetaData> uidList = session.getAttachment(POP3Session.UID_LIST, State.Transaction).orElse(ImmutableList.of());

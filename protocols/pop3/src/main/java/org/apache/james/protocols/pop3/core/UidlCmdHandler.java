@@ -33,6 +33,8 @@ import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -41,6 +43,7 @@ import com.google.common.collect.ImmutableSet;
  * Handles UIDL command
  */
 public class UidlCmdHandler implements CommandHandler<POP3Session>, CapaCapability {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UidlCmdHandler.class);
     private static final Collection<String> COMMANDS = ImmutableSet.of("UIDL");
     private static final Set<String> CAPS = ImmutableSet.of("UIDL");
 
@@ -59,6 +62,7 @@ public class UidlCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
     }
 
     private Response uidl(POP3Session session, Request request) {
+        LOGGER.trace("UIDL command received");
         POP3Response response = null;
         String parameters = request.getArgument();
         if (session.getHandlerState() == POP3Session.TRANSACTION) {

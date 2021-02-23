@@ -57,6 +57,7 @@ public abstract class AbstractPassCmdHandler extends RsetCmdHandler {
     }
 
     private Response doAuth(POP3Session session, Request request) {
+        LOGGER.trace("PASS command received");
         String parameters = request.getArgument();
         if (session.getHandlerState() == POP3Session.AUTHENTICATION_USERSET && parameters != null) {
             return doAuth(session, session.getUsername(), parameters);

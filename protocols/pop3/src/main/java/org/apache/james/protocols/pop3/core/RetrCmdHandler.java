@@ -33,6 +33,8 @@ import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.POP3StreamResponse;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -42,7 +44,7 @@ import com.google.common.collect.ImmutableSet;
  * Handles RETR command
  */
 public class RetrCmdHandler implements CommandHandler<POP3Session> {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(RetrCmdHandler.class);
     private static final Collection<String> COMMANDS = ImmutableSet.of("RETR");
     @VisibleForTesting
     static final Response SYNTAX_ERROR = new POP3Response(POP3Response.ERR_RESPONSE, "Usage: RETR [mail number]").immutable();
@@ -64,6 +66,7 @@ public class RetrCmdHandler implements CommandHandler<POP3Session> {
     }
 
     private Response retr(POP3Session session, Request request) {
+        LOGGER.trace("RETR command received");
         POP3Response response = null;
         String parameters = request.getArgument();
         if (session.getHandlerState() == POP3Session.TRANSACTION) {

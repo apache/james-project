@@ -27,6 +27,8 @@ import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -34,7 +36,7 @@ import com.google.common.collect.ImmutableSet;
  * Handles NOOP command
  */
 public class NoopCmdHandler implements CommandHandler<POP3Session> {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(NoopCmdHandler.class);
     private static final Collection<String> COMMANDS = ImmutableSet.of("NOOP");
 
     /**
@@ -51,6 +53,7 @@ public class NoopCmdHandler implements CommandHandler<POP3Session> {
     }
 
     private Response noop(POP3Session session) {
+        LOGGER.trace("NOOP command received");
         if (session.getHandlerState() == POP3Session.TRANSACTION) {
             return POP3Response.OK;
         } else {

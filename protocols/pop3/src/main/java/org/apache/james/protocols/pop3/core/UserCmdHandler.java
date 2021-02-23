@@ -29,6 +29,8 @@ import org.apache.james.protocols.api.handler.CommandHandler;
 import org.apache.james.protocols.pop3.POP3Response;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -36,7 +38,7 @@ import com.google.common.collect.ImmutableSet;
  * Handles USER command
  */
 public class UserCmdHandler implements CommandHandler<POP3Session>, CapaCapability {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserCmdHandler.class);
     private static final Collection<String> COMMANDS = ImmutableSet.of("USER");
     private static final Set<String> CAPS = ImmutableSet.of("USER");
 
@@ -55,6 +57,7 @@ public class UserCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
     }
 
     private Response user(POP3Session session, Request request) {
+        LOGGER.trace("USER command received");
         String parameters = request.getArgument();
         if (session.getHandlerState() == POP3Session.AUTHENTICATION_READY && parameters != null) {
             session.setUsername(Username.of(parameters));
