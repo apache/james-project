@@ -77,13 +77,9 @@ public class RabbitMQConnectionFactory {
         }
     }
 
-    private void setupSslConfiguration(ConnectionFactory connectionFactory) {
-        try {
+    private void setupSslConfiguration(ConnectionFactory connectionFactory) throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyManagementException, KeyStoreException, IOException {
             connectionFactory.useSslProtocol(sslContext(configuration));
             setupHostNameVerification(connectionFactory);
-        } catch (KeyManagementException | NoSuchAlgorithmException | CertificateException | KeyStoreException | IOException | UnrecoverableKeyException e) {
-            throw new RuntimeException("Cannot set SSL options to the connection factory", e);
-        }
     }
 
     private SSLContext sslContext(RabbitMQConfiguration configuration) throws KeyManagementException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, UnrecoverableKeyException {
@@ -105,7 +101,7 @@ public class RabbitMQConnectionFactory {
         if (keyStore.isPresent()) {
             SSLKeyStore sslKeyStore = keyStore.get();
 
-            sslContextBuilder.loadKeyMaterial(sslKeyStore.getFile(), sslKeyStore.getPassword(), null);
+            sslContextBuilder.loadKeyMaterial(sslKeyStore.getFile(), sslKeyStore.getPassword(), sslKeyStore.getPassword());
         }
     }
 
