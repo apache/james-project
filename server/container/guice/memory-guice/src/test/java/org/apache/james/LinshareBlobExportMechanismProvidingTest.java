@@ -21,10 +21,13 @@ package org.apache.james;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.modules.LinshareGuiceExtension;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@Tag(Unstable.TAG)
 class LinshareBlobExportMechanismProvidingTest {
     private static final LinshareGuiceExtension linshareGuiceExtension = new LinshareGuiceExtension();
 
