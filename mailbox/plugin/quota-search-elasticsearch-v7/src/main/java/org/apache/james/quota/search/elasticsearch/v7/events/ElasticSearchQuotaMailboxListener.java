@@ -25,16 +25,17 @@ import org.apache.james.backends.es.v7.DocumentId;
 import org.apache.james.backends.es.v7.ElasticSearchIndexer;
 import org.apache.james.backends.es.v7.RoutingKey;
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.Group;
-import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.events.Event;
+import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
+import org.apache.james.mailbox.events.MailboxEvents.QuotaUsageUpdatedEvent;
 import org.apache.james.quota.search.elasticsearch.v7.QuotaRatioElasticSearchConstants;
 import org.apache.james.quota.search.elasticsearch.v7.json.QuotaRatioToElasticSearchJson;
 import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Mono;
 
-public class ElasticSearchQuotaMailboxListener implements MailboxListener.ReactiveGroupMailboxListener {
+public class ElasticSearchQuotaMailboxListener implements EventListener.ReactiveGroupEventListener {
     public static class ElasticSearchQuotaMailboxListenerGroup extends Group {
 
     }

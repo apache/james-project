@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.elasticsearch.v7;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -29,7 +28,6 @@ import java.time.ZoneId;
 import org.apache.james.backends.es.v7.DockerElasticSearchExtension;
 import org.apache.james.backends.es.v7.ElasticSearchIndexer;
 import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
@@ -59,7 +57,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 

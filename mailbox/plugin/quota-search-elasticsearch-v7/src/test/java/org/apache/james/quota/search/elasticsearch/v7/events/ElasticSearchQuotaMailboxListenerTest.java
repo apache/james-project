@@ -29,10 +29,9 @@ import java.io.IOException;
 import org.apache.james.backends.es.v7.DockerElasticSearchExtension;
 import org.apache.james.backends.es.v7.ElasticSearchConfiguration;
 import org.apache.james.backends.es.v7.ElasticSearchIndexer;
-import org.apache.james.backends.es.v7.NodeMappingFactory;
 import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
-import org.apache.james.mailbox.events.Event;
-import org.apache.james.mailbox.events.Group;
+import org.apache.james.events.Event;
+import org.apache.james.events.Group;
 import org.apache.james.mailbox.quota.QuotaFixture.Counts;
 import org.apache.james.mailbox.quota.QuotaFixture.Sizes;
 import org.apache.james.mailbox.store.event.EventFactory;
@@ -53,8 +52,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class ElasticSearchQuotaMailboxListenerTest {
     static Event.EventId EVENT_ID = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
 
-    static final int BATCH_SIZE = 1;
-
     @RegisterExtension
     DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
 
@@ -71,8 +68,7 @@ class ElasticSearchQuotaMailboxListenerTest {
 
         quotaMailboxListener = new ElasticSearchQuotaMailboxListener(
             new ElasticSearchIndexer(client,
-                QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS,
-                BATCH_SIZE),
+                QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),
             new QuotaRatioToElasticSearchJson(),
             new UserRoutingKeyFactory());
     }
@@ -104,7 +100,6 @@ class ElasticSearchQuotaMailboxListenerTest {
         elasticSearch.awaitForElasticSearch();
 
         SearchRequest searchRequest = new SearchRequest(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS.getValue())
-            .types(NodeMappingFactory.DEFAULT_MAPPING_NAME)
             .source(new SearchSourceBuilder()
                 .query(QueryBuilders.matchAllQuery()));
         SearchResponse searchResponse = client.search(searchRequest).block();
