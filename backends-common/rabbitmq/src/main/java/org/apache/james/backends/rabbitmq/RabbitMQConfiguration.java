@@ -266,6 +266,7 @@ public class RabbitMQConfiguration {
 
                 return Objects.equals(this.strategy, that.strategy)
                         && Objects.equals(this.trustStore, that.trustStore)
+                        && Objects.equals(this.keyStore, that.keyStore)
                         && Objects.equals(this.hostNameVerifier, that.hostNameVerifier);
             }
             return false;
@@ -273,7 +274,7 @@ public class RabbitMQConfiguration {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(strategy, trustStore, hostNameVerifier);
+            return Objects.hash(strategy, trustStore, keyStore, hostNameVerifier);
         }
     }
 
