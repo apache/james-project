@@ -205,6 +205,7 @@ public class RabbitMQConfiguration {
                     this.sslValidationStrategy = sslValidationStrategy;
                     this.hostNameVerifier = hostNameVerifier;
                     this.sslTrustStore = sslTrustStore;
+                    this.sslKeyStore = Optional.empty();
                 }
 
                 public ReadyToBuild sslKeyStore(Optional<SSLKeyStore> sslKeyStore) {
