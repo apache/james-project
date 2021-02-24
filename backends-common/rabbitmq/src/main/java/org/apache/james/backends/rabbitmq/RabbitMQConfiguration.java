@@ -625,7 +625,9 @@ public class RabbitMQConfiguration {
                 && Objects.equals(this.handshakeTimeoutInMs, that.handshakeTimeoutInMs)
                 && Objects.equals(this.shutdownTimeoutInMs, that.shutdownTimeoutInMs)
                 && Objects.equals(this.networkRecoveryIntervalInMs, that.networkRecoveryIntervalInMs)
-                && Objects.equals(this.managementCredentials, that.managementCredentials
+                && Objects.equals(this.managementCredentials, that.managementCredentials)
+                && Objects.equals(this.useSsl, that.useSsl)
+                && Objects.equals(this.sslConfiguration, that.sslConfiguration
             );
         }
         return false;
@@ -634,6 +636,6 @@ public class RabbitMQConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hash(uri, managementUri, maxRetries, minDelayInMs, connectionTimeoutInMs,
-            channelRpcTimeoutInMs, handshakeTimeoutInMs, shutdownTimeoutInMs, networkRecoveryIntervalInMs, managementCredentials);
+            channelRpcTimeoutInMs, handshakeTimeoutInMs, shutdownTimeoutInMs, networkRecoveryIntervalInMs, managementCredentials, useSsl, sslConfiguration);
     }
 }
