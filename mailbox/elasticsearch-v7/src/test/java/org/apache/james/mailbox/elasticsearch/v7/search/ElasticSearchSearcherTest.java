@@ -71,7 +71,6 @@ import com.github.steveash.guavate.Guavate;
 @Disabled("JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
 class ElasticSearchSearcherTest {
 
-    static final int BATCH_SIZE = 1;
     static final int SEARCH_SIZE = 1;
     private static final Username USERNAME = Username.of("user");
 
@@ -110,8 +109,7 @@ class ElasticSearchSearcherTest {
             .listeningSearchIndex(preInstanciationStage -> new ElasticSearchListeningMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(),
                 new ElasticSearchIndexer(client,
-                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
-                    BATCH_SIZE),
+                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
                 new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
                     new InMemoryId.Factory(), messageIdFactory,
                     MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),

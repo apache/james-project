@@ -24,7 +24,6 @@ import static org.apache.james.quota.search.elasticsearch.v7.json.JsonMessageCon
 import java.util.List;
 
 import org.apache.james.backends.es.v7.AliasName;
-import org.apache.james.backends.es.v7.NodeMappingFactory;
 import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
 import org.apache.james.backends.es.v7.ReadAliasName;
 import org.apache.james.backends.es.v7.search.ScrolledSearch;
@@ -84,7 +83,6 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
             .ifPresent(searchSourceBuilder::size);
 
         SearchRequest searchRequest = new SearchRequest(readAlias.getValue())
-            .types(NodeMappingFactory.DEFAULT_MAPPING_NAME)
             .source(searchSourceBuilder);
 
         return client.search(searchRequest, RequestOptions.DEFAULT)
@@ -94,7 +92,6 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
     private Flux<SearchHit> executeScrolledSearch(QuotaQuery query) {
         return new ScrolledSearch(client,
             new SearchRequest(readAlias.getValue())
-                .types(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .source(searchSourceBuilder(query))
                 .scroll(TIMEOUT))
             .searchHits()

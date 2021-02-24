@@ -26,7 +26,7 @@
         <relativePath>../../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>metrics-es-reporter</artifactId>
+    <artifactId>metrics-es-reporter-v7</artifactId>
     <name>Apache James :: Server :: Metrics ElasticSearch Reporter</name>
 
     <dependencies>
