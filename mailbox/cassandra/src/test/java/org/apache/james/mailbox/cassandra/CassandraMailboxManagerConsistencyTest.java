@@ -739,6 +739,7 @@ class CassandraMailboxManagerConsistencyTest {
                 }));
             }
 
+            @Tag(Unstable.TAG)
             @Test
             void createMailboxShouldCreateWhenMailboxPathDaoFailsOnDeleteByPath(CassandraCluster cassandra) throws Exception {
                 testee.createMailbox(inboxPath, mailboxSession);
