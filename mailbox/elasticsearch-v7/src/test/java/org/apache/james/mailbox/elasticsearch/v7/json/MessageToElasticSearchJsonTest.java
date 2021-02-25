@@ -31,12 +31,14 @@ import java.util.Date;
 
 import javax.mail.Flags;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.elasticsearch.v7.IndexAttachments;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
@@ -52,7 +54,6 @@ import org.apache.james.mailbox.tika.TikaTextExtractor;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -99,7 +100,7 @@ class MessageToElasticSearchJsonTest {
                 date,
                 SIZE,
                 BODY_START_OCTET,
-                ClassLoaderUtils.getSystemResourceAsSharedStream("eml/spamMail.eml"),
+                new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/spamMail.eml"))),
                 new Flags(),
                 propertyBuilder.build(),
                 MAILBOX_ID);
@@ -119,7 +120,7 @@ class MessageToElasticSearchJsonTest {
                 date,
                 SIZE,
                 BODY_START_OCTET,
-                ClassLoaderUtils.getSystemResourceAsSharedStream("eml/invalidCharset.eml"),
+                new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/invalidCharset.eml"))),
                 new Flags(),
                 propertyBuilder.build(),
                 MAILBOX_ID);
@@ -141,7 +142,7 @@ class MessageToElasticSearchJsonTest {
                 date,
                 SIZE,
                 BODY_START_OCTET,
-                ClassLoaderUtils.getSystemResourceAsSharedStream("eml/htmlMail.eml"),
+                new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/htmlMail.eml"))),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("social", "pocket-money").build(),
                 propertyBuilder.build(),
                 MAILBOX_ID);
@@ -161,7 +162,7 @@ class MessageToElasticSearchJsonTest {
                 date,
                 SIZE,
                 BODY_START_OCTET,
-                ClassLoaderUtils.getSystemResourceAsSharedStream("eml/pgpSignedMail.eml"),
+                new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/pgpSignedMail.eml"))),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
                 propertyBuilder.build(),
                 MAILBOX_ID);
@@ -181,7 +182,7 @@ class MessageToElasticSearchJsonTest {
                 date,
                 SIZE,
                 BODY_START_OCTET,
-                ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mail.eml"),
+                new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mail.eml"))),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
                 propertyBuilder.build(),
                 MAILBOX_ID);
@@ -202,7 +203,7 @@ class MessageToElasticSearchJsonTest {
                 date,
                 SIZE,
                 BODY_START_OCTET,
-                ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"),
+                new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"))),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
                 propertyBuilder.build(),
                 MAILBOX_ID);
@@ -222,7 +223,7 @@ class MessageToElasticSearchJsonTest {
                 null,
                 SIZE,
                 BODY_START_OCTET,
-                ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"),
+                new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"))),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
                 propertyBuilder.build(),
                 MAILBOX_ID);
@@ -241,7 +242,7 @@ class MessageToElasticSearchJsonTest {
                 null,
                 SIZE,
                 BODY_START_OCTET,
-                ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"),
+                new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"))),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
                 propertyBuilder.build(),
                 MAILBOX_ID);
@@ -269,7 +270,7 @@ class MessageToElasticSearchJsonTest {
                 null,
                 SIZE,
                 BODY_START_OCTET,
-                ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"),
+                new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"))),
                 new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
                 propertyBuilder.build(),
                 MAILBOX_ID);
@@ -291,14 +292,14 @@ class MessageToElasticSearchJsonTest {
     }
 
     @Test
-    void emailWithNoMailboxIdShouldThrow() {
+    void emailWithNoMailboxIdShouldThrow() throws Exception {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"), IndexAttachments.YES);
         MailboxMessage mailWithNoMailboxId = new SimpleMailboxMessage(MESSAGE_ID, date,
             SIZE,
             BODY_START_OCTET,
-            ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"),
+            new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"))),
             new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
             propertyBuilder.build(),
             null);
@@ -350,7 +351,7 @@ class MessageToElasticSearchJsonTest {
         MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID, date,
             SIZE,
             BODY_START_OCTET,
-            ClassLoaderUtils.getSystemResourceAsSharedStream("eml/nonTextual.eml"),
+            new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/nonTextual.eml"))),
             new Flags(),
             propertyBuilder.build(),
             MAILBOX_ID);
@@ -370,7 +371,7 @@ class MessageToElasticSearchJsonTest {
             null,
             SIZE,
             BODY_START_OCTET,
-            ClassLoaderUtils.getSystemResourceAsSharedStream("eml/emailWithNonIndexableAttachment.eml"),
+            new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/emailWithNonIndexableAttachment.eml"))),
             new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
             propertyBuilder.build(),
             MAILBOX_ID);
@@ -398,7 +399,7 @@ class MessageToElasticSearchJsonTest {
             date,
             SIZE,
             BODY_START_OCTET,
-            ClassLoaderUtils.getSystemResourceAsSharedStream("eml/emailWithNonIndexableAttachment.eml"),
+            new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/emailWithNonIndexableAttachment.eml"))),
             new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
             propertyBuilder.build(),
             MAILBOX_ID);

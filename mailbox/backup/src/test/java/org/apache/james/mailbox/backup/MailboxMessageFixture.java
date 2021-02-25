@@ -26,12 +26,12 @@ import java.util.Date;
 import java.util.List;
 
 import javax.mail.Flags;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
@@ -63,11 +63,11 @@ public interface MailboxMessageFixture {
     Charset MESSAGE_CHARSET = StandardCharsets.UTF_8;
     String MESSAGE_CONTENT_1 = "Simple message content";
     byte[] MESSAGE_CONTENT_BYTES_1 = MESSAGE_CONTENT_1.getBytes(MESSAGE_CHARSET);
-    SharedByteArrayInputStream CONTENT_STREAM_1 = new SharedByteArrayInputStream(MESSAGE_CONTENT_BYTES_1);
+    ByteContent CONTENT_STREAM_1 = new ByteContent(MESSAGE_CONTENT_BYTES_1);
     String MESSAGE_CONTENT_2 = "Other message content";
 
     byte[] MESSAGE_CONTENT_BYTES_2 = MESSAGE_CONTENT_2.getBytes(MESSAGE_CHARSET);
-    SharedByteArrayInputStream CONTENT_STREAM_2 = new SharedByteArrayInputStream(MESSAGE_CONTENT_BYTES_2);
+    ByteContent CONTENT_STREAM_2 = new ByteContent(MESSAGE_CONTENT_BYTES_2);
     MessageId MESSAGE_ID_1 = MESSAGE_ID_FACTORY.generate();
     MessageId MESSAGE_ID_2 = MESSAGE_ID_FACTORY.generate();
 

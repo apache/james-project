@@ -50,6 +50,7 @@ import org.apache.james.mailbox.tika.TikaTextExtractor;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.stream.RawField;
+import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -228,12 +229,12 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
         ComposedMessageId customDateHeaderMessageId = messageManager.appendMessage(
             MessageManager.AppendCommand.builder()
-                .build(ClassLoader.getSystemResourceAsStream("eml/mailCustomDateHeader.eml")),
+                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mailCustomDateHeader.eml")),
             session).getId();
 
         ComposedMessageId customStringHeaderMessageId = messageManager.appendMessage(
             MessageManager.AppendCommand.builder()
-                .build(ClassLoader.getSystemResourceAsStream("eml/mailCustomStringHeader.eml")),
+                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mailCustomStringHeader.eml")),
             session).getId();
 
         elasticSearch.awaitForElasticSearch();
@@ -250,12 +251,12 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
         messageManager.appendMessage(
             MessageManager.AppendCommand.builder()
-                .build(ClassLoader.getSystemResourceAsStream("eml/mailCustomDateHeader.eml")),
+                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mailCustomDateHeader.eml")),
             session);
 
         ComposedMessageId customStringHeaderMessageId = messageManager.appendMessage(
             MessageManager.AppendCommand.builder()
-                .build(ClassLoader.getSystemResourceAsStream("eml/mailCustomStringHeader.eml")),
+                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mailCustomStringHeader.eml")),
             session).getId();
 
         elasticSearch.awaitForElasticSearch();

@@ -59,6 +59,7 @@ import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.manager.ManagerTestProvisionner;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -121,7 +122,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
         .bodyStartOctet(BODY_START_OCTET)
         .internalDate(new Date(1433628000000L))
         .size(SIZE)
-        .content(new SharedByteArrayInputStream("message".getBytes(StandardCharsets.UTF_8)))
+        .content(new ByteContent("message".getBytes(StandardCharsets.UTF_8)))
         .properties(new PropertyBuilder())
         .modseq(MOD_SEQ);
 

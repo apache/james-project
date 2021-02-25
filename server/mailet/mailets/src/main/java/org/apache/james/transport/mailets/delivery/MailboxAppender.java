@@ -19,6 +19,9 @@
 
 package org.apache.james.transport.mailets.delivery;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
@@ -31,8 +34,10 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.server.core.MimeMessageInputStream;
+import org.apache.james.server.core.MimeMessageUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,9 +86,29 @@ public class MailboxAppender {
         if (mailbox == null) {
             throw new MessagingException("Mailbox " + path + " for user " + session.getUser().asString() + " was not found on this server.");
         }
-        return mailbox.appendMessage(MessageManager.AppendCommand.builder()
-            .recent()
-            .build(new MimeMessageInputStream(mail)),
+        Content content = new Content() {
+            @Override
+            public InputStream getInputStream() throws IOException {
+                try {
+                    return new MimeMessageInputStream(mail);
+                } catch (MessagingException e) {
+                    throw new IOException(e);
+                }
+            }
+
+            @Override
+            public long size() throws MailboxException {
+                try {
+                    return MimeMessageUtil.getMessageSize(mail);
+                } catch (MessagingException e) {
+                    throw new MailboxException("Cannot compute message size", e);
+                }
+            }
+        };
+        return mailbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .recent()
+                .build(content),
             session);
     }
 

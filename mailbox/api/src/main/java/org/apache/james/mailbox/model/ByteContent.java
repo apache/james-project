@@ -20,13 +20,10 @@
 /**
  * 
  */
-package org.apache.james.mailbox.store.streaming;
+package org.apache.james.mailbox.model;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-
-import org.apache.james.mailbox.model.Content;
 
 public final class ByteContent implements Content {
 
@@ -45,9 +42,7 @@ public final class ByteContent implements Content {
     }
 
     @Override
-    public InputStream getInputStream() throws IOException {
+    public InputStream getInputStream() {
         return new ByteArrayInputStream(contents);
     }
-
-
 }

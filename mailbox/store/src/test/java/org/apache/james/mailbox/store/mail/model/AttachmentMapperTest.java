@@ -40,6 +40,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Mono;
 
@@ -159,7 +160,7 @@ public abstract class AttachmentMapperTest {
         MessageId messageId = generateMessageId();
         AttachmentId attachmentId = attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(ParsedAttachment.builder()
             .contentType("content")
-            .content("".getBytes(StandardCharsets.UTF_8))
+            .content(ByteSource.empty())
             .noName()
             .noCid()
             .inline(false)), messageId)
@@ -173,14 +174,14 @@ public abstract class AttachmentMapperTest {
         MessageId messageId1 = generateMessageId();
         AttachmentId attachmentId1 = attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(ParsedAttachment.builder()
             .contentType("content")
-            .content("".getBytes(StandardCharsets.UTF_8))
+            .content(ByteSource.wrap("".getBytes(StandardCharsets.UTF_8)))
             .noName()
             .noCid()
             .inline(false)), messageId1)
             .get(0).getAttachmentId();
         attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(ParsedAttachment.builder()
             .contentType("content")
-            .content("".getBytes(StandardCharsets.UTF_8))
+            .content(ByteSource.wrap("".getBytes(StandardCharsets.UTF_8)))
             .noName()
             .noCid()
             .inline(false)), generateMessageId())
@@ -218,7 +219,7 @@ public abstract class AttachmentMapperTest {
     void getOwnersShouldReturnEmptyWhenMessageIdReferenced() throws Exception {
         AttachmentId attachmentId = attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(ParsedAttachment.builder()
             .contentType("content")
-            .content("".getBytes(StandardCharsets.UTF_8))
+            .content(ByteSource.wrap("".getBytes(StandardCharsets.UTF_8)))
             .noName()
             .noCid()
             .inline(false)), generateMessageId())

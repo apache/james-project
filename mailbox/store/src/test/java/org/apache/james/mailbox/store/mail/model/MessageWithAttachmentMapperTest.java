@@ -29,10 +29,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.mail.Flags;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -50,6 +50,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteSource;
 
 public abstract class MessageWithAttachmentMapperTest {
 
@@ -82,19 +83,19 @@ public abstract class MessageWithAttachmentMapperTest {
         attachmentsMailbox = createMailbox(MailboxPath.forUser(Username.of("benwa"), "Attachments"));
         ParsedAttachment attachment1 = ParsedAttachment.builder()
             .contentType("content")
-            .content("attachment".getBytes(StandardCharsets.UTF_8))
+            .content(ByteSource.wrap("attachment".getBytes(StandardCharsets.UTF_8)))
             .noName()
             .cid(Cid.from("cid"))
             .inline();
         ParsedAttachment attachment2 = ParsedAttachment.builder()
             .contentType("content")
-            .content("attachment2".getBytes(StandardCharsets.UTF_8))
+            .content(ByteSource.wrap("attachment2".getBytes(StandardCharsets.UTF_8)))
             .noName()
             .cid(Cid.from("cid"))
             .inline();
         ParsedAttachment attachment3 = ParsedAttachment.builder()
             .contentType("content")
-            .content("attachment3".getBytes(StandardCharsets.UTF_8))
+            .content(ByteSource.wrap("attachment3".getBytes(StandardCharsets.UTF_8)))
             .noName()
             .cid(Cid.from("cid"))
             .inline(false);
@@ -193,10 +194,10 @@ public abstract class MessageWithAttachmentMapperTest {
     }
 
     private SimpleMailboxMessage createMessage(Mailbox mailbox, MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments) {
-        return new SimpleMailboxMessage(messageId, new Date(), content.length(), bodyStart, new SharedByteArrayInputStream(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId(), attachments);
+        return new SimpleMailboxMessage(messageId, new Date(), content.length(), bodyStart, new ByteContent(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId(), attachments);
     }
 
     private SimpleMailboxMessage createMessage(Mailbox mailbox, MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder) {
-        return new SimpleMailboxMessage(messageId, new Date(), content.length(), bodyStart, new SharedByteArrayInputStream(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId());
+        return new SimpleMailboxMessage(messageId, new Date(), content.length(), bodyStart, new ByteContent(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId());
     }
 }

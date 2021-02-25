@@ -40,7 +40,9 @@ import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.reactivestreams.Publisher;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
+import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Mono;
 
@@ -208,6 +210,27 @@ public class CachedBlobStore implements BlobStore {
         }
 
         return backend.save(bucketName, inputStream, storagePolicy);
+    }
+
+    @Override
+    public Publisher<BlobId> save(BucketName bucketName, ByteSource byteSource, StoragePolicy storagePolicy) {
+        Preconditions.checkNotNull(byteSource, "ByteSource must not be null");
+
+        if (isAbleToCache(bucketName, storagePolicy)) {
+            return saveInCache(bucketName, byteSource, storagePolicy);
+        }
+
+        return backend.save(bucketName, byteSource, storagePolicy);
+    }
+
+    private Mono<BlobId> saveInCache(BucketName bucketName, ByteSource byteSource, StoragePolicy storagePolicy) {
+        return Mono.from(backend.save(bucketName, byteSource, storagePolicy))
+            .flatMap(Throwing.function(blobId ->
+                ReadAheadInputStream.eager().of(byteSource.openStream())
+                    .length(sizeThresholdInBytes)
+                    .firstBytes
+                    .map(bytes -> Mono.from(cache.cache(blobId, bytes)).thenReturn(blobId))
+                    .orElse(Mono.just(blobId))));
     }
 
     @Override

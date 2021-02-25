@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Header;
 import org.apache.james.mime4j.MimeException;

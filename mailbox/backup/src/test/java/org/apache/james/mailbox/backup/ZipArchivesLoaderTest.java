@@ -33,6 +33,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.backup.zip.ZipArchivesLoader;
 import org.apache.james.mailbox.backup.zip.Zipper;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.model.ByteSourceContent;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -64,7 +65,7 @@ class ZipArchivesLoaderTest implements MailboxMessageFixture {
         Arrays.stream(messages).forEach(Throwing.consumer(message -> {
                 MessageManager.AppendCommand appendCommand = MessageManager.AppendCommand.builder()
                     .withFlags(message.createFlags())
-                    .build(message.getFullContent());
+                    .build(ByteSourceContent.of(message.getFullContent()));
                 mailboxManager.getMailbox(mailboxId, session).appendMessage(appendCommand, session);
             }));
     }

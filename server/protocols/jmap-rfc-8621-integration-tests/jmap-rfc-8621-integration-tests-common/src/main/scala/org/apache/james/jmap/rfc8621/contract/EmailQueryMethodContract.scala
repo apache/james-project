@@ -51,6 +51,7 @@ import org.apache.james.mime4j.field.address.DefaultAddressParser
 import org.apache.james.mime4j.message.{DefaultMessageWriter, MultipartBuilder}
 import org.apache.james.mime4j.stream.RawField
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
+import org.apache.james.util.ClassLoaderUtils
 import org.apache.james.utils.DataProbeImpl
 import org.awaitility.Awaitility
 import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
@@ -156,7 +157,7 @@ trait EmailQueryMethodContract {
 
     val messageId2: MessageId = mailboxProbe
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
-        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
     val request =
@@ -798,7 +799,7 @@ trait EmailQueryMethodContract {
     val messageId1: MessageId = sendMessageToBobInbox(server, message, requestDate)
     val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, mailboxPath, AppendCommand.from(
-        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
     val request =
@@ -845,7 +846,7 @@ trait EmailQueryMethodContract {
     sendMessageToBobInbox(server, message, requestDate)
     val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
-        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
     val request =
@@ -892,7 +893,7 @@ trait EmailQueryMethodContract {
     sendMessageToBobInbox(server, message, requestDate)
     val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
-        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
     val request =
@@ -1324,7 +1325,7 @@ trait EmailQueryMethodContract {
 
     val messageId2: MessageId = mailboxProbe
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
-        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
     val request =
@@ -1390,7 +1391,7 @@ trait EmailQueryMethodContract {
     val messageId2: MessageId = mailboxProbe
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
           .withInternalDate(beforeRequestDate)
-        .build(ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+        .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
     val messageId3: MessageId = mailboxProbe
@@ -1403,7 +1404,7 @@ trait EmailQueryMethodContract {
     val messageId4: MessageId = mailboxProbe
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
         .withInternalDate(afterRequestDate)
-        .build(ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+        .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
     val request =
@@ -5274,7 +5275,7 @@ trait EmailQueryMethodContract {
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
     server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
-        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
     val request =
@@ -5728,7 +5729,7 @@ trait EmailQueryMethodContract {
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(inbox(BOB))
     server.getProbe(classOf[MailboxProbeImpl])
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(
-        ClassLoader.getSystemResourceAsStream("eml/multipart_simple.eml")))
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_simple.eml")))
       .getMessageId
 
     val request =

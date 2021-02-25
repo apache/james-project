@@ -48,12 +48,12 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.T
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.TEXTUAL_LINE_COUNT;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
@@ -65,6 +65,7 @@ import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Attachments;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
@@ -83,6 +84,7 @@ import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteSource;
 import com.google.common.primitives.Bytes;
 
 import reactor.core.publisher.Mono;
@@ -187,10 +189,24 @@ public class CassandraMessageDAOV3 {
     private Mono<Tuple2<BlobId, BlobId>> saveContent(MailboxMessage message) throws MailboxException {
         try {
             byte[] headerContent = IOUtils.toByteArray(message.getHeaderContent());
-            byte[] bodyContent = IOUtils.toByteArray(message.getBodyContent());
+            ByteSource bodyByteSource = new ByteSource() {
+                @Override
+                public InputStream openStream() {
+                    try {
+                        return message.getBodyContent();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
 
-            Mono<BlobId> bodyFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), bodyContent, LOW_COST));
+                @Override
+                public long size() {
+                    return message.getBodyOctets();
+                }
+            };
+
             Mono<BlobId> headerFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), headerContent, SIZE_BASED));
+            Mono<BlobId> bodyFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), bodyByteSource, LOW_COST));
 
             return headerFuture.zipWith(bodyFuture);
         } catch (IOException e) {
@@ -293,7 +309,7 @@ public class CassandraMessageDAOV3 {
                 row.getTimestamp(INTERNAL_DATE),
                 row.getLong(FULL_CONTENT_OCTETS),
                 row.getInt(BODY_START_OCTET),
-                new SharedByteArrayInputStream(content),
+                new ByteContent(content),
                 getProperties(row),
                 getAttachments(row).collect(Guavate.toImmutableList()),
                 headerId,

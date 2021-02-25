@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -139,12 +140,17 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     private Mono<MessageAttachmentMetadata> storeAttachmentAsync(ParsedAttachment parsedAttachment, MessageId ownerMessageId) {
-        AttachmentId attachmentId = AttachmentId.random();
-        byte[] content = parsedAttachment.getContent();
-        return Mono.from(blobStore.save(blobStore.getDefaultBucketName(), content, LOW_COST))
-            .map(blobId -> new DAOAttachment(attachmentId, blobId, parsedAttachment.getContentType(), content.length))
-            .flatMap(daoAttachment -> storeAttachmentWithIndex(daoAttachment, ownerMessageId))
-            .then(Mono.defer(() -> Mono.just(parsedAttachment.asMessageAttachment(attachmentId, content.length))));
+        try {
+            AttachmentId attachmentId = AttachmentId.random();
+            ByteSource content = parsedAttachment.getContent();
+            long size = content.size();
+            return Mono.from(blobStore.save(blobStore.getDefaultBucketName(), content, LOW_COST))
+                .map(blobId -> new DAOAttachment(attachmentId, blobId, parsedAttachment.getContentType(), size))
+                .flatMap(daoAttachment -> storeAttachmentWithIndex(daoAttachment, ownerMessageId))
+                .then(Mono.defer(() -> Mono.just(parsedAttachment.asMessageAttachment(attachmentId, size))));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Mono<Void> storeAttachmentWithIndex(DAOAttachment daoAttachment, MessageId ownerMessageId) {

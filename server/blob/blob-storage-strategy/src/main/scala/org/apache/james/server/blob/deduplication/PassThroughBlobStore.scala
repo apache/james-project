@@ -22,6 +22,7 @@ package org.apache.james.server.blob.deduplication
 import java.io.InputStream
 
 import com.google.common.base.Preconditions
+import com.google.common.io.ByteSource
 import javax.inject.{Inject, Named}
 import org.apache.james.blob.api.{BlobId, BlobStore, BlobStoreDAO, BucketName}
 import org.reactivestreams.Publisher
@@ -43,6 +44,15 @@ class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
   }
 
   override def save(bucketName: BucketName, data: InputStream, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
+    Preconditions.checkNotNull(bucketName)
+    Preconditions.checkNotNull(data)
+    val blobId = blobIdFactory.randomId()
+
+    SMono(blobStoreDAO.save(bucketName, blobId, data))
+      .`then`(SMono.just(blobId))
+  }
+
+  override def save(bucketName: BucketName, data: ByteSource, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
     Preconditions.checkNotNull(bucketName)
     Preconditions.checkNotNull(data)
     val blobId = blobIdFactory.randomId()

@@ -34,7 +34,9 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.lifecycle.api.LifecycleUtil;
+import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.base.RFC2822Headers;
 import org.junit.jupiter.api.AfterEach;
@@ -256,7 +258,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
     public void testSizeModifiedBodyWithoutSave() throws MessagingException {
         String newBody = "This is the new body of the message";
         mw.setText(newBody);
-        assertThat(mw.getSize()).isEqualTo(body.length());
+        assertThat(mw.getSize()).isEqualTo(-1);
     }
 
     @Test
@@ -264,7 +266,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         String newBody = "This is the new body of the message";
         mw.setText(newBody);
         mw.saveChanges();
-        assertThat(mw.getSize()).isEqualTo(body.length());
+        assertThat(mw.getSize()).isEqualTo(-1);
     }
     
     @Test
@@ -291,5 +293,25 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
 
         assertThat(mimeMessageWrapper.getMessageID())
             .isEqualTo(messageId);
+    }
+
+    @Test
+    public void getMessageSizeShouldBeAccurateWhenHeadersAreModified() throws Exception {
+        MimeMessageWrapper wrapper = new MimeMessageWrapper(new MimeMessageInputStreamSource(MailImpl.getId(),
+            ClassLoaderUtils.getSystemResourceAsSharedStream("JAMES-1593.eml")));
+        wrapper.setHeader("header", "vss");
+
+        assertThat(wrapper.getMessageSize()).isEqualTo(
+            IOUtils.consume(wrapper.getMessageInputStream()));
+    }
+
+    @Test
+    public void getMessageSizeShouldBeAccurateWhenHeadersAreModifiedAndOtherEncoding() throws Exception {
+        MimeMessageWrapper wrapper = new MimeMessageWrapper(new MimeMessageInputStreamSource(MailImpl.getId(),
+            ClassLoaderUtils.getSystemResourceAsSharedStream("mail-containing-unicode-characters.eml")));
+        wrapper.setHeader("header", "vss");
+
+        assertThat(wrapper.getMessageSize()).isEqualTo(
+            IOUtils.consume(wrapper.getMessageInputStream()));
     }
 }

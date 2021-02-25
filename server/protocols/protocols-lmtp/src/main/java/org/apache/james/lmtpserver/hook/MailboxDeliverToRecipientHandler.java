@@ -20,6 +20,7 @@
 package org.apache.james.lmtpserver.hook;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -31,6 +32,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.protocols.lmtp.hook.DeliverToRecipientHook;
@@ -80,7 +82,17 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
             mailboxManager.getMailbox(MailboxPath.inbox(username), mailboxSession)
                 .appendMessage(MessageManager.AppendCommand.builder()
                     .recent()
-                    .build(envelope.getMessageInputStream()),
+                    .build(new Content() {
+                        @Override
+                        public InputStream getInputStream() throws IOException {
+                            return envelope.getMessageInputStream();
+                        }
+
+                        @Override
+                        public long size() {
+                            return envelope.getSize();
+                        }
+                    }),
                     mailboxSession);
             mailboxManager.endProcessingRequest(mailboxSession);
             return HookResult.builder()
@@ -88,7 +100,7 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
                 .smtpReturnCode(SMTPRetCode.MAIL_OK)
                 .smtpDescription(DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received")
                 .build();
-        } catch (IOException | MailboxException | UsersRepositoryException e) {
+        } catch (MailboxException | UsersRepositoryException e) {
             LOGGER.error("Unexpected error handling DATA stream", e);
             return HookResult.builder()
                 .hookReturnCode(HookReturnCode.denySoft())

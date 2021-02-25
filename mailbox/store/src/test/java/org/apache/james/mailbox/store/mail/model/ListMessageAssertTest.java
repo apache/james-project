@@ -28,11 +28,11 @@ import java.util.Date;
 import java.util.List;
 
 import javax.mail.Flags;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -90,7 +90,7 @@ class ListMessageAssertTest {
     private MailboxMessage createMailboxMessage(MailboxId mailboxId, MessageId messageId, MessageUid uid, Date internalDate,
                                                 String content, int bodyStart, PropertyBuilder propertyBuilder) {
         SimpleMailboxMessage simpleMailboxMessage = new SimpleMailboxMessage(messageId, internalDate, content.length(),
-            bodyStart, new SharedByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)), new Flags(), propertyBuilder.build(), mailboxId);
+            bodyStart, new ByteContent(content.getBytes(StandardCharsets.UTF_8)), new Flags(), propertyBuilder.build(), mailboxId);
 
         simpleMailboxMessage.setUid(uid);
         simpleMailboxMessage.setModSeq(ModSeq.first());
@@ -103,7 +103,7 @@ class ListMessageAssertTest {
 
     private MailboxMessage createMessage(Mailbox mailbox, MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder) {
         SimpleMailboxMessage simpleMailboxMessage = new SimpleMailboxMessage(messageId, INTERNAL_DATE, content.length(),
-            bodyStart, new SharedByteArrayInputStream(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId());
+            bodyStart, new ByteContent(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId());
 
         simpleMailboxMessage.setUid(MESSAGE_UID);
         return simpleMailboxMessage;

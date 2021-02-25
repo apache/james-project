@@ -25,12 +25,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import javax.mail.Flags;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
@@ -51,7 +51,7 @@ public interface ListeningMessageSearchIndexContract {
         .bodyStartOctet(BODY_START_OCTET)
         .internalDate(new Date(1433628000000L))
         .size(SIZE)
-        .content(new SharedByteArrayInputStream("message".getBytes(StandardCharsets.UTF_8)))
+        .content(new ByteContent("message".getBytes(StandardCharsets.UTF_8)))
         .properties(new PropertyBuilder())
         .modseq(MOD_SEQ);
     

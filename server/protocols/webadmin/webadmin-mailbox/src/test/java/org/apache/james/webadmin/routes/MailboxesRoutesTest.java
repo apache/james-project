@@ -40,7 +40,6 @@ import java.util.Date;
 import java.util.List;
 
 import javax.mail.Flags;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.backends.es.DockerElasticSearchExtension;
 import org.apache.james.backends.es.ElasticSearchIndexer;
@@ -65,6 +64,7 @@ import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.Mailbox;
@@ -633,7 +633,7 @@ class MailboxesRoutesTest {
                 SimpleMailboxMessage message = SimpleMailboxMessage.builder()
                     .messageId(InMemoryMessageId.of(42L))
                     .uid(uid)
-                    .content(new SharedByteArrayInputStream(content))
+                    .content(new ByteContent(content))
                     .size(content.length)
                     .internalDate(new Date(ZonedDateTime.parse("2018-02-15T15:54:02Z").toEpochSecond()))
                     .bodyStartOctet(0)
@@ -1052,7 +1052,7 @@ class MailboxesRoutesTest {
                 SimpleMailboxMessage message = SimpleMailboxMessage.builder()
                     .messageId(InMemoryMessageId.of(42L))
                     .uid(uid)
-                    .content(new SharedByteArrayInputStream(content))
+                    .content(new ByteContent(content))
                     .size(content.length)
                     .internalDate(new Date(ZonedDateTime.parse("2018-02-15T15:54:02Z").toEpochSecond()))
                     .bodyStartOctet(0)

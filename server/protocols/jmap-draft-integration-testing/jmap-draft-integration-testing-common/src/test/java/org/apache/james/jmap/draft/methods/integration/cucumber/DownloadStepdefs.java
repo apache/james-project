@@ -46,11 +46,14 @@ import org.apache.james.jmap.draft.model.AttachmentAccessToken;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.ByteContent;
+import org.apache.james.mailbox.model.ByteSourceContent;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mime4j.codec.DecoderUtil;
+import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.io.InputStreamUtils;
 
 import com.google.common.base.CharMatcher;
@@ -102,7 +105,7 @@ public class DownloadStepdefs {
         MailboxPath mailboxPath = MailboxPath.forUser(Username.of(user), mailbox);
 
         ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
-            AppendCommand.from(ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml")));
+            AppendCommand.from(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/oneAttachment.eml")));
 
         inputToMessageId.put(messageId, composedMessageId.getMessageId());
     }
@@ -112,7 +115,7 @@ public class DownloadStepdefs {
         MailboxPath mailboxPath = MailboxPath.forUser(Username.of(user), mailbox);
 
         ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
-            AppendCommand.from(new ByteArrayInputStream(
+            AppendCommand.from(new ByteContent(
                 Strings.repeat("header: 0123456789\r\n", 128 * 1024)
                     .getBytes(StandardCharsets.UTF_8))));
 
@@ -124,7 +127,7 @@ public class DownloadStepdefs {
         MailboxPath mailboxPath = MailboxPath.forUser(Username.of(user), mailbox);
 
         ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
-            AppendCommand.from(ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml")));
+            AppendCommand.from(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/oneAttachment.eml")));
 
         retrieveAndSaveAttachmentDetails(user, messageId, attachmentId, composedMessageId);
     }
@@ -134,11 +137,12 @@ public class DownloadStepdefs {
         MailboxPath mailboxPath = MailboxPath.forUser(Username.of(user), mailbox);
 
         InputStream message = InputStreamUtils.concat(
-            ClassLoader.getSystemResourceAsStream("eml/oneAttachment-part1.eml"),
+            ClassLoaderUtils.getSystemResourceAsSharedStream("eml/oneAttachment-part1.eml"),
             new ByteArrayInputStream(contentType.getBytes(StandardCharsets.UTF_8)),
-            ClassLoader.getSystemResourceAsStream("eml/oneAttachment-part2.eml"));
+            ClassLoaderUtils.getSystemResourceAsSharedStream("eml/oneAttachment-part2.eml"));
 
-        ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath, AppendCommand.from(message));
+        ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
+            AppendCommand.from(ByteSourceContent.of(message)));
 
         retrieveAndSaveAttachmentDetails(user, messageId, attachmentId, composedMessageId);
     }
@@ -148,7 +152,7 @@ public class DownloadStepdefs {
         MailboxPath mailboxPath = MailboxPath.forUser(Username.of(user), mailbox);
 
         ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
-            AppendCommand.from(ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml")));
+            AppendCommand.from(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/oneInlinedImage.eml")));
 
         retrieveAndSaveAttachmentDetails(user, messageId, attachmentId, composedMessageId);
     }
@@ -168,7 +172,7 @@ public class DownloadStepdefs {
         MailboxPath mailboxPath = MailboxPath.forUser(Username.of(user), mailbox);
 
         ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
-            AppendCommand.from(ClassLoader.getSystemResourceAsStream("eml/sameInlinedImages.eml")));
+            AppendCommand.from(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/sameInlinedImages.eml")));
 
         retrieveAndSaveAttachmentDetails(user, messageName, attachmentId, composedMessageId);
     }

@@ -1,0 +1,28 @@
+Return-Path: <bob@james.org>
+MIME-Version: 1.0
+Delivered-To: bob@james.org
+Received: from 10.233.68.83 (EHLO incoming.james.org) ([10.233.68.83])
+          by james-0 (JAMES SMTP Server ) with ESMTP ID -1705393842
+          for <bob@james.james.org>;
+          Wed, 22 Jan 2020 04:11:54 +0000 (UTC)
+Received: from smtp.james.org (unknown [10.233.65.0])
+	by incoming.james.org (Postfix) with ESMTPS id CCCA943
+	for <bob@james.james.org>; Wed, 22 Jan 2020 04:11:54 +0000 (UTC)
+Received: from [10.116.29.102] (unknown [1.54.162.156])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.james.org (Postfix) with ESMTPSA id 2B7D13F393
+	for <bob@james.org>; Wed, 22 Jan 2020 05:11:53 +0100 (CET)
+To: bob@james.org
+X-LINAGORA-Copy-Delivery-Done: 1
+From: Uncle Bob <bob@james.org>
+Subject: quoted
+Message-ID: <f4d046a8-e563-1e92-dbd9-c5038603e3a2@james.org>
+Date: Wed, 22 Jan 2020 11:11:38 +0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+
+Unicode €uro symbol.

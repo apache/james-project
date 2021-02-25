@@ -32,7 +32,6 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
-import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
@@ -48,6 +47,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
@@ -453,7 +453,7 @@ class UserQuotaRoutesTest {
 
         default MessageManager.AppendCommand withSize(int size) {
             byte[] bytes = Strings.repeat("a", size).getBytes(StandardCharsets.UTF_8);
-            return MessageManager.AppendCommand.from(new ByteArrayInputStream(bytes));
+            return MessageManager.AppendCommand.from(new ByteContent(bytes));
         }
     }
 

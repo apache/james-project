@@ -34,6 +34,7 @@ import org.apache.james.mailbox.backup.ZipAssert.EntryChecks;
 import org.apache.james.mailbox.backup.zip.ZipArchivesLoader;
 import org.apache.james.mailbox.backup.zip.Zipper;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.model.ByteSourceContent;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -237,11 +238,15 @@ class DefaultMailboxBackupTest implements MailboxMessageFixture {
     }
 
     private MessageManager.AppendCommand getMessage1AppendCommand() throws IOException {
-        return MessageManager.AppendCommand.builder().withFlags(flags1).build(MESSAGE_1.getFullContent());
+        return MessageManager.AppendCommand.builder()
+            .withFlags(flags1)
+            .build(ByteSourceContent.of(MESSAGE_1.getFullContent()));
     }
 
     private MessageManager.AppendCommand getMessage1OtherUserAppendCommand() throws IOException {
-        return MessageManager.AppendCommand.builder().withFlags(flags1).build(MESSAGE_1_OTHER_USER.getFullContent());
+        return MessageManager.AppendCommand.builder()
+            .withFlags(flags1)
+            .build(ByteSourceContent.of(MESSAGE_1_OTHER_USER.getFullContent()));
     }
 
 }

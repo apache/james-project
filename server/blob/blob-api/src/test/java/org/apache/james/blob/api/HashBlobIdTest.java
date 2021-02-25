@@ -61,7 +61,7 @@ public class HashBlobIdTest {
 
     @Test
     public void forPayloadShouldThrowOnNull() {
-        assertThatThrownBy(() -> BLOB_ID_FACTORY.forPayload(null))
+        assertThatThrownBy(() -> BLOB_ID_FACTORY.forPayload((byte[]) null))
             .isInstanceOf(IllegalArgumentException.class);
     }
 

@@ -22,6 +22,7 @@ package org.apache.james.modules;
 import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
 import static org.apache.james.mailbox.store.MailboxReactorUtils.block;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
@@ -36,6 +37,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.ByteSourceContent;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
@@ -147,7 +149,18 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
 
         MailboxSession mailboxSession = mailboxManager.createSystemSession(Username.of(username));
         MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
-        return messageManager.appendMessage(message, internalDate, mailboxSession, isRecent, flags).getId();
+        try (ByteSourceContent content = ByteSourceContent.of(message)) {
+            return messageManager.appendMessage(
+                MessageManager.AppendCommand.builder()
+                    .withInternalDate(internalDate)
+                    .isRecent(isRecent)
+                    .withFlags(flags)
+                    .build(content),
+                mailboxSession)
+                .getId();
+        } catch (IOException e) {
+            throw new MailboxException("Failed appending message", e);
+        }
     }
 
     public ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, MessageManager.AppendCommand appendCommand)
