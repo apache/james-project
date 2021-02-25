@@ -48,6 +48,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.T
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.TEXTUAL_LINE_COUNT;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -83,6 +84,7 @@ import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteSource;
 import com.google.common.primitives.Bytes;
 
 import reactor.core.publisher.Mono;
@@ -187,10 +189,24 @@ public class CassandraMessageDAOV3 {
     private Mono<Tuple2<BlobId, BlobId>> saveContent(MailboxMessage message) throws MailboxException {
         try {
             byte[] headerContent = IOUtils.toByteArray(message.getHeaderContent());
-            byte[] bodyContent = IOUtils.toByteArray(message.getBodyContent());
+            ByteSource bodyByteSource = new ByteSource() {
+                @Override
+                public InputStream openStream() {
+                    try {
+                        return message.getBodyContent();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
 
-            Mono<BlobId> bodyFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), bodyContent, LOW_COST));
+                @Override
+                public long size() {
+                    return message.getBodyOctets();
+                }
+            };
+
             Mono<BlobId> headerFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), headerContent, SIZE_BASED));
+            Mono<BlobId> bodyFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), bodyByteSource, LOW_COST));
 
             return headerFuture.zipWith(bodyFuture);
         } catch (IOException e) {
