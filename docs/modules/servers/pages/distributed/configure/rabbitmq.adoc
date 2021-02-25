@@ -46,8 +46,6 @@ Optional integer, defaults to 50
 | Configure the size of the channel pool.
 Optional integer, defaults to 3
 
-
-
 | ssl.enabled
 | Is using ssl enabled
 Optional boolean, defaults to false

@@ -77,6 +77,39 @@
           <dt><strong>channel.pool.size</strong></dt>
           <dd>Configure the size of the channel pool.
               Optional integer, defaults to 3</dd>
+
+          <dt><strong>ssl.enabled</strong></dt>
+          <dd>Is using ssl enabled
+              Optional boolean, defaults to false</dd>
+
+          <dt><strong>ssl.management.enabled</strong></dt>
+          <dd>Is using ssl on management api enabled
+              Optional boolean, defaults to false</dd>
+
+          <dt><strong>ssl.validation.strategy</strong></dt>
+          <dd>Configure the validation strategy used for rabbitmq connections. Possible values are default, ignore and override.
+              Optional string, defaults to default</dd>
+
+          <dt><strong>ssl.truststore</strong></dt>
+          <dd>Points to the truststore (PKCS12) used for verifying rabbitmq connection. If configured then "ssl.truststore.password" must also be configured,
+              Optional string, defaults to systemwide truststore. "ssl.validation.strategy: override" must be configured if you want to use this</dd>
+
+          <dt><strong>ssl.truststore.password</strong></dt>
+          <dd>Configure the truststore password. If configured then "ssl.truststore" must also be configured,
+              Optional string, defaults to empty string. "ssl.validation.strategy: override" must be configured if you want to use this</dd>
+
+          <dt><strong>ssl.hostname.verifier</strong></dt>
+          <dd>Configure host name verification. Possible options are default and accept_any_hostname
+              Optional string, defaults to default</dd>
+
+
+          <dt><strong>ssl.keystore</strong></dt>
+          <dd>Points to the keystore(PKCS12) used for verifying rabbitmq connection. If configured then "ssl.keystore.password" must also be configured,
+              Optional string, defaults to empty string</dd>
+
+          <dt><strong>ssl.keystore.password</strong></dt>
+          <dd>Configure the keystore password. If configured then "ssl.keystore" must also be configured,
+              Optional string, defaults to empty string</dd>
       </dl>
   </section>
 
