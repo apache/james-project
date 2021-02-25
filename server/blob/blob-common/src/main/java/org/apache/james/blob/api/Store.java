@@ -19,11 +19,26 @@
 
 package org.apache.james.blob.api;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.blob.api.BlobStore.StoragePolicy;
 import org.reactivestreams.Publisher;
+
+import com.google.common.base.Optional;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.io.ByteProcessor;
+import com.google.common.io.ByteSink;
+import com.google.common.io.ByteSource;
+import com.google.common.io.CharSource;
+import com.google.common.io.FileBackedOutputStream;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -31,6 +46,7 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 
 public interface Store<T, I> {
+    int FILE_THRESHOLD = 1024 * 100;
 
     Mono<I> save(T t);
 
@@ -42,31 +58,19 @@ public interface Store<T, I> {
 
         public static final int DEFAULT_CONCURRENCY = 16;
 
+        @FunctionalInterface
         public interface ValueToSave {
             Mono<BlobId> saveIn(BucketName bucketName, BlobStore blobStore);
         }
 
-        public static class BytesToSave implements ValueToSave {
-            private final byte[] bytes;
-            private final BlobStore.StoragePolicy storagePolicy;
-
-            public BytesToSave(byte[] bytes, BlobStore.StoragePolicy storagePolicy) {
-                this.bytes = bytes;
-                this.storagePolicy = storagePolicy;
-            }
-
-            @Override
-            public Mono<BlobId> saveIn(BucketName bucketName, BlobStore blobStore) {
-                return Mono.from(blobStore.save(bucketName, bytes, storagePolicy));
-            }
-        }
-
+        @FunctionalInterface
         public interface Encoder<T> {
             Stream<Pair<BlobType, ValueToSave>> encode(T t);
         }
 
+        @FunctionalInterface
         public interface Decoder<T> {
-            T decode(Stream<Pair<BlobType, byte[]>> streams);
+            T decode(Stream<Pair<BlobType, CloseableByteSource>> streams);
         }
 
         private final BlobPartsId.Factory<I> idFactory;
@@ -98,13 +102,20 @@ public interface Store<T, I> {
         public Mono<T> read(I blobIds) {
             return Flux.fromIterable(blobIds.asMap().entrySet())
                 .publishOn(Schedulers.elastic())
-                .flatMapSequential(
-                    entry -> Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), entry.getValue(), entry.getKey().getStoragePolicy()))
-                        .zipWith(Mono.just(entry.getKey())))
-                .map(entry -> Pair.of(entry.getT2(), entry.getT1()))
+                .map(entry ->  Pair.of(entry.getKey(), readByteSource(blobStore.getDefaultBucketName(), entry.getValue(), entry.getKey().getStoragePolicy())))
                 .collectList()
                 .map(Collection::stream)
                 .map(decoder::decode);
+        }
+
+        private CloseableByteSource readByteSource(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
+            FileBackedOutputStream out = new FileBackedOutputStream(FILE_THRESHOLD);
+            try {
+                blobStore.read(bucketName, blobId, storagePolicy).transferTo(out);
+                return new DelegateCloseableByteSource(out.asByteSource(), out::reset);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override
@@ -114,4 +125,89 @@ public interface Store<T, I> {
                 .then();
         }
     }
+
+    abstract class CloseableByteSource extends ByteSource implements Closeable {
+
+    }
+
+    class DelegateCloseableByteSource extends CloseableByteSource {
+        private final ByteSource wrapped;
+        private final Closeable closeable;
+
+        DelegateCloseableByteSource(ByteSource wrapped, Closeable closeable) {
+            this.wrapped = wrapped;
+            this.closeable = closeable;
+        }
+
+        @Override
+        public InputStream openStream() throws IOException {
+            return wrapped.openStream();
+        }
+
+        @Override
+        public CharSource asCharSource(Charset charset) {
+            return wrapped.asCharSource(charset);
+        }
+
+        @Override
+        public InputStream openBufferedStream() throws IOException {
+            return wrapped.openBufferedStream();
+        }
+
+        @Override
+        public ByteSource slice(long offset, long length) {
+            return wrapped.slice(offset, length);
+        }
+
+        @Override
+        public boolean isEmpty() throws IOException {
+            return wrapped.isEmpty();
+        }
+
+        @Override
+        public Optional<Long> sizeIfKnown() {
+            return wrapped.sizeIfKnown();
+        }
+
+        @Override
+        public long size() throws IOException {
+            return wrapped.size();
+        }
+
+        @Override
+        public long copyTo(OutputStream output) throws IOException {
+            return wrapped.copyTo(output);
+        }
+
+        @Override
+        public long copyTo(ByteSink sink) throws IOException {
+            return wrapped.copyTo(sink);
+        }
+
+        @Override
+        public byte[] read() throws IOException {
+            return wrapped.read();
+        }
+
+        @Override
+        public <T> T read(ByteProcessor<T> processor) throws IOException {
+            return wrapped.read(processor);
+        }
+
+        @Override
+        public HashCode hash(HashFunction hashFunction) throws IOException {
+            return wrapped.hash(hashFunction);
+        }
+
+        @Override
+        public boolean contentEquals(ByteSource other) throws IOException {
+            return wrapped.contentEquals(other);
+        }
+
+        @Override
+        public void close() throws IOException {
+            closeable.close();
+        }
+    }
+
 }
