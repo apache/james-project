@@ -280,6 +280,7 @@ public class RabbitMQConfiguration {
     }
 
     private static String USE_SSL = "ssl.enabled";
+    private static String USE_SSL_MANAGEMENT = "ssl.management.enabled";
 
     private static String SSL_TRUST_STORE_PATH = "ssl.truststore";
     private static String SSL_TRUST_STORE_PASSWORD = "ssl.truststore.password";
@@ -374,6 +375,7 @@ public class RabbitMQConfiguration {
         private Optional<Integer> shutdownTimeoutInMs;
         private Optional<Integer> networkRecoveryIntervalInMs;
         private Optional<Boolean> useSsl;
+        private Optional<Boolean> useSslManagement;
         private Optional<SSLConfiguration> sslConfiguration;
 
         private Builder(URI amqpUri, URI managementUri, ManagementCredentials managementCredentials) {
@@ -388,6 +390,7 @@ public class RabbitMQConfiguration {
             this.shutdownTimeoutInMs = Optional.empty();
             this.networkRecoveryIntervalInMs = Optional.empty();
             this.useSsl = Optional.empty();
+            this.useSslManagement = Optional.empty();
             this.sslConfiguration = Optional.empty();
         }
 
@@ -431,6 +434,11 @@ public class RabbitMQConfiguration {
             return this;
         }
 
+        public Builder useSslManagement(Boolean useSslForManagement) {
+            this.useSslManagement = Optional.of(useSslForManagement);
+            return this;
+        }
+
         public Builder sslConfiguration(SSLConfiguration sslConfiguration) {
             this.sslConfiguration = Optional.of(sslConfiguration);
             return this;
@@ -451,6 +459,7 @@ public class RabbitMQConfiguration {
                     shutdownTimeoutInMs.orElse(DEFAULT_SHUTDOWN_TIMEOUT),
                     networkRecoveryIntervalInMs.orElse(DEFAULT_NETWORK_RECOVERY_INTERVAL),
                     useSsl.orElse(false),
+                    useSslManagement.orElse(false),
                     sslConfiguration.orElse(defaultBehavior())
                 );
         }
@@ -474,6 +483,7 @@ public class RabbitMQConfiguration {
         URI managementUri = checkURI(managementUriAsString);
 
         Boolean useSsl = configuration.getBoolean(USE_SSL, false);
+        Boolean useSslForManagement = configuration.getBoolean(USE_SSL_MANAGEMENT, false);
 
         ManagementCredentials managementCredentials = ManagementCredentials.from(configuration);
         return builder()
@@ -481,6 +491,7 @@ public class RabbitMQConfiguration {
             .managementUri(managementUri)
             .managementCredentials(managementCredentials)
             .useSsl(useSsl)
+            .useSslManagement(useSslForManagement)
             .sslConfiguration(sslTrustConfiguration(configuration))
             .sslConfiguration(sslTrustConfiguration(configuration))
             .build();
@@ -544,13 +555,14 @@ public class RabbitMQConfiguration {
     private final int shutdownTimeoutInMs;
     private final int networkRecoveryIntervalInMs;
     private final Boolean useSsl;
+    private final Boolean useSslManagement;
     private final SSLConfiguration sslConfiguration;
 
 
     private final ManagementCredentials managementCredentials;
 
     private RabbitMQConfiguration(URI uri, URI managementUri, ManagementCredentials managementCredentials, int maxRetries, int minDelayInMs,
-                                  int connectionTimeoutInMs, int channelRpcTimeoutInMs, int handshakeTimeoutInMs, int shutdownTimeoutInMs, int networkRecoveryIntervalInMs, Boolean useSsl, SSLConfiguration sslConfiguration) {
+                                  int connectionTimeoutInMs, int channelRpcTimeoutInMs, int handshakeTimeoutInMs, int shutdownTimeoutInMs, int networkRecoveryIntervalInMs, Boolean useSsl, Boolean useSslManagement, SSLConfiguration sslConfiguration) {
         this.uri = uri;
         this.managementUri = managementUri;
         this.managementCredentials = managementCredentials;
@@ -562,6 +574,7 @@ public class RabbitMQConfiguration {
         this.shutdownTimeoutInMs = shutdownTimeoutInMs;
         this.networkRecoveryIntervalInMs = networkRecoveryIntervalInMs;
         this.useSsl = useSsl;
+        this.useSslManagement = useSslManagement;
         this.sslConfiguration = sslConfiguration;
     }
 
@@ -609,6 +622,10 @@ public class RabbitMQConfiguration {
         return useSsl;
     }
 
+    public Boolean useSslManagement() {
+        return useSslManagement;
+    }
+
     public SSLConfiguration getSslConfiguration() {
         return sslConfiguration;
     }
@@ -629,6 +646,7 @@ public class RabbitMQConfiguration {
                 && Objects.equals(this.networkRecoveryIntervalInMs, that.networkRecoveryIntervalInMs)
                 && Objects.equals(this.managementCredentials, that.managementCredentials)
                 && Objects.equals(this.useSsl, that.useSsl)
+                && Objects.equals(this.useSslManagement, that.useSslManagement)
                 && Objects.equals(this.sslConfiguration, that.sslConfiguration
             );
         }
@@ -638,6 +656,6 @@ public class RabbitMQConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hash(uri, managementUri, maxRetries, minDelayInMs, connectionTimeoutInMs,
-            channelRpcTimeoutInMs, handshakeTimeoutInMs, shutdownTimeoutInMs, networkRecoveryIntervalInMs, managementCredentials, useSsl, sslConfiguration);
+            channelRpcTimeoutInMs, handshakeTimeoutInMs, shutdownTimeoutInMs, networkRecoveryIntervalInMs, managementCredentials, useSsl, useSslManagement, sslConfiguration);
     }
 }
