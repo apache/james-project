@@ -61,7 +61,7 @@ Optional boolean, defaults to false
 Optional string, defaults to default
 
 | ssl.truststore
-| Points to the truststore used for verifying rabbitmq connection. If configured then "ssl.truststore.password" must also be configured,
+| Points to the truststore (PKCS12) used for verifying rabbitmq connection. If configured then "ssl.truststore.password" must also be configured,
 Optional string, defaults to systemwide truststore. "ssl.validation.strategy: override" must be configured if you want to use this
 
 | ssl.truststore.password
@@ -73,7 +73,7 @@ Optional string, defaults to empty string. "ssl.validation.strategy: override" m
 Optional string, defaults to default
 
 | ssl.keystore
-| Points to the keystore used for verifying rabbitmq connection. If configured then "ssl.keystore.password" must also be configured,
+| Points to the keystore(PKCS12) used for verifying rabbitmq connection. If configured then "ssl.keystore.password" must also be configured,
 Optional string, defaults to empty string
 
 | ssl.keystore.password
