@@ -21,10 +21,10 @@ package org.apache.james.server.blob.deduplication
 
 import java.io.InputStream
 import java.util.concurrent.Callable
+
 import com.google.common.base.Preconditions
 import com.google.common.hash.{Hashing, HashingInputStream}
 import com.google.common.io.{ByteSource, FileBackedOutputStream}
-
 import javax.inject.{Inject, Named}
 import org.apache.commons.io.IOUtils
 import org.apache.james.blob.api.{BlobId, BlobStore, BlobStoreDAO, BucketName}
@@ -46,6 +46,16 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
                                        blobIdFactory: BlobId.Factory) extends BlobStore {
 
   override def save(bucketName: BucketName, data: Array[Byte], storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
+    Preconditions.checkNotNull(bucketName)
+    Preconditions.checkNotNull(data)
+
+    val blobId = blobIdFactory.forPayload(data)
+
+    SMono(blobStoreDAO.save(bucketName, blobId, data))
+      .`then`(SMono.just(blobId))
+  }
+
+  override def save(bucketName: BucketName, data: ByteSource, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
     Preconditions.checkNotNull(bucketName)
     Preconditions.checkNotNull(data)
 

@@ -36,6 +36,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import com.google.common.base.Strings;
+import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Mono;
 
@@ -80,6 +81,16 @@ public interface BlobStoreContract extends BucketBlobStoreContract {
 
     @ParameterizedTest
     @MethodSource("storagePolicies")
+    default void saveShouldThrowWhenNullByteSource(BlobStore.StoragePolicy storagePolicy) {
+        BlobStore store = testee();
+        BucketName defaultBucketName = store.getDefaultBucketName();
+
+        assertThatThrownBy(() -> Mono.from(store.save(defaultBucketName, (ByteSource) null, storagePolicy)).block())
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
     default void saveShouldThrowWhenNullInputStream(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
@@ -95,6 +106,19 @@ public interface BlobStoreContract extends BucketBlobStoreContract {
         BucketName defaultBucketName = store.getDefaultBucketName();
 
         BlobId blobId = Mono.from(store.save(defaultBucketName, EMPTY_BYTEARRAY, storagePolicy)).block();
+
+        byte[] bytes = Mono.from(store.readBytes(defaultBucketName, blobId)).block();
+
+        assertThat(new String(bytes, StandardCharsets.UTF_8)).isEmpty();
+    }
+
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
+    default void saveShouldSaveEmptyByteSource(BlobStore.StoragePolicy storagePolicy) {
+        BlobStore store = testee();
+        BucketName defaultBucketName = store.getDefaultBucketName();
+
+        BlobId blobId = Mono.from(store.save(defaultBucketName, ByteSource.wrap(EMPTY_BYTEARRAY), storagePolicy)).block();
 
         byte[] bytes = Mono.from(store.readBytes(defaultBucketName, blobId)).block();
 
@@ -151,6 +175,19 @@ public interface BlobStoreContract extends BucketBlobStoreContract {
 
     @ParameterizedTest
     @MethodSource("storagePolicies")
+    default void readBytesShouldReturnSavedByteSource(BlobStore.StoragePolicy storagePolicy) {
+        BlobStore store = testee();
+        BucketName defaultBucketName = store.getDefaultBucketName();
+
+        BlobId blobId = Mono.from(store.save(defaultBucketName, ByteSource.wrap(SHORT_BYTEARRAY), storagePolicy)).block();
+
+        byte[] bytes = Mono.from(store.readBytes(defaultBucketName, blobId)).block();
+
+        assertThat(bytes).isEqualTo(SHORT_BYTEARRAY);
+    }
+
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
     default void readBytesShouldReturnLongSavedData(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
@@ -164,11 +201,37 @@ public interface BlobStoreContract extends BucketBlobStoreContract {
 
     @ParameterizedTest
     @MethodSource("storagePolicies")
+    default void readBytesShouldReturnLongSavedByteSource(BlobStore.StoragePolicy storagePolicy) {
+        BlobStore store = testee();
+        BucketName defaultBucketName = store.getDefaultBucketName();
+
+        BlobId blobId = Mono.from(store.save(defaultBucketName, ByteSource.wrap(ELEVEN_KILOBYTES), storagePolicy)).block();
+
+        byte[] bytes = Mono.from(store.readBytes(defaultBucketName, blobId)).block();
+
+        assertThat(bytes).isEqualTo(ELEVEN_KILOBYTES);
+    }
+
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
     default void readBytesShouldReturnBigSavedData(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
         BlobId blobId = Mono.from(store.save(defaultBucketName, TWELVE_MEGABYTES, storagePolicy)).block();
+
+        byte[] bytes = Mono.from(store.readBytes(defaultBucketName, blobId)).block();
+
+        assertThat(bytes).isEqualTo(TWELVE_MEGABYTES);
+    }
+
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
+    default void readBytesShouldReturnBigSavedByteSource(BlobStore.StoragePolicy storagePolicy) {
+        BlobStore store = testee();
+        BucketName defaultBucketName = store.getDefaultBucketName();
+
+        BlobId blobId = Mono.from(store.save(defaultBucketName, ByteSource.wrap(TWELVE_MEGABYTES), storagePolicy)).block();
 
         byte[] bytes = Mono.from(store.readBytes(defaultBucketName, blobId)).block();
 

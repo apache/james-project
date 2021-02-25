@@ -62,6 +62,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Strings;
+import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Mono;
 
@@ -172,6 +173,16 @@ public class CachedBlobStoreTest implements BlobStoreContract {
     }
 
     @Test
+    public void shouldCacheWhenEmptyByteSource() {
+        BlobId blobId = Mono.from(testee().save(DEFAULT_BUCKETNAME, ByteSource.wrap(EMPTY_BYTEARRAY), SIZE_BASED)).block();
+
+        SoftAssertions.assertSoftly(soflty -> {
+            soflty.assertThat(new ByteArrayInputStream(Mono.from(cache.read(blobId)).block())).hasSameContentAs(new ByteArrayInputStream(EMPTY_BYTEARRAY));
+            soflty.assertThat(Mono.from(backend.readBytes(DEFAULT_BUCKETNAME, blobId)).block()).containsExactly(EMPTY_BYTEARRAY);
+        });
+    }
+
+    @Test
     public void shouldNotCacheWhenEmptyByteArray() {
         BlobId blobId = Mono.from(testee().save(DEFAULT_BUCKETNAME, EMPTY_BYTEARRAY, SIZE_BASED)).block();
 
@@ -184,6 +195,18 @@ public class CachedBlobStoreTest implements BlobStoreContract {
     @Test
     public void shouldCacheWhenFiveKilobytesSteam() {
         BlobId blobId = Mono.from(testee().save(DEFAULT_BUCKETNAME, new ByteArrayInputStream(APPROXIMATELY_FIVE_KILOBYTES), SIZE_BASED)).block();
+
+        SoftAssertions.assertSoftly(soflty -> {
+            soflty.assertThat(new ByteArrayInputStream(Mono.from(cache.read(blobId)).block()))
+                .hasSameContentAs(new ByteArrayInputStream(APPROXIMATELY_FIVE_KILOBYTES));
+            soflty.assertThat(new ByteArrayInputStream(Mono.from(backend.readBytes(DEFAULT_BUCKETNAME, blobId)).block()))
+                .hasSameContentAs(new ByteArrayInputStream(APPROXIMATELY_FIVE_KILOBYTES));
+        });
+    }
+
+    @Test
+    public void shouldCacheWhenFiveKilobytesByteSource() {
+        BlobId blobId = Mono.from(testee().save(DEFAULT_BUCKETNAME, ByteSource.wrap(APPROXIMATELY_FIVE_KILOBYTES), SIZE_BASED)).block();
 
         SoftAssertions.assertSoftly(soflty -> {
             soflty.assertThat(new ByteArrayInputStream(Mono.from(cache.read(blobId)).block()))
@@ -287,6 +310,30 @@ public class CachedBlobStoreTest implements BlobStoreContract {
         SoftAssertions.assertSoftly(soflty -> {
             soflty.assertThat(Mono.from(cache.read(blobId)).blockOptional()).isEmpty();
             soflty.assertThat(testee().read(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE))
+                .hasSameContentAs(new ByteArrayInputStream(TWELVE_MEGABYTES));
+            soflty.assertThat(Mono.from(cache.read(blobId)).blockOptional()).isEmpty();
+        });
+    }
+
+    @Test
+    public void shouldNotCacheWhenReadWithOutDefaultBucketByteSource() {
+        BlobId blobId = Mono.from(backend.save(TEST_BUCKETNAME, ByteSource.wrap(APPROXIMATELY_FIVE_KILOBYTES), SIZE_BASED)).block();
+
+        SoftAssertions.assertSoftly(soflty -> {
+            soflty.assertThat(Mono.from(cache.read(blobId)).blockOptional()).isEmpty();
+            soflty.assertThat(testee().read(TEST_BUCKETNAME, blobId, HIGH_PERFORMANCE))
+                .hasSameContentAs(new ByteArrayInputStream(APPROXIMATELY_FIVE_KILOBYTES));
+            soflty.assertThat(Mono.from(cache.read(blobId)).blockOptional()).isEmpty();
+        });
+    }
+
+    @Test
+    public void shouldNotCacheWhenReadWithBigByteSource() {
+        BlobId blobId = Mono.from(backend.save(DEFAULT_BUCKETNAME, ByteSource.wrap(TWELVE_MEGABYTES), SIZE_BASED)).block();
+
+        SoftAssertions.assertSoftly(soflty -> {
+            soflty.assertThat(Mono.from(cache.read(blobId)).blockOptional()).isEmpty();
+            soflty.assertThat(new ByteArrayInputStream(Mono.from(testee().readBytes(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE)).block()))
                 .hasSameContentAs(new ByteArrayInputStream(TWELVE_MEGABYTES));
             soflty.assertThat(Mono.from(cache.read(blobId)).blockOptional()).isEmpty();
         });
