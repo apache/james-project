@@ -18,6 +18,13 @@
  ****************************************************************/
 package org.apache.james.backends.rabbitmq;
 
+import static org.apache.james.backends.rabbitmq.RabbitMQConfiguration.SSLConfiguration.HostNameVerifier;
+import static org.apache.james.backends.rabbitmq.RabbitMQConfiguration.SSLConfiguration.SSLKeyStore;
+import static org.apache.james.backends.rabbitmq.RabbitMQConfiguration.SSLConfiguration.SSLTrustStore;
+import static org.apache.james.backends.rabbitmq.RabbitMQConfiguration.SSLConfiguration.SSLValidationStrategy;
+import static org.apache.james.backends.rabbitmq.RabbitMQConfiguration.SSLConfiguration.SSLValidationStrategy.OVERRIDE;
+import static org.apache.james.backends.rabbitmq.RabbitMQConfiguration.SSLConfiguration.defaultBehavior;
+
 import java.io.File;
 import java.net.URI;
 import java.nio.file.Files;
@@ -31,9 +38,6 @@ import org.apache.commons.configuration2.Configuration;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-
-import static org.apache.james.backends.rabbitmq.RabbitMQConfiguration.SSLConfiguration.*;
-import static org.apache.james.backends.rabbitmq.RabbitMQConfiguration.SSLConfiguration.SSLValidationStrategy.*;
 
 public class RabbitMQConfiguration {
 
