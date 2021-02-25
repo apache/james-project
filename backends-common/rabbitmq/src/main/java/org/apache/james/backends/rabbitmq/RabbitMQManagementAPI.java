@@ -319,11 +319,9 @@ public interface RabbitMQManagementAPI {
     }
 
     static RabbitMQManagementAPI from(RabbitMQConfiguration configuration) {
-        RabbitMQConfiguration.ManagementCredentials credentials = configuration.getManagementCredentials();
-
-        RabbitMQManagementAPI rabbitMQManagementAPI = null;
         try {
-            rabbitMQManagementAPI = Feign.builder()
+            RabbitMQConfiguration.ManagementCredentials credentials = configuration.getManagementCredentials();
+            RabbitMQManagementAPI rabbitMQManagementAPI = Feign.builder()
                     .client(getClient(configuration))
                     .requestInterceptor(new BasicAuthRequestInterceptor(credentials.getUser(), new String(credentials.getPassword())))
                     .logger(new Slf4jLogger(RabbitMQManagementAPI.class))
@@ -333,11 +331,11 @@ public interface RabbitMQManagementAPI {
                     .retryer(new Retryer.Default())
                     .errorDecoder(RETRY_500)
                     .target(RabbitMQManagementAPI.class, configuration.getManagementUri().toString());
+
+            return rabbitMQManagementAPI;
         } catch (KeyManagementException | NoSuchAlgorithmException | CertificateException | KeyStoreException | IOException | UnrecoverableKeyException e) {
             throw new RuntimeException(e);
         }
-
-        return rabbitMQManagementAPI;
     }
 
     private static Client getClient(RabbitMQConfiguration configuration) throws KeyManagementException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, UnrecoverableKeyException {
