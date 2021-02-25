@@ -88,7 +88,7 @@
 
           <dt><strong>ssl.validation.strategy</strong></dt>
           <dd>Configure the validation strategy used for rabbitmq connections. Possible values are default, ignore and override.
-              Optional string, defaults to default</dd>
+              Optional string, defaults to using systemwide ssl configuration</dd>
 
           <dt><strong>ssl.truststore</strong></dt>
           <dd>Points to the truststore (PKCS12) used for verifying rabbitmq connection. If configured then "ssl.truststore.password" must also be configured,
@@ -100,7 +100,7 @@
 
           <dt><strong>ssl.hostname.verifier</strong></dt>
           <dd>Configure host name verification. Possible options are default and accept_any_hostname
-              Optional string, defaults to default</dd>
+              Optional string, defaults to subject alternative name host verifier</dd>
 
 
           <dt><strong>ssl.keystore</strong></dt>
