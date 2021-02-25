@@ -104,7 +104,7 @@
 
 
           <dt><strong>ssl.keystore</strong></dt>
-          <dd>Points to the keystore(PKCS12) used for verifying rabbitmq connection. If configured then "ssl.keystore.password" must also be configured,
+          <dd>Points to the keystore(PKCS12) used for client certificate authentication. If configured then "ssl.keystore.password" must also be configured,
               Optional string, defaults to empty string</dd>
 
           <dt><strong>ssl.keystore.password</strong></dt>

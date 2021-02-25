@@ -71,7 +71,7 @@ Optional string, defaults to empty string. "ssl.validation.strategy: override" m
 Optional string, defaults to default
 
 | ssl.keystore
-| Points to the keystore(PKCS12) used for verifying rabbitmq connection. If configured then "ssl.keystore.password" must also be configured,
+| Points to the keystore(PKCS12) used for client certificate authentication. If configured then "ssl.keystore.password" must also be configured,
 Optional string, defaults to empty string
 
 | ssl.keystore.password
