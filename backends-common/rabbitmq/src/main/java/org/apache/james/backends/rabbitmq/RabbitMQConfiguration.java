@@ -171,6 +171,7 @@ public class RabbitMQConfiguration {
 
         static class Builder {
 
+            @FunctionalInterface
             interface RequireSSLStrategyTrustStore {
                 RequireHostNameVerifier sslStrategy(SSLValidationStrategy strategy, Optional<SSLTrustStore> trustStore);
 
@@ -187,6 +188,7 @@ public class RabbitMQConfiguration {
                 }
             }
 
+            @FunctionalInterface
             interface RequireHostNameVerifier {
                 ReadyToBuild hostNameVerifier(HostNameVerifier hostNameVerifier);
 
