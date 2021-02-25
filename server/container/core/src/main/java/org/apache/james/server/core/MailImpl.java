@@ -22,7 +22,6 @@ package org.apache.james.server.core;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.OptionalDataException;
-import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
@@ -544,21 +543,6 @@ public class MailImpl implements Disposable, Mail {
             lastUpdated = new Date(lastUpdated.getTime());
         }
         this.lastUpdated = lastUpdated;
-    }
-
-    /**
-     * Writes the message out to an OutputStream.
-     *
-     * @param out the OutputStream to which to write the content
-     * @throws MessagingException if the MimeMessage is not set for this MailImpl
-     * @throws IOException        if an error occurs while reading or writing from the stream
-     */
-    public void writeMessageTo(OutputStream out) throws IOException, MessagingException {
-        if (message != null) {
-            message.writeTo(out);
-        } else {
-            throw new MessagingException("No message set for this MailImpl.");
-        }
     }
 
     // Serializable Methods
