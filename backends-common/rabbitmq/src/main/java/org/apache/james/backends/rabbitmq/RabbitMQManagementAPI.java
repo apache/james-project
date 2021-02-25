@@ -19,16 +19,24 @@
 
 package org.apache.james.backends.rabbitmq;
 
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.MoreObjects;
 
+import feign.Client;
 import feign.Feign;
 import feign.Logger;
 import feign.Param;
@@ -40,6 +48,13 @@ import feign.codec.ErrorDecoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
+import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.http.ssl.TrustStrategy;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
 
 public interface RabbitMQManagementAPI {
 
@@ -305,15 +320,94 @@ public interface RabbitMQManagementAPI {
 
     static RabbitMQManagementAPI from(RabbitMQConfiguration configuration) {
         RabbitMQConfiguration.ManagementCredentials credentials = configuration.getManagementCredentials();
-        return Feign.builder()
-            .requestInterceptor(new BasicAuthRequestInterceptor(credentials.getUser(), new String(credentials.getPassword())))
-            .logger(new Slf4jLogger(RabbitMQManagementAPI.class))
-            .logLevel(Logger.Level.FULL)
-            .encoder(new JacksonEncoder())
-            .decoder(new JacksonDecoder())
-            .retryer(new Retryer.Default())
-            .errorDecoder(RETRY_500)
-            .target(RabbitMQManagementAPI.class, configuration.getManagementUri().toString());
+
+        RabbitMQManagementAPI rabbitMQManagementAPI = null;
+        try {
+            rabbitMQManagementAPI = Feign.builder()
+                    .client(getClient(configuration))
+                    .requestInterceptor(new BasicAuthRequestInterceptor(credentials.getUser(), new String(credentials.getPassword())))
+                    .logger(new Slf4jLogger(RabbitMQManagementAPI.class))
+                    .logLevel(Logger.Level.FULL)
+                    .encoder(new JacksonEncoder())
+                    .decoder(new JacksonDecoder())
+                    .retryer(new Retryer.Default())
+                    .errorDecoder(RETRY_500)
+                    .target(RabbitMQManagementAPI.class, configuration.getManagementUri().toString());
+        } catch (KeyManagementException | NoSuchAlgorithmException | CertificateException | KeyStoreException | IOException | UnrecoverableKeyException e) {
+            throw new RuntimeException(e);
+        }
+
+        return rabbitMQManagementAPI;
+    }
+
+    private static Client getClient(RabbitMQConfiguration configuration) throws KeyManagementException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, UnrecoverableKeyException {
+        if (configuration.useSslManagement()) {
+            SSLContextBuilder sslContextBuilder = new SSLContextBuilder();
+
+            setupSslValidationStrategy(sslContextBuilder, configuration);
+
+            setupClientCertificateAuthentication(sslContextBuilder, configuration);
+
+            SSLContext sslContext = sslContextBuilder.build();
+
+            return new Client.Default(sslContext.getSocketFactory(), getHostNameVerifier(configuration));
+        }
+        else {
+            return new Client.Default(null, null);
+        }
+
+    }
+
+    private static HostnameVerifier getHostNameVerifier(RabbitMQConfiguration configuration) {
+        switch (configuration.getSslConfiguration().getHostNameVerifier()) {
+            case ACCEPT_ANY_HOSTNAME:
+                return ((hostname, session) -> true);
+            default:
+                return new DefaultHostnameVerifier();
+        }
+    }
+
+    private static void setupClientCertificateAuthentication(SSLContextBuilder sslContextBuilder, RabbitMQConfiguration configuration) throws NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException, CertificateException, IOException {
+        Optional<RabbitMQConfiguration.SSLConfiguration.SSLKeyStore> keyStore = configuration.getSslConfiguration().getKeyStore();
+
+        if (keyStore.isPresent()) {
+            RabbitMQConfiguration.SSLConfiguration.SSLKeyStore sslKeyStore = keyStore.get();
+
+            sslContextBuilder.loadKeyMaterial(sslKeyStore.getFile(), sslKeyStore.getPassword(), sslKeyStore.getPassword());
+        }
+    }
+
+    private static void setupSslValidationStrategy(SSLContextBuilder sslContextBuilder, RabbitMQConfiguration configuration) throws NoSuchAlgorithmException, KeyStoreException, CertificateException, IOException {
+        RabbitMQConfiguration.SSLConfiguration.SSLValidationStrategy strategy = configuration
+                .getSslConfiguration()
+                .getStrategy();
+
+        final TrustStrategy TRUST_ALL = (x509Certificates, authType) -> true;
+
+        switch (strategy) {
+            case DEFAULT:
+                break;
+            case IGNORE:
+                sslContextBuilder.loadTrustMaterial(TRUST_ALL);
+                break;
+            case OVERRIDE:
+                applyTrustStore(sslContextBuilder, configuration);
+                break;
+            default:
+                throw new NotImplementedException(
+                        String.format("unrecognized strategy '%s'", strategy.name()));
+        }
+    }
+
+    private static SSLContextBuilder applyTrustStore(SSLContextBuilder sslContextBuilder, RabbitMQConfiguration configuration) throws CertificateException, NoSuchAlgorithmException,
+            KeyStoreException, IOException {
+
+        RabbitMQConfiguration.SSLConfiguration.SSLTrustStore trustStore = configuration.getSslConfiguration()
+                .getTrustStore()
+                .orElseThrow(() -> new IllegalStateException("SSLTrustStore cannot to be empty"));
+
+        return sslContextBuilder
+                .loadTrustMaterial(trustStore.getFile(), trustStore.getPassword());
     }
 
     ErrorDecoder RETRY_500 = (methodKey, response) -> {
