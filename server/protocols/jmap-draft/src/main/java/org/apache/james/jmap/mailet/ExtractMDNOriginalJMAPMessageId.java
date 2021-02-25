@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.jmap.mailet;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -44,6 +42,7 @@ import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.dom.SingleBody;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
+import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
@@ -166,9 +165,8 @@ public class ExtractMDNOriginalJMAPMessageId extends GenericMailet {
     private Optional<Message> parseMessage(MimeMessage mimeMessage) {
         LOGGER.debug("Parsing message");
         try {
-            ByteArrayOutputStream os = new ByteArrayOutputStream();
-            mimeMessage.writeTo(os);
-            Message message = new DefaultMessageBuilder().parseMessage(new ByteArrayInputStream(os.toByteArray()));
+            Message message = new DefaultMessageBuilder()
+                .parseMessage(new MimeMessageInputStream(mimeMessage));
             return Optional.of(message);
         } catch (IOException | MessagingException e) {
             LOGGER.error("unable to parse message", e);
