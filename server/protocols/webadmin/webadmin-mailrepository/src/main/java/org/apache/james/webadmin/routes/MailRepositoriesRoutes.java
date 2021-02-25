@@ -19,8 +19,8 @@
 
 package org.apache.james.webadmin.routes;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.time.Clock;
 import java.util.List;
@@ -38,6 +38,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.apache.commons.io.output.CountingOutputStream;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
@@ -264,9 +265,9 @@ public class MailRepositoriesRoutes implements Routes {
     }
 
     private long computeExactSize(MimeMessage mimeMessage) throws IOException, MessagingException {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        mimeMessage.writeTo(byteArrayOutputStream);
-        return byteArrayOutputStream.size();
+        CountingOutputStream countingOutputStream = new CountingOutputStream(OutputStream.nullOutputStream());
+        mimeMessage.writeTo(countingOutputStream);
+        return countingOutputStream.getByteCount();
     }
 
     private MimeMessage getMailAsMimeMessage(MailRepositoryPath path, MailKey mailKey) {

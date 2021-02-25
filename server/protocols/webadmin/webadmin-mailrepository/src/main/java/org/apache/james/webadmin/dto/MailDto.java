@@ -19,8 +19,6 @@
 
 package org.apache.james.webadmin.dto;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,6 +36,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.util.MimeUtil;
+import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.james.util.mime.MessageContentExtractor.MessageContent;
 import org.apache.mailet.Mail;
@@ -114,13 +113,11 @@ public class MailDto {
     }
 
     private static Message convertMessage(MimeMessage message) throws IOException, MessagingException {
-        ByteArrayOutputStream rawMessage = new ByteArrayOutputStream();
-        message.writeTo(rawMessage);
         return Message.Builder
-                .of()
-                .use(MimeConfig.PERMISSIVE)
-                .parse(new ByteArrayInputStream(rawMessage.toByteArray()))
-                .build();
+            .of()
+            .use(MimeConfig.PERMISSIVE)
+            .parse(new MimeMessageInputStream(message))
+            .build();
     }
 
     private static Optional<HeadersDto> fetchHeaders(Set<AdditionalField> additionalFields, Mail mail) throws InaccessibleFieldException {
