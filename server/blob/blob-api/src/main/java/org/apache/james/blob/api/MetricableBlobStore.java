@@ -26,6 +26,8 @@ import javax.inject.Named;
 import org.apache.james.metrics.api.MetricFactory;
 import org.reactivestreams.Publisher;
 
+import com.google.common.io.ByteSource;
+
 public class MetricableBlobStore implements BlobStore {
 
     public static final String BLOB_STORE_IMPLEMENTATION = "blobStoreImplementation";
@@ -55,6 +57,11 @@ public class MetricableBlobStore implements BlobStore {
 
     @Override
     public Publisher<BlobId> save(BucketName bucketName, InputStream data, StoragePolicy storagePolicy) {
+        return metricFactory.decoratePublisherWithTimerMetric(SAVE_INPUT_STREAM_TIMER_NAME, blobStoreImpl.save(bucketName, data, storagePolicy));
+    }
+
+    @Override
+    public Publisher<BlobId> save(BucketName bucketName, ByteSource data, StoragePolicy storagePolicy) {
         return metricFactory.decoratePublisherWithTimerMetric(SAVE_INPUT_STREAM_TIMER_NAME, blobStoreImpl.save(bucketName, data, storagePolicy));
     }
 
