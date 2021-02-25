@@ -93,6 +93,9 @@ public class ElasticSearchSearcher {
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder()
             .query(queryConverter.from(mailboxIds, query))
             .size(computeRequiredSize(limit))
+            .fetchField(JsonMessageConstants.MAILBOX_ID)
+            .fetchField(JsonMessageConstants.UID)
+            .fetchField(JsonMessageConstants.MESSAGE_ID)
             .storedFields(STORED_FIELDS);
 
         query.getSorts()
