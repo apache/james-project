@@ -45,7 +45,7 @@ import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.queue.api.MailQueueFactory.SPOOL
 import org.apache.james.queue.api.{MailQueue, MailQueueFactory}
 import org.apache.james.rrt.api.CanSendFrom
-import org.apache.james.server.core.{MailImpl, MimeMessageInputStreamSource, MimeMessageWrapper}
+import org.apache.james.server.core.{MailImpl, MimeMessageSource, MimeMessageWrapper}
 import org.apache.mailet.{Attribute, AttributeName, AttributeValue}
 import org.reactivestreams.Publisher
 import org.slf4j.{Logger, LoggerFactory}
@@ -68,6 +68,14 @@ case class EmailSubmissionCreationParseException(setError: SetError) extends Exc
 case class NoRecipientException() extends Exception
 case class ForbiddenFromException(from: String) extends Exception
 case class ForbiddenMailFromException(from: List[String]) extends Exception
+
+case class MessageMimeMessageSource(id: String, message: MessageResult) extends MimeMessageSource {
+  override def getSourceId: String = id
+
+  override def getInputStream: InputStream = message.getFullContent.getInputStream
+
+  override def getMessageSize: Long = message.getFullContent.size()
+}
 
 class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerializer,
                                          messageIdManager: MessageIdManager,
@@ -211,7 +219,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       val submissionId = EmailSubmissionId.generate
 
       val result: Try[EmailSubmissionCreationResponse] = for {
-        message <- toMimeMessage(submissionId.value, m.getFullContent.getInputStream)
+        message <- toMimeMessage(submissionId.value, m)
         envelope <- resolveEnvelope(message, request.envelope)
         validation <- validate(mailboxSession)(message, envelope)
         mail <- Try({
@@ -232,8 +240,8 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
     })
   }
 
-  private def toMimeMessage(name: String, inputStream: InputStream): Try[MimeMessageWrapper] = {
-    val source = new MimeMessageInputStreamSource(name, inputStream)
+  private def toMimeMessage(name: String, message: MessageResult): Try[MimeMessageWrapper] = {
+    val source = MessageMimeMessageSource(name, message)
     // if MimeMessageCopyOnWriteProxy throws an error in the constructor we
     // have to manually care disposing our source.
     Try(new MimeMessageWrapper(source))

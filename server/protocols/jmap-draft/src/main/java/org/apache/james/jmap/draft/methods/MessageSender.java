@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.draft.methods;
 
+import java.io.InputStream;
+
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
@@ -30,12 +32,37 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.server.core.Envelope;
 import org.apache.james.server.core.MailImpl;
-import org.apache.james.server.core.MimeMessageInputStreamSource;
+import org.apache.james.server.core.MimeMessageSource;
 import org.apache.mailet.Mail;
 
 import com.google.common.annotations.VisibleForTesting;
 
 public class MessageSender {
+    public static class MessageMimeMessageSource extends MimeMessageSource {
+        private final String id;
+        private final MetaDataWithContent message;
+
+        public MessageMimeMessageSource(String id, MetaDataWithContent message) {
+            this.id = id;
+            this.message = message;
+        }
+
+        @Override
+        public String getSourceId() {
+            return id;
+        }
+
+        @Override
+        public InputStream getInputStream() {
+            return message.getContent();
+        }
+
+        @Override
+        public long getMessageSize() {
+            return message.getSize();
+        }
+    }
+
     private final MailSpool mailSpool;
 
     @Inject
@@ -62,7 +89,7 @@ public class MessageSender {
             .sender(envelope.getFrom().asOptional().orElseThrow(() -> new RuntimeException("Sender is mandatory")))
             .addRecipients(envelope.getRecipients())
             .build();
-        mail.setMessageContent(new MimeMessageInputStreamSource(name, message.getContent()));
+        mail.setMessageContent(new MessageMimeMessageSource(name, message));
         return mail;
     }
 
