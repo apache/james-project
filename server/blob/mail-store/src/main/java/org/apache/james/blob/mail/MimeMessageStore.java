@@ -47,6 +47,7 @@ import org.apache.james.server.core.MimeMessageWrapper;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Mono;
 
@@ -72,23 +73,39 @@ public class MimeMessageStore {
     static class MimeMessageEncoder implements Store.Impl.Encoder<MimeMessage> {
         @Override
         public Stream<Pair<BlobType, Store.Impl.ValueToSave>> encode(MimeMessage message) {
-            try {
-                MimeMessageInputStream stream = new MimeMessageInputStream(message);
-                MailHeaders mailHeaders = new MailHeaders(stream);
-
-                return Stream.of(
-                    Pair.of(HEADER_BLOB_TYPE, (bucketName, blobStore) -> {
-                        try {
-                            return Mono.from(blobStore.save(bucketName, mailHeaders.toByteArray(), SIZE_BASED));
-                        } catch (MessagingException e) {
-                            throw new RuntimeException(e);
+            Preconditions.checkNotNull(message);
+            return Stream.of(
+                Pair.of(HEADER_BLOB_TYPE, (bucketName, blobStore) -> {
+                    try {
+                        MimeMessageInputStream stream = new MimeMessageInputStream(message);
+                        MailHeaders mailHeaders = new MailHeaders(stream);
+                        return Mono.from(blobStore.save(bucketName, mailHeaders.toByteArray(), SIZE_BASED));
+                    } catch (MessagingException e) {
+                        throw new RuntimeException(e);
+                    }
+                }),
+                Pair.of(BODY_BLOB_TYPE, (bucketName, blobStore) ->
+                    Mono.from(blobStore.save(bucketName, new ByteSource() {
+                        @Override
+                        public InputStream openStream() throws IOException {
+                            try {
+                                MimeMessageInputStream stream = new MimeMessageInputStream(message);
+                                new MailHeaders(stream);
+                                return stream;
+                            } catch (MessagingException e) {
+                                throw new IOException("Failed to generate body stream", e);
+                            }
                         }
-                    }),
-                    Pair.of(BODY_BLOB_TYPE, (bucketName, blobStore) ->
-                        Mono.from(blobStore.save(bucketName, stream, SIZE_BASED))));
-            } catch (MessagingException e) {
-                throw new RuntimeException(e);
-            }
+
+                        @Override
+                        public long size() throws IOException {
+                            try {
+                                return message.getSize();
+                            } catch (MessagingException e) {
+                                throw new IOException("Failed accessing body size", e);
+                            }
+                        }
+                    }, SIZE_BASED))));
         }
     }
 
