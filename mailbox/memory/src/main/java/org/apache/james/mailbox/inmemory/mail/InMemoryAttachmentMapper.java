@@ -121,16 +121,19 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
 
     private MessageAttachmentMetadata storeAttachmentForMessage(MessageId ownerMessageId, ParsedAttachment parsedAttachment) throws MailboxException {
         AttachmentId attachmentId = AttachmentId.random();
-        byte[] bytes = parsedAttachment.getContent();
-
-        attachmentsById.put(attachmentId, AttachmentMetadata.builder()
-            .attachmentId(attachmentId)
-            .type(parsedAttachment.getContentType())
-            .size(bytes.length)
-            .build());
-        attachmentsRawContentById.put(attachmentId, bytes);
-        messageIdsByAttachmentId.put(attachmentId, ownerMessageId);
-        return parsedAttachment.asMessageAttachment(attachmentId, bytes.length);
+        try {
+            byte[] bytes = IOUtils.toByteArray(parsedAttachment.getContent().openStream());
+            attachmentsById.put(attachmentId, AttachmentMetadata.builder()
+                .attachmentId(attachmentId)
+                .type(parsedAttachment.getContentType())
+                .size(bytes.length)
+                .build());
+            attachmentsRawContentById.put(attachmentId, bytes);
+            messageIdsByAttachmentId.put(attachmentId, ownerMessageId);
+            return parsedAttachment.asMessageAttachment(attachmentId, bytes.length);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

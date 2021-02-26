@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store.mail.model.impl;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,6 +37,7 @@ import org.apache.james.mime4j.dom.Body;
 import org.apache.james.mime4j.dom.Entity;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
+import org.apache.james.mime4j.dom.SingleBody;
 import org.apache.james.mime4j.dom.field.ContentDispositionField;
 import org.apache.james.mime4j.dom.field.ContentIdField;
 import org.apache.james.mime4j.dom.field.ContentTypeField;
@@ -51,6 +53,7 @@ import org.slf4j.LoggerFactory;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteSource;
 
 public class MessageParser {
 
@@ -137,7 +140,19 @@ public class MessageParser {
 
         return ParsedAttachment.builder()
                 .contentType(contentType.orElse(DEFAULT_CONTENT_TYPE))
-                .content(getContent(entity.getBody()))
+                .content(new ByteSource() {
+                    @Override
+                    public InputStream openStream() throws IOException {
+                        Body body = entity.getBody();
+                        if (body instanceof SingleBody) {
+                            // Avoid copies for BinaryBody / TextBody
+                            SingleBody singleBody = (SingleBody) body;
+                            return singleBody.getInputStream();
+                        }
+                        // Fallback to a memory copy
+                        return new ByteArrayInputStream(getContent(body));
+                    }
+                })
                 .name(name)
                 .cid(cid)
                 .inline(isInline);

@@ -22,6 +22,8 @@ package org.apache.james.mailbox.model;
 import java.io.IOException;
 import java.util.Optional;
 
+import com.google.common.io.ByteSource;
+
 public class ParsedAttachment {
     interface Builder {
         @FunctionalInterface
@@ -35,7 +37,7 @@ public class ParsedAttachment {
 
         @FunctionalInterface
         interface RequireContent {
-            RequireName content(byte[] bytes);
+            RequireName content(ByteSource bytes);
         }
 
         @FunctionalInterface
@@ -79,12 +81,12 @@ public class ParsedAttachment {
     }
 
     private final ContentType contentType;
-    private final byte[] content;
+    private final ByteSource content;
     private final Optional<String> name;
     private final Optional<Cid> cid;
     private final boolean isInline;
 
-    private ParsedAttachment(ContentType contentType, byte[] content, Optional<String> name, Optional<Cid> cid, boolean isInline) {
+    private ParsedAttachment(ContentType contentType, ByteSource content, Optional<String> name, Optional<Cid> cid, boolean isInline) {
         this.contentType = contentType;
         this.content = content;
         this.name = name;
@@ -96,7 +98,7 @@ public class ParsedAttachment {
         return contentType;
     }
 
-    public byte[] getContent() {
+    public ByteSource getContent() {
         return content;
     }
 
@@ -130,7 +132,7 @@ public class ParsedAttachment {
             .attachment(AttachmentMetadata.builder()
                 .attachmentId(attachmentId)
                 .type(contentType)
-                .size(content.length)
+                .size(content.size())
                 .build())
             .name(name)
             .cid(cid)
