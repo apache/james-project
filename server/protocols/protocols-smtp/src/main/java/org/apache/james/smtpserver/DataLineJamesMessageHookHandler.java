@@ -72,8 +72,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
     @Override
     public Response onLine(SMTPSession session, ByteBuffer lineByteBuffer, LineHandler<SMTPSession> next) {
 
-        byte[] line = new byte[lineByteBuffer.remaining()];
-        lineByteBuffer.get(line, 0, line.length);
+        byte[] line = readBytes(lineByteBuffer);
 
         MimeMessageInputStreamSource mmiss = session.getAttachment(SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE, State.Transaction)
             .orElseThrow(() -> new RuntimeException("'" + SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE.asString() + "' has not been filled."));
@@ -133,6 +132,18 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
             return response;
         }
         return null;
+    }
+
+    private byte[] readBytes(ByteBuffer line) {
+        line.rewind();
+
+        if (line.hasArray()) {
+            return line.array();
+        } else {
+            byte[] bline = new byte[line.remaining()];
+            line.get(bline);
+            return bline;
+        }
     }
 
     protected Response processExtensions(SMTPSession session, Mail mail) {
