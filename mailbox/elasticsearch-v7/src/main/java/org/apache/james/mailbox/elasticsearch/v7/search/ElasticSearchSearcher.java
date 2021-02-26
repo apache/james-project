@@ -128,8 +128,6 @@ public class ElasticSearchSearcher {
     }
 
     private Optional<MessageSearchIndex.SearchResult> extractContentFromHit(SearchHit hit) {
-        //TODO: hit contains no fields object nor _source field
-        System.out.println(hit);
         DocumentField mailboxId = hit.field(JsonMessageConstants.MAILBOX_ID);
         DocumentField uid = hit.field(JsonMessageConstants.UID);
         Optional<DocumentField> id = retrieveMessageIdField(hit);
