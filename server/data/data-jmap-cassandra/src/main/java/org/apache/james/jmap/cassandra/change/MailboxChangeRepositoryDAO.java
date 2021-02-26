@@ -62,7 +62,7 @@ import com.google.common.collect.ImmutableSet;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-class MailboxChangeRepositoryDAO {
+public class MailboxChangeRepositoryDAO {
     private final CassandraAsyncExecutor executor;
     private final UserType zonedDateTimeUserType;
     private final PreparedStatement insertStatement;
