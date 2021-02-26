@@ -35,6 +35,8 @@ import org.apache.james.jmap.api.change.State;
 import org.apache.james.jmap.cassandra.change.CassandraEmailChangeRepository;
 import org.apache.james.jmap.cassandra.change.CassandraMailboxChangeRepository;
 import org.apache.james.jmap.cassandra.change.CassandraStateFactory;
+import org.apache.james.jmap.cassandra.change.EmailChangeRepositoryDAO;
+import org.apache.james.jmap.cassandra.change.MailboxChangeRepositoryDAO;
 import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.Authenticator;
@@ -165,6 +167,8 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(NoMailboxPathLocker.class).in(Scopes.SINGLETON);
         bind(UserRepositoryAuthenticator.class).in(Scopes.SINGLETON);
         bind(UserRepositoryAuthorizator.class).in(Scopes.SINGLETON);
+        bind(EmailChangeRepositoryDAO.class).in(Scopes.SINGLETON);
+        bind(MailboxChangeRepositoryDAO.class).in(Scopes.SINGLETON);
 
         bind(ReIndexerImpl.class).in(Scopes.SINGLETON);
         bind(MessageIdReIndexerImpl.class).in(Scopes.SINGLETON);
