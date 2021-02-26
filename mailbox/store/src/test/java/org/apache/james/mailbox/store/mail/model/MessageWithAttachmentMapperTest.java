@@ -50,6 +50,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteSource;
 
 public abstract class MessageWithAttachmentMapperTest {
 
@@ -82,19 +83,19 @@ public abstract class MessageWithAttachmentMapperTest {
         attachmentsMailbox = createMailbox(MailboxPath.forUser(Username.of("benwa"), "Attachments"));
         ParsedAttachment attachment1 = ParsedAttachment.builder()
             .contentType("content")
-            .content("attachment".getBytes(StandardCharsets.UTF_8))
+            .content(ByteSource.wrap("attachment".getBytes(StandardCharsets.UTF_8)))
             .noName()
             .cid(Cid.from("cid"))
             .inline();
         ParsedAttachment attachment2 = ParsedAttachment.builder()
             .contentType("content")
-            .content("attachment2".getBytes(StandardCharsets.UTF_8))
+            .content(ByteSource.wrap("attachment2".getBytes(StandardCharsets.UTF_8)))
             .noName()
             .cid(Cid.from("cid"))
             .inline();
         ParsedAttachment attachment3 = ParsedAttachment.builder()
             .contentType("content")
-            .content("attachment3".getBytes(StandardCharsets.UTF_8))
+            .content(ByteSource.wrap("attachment3".getBytes(StandardCharsets.UTF_8)))
             .noName()
             .cid(Cid.from("cid"))
             .inline(false);
