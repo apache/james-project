@@ -121,6 +121,9 @@ public class CassandraBlobStoreCache implements BlobStoreCache {
 
     private byte[] toByteArray(Row row) {
         ByteBuffer byteBuffer = row.getBytes(DATA);
+        if (byteBuffer.hasArray()) {
+            return byteBuffer.array();
+        }
         byte[] data = new byte[byteBuffer.remaining()];
         byteBuffer.get(data);
         return data;
