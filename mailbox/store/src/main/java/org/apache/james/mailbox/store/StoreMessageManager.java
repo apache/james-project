@@ -26,6 +26,7 @@ import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,6 +62,7 @@ import org.apache.james.mailbox.exception.ReadOnlyException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
+import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -329,8 +331,19 @@ public class StoreMessageManager implements MessageManager {
                 InputStreamConsummer.consume(tmpMsgIn);
                 bufferedOut.flush();
                 int bodyStartOctet = getBodyStartOctet(bIn);
+                final File finalFile = file;
                 return createAndDispatchMessage(computeInternalDate(internalDate),
-                    mailboxSession, file, propertyBuilder,
+                    mailboxSession, new Content() {
+                        @Override
+                        public InputStream getInputStream() throws IOException {
+                            return new FileInputStream(finalFile);
+                        }
+
+                        @Override
+                        public long size() {
+                            return finalFile.length();
+                        }
+                    }, propertyBuilder,
                     getFlags(mailboxSession, isRecent, flagsToBeSet), bodyStartOctet);
             }
         } catch (IOException | MimeException e) {
@@ -344,6 +357,24 @@ public class StoreMessageManager implements MessageManager {
                     // will be deleted hopefully some day
                 }
             }
+        }
+    }
+
+    public AppendResult appendMessage(Content msgIn, Date internalDate, final MailboxSession mailboxSession, boolean isRecent, Flags flagsToBeSet) throws MailboxException {
+        if (!isWriteable(mailboxSession)) {
+            throw new ReadOnlyException(getMailboxPath());
+        }
+
+        try (InputStream contentStreamStream = msgIn.getInputStream()) {
+            BodyOffsetInputStream bIn = new BodyOffsetInputStream(contentStreamStream);
+            PropertyBuilder propertyBuilder = parseProperties(bIn);
+            int bodyStartOctet = getBodyStartOctet(bIn);
+
+            return createAndDispatchMessage(computeInternalDate(internalDate),
+                mailboxSession, msgIn, propertyBuilder,
+                getFlags(mailboxSession, isRecent, flagsToBeSet), bodyStartOctet);
+        } catch (IOException | MimeException e) {
+            throw new MailboxException("Unable to parse message", e);
         }
     }
 
@@ -439,9 +470,10 @@ public class StoreMessageManager implements MessageManager {
         return bodyStartOctet;
     }
 
-    private AppendResult createAndDispatchMessage(Date internalDate, MailboxSession mailboxSession, File file, PropertyBuilder propertyBuilder, Flags flags, int bodyStartOctet) throws IOException, MailboxException {
-        try (SharedFileInputStream contentIn = new SharedFileInputStream(file)) {
-            final int size = (int) file.length();
+    private AppendResult createAndDispatchMessage(Date internalDate, MailboxSession mailboxSession, Content content, PropertyBuilder propertyBuilder, Flags flags, int bodyStartOctet) throws IOException, MailboxException {
+        // TODO MailboxMessage should be backed by a "content"
+        try (SharedFileInputStream contentIn = null) {
+            final int size = (int) content.size();
             new QuotaChecker(quotaManager, quotaRootResolver, mailbox).tryAddition(1, size);
 
             return locker.executeWithLock(getMailboxPath(), () -> {
