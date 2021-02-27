@@ -26,7 +26,6 @@ import static org.apache.james.quota.search.QuotaBoundaryFixture._50;
 import static org.apache.james.quota.search.QuotaBoundaryFixture._75;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.core.CoreFixture.Users.Alphabet;
@@ -38,6 +37,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.junit.jupiter.api.Disabled;
@@ -277,6 +277,6 @@ public interface QuotaSearcherContract {
 
     default MessageManager.AppendCommand withSize(int size) {
         byte[] bytes = Strings.repeat("a", size).getBytes(StandardCharsets.UTF_8);
-        return MessageManager.AppendCommand.from(new ByteArrayInputStream(bytes));
+        return MessageManager.AppendCommand.from(new ByteContent(bytes));
     }
 }

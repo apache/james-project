@@ -21,6 +21,7 @@ package org.apache.james.adapter.mailbox;
 import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,6 +38,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -184,10 +186,20 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
             session = mailboxManager.createSystemSession(username);
             mailboxManager.startProcessingRequest(session);
             MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, session);
-            InputStream emlFileAsStream = new FileInputStream(emlPath);
+            File file = new File(emlPath);
             messageManager.appendMessage(MessageManager.AppendCommand.builder()
                 .recent()
-                .build(emlFileAsStream), session);
+                .build(new Content() {
+                    @Override
+                    public InputStream getInputStream() throws IOException {
+                        return new FileInputStream(emlPath);
+                    }
+
+                    @Override
+                    public long size() {
+                        return file.length();
+                    }
+                }), session);
         } catch (Exception e) {
             LOGGER.error("Unable to create mailbox", e);
         } finally {

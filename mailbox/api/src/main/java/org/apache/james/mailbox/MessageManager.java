@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -32,11 +31,14 @@ import java.util.Objects;
 import java.util.Optional;
 
 import javax.mail.Flags;
+import javax.mail.internet.SharedInputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedCriteriaException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.Content;
@@ -218,7 +220,11 @@ public interface MessageManager {
             return builder().build(message);
         }
 
-        public static AppendCommand from(InputStream message) {
+        public static AppendCommand from(Content message) {
+            return builder().build(message);
+        }
+
+        public static AppendCommand from(SharedInputStream message) {
             return builder().build(message);
         }
 
@@ -261,7 +267,7 @@ public interface MessageManager {
                 return isRecent(false);
             }
 
-            public AppendCommand build(InputStream msgIn) {
+            public AppendCommand build(Content msgIn) {
                 return new AppendCommand(
                     msgIn,
                     internalDate.orElse(new Date()),
@@ -269,8 +275,26 @@ public interface MessageManager {
                     flags.orElse(new Flags()));
             }
 
+            public AppendCommand build(SharedInputStream msgIn) {
+                return build(new Content() {
+                    @Override
+                    public InputStream getInputStream() {
+                        return msgIn.newStream(0, -1);
+                    }
+
+                    @Override
+                    public long size() throws MailboxException {
+                        try {
+                            return IOUtils.consume(getInputStream());
+                        } catch (IOException e) {
+                            throw new MailboxException("Cannot compute content size", e);
+                        }
+                    }
+                });
+            }
+
             public AppendCommand build(byte[] msgIn) {
-                return build(new ByteArrayInputStream(msgIn));
+                return build(new ByteContent(msgIn));
             }
 
             public AppendCommand build(String msgIn) {
