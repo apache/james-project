@@ -112,7 +112,7 @@ public class MailboxCopierImpl implements MailboxCopier {
                             .withInternalDate(messageResult.getInternalDate())
                             .isRecent(messageResult.getFlags().contains(Flag.RECENT))
                             .withFlags(messageResult.getFlags())
-                            .build(content.getInputStream()),
+                            .build(content),
                         dstMailboxSession);
                     dstMailboxManager.endProcessingRequest(dstMailboxSession);
                     LOGGER.info("MailboxMessage #{} appended in destination mailbox with path={}", j, mailboxPath);

@@ -24,6 +24,7 @@ import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 import static org.apache.james.webadmin.vault.routes.RestoreService.RestoreResult.RESTORE_FAILED;
 import static org.apache.james.webadmin.vault.routes.RestoreService.RestoreResult.RESTORE_SUCCEED;
 
+import java.io.InputStream;
 import java.util.function.Predicate;
 
 import javax.inject.Inject;
@@ -35,7 +36,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
-import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.ByteSourceContent;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.vault.DeletedMessage;
@@ -79,10 +80,15 @@ class RestoreService {
     }
 
     private Mono<RestoreResult> appendToMailbox(MessageManager restoreMailboxManager, DeletedMessage deletedMessage, MailboxSession session) {
-        return appendCommand(deletedMessage)
-            .map(Throwing.<AppendCommand, ComposedMessageId>function(
-                appendCommand -> restoreMailboxManager.appendMessage(appendCommand, session).getId()).sneakyThrow())
-            .map(any -> RESTORE_SUCCEED)
+        return Mono.usingWhen(
+            messageContent(deletedMessage),
+            inputStream -> Mono.usingWhen(
+                Mono.fromCallable(() -> ByteSourceContent.of(inputStream)),
+                content -> Mono.fromCallable(() -> restoreMailboxManager.appendMessage(AppendCommand.builder()
+                        .build(content), session).getId())
+                    .map(any -> RESTORE_SUCCEED),
+                content -> Mono.fromRunnable(Throwing.runnable(content::close))),
+            stream -> Mono.fromRunnable(Throwing.runnable(stream::close)))
             .onErrorResume(throwable -> {
                 LOGGER.error("append message {} to restore mailbox of user {} didn't success",
                     deletedMessage.getMessageId().serialize(), deletedMessage.getOwner().asString(), throwable);
@@ -90,7 +96,7 @@ class RestoreService {
             });
     }
 
-    private Mono<AppendCommand> appendCommand(DeletedMessage deletedMessage) {
+    private Mono<InputStream> messageContent(DeletedMessage deletedMessage) {
         return Mono.from(deletedMessageVault.loadMimeMessage(deletedMessage.getOwner(), deletedMessage.getMessageId()))
             .onErrorResume(CONTENT_NOT_FOUND_PREDICATE, throwable -> {
                 LOGGER.info(
@@ -99,9 +105,7 @@ class RestoreService {
                     deletedMessage.getOwner().asString(),
                     throwable);
                 return Mono.empty();
-            })
-            .map(messageContentStream -> AppendCommand.builder()
-                .build(messageContentStream));
+            });
     }
 
     private MessageManager restoreMailboxManager(MailboxSession session) throws MailboxException {

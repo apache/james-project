@@ -43,6 +43,7 @@ import org.apache.james.mailbox.MessageManager.AppendResult;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
@@ -81,7 +82,6 @@ public class MessageAppender {
         Preconditions.checkArgument(!targetMailboxes.isEmpty());
         ImmutableList<MessageAttachmentMetadata> messageAttachments = getMessageAttachments(session, createdEntry.getValue().getAttachments());
         byte[] messageContent = mimeMessageConverter.convert(createdEntry, messageAttachments, session);
-        SharedByteArrayInputStream content = new SharedByteArrayInputStream(messageContent);
         Date internalDate = Date.from(createdEntry.getValue().getDate().toInstant());
 
         MessageManager mailbox = mailboxManager.getMailbox(targetMailboxes.get(0), session);
@@ -90,7 +90,7 @@ public class MessageAppender {
                 .withInternalDate(internalDate)
                 .withFlags(getFlags(createdEntry.getValue()))
                 .notRecent()
-                .build(content),
+                .build(new ByteContent(messageContent)),
             session);
         ComposedMessageId ids = appendResult.getId();
         if (targetMailboxes.size() > 1) {
@@ -101,7 +101,7 @@ public class MessageAppender {
             .uid(ids.getUid())
             .keywords(createdEntry.getValue().getKeywords())
             .internalDate(internalDate.toInstant())
-            .sharedContent(content)
+            .sharedContent(new SharedByteArrayInputStream(messageContent))
             .size(messageContent.length)
             .attachments(appendResult.getMessageAttachments())
             .mailboxId(mailbox.getId())
@@ -116,19 +116,18 @@ public class MessageAppender {
 
 
         byte[] messageContent = asBytes(message);
-        SharedByteArrayInputStream content = new SharedByteArrayInputStream(messageContent);
         Date internalDate = new Date();
 
         AppendResult appendResult = messageManager.appendMessage(MessageManager.AppendCommand.builder()
             .withFlags(flags)
-            .build(content), session);
+            .build(new ByteContent(messageContent)), session);
         ComposedMessageId ids = appendResult.getId();
 
         return MetaDataWithContent.builder()
             .uid(ids.getUid())
             .keywords(Keywords.lenientFactory().fromFlags(flags))
             .internalDate(internalDate.toInstant())
-            .sharedContent(content)
+            .sharedContent(new SharedByteArrayInputStream(messageContent))
             .size(messageContent.length)
             .attachments(appendResult.getMessageAttachments())
             .mailboxId(messageManager.getId())

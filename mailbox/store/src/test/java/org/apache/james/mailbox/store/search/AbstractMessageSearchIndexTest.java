@@ -352,7 +352,7 @@ public abstract class AbstractMessageSearchIndexTest {
 
         myFolderMessageManager.appendMessage(MessageManager.AppendCommand.builder()
             .withFlags(new Flags(Flags.Flag.SEEN))
-            .build(ClassLoader.getSystemResourceAsStream("eml/mail.eml")),
+            .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mail.eml")),
             session);
 
         await();
@@ -425,7 +425,7 @@ public abstract class AbstractMessageSearchIndexTest {
 
         ComposedMessageId mailWithDotsInHeader = myFolderMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
-                .build(ClassLoader.getSystemResourceAsStream("eml/headerWithDot.eml")),
+                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/headerWithDot.eml")),
             session).getId();
         await();
         
@@ -440,7 +440,7 @@ public abstract class AbstractMessageSearchIndexTest {
 
         ComposedMessageId mailWithDotsInHeader = myFolderMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
-                .build(ClassLoader.getSystemResourceAsStream("eml/headerWithDot.eml")),
+                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/headerWithDot.eml")),
             session).getId();
         await();
 
@@ -456,7 +456,7 @@ public abstract class AbstractMessageSearchIndexTest {
 
         ComposedMessageId m11 = inboxMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
-            .build(ClassLoader.getSystemResourceAsStream("eml/mail5.eml")),
+            .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mail5.eml")),
             session).getId();
 
         String emailToSearch = "luc.duzan@james.apache.org";
@@ -1296,7 +1296,7 @@ public abstract class AbstractMessageSearchIndexTest {
         assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.FullText));
         ComposedMessageId messageWithBeautifulBananaAsTextAttachment = myFolderMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
-            .build(ClassLoader.getSystemResourceAsStream("eml/emailWithTextAttachment.eml")),
+            .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/emailWithTextAttachment.eml")),
             session).getId();
         await();
 
@@ -1311,7 +1311,7 @@ public abstract class AbstractMessageSearchIndexTest {
         assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Attachment));
         ComposedMessageId messageWithBeautifulBananaAsTextAttachment = myFolderMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
-                .build(ClassLoader.getSystemResourceAsStream("eml/emailWithTextAttachment.eml")),
+                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/emailWithTextAttachment.eml")),
             session).getId();
         await();
 
@@ -1326,7 +1326,7 @@ public abstract class AbstractMessageSearchIndexTest {
         assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Attachment));
         myFolderMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
-                .build(ClassLoader.getSystemResourceAsStream("eml/emailWithTextAttachment.eml")),
+                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/emailWithTextAttachment.eml")),
             session).getId();
         await();
 

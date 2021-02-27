@@ -21,12 +21,12 @@ package org.apache.james.mailbox.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+
+import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.Username;
@@ -35,6 +35,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.model.AttachmentMetadata;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
@@ -45,6 +46,7 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
@@ -85,9 +87,8 @@ public abstract class AbstractMailboxManagerAttachmentTest {
     @Test
     void appendMessageShouldStoreWithoutAttachmentWhenMailWithoutAttachment() throws Exception {
         String mail = "Subject: Test\n\nBody";
-        InputStream mailInputStream = new ByteArrayInputStream(mail.getBytes());
         inboxMessageManager.appendMessage(MessageManager.AppendCommand.builder()
-            .build(mailInputStream), mailboxSession);
+            .build(new ByteContent(mail.getBytes())), mailboxSession);
         
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(inbox, MessageRange.all(), FetchType.Full, 1);
         assertThat(messages.hasNext()).isTrue();
@@ -96,7 +97,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
 
     @Test
     void appendMessageShouldStoreAttachmentWhenMailWithOneAttachment() throws Exception {
-        InputStream mailInputStream = ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml");
+        SharedByteArrayInputStream mailInputStream = ClassLoaderUtils.getSystemResourceAsSharedStream("eml/oneAttachmentAndSomeTextInlined.eml");
         inboxMessageManager.appendMessage(MessageManager.AppendCommand.builder()
             .build(mailInputStream), mailboxSession);
 
@@ -107,7 +108,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
 
     @Test
     void appendMessageShouldStoreAttachmentNameWhenMailWithOneAttachment() throws Exception {
-        InputStream mailInputStream = ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml");
+        SharedByteArrayInputStream mailInputStream = ClassLoaderUtils.getSystemResourceAsSharedStream("eml/oneAttachmentAndSomeTextInlined.eml");
         inboxMessageManager.appendMessage(MessageManager.AppendCommand.builder()
             .build(mailInputStream), mailboxSession);
 
@@ -120,7 +121,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
 
     @Test
     void appendMessageShouldStoreARetrievableAttachmentWhenMailWithOneAttachment() throws Exception {
-        InputStream mailInputStream = ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml");
+        SharedByteArrayInputStream mailInputStream = ClassLoaderUtils.getSystemResourceAsSharedStream("eml/oneAttachmentAndSomeTextInlined.eml");
 
         inboxMessageManager.appendMessage(MessageManager.AppendCommand.builder()
             .build(mailInputStream), mailboxSession);
@@ -135,7 +136,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
 
     @Test
     void appendMessageShouldStoreAttachmentsWhenMailWithTwoAttachment() throws Exception {
-        InputStream mailInputStream = ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml");
+        SharedByteArrayInputStream mailInputStream = ClassLoaderUtils.getSystemResourceAsSharedStream("eml/twoAttachments.eml");
 
         inboxMessageManager.appendMessage(MessageManager.AppendCommand.builder()
             .build(mailInputStream), mailboxSession);
@@ -147,7 +148,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
 
     @Test
     void appendMessageShouldStoreTwoRetrievableAttachmentsWhenMailWithTwoAttachment() throws Exception {
-        InputStream mailInputStream = ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml");
+        SharedByteArrayInputStream mailInputStream = ClassLoaderUtils.getSystemResourceAsSharedStream("eml/twoAttachments.eml");
 
         inboxMessageManager.appendMessage(MessageManager.AppendCommand.builder()
             .build(mailInputStream), mailboxSession);
@@ -176,7 +177,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
 
     @Test
     void appendMessageShouldStoreEmbeddedMailAsAttachmentWhenMailWithEmbeddedAttachment() throws Exception {
-        InputStream mailInputStream = ClassLoader.getSystemResourceAsStream("eml/embeddedAttachmentWithAttachment.eml");
+        SharedByteArrayInputStream mailInputStream = ClassLoaderUtils.getSystemResourceAsSharedStream("eml/embeddedAttachmentWithAttachment.eml");
 
         inboxMessageManager.appendMessage(MessageManager.AppendCommand.builder()
             .build(mailInputStream), mailboxSession);
@@ -190,10 +191,9 @@ public abstract class AbstractMailboxManagerAttachmentTest {
     void appendMessageShouldNotStoreAnyAttachmentWhenUnparsableMail() throws Exception {
         MailboxManager parseFailingMailboxManager = getParseFailingMailboxManager();
         MessageManager parseFailingInboxMessageManager = parseFailingMailboxManager.getMailbox(inboxPath, mailboxSession);
-        InputStream mailInputStream = new ByteArrayInputStream("content".getBytes());
 
         parseFailingInboxMessageManager.appendMessage(MessageManager.AppendCommand.builder()
-            .build(mailInputStream), mailboxSession);
+            .build(new ByteContent("content".getBytes())), mailboxSession);
 
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(inbox, MessageRange.all(), FetchType.Full, 1);
         assertThat(messages.hasNext()).isTrue();
