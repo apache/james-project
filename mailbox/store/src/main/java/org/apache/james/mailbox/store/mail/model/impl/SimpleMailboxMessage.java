@@ -26,15 +26,15 @@ import java.util.List;
 import java.util.Optional;
 
 import javax.mail.Flags;
-import javax.mail.internet.SharedInputStream;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
+import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
@@ -58,7 +58,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
         private Date internalDate;
         private Long size;
         private Integer bodyStartOctet;
-        private SharedInputStream content;
+        private Content content;
         private Flags flags;
         private Properties properties;
         private MailboxId mailboxId;
@@ -98,7 +98,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             return this;
         }
 
-        public Builder content(SharedInputStream content) {
+        public Builder content(Content content) {
             this.content = content;
             return this;
         }
@@ -174,9 +174,9 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             .mailboxId(mailboxId).build();
     }
 
-    private static SharedByteArrayInputStream copyFullContent(MailboxMessage original) throws MailboxException {
+    private static Content copyFullContent(MailboxMessage original) throws MailboxException {
         try {
-            return new SharedByteArrayInputStream(IOUtils.toByteArray(original.getFullContent()));
+            return new ByteContent(IOUtils.toByteArray(original.getFullContent()));
         } catch (IOException e) {
             throw new MailboxException("Unable to parse message", e);
         }
@@ -194,8 +194,8 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
     private ModSeq modSeq;
 
     public SimpleMailboxMessage(MessageId messageId, Date internalDate, long size, int bodyStartOctet,
-            SharedInputStream content, Flags flags,
-            Properties properties, MailboxId mailboxId, List<MessageAttachmentMetadata> attachments) {
+                                Content content, Flags flags,
+                                Properties properties, MailboxId mailboxId, List<MessageAttachmentMetadata> attachments) {
         super(new SimpleMessage(
                 messageId,
                 content, size, internalDate,
@@ -210,7 +210,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
     }
 
     public SimpleMailboxMessage(MessageId messageId, Date internalDate, long size, int bodyStartOctet,
-                                SharedInputStream content, Flags flags,
+                                Content content, Flags flags,
                                 Properties properties, MailboxId mailboxId) {
         this(messageId, internalDate, size, bodyStartOctet,
                 content, flags,

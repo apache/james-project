@@ -42,7 +42,6 @@ import java.util.TreeMap;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
-import javax.mail.util.SharedFileInputStream;
 
 import org.apache.commons.io.input.TeeInputStream;
 import org.apache.commons.lang3.tuple.Pair;
@@ -470,14 +469,12 @@ public class StoreMessageManager implements MessageManager {
         return bodyStartOctet;
     }
 
-    private AppendResult createAndDispatchMessage(Date internalDate, MailboxSession mailboxSession, Content content, PropertyBuilder propertyBuilder, Flags flags, int bodyStartOctet) throws IOException, MailboxException {
-        // TODO MailboxMessage should be backed by a "content"
-        try (SharedFileInputStream contentIn = null) {
+    private AppendResult createAndDispatchMessage(Date internalDate, MailboxSession mailboxSession, Content content, PropertyBuilder propertyBuilder, Flags flags, int bodyStartOctet) throws MailboxException {
             final int size = (int) content.size();
             new QuotaChecker(quotaManager, quotaRootResolver, mailbox).tryAddition(1, size);
 
             return locker.executeWithLock(getMailboxPath(), () -> {
-                Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>> data = messageStorer.appendMessageToStore(mailbox, internalDate, size, bodyStartOctet, contentIn, flags, propertyBuilder, mailboxSession);
+                Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>> data = messageStorer.appendMessageToStore(mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, mailboxSession);
 
                 Mailbox mailbox = getMailboxEntity();
 
@@ -494,7 +491,6 @@ public class StoreMessageManager implements MessageManager {
                 ComposedMessageId ids = new ComposedMessageId(mailbox.getMailboxId(), messageMetaData.getMessageId(), messageMetaData.getUid());
                 return new AppendResult(ids, messageMetaData.getSize(), data.getRight());
             }, MailboxPathLocker.LockType.Write);
-        }
     }
 
     private PropertyBuilder getPropertyBuilder(MaximalBodyDescriptor descriptor, String mediaType, String subType) {

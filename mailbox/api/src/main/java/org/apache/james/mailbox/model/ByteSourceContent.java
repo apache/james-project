@@ -35,9 +35,9 @@ public class ByteSourceContent implements Content, Closeable {
         FileBackedOutputStream out = new FileBackedOutputStream(FILE_THRESHOLD);
         try {
             stream.transferTo(out);
-            return new ByteSourceContent(out.asByteSource(), out::close);
+            return new ByteSourceContent(out.asByteSource(), out::reset);
         } catch (IOException ioException) {
-            out.close();
+            out.reset();
             throw ioException;
         }
     }

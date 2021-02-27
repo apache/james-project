@@ -26,10 +26,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.mail.Flags;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.TestId;
@@ -53,7 +53,7 @@ class MetadataMapAssertTest {
     @BeforeEach
     void setUp() {
         message1 = new SimpleMailboxMessage(MESSAGE_ID, DATE, HEADER_STRING.length() + BODY_STRING.length(),
-            HEADER_STRING.length(), new SharedByteArrayInputStream((HEADER_STRING + BODY_STRING).getBytes()), new Flags(), new PropertyBuilder().build(), MAILBOX_ID);
+            HEADER_STRING.length(), new ByteContent((HEADER_STRING + BODY_STRING).getBytes()), new Flags(), new PropertyBuilder().build(), MAILBOX_ID);
         message1.setUid(UID);
         message1.setModSeq(MODSEQ);
     }

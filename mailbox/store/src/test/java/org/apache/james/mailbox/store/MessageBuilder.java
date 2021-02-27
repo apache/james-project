@@ -28,9 +28,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.mail.Flags;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
@@ -81,7 +81,7 @@ public class MessageBuilder {
     public MailboxMessage build(MessageId messageId) throws Exception {
         byte[] headerContent = getHeaderContent();
         SimpleMailboxMessage mailboxMessage = new SimpleMailboxMessage(messageId, internalDate, size, headerContent.length,
-            new SharedByteArrayInputStream(Bytes.concat(headerContent, body)), flags, new PropertyBuilder().build(), mailboxId, NO_ATTACHMENTS);
+            new ByteContent(Bytes.concat(headerContent, body)), flags, new PropertyBuilder().build(), mailboxId, NO_ATTACHMENTS);
         mailboxMessage.setUid(uid);
         return mailboxMessage;
     }

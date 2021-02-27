@@ -30,7 +30,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import javax.mail.Flags;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.core.Username;
 import org.apache.james.events.EventListener;
@@ -42,6 +41,7 @@ import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.events.MessageMoveEvent;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -272,7 +272,7 @@ class SpamAssassinListenerTest {
         int bodyStartOctet = 25;
         byte[] content = "Subject: test\r\n\r\nBody\r\n".getBytes(StandardCharsets.UTF_8);
         SimpleMailboxMessage message = new SimpleMailboxMessage(MESSAGE_ID, new Date(),
-            size, bodyStartOctet, new SharedByteArrayInputStream(content), new Flags(), new PropertyBuilder().build(),
+            size, bodyStartOctet, new ByteContent(content), new Flags(), new PropertyBuilder().build(),
             mailbox.getMailboxId());
         MessageMetaData messageMetaData = mapperFactory.createMessageMapper(null).add(mailbox, message);
         message.setUid(messageMetaData.getUid());

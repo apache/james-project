@@ -28,10 +28,10 @@ import static org.mockito.Mockito.when;
 import java.util.Date;
 
 import javax.mail.Flags;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
@@ -63,7 +63,7 @@ class MessageUtilsTest {
         MockitoAnnotations.initMocks(this);
         messageUtils = new MessageUtils(uidProvider, modSeqProvider);
         message = new SimpleMailboxMessage(MESSAGE_ID, new Date(), CONTENT.length(), BODY_START,
-            new SharedByteArrayInputStream(CONTENT.getBytes()), new Flags(), new PropertyBuilder().build(), mailbox.getMailboxId());
+            new ByteContent(CONTENT.getBytes()), new Flags(), new PropertyBuilder().build(), mailbox.getMailboxId());
     }
     
     @Test

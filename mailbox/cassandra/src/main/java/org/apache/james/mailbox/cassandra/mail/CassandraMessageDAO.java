@@ -45,7 +45,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
@@ -59,6 +58,7 @@ import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.Attachme
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.Properties;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
@@ -269,7 +269,7 @@ public class CassandraMessageDAO {
                 row.getTimestamp(INTERNAL_DATE),
                 row.getLong(FULL_CONTENT_OCTETS),
                 row.getInt(BODY_START_OCTET),
-                new SharedByteArrayInputStream(content),
+                new ByteContent(content),
                 getProperties(row),
                 getAttachments(row).collect(Guavate.toImmutableList()),
                 headerId,
@@ -286,7 +286,7 @@ public class CassandraMessageDAO {
                 row.getTimestamp(INTERNAL_DATE),
                 row.getLong(FULL_CONTENT_OCTETS),
                 row.getInt(BODY_START_OCTET),
-                new SharedByteArrayInputStream(EMPTY_BYTE_ARRAY),
+                new ByteContent(EMPTY_BYTE_ARRAY),
                 getProperties(row),
                 getAttachments(row).collect(Guavate.toImmutableList()),
                 headerId,
