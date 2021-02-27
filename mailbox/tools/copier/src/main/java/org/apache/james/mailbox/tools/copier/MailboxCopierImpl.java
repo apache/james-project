@@ -107,7 +107,13 @@ public class MailboxCopierImpl implements MailboxCopier {
                     InputStreamContent content = (InputStreamContent) messageResult.getFullContent();
 
                     dstMailboxManager.startProcessingRequest(dstMailboxSession);
-                    dstMessageManager.appendMessage(content.getInputStream(), messageResult.getInternalDate(), dstMailboxSession, messageResult.getFlags().contains(Flag.RECENT), messageResult.getFlags());
+                    dstMessageManager.appendMessage(
+                        MessageManager.AppendCommand.builder()
+                            .withInternalDate(messageResult.getInternalDate())
+                            .isRecent(messageResult.getFlags().contains(Flag.RECENT))
+                            .withFlags(messageResult.getFlags())
+                            .build(content.getInputStream()),
+                        dstMailboxSession);
                     dstMailboxManager.endProcessingRequest(dstMailboxSession);
                     LOGGER.info("MailboxMessage #{} appended in destination mailbox with path={}", j, mailboxPath);
                     j++;
