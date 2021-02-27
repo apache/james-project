@@ -147,7 +147,14 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
 
         MailboxSession mailboxSession = mailboxManager.createSystemSession(Username.of(username));
         MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
-        return messageManager.appendMessage(message, internalDate, mailboxSession, isRecent, flags).getId();
+        return messageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .withInternalDate(internalDate)
+                .isRecent(isRecent)
+                .withFlags(flags)
+                .build(message),
+            mailboxSession)
+            .getId();
     }
 
     public ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, MessageManager.AppendCommand appendCommand)

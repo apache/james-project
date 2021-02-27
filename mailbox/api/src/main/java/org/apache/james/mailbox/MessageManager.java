@@ -242,6 +242,11 @@ public interface MessageManager {
                 return this;
             }
 
+            public Builder withInternalDate(Optional<Date> date) {
+                this.internalDate = date;
+                return this;
+            }
+
             public Builder isRecent(boolean recent) {
                 this.isRecent = Optional.of(recent);
                 return this;
