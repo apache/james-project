@@ -28,7 +28,6 @@ import java.util.Calendar;
 import java.util.Date;
 
 import javax.mail.Flags;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -37,6 +36,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
@@ -51,7 +51,7 @@ import com.google.common.collect.ImmutableList;
 class SimpleMailboxMessageTest {
     static final Charset MESSAGE_CHARSET = StandardCharsets.UTF_8;
     static final String MESSAGE_CONTENT = "Simple message content without special characters";
-    static final SharedByteArrayInputStream CONTENT_STREAM = new SharedByteArrayInputStream(MESSAGE_CONTENT.getBytes(MESSAGE_CHARSET));
+    static final ByteContent CONTENT_STREAM = new ByteContent(MESSAGE_CONTENT.getBytes(MESSAGE_CHARSET));
     static final String MESSAGE_CONTENT_SPECIAL_CHAR = "Simple message content with special characters: \"'(§è!çà$*`";
     static final TestId TEST_ID = TestId.of(1L);
     static final int BODY_START_OCTET = 0;
@@ -133,7 +133,7 @@ class SimpleMailboxMessageTest {
 
     private static SimpleMailboxMessage buildMessage(String content) {
         return new SimpleMailboxMessage(new DefaultMessageId(), Calendar.getInstance().getTime(),
-            content.length(), BODY_START_OCTET, new SharedByteArrayInputStream(
+            content.length(), BODY_START_OCTET, new ByteContent(
                     content.getBytes(MESSAGE_CHARSET)), new Flags(),
             new PropertyBuilder().build(), TEST_ID);
     }

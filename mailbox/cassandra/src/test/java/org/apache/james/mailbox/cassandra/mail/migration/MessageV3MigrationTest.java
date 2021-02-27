@@ -26,7 +26,6 @@ import java.util.Date;
 import java.util.List;
 
 import javax.mail.Flags;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
@@ -43,6 +42,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAOV3;
 import org.apache.james.mailbox.cassandra.mail.MessageRepresentation;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.MessageMapper;
@@ -132,12 +132,10 @@ class MessageV3MigrationTest {
         new MessageV3Migration(daoV2, daoV3).apply();
         MessageRepresentation migrated = daoV3.retrieveMessage((CassandraMessageId) message1.getMessageId(), MessageMapper.FetchType.Metadata).block();
 
-        int start = 0;
-        int end = -1;
         assertThat(migrated).isEqualToComparingOnlyGivenFields(original, "messageId",
             "internalDate", "size", "bodyStartOctet", "properties", "attachments", "headerId", "bodyId");
-        assertThat(migrated.getContent().newStream(start, end))
-            .hasSameContentAs(original.getContent().newStream(start, end));
+        assertThat(migrated.getContent().getInputStream())
+            .hasSameContentAs(original.getContent().getInputStream());
     }
 
     private SimpleMailboxMessage createMessage(MessageId messageId) {
@@ -148,7 +146,7 @@ class MessageV3MigrationTest {
             .internalDate(new Date())
             .bodyStartOctet(MessageV3MigrationTest.BODY_START)
             .size(MessageV3MigrationTest.CONTENT.length())
-            .content(new SharedByteArrayInputStream(MessageV3MigrationTest.CONTENT.getBytes(StandardCharsets.UTF_8)))
+            .content(new ByteContent(MessageV3MigrationTest.CONTENT.getBytes(StandardCharsets.UTF_8)))
             .flags(new Flags())
             .properties(new PropertyBuilder().build())
             .addAttachments(NO_ATTACHMENT)

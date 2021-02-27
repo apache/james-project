@@ -27,9 +27,9 @@ import java.util.List;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.mailbox.ApplicableFlagBuilder;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -105,7 +105,7 @@ class ApplicableFlagCalculatorTest {
         int bodyStart = 10;
 
         return new SimpleMailboxMessage(new DefaultMessageId(), new Date(), content.length(), bodyStart,
-            new SharedByteArrayInputStream(content.getBytes()), messageFlags, new PropertyBuilder().build(), TestId.of(1));
+            new ByteContent(content.getBytes()), messageFlags, new PropertyBuilder().build(), TestId.of(1));
     }
 
     private Flags getDefaultApplicableFlag() {

@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.util.Date;
 
 import javax.mail.Flags;
-import javax.mail.internet.SharedInputStream;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -33,10 +32,12 @@ import javax.persistence.Lob;
 import javax.persistence.Table;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
+import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 
@@ -72,15 +73,16 @@ public class JPAMailboxMessage extends AbstractJPAMailboxMessage {
         this.body = body;
     }
 
-    public JPAMailboxMessage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, SharedInputStream content, int bodyStartOctet, PropertyBuilder propertyBuilder) throws MailboxException {
+    public JPAMailboxMessage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, Content content, int bodyStartOctet, PropertyBuilder propertyBuilder) throws MailboxException {
         super(mailbox, internalDate, flags, size, bodyStartOctet, propertyBuilder);
         try {
             int headerEnd = bodyStartOctet;
             if (headerEnd < 0) {
                 headerEnd = 0;
             }
-            this.header = IOUtils.toByteArray(content.newStream(0, headerEnd));
-            this.body = IOUtils.toByteArray(content.newStream(getBodyStartOctet(), -1));
+            InputStream stream = content.getInputStream();
+            this.header = IOUtils.toByteArray(new BoundedInputStream(stream, headerEnd));
+            this.body = IOUtils.toByteArray(stream);
 
         } catch (IOException e) {
             throw new MailboxException("Unable to parse message",e);

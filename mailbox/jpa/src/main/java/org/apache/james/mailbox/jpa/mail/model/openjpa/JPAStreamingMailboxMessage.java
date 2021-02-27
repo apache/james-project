@@ -23,18 +23,17 @@ import java.io.InputStream;
 import java.util.Date;
 
 import javax.mail.Flags;
-import javax.mail.internet.SharedInputStream;
-import javax.mail.util.SharedByteArrayInputStream;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Table;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
+import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.openjpa.persistence.Persistent;
@@ -61,15 +60,17 @@ public class JPAStreamingMailboxMessage extends AbstractJPAMailboxMessage {
     @Column(name = "HEADER_BYTES", length = 10485760, nullable = false)
     private InputStream header;
 
-    private final SharedInputStream content;
+    private final Content content;
 
-    public JPAStreamingMailboxMessage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, SharedInputStream content, int bodyStartOctet, PropertyBuilder propertyBuilder) throws MailboxException {
+    public JPAStreamingMailboxMessage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, Content content, int bodyStartOctet, PropertyBuilder propertyBuilder) throws MailboxException {
         super(mailbox, internalDate, flags, size, bodyStartOctet, propertyBuilder);
         this.content = content;
 
         try {
-            this.header = getHeaderContent();
-            this.body = getBodyContent();
+            this.header = new BoundedInputStream(content.getInputStream(), getBodyStartOctet());
+            InputStream bodyStream = content.getInputStream();
+            bodyStream.skip(getBodyStartOctet());
+            this.body = bodyStream;
 
         } catch (IOException e) {
             throw new MailboxException("Unable to parse message",e);
@@ -81,8 +82,18 @@ public class JPAStreamingMailboxMessage extends AbstractJPAMailboxMessage {
      */
     public JPAStreamingMailboxMessage(JPAMailbox mailbox, MessageUid uid, ModSeq modSeq, MailboxMessage message) throws MailboxException {
         super(mailbox, uid, modSeq, message);
+        this.content = new Content() {
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return message.getFullContent();
+            }
+
+            @Override
+            public long size() {
+                return message.getFullContentOctets();
+            }
+        };
         try {
-            this.content = new SharedByteArrayInputStream(IOUtils.toByteArray(message.getFullContent()));
             this.header = getHeaderContent();
             this.body = getBodyContent();
         } catch (IOException e) {
@@ -92,7 +103,9 @@ public class JPAStreamingMailboxMessage extends AbstractJPAMailboxMessage {
 
     @Override
     public InputStream getBodyContent() throws IOException {
-        return content.newStream(getBodyStartOctet(), -1);
+        InputStream inputStream = content.getInputStream();
+        inputStream.skip(getBodyStartOctet());
+        return inputStream;
     }
 
     @Override
@@ -101,7 +114,7 @@ public class JPAStreamingMailboxMessage extends AbstractJPAMailboxMessage {
         if (headerEnd < 0) {
             headerEnd = 0;
         }
-        return content.newStream(0, headerEnd);
+        return new BoundedInputStream(content.getInputStream(), headerEnd);
     }
 
 }

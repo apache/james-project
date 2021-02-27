@@ -28,7 +28,6 @@ import java.util.List;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Username;
@@ -37,6 +36,7 @@ import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -997,7 +997,7 @@ public abstract class MessageIdMapperTest {
                 new Date(), 
                 content.length(), 
                 bodyStart, 
-                new SharedByteArrayInputStream(content.getBytes()), 
+                new ByteContent(content.getBytes()),
                 new Flags(), 
                 propertyBuilder.build(),
                 mailbox.getMailboxId());
