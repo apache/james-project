@@ -39,6 +39,7 @@ import org.apache.james.mailbox.exception.UnsupportedCriteriaException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
+import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -289,19 +290,19 @@ public interface MessageManager {
             return new Builder();
         }
 
-        private final InputStream msgIn;
+        private final Content msgIn;
         private final Date internalDate;
         private final boolean isRecent;
         private final Flags flags;
 
-        private AppendCommand(InputStream msgIn, Date internalDate, boolean isRecent, Flags flags) {
+        private AppendCommand(Content msgIn, Date internalDate, boolean isRecent, Flags flags) {
             this.msgIn = msgIn;
             this.internalDate = internalDate;
             this.isRecent = isRecent;
             this.flags = flags;
         }
 
-        public InputStream getMsgIn() {
+        public Content getMsgIn() {
             return msgIn;
         }
 
