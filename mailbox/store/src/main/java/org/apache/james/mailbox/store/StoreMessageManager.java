@@ -321,27 +321,17 @@ public class StoreMessageManager implements MessageManager {
             // source for the InputStream
             file = File.createTempFile("imap", ".msg");
             try (FileOutputStream out = new FileOutputStream(file);
-                 BufferedOutputStream bufferedOut = new BufferedOutputStream(out);
-                 BufferedInputStream tmpMsgIn = new BufferedInputStream(new TeeInputStream(msgIn, bufferedOut));
-                 BodyOffsetInputStream bIn = new BodyOffsetInputStream(tmpMsgIn)) {
-                // Disable line length... This should be handled by the smtp server
-                // component and not the parser itself
-                // https://issues.apache.org/jira/browse/IMAP-122
-                final MimeTokenStream parser = getParser(bIn);
-                readHeader(parser);
-                final MaximalBodyDescriptor descriptor = (MaximalBodyDescriptor) parser.getBodyDescriptor();
-                final MediaType mediaType = getMediaType(descriptor);
-                final PropertyBuilder propertyBuilder = getPropertyBuilder(descriptor, mediaType.mediaType, mediaType.subType);
-                setTextualLinesCount(parser, mediaType.mediaType, propertyBuilder);
-                final Flags flags = getFlags(mailboxSession, isRecent, flagsToBeSet);
+                BufferedOutputStream bufferedOut = new BufferedOutputStream(out);
+                BufferedInputStream tmpMsgIn = new BufferedInputStream(new TeeInputStream(msgIn, bufferedOut));
+                BodyOffsetInputStream bIn = new BodyOffsetInputStream(tmpMsgIn)) {
+                PropertyBuilder propertyBuilder = parseProperties(bIn);
 
-                if (internalDate == null) {
-                    internalDate = new Date();
-                }
                 InputStreamConsummer.consume(tmpMsgIn);
                 bufferedOut.flush();
                 int bodyStartOctet = getBodyStartOctet(bIn);
-                return createAndDispatchMessage(internalDate, mailboxSession, file, propertyBuilder, flags, bodyStartOctet);
+                return createAndDispatchMessage(computeInternalDate(internalDate),
+                    mailboxSession, file, propertyBuilder,
+                    getFlags(mailboxSession, isRecent, flagsToBeSet), bodyStartOctet);
             }
         } catch (IOException | MimeException e) {
             throw new MailboxException("Unable to parse message", e);
@@ -355,6 +345,24 @@ public class StoreMessageManager implements MessageManager {
                 }
             }
         }
+    }
+
+    private PropertyBuilder parseProperties(BodyOffsetInputStream bIn) throws IOException, MimeException {
+        // Disable line length... This should be handled by the smtp server
+        // component and not the parser itself
+        // https://issues.apache.org/jira/browse/IMAP-122
+        final MimeTokenStream parser = getParser(bIn);
+        readHeader(parser);
+        final MaximalBodyDescriptor descriptor = (MaximalBodyDescriptor) parser.getBodyDescriptor();
+        final MediaType mediaType = getMediaType(descriptor);
+        final PropertyBuilder propertyBuilder = getPropertyBuilder(descriptor, mediaType.mediaType, mediaType.subType);
+        setTextualLinesCount(parser, mediaType.mediaType, propertyBuilder);
+        return propertyBuilder;
+    }
+
+    private Date computeInternalDate(Date internalDate) {
+        return Optional.ofNullable(internalDate)
+            .orElseGet(Date::new);
     }
 
     private MimeTokenStream getParser(BodyOffsetInputStream bIn) {
