@@ -167,15 +167,19 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
                 if (imapSession != null) {
                     imapSession.logout();
                 }
-
-                // Make sure we close the channel after all the buffers were flushed out
-                Channel channel = ctx.getChannel();
-                if (channel.isConnected()) {
-                    channel.write(ChannelBuffers.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-                }
+                disconnectClient(ctx);
 
             }
         }
+    }
+
+    private void disconnectClient(ChannelHandlerContext ctx) {
+        // Make sure we close the channel after all the buffers were flushed out
+        Channel channel = ctx.getChannel();
+        if (channel.isConnected()) {
+            channel.write(ChannelBuffers.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+        }
+        imapConnectionsMetric.decrement();
     }
 
     @Override
@@ -198,11 +202,7 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
                 processor.process(message, responseEncoder, session);
 
                 if (session.getState() == ImapSessionState.LOGOUT) {
-                    // Make sure we close the channel after all the buffers were flushed out
-                    Channel channel = ctx.getChannel();
-                    if (channel.isConnected()) {
-                        channel.write(ChannelBuffers.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-                    }
+                    disconnectClient(ctx);
                 }
                 final IOException failure = responseEncoder.getFailure();
 
