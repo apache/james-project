@@ -352,7 +352,7 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
      */
     @Override
     public int getSize() throws MessagingException {
-        if (source != null) {
+        if (source != null && !bodyModified) {
             try {
                 long fullSize = source.getMessageSize();
                 if (headers == null) {
@@ -365,13 +365,8 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                 throw new MessagingException("Unable to calculate message size");
             }
         } else {
-            if (!messageParsed) {
-                loadMessage();
-            }
-
-            return super.getSize();
+            return UNKNOWN;
         }
-
     }
 
     /**

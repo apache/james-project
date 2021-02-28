@@ -258,7 +258,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
     public void testSizeModifiedBodyWithoutSave() throws MessagingException {
         String newBody = "This is the new body of the message";
         mw.setText(newBody);
-        assertThat(mw.getSize()).isEqualTo(body.length());
+        assertThat(mw.getSize()).isEqualTo(-1);
     }
 
     @Test
@@ -266,7 +266,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         String newBody = "This is the new body of the message";
         mw.setText(newBody);
         mw.saveChanges();
-        assertThat(mw.getSize()).isEqualTo(body.length());
+        assertThat(mw.getSize()).isEqualTo(-1);
     }
     
     @Test
