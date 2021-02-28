@@ -39,8 +39,11 @@ import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
+
+import com.google.common.io.CountingInputStream;
 
 /**
  * This object wraps a MimeMessage, only loading the underlying MimeMessage
@@ -56,6 +59,8 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
      * or via a temporary file. Default is the file
      */
     public static final String USE_MEMORY_COPY = "james.message.usememorycopy";
+    private static final int UNKNOWN = -1;
+    private static final int HEADER_BODY_SEPARATOR_SIZE = 2;
 
     /**
      * Can provide an input stream to the data
@@ -354,7 +359,7 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                     loadHeaders();
                 }
                 // 2 == CRLF
-                return (int) (fullSize - initialHeaderSize - 2);
+                return (int) (fullSize - initialHeaderSize - HEADER_BODY_SEPARATOR_SIZE);
 
             } catch (IOException e) {
                 throw new MessagingException("Unable to calculate message size");
@@ -379,10 +384,10 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
         try {
             in = getContentStream();
         } catch (Exception e) {
-            return -1;
+            return UNKNOWN;
         }
         if (in == null) {
-            return -1;
+            return UNKNOWN;
         }
         // Wrap input stream in LineNumberReader
         // Not sure what encoding to use really...
@@ -391,13 +396,13 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
             // Read through all the data
             char[] block = new char[4096];
             try (LineNumberReader counter = new LineNumberReader(isr)) {
-                while (counter.read(block) > -1) {
+                while (counter.read(block) > UNKNOWN) {
                     // Just keep reading
                 }
                 return counter.getLineNumber();
             }
         } catch (IOException ioe) {
-            return -1;
+            return UNKNOWN;
         }
     }
 
@@ -417,6 +422,15 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                 return source.getMessageSize();
             } catch (IOException ioe) {
                 throw new MessagingException("Error retrieving message size", ioe);
+            }
+        } else if (source != null && !bodyModified) {
+            try (InputStream in = source.getInputStream()) {
+                CountingInputStream countingInputStream = new CountingInputStream(in);
+                new MailHeaders(countingInputStream);
+                long previousHeaderLength = countingInputStream.getCount();
+                return source.getMessageSize() - previousHeaderLength + IOUtils.consume(new InternetHeadersInputStream(getAllHeaderLines()));
+            } catch (IOException e) {
+                throw new MessagingException("Error retrieving message size", e);
             }
         } else {
             return MimeMessageUtil.calculateMessageSize(this);
