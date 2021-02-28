@@ -382,7 +382,6 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
             // Need to determine whether need to insert this record, or update
             // it.
 
-            mc.getMessage().saveChanges();
             MessageInputStream is = new MessageInputStream(mc, sr, inMemorySizeLimit, true);
 
             // Begin a transaction
