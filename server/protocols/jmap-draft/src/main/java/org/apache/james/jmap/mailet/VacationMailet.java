@@ -21,6 +21,7 @@ package org.apache.james.jmap.mailet;
 
 import java.time.ZonedDateTime;
 import java.util.Locale;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -71,8 +72,10 @@ public class VacationMailet extends GenericMailet {
             if (!mail.hasSender()) {
                 return;
             }
-            if (!automaticallySentMailDetector.isAutomaticallySent(mail)
-                    && mail.getMessage().getReplyTo().length > 0) {
+            boolean hasReplyToHeaderField = Optional.ofNullable(mail.getMessage().getReplyTo())
+                .map(replyToFields -> replyToFields.length > 0)
+                .orElse(false);
+            if (!automaticallySentMailDetector.isAutomaticallySent(mail) && hasReplyToHeaderField) {
                 ZonedDateTime processingDate = zonedDateTimeProvider.get();
                 mail.getRecipients()
                     .forEach(mailAddress -> manageVacation(mailAddress, mail, processingDate));
