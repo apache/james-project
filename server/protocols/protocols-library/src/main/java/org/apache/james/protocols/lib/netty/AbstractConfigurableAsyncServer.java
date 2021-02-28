@@ -263,7 +263,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
             buildSSLContext();
             preInit();
-            executionHandler = createExecutionHander();
+            executionHandler = createExecutionHandler();
             frameHandlerFactory = createFrameHandlerFactory();
             bind();
             port = retrieveFirstBindedPort();
@@ -535,14 +535,14 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
      * 
      * @return ehandler
      */
-    protected ExecutionHandler createExecutionHander() {
+    protected ExecutionHandler createExecutionHandler() {
         return new ExecutionHandler(new JMXEnabledOrderedMemoryAwareThreadPoolExecutor(maxExecutorThreads, 0, 0, getThreadPoolJMXPath(), getDefaultJMXName() + "-executor"));
     }
 
     protected abstract ChannelHandlerFactory createFrameHandlerFactory();
 
     /**
-     * Return the {@link ExecutionHandler} or null if non should be used. Be sure you call {@link #createExecutionHander()} before
+     * Return the {@link ExecutionHandler} or null if non should be used. Be sure you call {@link #createExecutionHandler()} before
      * 
      * @return ehandler
      */
