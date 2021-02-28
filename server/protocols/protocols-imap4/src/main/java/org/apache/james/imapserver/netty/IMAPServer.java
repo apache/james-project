@@ -105,10 +105,6 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         if (timeout < DEFAULT_TIMEOUT) {
             throw new ConfigurationException("Minimum timeout of 30 minutes required. See rfc2060 5.4 for details");
         }
-        
-        if (timeout < 0) {
-            timeout = 0;
-        }
 
         processor.configure(getImapConfiguration(configuration));
     }
