@@ -94,7 +94,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         
         super.doConfigure(configuration);
         
-        hello = softwaretype + " Server " + getHelloName() + " is ready.";
+        hello = softwaretype + getHelloName() + " is ready.";
         compress = configuration.getBoolean("compress", false);
         maxLineLength = configuration.getInt("maxLineLength", DEFAULT_MAX_LINE_LENGTH);
         inMemorySizeLimit = configuration.getInt("inMemorySizeLimit", DEFAULT_IN_MEMORY_SIZE_LIMIT);
