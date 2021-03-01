@@ -86,7 +86,7 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
             crlf = 2;
         }
         
-        if (maxLiteralSize > 0 && maxLiteralSize > size) {
+        if (maxLiteralSize > 0 && size > maxLiteralSize) {
             throw new DecodingException(HumanReadableText.FAILED, "Specified literal is greater then the allowed size");
         }
         // Check if we have enough data
