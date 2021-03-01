@@ -65,8 +65,11 @@ public class MessageParser {
     private static final String TEXT_CALENDAR = "text/calendar";
     private static final ImmutableList<String> ATTACHMENT_CONTENT_TYPES = ImmutableList.of(
         "application/pgp-signature",
-        "message/disposition-notification",
-        TEXT_CALENDAR);
+        "message/disposition-notification");
+    private static final ImmutableList<String> ALLOWED_ATTACHMENT_CONTENT_TYPES = ImmutableList.<String>builder()
+        .addAll(ATTACHMENT_CONTENT_TYPES)
+        .add(TEXT_CALENDAR)
+        .build();
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageParser.class);
 
     private final Cid.CidParser cidParser;
@@ -190,7 +193,7 @@ public class MessageParser {
 
     private boolean isTextPart(Entity part) {
         return getContentTypeField(part)
-            .filter(header -> !ATTACHMENT_CONTENT_TYPES.contains(header.getMimeType()))
+            .filter(header -> !ALLOWED_ATTACHMENT_CONTENT_TYPES.contains(header.getMimeType()))
             .map(ContentTypeField::getMediaType)
             .map(TEXT_MEDIA_TYPE::equals)
             .orElse(false);
