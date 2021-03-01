@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 
-class IMAPServerTest {
+class IMAPServerConfigurationTest {
     @Test
     void getImapConfigurationShouldReturnDefaultValuesWhenEmpty() {
         ImapConfiguration imapConfiguration = IMAPServer.getImapConfiguration(new BaseHierarchicalConfiguration());
