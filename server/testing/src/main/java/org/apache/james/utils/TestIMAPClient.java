@@ -101,6 +101,15 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
         return this;
     }
 
+    public TestIMAPClient append(String mailboxName, String message) throws IOException {
+        String noFlags = null;
+        String noDateTime = null;
+        if (!imapClient.append(mailboxName, noFlags, noDateTime, message)) {
+            throw new RuntimeException(imapClient.getReplyString());
+        }
+        return this;
+    }
+
     public TestIMAPClient delete(String mailbox) throws IOException {
         imapClient.delete(mailbox);
         return this;
