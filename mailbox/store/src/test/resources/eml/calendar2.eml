@@ -24,10 +24,10 @@ Content-Transfer-Encoding: quoted-printable
 </html>
 
 --_000_AM5P190MB03542A58E344F2C68475A951AFD20AM5P190MB0354EURP_
-Content-Type: text/calendar; charset="iso-8859-1"; method=COUNTER
-Content-Transfer-Encoding: base64
+Content-Type: text/calendar; charset="utf-8"; method=COUNTER
 Content-Disposition: attachment;
- filename="attachment1.txt"
+ filename="attachment.txt"
+Content-Transfer-Encoding: base64
 
 QkVHSU46VkNBTEVOREFSDQpNRVRIT0Q6Q09VTlRFUg0KUFJPRElEOk1pY3Jvc29mdCBFeGNoYW5n
 ZSBTZXJ2ZXIgMjAxMA0KVkVSU0lPTjoyLjANCkJFR0lOOlZUSU1FWk9ORQ0KVFpJRDpFdXJvcGUv

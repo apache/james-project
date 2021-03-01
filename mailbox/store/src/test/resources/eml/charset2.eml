@@ -26,6 +26,8 @@ Content-Transfer-Encoding: quoted-printable
 --_000_AM5P190MB03542A58E344F2C68475A951AFD20AM5P190MB0354EURP_
 Content-Type: text/calendar; charset="iso-8859-1"; method=COUNTER
 Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="attachment1.txt"
 
 QkVHSU46VkNBTEVOREFSDQpNRVRIT0Q6Q09VTlRFUg0KUFJPRElEOk1pY3Jvc29mdCBFeGNoYW5n
 ZSBTZXJ2ZXIgMjAxMA0KVkVSU0lPTjoyLjANCkJFR0lOOlZUSU1FWk9ORQ0KVFpJRDpFdXJvcGUv
@@ -39,6 +41,8 @@ REFSDQo=
 --_000_AM5P190MB03542A58E344F2C68475A951AFD20AM5P190MB0354EURP_
 Content-Type: text/calendar; charset="iso-4444-5"; method=COUNTER
 Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="attachment2.txt"
 
 QkVHSU46VkNBTEVOREFSDQpNRVRIT0Q6Q09VTlRFUg0KUFJPRElEOk1pY3Jvc29mdCBFeGNoYW5n
 ZSBTZXJ2ZXIgMjAxMA0KVkVSU0lPTjoyLjANCkJFR0lOOlZUSU1FWk9ORQ0KVFpJRDpFdXJvcGUv
