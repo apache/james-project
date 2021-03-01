@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.message.request;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 
@@ -32,7 +34,7 @@ import com.google.common.base.MoreObjects;
 /**
  * {@link ImapRequest} which request the append of a message to a mailbox
  */
-public class AppendRequest extends AbstractImapRequest {
+public class AppendRequest extends AbstractImapRequest implements Closeable {
     private final String mailboxName;
     private final Flags flags;
     private final Date datetime;
@@ -90,5 +92,10 @@ public class AppendRequest extends AbstractImapRequest {
             .add("datetime", datetime)
             .add("message", message)
             .toString();
+    }
+
+    @Override
+    public void close() throws IOException {
+        message.close();
     }
 }

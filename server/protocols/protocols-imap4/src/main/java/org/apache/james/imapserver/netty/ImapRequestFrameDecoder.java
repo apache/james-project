@@ -19,7 +19,6 @@
 
 package org.apache.james.imapserver.netty;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -214,14 +213,6 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
                 
                 buffer.resetReaderIndex();
                 return null;
-            } finally {
-                if (reader instanceof Closeable) {
-                    try {
-                        ((Closeable) reader).close();
-                    } catch (IOException ignored) {
-                        // Nothing to do
-                    }
-                }
             }
         } else {
             // The session was null so may be the case because the channel was already closed but there were still bytes in the buffer.

@@ -1,15 +1,14 @@
 package org.apache.james.imapserver.netty;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.convert.DisabledListDelimiterHandler;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.io.FileHandler;
 import org.apache.james.core.Username;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
@@ -24,7 +23,6 @@ import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.utils.TestIMAPClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -35,7 +33,7 @@ class IMAPServerTest {
     private static final Username USER = Username.of("user@domain.org");
     private static final String USER_PASS = "pass";
 
-    private static XMLConfiguration getConfig(InputStream configStream) throws ConfigurationException {
+    private static XMLConfiguration getConfig(InputStream configStream) throws Exception {
         FileBasedConfigurationBuilder<XMLConfiguration> builder = new FileBasedConfigurationBuilder<>(XMLConfiguration.class)
             .configure(new Parameters()
                 .xml()
@@ -43,11 +41,7 @@ class IMAPServerTest {
         XMLConfiguration xmlConfiguration = builder.getConfiguration();
         FileHandler fileHandler = new FileHandler(xmlConfiguration);
         fileHandler.load(configStream);
-        try {
-            configStream.close();
-        } catch (IOException ignored) {
-            // Ignored
-        }
+        configStream.close();
 
         return xmlConfiguration;
     }
@@ -92,10 +86,12 @@ class IMAPServerTest {
     @Nested
     class NoLimit {
         IMAPServer imapServer;
+        private int port;
 
         @BeforeEach
         void beforeEach() throws Exception {
             imapServer = createImapServer("imapServerNoLimits.xml");
+            port = imapServer.getListenAddresses().get(0).getPort();
         }
 
         @AfterEach
@@ -105,9 +101,6 @@ class IMAPServerTest {
 
         @Test
         void smallAppendsShouldWork() {
-            int port = imapServer.getListenAddresses().get(0).getPort();
-            System.out.println(port);
-
             assertThatCode(() ->
                 testIMAPClient.connect("127.0.0.1", port)
                     .login(USER.asString(), USER_PASS)
@@ -115,12 +108,52 @@ class IMAPServerTest {
                 .doesNotThrowAnyException();
         }
 
-        @Disabled("JAMES-3507 Bad file management, scoped to command parsing, causes this to fail")
         @Test
         void mediumAppendsShouldWork() {
-            int port = imapServer.getListenAddresses().get(0).getPort();
-            System.out.println(port);
+            assertThatCode(() ->
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS)
+                    .append("INBOX", _65K_MESSAGE))
+                .doesNotThrowAnyException();
+        }
 
+        @Test
+        void largeAppendsShouldWork() {
+            assertThatCode(() ->
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS)
+                    .append("INBOX", _129K_MESSAGE))
+                .doesNotThrowAnyException();
+        }
+    }
+
+    @Nested
+    class Limit {
+        IMAPServer imapServer;
+        private int port;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            imapServer = createImapServer("imapServer.xml");
+            port = imapServer.getListenAddresses().get(0).getPort();
+        }
+
+        @AfterEach
+        void tearDown() {
+            imapServer.destroy();
+        }
+
+        @Test
+        void smallAppendsShouldWork() {
+            assertThatCode(() ->
+                testIMAPClient.connect("127.0.0.1", port)
+                    .login(USER.asString(), USER_PASS)
+                    .append("INBOX", "header: value\r\n\r\nBODY"))
+                .doesNotThrowAnyException();
+        }
+
+        @Test
+        void mediumAppendsShouldWork() {
             assertThatCode(() ->
                 testIMAPClient.connect("127.0.0.1", port)
                     .login(USER.asString(), USER_PASS)
@@ -130,68 +163,12 @@ class IMAPServerTest {
 
         @Test
         void largeAppendsShouldBeRejected() {
-            int port = imapServer.getListenAddresses().get(0).getPort();
-            System.out.println(port);
-
-            assertThatCode(() ->
+            assertThatThrownBy(() ->
                 testIMAPClient.connect("127.0.0.1", port)
                     .login(USER.asString(), USER_PASS)
                     .append("INBOX", _129K_MESSAGE))
                 .isInstanceOf(RuntimeException.class)
-            .hasMessageContaining("NO APPEND failed");
-        }
-    }
-
-    @Nested
-    class Limit {
-        IMAPServer imapServer;
-
-        @BeforeEach
-        void beforeEach() throws Exception {
-            imapServer = createImapServer("imapServer.xml");
-        }
-
-        @AfterEach
-        void tearDown() {
-            imapServer.destroy();
-        }
-
-        @Test
-        void smallAppendsShouldWork() {
-            int port = imapServer.getListenAddresses().get(0).getPort();
-            System.out.println(port);
-
-            assertThatCode(() ->
-                testIMAPClient.connect("127.0.0.1", port)
-                    .login(USER.asString(), USER_PASS)
-                    .append("INBOX", "header: value\r\n\r\nBODY"))
-                .doesNotThrowAnyException();
-        }
-
-        @Disabled("JAMES-3507 Bad file management, scoped to command parsing, causes this to fail")
-        @Test
-        void mediumAppendsShouldWork() {
-            int port = imapServer.getListenAddresses().get(0).getPort();
-            System.out.println(port);
-
-            assertThatCode(() ->
-                testIMAPClient.connect("127.0.0.1", port)
-                    .login(USER.asString(), USER_PASS)
-                    .append("INBOX", _65K_MESSAGE))
-                .doesNotThrowAnyException();
-        }
-
-        @Disabled("JAMES-3507 Bad file management, scoped to command parsing, causes this to fail")
-        @Test
-        void largeAppendsShouldWork() {
-            int port = imapServer.getListenAddresses().get(0).getPort();
-            System.out.println(port);
-
-            assertThatCode(() ->
-                testIMAPClient.connect("127.0.0.1", port)
-                    .login(USER.asString(), USER_PASS)
-                    .append("INBOX", _129K_MESSAGE))
-                .doesNotThrowAnyException();
+                .hasMessageContaining("BAD APPEND failed.");
         }
     }
 }
