@@ -142,7 +142,6 @@ class IMAPServerTest {
         }
     }
 
-    @Disabled("Broken literalSizeLimit option")
     @Nested
     class Limit {
         IMAPServer imapServer;
@@ -169,6 +168,7 @@ class IMAPServerTest {
                 .doesNotThrowAnyException();
         }
 
+        @Disabled("JAMES-3507 Bad file management, scoped to command parsing, causes this to fail")
         @Test
         void mediumAppendsShouldWork() {
             int port = imapServer.getListenAddresses().get(0).getPort();
@@ -181,6 +181,7 @@ class IMAPServerTest {
                 .doesNotThrowAnyException();
         }
 
+        @Disabled("JAMES-3507 Bad file management, scoped to command parsing, causes this to fail")
         @Test
         void largeAppendsShouldWork() {
             int port = imapServer.getListenAddresses().get(0).getPort();
