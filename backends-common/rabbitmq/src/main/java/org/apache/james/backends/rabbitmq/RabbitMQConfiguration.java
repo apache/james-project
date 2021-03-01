@@ -498,8 +498,7 @@ public class RabbitMQConfiguration {
             .managementCredentials(managementCredentials)
             .useSsl(useSsl)
             .useSslManagement(useSslForManagement)
-            .sslConfiguration(sslTrustConfiguration(configuration))
-            .sslConfiguration(sslTrustConfiguration(configuration))
+            .sslConfiguration(sslConfiguration(configuration))
             .build();
     }
 
@@ -511,7 +510,7 @@ public class RabbitMQConfiguration {
         }
     }
 
-    private static SSLConfiguration sslTrustConfiguration(Configuration configuration) {
+    private static SSLConfiguration sslConfiguration(Configuration configuration) {
         SSLValidationStrategy sslStrategy = Optional
                 .ofNullable(configuration.getString(SSL_VALIDATION_STRATEGY))
                 .map(SSLValidationStrategy::from)
