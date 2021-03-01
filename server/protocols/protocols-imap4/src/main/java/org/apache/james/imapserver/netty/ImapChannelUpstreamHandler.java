@@ -213,6 +213,9 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
                 }
             } finally {
                 ctx.getPipeline().remove(NettyConstants.HEARTBEAT_HANDLER);
+                if (message instanceof Closeable) {
+                    ((Closeable) message).close();
+                }
             }
 
             super.messageReceived(ctx, e);
