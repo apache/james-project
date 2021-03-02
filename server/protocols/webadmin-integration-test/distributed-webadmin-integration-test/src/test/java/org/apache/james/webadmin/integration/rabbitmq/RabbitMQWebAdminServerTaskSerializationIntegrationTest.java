@@ -69,6 +69,7 @@ import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.probe.DataProbe;
+import org.apache.james.server.core.MailImpl;
 import org.apache.james.task.TaskManager;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
@@ -80,7 +81,6 @@ import org.apache.james.webadmin.routes.MailQueueRoutes;
 import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
 import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes;
-import org.apache.mailet.base.test.FakeMail;
 import org.eclipse.jetty.http.HttpStatus;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
@@ -297,7 +297,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
         MailRepository repository = mailRepositoryStore.get(mailRepositoryUrl).get();
 
         String mailKey = "name1";
-        repository.store(FakeMail.builder()
+        repository.store(MailImpl.builder()
             .name(mailKey)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder().build())
             .build());
