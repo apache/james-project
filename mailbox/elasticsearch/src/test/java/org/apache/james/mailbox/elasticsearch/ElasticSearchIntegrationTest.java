@@ -80,7 +80,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     }
 
     @Override
-    protected void await() {
+    protected void await(long numberOfResults) {
         elasticSearch.awaitForElasticSearch();
     }
 

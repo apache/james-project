@@ -64,6 +64,7 @@ import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.mime4j.message.SingleBodyBuilder;
 import org.apache.james.util.ClassLoaderUtils;
 import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -73,6 +74,10 @@ import reactor.core.publisher.Flux;
 
 public abstract class AbstractMessageSearchIndexTest {
 
+    private static final ConditionFactory CALMLY_AWAIT = Awaitility
+            .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
+            .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
+            .await();
     private static final long LIMIT = 100L;
     private static final boolean RECENT = true;
     private static final boolean NOT_RECENT = false;
@@ -107,7 +112,6 @@ public abstract class AbstractMessageSearchIndexTest {
     private MailboxPath inboxPath;
     private MailboxPath otherInboxPath;
     private StoreMessageManager inboxMessageManager;
-
 
     @BeforeEach
     protected void setUp() throws Exception {
@@ -230,10 +234,10 @@ public abstract class AbstractMessageSearchIndexTest {
             RECENT,
             new Flags()).getId();
 
-        await();
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 13);
     }
 
-    protected abstract void await();
+    protected abstract void awaitMessageCount(List<MailboxId> mailboxIds, SearchQuery query, long messageCount);
     
     protected abstract void initializeMailboxManager() throws Exception;
 
@@ -245,7 +249,7 @@ public abstract class AbstractMessageSearchIndexTest {
             ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
             session);
 
-        await();
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
 
         SearchQuery searchQuery = SearchQuery.matchAll();
 
@@ -277,8 +281,6 @@ public abstract class AbstractMessageSearchIndexTest {
         messageIdManager.setInMailboxes(m4.getMessageId(),
             ImmutableList.of(mailbox2.getMailboxId()),
             session);
-
-        await();
 
         SearchQuery searchQuery = SearchQuery.matchAll();
 
@@ -314,7 +316,7 @@ public abstract class AbstractMessageSearchIndexTest {
         messageIdManager.setInMailboxes(m6.getMessageId(), ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()), session);
         messageIdManager.setInMailboxes(m7.getMessageId(), ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        await();
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 20);
 
         SearchQuery searchQuery = SearchQuery.matchAll();
 
@@ -348,16 +350,15 @@ public abstract class AbstractMessageSearchIndexTest {
         assumeTrue(messageIdManager != null);
         messageIdManager.setInMailboxes(m1.getMessageId(), ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        SearchQuery searchQuery = SearchQuery.matchAll();
-
         myFolderMessageManager.appendMessage(MessageManager.AppendCommand.builder()
             .withFlags(new Flags(Flags.Flag.SEEN))
             .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mail.eml")),
             session);
 
-        await();
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 15);
 
         int limit = 13;
+        SearchQuery searchQuery = SearchQuery.matchAll();
         List<MessageId> result = messageSearchIndex.search(session,
             ImmutableList.of(mailbox2.getMailboxId(), mailbox.getMailboxId()),
             searchQuery,
@@ -427,7 +428,7 @@ public abstract class AbstractMessageSearchIndexTest {
             MessageManager.AppendCommand.builder()
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/headerWithDot.eml")),
             session).getId();
-        await();
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
         
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.all());
 
@@ -442,7 +443,7 @@ public abstract class AbstractMessageSearchIndexTest {
             MessageManager.AppendCommand.builder()
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/headerWithDot.eml")),
             session).getId();
-        await();
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
 
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.headerExists("X-header.with.dots"));
 
@@ -459,10 +460,9 @@ public abstract class AbstractMessageSearchIndexTest {
             .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mail5.eml")),
             session).getId();
 
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
+
         String emailToSearch = "luc.duzan@james.apache.org";
-
-        await();
-
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.or(ImmutableList.of(
             SearchQuery.address(AddressType.From, emailToSearch),
             SearchQuery.address(AddressType.To, emailToSearch),
@@ -489,7 +489,7 @@ public abstract class AbstractMessageSearchIndexTest {
                     .build()),
             session).getId();
 
-        await();
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("benwa@apache.org")), session)).toStream())
             .containsOnly(messageId1.getUid());
@@ -510,7 +510,7 @@ public abstract class AbstractMessageSearchIndexTest {
                     .build()),
             session).getId();
 
-        await();
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("benwa")), session)).toStream())
             .containsOnly(messageId1.getUid());
@@ -531,14 +531,14 @@ public abstract class AbstractMessageSearchIndexTest {
                     .build()),
             session).getId();
 
-        await();
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("mydomain.org")), session)).toStream())
             .containsOnly(messageId1.getUid());
     }
 
     @Test
-    public void textShouldNotMatchOtherAddressesOfTheSameDomain() throws Exception {
+    void textShouldNotMatchOtherAddressesOfTheSameDomain() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
@@ -551,8 +551,8 @@ public abstract class AbstractMessageSearchIndexTest {
                     .setBody("benwa@apache.org email address do not exist", StandardCharsets.UTF_8)
                     .build()),
             session).getId();
-        
-        await();
+
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("alice@apache.org")), session)).toStream())
             .isEmpty();
@@ -624,9 +624,10 @@ public abstract class AbstractMessageSearchIndexTest {
             MessageRange.one(m5.getUid()),
             session);
 
-        await();
-
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.flagIsSet(Flags.Flag.SEEN));
+
+        //m5 & m6 now both have SEEN flag in INBOX mailbox
+        awaitMessageCount(ImmutableList.of(mailbox.getMailboxId()), searchQuery, 2);
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
             .contains(m5.getUid());
@@ -718,11 +719,12 @@ public abstract class AbstractMessageSearchIndexTest {
 
 
     @Test
-    void flagIsSetShouldReturnUidsOfMessageContainingAGivenUserFlag() throws MailboxException {
+    void flagIsSetShouldReturnUidsOfMessageContainingAGivenUserFlag() {
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.flagIsSet("Hello"));
 
-        assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
-            .containsOnly(m8.getUid());
+        CALMLY_AWAIT.untilAsserted(() ->
+            assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
+                .containsOnly(m8.getUid()));
     }
 
     @Test
@@ -1298,7 +1300,7 @@ public abstract class AbstractMessageSearchIndexTest {
             MessageManager.AppendCommand.builder()
             .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/emailWithTextAttachment.eml")),
             session).getId();
-        await();
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
 
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.mailContains("User message banana"));
 
@@ -1313,7 +1315,7 @@ public abstract class AbstractMessageSearchIndexTest {
             MessageManager.AppendCommand.builder()
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/emailWithTextAttachment.eml")),
             session).getId();
-        await();
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
 
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.attachmentContains("beautiful banana"));
 
@@ -1328,7 +1330,7 @@ public abstract class AbstractMessageSearchIndexTest {
             MessageManager.AppendCommand.builder()
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/emailWithTextAttachment.eml")),
             session).getId();
-        await();
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
 
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.attachmentContains("message"));
 
@@ -1352,7 +1354,7 @@ public abstract class AbstractMessageSearchIndexTest {
                 .build();
         ComposedMessageId messageWithBeautifulBananaAsPDFAttachment = myFolderMessageManager
             .appendMessage(MessageManager.AppendCommand.from(message), session).getId();
-        await();
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
 
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.attachmentContains("beautiful banana"));
 
@@ -1404,7 +1406,7 @@ public abstract class AbstractMessageSearchIndexTest {
                 .setBody("testmail", StandardCharsets.UTF_8)),
             session).getId();
 
-        await();
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 16);
 
         SearchQuery searchQuery = SearchQuery.allSortedWith(new Sort(SortClause.SentDate));
 
@@ -1443,7 +1445,7 @@ public abstract class AbstractMessageSearchIndexTest {
                 .setSubject("test")
                 .setBody("testmail", StandardCharsets.UTF_8)), session).getId();
 
-        await();
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 16);
 
         SearchQuery searchQuery = SearchQuery.allSortedWith(new Sort(SortClause.SentDate));
 
@@ -1503,7 +1505,7 @@ public abstract class AbstractMessageSearchIndexTest {
                             .build())),
             session).getId();
 
-        await();
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
 
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.attachmentFileName(fileName));
 
