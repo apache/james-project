@@ -2431,6 +2431,11 @@
                 <version>4.5.13</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore</artifactId>
+                <version>4.4.14</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.james</groupId>
                 <artifactId>apache-mime4j-dom</artifactId>
                 <version>${apache-mime4j.version}</version>
