@@ -21,10 +21,7 @@ package org.apache.james.backends.es.v7;
 
 import java.io.IOException;
 
-import org.apache.http.HttpStatus;
-import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
@@ -54,15 +51,18 @@ public class NodeMappingFactory {
     public static final String IGNORE_ABOVE = "ignore_above";
 
     public static ReactorElasticSearchClient applyMapping(ReactorElasticSearchClient client, IndexName indexName, XContentBuilder mappingsSources) throws IOException {
-        if (!mappingAlreadyExist(client, indexName)) {
+        createMapping(client, indexName, mappingsSources);
+
+        /*if (!mappingAlreadyExist(client, indexName)) {
             createMapping(client, indexName, mappingsSources);
-        }
+        }*/
         return client;
     }
 
+    //TODO: since ElasticSearch version 7 this check does not work anymore. Find another way to check whether mapping exists or not
     // ElasticSearch 6.3.2 does not support field master_timeout that is set up by 6.4.3 REST client when relying on getMapping
     @SuppressWarnings("deprecation")
-    public static boolean mappingAlreadyExist(ReactorElasticSearchClient client, IndexName indexName) throws IOException {
+    /*public static boolean mappingAlreadyExist(ReactorElasticSearchClient client, IndexName indexName) throws IOException {
         try {
             client.getLowLevelClient().performRequest(new Request("GET", "/" + indexName.getValue() + "/_mapping/"));
             return true;
@@ -72,7 +72,7 @@ public class NodeMappingFactory {
             }
         }
         return false;
-    }
+    }*/
 
     public static void createMapping(ReactorElasticSearchClient client, IndexName indexName, XContentBuilder mappingsSources) throws IOException {
         client.indices().putMapping(
