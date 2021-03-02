@@ -20,10 +20,12 @@
 package org.apache.james.mailbox.elasticsearch.v7;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
+import java.util.List;
 
 import org.apache.james.backends.es.v7.DockerElasticSearchExtension;
 import org.apache.james.backends.es.v7.ElasticSearchIndexer;
@@ -36,11 +38,11 @@ import org.apache.james.mailbox.elasticsearch.v7.json.MessageToElasticSearchJson
 import org.apache.james.mailbox.elasticsearch.v7.query.CriterionConverter;
 import org.apache.james.mailbox.elasticsearch.v7.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.v7.search.ElasticSearchSearcher;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
@@ -52,20 +54,32 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.stream.RawField;
 import org.apache.james.util.ClassLoaderUtils;
+import org.awaitility.Awaitility;
+import org.awaitility.Durations;
+import org.awaitility.core.ConditionFactory;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 
-@Disabled("JAMES-3492, error occurs in setup method")
 class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
-    static final int BATCH_SIZE = 1;
+    private static final ConditionFactory CALMLY_AWAIT = Awaitility
+            .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
+            .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
+            .await();
     static final int SEARCH_SIZE = 1;
+    private final QueryConverter queryConverter = new QueryConverter(new CriterionConverter());
 
     @RegisterExtension
     static TikaExtension tika = new TikaExtension();
@@ -81,14 +95,12 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
         client.close();
     }
 
-    @Disabled("JAMES-3492")
-	@Override
-    protected void await() {
-        elasticSearch.awaitForElasticSearch();
+    @Override
+    protected void awaitMessageCount(List<MailboxId> mailboxIds, SearchQuery query, long messageCount) {
+        awaitForElasticSearch(queryConverter.from(mailboxIds, query), messageCount);
     }
 
-    @Disabled("JAMES-3492")
-	@Override
+    @Override
     protected void initializeMailboxManager() throws Exception {
         textExtractor = new TikaTextExtractor(new RecordingMetricFactory(),
             new TikaHttpClientImpl(TikaConfiguration.builder()
@@ -129,7 +141,6 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     }
 
     @Test
-	@Disabled("JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     void termsBetweenElasticSearchAndLuceneLimitDueTuNonAsciiCharsShouldBeTruncated() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
@@ -142,14 +153,13 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .setBody(Strings.repeat("0à2345678é", 3200), StandardCharsets.UTF_8)),
             session).getId();
 
-        elasticSearch.awaitForElasticSearch();
+        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, recipient)), session)).toStream())
             .containsExactly(composedMessageId.getUid());
     }
 
     @Test
-	@Disabled("JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     void tooLongTermsShouldNotMakeIndexingFail() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
@@ -162,14 +172,13 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .setBody(Strings.repeat("0123456789", 3300), StandardCharsets.UTF_8)),
             session).getId();
 
-        elasticSearch.awaitForElasticSearch();
+        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, recipient)), session)).toStream())
             .containsExactly(composedMessageId.getUid());
     }
 
     @Test
-	@Disabled("JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     void fieldsExceedingLuceneLimitShouldNotBeIgnored() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
@@ -182,14 +191,13 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .setBody(Strings.repeat("0123456789 ", 5000), StandardCharsets.UTF_8)),
             session).getId();
 
-        elasticSearch.awaitForElasticSearch();
+        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("0123456789")), session)).toStream())
             .containsExactly(composedMessageId.getUid());
     }
 
     @Test
-	@Disabled("JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     void fieldsWithTooLongTermShouldStillBeIndexed() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
@@ -202,14 +210,13 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .setBody(Strings.repeat("0123456789 ", 5000) + " matchMe", StandardCharsets.UTF_8)),
             session).getId();
 
-        elasticSearch.awaitForElasticSearch();
+        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains("matchMe")), session)).toStream())
             .containsExactly(composedMessageId.getUid());
     }
 
     @Test
-	@Disabled("JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     void reasonableLongTermShouldNotBeIgnored() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
@@ -223,14 +230,13 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .setBody(reasonableLongTerm, StandardCharsets.UTF_8)),
             session).getId();
 
-        elasticSearch.awaitForElasticSearch();
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.bodyContains(reasonableLongTerm)), session)).toStream())
             .containsExactly(composedMessageId.getUid());
     }
 
     @Test
-	@Disabled("JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     void headerSearchShouldIncludeMessageWhenDifferentTypesOnAnIndexedField() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
@@ -246,14 +252,13 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mailCustomStringHeader.eml")),
             session).getId();
 
-        elasticSearch.awaitForElasticSearch();
+        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 15);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.headerExists("Custom-header")), session)).toStream())
             .containsExactly(customDateHeaderMessageId.getUid(), customStringHeaderMessageId.getUid());
     }
 
     @Test
-	@Disabled("JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     void messageShouldStillBeIndexedEvenAfterOneFieldFailsIndexation() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
@@ -276,7 +281,6 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     }
 
     @Test
-	@Disabled("JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
     void addressMatchesShouldBeExact() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
@@ -301,19 +305,19 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                     .build()),
             session).getId();
 
-        elasticSearch.awaitForElasticSearch();
+        awaitForElasticSearch(QueryBuilders.matchAllQuery(), 15);
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "bob@other.tld")), session)).toStream())
             .containsOnly(messageId2.getUid());
     }
 
-    @Disabled("MAILBOX-403 Relaxed the matching constraints for email addresses in text bodies to reduce ElasticSearch disk space usage, JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
+    @Disabled("MAILBOX-403 Relaxed the matching constraints for email addresses in text bodies to reduce ElasticSearch disk space usage")
     @Test
-    public void textShouldNotMatchOtherAddressesOfTheSameDomain() throws Exception {
+    public void textShouldNotMatchOtherAddressesOfTheSameDomain() {
 
     }
 
-    @Disabled("MAILBOX-401 '-' causes address matching to fail, JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
+    @Disabled("MAILBOX-401 '-' causes address matching to fail")
     @Test
     void localPartShouldBeMatchedWhenHyphen() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
@@ -345,7 +349,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .containsOnly(messageId2.getUid());
     }
 
-    @Disabled("MAILBOX-401 '-' causes address matching to fail, JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
+    @Disabled("MAILBOX-401 '-' causes address matching to fail")
     @Test
     void addressShouldBeMatchedWhenHyphen() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
@@ -377,7 +381,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .containsOnly(messageId1.getUid());
     }
 
-    @Disabled("MAILBOX-401 '-' causes address matching to fail, JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
+    @Disabled("MAILBOX-401 '-' causes address matching to fail")
     @Test
     void domainPartShouldBeMatchedWhenHyphen() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
@@ -409,113 +413,13 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .containsOnly(messageId1.getUid());
     }
 
-    @Disabled("JAMES-3492")
-	@Override
-    protected void bodyContainsShouldReturnUidOfMessageContainingTheApproximativeText() throws MailboxException {
-        super.bodyContainsShouldReturnUidOfMessageContainingTheApproximativeText();
+    private void awaitForElasticSearch(QueryBuilder query, long totalHits) {
+        CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
+                .untilAsserted(() -> assertThat(client.search(
+                        new SearchRequest(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
+                                .source(new SearchSourceBuilder().query(query)),
+                        RequestOptions.DEFAULT)
+                        .block()
+                        .getHits().getTotalHits().value).isEqualTo(totalHits));
     }
-
-    @Disabled("JAMES-3492")
-	@Override
-    public void textShouldMatchEmailAddressDomainPart() throws Exception {
-        super.textShouldMatchEmailAddressDomainPart();
-    }
-
-    @Disabled("JAMES-3492")
-	@Override
-    protected void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInAllMailboxes() throws MailboxException {
-        super.multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInAllMailboxes();
-    }
-
-    @Disabled("JAMES-3492")
-	@Override
-    protected void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInTwoMailboxes() throws MailboxException {
-        super.multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInTwoMailboxes();
-    }
-
-    @Disabled("JAMES-3492")
-	@Override
-    protected void internalDateAfterShouldReturnMessagesAfterAGivenDate() throws Exception {
-        super.internalDateAfterShouldReturnMessagesAfterAGivenDate();
-    }
-
-    @Disabled("JAMES-3492")
-	@Override
-    protected void internalDateBeforeShouldReturnMessagesBeforeAGivenDate() throws Exception {
-        super.internalDateBeforeShouldReturnMessagesBeforeAGivenDate();
-    }
-
-    @Disabled("JAMES-3492")
-	@Override
-    protected void modSeqEqualsShouldReturnUidsOfMessageHavingAGivenModSeq() throws Exception {
-        super.modSeqEqualsShouldReturnUidsOfMessageHavingAGivenModSeq();
-    }
-
-    @Disabled("JAMES-3492")
-	@Override
-    protected void modSeqGreaterThanShouldReturnUidsOfMessageHavingAGreaterModSeq() throws Exception {
-        super.modSeqGreaterThanShouldReturnUidsOfMessageHavingAGreaterModSeq();
-    }
-
-    @Disabled("JAMES-3492")
-	@Override
-    protected void modSeqLessThanShouldReturnUidsOfMessageHavingAGreaterModSeq() throws Exception {
-        super.modSeqLessThanShouldReturnUidsOfMessageHavingAGreaterModSeq();
-    }
-
-    @Disabled("JAMES-3492")
-	@Override
-    protected void addressShouldReturnUidHavingRightExpeditorWhenFromIsSpecified() throws Exception {
-        super.addressShouldReturnUidHavingRightExpeditorWhenFromIsSpecified();
-    }
-
-    @Disabled("JAMES-3492")
-	@Override
-    protected void uidShouldreturnEveryThing() throws Exception {
-        super.uidShouldreturnEveryThing();
-    }
-
-    @Disabled("JAMES-3492")
-	@Override
-    protected void youShouldBeAbleToSpecifySeveralCriterionOnASingleQuery() throws Exception {
-        super.youShouldBeAbleToSpecifySeveralCriterionOnASingleQuery();
-    }
-
-    @Disabled("JAMES-3492")
-	@Override
-    protected void andShouldReturnResultsMatchingBothRequests() throws Exception {
-        super.andShouldReturnResultsMatchingBothRequests();
-    }
-
-    @Disabled("JAMES-3492")
-	@Override
-    protected void orShouldReturnResultsMatchinganyRequests() throws Exception {
-        super.orShouldReturnResultsMatchinganyRequests();
-    }
-
-    @Disabled("JAMES-3492")
-	@Override
-    protected void mailsContainsShouldIncludeMailHavingAttachmentsMatchingTheRequest() throws Exception {
-        super.mailsContainsShouldIncludeMailHavingAttachmentsMatchingTheRequest();
-    }
-
-    @Disabled("JAMES-3492")
-	@Override
-    protected void sortOnCcShouldWork() throws Exception {
-        super.sortOnCcShouldWork();
-    }
-
-    @Disabled("JAMES-3492")
-	@Override
-    protected void sortOnFromShouldWork() throws Exception {
-        super.sortOnFromShouldWork();
-    }
-
-    @Disabled("JAMES-3492")
-	@Override
-    protected void sortOnToShouldWork() throws Exception {
-        super.sortOnToShouldWork();
-    }
-
-
 }
