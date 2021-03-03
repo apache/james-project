@@ -18,6 +18,9 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
+import static org.apache.james.imap.api.display.HumanReadableText.SOCKET_IO_FAILURE;
+
+import java.io.IOException;
 import java.io.InputStream;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -34,6 +37,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.base.AbstractImapCommandParser;
+import org.apache.james.imap.message.FileBackedLiteral;
 import org.apache.james.imap.message.request.AppendRequest;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -83,6 +87,12 @@ public class AppendCommandParser extends AbstractImapCommandParser {
         request.nextWordChar();
 
         InputStream literal = request.consumeLiteral(true).right;
-        return new AppendRequest(mailboxName, flags, Date.from(datetime.atZone(ZoneId.systemDefault()).toInstant()), literal, tag);
+
+        try {
+            return new AppendRequest(mailboxName, flags, Date.from(datetime.atZone(ZoneId.systemDefault()).toInstant()),
+                FileBackedLiteral.copy(literal), tag);
+        } catch (IOException e) {
+            throw new DecodingException(SOCKET_IO_FAILURE, "Error copying content", e);
+        }
     }
 }
