@@ -28,7 +28,7 @@ import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
-import org.apache.james.imap.message.response.Literal;
+import org.apache.james.imap.message.Literal;
 
 public interface ImapResponseComposer {
 

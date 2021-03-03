@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.imap.message.response;
+package org.apache.james.imap.message;
 
 import java.io.IOException;
 import java.io.InputStream;
