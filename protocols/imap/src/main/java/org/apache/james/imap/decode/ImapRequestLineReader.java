@@ -21,6 +21,7 @@ package org.apache.james.imap.decode;
 
 import static java.nio.charset.StandardCharsets.US_ASCII;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -47,6 +48,7 @@ import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.DayMonthYear;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SearchResUtil;
+import org.apache.james.imap.message.Literal;
 import org.apache.james.mailbox.MessageUid;
 
 /**
@@ -163,7 +165,7 @@ public abstract class ImapRequestLineReader {
      * @throws DecodingException
      *             If a char can't be read into each array element.
      */
-    public abstract InputStream read(int size, boolean extraCRLF) throws DecodingException;
+    public abstract Literal read(int size, boolean extraCRLF) throws IOException;
 
     /**
      * Sends a server command continuation request '+' back to the client,
@@ -369,14 +371,26 @@ public abstract class ImapRequestLineReader {
         if (charset == null) {
             return consumeLiteral(US_ASCII);
         } else {
-            ImmutablePair<Integer, InputStream> literal = consumeLiteral(false);
-            try (InputStream in = literal.right) {
-                Integer size = literal.left;
-                byte[] data = IOUtils.readFully(in, size);
-                ByteBuffer buffer = ByteBuffer.wrap(data);
-                return decode(charset, buffer);
+            try {
+                ImmutablePair<Integer, Literal> literal = consumeLiteral(false);
+                try (InputStream in = literal.right.getInputStream()) {
+                    Integer size = literal.left;
+                    byte[] data = IOUtils.readFully(in, size);
+                    ByteBuffer buffer = ByteBuffer.wrap(data);
+                    return decode(charset, buffer);
+                } catch (IOException e) {
+                    throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding", e);
+                } finally {
+                    if (literal.right instanceof Closeable) {
+                        try {
+                            ((Closeable) literal.right).close();
+                        } catch (IOException e) {
+                            // silent
+                        }
+                    }
+                }
             } catch (IOException e) {
-                throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding", e);
+                throw new DecodingException(HumanReadableText.SOCKET_IO_FAILURE, "Could not read literal", e);
             }
         }
     }
@@ -384,7 +398,7 @@ public abstract class ImapRequestLineReader {
     /**
      * @return the literal data and its expected size
      */
-    public ImmutablePair<Integer, InputStream> consumeLiteral(boolean extraCRLF) throws DecodingException {
+    public ImmutablePair<Integer, Literal> consumeLiteral(boolean extraCRLF) throws IOException {
         // The 1st character must be '{'
         consumeChar('{');
 
