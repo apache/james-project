@@ -19,13 +19,17 @@
 
 package org.apache.james.mailbox.store.search;
 
+import java.util.List;
+
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.SearchQuery;
 import org.junit.jupiter.api.Disabled;
 
 class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
 
     @Override
-    protected void await() {
+    protected void awaitMessageCount(List<MailboxId> mailboxIds, SearchQuery query, long messageCount) {
     }
 
     @Override
