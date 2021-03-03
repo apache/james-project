@@ -26,6 +26,7 @@ import java.util.Map;
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
+import org.apache.james.imap.message.Literal;
 import org.apache.james.mailbox.MessageSequenceNumber;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;

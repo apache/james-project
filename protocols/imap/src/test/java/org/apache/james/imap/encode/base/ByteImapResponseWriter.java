@@ -25,7 +25,7 @@ import java.io.InputStream;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.encode.ImapResponseWriter;
-import org.apache.james.imap.message.response.Literal;
+import org.apache.james.imap.message.Literal;
 
 /**
  * Class providing methods to send response messages from the server to the

@@ -21,7 +21,7 @@ package org.apache.james.imap.encode;
 
 import java.io.IOException;
 
-import org.apache.james.imap.message.response.Literal;
+import org.apache.james.imap.message.Literal;
 
 /**
  * <p>

@@ -33,7 +33,7 @@ import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.encode.ImapResponseComposer;
 import org.apache.james.imap.encode.ImapResponseWriter;
-import org.apache.james.imap.message.response.Literal;
+import org.apache.james.imap.message.Literal;
 import org.apache.james.imap.utils.FastByteArrayOutputStream;
 
 /**

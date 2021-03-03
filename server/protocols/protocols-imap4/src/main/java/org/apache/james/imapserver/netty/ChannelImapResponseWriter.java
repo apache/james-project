@@ -25,7 +25,7 @@ import java.io.InputStream;
 import java.nio.channels.FileChannel;
 
 import org.apache.james.imap.encode.ImapResponseWriter;
-import org.apache.james.imap.message.response.Literal;
+import org.apache.james.imap.message.Literal;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelPipeline;
