@@ -24,6 +24,8 @@ import java.io.InputStream;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.decode.DecodingException;
+import org.apache.james.imap.message.FileBackedLiteral;
+import org.apache.james.imap.message.Literal;
 import org.apache.james.imap.utils.EolInputStream;
 import org.jboss.netty.channel.Channel;
 
@@ -83,18 +85,23 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
      *             If a char can't be read into each array element.
      */
     @Override
-    public InputStream read(int size, boolean extraCRLF) throws DecodingException {
+    public Literal read(int size, boolean extraCRLF) throws DecodingException {
 
         // Unset the next char.
         nextSeen = false;
         nextChar = 0;
         InputStream limited = ByteStreams.limit(this.in, size);
-        if (extraCRLF) {
-            return new EolInputStream(this, limited);
-        } else {
-            return limited;
+
+        //TODO move this copy in netty stack and try to avoid it
+        try {
+            if (extraCRLF) {
+                return FileBackedLiteral.copy(new EolInputStream(this, limited));
+            } else {
+                return FileBackedLiteral.copy(limited);
+            }
+        } catch (IOException e) {
+            throw new DecodingException(HumanReadableText.SOCKET_IO_FAILURE, "Could not copy litteral", e);
         }
-        
     }
 
     @Override

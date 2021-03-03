@@ -25,6 +25,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.message.BytesBackedLiteral;
+import org.apache.james.imap.message.Literal;
 import org.apache.james.imap.utils.EolInputStream;
 
 import com.google.common.io.ByteStreams;
@@ -73,16 +75,17 @@ public class ImapRequestStreamLineReader extends ImapRequestLineReader implement
     }
 
     @Override
-    public InputStream read(int size, boolean extraCRLF) {
+    public Literal read(int size, boolean extraCRLF) throws IOException {
 
         // Unset the next char.
         nextSeen = false;
         nextChar = 0;
         InputStream limited = ByteStreams.limit(input, size);
+
         if (extraCRLF) {
-            return new EolInputStream(this, limited);
+            return BytesBackedLiteral.copy(new EolInputStream(this, limited));
         } else {
-            return limited;
+            return BytesBackedLiteral.copy(limited);
         }
     }
 

@@ -19,12 +19,15 @@
 
 package org.apache.james.imapserver.netty;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
+import org.apache.james.imap.message.BytesBackedLiteral;
+import org.apache.james.imap.message.Literal;
 import org.apache.james.imap.utils.EolInputStream;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
@@ -80,7 +83,7 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
      * {@link NotEnoughDataException}
      */
     @Override
-    public InputStream read(int size, boolean extraCRLF) throws DecodingException {
+    public Literal read(int size, boolean extraCRLF) throws DecodingException {
         int crlf = 0;
         if (extraCRLF) {
             crlf = 2;
@@ -100,12 +103,17 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
         nextSeen = false;
         nextChar = 0;
 
-        // limit the size via commons-io as ChannelBufferInputStream size limiting is buggy
-        InputStream in = new BoundedInputStream(new ChannelBufferInputStream(buffer), size); 
-        if (extraCRLF) {
-            return new EolInputStream(this, in);
-        } else {
-            return in;
+
+        try {
+            // limit the size via commons-io as ChannelBufferInputStream size limiting is buggy
+            InputStream in = new BoundedInputStream(new ChannelBufferInputStream(buffer), size);
+            if (extraCRLF) {
+                return BytesBackedLiteral.copy(new EolInputStream(this, in));
+            } else {
+                return BytesBackedLiteral.copy(in);
+            }
+        } catch (IOException e) {
+            throw new DecodingException(HumanReadableText.SOCKET_IO_FAILURE, "Can not read literal", e);
         }
     }
 
