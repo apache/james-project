@@ -540,53 +540,52 @@ public class StoreMailboxManager implements MailboxManager {
         mailbox.setUser(newMailboxPath.getUser());
         mailbox.setName(newMailboxPath.getName());
 
-        block(mapper.rename(mailbox)
-            .map(mailboxId -> {
-                resultBuilder.add(new MailboxRenamedResult(mailboxId, from, newMailboxPath));
-                return mailboxId;
-            }).then(eventBus.dispatch(EventFactory.mailboxRenamed()
-                    .randomEventId()
-                    .mailboxSession(session)
-                    .mailboxId(mailbox.getMailboxId())
-                    .oldPath(from)
-                    .newPath(newMailboxPath)
-                    .build(),
-                new MailboxIdRegistrationKey(mailbox.getMailboxId()))));
+        try {
+            block(mapper.rename(mailbox)
+                .map(mailboxId -> {
+                    resultBuilder.add(new MailboxRenamedResult(mailboxId, from, newMailboxPath));
+                    return mailboxId;
+                }));
 
-        // rename submailboxes
-        MailboxQuery.UserBound query = MailboxQuery.builder()
-            .userAndNamespaceFrom(from)
-            .expression(new PrefixedWildcard(from.getName() + getDelimiter()))
-            .build()
-            .asUserBound();
-        locker.executeWithLock(from, (LockAwareExecution<Void>) () -> {
-            block(mapper.findMailboxWithPathLike(query)
-                .flatMap(sub -> {
-                    String subOriginalName = sub.getName();
-                    String subNewName = newMailboxPath.getName() + subOriginalName.substring(from.getName().length());
-                    MailboxPath fromPath = new MailboxPath(from, subOriginalName);
-                    sub.setName(subNewName);
-                    return mapper.rename(sub)
-                        .map(mailboxId -> {
-                            resultBuilder.add(new MailboxRenamedResult(sub.getMailboxId(), fromPath, sub.generateAssociatedPath()));
-                            return mailboxId;
-                        }).then(eventBus.dispatch(EventFactory.mailboxRenamed()
-                                .randomEventId()
-                                .mailboxSession(session)
-                                .mailboxId(sub.getMailboxId())
-                                .oldPath(fromPath)
-                                .newPath(sub.generateAssociatedPath())
-                                .build(),
-                            new MailboxIdRegistrationKey(sub.getMailboxId())))
-                        .retryWhen(Retry.backoff(5, Duration.ofMillis(10)))
-                        .then(Mono.fromRunnable(() -> LOGGER.debug("Rename mailbox sub-mailbox {} to {}", subOriginalName, subNewName)));
-                }, LOW_CONCURRENCY)
-                .then());
+            // rename submailboxes
+            MailboxQuery.UserBound query = MailboxQuery.builder()
+                .userAndNamespaceFrom(from)
+                .expression(new PrefixedWildcard(from.getName() + getDelimiter()))
+                .build()
+                .asUserBound();
+            locker.executeWithLock(from, (LockAwareExecution<Void>) () -> {
+                block(mapper.findMailboxWithPathLike(query)
+                    .flatMap(sub -> {
+                        String subOriginalName = sub.getName();
+                        String subNewName = newMailboxPath.getName() + subOriginalName.substring(from.getName().length());
+                        MailboxPath fromPath = new MailboxPath(from, subOriginalName);
+                        sub.setName(subNewName);
+                        return mapper.rename(sub)
+                            .map(mailboxId -> {
+                                resultBuilder.add(new MailboxRenamedResult(sub.getMailboxId(), fromPath, sub.generateAssociatedPath()));
+                                return mailboxId;
+                            })
+                            .retryWhen(Retry.backoff(5, Duration.ofMillis(10)))
+                            .then(Mono.fromRunnable(() -> LOGGER.debug("Rename mailbox sub-mailbox {} to {}", subOriginalName, subNewName)));
+                    }, LOW_CONCURRENCY)
+                    .then());
 
-            return null;
+                return null;
 
-        }, MailboxPathLocker.LockType.Write);
-        return resultBuilder.build();
+            }, MailboxPathLocker.LockType.Write);
+            return resultBuilder.build();
+        } finally {
+            Flux.fromIterable(resultBuilder.build())
+                .concatMap(result -> eventBus.dispatch(EventFactory.mailboxRenamed()
+                        .randomEventId()
+                        .mailboxSession(session)
+                        .mailboxId(result.getMailboxId())
+                        .oldPath(result.getOriginPath())
+                        .newPath(result.getDestinationPath())
+                        .build(),
+                    new MailboxIdRegistrationKey(result.getMailboxId())))
+                .blockLast();
+        }
     }
 
     @Override
