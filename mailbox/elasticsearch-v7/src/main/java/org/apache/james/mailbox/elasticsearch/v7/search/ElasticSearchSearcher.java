@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.Optional;
 
 import org.apache.james.backends.es.v7.AliasName;
-import org.apache.james.backends.es.v7.NodeMappingFactory;
 import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
 import org.apache.james.backends.es.v7.ReadAliasName;
 import org.apache.james.backends.es.v7.RoutingKey;
@@ -81,7 +80,6 @@ public class ElasticSearchSearcher {
     public Flux<MessageSearchIndex.SearchResult> search(Collection<MailboxId> mailboxIds, SearchQuery query,
                                                         Optional<Integer> limit) {
         SearchRequest searchRequest = prepareSearch(mailboxIds, query, limit);
-        System.out.println(searchRequest.toString());
         Flux<MessageSearchIndex.SearchResult> pairStream = new ScrolledSearch(client, searchRequest)
             .searchHits()
             .map(this::extractContentFromHit)
@@ -95,9 +93,6 @@ public class ElasticSearchSearcher {
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder()
             .query(queryConverter.from(mailboxIds, query))
             .size(computeRequiredSize(limit))
-            .fetchField(JsonMessageConstants.MAILBOX_ID)
-            .fetchField(JsonMessageConstants.UID)
-            .fetchField(JsonMessageConstants.MESSAGE_ID)
             .storedFields(STORED_FIELDS);
 
         query.getSorts()
