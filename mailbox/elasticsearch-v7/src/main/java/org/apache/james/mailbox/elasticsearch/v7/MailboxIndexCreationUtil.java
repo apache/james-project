@@ -24,7 +24,6 @@ import java.io.IOException;
 import org.apache.james.backends.es.v7.ElasticSearchConfiguration;
 import org.apache.james.backends.es.v7.IndexCreationFactory;
 import org.apache.james.backends.es.v7.IndexName;
-import org.apache.james.backends.es.v7.NodeMappingFactory;
 import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
 import org.apache.james.backends.es.v7.ReadAliasName;
 import org.apache.james.backends.es.v7.WriteAliasName;
@@ -35,15 +34,12 @@ public class MailboxIndexCreationUtil {
                                                            ReadAliasName readAlias,
                                                            WriteAliasName writeAlias,
                                                            IndexName indexName,
-                                                           ElasticSearchConfiguration configuration) throws IOException {
-        return NodeMappingFactory.applyMapping(
-            new IndexCreationFactory(configuration)
+                                                           ElasticSearchConfiguration configuration) {
+            return new IndexCreationFactory(configuration)
                 .useIndex(indexName)
                 .addAlias(readAlias)
                 .addAlias(writeAlias)
-                .createIndexAndAliases(client),
-            indexName,
-            MailboxMappingFactory.getMappingContent());
+                .createIndexAndAliases(client, MailboxMappingFactory.getMappingContent());
     }
 
     public static ReactorElasticSearchClient prepareDefaultClient(ReactorElasticSearchClient client, ElasticSearchConfiguration configuration) throws IOException {
