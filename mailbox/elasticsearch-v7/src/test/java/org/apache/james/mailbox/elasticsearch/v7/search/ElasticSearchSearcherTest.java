@@ -21,6 +21,7 @@
 package org.apache.james.mailbox.elasticsearch.v7.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -59,20 +60,30 @@ import org.apache.james.mailbox.tika.TikaHttpClientImpl;
 import org.apache.james.mailbox.tika.TikaTextExtractor;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.mime4j.dom.Message;
+import org.awaitility.Awaitility;
+import org.awaitility.Durations;
+import org.awaitility.core.ConditionFactory;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 
-@Disabled("JAMES-3492, Types cannot be provided in get mapping requests, unless include_type_name is set to true.")
 class ElasticSearchSearcherTest {
 
     static final int SEARCH_SIZE = 1;
     private static final Username USERNAME = Username.of("user");
+    private static final ConditionFactory CALMLY_AWAIT = Awaitility
+        .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
+        .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
+        .await();
 
     @RegisterExtension
     static TikaExtension tika = new TikaExtension();
@@ -144,7 +155,7 @@ class ElasticSearchSearcherTest {
             .map(Throwing.<MailboxPath, ComposedMessageId>function(mailboxPath -> addMessage(session, mailboxPath)).sneakyThrow())
             .collect(Guavate.toImmutableList());
 
-        elasticSearch.awaitForElasticSearch();
+        awaitForElasticSearch(QueryBuilders.matchAllQuery(), composedMessageIds.size());
 
         MultimailboxesSearchQuery multimailboxesSearchQuery = MultimailboxesSearchQuery
             .from(SearchQuery.of(SearchQuery.all()))
@@ -169,5 +180,15 @@ class ElasticSearchSearcherTest {
                 .setBody("Hello", StandardCharsets.UTF_8)),
             session)
             .getId();
+    }
+
+    private void awaitForElasticSearch(QueryBuilder query, long totalHits) {
+        CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
+            .untilAsserted(() -> assertThat(client.search(
+                new SearchRequest(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
+                    .source(new SearchSourceBuilder().query(query)),
+                RequestOptions.DEFAULT)
+                .block()
+                .getHits().getTotalHits().value).isEqualTo(totalHits));
     }
 }
