@@ -20,7 +20,6 @@
 package org.apache.james.imapserver.netty;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -133,20 +132,7 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
                             //ignore exception during close
                         }
 
-                        reader = new NettyStreamImapRequestLineReader(channel, new FileInputStream(f) {
-                            /**
-                             * Delete the File on close too
-                             */
-                            @Override
-                            public void close() throws IOException {
-                                try {
-                                    super.close();
-                                } finally {
-                                    f.delete();
-                                }
-                            }
-
-                        }, retry);
+                        reader = new NettyStreamImapRequestLineReader(channel, f, retry);
                     } else {
                         attachment.put(WRITTEN_DATA, written);
                         return null;
