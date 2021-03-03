@@ -22,7 +22,6 @@ package org.apache.james.mailbox.store;
 import static org.apache.james.mailbox.store.MailboxReactorUtils.block;
 import static org.apache.james.mailbox.store.MailboxReactorUtils.blockOptional;
 import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
-import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -117,6 +116,7 @@ public class StoreMailboxManager implements MailboxManager {
     public static final int MAX_ATTEMPTS = 3;
     public static final Duration MIN_BACKOFF = Duration.ofMillis(100);
     public static final RetryBackoffSpec RETRY_BACKOFF_SPEC = Retry.backoff(MAX_ATTEMPTS, MIN_BACKOFF);
+    private static final int LOW_CONCURRENCY = 2;
 
     private final StoreRightManager storeRightManager;
     private final EventBus eventBus;
@@ -580,7 +580,7 @@ public class StoreMailboxManager implements MailboxManager {
                             new MailboxIdRegistrationKey(sub.getMailboxId())))
                         .retryWhen(Retry.backoff(5, Duration.ofMillis(10)))
                         .then(Mono.fromRunnable(() -> LOGGER.debug("Rename mailbox sub-mailbox {} to {}", subOriginalName, subNewName)));
-                }, DEFAULT_CONCURRENCY)
+                }, LOW_CONCURRENCY)
                 .then());
 
             return null;
