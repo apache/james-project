@@ -22,6 +22,8 @@ package org.apache.james.backends.es.v7;
 import java.io.IOException;
 
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.indices.GetMappingsRequest;
+import org.elasticsearch.client.indices.GetMappingsResponse;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
@@ -51,8 +53,24 @@ public class NodeMappingFactory {
     public static final String IGNORE_ABOVE = "ignore_above";
 
     public static ReactorElasticSearchClient applyMapping(ReactorElasticSearchClient client, IndexName indexName, XContentBuilder mappingsSources) throws IOException {
-        createMapping(client, indexName, mappingsSources);
+        if (!mappingAlreadyExist(client, indexName)) {
+            createMapping(client, indexName, mappingsSources);
+        }
         return client;
+    }
+
+    public static boolean mappingAlreadyExist(ReactorElasticSearchClient client, IndexName indexName) throws IOException {
+        GetMappingsResponse getMappingResponse =
+            client.indices().getMapping(
+                new GetMappingsRequest()
+                    .indices(indexName.getValue()),
+                RequestOptions.DEFAULT);
+
+        return !getMappingResponse
+            .mappings()
+            .get(indexName.getValue())
+            .sourceAsMap()
+            .isEmpty();
     }
 
     public static void createMapping(ReactorElasticSearchClient client, IndexName indexName, XContentBuilder mappingsSources) throws IOException {
