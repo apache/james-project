@@ -28,7 +28,6 @@ import java.util.Optional;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -58,10 +57,7 @@ class NodeMappingFactoryAuthTest {
         new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
-            .createIndexAndAliases(client);
-        NodeMappingFactory.applyMapping(client,
-            INDEX_NAME,
-            getMappingsSources());
+            .createIndexAndAliasesWithMapping(client, Optional.of(getMappingsSources()));
     }
 
     @AfterEach

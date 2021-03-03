@@ -23,14 +23,15 @@ import static org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
-import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +64,11 @@ public class IndexCreationFactory {
         }
 
         public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client) {
-            return new IndexCreationPerformer(nbShards, nbReplica, waitForActiveShards, indexName, aliases.build()).createIndexAndAliases(client);
+            return new IndexCreationPerformer(nbShards, nbReplica, waitForActiveShards, indexName, aliases.build()).createIndexAndAliases(client, Optional.empty());
+        }
+
+        public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client, XContentBuilder mappingContent) {
+            return new IndexCreationPerformer(nbShards, nbReplica, waitForActiveShards, indexName, aliases.build()).createIndexAndAliases(client, Optional.of(mappingContent));
         }
     }
 
@@ -82,10 +87,10 @@ public class IndexCreationFactory {
             this.aliases = aliases;
         }
 
-        public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client) {
+        public ReactorElasticSearchClient createIndexAndAliases(ReactorElasticSearchClient client, Optional<XContentBuilder> mappingContent) {
             Preconditions.checkNotNull(indexName);
             try {
-                createIndexIfNeeded(client, indexName, generateSetting(nbShards, nbReplica, waitForActiveShards));
+                createIndexIfNeeded(client, indexName, generateSetting(nbShards, nbReplica, waitForActiveShards), mappingContent);
                 aliases.forEach(Throwing.<AliasName>consumer(alias -> createAliasIfNeeded(client, indexName, alias))
                     .sneakyThrow());
             } catch (IOException e) {
@@ -111,12 +116,13 @@ public class IndexCreationFactory {
                 .existsAlias(new GetAliasesRequest().aliases(aliasName.getValue()), RequestOptions.DEFAULT);
         }
 
-        private void createIndexIfNeeded(ReactorElasticSearchClient client, IndexName indexName, XContentBuilder settings) throws IOException {
+        private void createIndexIfNeeded(ReactorElasticSearchClient client, IndexName indexName, XContentBuilder settings, Optional<XContentBuilder> mappingContent) throws IOException {
             try {
-                client.indices()
-                    .create(
-                        new CreateIndexRequest(indexName.getValue())
-                            .source(settings), RequestOptions.DEFAULT);
+                CreateIndexRequest request = new CreateIndexRequest(indexName.getValue()).source(settings);
+                mappingContent.ifPresent(request::mapping);
+                client.indices().create(
+                    request,
+                    RequestOptions.DEFAULT);
             } catch (ElasticsearchStatusException exception) {
                 if (exception.getMessage().contains(INDEX_ALREADY_EXISTS_EXCEPTION_MESSAGE)) {
                     LOGGER.info("Index [{}] already exists", indexName.getValue());
