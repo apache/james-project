@@ -22,6 +22,9 @@ package org.apache.james.imap.message;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.Content;
+
 public interface Literal {
     /**
      * Size of the literal content data.
@@ -38,4 +41,23 @@ public interface Literal {
      * @return elementIn
      */
     InputStream getInputStream() throws IOException;
+
+    default Content asMailboxContent() {
+        Literal literal = this;
+        return new Content() {
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return literal.getInputStream();
+            }
+
+            @Override
+            public long size() throws MailboxException {
+                try {
+                    return literal.size();
+                } catch (IOException e) {
+                    throw new MailboxException("Error computing content size", e);
+                }
+            }
+        };
+    }
 }
