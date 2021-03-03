@@ -578,6 +578,7 @@ public class StoreMailboxManager implements MailboxManager {
                                 .newPath(sub.generateAssociatedPath())
                                 .build(),
                             new MailboxIdRegistrationKey(sub.getMailboxId())))
+                        .retryWhen(Retry.backoff(5, Duration.ofMillis(10)))
                         .then(Mono.fromRunnable(() -> LOGGER.debug("Rename mailbox sub-mailbox {} to {}", subOriginalName, subNewName)));
                 }, DEFAULT_CONCURRENCY)
                 .then());
