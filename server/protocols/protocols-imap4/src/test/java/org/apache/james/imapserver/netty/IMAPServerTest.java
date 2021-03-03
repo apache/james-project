@@ -19,6 +19,7 @@
 
 package org.apache.james.imapserver.netty;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -51,6 +52,7 @@ class IMAPServerTest {
     private static final String _65K_MESSAGE = "header: value\r\n" + "012345678\r\n".repeat(6553);
     private static final Username USER = Username.of("user@domain.org");
     private static final String USER_PASS = "pass";
+    public static final String SMALL_MESSAGE = "header: value\r\n\r\nBODY";
 
     private static XMLConfiguration getConfig(InputStream configStream) throws Exception {
         FileBasedConfigurationBuilder<XMLConfiguration> builder = new FileBasedConfigurationBuilder<>(XMLConfiguration.class)
@@ -119,30 +121,42 @@ class IMAPServerTest {
         }
 
         @Test
-        void smallAppendsShouldWork() {
+        void smallAppendsShouldWork() throws Exception {
             assertThatCode(() ->
                 testIMAPClient.connect("127.0.0.1", port)
                     .login(USER.asString(), USER_PASS)
-                    .append("INBOX", "header: value\r\n\r\nBODY"))
+                    .append("INBOX", SMALL_MESSAGE))
                 .doesNotThrowAnyException();
+
+            assertThat(testIMAPClient.select("INBOX")
+                    .readFirstMessage())
+                .contains("\r\n" + SMALL_MESSAGE + ")\r\n");
         }
 
         @Test
-        void mediumAppendsShouldWork() {
+        void mediumAppendsShouldWork() throws Exception {
             assertThatCode(() ->
                 testIMAPClient.connect("127.0.0.1", port)
                     .login(USER.asString(), USER_PASS)
                     .append("INBOX", _65K_MESSAGE))
                 .doesNotThrowAnyException();
+
+            assertThat(testIMAPClient.select("INBOX")
+                    .readFirstMessage())
+                .contains("\r\n" + _65K_MESSAGE + ")\r\n");
         }
 
         @Test
-        void largeAppendsShouldWork() {
+        void largeAppendsShouldWork() throws Exception {
             assertThatCode(() ->
                 testIMAPClient.connect("127.0.0.1", port)
                     .login(USER.asString(), USER_PASS)
                     .append("INBOX", _129K_MESSAGE))
                 .doesNotThrowAnyException();
+
+            assertThat(testIMAPClient.select("INBOX")
+                    .readFirstMessage())
+                .contains("\r\n" + _129K_MESSAGE + ")\r\n");
         }
     }
 
@@ -163,21 +177,29 @@ class IMAPServerTest {
         }
 
         @Test
-        void smallAppendsShouldWork() {
+        void smallAppendsShouldWork() throws Exception {
             assertThatCode(() ->
                 testIMAPClient.connect("127.0.0.1", port)
                     .login(USER.asString(), USER_PASS)
-                    .append("INBOX", "header: value\r\n\r\nBODY"))
+                    .append("INBOX", SMALL_MESSAGE))
                 .doesNotThrowAnyException();
+
+            assertThat(testIMAPClient.select("INBOX")
+                    .readFirstMessage())
+                .contains("\r\n" + SMALL_MESSAGE + ")\r\n");
         }
 
         @Test
-        void mediumAppendsShouldWork() {
+        void mediumAppendsShouldWork() throws Exception {
             assertThatCode(() ->
                 testIMAPClient.connect("127.0.0.1", port)
                     .login(USER.asString(), USER_PASS)
                     .append("INBOX", _65K_MESSAGE))
                 .doesNotThrowAnyException();
+
+            assertThat(testIMAPClient.select("INBOX")
+                    .readFirstMessage())
+                .contains("\r\n" + _65K_MESSAGE + ")\r\n");
         }
 
         @Test
