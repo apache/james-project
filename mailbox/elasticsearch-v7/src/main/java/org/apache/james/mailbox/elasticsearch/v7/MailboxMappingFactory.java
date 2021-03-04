@@ -136,12 +136,12 @@ public class MailboxMappingFactory {
 
                         .startObject(DATE)
                             .field(TYPE, NodeMappingFactory.DATE)
-                            .field(FORMAT, "yyyy-MM-dd'T'HH:mm:ssZ")
+                            .field(FORMAT, "uuuu-MM-dd'T'HH:mm:ssX||uuuu-MM-dd'T'HH:mm:ssXXX||uuuu-MM-dd'T'HH:mm:ssXXXXX")
                         .endObject()
 
                         .startObject(SENT_DATE)
                             .field(TYPE, NodeMappingFactory.DATE)
-                            .field(FORMAT, "yyyy-MM-dd'T'HH:mm:ssZ")
+                            .field(FORMAT, "uuuu-MM-dd'T'HH:mm:ssX||uuuu-MM-dd'T'HH:mm:ssXXX||uuuu-MM-dd'T'HH:mm:ssXXXXX")
                         .endObject()
 
                         .startObject(USER_FLAGS)
