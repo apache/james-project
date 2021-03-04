@@ -23,6 +23,7 @@ import static org.apache.james.quota.search.QuotaSearchFixture.TestConstants.BOB
 import static org.apache.james.quota.search.QuotaSearchFixture.TestConstants.NOW;
 import static org.apache.james.quota.search.QuotaSearchFixture.TestConstants.QUOTAROOT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 
 import java.io.IOException;
 
@@ -39,17 +40,24 @@ import org.apache.james.quota.search.elasticsearch.v7.QuotaRatioElasticSearchCon
 import org.apache.james.quota.search.elasticsearch.v7.QuotaSearchIndexCreationUtil;
 import org.apache.james.quota.search.elasticsearch.v7.UserRoutingKeyFactory;
 import org.apache.james.quota.search.elasticsearch.v7.json.QuotaRatioToElasticSearchJson;
+import org.awaitility.Awaitility;
+import org.awaitility.Durations;
+import org.awaitility.core.ConditionFactory;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ElasticSearchQuotaMailboxListenerTest {
+
+    private static final ConditionFactory CALMLY_AWAIT = Awaitility
+        .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
+        .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
+        .await();
     static Event.EventId EVENT_ID = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
 
     @RegisterExtension
@@ -79,14 +87,12 @@ class ElasticSearchQuotaMailboxListenerTest {
     }
 
     @Test
-    @Disabled
     void deserializeElasticSearchQuotaMailboxListenerGroup() throws Exception {
         assertThat(Group.deserialize("org.apache.james.quota.search.elasticsearch.v7.events.ElasticSearchQuotaMailboxListener$ElasticSearchQuotaMailboxListenerGroup"))
             .isEqualTo(new ElasticSearchQuotaMailboxListener.ElasticSearchQuotaMailboxListenerGroup());
     }
 
     @Test
-    @Disabled
     void eventShouldIndexEventWhenQuotaEvent() throws Exception {
         quotaMailboxListener.event(EventFactory.quotaUpdated()
             .eventId(EVENT_ID)
@@ -97,13 +103,12 @@ class ElasticSearchQuotaMailboxListenerTest {
             .instant(NOW)
             .build());
 
-        elasticSearch.awaitForElasticSearch();
-
-        SearchRequest searchRequest = new SearchRequest(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS.getValue())
-            .source(new SearchSourceBuilder()
-                .query(QueryBuilders.matchAllQuery()));
-        SearchResponse searchResponse = client.search(searchRequest).block();
-
-        assertThat(searchResponse.getHits().getTotalHits()).isEqualTo(1);
+        CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
+            .untilAsserted(() -> assertThat(client.search(
+                new SearchRequest(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS.getValue())
+                    .source(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery())),
+                RequestOptions.DEFAULT)
+                .block()
+                .getHits().getTotalHits().value).isEqualTo(1));
     }
 }
