@@ -183,12 +183,12 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+    public void messageReceived(ChannelHandlerContext ctx, MessageEvent event) throws Exception {
         try (Closeable closeable = IMAPMDCContext.from(ctx, attributes)) {
             imapCommandsMetric.increment();
             ImapSession session = (ImapSession) attributes.get(ctx.getChannel());
             ImapResponseComposer response = (ImapResponseComposer) ctx.getAttachment();
-            ImapMessage message = (ImapMessage) e.getMessage();
+            ImapMessage message = (ImapMessage) event.getMessage();
             ChannelPipeline cp = ctx.getPipeline();
 
             try {
@@ -218,7 +218,7 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
                 }
             }
 
-            super.messageReceived(ctx, e);
+            super.messageReceived(ctx, event);
         }
     }
 
