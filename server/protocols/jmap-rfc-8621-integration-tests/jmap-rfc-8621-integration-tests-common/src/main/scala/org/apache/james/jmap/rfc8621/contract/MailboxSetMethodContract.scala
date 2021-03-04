@@ -47,6 +47,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.{Assertions, SoftAssertions}
 import org.hamcrest.Matchers.{equalTo, hasSize, not}
 import org.junit.jupiter.api.{BeforeEach, Disabled, RepeatedTest, Tag, Test}
+import reactor.core.scala.publisher.{SFlux, SMono}
+import reactor.core.scheduler.Schedulers
 
 trait MailboxSetMethodContract {
 
@@ -2988,6 +2990,80 @@ trait MailboxSetMethodContract {
   @Tag(CategoryTags.BASIC_FEATURE)
   def updateShouldRenameMailboxes(server: GuiceJamesServer): Unit = {
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
+
+    val request =
+      s"""
+        |{
+        |   "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+        |   "methodCalls": [
+        |      ["Mailbox/set",
+        |          {
+        |               "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |               "update": {
+        |                 "${mailboxId.serialize}" : {
+        |                   "name": "newName"
+        |                 }
+        |               }
+        |          },
+        |   "c2"],
+        |      ["Mailbox/get",
+        |         {
+        |           "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |           "properties": ["id", "name"],
+        |           "ids": ["${mailboxId.serialize}"]
+        |          },
+        |       "c2"]
+        |   ]
+        |}
+        |""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[1][1].state", "methodResponses[0][1].newState", "methodResponses[0][1].oldState")
+      .isEqualTo(
+      s"""{
+         |  "sessionState": "${SESSION_STATE.value}",
+         |  "methodResponses": [
+         |    ["Mailbox/set", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "updated": {
+         |        "${mailboxId.serialize}": {}
+         |      }
+         |    }, "c2"],
+         |    ["Mailbox/get", {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "state": "${INSTANCE.value}",
+         |      "list": [{
+         |        "id": "${mailboxId.serialize}",
+         |        "name": "newName"
+         |      }],
+         |      "notFound": []
+         |    }, "c2"]
+         |  ]
+         |}""".stripMargin)
+  }
+
+  @Test
+  @Tag(CategoryTags.BASIC_FEATURE)
+  def updateShouldRenameMailboxesWithManyChildren(server: GuiceJamesServer): Unit = {
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
+    SFlux.range(0, 100)
+      .concatMap(i =>  SMono.fromCallable(() => server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.forUser(BOB, s"mailbox1.$i"))))
+      .asJava()
+      .subscribeOn(Schedulers.elastic())
+      .blockLast()
 
     val request =
       s"""
