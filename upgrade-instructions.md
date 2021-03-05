@@ -25,6 +25,33 @@ Change list:
  - [Cassandra Schema update to V10](#cassandra-schema-update-to-v10)
  - [Recommended upgrade to Cassandra 3.11.10](#recommended-upgrade-to-cassandra-3-1110)
  - [JMS mail queue no longer relies on java serialization](#jms-mail-queue-no-longer-relies-on-java-serialization)
+ - [CassandraUsersRepository hash algorithm changes](#cassandrausersrepository-hash-algorithm-changes)
+
+### CassandraUsersRepository hash algorithm changes
+
+Date: 05/03/2021
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3512
+
+Concerned products: Cassandra Guice servers (without LDAP)
+
+Previous computation was not flushing the base64 encoding stream resulting in the 2 last characters of the base64 
+string being omitted, causing inter-operability issues when synchronizing password hash with external systems.
+
+New digest algorithm closes the base64 encoding stream resulting in a breaking change forcing user to reset their 
+password.
+
+If you wish to avoid this breaking change you can add the `-legacy` suffix to the hash algorithm configured, which will
+default to previous behaviour.
+
+Example `usersrepository.xml`:
+
+```
+<usersrepository>
+    <algorithm>SHA-512-legacy</algorithm>
+    <!-- ... -->
+</usersrepository>
+```
 
 ### JMS mail queue no longer relies on java serialization
 
