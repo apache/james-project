@@ -79,21 +79,21 @@ public class JDBCMailRepositoryTest implements MailRepositoryContract {
 
     @Override
     @Disabled("JAMES-2546 This mail repository does not support null sender")
-    public void storeRegularMailShouldNotFailWhenNullSender() {
-
+    public void storeRegularMailShouldNotFailWhenNullSender() throws Exception {
+        MailRepositoryContract.super.storeRegularMailShouldNotFailWhenNullSender();
     }
 
     @Override
     @Disabled("JAMES-3431 No support for Attribute collection Java serialization yet")
-    public void shouldPreserveDsnParameters() {
-
+    public void shouldPreserveDsnParameters() throws Exception {
+        MailRepositoryContract.super.shouldPreserveDsnParameters();
     }
 
     @Override
     @Test
     @Tag(Unstable.TAG)
     // Isolation issues
-    public void sizeShouldReturnZeroWhenEmpty() {
-
+    public void sizeShouldReturnZeroWhenEmpty() throws Exception {
+        MailRepositoryContract.super.sizeShouldReturnZeroWhenEmpty();
     }
 }
