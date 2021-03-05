@@ -31,20 +31,21 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.UsersDAO;
+import org.apache.james.user.lib.model.Algorithm;
 import org.apache.james.user.lib.model.DefaultUser;
 
 public class MemoryUsersDAO implements UsersDAO, Configurable {
     private final Map<String, User> userByName;
-    private String algo;
+    private Algorithm algo;
 
     MemoryUsersDAO() {
         this.userByName = new HashMap<>();
-        this.algo = "SHA-512";
+        this.algo = Algorithm.of("SHA-512");
     }
 
     @Override
     public void configure(HierarchicalConfiguration<ImmutableNode> config) {
-        algo = config.getString("algorithm", "SHA-512");
+        algo = Algorithm.of(config.getString("algorithm", "SHA-512"));
     }
 
     public void clear() {
