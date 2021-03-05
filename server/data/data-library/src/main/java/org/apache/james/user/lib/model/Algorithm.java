@@ -46,7 +46,7 @@ public class Algorithm {
         return algorithmName;
     }
 
-    public String rawValue() {
+    public String asString() {
         return rawValue;
     }
 
