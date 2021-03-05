@@ -19,6 +19,8 @@
 
 package org.apache.james.user.lib.util;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -140,11 +142,11 @@ public class DigestUtil {
 
         try {
             md = MessageDigest.getInstance(algorithm.algorithmName());
-            byte[] digest = md.digest(pass.getBytes("iso-8859-1"));
+            byte[] digest = md.digest(pass.getBytes(ISO_8859_1));
             bos = new ByteArrayOutputStream();
             OutputStream encodedStream = MimeUtility.encode(bos, "base64");
             encodedStream.write(digest);
-            return bos.toString("iso-8859-1");
+            return bos.toString(ISO_8859_1);
         } catch (IOException | MessagingException e) {
             throw new RuntimeException("Fatal error", e);
         }
