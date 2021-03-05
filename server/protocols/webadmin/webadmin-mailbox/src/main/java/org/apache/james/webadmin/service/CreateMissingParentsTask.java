@@ -19,15 +19,24 @@
 
 package org.apache.james.webadmin.service;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
 
 import org.apache.james.core.Username;
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
@@ -35,8 +44,15 @@ import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class CreateMissingParentsTask implements Task {
+    private static final Username USERNAME = Username.of("createMissingParentsTask");
     static final TaskType TASK_TYPE = TaskType.of("CreateMissingParentsTask");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
@@ -97,8 +113,8 @@ public class CreateMissingParentsTask implements Task {
         return DTOModule
             .forDomainObject(CreateMissingParentsTask.class)
             .convertToDTO(CreateMissingParentsTask.CreateMissingParentsTaskDTO.class)
-            .toDomainObjectConverter(dto -> new CreateMissingParentsTask(mailboxManager, Username.of(dto.username)))
-            .toDTOConverter((task, type) -> new CreateMissingParentsTask.CreateMissingParentsTaskDTO(type, task.username.asString()))
+            .toDomainObjectConverter(dto -> new CreateMissingParentsTask(mailboxManager))
+            .toDTOConverter((task, type) -> new CreateMissingParentsTask.CreateMissingParentsTaskDTO(type))
             .typeName(TASK_TYPE.asString())
             .withFactory(TaskDTOModule::new);
     }
@@ -119,13 +135,42 @@ public class CreateMissingParentsTask implements Task {
 
     @Override
     public Result run() {
-        MailboxSession session = mailboxManager.createSystemSession(username);
+        MailboxSession session = mailboxManager.createSystemSession(USERNAME);
         try {
-            mailboxManager.list(session);
+            List<MailboxPath> mailboxPaths = mailboxManager.list(session);
+
+            char delimiter = session.getPathDelimiter();
+            Set<MailboxPath> parentPaths = mailboxPaths
+                .stream()
+                .filter(path -> path.hasParent(delimiter))
+                .flatMap(path -> path.getParents(delimiter))
+                .collect(Guavate.toImmutableSet());
+
+            return Flux.fromIterable(parentPaths)
+                .filter(Predicate.not(mailboxPaths::contains))
+                .flatMap(this::createMailbox, DEFAULT_CONCURRENCY)
+                .reduce(Task::combine)
+                .switchIfEmpty(Mono.just(Result.COMPLETED))
+                .subscribeOn(Schedulers.elastic())
+                .block();
         } catch (MailboxException e) {
-            e.printStackTrace();
+            LOGGER.error("Error fetching mailbox paths", e);
+            return Result.PARTIAL;
         }
-        return null;
+    }
+
+    private Mono<Result> createMailbox(MailboxPath path) {
+        return Mono.fromRunnable(() -> {
+            MailboxSession ownerSession = mailboxManager.createSystemSession(path.getUser());
+            Optional<MailboxId> mailboxId = Throwing.supplier(() -> mailboxManager.createMailbox(path, ownerSession)).sneakyThrow().get();
+            recordSuccess(mailboxId);
+        })
+        .then(Mono.just(Result.COMPLETED))
+        .onErrorResume(e -> {
+            LOGGER.error("Error creating missing parent mailbox: {}", path.getName(), e);
+            recordFailure(path);
+            return Mono.just(Result.PARTIAL);
+        });
     }
 
     @Override
@@ -136,9 +181,21 @@ public class CreateMissingParentsTask implements Task {
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
         return Optional.of(AdditionalInformation.from(
-            created.stream().map(MailboxId::serialize).collect(ImmutableSet.toImmutableSet()),
+            created.stream().map(MailboxId::serialize).collect(Guavate.toImmutableSet()),
             totalCreated.get(),
-            failures.stream().collect(ImmutableSet.toImmutableSet()),
+            failures.stream().collect(Guavate.toImmutableSet()),
             totalFailure.get()));
+    }
+
+    private void recordSuccess(Optional<MailboxId> mailboxId) {
+        if (mailboxId.isPresent()) {
+            created.add(mailboxId.get());
+            totalCreated.incrementAndGet();
+        }
+    }
+
+    private void recordFailure(MailboxPath mailboxPath) {
+        failures.add(mailboxPath.asString());
+        totalFailure.incrementAndGet();
     }
 }

@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.model;
 
+import static org.apache.james.mailbox.model.MailboxConstants.DEFAULT_DELIMITER;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -242,4 +244,7 @@ public class MailboxPath {
         return namespace + delimiter + name;
     }
 
+    public boolean hasParent() {
+        return getHierarchyLevels(DEFAULT_DELIMITER).size() > 1;
+    }
 }
