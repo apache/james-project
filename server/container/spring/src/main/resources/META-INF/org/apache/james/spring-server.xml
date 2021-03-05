@@ -83,7 +83,7 @@
 
     <!-- Camel Context -->
     <camel:camelContext id="jamesCamelContext" trace="false">
-        <camel:jmxAgent id="agent" disabled="false" createConnector="false" serviceUrlPath="/jmxrmi/jamescamel"/>
+        <camel:jmxAgent id="agent" disabled="false"/>
     </camel:camelContext>
 
     <!-- DNS Service -->
