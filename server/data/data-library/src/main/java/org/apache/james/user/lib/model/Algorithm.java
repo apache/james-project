@@ -22,22 +22,36 @@ package org.apache.james.user.lib.model;
 import java.util.Objects;
 
 public class Algorithm {
+    private static final boolean LEGACY = true;
+    public static final String LEGACY_SUFFIX = "-legacy";
+
     public static Algorithm of(String rawValue) {
-        return new Algorithm(rawValue);
+        if (rawValue.endsWith(LEGACY_SUFFIX)) {
+            return new Algorithm(rawValue, rawValue.substring(0, rawValue.length() - LEGACY_SUFFIX.length()), LEGACY);
+        }
+        return new Algorithm(rawValue, rawValue, false);
     }
 
     private final String rawValue;
+    private final String algorithmName;
+    private final boolean legacy;
 
-    public Algorithm(String rawValue) {
+    private Algorithm(String rawValue, String algorithmName, boolean legacy) {
         this.rawValue = rawValue;
+        this.algorithmName = algorithmName;
+        this.legacy = legacy;
     }
 
     public String algorithmName() {
-        return rawValue;
+        return algorithmName;
     }
 
     public String rawValue() {
         return rawValue;
+    }
+
+    public boolean isLegacy() {
+        return legacy;
     }
 
     @Override
@@ -45,13 +59,15 @@ public class Algorithm {
         if (o instanceof Algorithm) {
             Algorithm that = (Algorithm) o;
 
-            return Objects.equals(this.rawValue, that.rawValue);
+            return Objects.equals(this.rawValue, that.rawValue)
+                && Objects.equals(this.algorithmName, that.algorithmName)
+                && Objects.equals(this.legacy, that.legacy);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(rawValue);
+        return Objects.hash(rawValue, algorithmName, legacy);
     }
 }

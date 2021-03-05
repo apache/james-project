@@ -19,6 +19,7 @@
 
 package org.apache.james.user.lib.model;
 
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -27,5 +28,21 @@ class AlgorithmTest {
     @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(Algorithm.class).verify();
+    }
+
+    @Test
+    void ofShouldParseRawHash() {
+        SoftAssertions.assertSoftly(softly-> {
+            softly.assertThat(Algorithm.of("SHA-1").algorithmName()).isEqualTo("SHA-1");
+            softly.assertThat(Algorithm.of("SHA-1").isLegacy()).isFalse();
+        });
+    }
+
+    @Test
+    void ofShouldParseLegacy() {
+        SoftAssertions.assertSoftly(softly-> {
+            softly.assertThat(Algorithm.of("SHA-1-legacy").algorithmName()).isEqualTo("SHA-1");
+            softly.assertThat(Algorithm.of("SHA-1-legacy").isLegacy()).isTrue();
+        });
     }
 }

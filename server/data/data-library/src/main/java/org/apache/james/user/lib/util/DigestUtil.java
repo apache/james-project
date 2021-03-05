@@ -146,6 +146,9 @@ public class DigestUtil {
             bos = new ByteArrayOutputStream();
             OutputStream encodedStream = MimeUtility.encode(bos, "base64");
             encodedStream.write(digest);
+            if (!algorithm.isLegacy()) {
+                encodedStream.close();
+            }
             return bos.toString(ISO_8859_1);
         } catch (IOException | MessagingException e) {
             throw new RuntimeException("Fatal error", e);
