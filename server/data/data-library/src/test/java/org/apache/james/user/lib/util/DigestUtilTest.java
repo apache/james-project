@@ -30,12 +30,42 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class DigestUtilTest {
-    private static Stream<Arguments> sha1TestBed() {
+    private static Stream<Arguments> sha1LegacyTestBed() {
         return Stream.of(
             Arguments.of("myPassword", "VBPuJHI7uixaa6LQGWx4s+5G"),
             Arguments.of("otherPassword", "ks40t+AjBnHsMaC1Is/6+mtb"),
             Arguments.of("", "2jmj7l5rSw0yVb/vlWAYkK/Y"),
             Arguments.of("a", "hvfkN/qlp/zhXR3cuerq6jd2"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("sha1LegacyTestBed")
+    void testSha1Legacy(String password, String expectedHash) throws Exception {
+        assertThat(DigestUtil.digestString(Optional.ofNullable(password).orElse(""), Algorithm.of("SHA-1-legacy")))
+            .isEqualTo(expectedHash);
+    }
+
+    private static Stream<Arguments> sha512LegacyTestBed() {
+        return Stream.of(
+            Arguments.of("myPassword", "RQrQPbk5XfzLXgMGb9fxbPuith4j1RY3NxRHFFkFLskKmkvzoVHmAOqKrtNuO4who9OKsXBYOXSd\r\nEw2kOA8U"),
+            Arguments.of("otherPassword", "6S2kG/b6oHgWBXQjKDKTayXWu2cs9374lxFrL9uVpmYUlq0lw/ZFU9svMtYVDV5aVjJqRbLWZ/df\r\neaaJwYxk"),
+            Arguments.of("", "z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGl\r\nODJ6+Sfa"),
+            Arguments.of("a", "H0D8ktokFpR1CXnubPWC8tXX0o4YM13gWrxU0FYOD1MChgxlK/CNVgJSql50IQVG82n7u86MEs/H\r\nlXsmUv6a"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("sha512LegacyTestBed")
+    void testSha512Legacy(String password, String expectedHash) throws Exception {
+        assertThat(DigestUtil.digestString(password, Algorithm.of("SHA-512-legacy")))
+            .isEqualTo(expectedHash);
+    }
+
+    private static Stream<Arguments> sha1TestBed() {
+        return Stream.of(
+            Arguments.of("myPassword", "VBPuJHI7uixaa6LQGWx4s+5GKNE=\r\n"),
+            Arguments.of("otherPassword", "ks40t+AjBnHsMaC1Is/6+mtb05s=\r\n"),
+            Arguments.of("", "2jmj7l5rSw0yVb/vlWAYkK/YBwk=\r\n"),
+            Arguments.of("a", "hvfkN/qlp/zhXR3cuerq6jd2Z7g=\r\n"));
     }
 
     @ParameterizedTest
@@ -47,10 +77,10 @@ class DigestUtilTest {
 
     private static Stream<Arguments> sha512TestBed() {
         return Stream.of(
-            Arguments.of("myPassword", "RQrQPbk5XfzLXgMGb9fxbPuith4j1RY3NxRHFFkFLskKmkvzoVHmAOqKrtNuO4who9OKsXBYOXSd\r\nEw2kOA8U"),
-            Arguments.of("otherPassword", "6S2kG/b6oHgWBXQjKDKTayXWu2cs9374lxFrL9uVpmYUlq0lw/ZFU9svMtYVDV5aVjJqRbLWZ/df\r\neaaJwYxk"),
-            Arguments.of("", "z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGl\r\nODJ6+Sfa"),
-            Arguments.of("a", "H0D8ktokFpR1CXnubPWC8tXX0o4YM13gWrxU0FYOD1MChgxlK/CNVgJSql50IQVG82n7u86MEs/H\r\nlXsmUv6a"));
+            Arguments.of("myPassword", "RQrQPbk5XfzLXgMGb9fxbPuith4j1RY3NxRHFFkFLskKmkvzoVHmAOqKrtNuO4who9OKsXBYOXSd\r\nEw2kOA8USA==\r\n"),
+            Arguments.of("otherPassword", "6S2kG/b6oHgWBXQjKDKTayXWu2cs9374lxFrL9uVpmYUlq0lw/ZFU9svMtYVDV5aVjJqRbLWZ/df\r\neaaJwYxkhQ==\r\n"),
+            Arguments.of("", "z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGl\r\nODJ6+SfaPg==\r\n"),
+            Arguments.of("a", "H0D8ktokFpR1CXnubPWC8tXX0o4YM13gWrxU0FYOD1MChgxlK/CNVgJSql50IQVG82n7u86MEs/H\r\nlXsmUv6adQ==\r\n"));
     }
 
     @ParameterizedTest
