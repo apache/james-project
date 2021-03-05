@@ -127,7 +127,7 @@ public class CassandraUsersDAO implements UsersDAO {
                 updateUserStatement.bind()
                     .setString(REALNAME, defaultUser.getUserName().asString())
                     .setString(PASSWORD, defaultUser.getHashedPassword())
-                    .setString(ALGORITHM, defaultUser.getHashAlgorithm().rawValue())
+                    .setString(ALGORITHM, defaultUser.getHashAlgorithm().asString())
                     .setString(NAME, defaultUser.getUserName().asString()))
             .block();
 
@@ -178,7 +178,7 @@ public class CassandraUsersDAO implements UsersDAO {
                 .setString(NAME, user.getUserName().asString())
                 .setString(REALNAME, user.getUserName().asString())
                 .setString(PASSWORD, user.getHashedPassword())
-                .setString(ALGORITHM, user.getHashAlgorithm().rawValue()))
+                .setString(ALGORITHM, user.getHashAlgorithm().asString()))
             .block();
 
         if (!executed) {
