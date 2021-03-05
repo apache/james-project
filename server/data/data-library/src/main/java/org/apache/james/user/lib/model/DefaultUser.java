@@ -36,7 +36,7 @@ public class DefaultUser implements User, Serializable {
 
     private final Username userName;
     private String hashedPassword;
-    private final String algorithm;
+    private final Algorithm algorithm;
 
     /**
      * Standard constructor.
@@ -46,7 +46,7 @@ public class DefaultUser implements User, Serializable {
      * @param hashAlg
      *            the algorithm used to generate the hash of the password
      */
-    public DefaultUser(Username name, String hashAlg) {
+    public DefaultUser(Username name, Algorithm hashAlg) {
         userName = name;
         algorithm = hashAlg;
     }
@@ -62,7 +62,7 @@ public class DefaultUser implements User, Serializable {
      * @param hashAlg
      *            the String algorithm used to generate the hash of the password
      */
-    public DefaultUser(Username name, String passwordHash, String hashAlg) {
+    public DefaultUser(Username name, String passwordHash, Algorithm hashAlg) {
         userName = name;
         hashedPassword = passwordHash;
         algorithm = hashAlg;
@@ -107,7 +107,7 @@ public class DefaultUser implements User, Serializable {
      * 
      * @return the name of the hashing algorithm used for this user's password
      */
-    public String getHashAlgorithm() {
+    public Algorithm getHashAlgorithm() {
         return algorithm;
     }
 }

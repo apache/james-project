@@ -43,6 +43,7 @@ import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.UsersDAO;
+import org.apache.james.user.lib.model.Algorithm;
 import org.apache.james.user.lib.model.DefaultUser;
 
 import com.datastax.driver.core.PreparedStatement;
@@ -51,7 +52,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 
 public class CassandraUsersDAO implements UsersDAO {
-    private static final String DEFAULT_ALGO_VALUE = "SHA-512";
+    private static final Algorithm DEFAULT_ALGO_VALUE = Algorithm.of("SHA-512");
 
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement getUserStatement;
@@ -113,7 +114,8 @@ public class CassandraUsersDAO implements UsersDAO {
         return executor.executeSingleRow(
                 getUserStatement.bind()
                     .setString(NAME, name.asString()))
-            .map(row -> new DefaultUser(Username.of(row.getString(NAME)), row.getString(PASSWORD), row.getString(ALGORITHM)))
+            .map(row -> new DefaultUser(Username.of(row.getString(NAME)), row.getString(PASSWORD),
+                Algorithm.of(row.getString(ALGORITHM))))
             .blockOptional();
     }
 
@@ -125,7 +127,7 @@ public class CassandraUsersDAO implements UsersDAO {
                 updateUserStatement.bind()
                     .setString(REALNAME, defaultUser.getUserName().asString())
                     .setString(PASSWORD, defaultUser.getHashedPassword())
-                    .setString(ALGORITHM, defaultUser.getHashAlgorithm())
+                    .setString(ALGORITHM, defaultUser.getHashAlgorithm().rawValue())
                     .setString(NAME, defaultUser.getUserName().asString()))
             .block();
 
@@ -176,7 +178,7 @@ public class CassandraUsersDAO implements UsersDAO {
                 .setString(NAME, user.getUserName().asString())
                 .setString(REALNAME, user.getUserName().asString())
                 .setString(PASSWORD, user.getHashedPassword())
-                .setString(ALGORITHM, user.getHashAlgorithm()))
+                .setString(ALGORITHM, user.getHashAlgorithm().rawValue()))
             .block();
 
         if (!executed) {
