@@ -34,6 +34,7 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.cassandra.CassandraUsersDAO;
 import org.apache.james.user.cassandra.CassandraUsersRepositoryModule;
 import org.apache.james.user.lib.UsersRepositoryImpl;
+import org.apache.james.user.lib.model.Algorithm;
 import org.apache.james.util.Host;
 
 public class CassandraHostSystem extends JamesManageSieveHostSystem {
@@ -65,7 +66,7 @@ public class CassandraHostSystem extends JamesManageSieveHostSystem {
 
     @Override
     protected UsersRepository createUsersRepository() {
-        CassandraUsersDAO usersDAO = new CassandraUsersDAO(cassandra.getConf());
+        CassandraUsersDAO usersDAO = new CassandraUsersDAO(new Algorithm.DefaultFactory(), cassandra.getConf());
         UsersRepositoryImpl usersRepository = new UsersRepositoryImpl(NO_DOMAIN_LIST, usersDAO);
         usersRepository.setEnableVirtualHosting(false);
         return usersRepository;

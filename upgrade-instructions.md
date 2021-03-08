@@ -41,14 +41,15 @@ string being omitted, causing inter-operability issues when synchronizing passwo
 New digest algorithm closes the base64 encoding stream resulting in a breaking change forcing user to reset their 
 password.
 
-If you wish to avoid this breaking change you can add the `-legacy` suffix to the hash algorithm configured, which will
-default to previous behaviour.
+If you wish to avoid this breaking change you can add the `hashingMode` configuration option in `usersrepository.xml` 
+configuration file, with the value `legacy`, which will ensure previous behaviour.
 
 Example `usersrepository.xml`:
 
 ```
 <usersrepository>
     <algorithm>SHA-512-legacy</algorithm>
+    <hashingMode>legacy</hashingMode>
     <!-- ... -->
 </usersrepository>
 ```

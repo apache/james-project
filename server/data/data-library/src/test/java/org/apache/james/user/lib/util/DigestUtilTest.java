@@ -19,12 +19,13 @@
 
 package org.apache.james.user.lib.util;
 
+import static org.apache.james.user.lib.model.Algorithm.DEFAULT_FACTORY;
+import static org.apache.james.user.lib.model.Algorithm.LEGACY_FACTORY;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.apache.james.user.lib.model.Algorithm;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -41,7 +42,7 @@ class DigestUtilTest {
     @ParameterizedTest
     @MethodSource("sha1LegacyTestBed")
     void testSha1Legacy(String password, String expectedHash) throws Exception {
-        assertThat(DigestUtil.digestString(Optional.ofNullable(password).orElse(""), Algorithm.of("SHA-1-legacy")))
+        assertThat(DigestUtil.digestString(Optional.ofNullable(password).orElse(""), LEGACY_FACTORY.of("SHA-1-legacy")))
             .isEqualTo(expectedHash);
     }
 
@@ -56,7 +57,7 @@ class DigestUtilTest {
     @ParameterizedTest
     @MethodSource("sha512LegacyTestBed")
     void testSha512Legacy(String password, String expectedHash) throws Exception {
-        assertThat(DigestUtil.digestString(password, Algorithm.of("SHA-512-legacy")))
+        assertThat(DigestUtil.digestString(password, LEGACY_FACTORY.of("SHA-512-legacy")))
             .isEqualTo(expectedHash);
     }
 
@@ -71,7 +72,7 @@ class DigestUtilTest {
     @ParameterizedTest
     @MethodSource("sha1TestBed")
     void testSha1(String password, String expectedHash) throws Exception {
-        assertThat(DigestUtil.digestString(Optional.ofNullable(password).orElse(""), Algorithm.of("SHA-1")))
+        assertThat(DigestUtil.digestString(Optional.ofNullable(password).orElse(""), DEFAULT_FACTORY.of("SHA-1")))
             .isEqualTo(expectedHash);
     }
 
@@ -86,7 +87,7 @@ class DigestUtilTest {
     @ParameterizedTest
     @MethodSource("sha512TestBed")
     void testSha512(String password, String expectedHash) throws Exception {
-        assertThat(DigestUtil.digestString(password, Algorithm.of("SHA-512")))
+        assertThat(DigestUtil.digestString(password, DEFAULT_FACTORY.of("SHA-512")))
             .isEqualTo(expectedHash);
     }
 }

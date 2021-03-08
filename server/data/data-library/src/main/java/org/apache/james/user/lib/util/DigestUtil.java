@@ -77,7 +77,7 @@ public class DigestUtil {
             digestFile(args[args.length - 1], alg);
         } else {
             try {
-                String hash = digestString(args[args.length - 1], Algorithm.of(alg));
+                String hash = digestString(args[args.length - 1], Algorithm.DEFAULT_FACTORY.of(alg));
                 System.out.println("Hash is: " + hash);
             } catch (NoSuchAlgorithmException nsae) {
                 System.out.println("No such algorithm available");

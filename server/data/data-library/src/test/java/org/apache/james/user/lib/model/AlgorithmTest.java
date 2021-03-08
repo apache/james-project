@@ -19,6 +19,9 @@
 
 package org.apache.james.user.lib.model;
 
+import static org.apache.james.user.lib.model.Algorithm.DEFAULT_FACTORY;
+import static org.apache.james.user.lib.model.Algorithm.LEGACY_FACTORY;
+
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
@@ -33,16 +36,16 @@ class AlgorithmTest {
     @Test
     void ofShouldParseRawHash() {
         SoftAssertions.assertSoftly(softly-> {
-            softly.assertThat(Algorithm.of("SHA-1").algorithmName()).isEqualTo("SHA-1");
-            softly.assertThat(Algorithm.of("SHA-1").isLegacy()).isFalse();
+            softly.assertThat(DEFAULT_FACTORY.of("SHA-1").algorithmName()).isEqualTo("SHA-1");
+            softly.assertThat(DEFAULT_FACTORY.of("SHA-1").isLegacy()).isFalse();
         });
     }
 
     @Test
     void ofShouldParseLegacy() {
         SoftAssertions.assertSoftly(softly-> {
-            softly.assertThat(Algorithm.of("SHA-1-legacy").algorithmName()).isEqualTo("SHA-1");
-            softly.assertThat(Algorithm.of("SHA-1-legacy").isLegacy()).isTrue();
+            softly.assertThat(LEGACY_FACTORY.of("SHA-1-legacy").algorithmName()).isEqualTo("SHA-1");
+            softly.assertThat(LEGACY_FACTORY.of("SHA-1-legacy").isLegacy()).isTrue();
         });
     }
 }

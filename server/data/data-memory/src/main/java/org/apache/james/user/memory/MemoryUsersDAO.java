@@ -37,15 +37,21 @@ import org.apache.james.user.lib.model.DefaultUser;
 public class MemoryUsersDAO implements UsersDAO, Configurable {
     private final Map<String, User> userByName;
     private Algorithm algo;
+    private Algorithm.Factory hashFactory;
 
     MemoryUsersDAO() {
         this.userByName = new HashMap<>();
-        this.algo = Algorithm.of("SHA-512");
+        this.hashFactory = Algorithm.DEFAULT_FACTORY;
+        this.algo = hashFactory.of("SHA-512");
     }
 
     @Override
     public void configure(HierarchicalConfiguration<ImmutableNode> config) {
-        algo = Algorithm.of(config.getString("algorithm", "SHA-512"));
+        hashFactory = Optional.ofNullable(config.getString("hashingMode", null))
+            .map(Algorithm.HashingMode::parse)
+            .orElse(Algorithm.HashingMode.DEFAULT)
+            .getFactory();
+        algo = hashFactory.of(config.getString("algorithm", "SHA-512"));
     }
 
     public void clear() {
