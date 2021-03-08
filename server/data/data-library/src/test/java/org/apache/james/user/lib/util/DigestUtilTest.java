@@ -42,7 +42,7 @@ class DigestUtilTest {
     @ParameterizedTest
     @MethodSource("sha1LegacyTestBed")
     void testSha1Legacy(String password, String expectedHash) throws Exception {
-        assertThat(DigestUtil.digestString(Optional.ofNullable(password).orElse(""), LEGACY_FACTORY.of("SHA-1-legacy")))
+        assertThat(DigestUtil.digestString(Optional.ofNullable(password).orElse(""), LEGACY_FACTORY.of("SHA-1")))
             .isEqualTo(expectedHash);
     }
 
@@ -57,7 +57,7 @@ class DigestUtilTest {
     @ParameterizedTest
     @MethodSource("sha512LegacyTestBed")
     void testSha512Legacy(String password, String expectedHash) throws Exception {
-        assertThat(DigestUtil.digestString(password, LEGACY_FACTORY.of("SHA-512-legacy")))
+        assertThat(DigestUtil.digestString(password, LEGACY_FACTORY.of("SHA-512")))
             .isEqualTo(expectedHash);
     }
 
