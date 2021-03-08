@@ -55,14 +55,14 @@ public class Algorithm {
     public static class LegacyFactory implements Factory {
         @Override
         public Algorithm of(String rawValue) {
-            return new Algorithm(rawValue, rawValue, LEGACY);
+            return new Algorithm(rawValue, LEGACY);
         }
     }
 
     public static class DefaultFactory implements Factory {
         @Override
         public Algorithm of(String rawValue) {
-            return new Algorithm(rawValue, rawValue, !LEGACY);
+            return new Algorithm(rawValue, !LEGACY);
         }
     }
 
@@ -71,17 +71,11 @@ public class Algorithm {
     public static final Factory DEFAULT_FACTORY = new DefaultFactory();
 
     private final String rawValue;
-    private final String algorithmName;
     private final boolean legacy;
 
-    private Algorithm(String rawValue, String algorithmName, boolean legacy) {
+    private Algorithm(String rawValue, boolean legacy) {
         this.rawValue = rawValue;
-        this.algorithmName = algorithmName;
         this.legacy = legacy;
-    }
-
-    public String algorithmName() {
-        return algorithmName;
     }
 
     public String asString() {
@@ -98,7 +92,6 @@ public class Algorithm {
             Algorithm that = (Algorithm) o;
 
             return Objects.equals(this.rawValue, that.rawValue)
-                && Objects.equals(this.algorithmName, that.algorithmName)
                 && Objects.equals(this.legacy, that.legacy);
         }
         return false;
@@ -106,6 +99,6 @@ public class Algorithm {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(rawValue, algorithmName, legacy);
+        return Objects.hash(rawValue, legacy);
     }
 }

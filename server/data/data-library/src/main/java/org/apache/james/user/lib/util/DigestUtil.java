@@ -141,7 +141,7 @@ public class DigestUtil {
         ByteArrayOutputStream bos;
 
         try {
-            md = MessageDigest.getInstance(algorithm.algorithmName());
+            md = MessageDigest.getInstance(algorithm.asString());
             byte[] digest = md.digest(pass.getBytes(ISO_8859_1));
             bos = new ByteArrayOutputStream();
             OutputStream encodedStream = MimeUtility.encode(bos, "base64");

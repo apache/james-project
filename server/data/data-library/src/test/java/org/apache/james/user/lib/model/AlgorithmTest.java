@@ -36,7 +36,7 @@ class AlgorithmTest {
     @Test
     void ofShouldParseRawHash() {
         SoftAssertions.assertSoftly(softly-> {
-            softly.assertThat(DEFAULT_FACTORY.of("SHA-1").algorithmName()).isEqualTo("SHA-1");
+            softly.assertThat(DEFAULT_FACTORY.of("SHA-1").asString()).isEqualTo("SHA-1");
             softly.assertThat(DEFAULT_FACTORY.of("SHA-1").isLegacy()).isFalse();
         });
     }
@@ -44,7 +44,7 @@ class AlgorithmTest {
     @Test
     void ofShouldParseLegacy() {
         SoftAssertions.assertSoftly(softly-> {
-            softly.assertThat(LEGACY_FACTORY.of("SHA-1-legacy").algorithmName()).isEqualTo("SHA-1");
+            softly.assertThat(LEGACY_FACTORY.of("SHA-1-legacy").asString()).isEqualTo("SHA-1");
             softly.assertThat(LEGACY_FACTORY.of("SHA-1-legacy").isLegacy()).isTrue();
         });
     }
