@@ -191,6 +191,22 @@ public class IndexCreationFactory {
     public static final String KEEP_MAIL_AND_URL = "keep_mail_and_url";
     public static final String SNOWBALL_KEEP_MAIL_AND_URL = "snowball_keep_mail_and_token";
     public static final String ENGLISH_SNOWBALL = "english_snowball";
+    public static final String BOOLEAN = "boolean";
+    public static final String TYPE = "type";
+    public static final String LONG = "long";
+    public static final String DOUBLE = "double";
+    public static final String KEYWORD = "keyword";
+    public static final String PROPERTIES = "properties";
+    public static final String ROUTING = "_routing";
+    public static final String REQUIRED = "required";
+    public static final String DATE = "date";
+    public static final String FORMAT = "format";
+    public static final String NESTED = "nested";
+    public static final String FIELDS = "fields";
+    public static final String RAW = "raw";
+    public static final String ANALYZER = "analyzer";
+    public static final String NORMALIZER = "normalizer";
+    public static final String SEARCH_ANALYZER = "search_analyzer";
 
     @Inject
     public IndexCreationFactory(ElasticSearchConfiguration configuration) {

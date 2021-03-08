@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.elasticsearch.v7.query;
 
-import static org.apache.james.backends.es.v7.NodeMappingFactory.RAW;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.RAW;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
