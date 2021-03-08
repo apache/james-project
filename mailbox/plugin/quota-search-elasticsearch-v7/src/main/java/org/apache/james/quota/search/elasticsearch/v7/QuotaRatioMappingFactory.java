@@ -19,12 +19,12 @@
 
 package org.apache.james.quota.search.elasticsearch.v7;
 
-import static org.apache.james.backends.es.v7.NodeMappingFactory.DOUBLE;
-import static org.apache.james.backends.es.v7.NodeMappingFactory.KEYWORD;
-import static org.apache.james.backends.es.v7.NodeMappingFactory.PROPERTIES;
-import static org.apache.james.backends.es.v7.NodeMappingFactory.REQUIRED;
-import static org.apache.james.backends.es.v7.NodeMappingFactory.ROUTING;
-import static org.apache.james.backends.es.v7.NodeMappingFactory.TYPE;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.DOUBLE;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.KEYWORD;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.PROPERTIES;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.REQUIRED;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.ROUTING;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.TYPE;
 import static org.apache.james.quota.search.elasticsearch.v7.json.JsonMessageConstants.DOMAIN;
 import static org.apache.james.quota.search.elasticsearch.v7.json.JsonMessageConstants.QUOTA_RATIO;
 import static org.apache.james.quota.search.elasticsearch.v7.json.JsonMessageConstants.USER;
