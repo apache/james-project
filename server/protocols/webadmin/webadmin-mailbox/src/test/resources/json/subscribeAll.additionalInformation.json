@@ -1,0 +1,7 @@
+{
+  "type":"SubscribeAllTask",
+  "timestamp":"2007-12-03T10:15:30Z",
+  "username": "bob",
+  "subscribedCount": 18,
+  "unsubscribedCount": 42
+}
