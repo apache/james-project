@@ -24,6 +24,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.user.lib.UsersRepositoryContract;
 import org.apache.james.user.lib.UsersRepositoryImpl;
+import org.apache.james.user.lib.model.Algorithm;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -70,7 +71,7 @@ class CassandraUsersRepositoryTest {
     }
 
     private static UsersRepositoryImpl getUsersRepository(DomainList domainList, boolean enableVirtualHosting) throws Exception {
-        CassandraUsersDAO usersDAO = new CassandraUsersDAO(cassandraCluster.getCassandraCluster().getConf());
+        CassandraUsersDAO usersDAO = new CassandraUsersDAO(new Algorithm.DefaultFactory(), cassandraCluster.getCassandraCluster().getConf());
         BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("enableVirtualHosting", String.valueOf(enableVirtualHosting));
 

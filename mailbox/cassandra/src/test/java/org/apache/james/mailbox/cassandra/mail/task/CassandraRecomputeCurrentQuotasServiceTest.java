@@ -48,6 +48,7 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.cassandra.CassandraUsersDAO;
 import org.apache.james.user.cassandra.CassandraUsersRepositoryModule;
 import org.apache.james.user.lib.UsersRepositoryImpl;
+import org.apache.james.user.lib.model.Algorithm;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -76,7 +77,7 @@ public class CassandraRecomputeCurrentQuotasServiceTest implements RecomputeCurr
         CassandraCluster cassandra = cassandraCluster.getCassandraCluster();
         CassandraMailboxSessionMapperFactory mapperFactory = CassandraTestSystemFixture.createMapperFactory(cassandra);
 
-        CassandraUsersDAO usersDAO = new CassandraUsersDAO(cassandra.getConf());
+        CassandraUsersDAO usersDAO = new CassandraUsersDAO(new Algorithm.DefaultFactory(), cassandra.getConf());
         usersRepository = new UsersRepositoryImpl(NO_DOMAIN_LIST, usersDAO);
         usersRepository.setEnableVirtualHosting(false);
 

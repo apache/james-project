@@ -19,17 +19,23 @@
 
 package org.apache.james.modules.data;
 
+import java.util.Optional;
+
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.cassandra.CassandraUsersDAO;
 import org.apache.james.user.lib.UsersDAO;
 import org.apache.james.user.lib.UsersRepositoryImpl;
+import org.apache.james.user.lib.model.Algorithm;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
@@ -50,5 +56,15 @@ public class CassandraUsersRepositoryModule extends AbstractModule {
         return InitilizationOperationBuilder
             .forClass(UsersRepositoryImpl.class)
             .init(() -> usersRepository.configure(configurationProvider.getConfiguration("usersrepository")));
+    }
+
+    @Provides
+    @Singleton
+    Algorithm.Factory provideAlgorithmFactory(ConfigurationProvider configurationProvider) throws ConfigurationException {
+        return Optional.ofNullable(configurationProvider.getConfiguration("usersrepository")
+            .getString("hashingMode", null))
+            .map(Algorithm.HashingMode::parse)
+            .orElse(Algorithm.HashingMode.DEFAULT)
+            .getFactory();
     }
 }

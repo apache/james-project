@@ -19,31 +19,63 @@
 
 package org.apache.james.user.lib.model;
 
+import java.util.Arrays;
 import java.util.Objects;
 
-public class Algorithm {
-    private static final boolean LEGACY = true;
-    public static final String LEGACY_SUFFIX = "-legacy";
+import com.google.common.collect.ImmutableList;
 
-    public static Algorithm of(String rawValue) {
-        if (rawValue.endsWith(LEGACY_SUFFIX)) {
-            return new Algorithm(rawValue, rawValue.substring(0, rawValue.length() - LEGACY_SUFFIX.length()), LEGACY);
+public class Algorithm {
+
+    public enum HashingMode {
+        LEGACY(LEGACY_FACTORY),
+        DEFAULT(DEFAULT_FACTORY);
+
+        public static HashingMode parse(String value) {
+            return Arrays.stream(values())
+                .filter(aValue -> value.equalsIgnoreCase(aValue.toString()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unsuported value for HashingMode: " + value + ". Should be one of " + ImmutableList.copyOf(values())));
         }
-        return new Algorithm(rawValue, rawValue, false);
+
+        private final Factory factory;
+
+        HashingMode(Factory factory) {
+            this.factory = factory;
+        }
+
+        public Factory getFactory() {
+            return factory;
+        }
     }
+
+    public interface Factory {
+        Algorithm of(String rawValue);
+    }
+
+    public static class LegacyFactory implements Factory {
+        @Override
+        public Algorithm of(String rawValue) {
+            return new Algorithm(rawValue, LEGACY);
+        }
+    }
+
+    public static class DefaultFactory implements Factory {
+        @Override
+        public Algorithm of(String rawValue) {
+            return new Algorithm(rawValue, !LEGACY);
+        }
+    }
+
+    private static final boolean LEGACY = true;
+    public static final Factory LEGACY_FACTORY = new LegacyFactory();
+    public static final Factory DEFAULT_FACTORY = new DefaultFactory();
 
     private final String rawValue;
-    private final String algorithmName;
     private final boolean legacy;
 
-    private Algorithm(String rawValue, String algorithmName, boolean legacy) {
+    private Algorithm(String rawValue, boolean legacy) {
         this.rawValue = rawValue;
-        this.algorithmName = algorithmName;
         this.legacy = legacy;
-    }
-
-    public String algorithmName() {
-        return algorithmName;
     }
 
     public String asString() {
@@ -60,7 +92,6 @@ public class Algorithm {
             Algorithm that = (Algorithm) o;
 
             return Objects.equals(this.rawValue, that.rawValue)
-                && Objects.equals(this.algorithmName, that.algorithmName)
                 && Objects.equals(this.legacy, that.legacy);
         }
         return false;
@@ -68,6 +99,6 @@ public class Algorithm {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(rawValue, algorithmName, legacy);
+        return Objects.hash(rawValue, legacy);
     }
 }

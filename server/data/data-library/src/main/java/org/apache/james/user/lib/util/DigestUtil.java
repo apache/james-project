@@ -77,7 +77,7 @@ public class DigestUtil {
             digestFile(args[args.length - 1], alg);
         } else {
             try {
-                String hash = digestString(args[args.length - 1], Algorithm.of(alg));
+                String hash = digestString(args[args.length - 1], Algorithm.DEFAULT_FACTORY.of(alg));
                 System.out.println("Hash is: " + hash);
             } catch (NoSuchAlgorithmException nsae) {
                 System.out.println("No such algorithm available");
@@ -141,7 +141,7 @@ public class DigestUtil {
         ByteArrayOutputStream bos;
 
         try {
-            md = MessageDigest.getInstance(algorithm.algorithmName());
+            md = MessageDigest.getInstance(algorithm.asString());
             byte[] digest = md.digest(pass.getBytes(ISO_8859_1));
             bos = new ByteArrayOutputStream();
             OutputStream encodedStream = MimeUtility.encode(bos, "base64");
