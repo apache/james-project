@@ -34,6 +34,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -54,7 +55,6 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -334,11 +334,17 @@ public class StoreMessageIdManager implements MessageIdManager {
         if (mailboxMessage.isEmpty()) {
             return Mono.error(new MailboxNotFoundException("can't load message"));
         }
+        List<Pair<MailboxMessage, Mailbox>> messagesToRemove = currentMailboxMessages.stream()
+            .flatMap(message -> messageMoves.removedMailboxes()
+                .stream()
+                .filter(mailbox -> mailbox.getMailboxId().equals(message.getMailboxId()))
+                .map(mailbox -> Pair.of(message, mailbox)))
+            .collect(Guavate.toImmutableList());
 
         return Mono.fromRunnable(Throwing.runnable(() -> validateQuota(messageMoves, mailboxMessage.get())).sneakyThrow())
             .then(Mono.fromRunnable(Throwing.runnable(() ->
                 addMessageToMailboxes(mailboxMessage.get(), messageMoves.addedMailboxes(), mailboxSession)).sneakyThrow()))
-            .then(removeMessageFromMailboxes(mailboxMessage.get(), messageMoves.removedMailboxes(), mailboxSession))
+            .then(removeMessageFromMailboxes(mailboxMessage.get().getMessageId(), messagesToRemove, mailboxSession))
             .then(eventBus.dispatch(EventFactory.moved()
                     .session(mailboxSession)
                     .messageMoves(messageMoves.asMessageMoves())
@@ -350,23 +356,26 @@ public class StoreMessageIdManager implements MessageIdManager {
                     .collect(Guavate.toImmutableSet())));
     }
 
-    private Mono<Void> removeMessageFromMailboxes(MailboxMessage message, Set<Mailbox> mailboxesToRemove, MailboxSession mailboxSession) {
+    private Mono<Void> removeMessageFromMailboxes(MessageId messageId, List<Pair<MailboxMessage, Mailbox>> messages, MailboxSession mailboxSession) {
+        if (messages.isEmpty()) {
+            return Mono.empty();
+        }
+
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
-        MessageMetaData eventPayload = message.metaData();
 
-        ImmutableSet<MailboxId> mailboxIds = mailboxesToRemove.stream()
-            .map(Mailbox::getMailboxId)
-            .collect(Guavate.toImmutableSet());
+        ImmutableList<MailboxId> mailboxIds = messages.stream()
+            .map(pair -> pair.getRight().getMailboxId())
+            .collect(Guavate.toImmutableList());
 
-        return Mono.from(messageIdMapper.deleteReactive(message.getMessageId(), mailboxIds))
-            .then(Flux.fromIterable(mailboxesToRemove)
-                .flatMap(mailbox -> eventBus.dispatch(EventFactory.expunged()
+        return Mono.from(messageIdMapper.deleteReactive(messageId, mailboxIds))
+            .then(Flux.fromIterable(messages)
+                .flatMap(message -> eventBus.dispatch(EventFactory.expunged()
                         .randomEventId()
                         .mailboxSession(mailboxSession)
-                        .mailbox(mailbox)
-                        .addMetaData(eventPayload)
+                        .mailbox(message.getRight())
+                        .addMetaData(message.getLeft().metaData())
                         .build(),
-                    new MailboxIdRegistrationKey(mailbox.getMailboxId())), DEFAULT_CONCURRENCY)
+                    new MailboxIdRegistrationKey(message.getRight().getMailboxId())), DEFAULT_CONCURRENCY)
                 .then());
     }
     

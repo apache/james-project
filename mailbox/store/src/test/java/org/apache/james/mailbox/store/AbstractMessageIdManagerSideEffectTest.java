@@ -34,6 +34,7 @@ import java.util.concurrent.CountDownLatch;
 
 import javax.mail.Flags;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
@@ -337,6 +338,28 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof Added).hasSize(1)
             .extracting(event -> (Added) event).extracting(Added::getMailboxId)
             .containsOnly(mailbox1.getMailboxId());
+    }
+
+    @Test
+    void setInMailboxesShouldUseTheRightMessageUidsInExpunged() throws Exception {
+        givenUnlimitedQuota();
+        MessageId messageId = testingData.persist(mailbox2.getMailboxId(), messageUid1, FLAGS, session);
+        testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
+        testingData.persist(mailbox1.getMailboxId(), messageUid2, FLAGS, session);
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId(), mailbox3.getMailboxId()), session);
+        List<MessageResult> messages = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, session);
+        MessageUid uidMailbox1 = messages.stream().filter(message -> message.getMailboxId().equals(mailbox1.getMailboxId())).map(MessageResult::getUid).findFirst().get();
+        MessageUid uidMailbox3 = messages.stream().filter(message -> message.getMailboxId().equals(mailbox3.getMailboxId())).map(MessageResult::getUid).findFirst().get();
+
+
+        eventBus.register(eventCollector);
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox2.getMailboxId()), session);
+
+        assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof MessageMoveEvent).hasSize(1);
+        assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof Expunged).hasSize(2)
+            .extracting(event -> (Expunged) event)
+            .extracting(event -> Pair.of(event.getMailboxId(), ImmutableList.copyOf(event.getUids())))
+            .containsOnly(Pair.of(mailbox1.getMailboxId(), ImmutableList.of(uidMailbox1)), Pair.of(mailbox3.getMailboxId(), ImmutableList.of(uidMailbox3)));
     }
 
     @Test
