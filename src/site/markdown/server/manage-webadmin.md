@@ -1136,6 +1136,36 @@ Warning: Canceling this task should be considered unsafe as it will leave the cu
 Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
 concurrent changes done during the reIndexing might be ignored.
 
+### Subscribing a user to all of its mailboxes
+ 
+```
+curl -XPOST http://ip:port/users/{usernameToBeUsed}/mailboxes?task=subscribeAll
+```
+
+Will schedule a task for subscribing a user to all of its mailboxes.
+ 
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+Most users are unaware of what an IMAP subscription is, nor how they can manage it. If the subscription list gets out
+of sync with the mailbox list, it could result in downgraded user experience (see MAILBOX-405). This task allow
+to reset the subscription list to the mailbox list on a per user basis thus working around the aforementioned issues.
+
+Response codes:
+ 
+ - 201: Success. Corresponding task id is returned.
+ - 404: No such user
+
+The scheduled task will have the following type `SubscribeAllTask` and the following `additionalInformation`:
+
+```
+{
+  "type":"SubscribeAllTask",
+  "username":"user@domain.com",
+  "subscribedCount":18,
+  "unsubscribedCount": 3
+}
+```
+
 ### Recomputing User JMAP fast message view projection
 
 This action is only available for backends supporting JMAP protocol.
