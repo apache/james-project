@@ -162,6 +162,28 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
+    void subscribeAllShouldComplete(GuiceJamesServer server) throws Exception {
+        server.getProbe(DataProbeImpl.class).addUser(USERNAME, "secret");
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
+        String taskId = with()
+            .post("/users/" + USERNAME + "/mailboxes?task=subscribeAll")
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("taskId", is(notNullValue()))
+            .body("type", is("SubscribeAllTask"))
+            .body("additionalInformation.username", is(USERNAME))
+            .body("additionalInformation.subscribedCount", is(1))
+            .body("additionalInformation.unsubscribedCount", is(0));
+    }
+
+    @Test
     void singleMailboxReindexingShouldComplete(GuiceJamesServer server) {
         MailboxId mailboxId = server.getProbe(MailboxProbeImpl.class)
             .createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
