@@ -33,6 +33,7 @@ import org.apache.james.webadmin.routes.GlobalQuotaRoutes;
 import org.apache.james.webadmin.routes.MailboxesRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserQuotaRoutes;
+import org.apache.james.webadmin.service.SubscribeAllRequestToTask;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
 
@@ -57,10 +58,13 @@ public class MailboxRoutesModule extends AbstractModule {
         Multibinder<JsonTransformerModule> jsonTransformerModuleMultibinder = Multibinder.newSetBinder(binder(), JsonTransformerModule.class);
         jsonTransformerModuleMultibinder.addBinding().to(QuotaModule.class);
 
-        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(USER_MAILBOXES_OPERATIONS_INJECTION_KEY));
+        Multibinder<TaskRegistration> userBoundTasks = Multibinder.newSetBinder(binder(), TaskRegistration.class,
+            Names.named(USER_MAILBOXES_OPERATIONS_INJECTION_KEY));
         Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(ALL_MAILBOXES_TASKS));
         Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(ONE_MAILBOX_TASKS));
         Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(ONE_MAIL_TASKS));
         Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(USER_QUOTAS_OPERATIONS_INJECTION_KEY));
+
+        userBoundTasks.addBinding().to(SubscribeAllRequestToTask.class);
     }
 }
