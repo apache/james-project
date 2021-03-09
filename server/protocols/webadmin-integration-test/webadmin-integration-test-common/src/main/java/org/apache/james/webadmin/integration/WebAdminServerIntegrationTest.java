@@ -27,7 +27,10 @@ import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 import java.util.List;
 
@@ -398,6 +401,29 @@ public abstract class WebAdminServerIntegrationTest {
             .body("type", is("MailboxesExportTask"));
     }
 
+    @Test
+    void createMissParentsTasksShouldBeExposed() {
+        String taskId = with()
+            .queryParam("task", "createMissingParents")
+            .post("/mailboxes")
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+            .when()
+            .get(taskId + "/await")
+            .then()
+            .body("status", is("completed"))
+            .body("type", is("CreateMissingParentsTask"))
+            .body("additionalInformation.created", hasSize(0))
+            .body("additionalInformation.totalCreated", is(0))
+            .body("additionalInformation.failures", empty())
+            .body("additionalInformation.totalFailure", is(0))
+            .body("startedDate", is(notNullValue()))
+            .body("submitDate", is(notNullValue()))
+            .body("completedDate", is(notNullValue()));
+    }
 
     public static ListAppender<ILoggingEvent> getListAppenderForClass(Class clazz) {
         Logger logger = (Logger) LoggerFactory.getLogger(clazz);
