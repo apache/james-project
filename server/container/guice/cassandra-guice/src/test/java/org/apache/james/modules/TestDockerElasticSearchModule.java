@@ -20,8 +20,8 @@
 package org.apache.james.modules;
 
 import org.apache.james.CleanupTasksPerformer;
-import org.apache.james.backends.es.DockerElasticSearch;
-import org.apache.james.backends.es.ElasticSearchConfiguration;
+import org.apache.james.backends.es.v7.DockerElasticSearch;
+import org.apache.james.backends.es.v7.ElasticSearchConfiguration;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;

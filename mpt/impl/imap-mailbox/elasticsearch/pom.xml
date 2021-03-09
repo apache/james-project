@@ -33,11 +33,11 @@
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-backends-es</artifactId>
+            <artifactId>apache-james-backends-es-v7</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-backends-es</artifactId>
+            <artifactId>apache-james-backends-es-v7</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -52,7 +52,7 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-mailbox-elasticsearch</artifactId>
+            <artifactId>apache-james-mailbox-elasticsearch-v7</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
