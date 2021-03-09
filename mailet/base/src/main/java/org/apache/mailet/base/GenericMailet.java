@@ -23,6 +23,7 @@ package org.apache.mailet.base;
 import static java.util.function.Predicate.not;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -39,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
 
 /**
@@ -60,6 +62,7 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
     private static final String TRUE = "true";
     private static final String FALSE = "false";
     private static final String CONFIG_IS_NULL_ERROR_MESSAGE = "Mailet configuration must be set before getInitParameter is called.";
+    private static final List<String> ERROR_PARAMETERS = ImmutableList.of("onMailetException", "onMatchException");
 
     private MailetConfig config = null;
 
@@ -299,6 +302,7 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
     protected final void checkInitParameters(Set<String> allowed) throws MessagingException {
         Set<String> bad = Streams.stream(getInitParameterNames())
             .filter(not(allowed::contains))
+            .filter(not(ERROR_PARAMETERS::contains))
             .collect(Guavate.toImmutableSet());
 
         if (!bad.isEmpty()) {
