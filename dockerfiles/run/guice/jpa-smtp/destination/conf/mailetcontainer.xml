@@ -44,9 +44,12 @@
         </processor>
 
         <processor state="error" enableJmx="true">
-            <mailet match="All" class="Bounce"/>
+            <mailet match="All" class="Bounce">
+                <onMailetException>ignore</onMailetException>
+            </mailet>
             <mailet match="All" class="ToRepository">
                 <repositoryPath>file://var/mail/error/</repositoryPath>
+                <onMailetException>ignore</onMailetException>
             </mailet>
         </processor>
 

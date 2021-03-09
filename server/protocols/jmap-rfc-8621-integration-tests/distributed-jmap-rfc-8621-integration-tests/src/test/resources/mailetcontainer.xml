@@ -40,7 +40,9 @@
         </processor>
 
         <processor state="error" enableJmx="false">
-            <mailet match="All" class="Bounce"/>
+            <mailet match="All" class="Bounce">
+                <onMailetException>ignore</onMailetException>
+            </mailet>
         </processor>
 
         <processor state="transport" enableJmx="false">
