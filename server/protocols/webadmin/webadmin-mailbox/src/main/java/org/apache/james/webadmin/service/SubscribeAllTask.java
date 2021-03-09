@@ -113,7 +113,7 @@ public class SubscribeAllTask implements Task {
                 }));
 
         } catch (SubscriptionException e) {
-            LOGGER.error("Couldnot retrieve subscriptions for {}", username, e);
+            LOGGER.error("Could not retrieve subscriptions for {}", username, e);
             return Result.PARTIAL;
         }
         return Result.COMPLETED;

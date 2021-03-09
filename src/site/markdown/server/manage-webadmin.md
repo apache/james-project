@@ -1147,7 +1147,7 @@ Will schedule a task for subscribing a user to all of its mailboxes.
 [More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Most users are unaware of what an IMAP subscription is, nor how they can manage it. If the subscription list gets out
-of sync with the mailbox list, it could result in downgraded user experience (see MAILBOX-405). This task allow
+of sync with the mailbox list, it could result in downgraded user experience (see MAILBOX-405). This task allows
 to reset the subscription list to the mailbox list on a per user basis thus working around the aforementioned issues.
 
 Response codes:
