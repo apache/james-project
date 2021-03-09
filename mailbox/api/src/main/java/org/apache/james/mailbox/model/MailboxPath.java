@@ -19,13 +19,12 @@
 
 package org.apache.james.mailbox.model;
 
-import static org.apache.james.mailbox.model.MailboxConstants.DEFAULT_DELIMITER;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.Username;
@@ -244,7 +243,11 @@ public class MailboxPath {
         return namespace + delimiter + name;
     }
 
-    public boolean hasParent() {
-        return getHierarchyLevels(DEFAULT_DELIMITER).size() > 1;
+    public boolean hasParent(char delimiter) {
+        return name.indexOf(delimiter) >= 0;
+    }
+
+    public Stream<MailboxPath> getParents(char delimiter) {
+        return getHierarchyLevels(delimiter).stream().filter(p -> !p.equals(this));
     }
 }
