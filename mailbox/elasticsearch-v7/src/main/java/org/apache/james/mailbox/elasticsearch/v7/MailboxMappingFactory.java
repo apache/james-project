@@ -19,22 +19,22 @@
 
 package org.apache.james.mailbox.elasticsearch.v7;
 
+import static org.apache.james.backends.es.v7.IndexCreationFactory.ANALYZER;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.BOOLEAN;
 import static org.apache.james.backends.es.v7.IndexCreationFactory.CASE_INSENSITIVE;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.FIELDS;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.FORMAT;
 import static org.apache.james.backends.es.v7.IndexCreationFactory.KEEP_MAIL_AND_URL;
-import static org.apache.james.backends.es.v7.NodeMappingFactory.ANALYZER;
-import static org.apache.james.backends.es.v7.NodeMappingFactory.BOOLEAN;
-import static org.apache.james.backends.es.v7.NodeMappingFactory.FIELDS;
-import static org.apache.james.backends.es.v7.NodeMappingFactory.FORMAT;
-import static org.apache.james.backends.es.v7.NodeMappingFactory.KEYWORD;
-import static org.apache.james.backends.es.v7.NodeMappingFactory.LONG;
-import static org.apache.james.backends.es.v7.NodeMappingFactory.NESTED;
-import static org.apache.james.backends.es.v7.NodeMappingFactory.NORMALIZER;
-import static org.apache.james.backends.es.v7.NodeMappingFactory.PROPERTIES;
-import static org.apache.james.backends.es.v7.NodeMappingFactory.RAW;
-import static org.apache.james.backends.es.v7.NodeMappingFactory.REQUIRED;
-import static org.apache.james.backends.es.v7.NodeMappingFactory.ROUTING;
-import static org.apache.james.backends.es.v7.NodeMappingFactory.SEARCH_ANALYZER;
-import static org.apache.james.backends.es.v7.NodeMappingFactory.TYPE;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.KEYWORD;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.LONG;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.NESTED;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.NORMALIZER;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.PROPERTIES;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.RAW;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.REQUIRED;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.ROUTING;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.SEARCH_ANALYZER;
+import static org.apache.james.backends.es.v7.IndexCreationFactory.TYPE;
 import static org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.ATTACHMENTS;
 import static org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.BCC;
 import static org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.CC;
@@ -67,7 +67,7 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
 
-import org.apache.james.backends.es.v7.NodeMappingFactory;
+import org.apache.james.backends.es.v7.IndexCreationFactory;
 import org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.Attachment;
 import org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.EMailer;
 import org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.HEADER;
@@ -135,13 +135,13 @@ public class MailboxMappingFactory {
                         .endObject()
 
                         .startObject(DATE)
-                            .field(TYPE, NodeMappingFactory.DATE)
-                            .field(FORMAT, "yyyy-MM-dd'T'HH:mm:ssZ")
+                            .field(TYPE, IndexCreationFactory.DATE)
+                            .field(FORMAT, "uuuu-MM-dd'T'HH:mm:ssX||uuuu-MM-dd'T'HH:mm:ssXXX||uuuu-MM-dd'T'HH:mm:ssXXXXX")
                         .endObject()
 
                         .startObject(SENT_DATE)
-                            .field(TYPE, NodeMappingFactory.DATE)
-                            .field(FORMAT, "yyyy-MM-dd'T'HH:mm:ssZ")
+                            .field(TYPE, IndexCreationFactory.DATE)
+                            .field(FORMAT, "uuuu-MM-dd'T'HH:mm:ssX||uuuu-MM-dd'T'HH:mm:ssXXX||uuuu-MM-dd'T'HH:mm:ssXXXXX")
                         .endObject()
 
                         .startObject(USER_FLAGS)

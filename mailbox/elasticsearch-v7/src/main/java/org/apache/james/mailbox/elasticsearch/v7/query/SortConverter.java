@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.elasticsearch.v7.query;
 
-import org.apache.james.backends.es.v7.NodeMappingFactory;
+import org.apache.james.backends.es.v7.IndexCreationFactory;
 import org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -43,15 +43,15 @@ public class SortConverter {
                 return SortBuilders.fieldSort(JsonMessageConstants.DATE);
             case MailboxCc :
                 return SortBuilders.fieldSort(JsonMessageConstants.CC + PATH_SEPARATOR + JsonMessageConstants.EMailer.ADDRESS
-                    + PATH_SEPARATOR + NodeMappingFactory.RAW);
+                    + PATH_SEPARATOR + IndexCreationFactory.RAW);
             case MailboxFrom :
                 return SortBuilders.fieldSort(JsonMessageConstants.FROM + PATH_SEPARATOR + JsonMessageConstants.EMailer.ADDRESS
-                    + PATH_SEPARATOR + NodeMappingFactory.RAW);
+                    + PATH_SEPARATOR + IndexCreationFactory.RAW);
             case MailboxTo :
                 return SortBuilders.fieldSort(JsonMessageConstants.TO + PATH_SEPARATOR + JsonMessageConstants.EMailer.ADDRESS
-                    + PATH_SEPARATOR + NodeMappingFactory.RAW);
+                    + PATH_SEPARATOR + IndexCreationFactory.RAW);
             case BaseSubject :
-                return SortBuilders.fieldSort(JsonMessageConstants.SUBJECT + PATH_SEPARATOR + NodeMappingFactory.RAW);
+                return SortBuilders.fieldSort(JsonMessageConstants.SUBJECT + PATH_SEPARATOR + IndexCreationFactory.RAW);
             case Size :
                 return SortBuilders.fieldSort(JsonMessageConstants.SIZE);
             case SentDate :

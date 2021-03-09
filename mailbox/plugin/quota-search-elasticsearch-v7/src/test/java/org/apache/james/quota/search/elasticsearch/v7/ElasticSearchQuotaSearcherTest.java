@@ -26,21 +26,15 @@ import java.util.stream.IntStream;
 
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSizeLimit;
-import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.quota.search.Limit;
 import org.apache.james.quota.search.Offset;
 import org.apache.james.quota.search.QuotaQuery;
 import org.apache.james.quota.search.QuotaSearchTestSystem;
 import org.apache.james.quota.search.QuotaSearcherContract;
-import org.apache.james.user.api.UsersRepositoryException;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(ElasticSearchQuotaSearchTestSystemExtension.class)
-@Disabled("JAMES-3492")
 class ElasticSearchQuotaSearcherTest implements QuotaSearcherContract {
     @Test
     void searchShouldNotBeLimitedByElasticSearchDefaultSearchLimit(QuotaSearchTestSystem testSystem) throws Exception {
@@ -49,17 +43,18 @@ class ElasticSearchQuotaSearcherTest implements QuotaSearcherContract {
         testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSizeLimit.size(100));
 
         IntStream.range(0, userCount)
-                .boxed()
-                .map(i -> Username.fromLocalPartWithDomain("user" + i, SIMPSON_COM))
-                .forEach(user -> provisionUser(testSystem, user));
+            .boxed()
+            .map(i -> Username.fromLocalPartWithDomain("user" + i, SIMPSON_COM))
+            .forEach(user -> provisionUser(testSystem, user));
         testSystem.await();
 
-        assertThat(
+        CALMLY_AWAIT.untilAsserted(() ->
+            assertThat(
                 testSystem.getQuotaSearcher()
-                        .search(QuotaQuery.builder()
-                                .withLimit(Limit.unlimited())
-                                .build()))
-                .hasSize(userCount);
+                    .search(QuotaQuery.builder()
+                        .withLimit(Limit.unlimited())
+                        .build()))
+                .hasSize(userCount));
     }
 
     @Test
@@ -74,13 +69,14 @@ class ElasticSearchQuotaSearcherTest implements QuotaSearcherContract {
                 .forEach(user -> provisionUser(testSystem, user));
         testSystem.await();
 
-        assertThat(
+        CALMLY_AWAIT.untilAsserted(() ->
+            assertThat(
                 testSystem.getQuotaSearcher()
-                        .search(QuotaQuery.builder()
-                                .withLimit(Limit.unlimited())
-                                .withOffset(Offset.of(1))
-                                .build()))
-                .hasSize(userCount - 1);
+                    .search(QuotaQuery.builder()
+                        .withLimit(Limit.unlimited())
+                        .withOffset(Offset.of(1))
+                        .build()))
+                .hasSize(userCount - 1));
     }
 
     private void provisionUser(QuotaSearchTestSystem testSystem, Username username) {
@@ -90,65 +86,5 @@ class ElasticSearchQuotaSearcherTest implements QuotaSearcherContract {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public void moreThanShouldFilterOutTooSmallValues(QuotaSearchTestSystem testSystem) throws Exception {
-
-    }
-
-    @Override
-    public void lessThanShouldFilterOutTooBigValues(QuotaSearchTestSystem testSystem) throws Exception {
-
-    }
-
-    @Override
-    public void rangeShouldFilterValuesOutOfRange(QuotaSearchTestSystem testSystem) throws Exception {
-
-    }
-
-    @Override
-    public void hasDomainShouldFilterOutValuesWithDifferentDomains(QuotaSearchTestSystem testSystem) throws Exception {
-
-    }
-
-    @Override
-    public void andShouldCombineClauses(QuotaSearchTestSystem testSystem) throws Exception {
-
-    }
-
-    @Override
-    public void resultShouldBeAlphabeticallyOrdered(QuotaSearchTestSystem testSystem) throws Exception {
-
-    }
-
-    @Override
-    public void limitShouldBeTheMaximumValueOfReturnedResults(QuotaSearchTestSystem testSystem) throws Exception {
-
-    }
-
-    @Override
-    public void offsetShouldSkipSomeResults(QuotaSearchTestSystem testSystem) throws Exception {
-
-    }
-
-    @Override
-    public void searchShouldReturnEmptyOnTooBigOffset(QuotaSearchTestSystem testSystem) throws Exception {
-
-    }
-
-    @Override
-    public void pagingShouldBeSupported(QuotaSearchTestSystem testSystem) throws Exception {
-
-    }
-
-    @Override
-    public void appendMessage(QuotaSearchTestSystem testSystem, Username username, MessageManager.AppendCommand appendCommand) throws MailboxException, UsersRepositoryException, DomainListException {
-
-    }
-
-    @Override
-    public MessageManager.AppendCommand withSize(int size) {
-        return null;
     }
 }
