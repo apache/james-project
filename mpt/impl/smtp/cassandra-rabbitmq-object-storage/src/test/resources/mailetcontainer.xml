@@ -41,9 +41,11 @@
 
         <processor state="error" enableJmx="true">
             <mailet match="All" class="Bounce">
+                <onMailetException>ignore</onMailetException>
             </mailet>
             <mailet match="All" class="ToRepository">
                 <repositoryPath>cassandra://var/mail/error/</repositoryPath>
+                <onMailetException>ignore</onMailetException>
             </mailet>
         </processor>
 

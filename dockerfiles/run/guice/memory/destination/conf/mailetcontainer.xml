@@ -47,9 +47,12 @@
             <mailet match="All" class="MetricsMailet">
                 <metricName>mailetContainerErrors</metricName>
             </mailet>
-            <mailet match="All" class="Bounce"/>
+            <mailet match="All" class="Bounce">
+                <onMailetException>ignore</onMailetException>
+            </mailet>
             <mailet match="All" class="ToRepository">
                 <repositoryPath>memory://var/mail/error/</repositoryPath>
+                <onMailetException>ignore</onMailetException>
             </mailet>
         </processor>
 
