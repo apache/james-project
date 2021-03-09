@@ -703,6 +703,34 @@ The scheduled task will have the following type `error-recovery-indexation` and 
 }
 ```
 
+##### Create missing parent mailboxes
+
+Will schedule a task for creating all the missing parent mailboxes in a hierarchical mailbox tree, which is the result 
+of a partially failed rename operation of a child mailbox. 
+
+```
+curl -XPOST 'http://ip:port/mailboxes?task=createMissingParents'
+```
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `createMissingParents` and the following `additionalInformation`:
+
+```
+{
+  "type":"createMissingParents"    
+  "created": ["1", "2" ],
+  "totalCreated": 2,
+  "failures": [],
+  "totalFailure": 0
+}
+```
+
 ### Single mailbox
 
 #### ReIndexing a mailbox mails
