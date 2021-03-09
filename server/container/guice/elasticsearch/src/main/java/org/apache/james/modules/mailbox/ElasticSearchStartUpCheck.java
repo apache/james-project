@@ -23,11 +23,12 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 
-import org.apache.james.backends.es.ElasticSearchConfiguration;
-import org.apache.james.backends.es.ReactorElasticSearchClient;
+import org.apache.james.backends.es.v7.ElasticSearchConfiguration;
+import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.elasticsearch.Version;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.core.MainResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,25 +51,25 @@ public class ElasticSearchStartUpCheck implements StartUpCheck {
     @Override
     public CheckResult check() {
         try {
-            Version esVersion = client.info(RequestOptions.DEFAULT)
+            MainResponse.Version esVersion = client.info(RequestOptions.DEFAULT)
                 .getVersion();
-            if (esVersion.isCompatible(RECOMMENDED_ES_VERSION)) {
+
                 return CheckResult.builder()
                     .checkName(checkName())
                     .resultType(ResultType.GOOD)
                     .build();
-            }
-            String esVersionCompatibilityWarn = String.format(
-                "ES version(%s) is not compatible with the recommendation(%s)",
-                esVersion.toString(),
-                RECOMMENDED_ES_VERSION.toString());
-            LOGGER.warn(esVersionCompatibilityWarn);
 
-            return CheckResult.builder()
-                .checkName(checkName())
-                .resultType(ResultType.BAD)
-                .description(esVersionCompatibilityWarn)
-                .build();
+//            String esVersionCompatibilityWarn = String.format(
+//                "ES version(%s) is not compatible with the recommendation(%s)",
+//                esVersion.toString(),
+//                RECOMMENDED_ES_VERSION.toString());
+//            LOGGER.warn(esVersionCompatibilityWarn);
+//
+//            return CheckResult.builder()
+//                .checkName(checkName())
+//                .resultType(ResultType.BAD)
+//                .description(esVersionCompatibilityWarn)
+//                .build();
         } catch (IOException e) {
             LOGGER.error(VERSION_CHECKING_ERROR_MESSAGE, e);
             return CheckResult.builder()

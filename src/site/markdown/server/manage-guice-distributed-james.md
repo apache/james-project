@@ -225,7 +225,7 @@ As explained in the [Mailbox Event Bus](#Mailbox_Event_Bus) section, processing 
 
 Currently, an administrator can monitor indexation failures through `ERROR` log review. You can as well
 [list failed events](manage-webadmin.html#Listing_failed_events) by looking with the group called 
-`org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex$ElasticSearchListeningMessageSearchIndexGroup`.
+`org.apache.james.mailbox.elasticsearch.v7.events.ElasticSearchListeningMessageSearchIndex$ElasticSearchListeningMessageSearchIndexGroup`.
 A first on-the-fly solution could be to just 
 [redeliver those group events with event dead letter](#Mailbox_Event_Bus).
 

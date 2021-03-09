@@ -69,7 +69,7 @@ import io.restassured.specification.RequestSpecification;
 @Tag(BasicFeature.TAG)
 class RabbitMQReindexingWithEventDeadLettersTest {
 
-    private static final String ELASTICSEARCH_LISTENER_GROUP = "org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex$ElasticSearchListeningMessageSearchIndexGroup";
+    private static final String ELASTICSEARCH_LISTENER_GROUP = "org.apache.james.mailbox.elasticsearch.v7.events.ElasticSearchListeningMessageSearchIndex$ElasticSearchListeningMessageSearchIndexGroup";
 
     private static final ConditionFactory CALMLY_AWAIT = Awaitility
         .with().pollInterval(Duration.ofMillis(100))

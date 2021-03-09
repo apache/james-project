@@ -137,7 +137,7 @@ Currently, an administrator can monitor indexation failures through
 `ERROR` log review. You can as well
 xref:distributed/operate/webadmin.adoc#_listing_failed_events[list failed events] by
 looking with the group called
-`org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex$ElasticSearchListeningMessageSearchIndexGroup`.
+`org.apache.james.mailbox.elasticsearch.v7.events.ElasticSearchListeningMessageSearchIndex$ElasticSearchListeningMessageSearchIndexGroup`.
 A first on-the-fly solution could be to just
 link:#_mailbox_event_bus[redeliver those group events with event dead letter].
 

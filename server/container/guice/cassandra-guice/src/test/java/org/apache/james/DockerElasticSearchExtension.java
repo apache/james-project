@@ -22,9 +22,9 @@ package org.apache.james;
 import java.time.Duration;
 import java.util.Optional;
 
-import org.apache.james.backends.es.DockerElasticSearch;
-import org.apache.james.backends.es.DockerElasticSearchSingleton;
-import org.apache.james.backends.es.ElasticSearchConfiguration;
+import org.apache.james.backends.es.v7.DockerElasticSearch;
+import org.apache.james.backends.es.v7.DockerElasticSearchSingleton;
+import org.apache.james.backends.es.v7.ElasticSearchConfiguration;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.inject.Module;

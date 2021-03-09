@@ -41,11 +41,11 @@
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-mailbox-elasticsearch</artifactId>
+            <artifactId>apache-james-mailbox-elasticsearch-v7</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-mailbox-quota-search-elasticsearch</artifactId>
+            <artifactId>apache-james-mailbox-quota-search-elasticsearch-v7</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
