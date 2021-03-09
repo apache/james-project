@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -70,6 +71,30 @@ public class BounceTest {
 
         assertThatThrownBy(() -> bounce.init(mailetConfig))
             .isInstanceOf(MessagingException.class);
+    }
+
+    @Test
+    void initShouldNotThrowWhenOnMailetExceptionParameter() {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("onMailetException", "ignore")
+                .build();
+
+        assertThatCode(() -> bounce.init(mailetConfig))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    void initShouldNotThrowWhenOnMatchExceptionParameter() {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("onMatchException", "ignore")
+                .build();
+
+        assertThatCode(() -> bounce.init(mailetConfig))
+            .doesNotThrowAnyException();
     }
 
     @Test
