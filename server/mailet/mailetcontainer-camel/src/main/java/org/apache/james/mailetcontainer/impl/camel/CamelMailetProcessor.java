@@ -187,7 +187,7 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
 
         private void complete(Exchange exchange, CamelMailetProcessor container) {
             LOGGER.debug("End of mailetprocessor for state {} reached", container.getState());
-            exchange.setProperty(Exchange.ROUTE_STOP, true);
+            exchange.setRouteStop(true);
         }
 
         private void dispose(Exchange exchange, Mail mail) throws MessagingException {
@@ -195,7 +195,7 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
             LifecycleUtil.dispose(mail);
 
             // stop routing
-            exchange.setProperty(Exchange.ROUTE_STOP, true);
+            exchange.setRouteStop(true);
         }
 
     }
