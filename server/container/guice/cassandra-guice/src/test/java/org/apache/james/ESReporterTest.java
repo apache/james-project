@@ -47,6 +47,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
@@ -103,6 +104,7 @@ class ESReporterTest {
     }
 
     @Test
+    @Disabled("JAMES-3492, com.linagora.elasticsearch.metrics package does not support es7")
     void timeMetricsShouldBeReportedWhenImapCommandsReceived(GuiceJamesServer server) throws Exception {
         IMAPClient client = new IMAPClient();
         client.connect(InetAddress.getLocalHost(), server.getProbe(ImapGuiceProbe.class).getImapPort());
@@ -125,6 +127,7 @@ class ESReporterTest {
     }
 
     @Test
+    @Disabled("JAMES-3492, com.linagora.elasticsearch.metrics package does not support es7")
     void timeMetricsShouldBeReportedWhenJmapRequestsReceived() {
         TimerTask timerTask = new TimerTask() {
             @Override
