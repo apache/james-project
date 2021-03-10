@@ -2114,6 +2114,7 @@ S: A99 OK STORE completed\.
 LOG INFO Waiting for Indexer to index data
 
 AWAIT
+WAIT 10000
 
 LOG INFO Performing tests about search
 
@@ -2317,6 +2318,7 @@ S: A202 OK (\[.+\] )?APPEND completed\.
 LOG INFO Waiting for Indexer to index data
 
 AWAIT
+WAIT 10000
 
 LOG INFO Performing tests about search
 
