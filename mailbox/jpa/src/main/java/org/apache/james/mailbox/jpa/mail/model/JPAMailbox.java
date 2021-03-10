@@ -56,6 +56,8 @@ import com.google.common.annotations.VisibleForTesting;
         query = "SELECT COUNT(mailbox) FROM Mailbox mailbox WHERE mailbox.name LIKE :nameParam and mailbox.user is NULL and mailbox.namespace= :namespaceParam"),
     @NamedQuery(name = "listMailboxes",
         query = "SELECT mailbox FROM Mailbox mailbox"),
+    @NamedQuery(name = "findMailboxByUserName",
+        query = "SELECT mailbox FROM Mailbox mailbox WHERE mailbox.user= :userParam and mailbox.namespace= :namespaceParam"),
     @NamedQuery(name = "findHighestModSeq",
         query = "SELECT mailbox.highestModSeq FROM Mailbox mailbox WHERE mailbox.mailboxId = :idParam"),
     @NamedQuery(name = "findLastUid",

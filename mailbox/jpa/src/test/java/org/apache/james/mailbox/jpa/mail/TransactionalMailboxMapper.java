@@ -19,8 +19,11 @@
 
 package org.apache.james.mailbox.jpa.mail;
 
+import java.util.List;
+
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Right;
@@ -93,6 +96,11 @@ public class TransactionalMailboxMapper implements MailboxMapper {
     @Override
     public Flux<Mailbox> findNonPersonalMailboxes(Username userName, Right right) {
         return wrapped.findNonPersonalMailboxes(userName, right);
+    }
+
+    @Override
+    public List<Mailbox> findMailboxesForUser(MailboxPath mailboxPath) throws MailboxException {
+        throw new UnsupportedOperationException("Not Implemented");
     }
 
 }

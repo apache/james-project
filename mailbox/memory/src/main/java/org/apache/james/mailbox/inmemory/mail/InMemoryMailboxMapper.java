@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.inmemory.mail;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -25,6 +26,7 @@ import java.util.function.Function;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
@@ -165,5 +167,10 @@ public class InMemoryMailboxMapper implements MailboxMapper {
                 .get(MailboxACL.EntryKey.createUserEntryKey(userName)))
             .map(rights -> rights.contains(right))
             .orElse(false);
+    }
+
+    @Override
+    public List<Mailbox> findMailboxesForUser(MailboxPath mailboxPath) throws MailboxException {
+        throw new UnsupportedOperationException("Not Implemented");
     }
 }

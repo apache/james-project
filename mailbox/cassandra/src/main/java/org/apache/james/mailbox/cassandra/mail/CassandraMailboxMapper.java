@@ -21,6 +21,7 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import java.security.SecureRandom;
 import java.time.Duration;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -32,6 +33,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesService;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.Mailbox;
@@ -356,4 +358,10 @@ public class CassandraMailboxMapper implements MailboxMapper {
                 .map(Pair::getLeft)
                 .flatMap(this::retrieveMailbox, CONCURRENCY));
     }
+    
+    @Override
+    public List<Mailbox> findMailboxesForUser(MailboxPath mailboxPath) throws MailboxException {
+        throw new UnsupportedOperationException("Not Implemented");
+    }
+    
 }

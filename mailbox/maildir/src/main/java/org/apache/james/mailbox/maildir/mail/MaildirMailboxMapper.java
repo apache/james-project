@@ -343,4 +343,9 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     public Flux<Mailbox> findNonPersonalMailboxes(Username userName, Right right) {
         return Flux.empty();
     }
+
+    @Override
+    public List<Mailbox> findMailboxesForUser(MailboxPath mailboxPath) throws MailboxException {
+        throw new UnsupportedOperationException("Not Implemented");
+    }
 }

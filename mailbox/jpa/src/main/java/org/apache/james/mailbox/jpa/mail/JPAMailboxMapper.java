@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.jpa.mail;
 
+import java.util.List;
+
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
@@ -44,6 +46,7 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.MailboxExpressionBackwardCompatibility;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
@@ -227,4 +230,19 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     public Flux<Mailbox> findNonPersonalMailboxes(Username userName, Right right) {
         return Flux.empty();
     }
+    
+    public List<Mailbox> findMailboxesForUser(MailboxPath mailboxPath) throws MailboxException {
+        try {
+            return getEntityManager().createNamedQuery("findMailboxByUserName", JPAMailbox.class)
+                    .setParameter("namespaceParam", mailboxPath.getNamespace())
+                    .setParameter("userParam", mailboxPath.getUser().asString())
+                    .getResultList()
+                    .stream()
+                    .map(JPAMailbox::toMailbox)
+                    .collect(Guavate.toImmutableList());
+        } catch (PersistenceException e) {
+            throw new MailboxException("Exception upon JPA execution", e);
+        }
+    }
+    
 }

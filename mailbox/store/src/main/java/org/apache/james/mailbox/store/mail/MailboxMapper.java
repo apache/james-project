@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Right;
@@ -76,6 +77,11 @@ public interface MailboxMapper extends Mapper {
      * Return a List of {@link Mailbox} for the given userName and matching the right
      */
     Flux<Mailbox> findNonPersonalMailboxes(Username userName, Right right);
+    
+    /**
+     * Return a List of {@link Mailbox} for the given user
+     */
+    List<Mailbox> findMailboxesForUser(MailboxPath mailboxPath)  throws MailboxException;
 
     /**
      * Return a List of {@link Mailbox} which name is like the given name
