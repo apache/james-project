@@ -33,6 +33,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Map;
 
 import org.apache.james.core.Domain;
@@ -56,6 +57,8 @@ import org.apache.james.quota.search.QuotaSearchTestSystem;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.assertj.core.api.SoftAssertions;
+import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionFactory;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -70,6 +73,11 @@ import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 
 class UserQuotaRoutesTest {
+
+    private static final ConditionFactory CALMLY_AWAIT = Awaitility
+        .with().pollInterval(Duration.ofMillis(100))
+        .and().pollDelay(Duration.ofMillis(100))
+        .await();
 
     private static final String QUOTA_USERS = "/quota/users";
     private static final String LOST_LOCAL = "lost.local";
@@ -108,15 +116,18 @@ class UserQuotaRoutesTest {
 
             testSystem.getQuotaSearchTestSystem().await();
 
-            given()
-                .get("/quota/users")
-            .then()
-                .statusCode(HttpStatus.OK_200)
-                .contentType(ContentType.JSON)
-                .body("username", containsInAnyOrder(
-                    BOB.asString(),
-                    JACK.asString(),
-                    GUY_WITH_STRANGE_DOMAIN.asString()));
+            CALMLY_AWAIT.atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> {
+                    given()
+                        .get("/quota/users")
+                        .then()
+                        .statusCode(HttpStatus.OK_200)
+                        .contentType(ContentType.JSON)
+                        .body("username", containsInAnyOrder(
+                            BOB.asString(),
+                            JACK.asString(),
+                            GUY_WITH_STRANGE_DOMAIN.asString()));
+                });
         }
 
         @Test
@@ -127,16 +138,19 @@ class UserQuotaRoutesTest {
 
             testSystem.getQuotaSearchTestSystem().await();
 
-            given()
-                .param("domain", LOST_LOCAL)
-            .when()
-                .get("/quota/users")
-            .then()
-                .statusCode(HttpStatus.OK_200)
-                .contentType(ContentType.JSON)
-                .body("username", containsInAnyOrder(
-                    BOB.asString(),
-                    JACK.asString()));
+            CALMLY_AWAIT.atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> {
+                    given()
+                        .param("domain", LOST_LOCAL)
+                        .when()
+                        .get("/quota/users")
+                        .then()
+                        .statusCode(HttpStatus.OK_200)
+                        .contentType(ContentType.JSON)
+                        .body("username", containsInAnyOrder(
+                            BOB.asString(),
+                            JACK.asString()));
+                });
         }
 
         @Test
@@ -147,16 +161,19 @@ class UserQuotaRoutesTest {
 
             testSystem.getQuotaSearchTestSystem().await();
 
-            given()
-                .param("limit", 2)
-            .when()
-                .get("/quota/users")
-            .then()
-                .statusCode(HttpStatus.OK_200)
-                .contentType(ContentType.JSON)
-                .body("username", containsInAnyOrder(
-                    BOB.asString(),
-                    GUY_WITH_STRANGE_DOMAIN.asString()));
+            CALMLY_AWAIT.atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> {
+                    given()
+                        .param("limit", 2)
+                        .when()
+                        .get("/quota/users")
+                        .then()
+                        .statusCode(HttpStatus.OK_200)
+                        .contentType(ContentType.JSON)
+                        .body("username", containsInAnyOrder(
+                            BOB.asString(),
+                            GUY_WITH_STRANGE_DOMAIN.asString()));
+                });
         }
 
         @Test
@@ -167,16 +184,19 @@ class UserQuotaRoutesTest {
 
             testSystem.getQuotaSearchTestSystem().await();
 
-            given()
-                .param("offset", 1)
-            .when()
-                .get("/quota/users")
-            .then()
-                .statusCode(HttpStatus.OK_200)
-                .contentType(ContentType.JSON)
-                .body("username", containsInAnyOrder(
-                    JACK.asString(),
-                    GUY_WITH_STRANGE_DOMAIN.asString()));
+            CALMLY_AWAIT.atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> {
+                    given()
+                        .param("offset", 1)
+                        .when()
+                        .get("/quota/users")
+                        .then()
+                        .statusCode(HttpStatus.OK_200)
+                        .contentType(ContentType.JSON)
+                        .body("username", containsInAnyOrder(
+                            JACK.asString(),
+                            GUY_WITH_STRANGE_DOMAIN.asString()));
+                });
         }
 
         @Test
@@ -190,16 +210,19 @@ class UserQuotaRoutesTest {
 
             testSystem.getQuotaSearchTestSystem().await();
 
-            given()
-                .param("minOccupationRatio", 0.5)
-            .when()
-                .get("/quota/users")
-            .then()
-                .statusCode(HttpStatus.OK_200)
-                .contentType(ContentType.JSON)
-                .body("username", containsInAnyOrder(
-                    JACK.asString(),
-                    GUY_WITH_STRANGE_DOMAIN.asString()));
+            CALMLY_AWAIT.atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> {
+                    given()
+                        .param("minOccupationRatio", 0.5)
+                        .when()
+                        .get("/quota/users")
+                        .then()
+                        .statusCode(HttpStatus.OK_200)
+                        .contentType(ContentType.JSON)
+                        .body("username", containsInAnyOrder(
+                            JACK.asString(),
+                            GUY_WITH_STRANGE_DOMAIN.asString()));
+                });
         }
 
         @Test
@@ -213,16 +236,19 @@ class UserQuotaRoutesTest {
 
             testSystem.getQuotaSearchTestSystem().await();
 
-            given()
-                .param("maxOccupationRatio", 0.5)
-            .when()
-                .get("/quota/users")
-            .then()
-                .statusCode(HttpStatus.OK_200)
-                .contentType(ContentType.JSON)
-                .body("username", containsInAnyOrder(
-                    JACK.asString(),
-                    BOB.asString()));
+            CALMLY_AWAIT.atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> {
+                    given()
+                        .param("maxOccupationRatio", 0.5)
+                        .when()
+                        .get("/quota/users")
+                        .then()
+                        .statusCode(HttpStatus.OK_200)
+                        .contentType(ContentType.JSON)
+                        .body("username", containsInAnyOrder(
+                            JACK.asString(),
+                            BOB.asString()));
+                });
         }
 
         @Test
@@ -236,15 +262,18 @@ class UserQuotaRoutesTest {
 
             testSystem.getQuotaSearchTestSystem().await();
 
-            given()
-                .get("/quota/users")
-            .then()
-                .statusCode(HttpStatus.OK_200)
-                .contentType(ContentType.JSON)
-                .body("username", contains(
-                    BOB.asString(),
-                    GUY_WITH_STRANGE_DOMAIN.asString(),
-                    JACK.asString()));
+            CALMLY_AWAIT.atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> {
+                    given()
+                        .get("/quota/users")
+                        .then()
+                        .statusCode(HttpStatus.OK_200)
+                        .contentType(ContentType.JSON)
+                        .body("username", contains(
+                            BOB.asString(),
+                            GUY_WITH_STRANGE_DOMAIN.asString(),
+                            JACK.asString()));
+                });
         }
 
         @Test
@@ -400,19 +429,21 @@ class UserQuotaRoutesTest {
 
             testSystem.getQuotaSearchTestSystem().await();
 
-            String jsonAsString =
-                with()
-                    .param("minOccupationRatio", 0.5)
-                    .get("/quota/users")
-                .then()
-                    .statusCode(HttpStatus.OK_200)
-                .extract()
-                    .body()
-                    .asString();
+            CALMLY_AWAIT.atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> {
+                    String jsonAsString =
+                        with()
+                            .param("minOccupationRatio", 0.5)
+                            .get("/quota/users")
+                            .then()
+                            .statusCode(HttpStatus.OK_200)
+                            .extract()
+                            .body()
+                            .asString();
 
-            assertThatJson(jsonAsString)
-                .when(IGNORING_ARRAY_ORDER)
-                    .isEqualTo("[" +
+                    assertThatJson(jsonAsString)
+                        .when(IGNORING_ARRAY_ORDER)
+                        .isEqualTo("[" +
                             "    {" +
                             "        \"detail\": {" +
                             "            \"global\": {" +
@@ -438,6 +469,7 @@ class UserQuotaRoutesTest {
                             "        \"username\": \"guy@strange.local\"" +
                             "    }" +
                             "]");
+                });
         }
 
 
