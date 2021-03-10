@@ -31,9 +31,7 @@
     <packaging>jar</packaging>
 
     <name>Apache James :: Server :: Blob :: Deduplicating Blob Storage</name>
-    <description>
-        An implementation of BlobStore which deduplicates the stored blobs.
-    </description>
+    <description>An implementation of BlobStore which deduplicates the stored blobs.</description>
 
     <dependencies>
         <dependency>

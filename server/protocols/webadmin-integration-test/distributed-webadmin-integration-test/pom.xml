@@ -117,7 +117,7 @@
                             <artifactId>maven-surefire-plugin</artifactId>
                             <version>2.22.2</version>
                             <configuration>
-                                <excludedGroups></excludedGroups>
+                                <excludedGroups />
                                 <groups combine.self="override">BasicFeature&amp;unstable</groups>
                             </configuration>
                         </plugin>

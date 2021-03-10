@@ -31,10 +31,8 @@
     <packaging>jar</packaging>
 
     <name>Apache James :: Server :: Blob :: Deduplicating Blob Storage Garbage collection</name>
-    <description>
-        Garbage collector for the deduplicating blob store
-        to ensure their effective deletion.
-    </description>
+    <description>Garbage collector for the deduplicating blob store
+        to ensure their effective deletion.</description>
 
     <dependencies>
         <dependency>

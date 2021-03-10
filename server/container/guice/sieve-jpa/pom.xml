@@ -30,7 +30,7 @@
     <artifactId>james-server-guice-sieve-jpa</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: Guice :: Sieve :: JPA </name>
+    <name>Apache James :: Server :: Guice :: Sieve :: JPA</name>
     <description>Sieve JPA modules for Guice implementation of James server</description>
 
     <dependencies>
@@ -49,6 +49,5 @@
             <artifactId>guice</artifactId>
         </dependency>
     </dependencies>
-
 
 </project>
