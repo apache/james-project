@@ -181,7 +181,7 @@
                             <artifactId>maven-surefire-plugin</artifactId>
                             <version>2.22.2</version>
                             <configuration>
-                                <excludedGroups></excludedGroups>
+                                <excludedGroups />
                                 <groups combine.self="override">org.apache.james.junit.categories.Unstable</groups>
                             </configuration>
                         </plugin>

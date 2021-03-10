@@ -31,10 +31,8 @@
     <packaging>jar</packaging>
 
     <name>Apache James :: Server :: Mailet :: Mock SMTP Server</name>
-    <description>
-        Provide a standalone mock SMTP server that could be configured over HTTP.
-        Dockerized it can be used for advanced error testing for SMTP clients.
-    </description>
+    <description>Provide a standalone mock SMTP server that could be configured over HTTP.
+        Dockerized it can be used for advanced error testing for SMTP clients.</description>
 
     <dependencies>
         <dependency>
