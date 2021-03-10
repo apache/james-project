@@ -47,7 +47,7 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-mailbox-elasticsearch</artifactId>
+            <artifactId>apache-james-mailbox-elasticsearch-v7</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
