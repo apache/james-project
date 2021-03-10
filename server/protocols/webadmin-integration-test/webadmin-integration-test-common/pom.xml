@@ -35,7 +35,7 @@
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-backends-es</artifactId>
+            <artifactId>apache-james-backends-es-v7</artifactId>
             <type>test-jar</type>
         </dependency>
         <dependency>
