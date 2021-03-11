@@ -23,8 +23,8 @@ import java.io.FileNotFoundException;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.metrics.es.ESMetricReporter;
-import org.apache.james.metrics.es.ESReporterConfiguration;
+import org.apache.james.metrics.es.v7.ESMetricReporter;
+import org.apache.james.metrics.es.v7.ESReporterConfiguration;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
