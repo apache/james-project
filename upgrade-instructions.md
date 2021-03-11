@@ -54,6 +54,34 @@ Example `usersrepository.xml`:
 </usersrepository>
 ```
 
+### Recommended upgrade to Elasticsearch 7.10.2
+
+Date: 11/03/2021
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-2492
+
+Concerned products: Cassandra Guice server (with and without rabbitMQ)
+
+James is no longer tested against Elasticsearch 6.3.2 but instead against Elasticsearch 7.10.2 Users are recommended to upgrade to this
+version as well.
+
+This [link](https://www.elastic.co/guide/en/elasticsearch/reference/7.x/rolling-upgrades.html) describes a possible update procedure:
+
+Updating from Elasticsearch < 6.8 needs an extra step of shutting down the cluster and restarting it after each node is upgraded
+
+- Test the upgrade in dev environment first
+- Take a backup of the cluster
+- On each node, perform a rolling update
+- Disable shard allocation
+- Stop non-essential indexing and perform a synced flush this node
+- Shut down this node.
+- Upgrade the node you shut down
+- Upgrade any plugins
+- Start the upgraded node
+- Reenable shard allocation
+- Wait for the node to recover
+- Repeat for other nodes
+
 ### JMS mail queue no longer relies on java serialization
 
 Date: 07/12/2020
