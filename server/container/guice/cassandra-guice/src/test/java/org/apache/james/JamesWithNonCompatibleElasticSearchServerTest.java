@@ -29,7 +29,6 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.mailbox.ElasticSearchStartUpCheck;
 import org.apache.james.util.docker.Images;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -52,7 +51,6 @@ class JamesWithNonCompatibleElasticSearchServerTest {
     }
 
     @Test
-    @Disabled("JAMES-3492, fails because communication fails with lower than 7.x nodes, maybe should be removed ")
     void jamesShouldStopWhenStartingWithANonCompatibleElasticSearchServer(GuiceJamesServer server) throws Exception {
         assertThatThrownBy(server::start)
             .isInstanceOfSatisfying(
