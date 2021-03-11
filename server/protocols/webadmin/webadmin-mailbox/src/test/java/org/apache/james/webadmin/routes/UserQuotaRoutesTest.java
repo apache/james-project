@@ -120,7 +120,7 @@ class UserQuotaRoutesTest {
                 .untilAsserted(() -> {
                     given()
                         .get("/quota/users")
-                        .then()
+                    .then()
                         .statusCode(HttpStatus.OK_200)
                         .contentType(ContentType.JSON)
                         .body("username", containsInAnyOrder(
@@ -142,9 +142,9 @@ class UserQuotaRoutesTest {
                 .untilAsserted(() -> {
                     given()
                         .param("domain", LOST_LOCAL)
-                        .when()
+                    .when()
                         .get("/quota/users")
-                        .then()
+                    .then()
                         .statusCode(HttpStatus.OK_200)
                         .contentType(ContentType.JSON)
                         .body("username", containsInAnyOrder(
@@ -165,9 +165,9 @@ class UserQuotaRoutesTest {
                 .untilAsserted(() -> {
                     given()
                         .param("limit", 2)
-                        .when()
+                    .when()
                         .get("/quota/users")
-                        .then()
+                    .then()
                         .statusCode(HttpStatus.OK_200)
                         .contentType(ContentType.JSON)
                         .body("username", containsInAnyOrder(
@@ -188,9 +188,9 @@ class UserQuotaRoutesTest {
                 .untilAsserted(() -> {
                     given()
                         .param("offset", 1)
-                        .when()
+                    .when()
                         .get("/quota/users")
-                        .then()
+                    .then()
                         .statusCode(HttpStatus.OK_200)
                         .contentType(ContentType.JSON)
                         .body("username", containsInAnyOrder(
@@ -214,9 +214,9 @@ class UserQuotaRoutesTest {
                 .untilAsserted(() -> {
                     given()
                         .param("minOccupationRatio", 0.5)
-                        .when()
+                    .when()
                         .get("/quota/users")
-                        .then()
+                    .then()
                         .statusCode(HttpStatus.OK_200)
                         .contentType(ContentType.JSON)
                         .body("username", containsInAnyOrder(
@@ -240,9 +240,9 @@ class UserQuotaRoutesTest {
                 .untilAsserted(() -> {
                     given()
                         .param("maxOccupationRatio", 0.5)
-                        .when()
+                    .when()
                         .get("/quota/users")
-                        .then()
+                    .then()
                         .statusCode(HttpStatus.OK_200)
                         .contentType(ContentType.JSON)
                         .body("username", containsInAnyOrder(
@@ -266,7 +266,7 @@ class UserQuotaRoutesTest {
                 .untilAsserted(() -> {
                     given()
                         .get("/quota/users")
-                        .then()
+                    .then()
                         .statusCode(HttpStatus.OK_200)
                         .contentType(ContentType.JSON)
                         .body("username", contains(
@@ -435,7 +435,7 @@ class UserQuotaRoutesTest {
                         with()
                             .param("minOccupationRatio", 0.5)
                             .get("/quota/users")
-                            .then()
+                        .then()
                             .statusCode(HttpStatus.OK_200)
                             .extract()
                             .body()
