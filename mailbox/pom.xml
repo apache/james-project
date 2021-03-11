@@ -38,7 +38,6 @@
         <module>api</module>
         <module>backup</module>
         <module>cassandra</module>
-        <module>elasticsearch</module>
         <module>elasticsearch-v7</module>
 
         <module>event/json</module>
@@ -56,7 +55,6 @@
         <module>plugin/quota-mailing-memory</module>
 
         <module>plugin/quota-search</module>
-        <module>plugin/quota-search-elasticsearch</module>
         <module>plugin/quota-search-elasticsearch-v7</module>
         <module>plugin/quota-search-scanning</module>
 
