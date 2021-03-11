@@ -19,21 +19,15 @@
 
 package org.apache.james.mailetcontainer;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Optional;
 
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.mdn.MDNReportParser;
-import org.apache.james.mdn.sending.mode.DispositionSendingMode;
-import org.apache.james.mime4j.MimeException;
-import org.apache.james.mime4j.parser.AbstractContentHandler;
-import org.apache.james.mime4j.parser.MimeStreamParser;
-import org.apache.james.mime4j.stream.BodyDescriptor;
-import org.apache.james.mime4j.stream.MimeConfig;
-import org.apache.james.server.core.MimeMessageInputStream;
+import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.field.ContentTypeFieldImpl;
+import org.apache.james.mime4j.stream.RawField;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.AutomaticallySentMailDetector;
 
@@ -98,52 +92,10 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
 
     @Override
     public boolean isMdnSentAutomatically(Mail mail) throws MessagingException {
-        ResultCollector resultCollector = new ResultCollector(false);
-        MimeStreamParser parser = new MimeStreamParser(MimeConfig.custom()
-            .setMaxContentLen(100 * 1024 * 1024)
-            .setMaxHeaderCount(-1)
-            .setMaxHeaderLen(-1)
-            .setMaxLineLen(-1)
-            .setHeadlessParsing(mail.getMessage().getContentType())
-            .build());
-        parser.setContentHandler(createMdnContentHandler(resultCollector));
-        try {
-            parser.parse(new MimeMessageInputStream(mail.getMessage()));
-        } catch (MimeException e) {
-            throw new MessagingException("Can not parse Mime", e);
-        } catch (IOException e) {
-            throw new MessagingException("Can not read content", e);
-        }
-        return resultCollector.getResult();
+        return Optional.ofNullable(mail.getMessage().getContentType())
+            .map(field -> ContentTypeFieldImpl.PARSER.parse(new RawField("Content-Type", field), DecodeMonitor.SILENT))
+            .map(field -> field.getMimeType())
+            .stream()
+            .anyMatch("multipart/report"::equals);
     }
-
-    private AbstractContentHandler createMdnContentHandler(final ResultCollector resultCollector) {
-        return new AbstractContentHandler() {
-            @Override
-            public void body(BodyDescriptor bodyDescriptor, InputStream inputStream) throws MimeException, IOException {
-                if (bodyDescriptor.getMimeType().equalsIgnoreCase("message/disposition-notification")) {
-                    resultCollector.setResult(MDNReportParser.parse(inputStream, bodyDescriptor.getCharset())
-                        .map(report -> report.getDispositionField().getSendingMode() == DispositionSendingMode.Automatic)
-                        .getOrElse(() -> false));
-                }
-            }
-        };
-    }
-
-    private static class ResultCollector {
-        private boolean result;
-
-        public ResultCollector(boolean result) {
-            this.result = result;
-        }
-
-        public boolean getResult() {
-            return result;
-        }
-
-        public void setResult(boolean result) {
-            this.result = result;
-        }
-    }
-
 }

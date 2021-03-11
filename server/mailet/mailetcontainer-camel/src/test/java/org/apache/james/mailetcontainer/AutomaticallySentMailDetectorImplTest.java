@@ -261,6 +261,7 @@ class AutomaticallySentMailDetectorImplTest {
     void isMdnSentAutomaticallyShouldBeDetected() throws Exception {
         MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
         MimeMultipart multipart = new MimeMultipart();
+        multipart.setSubType("report");
         MimeBodyPart scriptPart = new MimeBodyPart();
         scriptPart.setDataHandler(
                 new DataHandler(
@@ -380,6 +381,7 @@ class AutomaticallySentMailDetectorImplTest {
     void isMdnSentAutomaticallyShouldDetectBigMDN() throws Exception {
         MimeMessage message = MimeMessageUtil.defaultMimeMessage();
         MimeMultipart multipart = new MimeMultipart();
+        multipart.setSubType("report");
         MimeBodyPart scriptPart = new MimeBodyPart();
         scriptPart.setDataHandler(
             new DataHandler(
