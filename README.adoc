@@ -165,7 +165,7 @@ You need a running *s3* compatible objectstorage in docker. To achieve this run:
 
 You need a running *ElasticSearch* in docker. To achieve this run:
 
-    $ docker run -d --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:6.3.2
+    $ docker run -d --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:7.10.2
 
 If you want to handle attachment text extraction before indexing in ElasticSearch (this makes attachments searchable)
 and if you want to use all the JMAP search capabilities, you also need to start *Tika*.
@@ -237,7 +237,7 @@ You need a running *cassandra* in docker. To achieve this run:
 
 You need a running *ElasticSearch* in docker. To achieve this run:
 
-    $ docker run -d --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:6.3.2
+    $ docker run -d --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:7.10.2
 
 If you want to handle attachment text extraction before indexing in ElasticSearch (this makes attachments searchable)
 and if you want to use all the JMAP search capabilities, you also need to start *Tika*.

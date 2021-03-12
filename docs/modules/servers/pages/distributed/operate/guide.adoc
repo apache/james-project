@@ -165,21 +165,21 @@ administrator might want to update index settings include:
 
 In order to achieve such a procedure, you need to:
 
-* https://www.elastic.co/guide/en/elasticsearch/reference/6.3/indices-create-index.html[Create
+* https://www.elastic.co/guide/en/elasticsearch/reference/7.10/indices-create-index.html[Create
 the new index] with the right settings and mapping
 * James uses two aliases on the mailbox index: one for reading
 (`mailboxReadAlias`) and one for writing (`mailboxWriteAlias`). First
-https://www.elastic.co/guide/en/elasticsearch/reference/6.3/indices-aliases.html[add
+https://www.elastic.co/guide/en/elasticsearch/reference/7.10/indices-aliases.html[add
 an alias] `mailboxWriteAlias` to that new index, so that now James
 writes on the old and new indexes, while only keeping reading on the
 first one
 * Now trigger a
-https://www.elastic.co/guide/en/elasticsearch/reference/6.3/docs-reindex.html[reindex]
+https://www.elastic.co/guide/en/elasticsearch/reference/7.10/docs-reindex.html[reindex]
 from the old index to the new one (this actively relies on `_source`
 field being present)
 * When this is done, add the `mailboxReadAlias` alias to the new index
 * Now that the migration to the new index is done, you can
-https://www.elastic.co/guide/en/elasticsearch/reference/6.3/indices-delete-index.html[drop
+https://www.elastic.co/guide/en/elasticsearch/reference/7.10/indices-delete-index.html[drop
 the old index]
 * You might want as well modify the James configuration file
 https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/elasticsearch.properties[elasticsearch.properties]
