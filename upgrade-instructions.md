@@ -34,7 +34,7 @@ JIRA: https://issues.apache.org/jira/browse/JAMES-2492
 
 Concerned products: Cassandra Guice server (with and without rabbitMQ)
 
-James is no longer tested against Elasticsearch 6.3.2 but instead against Elasticsearch 7.10.2 Users are recommended to upgrade to this
+James is no longer compatible with Elasticsearch 6.x. The new environment uses Elasticsearch 7.10.2 and users are recommended to upgrade to this
 version as well.
 
 This [link](https://www.elastic.co/guide/en/elasticsearch/reference/7.x/rolling-upgrades.html) describes a possible update procedure:
