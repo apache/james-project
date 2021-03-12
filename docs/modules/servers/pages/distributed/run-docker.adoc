@@ -57,7 +57,7 @@ You need a running *Zenko Cloudserver* objectstorage in docker. To achieve this 
 
 You need a running *ElasticSearch* in docker. To achieve this run:
 
-    $ docker run -d --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:6.3.2
+    $ docker run -d --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:7.10.2
 
 If you want to use all the JMAP search capabilities, you may also need to start Tika:
 

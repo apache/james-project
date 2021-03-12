@@ -69,7 +69,7 @@ You may skip this part if you already have a running Cassandra on your network.
 3.2. Deploy ElasticSearch (optional)
 You may skip this part if you already have a running ElasticSearch on your network.
 
-<i>$ docker run --detach=true --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:6.3.2</i>
+<i>$ docker run --detach=true --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:7.10.2</i>
 
 Step 4: Configure
 #################

@@ -81,7 +81,7 @@
           <dd>Number of replica for index provisionned by James (default: 0)</dd>
           <dt><strong>elasticsearch.index.waitForActiveShards (default: 1)</strong></dt>
           <dd>Wait for a certain number of active shard copies before proceeding with the operation.</dd>
-          <dd>You may consult the <a href="https://www.elastic.co/guide/en/elasticsearch/reference/6.3/docs-index_.html#index-wait-for-active-shards">documentation</a> for more information.</dd>
+          <dd>You may consult the <a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.10/docs-index_.html#active-shards">documentation</a> for more information.</dd>
           <dt><strong>elasticsearch.index.mailbox.name</strong></dt>
           <dd>Name of the mailbox index backed by the alias. It will be created if missing.</dd>
           <dt><strong>elasticsearch.index.name</strong></dt>
@@ -129,7 +129,7 @@
 
       <dl>
           <dt><strong>elasticsearch.http.host</strong></dt>
-          <dd>Host to report metrics on. Defaults to master host.</dd>
+          <dd>Host to report metrics on. Defaults to master host. Compatible with 6.x hosts</dd>
 
           <dt><strong>elasticsearch.http.port</strong></dt>
           <dd>Http port to use for publishing metrics</dd>
