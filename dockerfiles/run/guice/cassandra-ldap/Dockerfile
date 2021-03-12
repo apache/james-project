@@ -19,8 +19,8 @@ EXPOSE 25 110 143 465 587 993 4000 8000
 WORKDIR /root
 
 # Get data we need to run James : build results and configuration
-ADD destination/james-server-cassandra-ldap-guice.jar /root/james-server.jar
-ADD destination/james-server-cassandra-ldap-guice.lib /root/james-server-cassandra-ldap-guice.lib
+ADD destination/james-server-cassandra-guice.jar /root/james-server.jar
+ADD destination/james-server-cassandra-guice.lib /root/james-server-cassandra-guice.lib
 ADD destination/james-server-cli.jar /root/james-cli.jar
 ADD destination/james-server-cli.lib /root/james-server-cli.lib
 ADD destination/conf /root/conf
