@@ -32,6 +32,22 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 
 public class Authenticator {
+    public static class Authorization {
+        public static Authorization of(String value) {
+            return new Authorization(value);
+        }
+
+        private final String value;
+
+        public Authorization(String value) {
+            this.value = value;
+        }
+
+        public String asString() {
+            return value;
+        }
+    }
+
     public static Authenticator of(MetricFactory metricFactory, AuthenticationStrategy... authenticationStrategies) {
         return new Authenticator(ImmutableList.copyOf(authenticationStrategies), metricFactory);
     }
@@ -46,10 +62,22 @@ public class Authenticator {
     }
 
     public Mono<MailboxSession> authenticate(HttpServerRequest request) {
+        return authenticateIfPossible(request)
+            .switchIfEmpty(Mono.error(new UnauthorizedException("No valid authentication methods provided")));
+    }
+
+    public Mono<MailboxSession> authenticate(Authorization authorization) {
+        return Mono.from(metricFactory.decoratePublisherWithTimerMetric("JMAP-authentication-filter",
+            Flux.fromIterable(authMethods)
+                .concatMap(auth -> auth.createMailboxSession(authorization))
+                .next()
+                .switchIfEmpty(Mono.error(new UnauthorizedException("No valid authentication methods provided")))));
+    }
+
+    public Mono<MailboxSession> authenticateIfPossible(HttpServerRequest request) {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric("JMAP-authentication-filter",
             Flux.fromIterable(authMethods)
                 .concatMap(auth -> auth.createMailboxSession(request))
-                .next()
-                .switchIfEmpty(Mono.error(new UnauthorizedException("No valid authentication methods provided")))));
+                .next()));
     }
 }

@@ -55,6 +55,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
 import reactor.netty.http.server.HttpServer;
+import reactor.netty.http.server.HttpServerRequest;
 
 public class JMAPApiRoutesTest {
     private static final int RANDOM_PORT = 0;
@@ -92,7 +93,7 @@ public class JMAPApiRoutesTest {
             .build();
 
         doReturn(Mono.just(MailboxSessionUtil.create(Username.of("bob"))))
-            .when(mockedAuthFilter).authenticate(any());
+            .when(mockedAuthFilter).authenticate(any(HttpServerRequest.class));
         when(mockedUserProvisionner.provisionUser(any()))
             .thenReturn(Mono.empty());
     }
@@ -115,7 +116,7 @@ public class JMAPApiRoutesTest {
     }
 
     @Test
-    public void mustReturnInvalidArgumentOnInvalidState() throws Exception {
+    public void mustReturnInvalidArgumentOnInvalidState() {
         ObjectNode json = new ObjectNode(new JsonNodeFactory(false));
         json.put("type", "invalidArgument");
 
@@ -132,7 +133,7 @@ public class JMAPApiRoutesTest {
     }
 
     @Test
-    public void mustReturnAccountsOnValidRequest() throws Exception {
+    public void mustReturnAccountsOnValidRequest() {
         ObjectNode json = new ObjectNode(new JsonNodeFactory(false));
         json.put("state", "f6a7e214");
         ArrayNode arrayNode = json.putArray("list");

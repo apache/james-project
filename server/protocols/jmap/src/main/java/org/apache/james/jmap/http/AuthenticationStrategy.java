@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.jmap.http;
 
+import java.util.Optional;
+
 import org.apache.james.mailbox.MailboxSession;
 
 import com.google.common.base.Preconditions;
@@ -28,12 +30,15 @@ import reactor.netty.http.server.HttpServerRequest;
 public interface AuthenticationStrategy {
     Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest);
 
+    Mono<MailboxSession> createMailboxSession(Authenticator.Authorization authorization);
+
     String AUTHORIZATION_HEADERS = "Authorization";
 
-    default String authHeaders(HttpServerRequest httpRequest) {
+    default Optional<Authenticator.Authorization> authHeaders(HttpServerRequest httpRequest) {
         Preconditions.checkArgument(httpRequest != null, "'httpRequest' is mandatory");
         Preconditions.checkArgument(httpRequest.requestHeaders().getAll(AUTHORIZATION_HEADERS).size() <= 1, "Only one set of credential is allowed");
 
-        return httpRequest.requestHeaders().get(AUTHORIZATION_HEADERS);
+        return Optional.ofNullable(httpRequest.requestHeaders().get(AUTHORIZATION_HEADERS))
+            .map(Authenticator.Authorization::of);
     }
 }

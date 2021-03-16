@@ -32,8 +32,9 @@ import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.user.memory.MemoryUsersRepository;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 import com.google.common.collect.ImmutableList;
 
@@ -50,7 +51,7 @@ public class JWTAuthenticationStrategyTest {
     private HttpServerRequest mockedRequest;
     private HttpHeaders mockedHeaders;
 
-    @Before
+    @BeforeEach
     public void setup() {
         stubTokenVerifier = mock(JwtTokenVerifier.class);
         mockedMailboxManager = mock(MailboxManager.class);
@@ -64,90 +65,161 @@ public class JWTAuthenticationStrategyTest {
         testee = new JWTAuthenticationStrategy(stubTokenVerifier, mockedMailboxManager, usersRepository);
     }
 
+    @Nested
+    class HTTP {
+        @Test
+        public void createMailboxSessionShouldReturnEmptyWhenAuthHeaderIsEmpty() {
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn("");
 
-    @Test
-    public void createMailboxSessionShouldReturnEmptyWhenAuthHeaderIsEmpty() {
-        when(mockedHeaders.get(AUTHORIZATION_HEADERS))
-            .thenReturn("");
+            assertThat(testee.createMailboxSession(mockedRequest).blockOptional())
+                .isEmpty();
+        }
 
-        assertThat(testee.createMailboxSession(mockedRequest).blockOptional())
-            .isEmpty();
-    }
+        @Test
+        public void createMailboxSessionShouldThrowWhenAuthHeadersIsInvalid() {
+            String username = "123456789";
+            String validAuthHeader = "valid";
+            String fakeAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + validAuthHeader;
+            MailboxSession fakeMailboxSession = mock(MailboxSession.class);
 
-    @Test
-    public void createMailboxSessionShouldThrowWhenAuthHeadersIsInvalid() {
-        String username = "123456789";
-        String validAuthHeader = "valid";
-        String fakeAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + validAuthHeader;
-        MailboxSession fakeMailboxSession = mock(MailboxSession.class);
-
-        when(stubTokenVerifier.verify(validAuthHeader)).thenReturn(false);
-        when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
-        when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
+            when(stubTokenVerifier.verify(validAuthHeader)).thenReturn(false);
+            when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
+            when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
                 .thenReturn(fakeMailboxSession);
 
-        when(mockedHeaders.get(AUTHORIZATION_HEADERS))
-            .thenReturn(fakeAuthHeaderWithPrefix);
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn(fakeAuthHeaderWithPrefix);
 
-        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).blockOptional())
-            .isInstanceOf(UnauthorizedException.class);
-    }
+            assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).blockOptional())
+                .isInstanceOf(UnauthorizedException.class);
+        }
 
-    @Test
-    public void createMailboxSessionShouldReturnEmptyWhenAuthHeaderIsInvalid() {
-        when(mockedHeaders.get(AUTHORIZATION_HEADERS))
-            .thenReturn("bad");
+        @Test
+        public void createMailboxSessionShouldReturnEmptyWhenAuthHeaderIsInvalid() {
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn("bad");
 
-        assertThat(testee.createMailboxSession(mockedRequest).blockOptional())
-            .isEmpty();
-    }
+            assertThat(testee.createMailboxSession(mockedRequest).blockOptional())
+                .isEmpty();
+        }
 
-    @Test
-    public void createMailboxSessionShouldThrowWhenMultipleHeaders() {
-        String authHeader1 = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + "token1";
-        String authHeader2 = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + "token2";
+        @Test
+        public void createMailboxSessionShouldThrowWhenMultipleHeaders() {
+            String authHeader1 = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + "token1";
+            String authHeader2 = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + "token2";
 
-        when(mockedHeaders.getAll(AUTHORIZATION_HEADERS))
-            .thenReturn(ImmutableList.of(authHeader1, authHeader2));
+            when(mockedHeaders.getAll(AUTHORIZATION_HEADERS))
+                .thenReturn(ImmutableList.of(authHeader1, authHeader2));
 
-        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).blockOptional())
-            .isInstanceOf(IllegalArgumentException.class);
-    }
+            assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).blockOptional())
+                .isInstanceOf(IllegalArgumentException.class);
+        }
 
-    @Test
-    public void createMailboxSessionShouldReturnWhenAuthHeadersAreValid() {
-        String username = "123456789";
-        String validAuthHeader = "valid";
-        String fakeAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + validAuthHeader;
-        MailboxSession fakeMailboxSession = mock(MailboxSession.class);
+        @Test
+        public void createMailboxSessionShouldReturnWhenAuthHeadersAreValid() {
+            String username = "123456789";
+            String validAuthHeader = "valid";
+            String fakeAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + validAuthHeader;
+            MailboxSession fakeMailboxSession = mock(MailboxSession.class);
 
-        when(stubTokenVerifier.verify(validAuthHeader)).thenReturn(true);
-        when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
-        when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
+            when(stubTokenVerifier.verify(validAuthHeader)).thenReturn(true);
+            when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
+            when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
                 .thenReturn(fakeMailboxSession);
-        when(mockedHeaders.get(AUTHORIZATION_HEADERS))
-            .thenReturn(fakeAuthHeaderWithPrefix);
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn(fakeAuthHeaderWithPrefix);
 
-        MailboxSession result = testee.createMailboxSession(mockedRequest).block();
-        assertThat(result).isEqualTo(fakeMailboxSession);
+            MailboxSession result = testee.createMailboxSession(mockedRequest).block();
+            assertThat(result).isEqualTo(fakeMailboxSession);
+        }
+
+        @Test
+        public void createMailboxSessionShouldThrowUponInvalidVirtualHosting() {
+            String username = "123456789@domain.tld";
+            String validAuthHeader = "valid";
+            String fakeAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + validAuthHeader;
+            MailboxSession fakeMailboxSession = mock(MailboxSession.class);
+
+            when(stubTokenVerifier.verify(validAuthHeader)).thenReturn(true);
+            when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
+            when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
+                .thenReturn(fakeMailboxSession);
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn(fakeAuthHeaderWithPrefix);
+
+
+            assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).block())
+                .isInstanceOf(UnauthorizedException.class);
+        }
     }
 
-    @Test
-    public void createMailboxSessionShouldThrowUponInvalidVirtualHosting() {
-        String username = "123456789@domain.tld";
-        String validAuthHeader = "valid";
-        String fakeAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + validAuthHeader;
-        MailboxSession fakeMailboxSession = mock(MailboxSession.class);
+    @Nested
+    class Authoriztion {
+        @Test
+        public void createMailboxSessionShouldReturnEmptyWhenAuthHeaderIsEmpty() {
 
-        when(stubTokenVerifier.verify(validAuthHeader)).thenReturn(true);
-        when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
-        when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
+            assertThat(testee.createMailboxSession(new Authenticator.Authorization("")).blockOptional())
+                .isEmpty();
+        }
+
+        @Test
+        public void createMailboxSessionShouldThrowWhenAuthHeadersIsInvalid() {
+            String username = "123456789";
+            String validAuthHeader = "valid";
+            String fakeAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + validAuthHeader;
+            MailboxSession fakeMailboxSession = mock(MailboxSession.class);
+
+            when(stubTokenVerifier.verify(validAuthHeader)).thenReturn(false);
+            when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
+            when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
                 .thenReturn(fakeMailboxSession);
-        when(mockedHeaders.get(AUTHORIZATION_HEADERS))
-            .thenReturn(fakeAuthHeaderWithPrefix);
+
+            assertThatThrownBy(() -> testee.createMailboxSession(new Authenticator.Authorization(fakeAuthHeaderWithPrefix)).blockOptional())
+                .isInstanceOf(UnauthorizedException.class);
+        }
+
+        @Test
+        public void createMailboxSessionShouldReturnEmptyWhenAuthHeaderIsInvalid() {
+            assertThat(testee.createMailboxSession(new Authenticator.Authorization("bad")).blockOptional())
+                .isEmpty();
+        }
+
+        @Test
+        public void createMailboxSessionShouldReturnWhenAuthHeadersAreValid() {
+            String username = "123456789";
+            String validAuthHeader = "valid";
+            String fakeAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + validAuthHeader;
+            MailboxSession fakeMailboxSession = mock(MailboxSession.class);
+
+            when(stubTokenVerifier.verify(validAuthHeader)).thenReturn(true);
+            when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
+            when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
+                .thenReturn(fakeMailboxSession);
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn(fakeAuthHeaderWithPrefix);
+
+            MailboxSession result = testee.createMailboxSession(new Authenticator.Authorization(fakeAuthHeaderWithPrefix)).block();
+            assertThat(result).isEqualTo(fakeMailboxSession);
+        }
+
+        @Test
+        public void createMailboxSessionShouldThrowUponInvalidVirtualHosting() {
+            String username = "123456789@domain.tld";
+            String validAuthHeader = "valid";
+            String fakeAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + validAuthHeader;
+            MailboxSession fakeMailboxSession = mock(MailboxSession.class);
+
+            when(stubTokenVerifier.verify(validAuthHeader)).thenReturn(true);
+            when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
+            when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
+                .thenReturn(fakeMailboxSession);
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn(fakeAuthHeaderWithPrefix);
 
 
-        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).block())
-            .isInstanceOf(UnauthorizedException.class);
+            assertThatThrownBy(() -> testee.createMailboxSession(new Authenticator.Authorization(fakeAuthHeaderWithPrefix)).block())
+                .isInstanceOf(UnauthorizedException.class);
+        }
     }
 }

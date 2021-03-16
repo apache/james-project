@@ -18,12 +18,15 @@
  ****************************************************************/
 package org.apache.james.jmap.jwt;
 
+import static org.apache.james.util.ReactorUtils.publishIfPresent;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.jmap.http.AuthenticationStrategy;
+import org.apache.james.jmap.http.Authenticator;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -56,9 +59,15 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
     @Override
     public Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest) {
         return Mono.fromCallable(() -> authHeaders(httpRequest))
-            .filter(header -> header.startsWith(AUTHORIZATION_HEADER_PREFIX))
-            .map(header -> header.substring(AUTHORIZATION_HEADER_PREFIX.length()))
-            .map(userJWTToken -> {
+            .handle(publishIfPresent())
+            .flatMap(this::createMailboxSession);
+    }
+
+    @Override
+    public Mono<MailboxSession> createMailboxSession(Authenticator.Authorization authorization) {
+        if (authorization.asString().startsWith(AUTHORIZATION_HEADER_PREFIX)) {
+            return Mono.fromCallable(() -> {
+                String userJWTToken = authorization.asString().substring(AUTHORIZATION_HEADER_PREFIX.length());
                 if (!tokenManager.verify(userJWTToken)) {
                     throw new UnauthorizedException("Failed Jwt verification");
                 }
@@ -70,8 +79,9 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
                     throw new UnauthorizedException("Invalid username", e);
                 }
 
-                return username;
-            })
-            .map(mailboxManager::createSystemSession);
+                return mailboxManager.createSystemSession(username);
+            });
+        }
+        return Mono.empty();
     }
 }

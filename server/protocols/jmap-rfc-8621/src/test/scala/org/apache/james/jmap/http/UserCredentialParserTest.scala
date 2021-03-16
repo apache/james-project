@@ -24,6 +24,7 @@ import java.util.Base64
 
 import org.apache.james.core.Username
 import org.apache.james.jmap.exceptions.UnauthorizedException
+import org.apache.james.jmap.http.Authenticator.Authorization
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,7 @@ import org.junit.jupiter.api.Test;
 class UserCredentialParserTest {
   @Test
   def shouldReturnCredentialWhenUsernamePasswordToken(): Unit = {
-    val token: String = "Basic " + toBase64("user1:password")
+    val token: Authorization = new Authorization("Basic " + toBase64("user1:password"))
 
     assertThat(UserCredential.parseUserCredentials(token))
       .isEqualTo(Some(UserCredential(Username.of("user1"), "password")))
@@ -39,7 +40,7 @@ class UserCredentialParserTest {
 
   @Test
   def shouldAcceptPartSeparatorAsPartOfPassword(): Unit = {
-    val token: String = "Basic " + toBase64("user1:pass:word")
+    val token: Authorization = new Authorization("Basic " + toBase64("user1:pass:word"))
 
     assertThat(UserCredential.parseUserCredentials(token))
       .isEqualTo(Some(UserCredential(Username.of("user1"), "pass:word")))
@@ -47,7 +48,7 @@ class UserCredentialParserTest {
 
   @Test
   def shouldReturnCredentialWhenRandomSpecialCharacterInUsernameToken(): Unit = {
-    val token: String = "Basic " + toBase64("fd2*#jk:password")
+    val token: Authorization = new Authorization("Basic " + toBase64("fd2*#jk:password"))
 
     assertThat(UserCredential.parseUserCredentials(token))
       .isEqualTo(Some(UserCredential(Username.of("fd2*#jk"), "password")))
@@ -55,7 +56,7 @@ class UserCredentialParserTest {
 
   @Test
   def shouldReturnCredentialsWhenRandomSpecialCharacterInBothUsernamePasswoedToken(): Unit = {
-    val token: String = "Basic " + toBase64("fd2*#jk:password@fd23*&^$%")
+    val token: Authorization = new Authorization("Basic " + toBase64("fd2*#jk:password@fd23*&^$%"))
 
     assertThat(UserCredential.parseUserCredentials(token))
       .isEqualTo(Some(UserCredential(Username.of("fd2*#jk"), "password@fd23*&^$%")))
@@ -63,7 +64,7 @@ class UserCredentialParserTest {
 
   @Test
   def shouldReturnCredentialWhenUsernameDomainPasswordToken(): Unit = {
-    val token: String = "Basic " + toBase64("user1@domain.tld:password")
+    val token: Authorization = new Authorization("Basic " + toBase64("user1@domain.tld:password"))
 
     assertThat(UserCredential.parseUserCredentials(token))
       .isEqualTo(Some(UserCredential(Username.of("user1@domain.tld"), "password")))
@@ -71,7 +72,7 @@ class UserCredentialParserTest {
 
   @Test
   def shouldReturnCredentialWhenUsernameDomainNoPasswordToken(): Unit = {
-    val token: String = "Basic " + toBase64("user1@domain.tld:")
+    val token: Authorization = new Authorization("Basic " + toBase64("user1@domain.tld:"))
 
     assertThat(UserCredential.parseUserCredentials(token))
       .isEqualTo(Some(UserCredential(Username.of("user1@domain.tld"), "")))
@@ -79,7 +80,7 @@ class UserCredentialParserTest {
 
   @Test
   def shouldReturnNoneWhenPayloadIsNotBase64(): Unit = {
-    val token: String = "Basic user1:password"
+    val token: Authorization = new Authorization("Basic user1:password")
 
     assertThat(UserCredential.parseUserCredentials(token))
       .isEqualTo(None)
@@ -87,20 +88,20 @@ class UserCredentialParserTest {
 
   @Test
   def shouldReturnNoneWhenEmptyToken(): Unit = {
-    assertThat(UserCredential.parseUserCredentials(""))
+    assertThat(UserCredential.parseUserCredentials(new Authorization("")))
       .isEqualTo(None)
   }
 
   @Test
   def shouldThrowWhenWrongFormatCredential(): Unit = {
-    val token: String = "Basic " + toBase64("user1@password")
+    val token: Authorization = new Authorization("Basic " + toBase64("user1@password"))
 
     assertThrows(classOf[UnauthorizedException], () => UserCredential.parseUserCredentials(token))
   }
 
   @Test
   def shouldReturnNoneWhenUpperCaseToken(): Unit = {
-    val token: String = "BASIC " + toBase64("user1@password")
+    val token: Authorization = new Authorization("BASIC " + toBase64("user1@password"))
 
     assertThat(UserCredential.parseUserCredentials(token))
       .isEqualTo(None)
@@ -108,7 +109,7 @@ class UserCredentialParserTest {
 
   @Test
   def shouldReturnNoneWhenLowerCaseToken(): Unit = {
-    val token: String = "basic " + toBase64("user1:password")
+    val token: Authorization = new Authorization("basic " + toBase64("user1:password"))
 
     assertThat(UserCredential.parseUserCredentials(token))
       .isEqualTo(None)
@@ -116,7 +117,7 @@ class UserCredentialParserTest {
 
   @Test
   def shouldReturnNoneWhenCredentialWithNoPassword(): Unit = {
-    val token: String = "Basic " + toBase64("user1:")
+    val token: Authorization = new Authorization("Basic " + toBase64("user1:"))
 
     assertThat(UserCredential.parseUserCredentials(token))
       .isEqualTo(Some(UserCredential(Username.of("user1"), "")))
@@ -124,7 +125,7 @@ class UserCredentialParserTest {
 
   @Test
   def shouldThrowWhenCredentialWithNoUsername(): Unit = {
-    val token: String = "Basic " + toBase64(":pass")
+    val token: Authorization = new Authorization("Basic " + toBase64(":pass"))
 
     assertThrows(classOf[UnauthorizedException], () => UserCredential.parseUserCredentials(token))
   }

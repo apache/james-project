@@ -28,6 +28,7 @@ import eu.timepit.refined.string.MatchesRegex
 import javax.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.jmap.exceptions.UnauthorizedException
+import org.apache.james.jmap.http.Authenticator.Authorization
 import org.apache.james.jmap.http.UserCredential._
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.user.api.UsersRepository
@@ -35,6 +36,7 @@ import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.netty.http.server.HttpServerRequest
+import scala.jdk.OptionConverters._
 
 import scala.util.{Failure, Success, Try}
 
@@ -45,8 +47,8 @@ object UserCredential {
   private val logger = LoggerFactory.getLogger(classOf[UserCredential])
   private val BASIC_AUTHENTICATION_PREFIX: String = "Basic "
 
-  def parseUserCredentials(token: String): Option[UserCredential] = {
-    val refinedValue: Either[String, BasicAuthenticationHeaderValue] = refineV(token)
+  def parseUserCredentials(token: Authorization): Option[UserCredential] = {
+    val refinedValue: Either[String, BasicAuthenticationHeaderValue] = refineV(token.asString())
 
     refinedValue match {
       // Ignore Authentication headers not being Basic Auth
@@ -88,18 +90,21 @@ case class UserCredential(username: Username, password: String)
 class BasicAuthenticationStrategy @Inject()(val usersRepository: UsersRepository,
                                             val mailboxManager: MailboxManager) extends AuthenticationStrategy {
 
-  override def createMailboxSession(httpRequest: HttpServerRequest): Mono[MailboxSession] = {
-    SMono.fromCallable(() => authHeaders(httpRequest))
-      .map(parseUserCredentials)
-      .handle(publishNext)
-      .filter(isValid)
-      .map(_.username)
-      .map(mailboxManager.createSystemSession)
-      .asJava()
-  }
+  override def createMailboxSession(httpRequest: HttpServerRequest): Mono[MailboxSession] =
+    authHeaders(httpRequest).toScala
+      .map(createMailboxSession)
+      .getOrElse(SMono.empty[MailboxSession].asJava())
 
-  private def publishNext[T]: (Option[T], reactor.core.publisher.SynchronousSink[T]) => Unit =
-    (maybeT, sink) => maybeT.foreach(t => sink.next(t))
+  override def createMailboxSession(authorization: Authorization): Mono[MailboxSession] =
+    parseUserCredentials(authorization)
+      .map(credentials => {
+        if(isValid(credentials)) {
+          SMono.just(mailboxManager.createSystemSession(credentials.username))
+        } else {
+          SMono.error(new UnauthorizedException(s"Bad authentication for ${credentials.username}"))
+        }
+      }).getOrElse(SMono.empty)
+      .asJava()
 
   private def isValid(userCredential: UserCredential): Boolean =
     usersRepository.test(userCredential.username, userCredential.password)

@@ -34,8 +34,9 @@ import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
@@ -44,20 +45,40 @@ import io.netty.handler.codec.http.HttpMethod;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 
-public class AuthenticatorTest {
+class AuthenticatorTest {
     private static final String TOKEN = "df991d2a-1c5a-4910-a90f-808b6eda133e";
     private static final String AUTHORIZATION_HEADERS = "Authorization";
     private static final Username USERNAME = Username.of("user@domain.tld");
 
-    private static final AuthenticationStrategy DENY = httpRequest -> Mono.error(new UnauthorizedException(null));
-    private static final AuthenticationStrategy ALLOW = httpRequest -> Mono.just(mock(MailboxSession.class));
+    private static final AuthenticationStrategy DENY = new AuthenticationStrategy() {
+        @Override
+        public Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest) {
+            return Mono.error(new UnauthorizedException(null));
+        }
+
+        @Override
+        public Mono<MailboxSession> createMailboxSession(Authenticator.Authorization authorization) {
+            return Mono.error(new UnauthorizedException(null));
+        }
+    };
+    private static final AuthenticationStrategy ALLOW = new AuthenticationStrategy() {
+        @Override
+        public Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest) {
+            return Mono.just(mock(MailboxSession.class));
+        }
+
+        @Override
+        public Mono<MailboxSession> createMailboxSession(Authenticator.Authorization authorization) {
+            return Mono.just(mock(MailboxSession.class));
+        }
+    };
 
     private HttpServerRequest mockedRequest;
     private HttpHeaders mockedHeaders;
     private AccessTokenRepository accessTokenRepository;
     private Authenticator testee;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         mockedRequest = mock(HttpServerRequest.class);
         mockedHeaders = mock(HttpHeaders.class);
@@ -73,90 +94,204 @@ public class AuthenticatorTest {
         testee = Authenticator.of(new RecordingMetricFactory(), DENY);
     }
 
-    @Test
-    public void filterShouldReturnUnauthorizedOnNullAuthorizationHeader() {
-        when(mockedHeaders.get(AUTHORIZATION_HEADERS))
-            .thenReturn(null);
+    @Nested
+    class Http {
 
-        assertThatThrownBy(() -> testee.authenticate(mockedRequest).block())
-            .isInstanceOf(UnauthorizedException.class);
+        @Test
+        public void filterShouldReturnUnauthorizedOnNullAuthorizationHeader() {
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn(null);
+
+            assertThatThrownBy(() -> testee.authenticate(mockedRequest).block())
+                .isInstanceOf(UnauthorizedException.class);
+        }
+
+        @Test
+        public void filterShouldReturnUnauthorizedWhenNoAuthenticationStrategy() {
+            Authenticator testee = Authenticator.of(new RecordingMetricFactory());
+
+            assertThatThrownBy(() -> testee.authenticate(mockedRequest).block())
+                .isInstanceOf(UnauthorizedException.class);
+        }
+
+        @Test
+        public void authenticationStrategiesShouldNotBeEagerlySubScribed() {
+            AtomicBoolean called = new AtomicBoolean(false);
+
+            testee = Authenticator.of(new RecordingMetricFactory(),
+                ALLOW,
+                new AuthenticationStrategy() {
+                    @Override
+                    public Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest) {
+                        return Mono.fromRunnable(() -> called.set(true));
+                    }
+
+                    @Override
+                    public Mono<MailboxSession> createMailboxSession(Authenticator.Authorization authorization) {
+                        return Mono.fromRunnable(() -> called.set(true));
+                    }
+                });
+            assertThat(called.get()).isFalse();
+
+            testee.authenticate(mockedRequest).block();
+
+            assertThat(called.get()).isFalse();
+        }
+
+        @Test
+        public void filterShouldReturnUnauthorizedOnInvalidAuthorizationHeader() {
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn(TOKEN);
+
+            assertThatThrownBy(() -> testee.authenticate(mockedRequest).block())
+                .isInstanceOf(UnauthorizedException.class);
+        }
+
+        @Test
+        public void filterShouldReturnUnauthorizedOnBadAuthorizationHeader() {
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn("bad");
+
+            assertThatThrownBy(() -> testee.authenticate(mockedRequest).block())
+                .isInstanceOf(UnauthorizedException.class);
+        }
+
+        @Test
+        public void filterShouldReturnUnauthorizedWhenNoStrategy() {
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn(TOKEN);
+
+            Authenticator authFilter = new Authenticator(ImmutableList.of(), new RecordingMetricFactory());
+            assertThatThrownBy(() -> authFilter.authenticate(mockedRequest).block())
+                .isInstanceOf(UnauthorizedException.class);
+        }
+
+        @Test
+        public void filterShouldNotThrowOnValidAuthorizationHeader() {
+            AccessToken token = AccessToken.fromString(TOKEN);
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn(TOKEN);
+
+            accessTokenRepository.addToken(USERNAME, token).block();
+
+            Authenticator authFilter = Authenticator.of(new RecordingMetricFactory(), ALLOW);
+
+            assertThatCode(() -> authFilter.authenticate(mockedRequest).block())
+                .doesNotThrowAnyException();
+        }
+
+        @Test
+        public void filterShouldThrowWhenChainingAuthorizationStrategies() {
+            AccessToken token = AccessToken.fromString(TOKEN);
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn(TOKEN);
+
+            accessTokenRepository.addToken(USERNAME, token).block();
+
+            Authenticator authFilter = Authenticator.of(new RecordingMetricFactory(), DENY, ALLOW);
+
+            assertThatThrownBy(() -> authFilter.authenticate(mockedRequest).block())
+                .isInstanceOf(UnauthorizedException.class);
+        }
     }
 
-    @Test
-    public void filterShouldReturnUnauthorizedWhenNoAuthenticationStrategy() {
-        Authenticator testee = Authenticator.of(new RecordingMetricFactory());
+    @Nested
+    class Authorization {
+        @Test
+        public void filterShouldReturnUnauthorizedOnNullAuthorizationHeader() {
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn(null);
 
-        assertThatThrownBy(() -> testee.authenticate(mockedRequest).block())
-            .isInstanceOf(UnauthorizedException.class);
-    }
+            assertThatThrownBy(() -> testee.authenticate(new Authenticator.Authorization("toto")).block())
+                .isInstanceOf(UnauthorizedException.class);
+        }
 
-    @Test
-    public void authenticationStrategiesShouldNotBeEagerlySubScribed() {
-        AtomicBoolean called = new AtomicBoolean(false);
+        @Test
+        public void filterShouldReturnUnauthorizedWhenNoAuthenticationStrategy() {
+            Authenticator testee = Authenticator.of(new RecordingMetricFactory());
 
-        testee = Authenticator.of(new RecordingMetricFactory(),
-            ALLOW,
-            req -> Mono.fromRunnable(() -> called.set(true)));
-        assertThat(called.get()).isFalse();
+            assertThatThrownBy(() -> testee.authenticate(new Authenticator.Authorization("toto")).block())
+                .isInstanceOf(UnauthorizedException.class);
+        }
 
-        testee.authenticate(mockedRequest).block();
+        @Test
+        public void authenticationStrategiesShouldNotBeEagerlySubScribed() {
+            AtomicBoolean called = new AtomicBoolean(false);
 
-        assertThat(called.get()).isFalse();
-    }
+            testee = Authenticator.of(new RecordingMetricFactory(),
+                ALLOW,
+                new AuthenticationStrategy() {
+                    @Override
+                    public Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest) {
+                        return Mono.fromRunnable(() -> called.set(true));
+                    }
 
-    @Test
-    public void filterShouldReturnUnauthorizedOnInvalidAuthorizationHeader() {
-        when(mockedHeaders.get(AUTHORIZATION_HEADERS))
-            .thenReturn(TOKEN);
+                    @Override
+                    public Mono<MailboxSession> createMailboxSession(Authenticator.Authorization authorization) {
+                        return Mono.fromRunnable(() -> called.set(true));
+                    }
+                });
+            assertThat(called.get()).isFalse();
 
-        assertThatThrownBy(() -> testee.authenticate(mockedRequest).block())
-            .isInstanceOf(UnauthorizedException.class);
-    }
+            testee.authenticate(new Authenticator.Authorization("toto")).block();
 
-    @Test
-    public void filterShouldReturnUnauthorizedOnBadAuthorizationHeader() {
-        when(mockedHeaders.get(AUTHORIZATION_HEADERS))
-            .thenReturn("bad");
+            assertThat(called.get()).isFalse();
+        }
 
-        assertThatThrownBy(() -> testee.authenticate(mockedRequest).block())
-            .isInstanceOf(UnauthorizedException.class);
-    }
+        @Test
+        public void filterShouldReturnUnauthorizedOnInvalidAuthorizationHeader() {
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn(TOKEN);
 
-    @Test
-    public void filterShouldReturnUnauthorizedWhenNoStrategy() {
-        when(mockedHeaders.get(AUTHORIZATION_HEADERS))
-            .thenReturn(TOKEN);
+            assertThatThrownBy(() -> testee.authenticate(new Authenticator.Authorization("toto")).block())
+                .isInstanceOf(UnauthorizedException.class);
+        }
 
-        Authenticator authFilter = new Authenticator(ImmutableList.of(), new RecordingMetricFactory());
-        assertThatThrownBy(() -> authFilter.authenticate(mockedRequest).block())
-            .isInstanceOf(UnauthorizedException.class);
-    }
+        @Test
+        public void filterShouldReturnUnauthorizedOnBadAuthorizationHeader() {
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn("bad");
 
-    @Test
-    public void filterShouldNotThrowOnValidAuthorizationHeader() {
-        AccessToken token = AccessToken.fromString(TOKEN);
-        when(mockedHeaders.get(AUTHORIZATION_HEADERS))
-            .thenReturn(TOKEN);
+            assertThatThrownBy(() -> testee.authenticate(new Authenticator.Authorization("toto")).block())
+                .isInstanceOf(UnauthorizedException.class);
+        }
 
-        accessTokenRepository.addToken(USERNAME, token).block();
+        @Test
+        public void filterShouldReturnUnauthorizedWhenNoStrategy() {
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn(TOKEN);
 
-        Authenticator authFilter = Authenticator.of(new RecordingMetricFactory(), ALLOW);
+            Authenticator authFilter = new Authenticator(ImmutableList.of(), new RecordingMetricFactory());
+            assertThatThrownBy(() -> authFilter.authenticate(mockedRequest).block())
+                .isInstanceOf(UnauthorizedException.class);
+        }
 
-        assertThatCode(() -> authFilter.authenticate(mockedRequest).block())
-            .doesNotThrowAnyException();
-    }
+        @Test
+        public void filterShouldNotThrowOnValidAuthorizationHeader() {
+            AccessToken token = AccessToken.fromString(TOKEN);
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn(TOKEN);
 
-    @Test
-    public void filterShouldThrowWhenChainingAuthorizationStrategies() {
-        AccessToken token = AccessToken.fromString(TOKEN);
-        when(mockedHeaders.get(AUTHORIZATION_HEADERS))
-            .thenReturn(TOKEN);
+            accessTokenRepository.addToken(USERNAME, token).block();
 
-        accessTokenRepository.addToken(USERNAME, token).block();
+            Authenticator authFilter = Authenticator.of(new RecordingMetricFactory(), ALLOW);
 
-        Authenticator authFilter = Authenticator.of(new RecordingMetricFactory(), DENY, ALLOW);
+            assertThatCode(() -> authFilter.authenticate(new Authenticator.Authorization("toto")).block())
+                .doesNotThrowAnyException();
+        }
 
-        assertThatThrownBy(() -> authFilter.authenticate(mockedRequest).block())
-            .isInstanceOf(UnauthorizedException.class);
+        @Test
+        public void filterShouldThrowWhenChainingAuthorizationStrategies() {
+            AccessToken token = AccessToken.fromString(TOKEN);
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn(TOKEN);
+
+            accessTokenRepository.addToken(USERNAME, token).block();
+
+            Authenticator authFilter = Authenticator.of(new RecordingMetricFactory(), DENY, ALLOW);
+
+            assertThatThrownBy(() -> authFilter.authenticate(new Authenticator.Authorization("toto")).block())
+                .isInstanceOf(UnauthorizedException.class);
+        }
     }
 }

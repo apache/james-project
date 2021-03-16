@@ -33,8 +33,9 @@ import org.apache.james.jmap.draft.crypto.AccessTokenManagerImpl;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 import com.google.common.collect.ImmutableList;
 
@@ -42,7 +43,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
 
-public class AccessTokenAuthenticationStrategyTest {
+class AccessTokenAuthenticationStrategyTest {
     private static final String AUTHORIZATION_HEADERS = "Authorization";
 
     private AccessTokenManagerImpl mockedAccessTokenManager;
@@ -51,7 +52,7 @@ public class AccessTokenAuthenticationStrategyTest {
     private HttpServerRequest mockedRequest;
     private HttpHeaders mockedHeaders;
 
-    @Before
+    @BeforeEach
     public void setup() {
         mockedAccessTokenManager = mock(AccessTokenManagerImpl.class);
         mockedMailboxManager = mock(MailboxManager.class);
@@ -64,69 +65,115 @@ public class AccessTokenAuthenticationStrategyTest {
         testee = new AccessTokenAuthenticationStrategy(mockedAccessTokenManager, mockedMailboxManager);
     }
 
-    @Test
-    public void createMailboxSessionShouldReturnEmptyWhenNoAuthProvided() {
-        assertThat(testee.createMailboxSession(mockedRequest).blockOptional())
-            .isEmpty();
-    }
+    @Nested
+    class Http {
+        @Test
+        void createMailboxSessionShouldReturnEmptyWhenNoAuthProvided() {
+            assertThat(testee.createMailboxSession(mockedRequest).blockOptional())
+                .isEmpty();
+        }
 
-    @Test
-    public void createMailboxSessionShouldThrowWhenAuthHeaderIsNotAnUUID() {
-        when(mockedHeaders.get(AUTHORIZATION_HEADERS))
-            .thenReturn("bad");
+        @Test
+        void createMailboxSessionShouldThrowWhenAuthHeaderIsNotAnUUID() {
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn("bad");
 
-        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).block())
+            assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).block())
                 .isExactlyInstanceOf(UnauthorizedException.class);
+        }
+
+        @Test
+        void createMailboxSessionShouldThrowWhenAuthHeaderIsInvalid() {
+            Username username = Username.of("123456789");
+            MailboxSession fakeMailboxSession = mock(MailboxSession.class);
+
+            when(mockedMailboxManager.createSystemSession(eq(username)))
+                .thenReturn(fakeMailboxSession);
+
+            UUID authHeader = UUID.randomUUID();
+            AccessToken accessToken = AccessToken.fromString(authHeader.toString());
+            when(mockedAccessTokenManager.getUsernameFromToken(accessToken))
+                .thenReturn(Mono.error(new InvalidAccessToken(accessToken)));
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn(authHeader.toString());
+
+            assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).blockOptional())
+                .isInstanceOf(UnauthorizedException.class);
+        }
+
+        @Test
+        void createMailboxSessionShouldThrowWhenMultipleAuthHeaders() {
+            UUID authHeader1 = UUID.randomUUID();
+            UUID authHeader2 = UUID.randomUUID();
+
+            when(mockedHeaders.getAll(AUTHORIZATION_HEADERS))
+                .thenReturn(ImmutableList.of(authHeader1.toString(), authHeader2.toString()));
+
+            assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).block())
+                .isExactlyInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        void createMailboxSessionShouldReturnWhenAuthHeadersAreValid() {
+            Username username = Username.of("123456789");
+            MailboxSession fakeMailboxSession = mock(MailboxSession.class);
+
+            when(mockedMailboxManager.createSystemSession(eq(username)))
+                .thenReturn(fakeMailboxSession);
+
+            UUID authHeader = UUID.randomUUID();
+            AccessToken accessToken = AccessToken.fromString(authHeader.toString());
+            when(mockedAccessTokenManager.getUsernameFromToken(accessToken))
+                .thenReturn(Mono.just(username));
+            when(mockedHeaders.get(AUTHORIZATION_HEADERS))
+                .thenReturn(authHeader.toString());
+
+
+            MailboxSession result = testee.createMailboxSession(mockedRequest).block();
+            assertThat(result).isEqualTo(fakeMailboxSession);
+        }
     }
 
-    @Test
-    public void createMailboxSessionShouldThrowWhenAuthHeaderIsInvalid() {
-        Username username = Username.of("123456789");
-        MailboxSession fakeMailboxSession = mock(MailboxSession.class);
+    @Nested
+    class Authorization {
+        @Test
+        void createMailboxSessionShouldThrowWhenAuthHeaderIsNotAnUUID() {
+            assertThatThrownBy(() -> testee.createMailboxSession(new Authenticator.Authorization("bad")).block())
+                .isExactlyInstanceOf(UnauthorizedException.class);
+        }
 
-        when(mockedMailboxManager.createSystemSession(eq(username)))
-            .thenReturn(fakeMailboxSession);
+        @Test
+        void createMailboxSessionShouldThrowWhenAuthHeaderIsInvalid() {
+            Username username = Username.of("123456789");
+            MailboxSession fakeMailboxSession = mock(MailboxSession.class);
 
-        UUID authHeader = UUID.randomUUID();
-        AccessToken accessToken = AccessToken.fromString(authHeader.toString());
-        when(mockedAccessTokenManager.getUsernameFromToken(accessToken))
-            .thenReturn(Mono.error(new InvalidAccessToken(accessToken)));
-        when(mockedHeaders.get(AUTHORIZATION_HEADERS))
-            .thenReturn(authHeader.toString());
+            when(mockedMailboxManager.createSystemSession(eq(username)))
+                .thenReturn(fakeMailboxSession);
 
-        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).blockOptional())
-            .isInstanceOf(UnauthorizedException.class);
-    }
+            UUID authHeader = UUID.randomUUID();
+            AccessToken accessToken = AccessToken.fromString(authHeader.toString());
+            when(mockedAccessTokenManager.getUsernameFromToken(accessToken))
+                .thenReturn(Mono.error(new InvalidAccessToken(accessToken)));
 
-    @Test
-    public void createMailboxSessionShouldThrowWhenMultipleAuthHeaders() {
-        UUID authHeader1 = UUID.randomUUID();
-        UUID authHeader2 = UUID.randomUUID();
+            assertThatThrownBy(() -> testee.createMailboxSession(new Authenticator.Authorization(authHeader.toString())).blockOptional())
+                .isInstanceOf(UnauthorizedException.class);
+        }
 
-        when(mockedHeaders.getAll(AUTHORIZATION_HEADERS))
-            .thenReturn(ImmutableList.of(authHeader1.toString(), authHeader2.toString()));
+        @Test
+        void createMailboxSessionShouldReturnWhenAuthHeadersAreValid() {
+            Username username = Username.of("123456789");
+            MailboxSession fakeMailboxSession = mock(MailboxSession.class);
 
-        assertThatThrownBy(() -> testee.createMailboxSession(mockedRequest).block())
-            .isExactlyInstanceOf(IllegalArgumentException.class);
-    }
+            when(mockedMailboxManager.createSystemSession(eq(username)))
+                .thenReturn(fakeMailboxSession);
 
-    @Test
-    public void createMailboxSessionShouldReturnWhenAuthHeadersAreValid() {
-        Username username = Username.of("123456789");
-        MailboxSession fakeMailboxSession = mock(MailboxSession.class);
+            UUID authHeader = UUID.randomUUID();
+            AccessToken accessToken = AccessToken.fromString(authHeader.toString());
+            when(mockedAccessTokenManager.getUsernameFromToken(accessToken))
+                .thenReturn(Mono.just(username));
 
-        when(mockedMailboxManager.createSystemSession(eq(username)))
-            .thenReturn(fakeMailboxSession);
-
-        UUID authHeader = UUID.randomUUID();
-        AccessToken accessToken = AccessToken.fromString(authHeader.toString());
-        when(mockedAccessTokenManager.getUsernameFromToken(accessToken))
-            .thenReturn(Mono.just(username));
-        when(mockedHeaders.get(AUTHORIZATION_HEADERS))
-            .thenReturn(authHeader.toString());
-
-
-        MailboxSession result = testee.createMailboxSession(mockedRequest).block();
-        assertThat(result).isEqualTo(fakeMailboxSession);
+            MailboxSession result = testee.createMailboxSession(new Authenticator.Authorization(authHeader.toString())).block();
+            assertThat(result).isEqualTo(fakeMailboxSession);
+        }
     }
 }

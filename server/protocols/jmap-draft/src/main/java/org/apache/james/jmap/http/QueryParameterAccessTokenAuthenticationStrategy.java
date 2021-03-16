@@ -59,6 +59,11 @@ public class QueryParameterAccessTokenAuthenticationStrategy implements Authenti
             .map(mailboxManager::createSystemSession);
     }
 
+    @Override
+    public Mono<MailboxSession> createMailboxSession(Authenticator.Authorization authorization) {
+        return Mono.empty();
+    }
+
     private Optional<AttachmentAccessToken> getAccessToken(HttpServerRequest httpRequest) {
         try {
 

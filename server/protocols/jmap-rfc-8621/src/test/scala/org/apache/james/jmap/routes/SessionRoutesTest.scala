@@ -43,6 +43,7 @@ import org.scalatest.BeforeAndAfter
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import reactor.core.publisher.Mono
+import reactor.netty.http.server.HttpServerRequest
 
 import scala.jdk.CollectionConverters._
 
@@ -62,7 +63,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
       .thenReturn(BOB)
 
     val mockedAuthFilter = mock(classOf[Authenticator])
-    when(mockedAuthFilter.authenticate(any()))
+    when(mockedAuthFilter.authenticate(any(classOf[HttpServerRequest])))
       .thenReturn(Mono.just(mockedSession))
 
     val sessionRoutes = new SessionRoutes(
