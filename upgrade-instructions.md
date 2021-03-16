@@ -14,6 +14,10 @@ Note: this section is in progress. It will be updated during all the development
 
 Changes to apply between 3.5.x and 3.6.x will be reported here.
 
+## 3.6.0 version
+
+Changes to apply between 3.5.0 and 3.6.0 are reported here.
+
 Change list:
 
  - [Drop Cassandra schema version prior version 5](#drop-cassandra-schema-version-prior-version-5)
