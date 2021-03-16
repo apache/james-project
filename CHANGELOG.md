@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ### Added
 - JAMES-2884 Partial Support for JMAP RFC-8621: The current implementation status allow reading mailboxes, emails, vacation responses.
+  - JAMES-3457 Implement JMAP eventSource 
+  - JAMES-3491 JMAP over websocket (RFC-8887)
+  - JAMES-3470 JMAP RFC-8621 Email/changes + Mailbox/changes support
 - JAMES-3117 Add PeriodicalHealthChecks for periodical calling all health checks
 - JAMES-3143 WebAdmin endpoint to solve Cassandra message inconsistencies
 - JAMES-3138 Webadmin endpoint to recompute users current quotas on top of Guice products
@@ -25,6 +28,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - JAMES-3028 Distributed server: allow choosing whether blobs should be deduplicated
 - JAMES-3196 CanSendFromImpl: enable to send email from aliases for SMTP and JMAP
 - JAMES-3196 Add an IMAP SessionId to correlate logs
+- JAMES-3502 DistributedServer: SSL and authentication support for RabbitMQ
+- JAMES-3504 Metrics and log for POP3
+- JAMES-3431 Optional DSN support
+- JAMES-3202 Allow search index Reindexing without cleanup
 
 ### Changed
 - Switch to Java 11 for build and run
@@ -40,11 +47,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - JAMES-3440 JMAP users can now avoid relying on ElasticSearch reads for basic listing operations thanks to the EmailQueryView 
 - JAMES-3252 DomainList autoDection should be turned off by 
 - JAMES-3192 Upgrade Apache configuration to 2.7
-
-### Deprecated
-- HybridBlobStore. This will be removed after 3.6.0 release. Introduced to fasten small blob access, its usage could be
-compared to a cache, but with a sub-optimal implementation (no eviction, default replication factor, no  circuit breaking).
-Use BlobStore cache instead.
+- JAMES-3492 Upgrade ElasticSearch dependency for DistributedServer to 7.10
+- JAMES-2514 Upgrade Cassandra dependency for DistributedServer 3.11.3 -> 3.11.10
+- JAMES-3497 Multiple dependencies upgrades
+- JAMES-3499 Package LDAP in Distributed Server
+- JAMES-3225 Set up of the Apache CI
+- [REFACTORING] Switch most of the test suite to JUNIT 5
 
 ### Fixed
 - JAMES-3305 Avoid crashes upon deserialization issues when consuming RabbitMQ messages, leverage dead-letter feature
@@ -72,9 +80,22 @@ Use BlobStore cache instead.
 - JAMES-3204 Push limit to Cassandra backend when reading messages - before that message listing queries where always reading at least 5000 rows, and triggering other reads for these rows.
 - JAMES-3201 ReIndexing enhancements
 - JAMES-3179 Fix UpdatableTickingClock thread safety issue
+- MAILBOX-405 Renaming too much mailboxes at once was failing on top of the Cassandra mailbox
+- JAMES-3513 Wrong UID dispatched on the EventBus for StoreMessageIdManager::setInMailboxes
+- JAMES-3512 DigestUtil: close base64 encoding stream
+- JAMES-3487 Allow setting on*Exception parameters for Bounce
+- JAMES-3511 Solve java.util.NoSuchElementException: heartbeatHandler
+- JAMES-3507 Fix broken IMAP APPEND literalSizeLimit option preventing from buffering large requests to files
+- JAMES-3438 des-ambiguity error message for Email/set create Content-Transfer-Encoding rejection
+- JAMES-3477 Fix NPE when concurrently updating MimeMessage (always copy the message rather than using shared references, which might impact performance)
+- JAMES-3444 Perform JMAP TransportChecks only when JMAP is enabled
+- JAMES-3495 Cassandra mailbox: Reproduce and fix the null messageId bug
+- JAMES-3490 maxUploadSize should come from configuration
+- JAMES-1717 VacationMailet should not return answers when no or empty Reply-To header
+- JAMES-1784 JMAP: Users with `_` in their names cannot download attachments
 
 ### Removed
- - HybridBlobStore. This will be removed after 3.6.0 release. Introduced to fasten small blob access, its usage could be
+ - HybridBlobStore. Introduced to fasten small blob access, its usage could be
  compared to a cache, but with a sub-optimal implementation (no eviction, default replication factor, no  circuit breaking).
  Use BlobStore cache instead.
  
@@ -101,7 +122,13 @@ Use BlobStore cache instead.
 - JAMES-2629 Use a future supplier in CassandraAsyncExecutor
 - JAMES-2904 Avoid loading attachment when not needed (IMAP & JMAP) + attachment content streaming (JMAP)
 - JAMES-3155 Limit the number of flags updated at the same time
-- JAMES-3264: MAILBOX details are read 3 times upon indexing
+- JAMES-3264 MAILBOX details are read 3 times upon indexing
+- JAMES-3506 Avoid a full body read within VacationMailet
+- JAMES-3508 Improved performance for IMAP APPEND
+- JAMES-3506 SMTP performance enhancement
+- JAMES-3505 Make mail remote delivery multi-threaded
+- JAMES-3488 Support TLS 1.3
+- JAMES-3484 Cassandra mailbox should group copies/moves
 
 ### Third party softwares
 - James is no longer tested against Cassandra 3.11.3 but instead against Cassandra 3.11.10. Users are recommended to upgrade to this
