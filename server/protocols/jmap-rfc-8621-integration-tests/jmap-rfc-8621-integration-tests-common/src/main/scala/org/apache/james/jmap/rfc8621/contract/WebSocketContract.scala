@@ -35,6 +35,7 @@ import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
+import org.awaitility.Awaitility
 import org.junit.jupiter.api.{BeforeEach, Test, Timeout}
 import play.api.libs.json.{JsString, Json}
 import reactor.core.scala.publisher.SMono
@@ -211,6 +212,88 @@ trait WebSocketContract {
 
   @Test
   @Timeout(180)
+  def apiRequestsShouldSupportLaterAuth(server: GuiceJamesServer): Unit = {
+    val response: Either[String, String] =
+      unauthenticatedRequest(server)
+        .response(asWebSocket[Identity, String] {
+          ws =>
+            ws.send(WebSocketFrame.text(
+              """{
+                |  "@type": "Authorization",
+                |  "Authorization": "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ="
+                |}""".stripMargin))
+
+            ws.send(WebSocketFrame.text(
+              """{
+                |  "@type": "Request",
+                |  "using": [ "urn:ietf:params:jmap:core"],
+                |  "methodCalls": [
+                |    [
+                |      "Core/echo",
+                |      {
+                |        "arg1": "arg1data",
+                |        "arg2": "arg2data"
+                |      },
+                |      "c1"
+                |    ]
+                |  ]
+                |}""".stripMargin))
+
+            ws.receive()
+              .map { case t: Text => t.payload }
+        })
+        .send(backend)
+        .body
+
+    assertThatJson(response.toOption.get)
+      .isEqualTo("""{
+                   |  "@type":"Response",
+                   |  "requestId":null,
+                   |  "sessionState":"2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+                   |  "methodResponses":[["Core/echo",{"arg1":"arg1data","arg2":"arg2data"},"c1"]]
+                   |}""".stripMargin)
+  }
+
+  @Test
+  @Timeout(180)
+  def laterAuthShouldAbortConnectionOnFailure(server: GuiceJamesServer): Unit = {
+    unauthenticatedRequest(server)
+        .response(asWebSocket[Identity, String] {
+          ws =>
+            ws.send(WebSocketFrame.text(
+              """{
+                |  "@type": "Authorization",
+                |  "Authorization": "Basic bad"
+                |}""".stripMargin))
+
+            Awaitility.await().untilAsserted(() => assertThat(ws.isOpen()).isFalse)
+            "!ws.isOpen()"
+        })
+        .send(backend)
+        .body
+  }
+
+  @Test
+  @Timeout(180)
+  def laterAuthShouldFailWhenAlreadyAuthenticated(server: GuiceJamesServer): Unit = {
+    authenticatedRequest(server)
+        .response(asWebSocket[Identity, String] {
+          ws =>
+            ws.send(WebSocketFrame.text(
+              """{
+                |  "@type": "Authorization",
+                |  "Authorization": "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ="
+                |}""".stripMargin))
+
+            Awaitility.await().untilAsserted(() => assertThat(ws.isOpen()).isFalse)
+            "!ws.isOpen()"
+        })
+        .send(backend)
+        .body
+  }
+
+  @Test
+  @Timeout(180)
   def nonJsonPayloadShouldTriggerError(server: GuiceJamesServer): Unit = {
     val response: Either[String, String] =
       authenticatedRequest(server)
@@ -232,23 +315,6 @@ trait WebSocketContract {
                    |  "requestId":null,
                    |  "@type":"RequestError"
                    |}""".stripMargin)
-  }
-
-  @Test
-  @Timeout(180)
-  def handshakeShouldBeAuthenticated(server: GuiceJamesServer): Unit = {
-    assertThatThrownBy(() =>
-      unauthenticatedRequest(server)
-        .response(asWebSocket[Identity, String] {
-          ws =>
-            ws.send(WebSocketFrame.text("The quick brown fox"))
-
-          ws.receive()
-            .map { case t: Text => t.toString }
-      })
-      .send(backend)
-      .body)
-      .hasRootCause(new ProtocolException("Expected HTTP 101 response but was '401 Unauthorized'"))
   }
 
   @Test

@@ -27,7 +27,6 @@ import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import javax.inject.{Inject, Named}
-import org.apache.james.core.Username
 import org.apache.james.events.{EventBus, Registration}
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.JMAP_WS
@@ -35,6 +34,7 @@ import org.apache.james.jmap.api.change.{EmailChangeRepository, MailboxChangeRep
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeListener, TypeName, _}
 import org.apache.james.jmap.core.{OutboundMessage, ProblemDetails, RequestId, WebSocketError, WebSocketPushDisable, WebSocketPushEnable, WebSocketRequest, WebSocketResponse, _}
+import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
 import org.apache.james.jmap.json.ResponseSerializer
@@ -53,7 +53,8 @@ object WebSocketRoutes {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[WebSocketRoutes])
 }
 
-case class ClientContext(outbound: Sinks.Many[OutboundMessage], pushRegistration: AtomicReference[Registration], session: MailboxSession) {
+case class ClientContext(outbound: Sinks.Many[OutboundMessage], pushRegistration: AtomicReference[Registration],
+                         maybeSession: AtomicReference[MailboxSession] = new AtomicReference[MailboxSession]()) {
   def withRegistration(registration: Registration): Unit = withRegistration(Some(registration))
 
   def clean(): Unit = withRegistration(None)
@@ -62,6 +63,15 @@ case class ClientContext(outbound: Sinks.Many[OutboundMessage], pushRegistration
     .foreach(oldRegistration => SMono.fromCallable(() => oldRegistration.unregister())
       .subscribeOn(Schedulers.elastic())
       .subscribe())
+
+  def session: Either[UnauthorizedException, MailboxSession] = Option(maybeSession.get)
+    .map(Right(_))
+    .getOrElse(Left(new UnauthorizedException("Client did not yet authenticate")))
+
+  def withSession(session: Option[MailboxSession]): ClientContext = {
+    session.foreach(maybeSession.getAndSet)
+    this
+  }
 }
 
 class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
@@ -82,17 +92,18 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
       .corsHeaders())
 
   private def handleWebSockets(httpServerRequest: HttpServerRequest, httpServerResponse: HttpServerResponse): Mono[Void] = {
-    SMono(authenticator.authenticate(httpServerRequest))
-      .flatMap((mailboxSession: MailboxSession) => userProvisioner.provisionUser(mailboxSession)
-        .`then`
-        .`then`(SMono(httpServerResponse.sendWebsocket((in, out) => handleWebSocketConnection(mailboxSession)(in, out)))))
+    SMono(authenticator.authenticateIfPossible(httpServerRequest))
+      .flatMap((mailboxSession: MailboxSession) => userProvisioner.provisionUser(mailboxSession).`then`(SMono.just(mailboxSession)))
+      .map(Some(_))
+      .switchIfEmpty(SMono.just(None))
+      .flatMap(maybeSession => SMono(httpServerResponse.sendWebsocket((in, out) => handleWebSocketConnection(in, out)(maybeSession))))
       .onErrorResume(throwable => handleHttpHandshakeError(throwable, httpServerResponse))
       .subscribeOn(Schedulers.elastic)
       .asJava()
       .`then`()
   }
 
-  private def handleWebSocketConnection(session: MailboxSession)(in: WebsocketInbound, out: WebsocketOutbound): Mono[Void] = {
+  private def handleWebSocketConnection(in: WebsocketInbound, out: WebsocketOutbound)(session: Option[MailboxSession] = None): Mono[Void] = {
     val sink: Sinks.Many[OutboundMessage] = Sinks.many().unicast().onBackpressureBuffer()
 
     out.sendString(
@@ -103,7 +114,8 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
       .subscribeOn(Schedulers.elastic())
       .subscribe()
 
-    val context = ClientContext(sink, new AtomicReference[Registration](), session)
+    val context = ClientContext(sink, new AtomicReference[Registration](),
+      session.map(new AtomicReference[MailboxSession](_)).getOrElse(new AtomicReference[MailboxSession]()))
     SFlux[WebSocketFrame](in.aggregateFrames()
       .receiveFrames())
       .map(frame => {
@@ -124,19 +136,37 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
         val error = asError(None)(new IllegalArgumentException(invalid.toString()))
         SMono.fromCallable(() => clientContext.outbound.emitNext(error, FAIL_FAST))
       }, {
+          case auth: WebsocketAuthorization =>
+            if (clientContext.session.isRight) {
+              clientContext.outbound.tryEmitComplete()
+              SMono.error(new IllegalStateException("Already authenticated"))
+            } else {
+              SMono(authenticator.authenticate(auth.asJava))
+                .doOnNext(mailboxSession => clientContext.withSession(Some(mailboxSession)))
+                .flatMap(mailboxSession => userProvisioner.provisionUser(mailboxSession))
+                .doOnError({
+                  case _: UnauthorizedException => clientContext.outbound.tryEmitComplete()
+                })
+                .`then`()
+            }
           case request: WebSocketRequest =>
-            jmapApi.process(request.requestObject, clientContext.session)
-              .map[OutboundMessage](WebSocketResponse(request.requestId, _))
-              .onErrorResume(e => SMono.just(asError(request.requestId)(e)))
-              .subscribeOn(Schedulers.elastic)
-              .doOnNext(next => clientContext.outbound.emitNext(next, FAIL_FAST))
-              .`then`()
+            clientContext.session
+              .fold(e => SMono.error(e),
+              session => jmapApi.process(request.requestObject, session)
+                .map[OutboundMessage](WebSocketResponse(request.requestId, _))
+                .onErrorResume(e => SMono.just(asError(request.requestId)(e)))
+                .subscribeOn(Schedulers.elastic)
+                .doOnNext(next => clientContext.outbound.emitNext(next, FAIL_FAST))
+                .`then`())
           case pushEnable: WebSocketPushEnable =>
-            SMono(eventBus.register(
-                StateChangeListener(pushEnable.dataTypes.getOrElse(TypeName.ALL), clientContext.outbound),
-                AccountIdRegistrationKey.of(clientContext.session.getUser)))
-              .doOnNext(newRegistration => clientContext.withRegistration(newRegistration))
-              .`then`(sendPushStateIfRequested(pushEnable, clientContext))
+            clientContext.session
+              .fold(e => SMono.error(e),
+                session =>
+                  SMono(eventBus.register(
+                    StateChangeListener(pushEnable.dataTypes.getOrElse(TypeName.ALL), clientContext.outbound),
+                    AccountIdRegistrationKey.of(session.getUser)))
+                    .doOnNext(newRegistration => clientContext.withRegistration(newRegistration))
+                    .`then`(sendPushStateIfRequested(pushEnable, clientContext)))
           case WebSocketPushDisable => SMono.fromCallable(() => clientContext.clean())
       })
 
@@ -145,22 +175,25 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
       .map(_ => sendPushState(clientContext))
       .getOrElse(SMono.empty)
 
-  private def sendPushState(clientContext: ClientContext): SMono[Unit] = {
-    val username: Username = clientContext.session.getUser
-    val accountId: AccountId = AccountId.from(username).fold(
-      failure => throw new IllegalArgumentException(failure),
-      success => success)
-    SMono(
-      for {
-        mailboxState <- mailboxChangeRepository.getLatestStateWithDelegation(JavaAccountId.fromUsername(username))
-        emailState <- emailChangeRepository.getLatestStateWithDelegation(JavaAccountId.fromUsername(username))
-      } yield {
-        clientContext.outbound.emitNext(StateChange(Map(accountId -> TypeState(
-          MailboxTypeName.asMap(Some(State.fromJava(mailboxState))) ++
-            EmailTypeName.asMap(Some(State.fromJava(emailState))))),
-          Some(PushState.from(mailboxState, emailState))), FAIL_FAST)
-      })
-  }
+  private def sendPushState(clientContext: ClientContext): SMono[Unit] =
+    clientContext.session.map(_.getUser)
+      .map(username => AccountId.from(username).fold(
+        failure => throw new IllegalArgumentException(failure),
+        success => (username, success)))
+      .fold(e => SMono.error(e),
+        {
+          case (username, accountId) =>
+            SMono(
+              for {
+                mailboxState <- mailboxChangeRepository.getLatestStateWithDelegation(JavaAccountId.fromUsername(username))
+                emailState <- emailChangeRepository.getLatestStateWithDelegation(JavaAccountId.fromUsername(username))
+              } yield {
+                clientContext.outbound.emitNext(StateChange(Map(accountId -> TypeState(
+                  MailboxTypeName.asMap(Some(State.fromJava(mailboxState))) ++
+                    EmailTypeName.asMap(Some(State.fromJava(emailState))))),
+                  Some(PushState.from(mailboxState, emailState))), FAIL_FAST)
+              })
+        })
 
   private def handleHttpHandshakeError(throwable: Throwable, response: HttpServerResponse): SMono[Void] =
     respondDetails(response, ProblemDetails.forThrowable(throwable))

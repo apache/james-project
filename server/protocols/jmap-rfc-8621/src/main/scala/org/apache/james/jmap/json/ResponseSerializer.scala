@@ -193,9 +193,11 @@ object ResponseSerializer {
   }
   private implicit val pushStateReads: Reads[PushState] = Json.valueReads[PushState]
   private implicit val webSocketPushEnableReads: Reads[WebSocketPushEnable] = Json.reads[WebSocketPushEnable]
+  private implicit val webSocketAuthorizationReads: Reads[WebsocketAuthorization] = (JsPath \ "Authorization").read[String].map(WebsocketAuthorization)
   private implicit val webSocketInboundReads: Reads[WebSocketInboundMessage] = {
     case json: JsObject =>
       json.value.get("@type") match {
+        case Some(JsString("Authorization")) => webSocketAuthorizationReads.reads(json)
         case Some(JsString("Request")) => webSocketRequestReads.reads(json)
         case Some(JsString("WebSocketPushEnable")) => webSocketPushEnableReads.reads(json)
         case Some(JsString("WebSocketPushDisable")) => JsSuccess(WebSocketPushDisable)

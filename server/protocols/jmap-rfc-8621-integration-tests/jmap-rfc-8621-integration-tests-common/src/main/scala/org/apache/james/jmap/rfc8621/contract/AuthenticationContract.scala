@@ -134,7 +134,7 @@ trait AuthenticationContract {
         .statusCode(SC_UNAUTHORIZED)
         .body("status", equalTo(401))
         .body("type", equalTo("about:blank"))
-        .body("detail", equalTo("No valid authentication methods provided"))
+        .body("detail", equalTo("Bad authentication for bob@domain "))
     }
 
     @Test
@@ -149,7 +149,7 @@ trait AuthenticationContract {
         .statusCode(SC_UNAUTHORIZED)
         .body("status", equalTo(401))
         .body("type", equalTo("about:blank"))
-        .body("detail", equalTo("No valid authentication methods provided"))
+        .body("detail", equalTo("Bad authentication for usernotfound@domain "))
     }
 
     @Test
@@ -165,7 +165,7 @@ trait AuthenticationContract {
         .statusCode(SC_UNAUTHORIZED)
         .body("status", equalTo(401))
         .body("type", equalTo("about:blank"))
-        .body("detail", equalTo("No valid authentication methods provided"))
+        .body("detail", equalTo("Bad authentication for bob@domain.tld"))
     }
   }
 

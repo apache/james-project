@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets
 import com.google.common.hash.Hashing
 import org.apache.james.jmap.api.change.State
 import org.apache.james.jmap.change.{TypeName, TypeState}
+import org.apache.james.jmap.http.Authenticator.Authorization
 import org.apache.james.jmap.routes.PingPolicy.Interval
 
 sealed trait WebSocketInboundMessage
@@ -67,3 +68,6 @@ case class StateChange(changes: Map[AccountId, TypeState], pushState: Option[Pus
 
 case class WebSocketPushEnable(dataTypes: Option[Set[TypeName]], pushState: Option[PushState]) extends WebSocketInboundMessage
 case object WebSocketPushDisable extends WebSocketInboundMessage
+case class WebsocketAuthorization(authorization: String) extends WebSocketInboundMessage {
+  val asJava: Authorization = new Authorization(authorization)
+}

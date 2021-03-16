@@ -30,3 +30,30 @@ To implement custom authentication mechanisms, you need to implement `org.apache
 and register it in `RFC8621MethodsModule::provideAuthenticator`.
 
 Note that the Apache James project would happily welcome contributions regarding support of other authentication flows.
+
+## RFC-8887 and authentication for Web browser
+
+James implements authentication via passing an `Authorization` token during the HTTP handshake.
+
+However native browser implementations do not support passing additional headers (See
+[this HTML WG discussion](https://github.com/whatwg/html/issues/3062) which even mention JMAP).
+
+As such, we define an extension to upgrade unauthenticated webSocket connection into connected one.
+
+We define the additional message for carrying Authorization:
+
+```
+{
+  "@type": "Authorization",
+  "Authorization": "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ="
+}
+```
+
+`Authorization` message can only be sent on not yet authenticated webSocket channel.
+
+An `Authorization` message must be sent on not yet authenticated webSocket before any other message.
+
+Violation of these constraints leads to connection closure.
+
+The value carried in the `Authorization` property will be validated as if it was specified via the `Authorization` header.
+Failure doing so leads to connection closure.

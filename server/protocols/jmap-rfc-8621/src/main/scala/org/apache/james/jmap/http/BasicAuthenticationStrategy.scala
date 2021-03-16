@@ -101,7 +101,7 @@ class BasicAuthenticationStrategy @Inject()(val usersRepository: UsersRepository
         if(isValid(credentials)) {
           SMono.just(mailboxManager.createSystemSession(credentials.username))
         } else {
-          SMono.error(new UnauthorizedException(s"Bad authentication for ${credentials.username}"))
+          SMono.error(new UnauthorizedException(s"Bad authentication for ${credentials.username.asString()}"))
         }
       }).getOrElse(SMono.empty)
       .asJava()

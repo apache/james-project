@@ -180,7 +180,7 @@ class EventSourceRoutes@Inject() (@Named(InjectionKeys.RFC_8621) val authenticat
 
   private def registerSSE(response: HttpServerResponse, session: MailboxSession, options: EventSourceOptions): SMono[Unit] = {
     val sink: Sinks.Many[OutboundMessage] = Sinks.many().unicast().onBackpressureBuffer()
-    val context = ClientContext(sink, new AtomicReference[Registration](), session)
+    val context = ClientContext(sink, new AtomicReference[Registration](), new AtomicReference[MailboxSession](session))
 
     val pingDisposable = options.pingPolicy
       .asFlux()
