@@ -41,6 +41,7 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.images.builder.ImageFromDockerfile;
+import org.testcontainers.utility.MountableFile;
 
 import com.github.dockerjava.api.model.ContainerNetwork;
 import com.google.common.base.Strings;
@@ -133,6 +134,11 @@ public class DockerContainer implements TestRule, BeforeAllCallback, AfterAllCal
 
     public Container.ExecResult exec(String... command) throws IOException, InterruptedException {
        return container.execInContainer(command);
+    }
+
+    public DockerContainer withCopyFileToContainer(MountableFile file, String path) {
+        container.withCopyFileToContainer(file, path);
+        return this;
     }
 
     public void start() {
