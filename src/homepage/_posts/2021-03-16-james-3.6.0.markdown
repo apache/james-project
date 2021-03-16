@@ -15,7 +15,7 @@ Early adopters can [download it][download], any issue can be reported on our iss
 
 Since the last release we worked hard refreshing our JMAP implementation, implementing both [JMAP core][jmap-core],
 [JMAP mail][jmap-mail] and the [JMAP over WebSocket][jmap-ws] specifications. Their support is considered experimental and
-early adopters' feedback is highly welcome.
+early adopters' feedback is highly welcomed.
 
 [JMAP Draft][jmap-draft] should be considered legacy, and will be removed in next releases.
 
