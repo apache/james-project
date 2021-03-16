@@ -57,7 +57,7 @@ public class AccessTokenAuthenticationStrategy implements AuthenticationStrategy
     public Mono<MailboxSession> createMailboxSession(Authenticator.Authorization authorization) {
         if (!authorization.asString().startsWith("Bearer")) {
             return Mono.fromCallable(() -> AccessToken.fromString(authorization.asString()))
-                .flatMap(accessToken-> Mono.from(accessTokenManager.getUsernameFromToken(accessToken)))
+                .flatMap(accessToken -> Mono.from(accessTokenManager.getUsernameFromToken(accessToken)))
                 .map(mailboxManager::createSystemSession)
                 .onErrorResume(InvalidAccessToken.class, error -> Mono.error(new UnauthorizedException("Invalid access token", error)))
                 .onErrorResume(NotAnAccessTokenException.class, error -> Mono.error(new UnauthorizedException("Not an access token", error)));
