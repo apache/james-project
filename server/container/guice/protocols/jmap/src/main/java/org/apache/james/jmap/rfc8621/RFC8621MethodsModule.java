@@ -22,12 +22,15 @@ package org.apache.james.jmap.rfc8621;
 import static org.apache.james.jmap.core.JmapRfc8621Configuration.LOCALHOST_CONFIGURATION;
 
 import java.io.FileNotFoundException;
+import java.util.Set;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.jmap.JMAPRoutes;
 import org.apache.james.jmap.JMAPRoutesHandler;
 import org.apache.james.jmap.Version;
 import org.apache.james.jmap.core.JmapRfc8621Configuration;
+import org.apache.james.jmap.http.AuthenticationStrategy;
 import org.apache.james.jmap.http.Authenticator;
 import org.apache.james.jmap.http.BasicAuthenticationStrategy;
 import org.apache.james.jmap.http.rfc8621.InjectionKeys;
@@ -96,28 +99,34 @@ public class RFC8621MethodsModule extends AbstractModule {
         methods.addBinding().to(IdentityGetMethod.class);
         methods.addBinding().to(ThreadChangesMethod.class);
         methods.addBinding().to(ThreadGetMethod.class);
+
+        Multibinder<JMAPRoutes> routes = Multibinder.newSetBinder(binder(), JMAPRoutes.class);
+        routes.addBinding().to(SessionRoutes.class);
+        routes.addBinding().to(JMAPApiRoutes.class);
+        routes.addBinding().to(DownloadRoutes.class);
+        routes.addBinding().to(UploadRoutes.class);
+        routes.addBinding().to(WebSocketRoutes.class);
+        routes.addBinding().to(EventSourceRoutes.class);
+
+        Multibinder<AuthenticationStrategy> authenticationStrategies = Multibinder.newSetBinder(binder(), AuthenticationStrategy.class);
+        authenticationStrategies.addBinding().to(BasicAuthenticationStrategy.class);
+        authenticationStrategies.addBinding().to(JWTAuthenticationStrategy.class);
     }
 
     @ProvidesIntoSet
-    JMAPRoutesHandler routesHandler(SessionRoutes sessionRoutes,
-                                    JMAPApiRoutes jmapApiRoutes,
-                                    DownloadRoutes downloadRoutes,
-                                    UploadRoutes uploadRoutes,
-                                    WebSocketRoutes webSocketRoutes,
-                                    EventSourceRoutes eventSourceRoutes) {
-        return new JMAPRoutesHandler(Version.RFC8621, jmapApiRoutes, sessionRoutes, downloadRoutes, uploadRoutes, webSocketRoutes, eventSourceRoutes);
+    JMAPRoutesHandler routesHandler(Set<JMAPRoutes> routes) {
+        return new JMAPRoutesHandler(Version.RFC8621, routes);
     }
 
     @Provides
     @Singleton
     @Named(InjectionKeys.RFC_8621)
     Authenticator provideAuthenticator(MetricFactory metricFactory,
-                                       BasicAuthenticationStrategy basicAuthenticationStrategy,
-                                       JWTAuthenticationStrategy jwtAuthenticationStrategy) {
+                                       Set<AuthenticationStrategy> authenticationStrategies) {
+
         return Authenticator.of(
             metricFactory,
-            basicAuthenticationStrategy,
-            jwtAuthenticationStrategy);
+            authenticationStrategies);
     }
 
     @Provides

@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap.http;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.james.jmap.exceptions.UnauthorizedException;
@@ -33,6 +34,10 @@ import reactor.netty.http.server.HttpServerRequest;
 
 public class Authenticator {
     public static Authenticator of(MetricFactory metricFactory, AuthenticationStrategy... authenticationStrategies) {
+        return of(metricFactory, ImmutableList.copyOf(authenticationStrategies));
+    }
+
+    public static Authenticator of(MetricFactory metricFactory, Collection<AuthenticationStrategy> authenticationStrategies) {
         return new Authenticator(ImmutableList.copyOf(authenticationStrategies), metricFactory);
     }
 

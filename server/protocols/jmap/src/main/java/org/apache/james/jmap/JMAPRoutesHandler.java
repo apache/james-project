@@ -33,6 +33,11 @@ public class JMAPRoutesHandler {
         this.routes = ImmutableSet.copyOf(routes);
     }
 
+    public JMAPRoutesHandler(Version version, Set<JMAPRoutes> routes) {
+        this.version = version;
+        this.routes = routes;
+    }
+
     Stream<JMAPRoute> routes(Version versionRequest) {
         if (version.equals(versionRequest)) {
             return routes.stream()
