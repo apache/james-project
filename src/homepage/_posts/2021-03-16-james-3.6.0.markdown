@@ -17,7 +17,12 @@ Since the last release we worked hard refreshing our JMAP implementation, implem
 [JMAP mail][jmap-mail] and the [JMAP over WebSocket][jmap-ws] specifications. Their support is considered experimental and
 early adopters' feedback is highly welcomed.
 
-[JMAP Draft][jmap-draft] should be considered legacy, and will be removed in next releases.
+[JMAP Draft][jmap-draft] should be considered legacy, and will be removed in upcoming 3.7.0 release.
+
+### Switch to Java 11 for build and run
+
+We adopted Java Runtime Environment 11 from James release 3.6.0. James 3.5.0 is the last version offering Java Runtime
+Environment 8 support.
 
 ## Release changelog
 
@@ -72,11 +77,6 @@ Here are some points we worked on:
 - JAMES-3225 Set up of the Apache CI
 - [REFACTORING] Switch most of the test suite to JUNIT 5
 
-### Deprecated
-- HybridBlobStore. This will be removed after 3.6.0 release. Introduced to fasten small blob access, its usage could be
-compared to a cache, but with a sub-optimal implementation (no eviction, default replication factor, no  circuit breaking).
-Use BlobStore cache instead.
-
 ### Fixed
 - JAMES-3305 Avoid crashes upon deserialization issues when consuming RabbitMQ messages, leverage dead-letter feature
 - JAMES-3212 JMAP Handle subcrible/unsubcrible child's folder when update mailbox
@@ -118,7 +118,7 @@ Use BlobStore cache instead.
 - JAMES-1784 JMAP: Users with `_` in their names cannot download attachments
 
 ### Removed
-- HybridBlobStore. This will be removed after 3.6.0 release. Introduced to fasten small blob access, its usage could be
+- HybridBlobStore. Introduced to fasten small blob access, its usage could be
 compared to a cache, but with a sub-optimal implementation (no eviction, default replication factor, no  circuit breaking).
 Use BlobStore cache instead.
 
