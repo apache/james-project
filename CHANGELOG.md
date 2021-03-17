@@ -56,11 +56,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - JAMES-3225 Set up of the Apache CI
 - [REFACTORING] Switch most of the test suite to JUNIT 5
 
-### Deprecated
-- HybridBlobStore. This will be removed after 3.6.0 release. Introduced to fasten small blob access, its usage could be
-compared to a cache, but with a sub-optimal implementation (no eviction, default replication factor, no  circuit breaking).
-Use BlobStore cache instead.
-
 ### Fixed
 - JAMES-3305 Avoid crashes upon deserialization issues when consuming RabbitMQ messages, leverage dead-letter feature
 - JAMES-3212 JMAP Handle subcrible/unsubcrible child's folder when update mailbox
@@ -94,7 +89,7 @@ Use BlobStore cache instead.
 - JAMES-3511 Solve java.util.NoSuchElementException: heartbeatHandler
 - JAMES-3507 Fix broken IMAP APPEND literalSizeLimit option preventing from buffering large requests to files
 - JAMES-3438 des-ambiguity error message for Email/set create Content-Transfer-Encoding rejection
-- JAMES-3477 Fix NPE when concurrently updating MimeMessage
+- JAMES-3477 Fix NPE when concurrently updating MimeMessage (always copy the message rather than using shared references, which might impact performance)
 - JAMES-3444 Perform JMAP TransportChecks only when JMAP is enabled
 - JAMES-3495 Cassandra mailbox: Reproduce and fix the null messageId bug
 - JAMES-3490 maxUploadSize should come from configuration
@@ -102,7 +97,7 @@ Use BlobStore cache instead.
 - JAMES-1784 JMAP: Users with `_` in their names cannot download attachments
 
 ### Removed
- - HybridBlobStore. This will be removed after 3.6.0 release. Introduced to fasten small blob access, its usage could be
+ - HybridBlobStore. Introduced to fasten small blob access, its usage could be
  compared to a cache, but with a sub-optimal implementation (no eviction, default replication factor, no  circuit breaking).
  Use BlobStore cache instead.
  
