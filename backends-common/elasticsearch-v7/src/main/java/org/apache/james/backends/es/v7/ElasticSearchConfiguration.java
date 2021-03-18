@@ -191,9 +191,9 @@ public class ElasticSearchConfiguration {
             }
         }
 
-        static class Builder {
+        public static class Builder {
 
-            interface RequireSSLStrategyTrustStore {
+            public interface RequireSSLStrategyTrustStore {
                 RequireHostNameVerifier sslStrategy(SSLValidationStrategy strategy, Optional<SSLTrustStore> trustStore);
 
                 default RequireHostNameVerifier strategyIgnore() {
@@ -209,7 +209,7 @@ public class ElasticSearchConfiguration {
                 }
             }
 
-            interface RequireHostNameVerifier {
+            public interface RequireHostNameVerifier {
                 ReadyToBuild hostNameVerifier(HostNameVerifier hostNameVerifier);
 
                 default ReadyToBuild acceptAnyHostNameVerifier() {
@@ -221,7 +221,7 @@ public class ElasticSearchConfiguration {
                 }
             }
 
-            static class ReadyToBuild {
+            public static class ReadyToBuild {
                 private final SSLValidationStrategy sslValidationStrategy;
                 private final HostNameVerifier hostNameVerifier;
                 private Optional<SSLTrustStore> sslTrustStore;
@@ -247,7 +247,7 @@ public class ElasticSearchConfiguration {
             return new SSLConfiguration(SSLValidationStrategy.DEFAULT, HostNameVerifier.DEFAULT, Optional.empty());
         }
 
-        static Builder.RequireSSLStrategyTrustStore builder() {
+        public static Builder.RequireSSLStrategyTrustStore builder() {
             return (strategy, trustStore) -> hostNameVerifier -> new Builder.ReadyToBuild(strategy, hostNameVerifier, trustStore);
         }
 
