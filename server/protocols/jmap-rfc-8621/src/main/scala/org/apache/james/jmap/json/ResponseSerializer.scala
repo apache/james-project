@@ -88,42 +88,19 @@ object ResponseSerializer {
 
   private implicit val usernameWrites: Writes[Username] = username => JsString(username.asString)
   private implicit val urlWrites: Writes[URL] = url => JsString(url.toString)
-  private implicit val coreCapabilityWrites: Writes[CoreCapabilityProperties] = Json.writes[CoreCapabilityProperties]
-  private implicit val mailCapabilityWrites: Writes[MailCapabilityProperties] = Json.writes[MailCapabilityProperties]
+  val coreCapabilityWrites: OWrites[CoreCapabilityProperties] = Json.writes[CoreCapabilityProperties]
+  val mailCapabilityWrites: OWrites[MailCapabilityProperties] = Json.writes[MailCapabilityProperties]
   private implicit val maxDelayedSendWrites: Writes[MaxDelayedSend] = Json.valueWrites[MaxDelayedSend]
   private implicit val ehloNameWrites: Writes[EhloName] = Json.valueWrites[EhloName]
   private implicit val ehloArgsWrites: Writes[EhloArgs] = Json.valueWrites[EhloArgs]
   private implicit val supportsPushWrites: Writes[SupportsPush] = Json.valueWrites[SupportsPush]
-  private implicit val submissionPropertiesWrites: Writes[SubmissionProperties] = Json.writes[SubmissionProperties]
-  private implicit val webSocketPropertiesWrites: Writes[WebSocketCapabilityProperties] = Json.writes[WebSocketCapabilityProperties]
-  private implicit val quotaCapabilityWrites: Writes[QuotaCapabilityProperties] = OWrites[QuotaCapabilityProperties](_ => Json.obj())
-  private implicit val sharesCapabilityWrites: Writes[SharesCapabilityProperties] = OWrites[SharesCapabilityProperties](_ => Json.obj())
-  private implicit val vacationResponseCapabilityWrites: Writes[VacationResponseCapabilityProperties] = OWrites[VacationResponseCapabilityProperties](_ => Json.obj())
-  private implicit val submissionCapabilityWrites: Writes[SubmissionCapability] = OWrites[SubmissionCapability](_ => Json.obj())
-  private implicit val webSocketCapabilityWrites: Writes[WebSocketCapability] = OWrites[WebSocketCapability](_ => Json.obj())
+  val submissionPropertiesWrites: OWrites[SubmissionProperties] = Json.writes[SubmissionProperties]
+  val webSocketPropertiesWrites: OWrites[WebSocketCapabilityProperties] = Json.writes[WebSocketCapabilityProperties]
 
   private implicit val setCapabilityWrites: Writes[Set[_ <: Capability]] =
     (set: Set[_ <: Capability]) => {
-      set.foldLeft(JsObject.empty)((jsObject, capability) => {
-        capability match {
-          case capability: CoreCapability =>
-            jsObject.+(capability.identifier.value, coreCapabilityWrites.writes(capability.properties))
-          case capability: MailCapability =>
-            jsObject.+(capability.identifier.value, mailCapabilityWrites.writes(capability.properties))
-          case capability: QuotaCapability =>
-            jsObject.+(capability.identifier.value, quotaCapabilityWrites.writes(capability.properties))
-          case capability: SharesCapability =>
-            jsObject.+(capability.identifier.value, sharesCapabilityWrites.writes(capability.properties))
-          case capability: VacationResponseCapability =>
-            jsObject.+(capability.identifier.value, vacationResponseCapabilityWrites.writes(capability.properties))
-          case capability: SubmissionCapability =>
-            jsObject.+(capability.identifier.value, submissionPropertiesWrites.writes(capability.properties))
-          case capability: WebSocketCapability =>
-            jsObject.+(capability.identifier.value, webSocketPropertiesWrites.writes(capability.properties))
-          case _ =>
-            jsObject.+(capability.identifier.value, JsObject(Map[String, JsValue]()))
-        }
-      })
+      set.foldLeft(JsObject.empty)((jsObject, capability) =>
+        jsObject.+(capability.identifier.value, capability.properties.jsonify))
     }
 
   private implicit val capabilitiesWrites: Writes[Capabilities] = capabilities => setCapabilityWrites.writes(capabilities.capabilities)

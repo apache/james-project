@@ -30,7 +30,9 @@ import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EM
 import org.apache.james.jmap.core.CoreCapabilityProperties.CollationAlgorithm
 import org.apache.james.jmap.core.MailCapability.EmailQuerySortOption
 import org.apache.james.jmap.core.UnsignedInt.{UnsignedInt, UnsignedIntConstraint}
+import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.util.Size
+import play.api.libs.json.{JsObject, Json}
 
 import scala.util.{Failure, Success, Try}
 
@@ -48,7 +50,9 @@ object CapabilityIdentifier {
   val JAMES_SHARES: CapabilityIdentifier = "urn:apache:james:params:jmap:mail:shares"
 }
 
-trait CapabilityProperties
+trait CapabilityProperties {
+  def jsonify(): JsObject
+}
 
 trait Capability {
   def identifier(): CapabilityIdentifier
@@ -86,10 +90,14 @@ final case class CoreCapabilityProperties(maxSizeUpload: MaxSizeUpload,
                                           maxCallsInRequest: MaxCallsInRequest,
                                           maxObjectsInGet: MaxObjectsInGet,
                                           maxObjectsInSet: MaxObjectsInSet,
-                                          collationAlgorithms: List[CollationAlgorithm]) extends CapabilityProperties
+                                          collationAlgorithms: List[CollationAlgorithm]) extends CapabilityProperties {
+  override def jsonify(): JsObject = ResponseSerializer.coreCapabilityWrites.writes(this)
+}
 
 final case class WebSocketCapabilityProperties(supportsPush: SupportsPush,
-                                               url: URL) extends CapabilityProperties
+                                               url: URL) extends CapabilityProperties {
+  override def jsonify(): JsObject = ResponseSerializer.webSocketPropertiesWrites.writes(this)
+}
 
 final case class SupportsPush(value: Boolean) extends AnyVal
 final case class MaxDelayedSend(value: Int) extends AnyVal
@@ -100,7 +108,9 @@ final case class SubmissionCapability(identifier: CapabilityIdentifier = EMAIL_S
                                       properties: SubmissionProperties = SubmissionProperties()) extends Capability
 
 final case class SubmissionProperties(maxDelayedSend: MaxDelayedSend = MaxDelayedSend(0),
-                                      submissionExtensions: Map[EhloName, List[EhloArgs]] = Map()) extends CapabilityProperties
+                                      submissionExtensions: Map[EhloName, List[EhloArgs]] = Map()) extends CapabilityProperties {
+  override def jsonify(): JsObject = ResponseSerializer.submissionPropertiesWrites.writes(this)
+}
 
 object MailCapability {
   type EmailQuerySortOption = String Refined NonEmpty
@@ -120,19 +130,27 @@ final case class MailCapabilityProperties(maxMailboxesPerEmail: MaxMailboxesPerE
                                           maxSizeMailboxName: MaxSizeMailboxName,
                                           maxSizeAttachmentsPerEmail: MaxSizeAttachmentsPerEmail,
                                           emailQuerySortOptions: List[EmailQuerySortOption],
-                                          mayCreateTopLevelMailbox: MayCreateTopLevelMailbox) extends CapabilityProperties
+                                          mayCreateTopLevelMailbox: MayCreateTopLevelMailbox) extends CapabilityProperties {
+  override def jsonify(): JsObject = ResponseSerializer.mailCapabilityWrites.writes(this)
+}
 
-final case class QuotaCapabilityProperties() extends CapabilityProperties
+final case class QuotaCapabilityProperties() extends CapabilityProperties {
+  override def jsonify(): JsObject = Json.obj()
+}
 
 final case class QuotaCapability(properties: QuotaCapabilityProperties = QuotaCapabilityProperties(),
                                  identifier: CapabilityIdentifier = JAMES_QUOTA) extends Capability
 
-final case class SharesCapabilityProperties() extends CapabilityProperties
+final case class SharesCapabilityProperties() extends CapabilityProperties {
+  override def jsonify(): JsObject = Json.obj()
+}
 
 final case class SharesCapability(properties: SharesCapabilityProperties = SharesCapabilityProperties(),
                                   identifier: CapabilityIdentifier = JAMES_SHARES) extends Capability
 
-final case class VacationResponseCapabilityProperties() extends CapabilityProperties
+final case class VacationResponseCapabilityProperties() extends CapabilityProperties {
+  override def jsonify(): JsObject = Json.obj()
+}
 
 final case class VacationResponseCapability(properties: VacationResponseCapabilityProperties = VacationResponseCapabilityProperties(),
                                             identifier: CapabilityIdentifier = JMAP_VACATION_RESPONSE) extends Capability
