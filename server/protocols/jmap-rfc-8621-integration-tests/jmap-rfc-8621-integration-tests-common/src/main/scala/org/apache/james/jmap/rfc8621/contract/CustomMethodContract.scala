@@ -40,6 +40,7 @@ import org.apache.james.mailbox.MailboxSession
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
 import org.reactivestreams.Publisher
+import play.api.libs.json.{JsObject, Json}
 import reactor.core.scala.publisher.SMono
 
 object CustomMethodContract {
@@ -75,7 +76,7 @@ object CustomMethodContract {
       |      "url": "http://domain.com/jmap/ws"
       |    },
       |    "urn:apache:james:params:jmap:mail:quota": {},
-      |    "$CUSTOM": {},
+      |    "$CUSTOM": {"custom": "property"},
       |    "urn:apache:james:params:jmap:mail:shares": {},
       |    "urn:ietf:params:jmap:vacationresponse":{}
       |  },
@@ -113,7 +114,7 @@ object CustomMethodContract {
       |        },
       |        "urn:apache:james:params:jmap:mail:quota": {},
       |        "urn:apache:james:params:jmap:mail:shares": {},
-      |        "$CUSTOM": {},
+      |        "$CUSTOM": {"custom": "property"},
       |        "urn:ietf:params:jmap:vacationresponse":{}
       |      }
       |    }
@@ -137,7 +138,9 @@ object CustomMethodContract {
       |}""".stripMargin
 }
 
-case class CustomCapabilityProperties() extends CapabilityProperties
+case class CustomCapabilityProperties() extends CapabilityProperties {
+  override def jsonify(): JsObject = Json.obj(("custom", "property"))
+}
 
 case class CustomCapability(properties: CustomCapabilityProperties = CustomCapabilityProperties(), identifier: CapabilityIdentifier = CUSTOM) extends Capability
 
