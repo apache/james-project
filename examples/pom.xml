@@ -27,7 +27,7 @@
   </parent>
   <groupId>org.apache.james.examples</groupId>
   <artifactId>examples</artifactId>
-  <version>3.6.0</version>
+  <version>3.7.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Apache James :: Examples</name>
   <modules>
@@ -40,8 +40,4 @@
     <maven.compiler.target>1.11</maven.compiler.target>
     <maven.compiler.source>1.11</maven.compiler.source>
   </properties>
-
-  <scm>
-    <tag>james-project-3.6.0</tag>
-  </scm>
 </project>
