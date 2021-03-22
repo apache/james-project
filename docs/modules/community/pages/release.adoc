@@ -78,7 +78,7 @@ mvn release:prepare -Darguments="-Dmaven.javadoc.skip=true -DskipTests -Dskip.ji
 mvn release:perform -Darguments="-Dmaven.javadoc.skip=true -DskipTests -Dskip.jib" -DautoVersionSubmodules=true
 ----
 
-Failure to react when being prompted for git or GPG credentials might abort the release.
+Failure to react when being prompted for git or GPG credentials might abort the release. GPG agent with a reasonable session time can be used to unlock the key before hand and reduce this risk.
 
 Then visit https://repository.apache.org/#stagingRepositories[Apache maven repository], go in staging repository, close
 the corresponding artifact before performing the vote.
