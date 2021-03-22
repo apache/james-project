@@ -39,7 +39,6 @@ Set up your maven configuration in `~/.m2/settings.xml` :
 ----
 <settings>
   <servers>
-    <!-- To publish a snapshot of some part of Maven -->
     <server>
       <id>apache.snapshots.https</id>
       <username>apacheId</username>
