@@ -53,8 +53,6 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
@@ -185,8 +183,7 @@ public class ClientProvider implements Provider<ReactorElasticSearchClient> {
     private final ReactorElasticSearchClient client;
 
     @Inject
-    @VisibleForTesting
-    ClientProvider(ElasticSearchConfiguration configuration) {
+    public ClientProvider(ElasticSearchConfiguration configuration) {
         this.httpAsyncClientConfigurer = new HttpAsyncClientConfigurer(configuration);
         this.configuration = configuration;
         this.elasticSearchRestHighLevelClient = connect(configuration);
