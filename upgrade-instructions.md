@@ -62,7 +62,7 @@ Example `usersrepository.xml`:
 
 Date: 11/03/2021
 
-JIRA: https://issues.apache.org/jira/browse/JAMES-2492
+JIRA: https://issues.apache.org/jira/browse/JAMES-3492
 
 Concerned products: Cassandra Guice server (with and without rabbitMQ)
 
