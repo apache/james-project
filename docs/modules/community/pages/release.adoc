@@ -73,7 +73,7 @@ mvn release:clean
 
 mvn release:prepare -Darguments="-Dmaven.javadoc.skip=true -DskipTests -Dskip.jib" -DautoVersionSubmodules=true
 
-mvn release:prepare -Darguments="-Dmaven.javadoc.skip=true -DskipTests -Dskip.jib" -DautoVersionSubmodules=true
+mvn release:perform -Darguments="-Dmaven.javadoc.skip=true -DskipTests -Dskip.jib" -DautoVersionSubmodules=true
 ----
 
 Failure to react when being prompted for git or GPG credentials might abort the release.
@@ -120,7 +120,7 @@ Cheers,
 PMC member name
 ----
 
-After the voting period, do the voting after-maths. Reply in the voting thread:
+After the voting period, do the voting aftermaths. Reply in the voting thread:
 
 [source]
 ----
