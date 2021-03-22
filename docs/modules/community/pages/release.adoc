@@ -61,6 +61,8 @@ Set up your maven configuration in `~/.m2/settings.xml` :
 </settings>
 ----
 
+Ensure that released branch HEAD have a clean green build on the CI.
+
 Run these commands to perform a release, from the master branch:
 
 [source,bash]
