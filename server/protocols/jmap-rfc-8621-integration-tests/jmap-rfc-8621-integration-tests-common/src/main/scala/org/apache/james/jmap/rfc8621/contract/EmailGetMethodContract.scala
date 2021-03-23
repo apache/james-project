@@ -20,8 +20,9 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
-import java.time.ZonedDateTime
+import java.time.{Duration, ZonedDateTime}
 import java.util.Date
+import java.util.concurrent.TimeUnit
 
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
@@ -33,7 +34,7 @@ import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
 import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
-import org.apache.james.jmap.api.change.{EmailChange, State}
+import org.apache.james.jmap.api.change.State
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.State.INSTANCE
@@ -50,6 +51,8 @@ import org.apache.james.mime4j.stream.RawField
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.util.ClassLoaderUtils
 import org.apache.james.utils.DataProbeImpl
+import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.Awaitility
 import org.junit.jupiter.api.{BeforeEach, Test}
 
 object EmailGetMethodContract {
@@ -65,6 +68,13 @@ object EmailGetMethodContract {
 }
 
 trait EmailGetMethodContract {
+  private lazy val slowPacedPollInterval = Duration.ofMillis(100)
+  private lazy val calmlyAwait = Awaitility.`with`
+    .pollInterval(slowPacedPollInterval)
+    .and.`with`.pollDelay(slowPacedPollInterval)
+    .await
+  private lazy val awaitAtMostTenSeconds = calmlyAwait.atMost(10, TimeUnit.SECONDS)
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DataProbeImpl])
@@ -4353,7 +4363,7 @@ trait EmailGetMethodContract {
          |                ],
          |                "list": [
          |                    {
-         |                        "id": "1",
+         |                        "id": "${messageId.serialize}",
          |                        "bodyValues": {
          |                            "3": {
          |                                "value": "I am the text plain part!\\r\\n",
@@ -7102,7 +7112,7 @@ trait EmailGetMethodContract {
       .getMessageId
       .serialize()
 
-    val state: State = storeReferenceState(server, accountId)
+    val state: State = waitForNextState(server, accountId, State.INITIAL)
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -7143,17 +7153,12 @@ trait EmailGetMethodContract {
            |}""".stripMargin)
   }
 
-  private def storeReferenceState(server: GuiceJamesServer, accountId: AccountId) = {
+  private def waitForNextState(server: GuiceJamesServer, accountId: AccountId, initialState: State): State = {
     val jmapGuiceProbe: JmapGuiceProbe = server.getProbe(classOf[JmapGuiceProbe])
-    jmapGuiceProbe.saveEmailChange(
-      EmailChange.builder()
-        .accountId(accountId)
-        .state(State.Factory.DEFAULT.generate())
-        .date(ZonedDateTime.now())
-        .isDelegated(false)
-        .build())
+    awaitAtMostTenSeconds.untilAsserted {
+      () => assertThat(jmapGuiceProbe.getLatestEmailState(accountId)).isNotEqualTo(initialState)
+    }
 
-    val state: State = jmapGuiceProbe.getLatestEmailState(accountId)
-    state
+    jmapGuiceProbe.getLatestEmailState(accountId)
   }
 }
