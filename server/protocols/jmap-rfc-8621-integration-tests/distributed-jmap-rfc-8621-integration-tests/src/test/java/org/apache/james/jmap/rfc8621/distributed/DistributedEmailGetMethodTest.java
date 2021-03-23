@@ -25,8 +25,6 @@ import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
-import org.apache.james.jmap.api.change.State;
-import org.apache.james.jmap.cassandra.change.CassandraStateFactory;
 import org.apache.james.jmap.rfc8621.contract.EmailGetMethodContract;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
@@ -62,10 +60,5 @@ public class DistributedEmailGetMethodTest implements EmailGetMethodContract {
     @Override
     public MessageId randomMessageId() {
         return MESSAGE_ID_FACTORY.of(UUIDs.timeBased());
-    }
-
-    @Override
-    public State.Factory stateFactory() {
-        return new CassandraStateFactory();
     }
 }

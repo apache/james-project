@@ -75,8 +75,6 @@ trait EmailGetMethodContract {
     .await
   private lazy val awaitAtMostTenSeconds = calmlyAwait.atMost(10, TimeUnit.SECONDS)
 
-  def stateFactory: State.Factory
-
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DataProbeImpl])

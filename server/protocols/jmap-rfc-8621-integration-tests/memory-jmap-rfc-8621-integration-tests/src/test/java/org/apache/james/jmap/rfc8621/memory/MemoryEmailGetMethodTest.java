@@ -26,7 +26,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
-import org.apache.james.jmap.api.change.State;
 import org.apache.james.jmap.rfc8621.contract.EmailGetMethodContract;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MessageId;
@@ -44,10 +43,5 @@ public class MemoryEmailGetMethodTest implements EmailGetMethodContract {
     @Override
     public MessageId randomMessageId() {
         return InMemoryMessageId.of(ThreadLocalRandom.current().nextInt(100000) + 100);
-    }
-
-    @Override
-    public State.Factory stateFactory() {
-        return State.Factory.DEFAULT;
     }
 }
