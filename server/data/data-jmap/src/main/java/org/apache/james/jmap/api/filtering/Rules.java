@@ -16,48 +16,51 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.eventsourcing.eventstore
 
-import org.apache.james.eventsourcing.{Event, EventId}
+package org.apache.james.jmap.api.filtering;
 
-import java.util.Optional
-import scala.annotation.varargs
-import scala.jdk.CollectionConverters._
-import scala.jdk.OptionConverters._
+import java.util.List;
+import java.util.Objects;
 
-object History {
-  def empty: History = new History(Nil)
+import com.google.common.base.MoreObjects;
 
-  def of(events: List[Event]): History = new History(events)
+public class Rules {
+    private final List<Rule> rules;
+    private final Version version;
 
-  @varargs
-  def of(events: Event*): History = of(events.toList)
-}
+    public Rules(List<Rule> rules, Version version) {
+        this.rules = rules;
+        this.version = version;
+    }
 
-final case class History private(events: List[Event]) {
-  if (hasEventIdDuplicates(events)) {
-    throw EventStoreFailedException("Event History contains duplicated EventId")
-  }
+    public List<Rule> getRules() {
+        return rules;
+    }
 
-  private def hasEventIdDuplicates(events: List[Event]) = {
-    val eventIdsNumber = events.map(event => event.eventId)
-      .toSet
-      .size
-    eventIdsNumber != events.size
-  }
+    public Version getVersion() {
+        return version;
+    }
 
-  def getVersion: Option[EventId] = events
-    .map(event => event.eventId)
-    .maxOption
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof Rules) {
+            Rules that = (Rules) o;
+            return Objects.equals(this.rules, that.rules)
+                && Objects.equals(this.version, that.version);
+        }
+        return false;
+    }
 
-  def getVersionAsJava: Optional[EventId] = getVersion.toJava
+    @Override
+    public final int hashCode() {
+        return Objects.hash(rules, version);
+    }
 
-  def getEvents:List[Event] = events
-
-  def getEventsJava:java.util.List[Event] = events.asJava
-
-  def getNextEventId: EventId = getVersion
-    .map(eventId => eventId.next)
-    .getOrElse(EventId.first)
-
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("rules", rules)
+            .add("version", version)
+            .toString();
+    }
 }

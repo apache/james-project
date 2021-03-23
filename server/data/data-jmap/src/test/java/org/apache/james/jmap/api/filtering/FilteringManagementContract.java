@@ -35,6 +35,8 @@ import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.ImmutableList;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -49,8 +51,8 @@ public interface FilteringManagementContract {
 
     @Test
     default void listingRulesForUnknownUserShouldReturnEmptyList(EventStore eventStore) {
-        assertThat(Flux.from(instantiateFilteringManagement(eventStore).listRulesForUser(USERNAME)).toStream())
-            .isEmpty();
+        assertThat(Mono.from(instantiateFilteringManagement(eventStore).listRulesForUser(USERNAME)).block())
+            .isEqualTo(new Rules(ImmutableList.of(), new Version(-1)));
     }
 
     @Test
@@ -66,8 +68,8 @@ public interface FilteringManagementContract {
 
         Mono.from(testee.defineRulesForUser(USERNAME, RULE_1, RULE_2)).block();
 
-        assertThat(Flux.from(testee.listRulesForUser(USERNAME)).toStream())
-            .containsExactly(RULE_1, RULE_2);
+        assertThat(Mono.from(testee.listRulesForUser(USERNAME)).block())
+            .isEqualTo(new Rules(ImmutableList.of(RULE_1, RULE_2), new Version(0)));
     }
 
     @Test
@@ -77,8 +79,8 @@ public interface FilteringManagementContract {
         Mono.from(testee.defineRulesForUser(USERNAME, RULE_1, RULE_2)).block();
         Mono.from(testee.defineRulesForUser(USERNAME, RULE_2, RULE_1)).block();
 
-        assertThat(Flux.from(testee.listRulesForUser(USERNAME)).toStream())
-            .containsExactly(RULE_2, RULE_1);
+        assertThat(Mono.from(testee.listRulesForUser(USERNAME)).block())
+            .isEqualTo(new Rules(ImmutableList.of(RULE_2, RULE_1), new Version(1)));
     }
 
     @Test
@@ -111,8 +113,9 @@ public interface FilteringManagementContract {
         FilteringManagement testee = instantiateFilteringManagement(eventStore);
         Mono.from(testee.defineRulesForUser(USERNAME, RULE_3, RULE_2, RULE_1)).block();
 
-        assertThat(Flux.from(testee.listRulesForUser(USERNAME)).toStream())
-            .containsExactly(RULE_3, RULE_2, RULE_1);
+
+        assertThat(Mono.from(testee.listRulesForUser(USERNAME)).block())
+            .isEqualTo(new Rules(ImmutableList.of(RULE_3, RULE_2, RULE_1), new Version(0)));
     }
 
     @Test
@@ -122,7 +125,8 @@ public interface FilteringManagementContract {
         Mono.from(testee.defineRulesForUser(USERNAME, RULE_3, RULE_2, RULE_1)).block();
         Mono.from(testee.clearRulesForUser(USERNAME)).block();
 
-        assertThat(Flux.from(testee.listRulesForUser(USERNAME)).toStream()).isEmpty();
+        assertThat(Mono.from(testee.listRulesForUser(USERNAME)).block())
+            .isEqualTo(new Rules(ImmutableList.of(), new Version(1)));
     }
 
     @Test
@@ -131,8 +135,9 @@ public interface FilteringManagementContract {
 
         Mono.from(testee.defineRulesForUser(USERNAME, RULE_FROM, RULE_RECIPIENT, RULE_SUBJECT, RULE_TO, RULE_1)).block();
 
-        assertThat(Flux.from(testee.listRulesForUser(USERNAME)).toStream())
-            .containsExactly(RULE_FROM, RULE_RECIPIENT, RULE_SUBJECT, RULE_TO, RULE_1);
+
+        assertThat(Mono.from(testee.listRulesForUser(USERNAME)).block())
+            .isEqualTo(new Rules(ImmutableList.of(RULE_FROM, RULE_RECIPIENT, RULE_SUBJECT, RULE_TO, RULE_1), new Version(0)));
     }
 
 }
