@@ -35,7 +35,6 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
@@ -90,10 +89,9 @@ public class GetFilterMethod implements Method {
     }
 
     private Mono<JmapResponse> retrieveFilter(MethodCallId methodCallId, Username username) {
-        return Flux.from(filteringManagement.listRulesForUser(username))
-            .collect(Guavate.toImmutableList())
+        return Mono.from(filteringManagement.listRulesForUser(username))
             .map(rules -> GetFilterResponse.builder()
-                .rules(rules)
+                .rules(rules.getRules())
                 .build())
             .map(getFilterResponse -> JmapResponse.builder()
                 .methodCallId(methodCallId)

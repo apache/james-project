@@ -39,6 +39,6 @@ public interface FilteringManagement {
         return defineRulesForUser(username, ImmutableList.of());
     }
 
-    Publisher<Rule> listRulesForUser(Username username);
+    Publisher<Rules> listRulesForUser(Username username);
 
 }

@@ -16,48 +16,17 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.eventsourcing.eventstore
 
-import org.apache.james.eventsourcing.{Event, EventId}
+package org.apache.james.jmap.api.filtering;
 
-import java.util.Optional
-import scala.annotation.varargs
-import scala.jdk.CollectionConverters._
-import scala.jdk.OptionConverters._
+import org.junit.jupiter.api.Test;
 
-object History {
-  def empty: History = new History(Nil)
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-  def of(events: List[Event]): History = new History(events)
-
-  @varargs
-  def of(events: Event*): History = of(events.toList)
-}
-
-final case class History private(events: List[Event]) {
-  if (hasEventIdDuplicates(events)) {
-    throw EventStoreFailedException("Event History contains duplicated EventId")
-  }
-
-  private def hasEventIdDuplicates(events: List[Event]) = {
-    val eventIdsNumber = events.map(event => event.eventId)
-      .toSet
-      .size
-    eventIdsNumber != events.size
-  }
-
-  def getVersion: Option[EventId] = events
-    .map(event => event.eventId)
-    .maxOption
-
-  def getVersionAsJava: Optional[EventId] = getVersion.toJava
-
-  def getEvents:List[Event] = events
-
-  def getEventsJava:java.util.List[Event] = events.asJava
-
-  def getNextEventId: EventId = getVersion
-    .map(eventId => eventId.next)
-    .getOrElse(EventId.first)
-
+class VersionTest {
+    @Test
+    void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(Version.class)
+            .verify();
+    }
 }
