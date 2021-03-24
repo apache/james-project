@@ -18,18 +18,17 @@
  ****************************************************************/
 package org.apache.james.jmap.rfc8621.contract
 
-import java.io.{ByteArrayInputStream, InputStream}
+import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType
-import org.apache.commons.io.IOUtils
 import org.apache.http.HttpStatus.{SC_BAD_REQUEST, SC_CREATED, SC_FORBIDDEN, SC_OK, SC_UNAUTHORIZED}
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ALICE, ALICE_ACCOUNT_ID, ALICE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, _2_DOT_DOMAIN, authScheme, baseRequestSpecBuilder}
-import org.apache.james.jmap.rfc8621.contract.UploadContract.{BIG_INPUT_STREAM, VALID_INPUT_STREAM}
+import org.apache.james.jmap.rfc8621.contract.UploadContract.{BIG_INPUT, VALID_INPUT}
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.Matchers.equalTo
@@ -37,8 +36,8 @@ import org.junit.jupiter.api.{BeforeEach, Test}
 import play.api.libs.json.{JsString, Json}
 
 object UploadContract {
-  private val BIG_INPUT_STREAM: InputStream = new ByteArrayInputStream("123456789\r\n".repeat(1024 * 1024 * 4).getBytes)
-  private val VALID_INPUT_STREAM: InputStream = new ByteArrayInputStream("123456789\r\n".repeat(1024 * 1024 * 3).getBytes)
+  private val BIG_INPUT: Array[Byte] = "123456789\r\n".repeat(1024 * 1024 * 4).getBytes(StandardCharsets.UTF_8)
+  private val VALID_INPUT: Array[Byte] = "123456789\r\n".repeat(1024 * 1024).getBytes(StandardCharsets.UTF_8)
 }
 
 trait UploadContract {
@@ -61,7 +60,7 @@ trait UploadContract {
     val uploadResponse: String = `given`
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(VALID_INPUT_STREAM)
+      .body(VALID_INPUT)
     .when
       .post(s"/upload/$ACCOUNT_ID/")
     .`then`
@@ -72,7 +71,7 @@ trait UploadContract {
 
     val blobId: String = Json.parse(uploadResponse).\("blobId").get.asInstanceOf[JsString].value
 
-    val downloadResponse: String = `given`
+    val downloadResponse: Array[Byte] = `given`
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
     .when
@@ -81,12 +80,10 @@ trait UploadContract {
       .statusCode(SC_OK)
       .extract
       .body
-      .asString
+      .asByteArray()
 
-    val expectedResponse: String = IOUtils.toString(VALID_INPUT_STREAM, StandardCharsets.UTF_8)
-
-    assertThat(new ByteArrayInputStream(downloadResponse.getBytes(StandardCharsets.UTF_8)))
-      .hasContent(expectedResponse)
+    assertThat(new ByteArrayInputStream(downloadResponse))
+      .hasBinaryContent(VALID_INPUT)
   }
 
   @Test
@@ -94,7 +91,7 @@ trait UploadContract {
     `given`
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(VALID_INPUT_STREAM)
+      .body(VALID_INPUT)
     .when
       .post(s"/upload/$ALICE_ACCOUNT_ID/")
     .`then`
@@ -109,7 +106,7 @@ trait UploadContract {
     val uploadResponse: String = `given`
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(VALID_INPUT_STREAM)
+      .body(VALID_INPUT)
     .when
       .post(s"/upload/$ACCOUNT_ID/")
     .`then`
@@ -139,7 +136,7 @@ trait UploadContract {
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .contentType(ContentType.BINARY)
-      .body(BIG_INPUT_STREAM)
+      .body(BIG_INPUT)
     .when
       .post(s"/upload/$ACCOUNT_ID/")
     .`then`
@@ -157,7 +154,7 @@ trait UploadContract {
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .contentType(ContentType.BINARY)
-      .body(VALID_INPUT_STREAM)
+      .body(VALID_INPUT)
     .when
       .post(s"/upload/$ACCOUNT_ID/")
     .`then`
