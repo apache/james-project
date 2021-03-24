@@ -124,8 +124,8 @@ trait UploadContract {
     .when
       .get(s"/download/$ALICE_ACCOUNT_ID/$blobId")
     .`then`
-      .statusCode(SC_UNAUTHORIZED)
-      .body("status", equalTo(401))
+      .statusCode(SC_FORBIDDEN)
+      .body("status", equalTo(403))
       .body("type", equalTo("about:blank"))
       .body("detail", equalTo("You cannot download in others accounts"))
   }
