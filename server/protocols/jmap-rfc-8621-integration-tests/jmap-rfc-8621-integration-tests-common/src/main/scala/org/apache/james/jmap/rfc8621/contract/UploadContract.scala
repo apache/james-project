@@ -127,7 +127,7 @@ trait UploadContract {
       .statusCode(SC_UNAUTHORIZED)
       .body("status", equalTo(401))
       .body("type", equalTo("about:blank"))
-      .body("detail", equalTo("No valid authentication methods provided"))
+      .body("detail", equalTo("You cannot download in others accounts"))
   }
 
   @Test

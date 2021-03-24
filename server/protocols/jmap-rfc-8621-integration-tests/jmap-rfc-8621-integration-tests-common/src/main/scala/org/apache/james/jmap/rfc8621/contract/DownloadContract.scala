@@ -177,7 +177,7 @@ trait DownloadContract {
       .statusCode(SC_FORBIDDEN)
       .body("status", equalTo(403))
       .body("type", equalTo("about:blank"))
-      .body("detail", equalTo("You cannot upload in others accounts"))
+      .body("detail", equalTo("You cannot download in others accounts"))
   }
 
   @Test
