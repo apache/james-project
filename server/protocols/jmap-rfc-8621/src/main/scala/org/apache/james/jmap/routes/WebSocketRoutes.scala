@@ -35,6 +35,7 @@ import org.apache.james.jmap.api.change.{EmailChangeRepository, MailboxChangeRep
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeListener, TypeName, _}
 import org.apache.james.jmap.core.{OutboundMessage, ProblemDetails, RequestId, WebSocketError, WebSocketPushDisable, WebSocketPushEnable, WebSocketRequest, WebSocketResponse, _}
+import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
 import org.apache.james.jmap.json.ResponseSerializer
@@ -162,8 +163,10 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
       })
   }
 
-  private def handleHttpHandshakeError(throwable: Throwable, response: HttpServerResponse): SMono[Void] =
-    respondDetails(response, ProblemDetails.forThrowable(throwable))
+  private def handleHttpHandshakeError(throwable: Throwable, response: HttpServerResponse): SMono[Void] = throwable match {
+    case e: UnauthorizedException => respondDetails(e.addHeaders(response), ProblemDetails.forThrowable(throwable))
+    case _ => respondDetails(response, ProblemDetails.forThrowable(throwable))
+  }
 
   private def asError(requestId: Option[RequestId])(throwable: Throwable): WebSocketError =
     WebSocketError(requestId, ProblemDetails.forThrowable(throwable))

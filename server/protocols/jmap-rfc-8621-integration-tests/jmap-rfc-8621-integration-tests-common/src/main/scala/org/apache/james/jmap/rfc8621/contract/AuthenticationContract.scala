@@ -78,6 +78,7 @@ trait AuthenticationContract {
         .post
       .`then`
         .statusCode(SC_UNAUTHORIZED)
+        .header("WWW-Authenticate", "Basic realm=\"simple\", Bearer realm=\"JWT\"")
         .body("status", equalTo(401))
         .body("type", equalTo("about:blank"))
         .body("detail", equalTo("No valid authentication methods provided"))

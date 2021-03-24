@@ -16,26 +16,42 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.jmap.http;
 
-import org.apache.james.mailbox.MailboxSession;
+import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 
-import reactor.core.publisher.Mono;
-import reactor.netty.http.server.HttpServerRequest;
+public class AuthenticationScheme {
+    public static AuthenticationScheme of(String value) {
+        Preconditions.checkNotNull(value);
 
-public interface AuthenticationStrategy {
-    Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest);
+        return new AuthenticationScheme(value);
+    }
 
-    AuthenticationChallenge correspondingChallenge();
+    private final String value;
 
-    String AUTHORIZATION_HEADERS = "Authorization";
+    private AuthenticationScheme(String value) {
+        this.value = value;
+    }
 
-    default String authHeaders(HttpServerRequest httpRequest) {
-        Preconditions.checkArgument(httpRequest != null, "'httpRequest' is mandatory");
-        Preconditions.checkArgument(httpRequest.requestHeaders().getAll(AUTHORIZATION_HEADERS).size() <= 1, "Only one set of credential is allowed");
+    public String asString() {
+        return value;
+    }
 
-        return httpRequest.requestHeaders().get(AUTHORIZATION_HEADERS);
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof AuthenticationScheme) {
+            AuthenticationScheme that = (AuthenticationScheme) o;
+
+            return Objects.equals(this.value, that.value);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(value);
     }
 }

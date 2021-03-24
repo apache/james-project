@@ -16,26 +16,30 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.jmap.http;
 
-import org.apache.james.mailbox.MailboxSession;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
-import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
-import reactor.core.publisher.Mono;
-import reactor.netty.http.server.HttpServerRequest;
+public class AuthenticateHeader {
+    public static final String HEADER_NAME = "WWW-Authenticate";
 
-public interface AuthenticationStrategy {
-    Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest);
+    public static AuthenticateHeader of(Collection<AuthenticationChallenge> challenges) {
+        return new AuthenticateHeader(ImmutableList.copyOf(challenges));
+    }
 
-    AuthenticationChallenge correspondingChallenge();
+    private final ImmutableList<AuthenticationChallenge> challenges;
 
-    String AUTHORIZATION_HEADERS = "Authorization";
+    private AuthenticateHeader(ImmutableList<AuthenticationChallenge> challenges) {
+        this.challenges = challenges;
+    }
 
-    default String authHeaders(HttpServerRequest httpRequest) {
-        Preconditions.checkArgument(httpRequest != null, "'httpRequest' is mandatory");
-        Preconditions.checkArgument(httpRequest.requestHeaders().getAll(AUTHORIZATION_HEADERS).size() <= 1, "Only one set of credential is allowed");
-
-        return httpRequest.requestHeaders().get(AUTHORIZATION_HEADERS);
+    public String asHeaderValue() {
+        return challenges.stream()
+            .map(AuthenticationChallenge::asString)
+            .collect(Collectors.joining(", "));
     }
 }

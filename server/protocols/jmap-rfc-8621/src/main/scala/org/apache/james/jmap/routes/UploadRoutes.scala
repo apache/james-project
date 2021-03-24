@@ -100,12 +100,12 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
   def post(request: HttpServerRequest, response: HttpServerResponse): Mono[Void] = {
     request.requestHeaders.get(CONTENT_TYPE) match {
       case contentType => SMono.fromPublisher(
-        authenticator.authenticate(request))
+          authenticator.authenticate(request))
         .flatMap(session => post(request, response, ContentType.of(contentType), session))
         .onErrorResume {
           case e: UnauthorizedException =>
             LOGGER.warn("Unauthorized", e)
-            respondDetails(response,
+            respondDetails(e.addHeaders(response),
               ProblemDetails(status = UNAUTHORIZED, detail = e.getMessage),
               UNAUTHORIZED)
           case _: TooBigUploadException =>

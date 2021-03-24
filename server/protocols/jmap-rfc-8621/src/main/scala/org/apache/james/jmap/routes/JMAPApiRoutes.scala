@@ -31,6 +31,7 @@ import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.JMAP
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.{ProblemDetails, RequestObject}
+import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
 import org.apache.james.jmap.json.ResponseSerializer
@@ -100,8 +101,10 @@ class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
           StandardCharsets.UTF_8)
         .`then`()))
 
-  private def handleError(throwable: Throwable, response: HttpServerResponse): SMono[Void] =
-    respondDetails(response, ProblemDetails.forThrowable(throwable))
+  private def handleError(throwable: Throwable, response: HttpServerResponse): SMono[Void] = throwable match {
+    case e: UnauthorizedException => respondDetails(e.addHeaders(response), ProblemDetails.forThrowable(throwable))
+    case _ => respondDetails(response, ProblemDetails.forThrowable(throwable))
+  }
 
   private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails): SMono[Void] =
     SMono.fromPublisher(httpServerResponse.status(details.status)

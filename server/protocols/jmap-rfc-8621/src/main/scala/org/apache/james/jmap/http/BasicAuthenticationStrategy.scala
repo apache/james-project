@@ -38,6 +38,8 @@ import reactor.netty.http.server.HttpServerRequest
 
 import scala.util.{Failure, Success, Try}
 
+import scala.jdk.CollectionConverters._
+
 object UserCredential {
   type BasicAuthenticationHeaderValue = String Refined MatchesRegex["Basic [\\d\\w=]++"]
   type CredentialsAsString = String Refined MatchesRegex[".*:.*"]
@@ -88,7 +90,7 @@ case class UserCredential(username: Username, password: String)
 class BasicAuthenticationStrategy @Inject()(val usersRepository: UsersRepository,
                                             val mailboxManager: MailboxManager) extends AuthenticationStrategy {
 
-  override def createMailboxSession(httpRequest: HttpServerRequest): Mono[MailboxSession] = {
+  override def createMailboxSession(httpRequest: HttpServerRequest): Mono[MailboxSession] =
     SMono.fromCallable(() => authHeaders(httpRequest))
       .map(parseUserCredentials)
       .handle(publishNext)
@@ -96,7 +98,10 @@ class BasicAuthenticationStrategy @Inject()(val usersRepository: UsersRepository
       .map(_.username)
       .map(mailboxManager.createSystemSession)
       .asJava()
-  }
+
+
+  override def correspondingChallenge(): AuthenticationChallenge = AuthenticationChallenge.of(
+    AuthenticationScheme.of("Basic"), Map("realm" -> "simple").asJava)
 
   private def publishNext[T]: (Option[T], reactor.core.publisher.SynchronousSink[T]) => Unit =
     (maybeT, sink) => maybeT.foreach(t => sink.next(t))

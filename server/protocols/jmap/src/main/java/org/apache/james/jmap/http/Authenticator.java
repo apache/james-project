@@ -21,10 +21,11 @@ package org.apache.james.jmap.http;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.james.jmap.exceptions.UnauthorizedException;
+import org.apache.james.jmap.exceptions.NoAuthorizationSuppliedException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
@@ -55,6 +56,13 @@ public class Authenticator {
             Flux.fromIterable(authMethods)
                 .concatMap(auth -> auth.createMailboxSession(request))
                 .next()
-                .switchIfEmpty(Mono.error(new UnauthorizedException("No valid authentication methods provided")))));
+                .switchIfEmpty(Mono.error(noAuthSupplied()))));
+    }
+
+    private NoAuthorizationSuppliedException noAuthSupplied() {
+        return new NoAuthorizationSuppliedException(AuthenticateHeader.of(
+            authMethods.stream()
+                .map(AuthenticationStrategy::correspondingChallenge)
+                .collect(Guavate.toImmutableList())));
     }
 }

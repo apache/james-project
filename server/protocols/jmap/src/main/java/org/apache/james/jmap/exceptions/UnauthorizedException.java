@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.exceptions;
 
+import reactor.netty.http.server.HttpServerResponse;
+
 public class UnauthorizedException extends RuntimeException {
 
     public UnauthorizedException(String message) {
@@ -27,5 +29,9 @@ public class UnauthorizedException extends RuntimeException {
 
     public UnauthorizedException(String message, Throwable throwable) {
         super(message, throwable);
+    }
+
+    public HttpServerResponse addHeaders(HttpServerResponse response) {
+        return response;
     }
 }

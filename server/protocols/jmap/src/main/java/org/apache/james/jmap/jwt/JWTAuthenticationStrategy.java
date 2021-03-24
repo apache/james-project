@@ -23,6 +23,8 @@ import javax.inject.Named;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
+import org.apache.james.jmap.http.AuthenticationChallenge;
+import org.apache.james.jmap.http.AuthenticationScheme;
 import org.apache.james.jmap.http.AuthenticationStrategy;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
@@ -31,6 +33,7 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
@@ -73,5 +76,12 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
                 return username;
             })
             .map(mailboxManager::createSystemSession);
+    }
+
+    @Override
+    public AuthenticationChallenge correspondingChallenge() {
+        return AuthenticationChallenge.of(
+            AuthenticationScheme.of("Bearer"),
+            ImmutableMap.of("realm", "JWT"));
     }
 }

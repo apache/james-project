@@ -16,26 +16,23 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.http;
 
-import org.apache.james.mailbox.MailboxSession;
+package org.apache.james.jmap.exceptions;
 
-import com.google.common.base.Preconditions;
+import org.apache.james.jmap.http.AuthenticateHeader;
 
-import reactor.core.publisher.Mono;
-import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
 
-public interface AuthenticationStrategy {
-    Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest);
+public class NoAuthorizationSuppliedException extends UnauthorizedException {
+    private final AuthenticateHeader authenticateHeader;
 
-    AuthenticationChallenge correspondingChallenge();
+    public NoAuthorizationSuppliedException(AuthenticateHeader authenticateHeader) {
+        super("No valid authentication methods provided");
+        this.authenticateHeader = authenticateHeader;
+    }
 
-    String AUTHORIZATION_HEADERS = "Authorization";
-
-    default String authHeaders(HttpServerRequest httpRequest) {
-        Preconditions.checkArgument(httpRequest != null, "'httpRequest' is mandatory");
-        Preconditions.checkArgument(httpRequest.requestHeaders().getAll(AUTHORIZATION_HEADERS).size() <= 1, "Only one set of credential is allowed");
-
-        return httpRequest.requestHeaders().get(AUTHORIZATION_HEADERS);
+    @Override
+    public HttpServerResponse addHeaders(HttpServerResponse response) {
+        return response.addHeader(AuthenticateHeader.HEADER_NAME, authenticateHeader.asHeaderValue());
     }
 }

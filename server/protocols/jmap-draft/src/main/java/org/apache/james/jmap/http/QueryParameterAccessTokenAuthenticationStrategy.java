@@ -32,6 +32,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 
 import io.netty.handler.codec.http.QueryStringDecoder;
 import reactor.core.publisher.Mono;
@@ -57,6 +58,13 @@ public class QueryParameterAccessTokenAuthenticationStrategy implements Authenti
             .map(AttachmentAccessToken::getUsername)
             .map(Username::of)
             .map(mailboxManager::createSystemSession);
+    }
+
+    @Override
+    public AuthenticationChallenge correspondingChallenge() {
+        return AuthenticationChallenge.of(
+            AuthenticationScheme.of("QueryParameterBearer"),
+            ImmutableMap.of("realm", "JMAP Draft access token over Query parameter"));
     }
 
     private Optional<AttachmentAccessToken> getAccessToken(HttpServerRequest httpRequest) {

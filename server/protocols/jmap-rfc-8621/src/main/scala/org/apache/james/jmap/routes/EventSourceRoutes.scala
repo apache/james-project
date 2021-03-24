@@ -35,6 +35,7 @@ import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.EVENT_SOURCE
 import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeListener, TypeName}
 import org.apache.james.jmap.core.{OutboundMessage, PingMessage, ProblemDetails, StateChange}
+import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
 import org.apache.james.jmap.json.ResponseSerializer
@@ -215,8 +216,10 @@ class EventSourceRoutes@Inject() (@Named(InjectionKeys.RFC_8621) val authenticat
     s"event: $event\ndata: ${Json.stringify(ResponseSerializer.serialize(outboundMessage))}\n\n"
   }
 
-  private def handleConnectionEstablishmentError(throwable: Throwable, response: HttpServerResponse): SMono[Void] =
-    respondDetails(response, ProblemDetails.forThrowable(throwable))
+  private def handleConnectionEstablishmentError(throwable: Throwable, response: HttpServerResponse): SMono[Void] = throwable match {
+    case e: UnauthorizedException => respondDetails(e.addHeaders(response), ProblemDetails.forThrowable(throwable))
+    case _ => respondDetails(response, ProblemDetails.forThrowable(throwable))
+  }
 
   private def respondDetails(response: HttpServerResponse, details: ProblemDetails): SMono[Void] =
     SMono.fromPublisher(response.status(details.status)

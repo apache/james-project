@@ -225,7 +225,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
             FORBIDDEN)
         case e: UnauthorizedException =>
           LOGGER.warn("Unauthorized", e)
-          respondDetails(response,
+          respondDetails(e.addHeaders(response),
             ProblemDetails(status = UNAUTHORIZED, detail = e.getMessage),
             UNAUTHORIZED)
         case _: BlobNotFoundException =>

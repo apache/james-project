@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
@@ -38,6 +39,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
@@ -49,8 +51,22 @@ public class AuthenticatorTest {
     private static final String AUTHORIZATION_HEADERS = "Authorization";
     private static final Username USERNAME = Username.of("user@domain.tld");
 
-    private static final AuthenticationStrategy DENY = httpRequest -> Mono.error(new UnauthorizedException(null));
-    private static final AuthenticationStrategy ALLOW = httpRequest -> Mono.just(mock(MailboxSession.class));
+    public static AuthenticationStrategy asAuthStrategy(Function<HttpServerRequest, Mono<MailboxSession>> auth) {
+        return new AuthenticationStrategy() {
+            @Override
+            public Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest) {
+                return auth.apply(httpRequest);
+            }
+
+            @Override
+            public AuthenticationChallenge correspondingChallenge() {
+                return AuthenticationChallenge.of(AuthenticationScheme.of("Testing"), ImmutableMap.of());
+            }
+        };
+    }
+
+    private static final AuthenticationStrategy DENY = asAuthStrategy(httpRequest -> Mono.error(new UnauthorizedException(null)));
+    private static final AuthenticationStrategy ALLOW = asAuthStrategy(httpRequest -> Mono.just(mock(MailboxSession.class)));
 
     private HttpServerRequest mockedRequest;
     private HttpHeaders mockedHeaders;
@@ -96,7 +112,7 @@ public class AuthenticatorTest {
 
         testee = Authenticator.of(new RecordingMetricFactory(),
             ALLOW,
-            req -> Mono.fromRunnable(() -> called.set(true)));
+            asAuthStrategy(req -> Mono.fromRunnable(() -> called.set(true))));
         assertThat(called.get()).isFalse();
 
         testee.authenticate(mockedRequest).block();
