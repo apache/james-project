@@ -3732,6 +3732,10 @@
                                     <id>scala-compile-first</id>
                                     <phase>none</phase>
                                 </execution>
+                                <execution>
+                                    <id>scala-test-compile</id>
+                                    <phase>none</phase>
+                                </execution>
                             </executions>
                         </plugin>
                         <plugin>
