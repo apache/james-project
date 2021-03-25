@@ -33,6 +33,7 @@
     <name>Apache James :: Server :: Blob</name>
 
     <modules>
+        <module>blob-aes</module>
         <module>blob-api</module>
         <module>blob-cassandra</module>
         <module>blob-common</module>
