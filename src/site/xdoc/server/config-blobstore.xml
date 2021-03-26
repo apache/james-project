@@ -85,7 +85,41 @@
                         Maximum size of stored objects expressed in bytes.</dd>
                 </dl>
             </subsection>
+            <subsection name="Encryption choice">
+                <p>
+                    Data can be optionally encrypted with a symmetric key using AES before being stored in the blobStore. As many user relies
+                    on third party for object storage, a compromised third party will not escalate to a data disclosure. Of course, a
+                    performance price have to be paid, as encryption takes resources.
+                </p>
+                <dl>
+                    <dt><strong>encryption.aes.enable</strong></dt>
+                    <dd>Optional boolean, defaults to false</dd>
+                </dl>
+                <p>If AES encryption is enabled, then the following properties MUST be present:</p>
+                <dl>
+                    <dt><strong>encryption.aes.password</strong></dt>
+                    <dd>String</dd>
+                </dl>
+                <dl>
+                    <dt><strong>encryption.aes.salt</strong></dt>
+                    <dd>Hexadecimal string.</dd>
+                </dl>
+                <p><b>WARNING:</b> Once chosen this choice can not be reverted, all the data is either clear or encrypted. Mixed encryption
+                    is not supported.</p>
+                <p>
+                    Here is an example of how you can generate the above values (be mindful to customize the byte lengths in order to add
+                    enough entropy.
+                </p>
+                <pre>
+                    <code>
+# Password generation
+openssl rand -base64 64
 
+# Salt generation
+generate salt with : openssl rand -hex 16
+                    </code>
+                </pre>
+            </subsection>
             <subsection name="ObjectStorage BlobStore Buckets Configuration">
                 <dl>
                     <dt><strong>objectstorage.bucketPrefix</strong></dt>
