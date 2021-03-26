@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Added
+ - JAMES-3524 Support symmetric encryption support on top of BlobStore
+
 ## [3.6.0] - 2021-03-16
 
 ### Added
