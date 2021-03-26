@@ -22,13 +22,8 @@ package org.apache.james.blob.aes;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.GeneralSecurityException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
@@ -41,53 +36,37 @@ import org.reactivestreams.Publisher;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSource;
-import com.google.crypto.tink.Aead;
-import com.google.crypto.tink.aead.AeadConfig;
-import com.google.crypto.tink.subtle.AesGcmJce;
+import com.google.common.io.FileBackedOutputStream;
+import com.google.crypto.tink.subtle.AesGcmHkdfStreaming;
 
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class AESBlobStoreDAO implements BlobStoreDAO {
-    private static final byte[] EMPTY_ASSOCIATED_DATA = new byte[0];
-    private static final int PBKDF2_ITERATIONS = 65536;
-    private static final int KEY_SIZE = 256;
-    private static final String SECRET_KEY_FACTORY_ALGORITHM = "PBKDF2WithHmacSHA256";
-
+    // For now, aligned with with MimeMessageInputStreamSource file threshold, detailed benchmarking might be conducted to challenge this choice
+    public static final int FILE_THRESHOLD_100_KB = 100 * 1024;
     private final BlobStoreDAO underlying;
-    private final Aead aead;
+    private final AesGcmHkdfStreaming streamingAead;
 
     public AESBlobStoreDAO(BlobStoreDAO underlying, CryptoConfig cryptoConfig) {
         this.underlying = underlying;
-
-        try {
-            AeadConfig.register();
-
-            SecretKey secretKey = deriveKey(cryptoConfig);
-            aead = new AesGcmJce(secretKey.getEncoded());
-        } catch (GeneralSecurityException e) {
-            throw new RuntimeException("Error while starting AESPayloadCodec", e);
-        }
+        this.streamingAead = PBKDF2StreamingAeadFactory.newAesGcmHkdfStreaming(cryptoConfig);
     }
 
-    private static SecretKey deriveKey(CryptoConfig cryptoConfig) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        byte[] saltBytes = cryptoConfig.salt();
-        SecretKeyFactory skf = SecretKeyFactory.getInstance(SECRET_KEY_FACTORY_ALGORITHM);
-        PBEKeySpec spec = new PBEKeySpec(cryptoConfig.password(), saltBytes, PBKDF2_ITERATIONS, KEY_SIZE);
-        return skf.generateSecret(spec);
-    }
-
-    public byte[] encrypt(byte[] input) {
-        try {
-            return aead.encrypt(input, EMPTY_ASSOCIATED_DATA);
-        } catch (GeneralSecurityException e) {
+    public FileBackedOutputStream encrypt(InputStream input) {
+        try (FileBackedOutputStream encryptedContent = new FileBackedOutputStream(FILE_THRESHOLD_100_KB)) {
+            OutputStream outputStream = streamingAead.newEncryptingStream(encryptedContent, PBKDF2StreamingAeadFactory.EMPTY_ASSOCIATED_DATA);
+            input.transferTo(outputStream);
+            outputStream.close();
+            return encryptedContent;
+        } catch (GeneralSecurityException | IOException e) {
             throw new RuntimeException("Unable to build payload for object storage, failed to encrypt", e);
         }
     }
 
-    public byte[] decrypt(byte[] ciphertext) throws IOException {
+    public InputStream decrypt(InputStream ciphertext) throws IOException {
+        // We break symmetry and avoid allocating resources like files as we are not able, in higher level APIs (mailbox) to do resource cleanup.
         try {
-            return aead.decrypt(ciphertext, EMPTY_ASSOCIATED_DATA);
+            return streamingAead.newDecryptingStream(ciphertext, PBKDF2StreamingAeadFactory.EMPTY_ASSOCIATED_DATA);
         } catch (GeneralSecurityException e) {
             throw new IOException("Incorrect crypto setup", e);
         }
@@ -95,17 +74,19 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
 
     @Override
     public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
-        return Mono.from(underlying.readBytes(bucketName, blobId))
-            .map(Throwing.function(this::decrypt))
-            .map(ByteArrayInputStream::new)
-            .subscribeOn(Schedulers.elastic())
-            .block();
+        try {
+            return decrypt(underlying.read(bucketName, blobId));
+        } catch (IOException e) {
+            throw new ObjectStoreIOException("Error reading blob " + blobId.asString(), e);
+        }
     }
 
     @Override
     public Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
         return Mono.from(underlying.readBytes(bucketName, blobId))
-            .map(Throwing.function(this::decrypt));
+            .map(ByteArrayInputStream::new)
+            .map(Throwing.function(this::decrypt))
+            .map(Throwing.function(IOUtils::toByteArray));
     }
 
     @Override
@@ -114,10 +95,7 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
         Preconditions.checkNotNull(blobId);
         Preconditions.checkNotNull(data);
 
-        return Mono.just(data)
-            .flatMap(payload -> Mono.fromCallable(() -> encrypt(payload)).subscribeOn(Schedulers.parallel()))
-            .flatMap(encryptedPayload -> Mono.from(underlying.save(bucketName, blobId, encryptedPayload)))
-            .onErrorMap(e -> new ObjectStoreIOException("Exception occurred while saving bytearray", e));
+        return save(bucketName, blobId, new ByteArrayInputStream(data));
     }
 
     @Override
@@ -126,9 +104,10 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
         Preconditions.checkNotNull(blobId);
         Preconditions.checkNotNull(inputStream);
 
-        return Mono.just(inputStream)
-            .flatMap(data -> Mono.fromCallable(() -> IOUtils.toByteArray(inputStream)).subscribeOn(Schedulers.parallel()))
-            .flatMap(encryptedData -> Mono.from(save(bucketName, blobId, encryptedData)))
+        return Mono.using(
+                () -> encrypt(inputStream),
+                fileBackedOutputStream -> Mono.from(underlying.save(bucketName, blobId, fileBackedOutputStream.asByteSource())),
+                Throwing.consumer(FileBackedOutputStream::reset))
             .onErrorMap(e -> new ObjectStoreIOException("Exception occurred while saving bytearray", e));
     }
 
