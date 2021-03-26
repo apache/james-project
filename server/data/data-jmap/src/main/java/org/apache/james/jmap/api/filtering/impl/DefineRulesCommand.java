@@ -21,10 +21,12 @@ package org.apache.james.jmap.api.filtering.impl;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.Command;
 import org.apache.james.jmap.api.filtering.Rule;
+import org.apache.james.jmap.api.filtering.Version;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -33,17 +35,23 @@ public class DefineRulesCommand implements Command {
 
     private final Username username;
     private final List<Rule> rules;
+    private final Optional<Version> ifInState;
 
-    public DefineRulesCommand(Username username, List<Rule> rules) {
+    public DefineRulesCommand(Username username, List<Rule> rules, Optional<Version> ifInState) {
         Preconditions.checkNotNull(username);
         Preconditions.checkNotNull(rules);
 
         this.username = username;
         this.rules = rules;
+        this.ifInState = ifInState;
     }
 
     public List<Rule> getRules() {
         return rules;
+    }
+
+    public Optional<Version> getIfInState() {
+        return ifInState;
     }
 
     public Username getUsername() {
@@ -56,14 +64,15 @@ public class DefineRulesCommand implements Command {
             DefineRulesCommand that = (DefineRulesCommand) o;
 
             return Objects.equals(this.username, that.username)
-                && Objects.equals(this.rules, that.rules);
+                && Objects.equals(this.rules, that.rules)
+                && Objects.equals(this.ifInState, that.ifInState);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(username, rules);
+        return Objects.hash(username, rules, ifInState);
     }
 
     @Override
@@ -71,6 +80,7 @@ public class DefineRulesCommand implements Command {
         return MoreObjects.toStringHelper(this)
             .add("user", username)
             .add("rules", rules)
+            .add("ifInState", ifInState)
             .toString();
     }
 }

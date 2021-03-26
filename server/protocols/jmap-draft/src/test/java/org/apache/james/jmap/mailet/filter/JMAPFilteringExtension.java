@@ -26,6 +26,7 @@ import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_1_AD
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.mail.MessagingException;
@@ -116,7 +117,7 @@ public class JMAPFilteringExtension implements BeforeEachCallback, ParameterReso
                     .build())
                 .collect(ImmutableList.toImmutableList());
 
-            Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME, rules)).block();
+            Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME, rules, Optional.empty())).block();
         }
 
         public FakeMail asMail(MimeMessageBuilder mimeMessageBuilder) throws MessagingException {

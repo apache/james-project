@@ -46,7 +46,7 @@ public class DefineRulesCommandHandler implements CommandHandler<DefineRulesComm
         FilteringAggregateId aggregateId = new FilteringAggregateId(storeCommand.getUsername());
 
         return Mono.from(eventStore.getEventsOfAggregate(aggregateId))
-        .map(history -> FilteringAggregate.load(aggregateId, history).defineRules(storeCommand.getRules()));
+            .map(history -> FilteringAggregate.load(aggregateId, history).defineRules(storeCommand));
     }
 
 }
