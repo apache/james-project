@@ -29,7 +29,6 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConsisten
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.blob.cassandra.BlobTables;
 import org.apache.james.core.Domain;
-import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.RabbitMQExtension;
@@ -44,7 +43,6 @@ import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.SpoolerProbe;
 import org.apache.james.utils.TestIMAPClient;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.datastax.driver.core.Cluster;
@@ -62,7 +60,8 @@ public class WithCassandraPassThroughBlobStoreMutableTest implements MailsShould
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.cassandra()
-                .passthrough())
+                .passthrough()
+                .noCryptoConfig())
             .searchConfiguration(SearchConfiguration.elasticSearch())
             .build())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)

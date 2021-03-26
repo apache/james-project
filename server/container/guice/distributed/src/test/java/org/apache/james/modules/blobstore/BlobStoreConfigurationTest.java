@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.james.FakePropertiesProvider;
+import org.apache.james.blob.aes.CryptoConfig;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
 import org.apache.james.server.blob.deduplication.StorageStrategy;
 import org.junit.jupiter.api.Test;
@@ -67,6 +68,96 @@ class BlobStoreConfigurationTest {
     }
 
     @Test
+    void encryptionShouldRequirePassword() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", "s3");
+        configuration.addProperty("deduplication.enable", false);
+        configuration.addProperty("encryption.aes.enable", true);
+        // Hex.encode("salty".getBytes(StandardCharsets.UTF_8))
+        configuration.addProperty("encryption.aes.salt", "73616c7479");
+        FakePropertiesProvider propertyProvider = FakePropertiesProvider.builder()
+            .register(ConfigurationComponent.NAME, configuration)
+            .build();
+
+        assertThatThrownBy(() -> parse(propertyProvider))
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void encryptionShouldRequireSalt() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", "cassandra");
+        configuration.addProperty("deduplication.enable", false);
+        configuration.addProperty("encryption.aes.enable", true);
+        configuration.addProperty("encryption.aes.password", "salty");
+        FakePropertiesProvider propertyProvider = FakePropertiesProvider.builder()
+            .register(ConfigurationComponent.NAME, configuration)
+            .build();
+
+        assertThatThrownBy(() -> parse(propertyProvider))
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void encryptionShouldBeDisabledByDefault() throws Exception {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", "cassandra");
+        configuration.addProperty("deduplication.enable", false);
+        FakePropertiesProvider propertyProvider = FakePropertiesProvider.builder()
+            .register(ConfigurationComponent.NAME, configuration)
+            .build();
+
+        assertThat(parse(propertyProvider))
+            .isEqualTo(BlobStoreConfiguration.builder()
+                .cassandra()
+                .disableCache()
+                .passthrough()
+                .noCryptoConfig());
+    }
+
+    @Test
+    void encryptionShouldBeDisableable() throws Exception {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", "cassandra");
+        configuration.addProperty("deduplication.enable", false);
+        configuration.addProperty("encryption.aes.enable", false);
+        FakePropertiesProvider propertyProvider = FakePropertiesProvider.builder()
+            .register(ConfigurationComponent.NAME, configuration)
+            .build();
+
+        assertThat(parse(propertyProvider))
+            .isEqualTo(BlobStoreConfiguration.builder()
+                .cassandra()
+                .disableCache()
+                .passthrough()
+                .noCryptoConfig());
+    }
+
+    @Test
+    void encryptionCanBeActivated() throws Exception {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", "cassandra");
+        configuration.addProperty("deduplication.enable", false);
+        configuration.addProperty("encryption.aes.enable", true);
+        configuration.addProperty("encryption.aes.password", "myPass");
+        // Hex.encode("salty".getBytes(StandardCharsets.UTF_8))
+        configuration.addProperty("encryption.aes.salt", "73616c7479");
+        FakePropertiesProvider propertyProvider = FakePropertiesProvider.builder()
+            .register(ConfigurationComponent.NAME, configuration)
+            .build();
+
+        assertThat(parse(propertyProvider))
+            .isEqualTo(BlobStoreConfiguration.builder()
+                .cassandra()
+                .disableCache()
+                .passthrough()
+                .cryptoConfig(CryptoConfig.builder()
+                    .password("myPass".toCharArray())
+                    .salt("73616c7479")
+                    .build()));
+    }
+
+    @Test
     void provideChoosingConfigurationShouldThrowWhenPropertyFieldIsNotInSupportedList() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("implementation", "gabouzomeuh");
@@ -88,7 +179,8 @@ class BlobStoreConfigurationTest {
             .isEqualTo(BlobStoreConfiguration.builder()
                     .cassandra()
                     .disableCache()
-                    .passthrough());
+                    .passthrough()
+                    .noCryptoConfig());
     }
 
     @Test
@@ -104,7 +196,8 @@ class BlobStoreConfigurationTest {
             .isEqualTo(BlobStoreConfiguration.builder()
                     .s3()
                     .disableCache()
-                    .deduplication());
+                    .deduplication()
+                    .noCryptoConfig());
     }
 
     @Test
@@ -120,7 +213,8 @@ class BlobStoreConfigurationTest {
             .isEqualTo(BlobStoreConfiguration.builder()
                     .cassandra()
                     .disableCache()
-                    .passthrough());
+                    .passthrough()
+                    .noCryptoConfig());
     }
 
     @Test

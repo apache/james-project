@@ -79,7 +79,8 @@ public class RabbitMQAwsS3Stepdefs {
             .blobStore(BlobStoreConfiguration.builder()
                     .s3()
                     .disableCache()
-                    .deduplication())
+                    .deduplication()
+                    .noCryptoConfig())
             .searchConfiguration(SearchConfiguration.elasticSearch())
             .build();
 

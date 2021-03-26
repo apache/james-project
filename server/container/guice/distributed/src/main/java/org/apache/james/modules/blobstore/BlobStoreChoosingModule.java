@@ -28,7 +28,6 @@ import com.google.inject.multibindings.Multibinder;
 public class BlobStoreChoosingModule extends AbstractModule {
     @Override
     protected void configure() {
-
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(CassandraBlobModule.MODULE);
     }

@@ -64,7 +64,8 @@ public class CassandraRabbitMQAwsS3JmapTestRule implements TestRule {
             .blobStore(BlobStoreConfiguration.builder()
                     .s3()
                     .disableCache()
-                    .deduplication())
+                    .deduplication()
+                    .noCryptoConfig())
             .searchConfiguration(SearchConfiguration.elasticSearch())
             .build();
 

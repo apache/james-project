@@ -30,7 +30,8 @@ class BlobStoreCacheModulesChooserTest {
         assertThat(BlobStoreCacheModulesChooser.chooseModules(BlobStoreConfiguration.builder()
                     .s3()
                     .disableCache()
-                    .deduplication()))
+                    .deduplication()
+                    .noCryptoConfig()))
             .hasSize(1)
             .first()
             .isInstanceOf(BlobStoreCacheModulesChooser.CacheDisabledModule.class);
@@ -41,7 +42,8 @@ class BlobStoreCacheModulesChooserTest {
         assertThat(BlobStoreCacheModulesChooser.chooseModules(BlobStoreConfiguration.builder()
                 .s3()
                 .enableCache()
-                .deduplication()))
+                .deduplication()
+                .noCryptoConfig()))
             .hasSize(2)
             .allSatisfy(module ->
                 assertThat(module).isOfAnyClassIn(
