@@ -35,6 +35,33 @@ Consequently, all the requested deletions will not be performed, meaning that bl
 
 NOTE: If you are upgrading from James 3.5 or older, the deduplication was enabled.
 
+=== Encryption choice
+
+Data can be optionally encrypted with a symmetric key using AES before being stored in the blobStore. As many user relies
+on third party for object storage, a compromised third party will not escalate to a data disclosure. Of course, a
+performance price have to be paid, as encryption takes resources.
+
+*encryption.aes.enable* : Optional boolean, defaults to false.
+
+If AES encryption is enabled, then the following properties MUST be present:
+
+ - *encryption.aes.password* : String
+ - *encryption.aes.salt* : Hexadecimal string
+
+WARNING: Once chosen this choice can not be reverted, all the data is either clear or encrypted. Mixed encryption
+is not supported.
+
+Here is an example of how you can generate the above values (be mindful to customize the byte lengths in order to add
+enough entropy.
+
+....
+# Password generation
+openssl rand -base64 64
+
+# Salt generation
+generate salt with : openssl rand -hex 16
+....
+
 === Cassandra BlobStore Cache
 
 A Cassandra cache can be enabled to reduce latency when reading small blobs frequently.
