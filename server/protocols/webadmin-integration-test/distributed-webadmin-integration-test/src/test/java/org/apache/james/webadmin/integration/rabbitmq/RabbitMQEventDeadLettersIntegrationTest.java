@@ -87,6 +87,7 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
 @Tag(BasicFeature.TAG)
+@Tag(Unstable.TAG)
 class RabbitMQEventDeadLettersIntegrationTest {
     public static class RetryEventsListenerGroup extends Group {
     }
@@ -536,7 +537,6 @@ class RabbitMQEventDeadLettersIntegrationTest {
             .body(".", hasSize(0));
     }
 
-    @Tag(Unstable.TAG)
     @Test
     void multipleFailedEventsShouldBeCorrectlyProcessedByListenerAfterSuccessfulGroupRedelivery(RetryEventsListener retryEventsListener) {
         retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
