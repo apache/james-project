@@ -45,7 +45,8 @@ public class StorageStrategyValidationEventSourcingSystemTest {
     void startingForTheFirstTimeShouldSucceedWhenPassThrough() {
         StartUpCheck.CheckResult checkResult = testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
             .disableCache()
-            .passthrough());
+            .passthrough()
+            .noCryptoConfig());
 
         assertThat(checkResult.getResultType()).isEqualTo(StartUpCheck.ResultType.GOOD);
     }
@@ -54,7 +55,8 @@ public class StorageStrategyValidationEventSourcingSystemTest {
     void startingForTheFirstTimeShouldSucceedWhenDeduplication() {
         StartUpCheck.CheckResult checkResult = testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
             .disableCache()
-            .deduplication());
+            .deduplication()
+            .noCryptoConfig());
 
         assertThat(checkResult.getResultType()).isEqualTo(StartUpCheck.ResultType.GOOD);
     }
@@ -63,11 +65,13 @@ public class StorageStrategyValidationEventSourcingSystemTest {
     void startingShouldSucceedWhenTurningOnDeduplication() {
         testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
             .disableCache()
-            .passthrough());
+            .passthrough()
+            .noCryptoConfig());
 
         StartUpCheck.CheckResult checkResult = testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
             .disableCache()
-            .deduplication());
+            .deduplication()
+            .noCryptoConfig());
 
         assertThat(checkResult.getResultType()).isEqualTo(StartUpCheck.ResultType.GOOD);
     }
@@ -76,11 +80,13 @@ public class StorageStrategyValidationEventSourcingSystemTest {
     void startingShouldFailWhenTurningOffDeduplication() {
         testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
             .disableCache()
-            .deduplication());
+            .deduplication()
+            .noCryptoConfig());
 
         StartUpCheck.CheckResult checkResult = testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
             .disableCache()
-            .passthrough());
+            .passthrough()
+            .noCryptoConfig());
 
         assertThat(checkResult.getResultType()).isEqualTo(StartUpCheck.ResultType.BAD);
     }
@@ -89,10 +95,12 @@ public class StorageStrategyValidationEventSourcingSystemTest {
     void validatingSeveralTimeTheSameStrategyShouldNotAddEventsToTheHistory() {
         testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
             .disableCache()
-            .deduplication());
+            .deduplication()
+            .noCryptoConfig());
         testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
             .disableCache()
-            .deduplication());
+            .deduplication()
+            .noCryptoConfig());
 
         History history = Mono.from(eventStore.getEventsOfAggregate(RegisterStorageStrategyCommandHandler.AGGREGATE_ID)).block();
 

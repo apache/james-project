@@ -19,6 +19,9 @@
 
 package org.apache.james.blob.aes;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 import com.google.crypto.tink.subtle.Hex;
 
 public class CryptoConfig {
@@ -41,5 +44,21 @@ public class CryptoConfig {
 
     public char[] password() {
         return password;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof CryptoConfig) {
+            CryptoConfig that = (CryptoConfig) o;
+
+            return Objects.equals(this.salt, that.salt)
+                && Arrays.equals(this.password, that.password);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(salt, password);
     }
 }

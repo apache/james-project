@@ -17,38 +17,35 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.rfc8621.distributed;
+package org.apache.james;
 
-import org.apache.james.CassandraExtension;
-import org.apache.james.CassandraRabbitMQJamesConfiguration;
-import org.apache.james.CassandraRabbitMQJamesServerMain;
-import org.apache.james.DockerElasticSearchExtension;
-import org.apache.james.JamesServerBuilder;
-import org.apache.james.JamesServerExtension;
-import org.apache.james.jmap.rfc8621.contract.VacationResponseSetMethodContract;
-import org.apache.james.modules.AwsS3BlobStoreExtension;
+import org.apache.james.blob.aes.CryptoConfig;
+import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class DistributedVacationResponseSetMethodTest implements VacationResponseSetMethodContract {
+public class WithEncryptedBlobStoreImmutableTest implements JmapJamesServerContract, JamesServerContract {
     @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
         CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .blobStore(BlobStoreConfiguration.builder()
-                .s3()
-                .disableCache()
+            .blobStore(BlobStoreConfiguration.cassandra()
                 .deduplication()
-                .noCryptoConfig())
+                .cryptoConfig(CryptoConfig.builder()
+                    .password("myPass".toCharArray())
+                    // Hex.encode("salty".getBytes(StandardCharsets.UTF_8))
+                    .salt("73616c7479")
+                    .build()))
+            .searchConfiguration(SearchConfiguration.elasticSearch())
             .build())
+        .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
+            .overrideWith(new TestJMAPServerModule()))
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .extension(new RabbitMQExtension())
-        .extension(new AwsS3BlobStoreExtension())
-        .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }

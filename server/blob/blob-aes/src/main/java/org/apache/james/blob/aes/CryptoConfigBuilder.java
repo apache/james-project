@@ -41,8 +41,9 @@ public class CryptoConfigBuilder {
     }
 
     public CryptoConfig build() {
-        Preconditions.checkState(!Strings.isNullOrEmpty(salt));
-        Preconditions.checkState(password != null && password.length > 0);
+        Preconditions.checkState(!Strings.isNullOrEmpty(salt), "'salt' is mandatory and must not be empty");
+        Preconditions.checkState(password != null && password.length > 0, "'password' is mandatory and must not be empty");
+
         return new CryptoConfig(Hex.encode(Hex.decode(salt)), password);
     }
 }

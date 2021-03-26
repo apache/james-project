@@ -29,7 +29,6 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.EventStore;
-import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreExtension;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
 import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
@@ -38,7 +37,6 @@ import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.modules.blobstore.validation.EventsourcingStorageStrategy;
 import org.apache.james.modules.blobstore.validation.StorageStrategyModule;
-import org.apache.james.server.blob.deduplication.StorageStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -66,12 +64,14 @@ class BlobStoreConfigurationValidationStartUpCheckTest {
             .builder()
             .cassandra()
             .disableCache()
-            .deduplication();
+            .deduplication()
+            .noCryptoConfig();
     private static BlobStoreConfiguration PASSTHROUGH_STRATEGY = BlobStoreConfiguration
             .builder()
             .cassandra()
             .disableCache()
-            .passthrough();
+            .passthrough()
+            .noCryptoConfig();
 
     private EventsourcingStorageStrategy eventsourcingStorageStrategy;
 

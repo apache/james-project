@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.james.blob.aes.CryptoConfig;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
 import org.apache.james.server.blob.deduplication.StorageStrategy;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
@@ -71,19 +72,33 @@ public class BlobStoreConfiguration {
 
     @FunctionalInterface
     public interface RequireStoringStrategy {
-        BlobStoreConfiguration strategy(StorageStrategy storageStrategy);
+        RequireCryptoConfig strategy(StorageStrategy storageStrategy);
 
-        default BlobStoreConfiguration passthrough() {
+        default RequireCryptoConfig passthrough() {
             return strategy(StorageStrategy.PASSTHROUGH);
         }
 
-        default BlobStoreConfiguration deduplication() {
+        default RequireCryptoConfig deduplication() {
             return strategy(StorageStrategy.DEDUPLICATION);
         }
     }
 
+    @FunctionalInterface
+    public interface RequireCryptoConfig {
+        BlobStoreConfiguration cryptoConfig(Optional<CryptoConfig> cryptoConfig);
+
+        default BlobStoreConfiguration noCryptoConfig() {
+            return cryptoConfig(Optional.empty());
+        }
+
+        default BlobStoreConfiguration cryptoConfig(CryptoConfig cryptoConfig) {
+            return cryptoConfig(Optional.of(cryptoConfig));
+        }
+    }
+
     public static RequireImplementation builder() {
-        return implementation -> enableCache -> storageStrategy -> new BlobStoreConfiguration(implementation, enableCache, storageStrategy);
+        return implementation -> enableCache -> storageStrategy -> cryptoConfig ->
+            new BlobStoreConfiguration(implementation, enableCache, storageStrategy, cryptoConfig);
     }
 
     public enum BlobStoreImplName {
@@ -117,6 +132,9 @@ public class BlobStoreConfiguration {
 
     static final String BLOBSTORE_IMPLEMENTATION_PROPERTY = "implementation";
     static final String CACHE_ENABLE_PROPERTY = "cache.enable";
+    static final String ENCRYPTION_ENABLE_PROPERTY = "encryption.aes.enable";
+    static final String ENCRYPTION_PASSWORD_PROPERTY = "encryption.aes.password";
+    static final String ENCRYPTION_SALT_PROPERTY = "encryption.aes.salt";
     static final boolean CACHE_ENABLED = true;
     static final String DEDUPLICATION_ENABLE_PROPERTY = "deduplication.enable";
 
@@ -134,9 +152,10 @@ public class BlobStoreConfiguration {
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find " + ConfigurationComponent.NAME + " configuration file, using cassandra blobstore as the default");
             return BlobStoreConfiguration.builder()
-                    .cassandra()
-                    .disableCache()
-                    .passthrough();
+                .cassandra()
+                .disableCache()
+                .passthrough()
+                .noCryptoConfig();
         }
     }
 
@@ -155,12 +174,32 @@ public class BlobStoreConfiguration {
                         "Warning: Once this feature is enabled, there is no turning back as turning it off will lead to the deletion of all\n" +
                         "the mails sharing the same content once one is deleted.\n" +
                         "Upgrade note: If you are upgrading from James 3.5 or older, the deduplication was enabled."));
+        Optional<CryptoConfig> cryptoConfig = parseCryptoConfig(configuration);
 
         if (deduplicationEnabled) {
-            return new BlobStoreConfiguration(blobStoreImplName, cacheEnabled, StorageStrategy.DEDUPLICATION);
+            return builder()
+                .implementation(blobStoreImplName)
+                .enableCache(cacheEnabled)
+                .deduplication()
+                .cryptoConfig(cryptoConfig);
         } else {
-            return new BlobStoreConfiguration(blobStoreImplName, cacheEnabled, StorageStrategy.PASSTHROUGH);
+            return builder()
+                .implementation(blobStoreImplName)
+                .enableCache(cacheEnabled)
+                .passthrough()
+                .cryptoConfig(cryptoConfig);
         }
+    }
+
+    private static Optional<CryptoConfig> parseCryptoConfig(Configuration configuration) {
+        final boolean enabled = configuration.getBoolean(ENCRYPTION_ENABLE_PROPERTY, false);
+        if (enabled) {
+            return Optional.of(CryptoConfig.builder()
+                .password(Optional.ofNullable(configuration.getString(ENCRYPTION_PASSWORD_PROPERTY, null)).map(String::toCharArray).orElse(null))
+                .salt(configuration.getString(ENCRYPTION_SALT_PROPERTY, null))
+                .build());
+        }
+        return Optional.empty();
     }
 
     @VisibleForTesting
@@ -177,11 +216,13 @@ public class BlobStoreConfiguration {
     private final BlobStoreImplName implementation;
     private final boolean cacheEnabled;
     private final StorageStrategy storageStrategy;
+    private final Optional<CryptoConfig> cryptoConfig;
 
-    BlobStoreConfiguration(BlobStoreImplName implementation, boolean cacheEnabled, StorageStrategy storageStrategy) {
+    BlobStoreConfiguration(BlobStoreImplName implementation, boolean cacheEnabled, StorageStrategy storageStrategy, Optional<CryptoConfig> cryptoConfig) {
         this.implementation = implementation;
         this.cacheEnabled = cacheEnabled;
         this.storageStrategy = storageStrategy;
+        this.cryptoConfig = cryptoConfig;
     }
 
     public boolean cacheEnabled() {
@@ -196,6 +237,10 @@ public class BlobStoreConfiguration {
         return implementation;
     }
 
+    public Optional<CryptoConfig> getCryptoConfig() {
+        return cryptoConfig;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof BlobStoreConfiguration) {
@@ -203,14 +248,15 @@ public class BlobStoreConfiguration {
 
             return Objects.equals(this.implementation, that.implementation)
                 && Objects.equals(this.cacheEnabled, that.cacheEnabled)
-                && Objects.equals(this.storageStrategy, that.storageStrategy);
+                && Objects.equals(this.storageStrategy, that.storageStrategy)
+                && Objects.equals(this.cryptoConfig, that.cryptoConfig);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(implementation, cacheEnabled, storageStrategy);
+        return Objects.hash(implementation, cacheEnabled, storageStrategy, cryptoConfig);
     }
 
     @Override
@@ -219,6 +265,7 @@ public class BlobStoreConfiguration {
             .add("implementation", implementation)
             .add("cacheEnabled", cacheEnabled)
             .add("storageStrategy", storageStrategy.name())
+            .add("cryptoConfig", cryptoConfig)
             .toString();
     }
 }

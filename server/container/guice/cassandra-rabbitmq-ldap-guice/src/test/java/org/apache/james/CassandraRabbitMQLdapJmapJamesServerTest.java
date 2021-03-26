@@ -59,7 +59,8 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
         @RegisterExtension
         JamesServerExtension testExtension = baseJamesServerExtensionBuilder(BlobStoreConfiguration.s3()
                 .disableCache()
-                .passthrough())
+                .passthrough()
+                .noCryptoConfig())
             .extension(new AwsS3BlobStoreExtension())
             .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
             .build();
@@ -72,7 +73,8 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
         JamesServerExtension testExtension = baseJamesServerExtensionBuilder(BlobStoreConfiguration.builder()
                 .cassandra()
                 .disableCache()
-                .passthrough())
+                .passthrough()
+                .noCryptoConfig())
             .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
             .build();
     }

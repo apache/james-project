@@ -21,6 +21,7 @@ package org.apache.james.modules.blobstore;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.blob.aes.CryptoConfig;
 import org.junit.jupiter.api.Test;
 
 class BlobStoreModulesChooserTest {
@@ -30,9 +31,10 @@ class BlobStoreModulesChooserTest {
         assertThat(BlobStoreModulesChooser.chooseModules(BlobStoreConfiguration.builder()
                     .s3()
                     .disableCache()
-                    .deduplication()))
-            .first()
-            .isInstanceOf(BlobStoreModulesChooser.ObjectStorageBlobStoreDAODeclarationModule.class);
+                    .deduplication()
+                    .noCryptoConfig()))
+            .filteredOn(module -> module instanceof BlobStoreModulesChooser.ObjectStorageBlobStoreDAODeclarationModule)
+            .hasSize(1);
     }
 
     @Test
@@ -40,8 +42,35 @@ class BlobStoreModulesChooserTest {
         assertThat(BlobStoreModulesChooser.chooseModules(BlobStoreConfiguration.builder()
                 .cassandra()
                 .disableCache()
-                .passthrough()))
-            .first()
-            .isInstanceOf(BlobStoreModulesChooser.CassandraBlobStoreDAODeclarationModule.class);
+                .passthrough()
+                .noCryptoConfig()))
+            .filteredOn(module -> module instanceof BlobStoreModulesChooser.CassandraBlobStoreDAODeclarationModule)
+            .hasSize(1);
+    }
+
+    @Test
+    void provideBlobStoreShouldReturnNoEncryptionWhenNoneConfigured() {
+        assertThat(BlobStoreModulesChooser.chooseModules(BlobStoreConfiguration.builder()
+                    .s3()
+                    .disableCache()
+                    .deduplication()
+                    .noCryptoConfig()))
+            .filteredOn(module -> module instanceof BlobStoreModulesChooser.NoEncryptionModule)
+            .hasSize(1);
+    }
+
+    @Test
+    void provideBlobStoreShouldReturnEncryptionWhenConfigured() {
+        assertThat(BlobStoreModulesChooser.chooseModules(BlobStoreConfiguration.builder()
+                .cassandra()
+                .disableCache()
+                .passthrough()
+                .cryptoConfig(CryptoConfig.builder()
+                    .password("myPass".toCharArray())
+                    // Hex.encode("salty".getBytes(StandardCharsets.UTF_8))
+                    .salt("73616c7479")
+                    .build())))
+            .filteredOn(module -> module instanceof BlobStoreModulesChooser.EncryptionModule)
+            .hasSize(1);
     }
 }
