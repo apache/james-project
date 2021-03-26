@@ -67,7 +67,7 @@ pipeline {
 
                                     sh 'sleep 10'
 
-                                    sh 'docker run -d --name=elasticsearch -p 9200:9200 -v /srv/bench-running-docker/elasticsearch:/usr/share/elasticsearch/data  --env "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:6.3.2'
+                                    sh 'docker run -d --name=elasticsearch -p 9200:9200 -v /srv/bench-running-docker/elasticsearch:/usr/share/elasticsearch/data  --env "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.10.2'
 
                                     sh 'sleep 10'
 
@@ -87,7 +87,7 @@ pipeline {
                                     break
                                 case "s3-local":
                                     sh 'docker run -d --name=cassandra -p 9042:9042 cassandra:3.11.10'
-                                    sh 'docker run -d --name=elasticsearch -p 9200:9200 --env "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:6.3.2'
+                                    sh 'docker run -d --name=elasticsearch -p 9200:9200 --env "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.10.2'
                                     sh 'docker run -d --name=tika apache/tika:1.24'
                                     sh 'docker run -d --env "REMOTE_MANAGEMENT_DISABLE=1" --env "SCALITY_ACCESS_KEY_ID=accessKey1" --env "SCALITY_SECRET_ACCESS_KEY=secretKey1" --name=s3 zenko/cloudserver:8.2.6'
                                     sh 'docker run -d --name=rabbitmq -p 15672:15672 -p 5672:5672 rabbitmq:3.8.1-management'
@@ -96,7 +96,7 @@ pipeline {
                                     break
                                 case "s3":
                                     sh 'docker run -d --name=cassandra -p 9042:9042 cassandra:3.11.10'
-                                    sh 'docker run -d --name=elasticsearch -p 9200:9200 --env "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:6.3.2'
+                                    sh 'docker run -d --name=elasticsearch -p 9200:9200 --env "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.10.2'
                                     sh 'docker run -d --name=tika apache/tika:1.24'
                                     sh 'docker run -d --name=rabbitmq -p 15672:15672 -p 5672:5672 rabbitmq:3.8.1-management'
 
