@@ -22,7 +22,6 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.core.Username;
-import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
@@ -42,22 +41,34 @@ public abstract class AbstractSenderAuthIdentifyVerificationRcptHook implements 
         .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH)
             + " Incorrect Authentication for Specified Email Address")
         .build();
+    private static final HookResult AUTH_REQUIRED = HookResult.builder()
+        .hookReturnCode(HookReturnCode.deny())
+        .smtpReturnCode(SMTPRetCode.AUTH_REQUIRED)
+        .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH)
+            + " Authentication Required")
+        .build();
     
     @Override
     public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
         if (session.getUsername() != null) {
-            MaybeSender senderAddress = session.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction).orElse(MaybeSender.nullSender());
-            
             // Check if the sender address is the same as the user which was used to authenticate.
             // Its important to ignore case here to fix JAMES-837. This is save todo because if the handler is called
             // the user was already authenticated
+
             if (isAnonymous(sender)
                 || !senderMatchSessionUser(sender, session)
-                || !belongsToLocalDomain(senderAddress)) {
+                || !belongsToLocalDomain(sender)) {
                 return INVALID_AUTH;
             }
+            return HookResult.DECLINED;
+        } else {
+            // Validate that unauthenticated users do not use local addresses in MAIL FROM
+            if (belongsToLocalDomain(sender)) {
+                return AUTH_REQUIRED;
+            } else {
+                return HookResult.DECLINED;
+            }
         }
-        return HookResult.DECLINED;
     }
 
     private boolean isAnonymous(MaybeSender maybeSender) {
