@@ -80,6 +80,18 @@ class SmtpIdentityVerificationTest {
     }
 
     @Test
+    void rejectUnauthenticatedSendersUsingLocalDomains(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .requireAuthentication()
+            .verifyIdentity());
+
+        assertThatThrownBy(() ->
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .sendMessage(USER, USER))
+            .isEqualTo(new SMTPSendingException(SmtpSendingStep.RCPT, "530 5.7.1 Authentication Required\n"));
+    }
+
+    @Test
     void smtpShouldAcceptMessageWhenIdentityIsNotMatchingButNotChecked(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()
