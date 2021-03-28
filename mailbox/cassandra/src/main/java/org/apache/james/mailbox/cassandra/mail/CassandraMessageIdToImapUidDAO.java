@@ -57,6 +57,7 @@ import org.apache.james.mailbox.cassandra.ids.CassandraMessageId.Factory;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 
+import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
@@ -103,6 +104,7 @@ public class CassandraMessageIdToImapUidDAO {
                                           CassandraMessageId.Factory messageIdFactory) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.consistenciesConfiguration = consistenciesConfiguration;
+        this.cassandraConfiguration = cassandraConfiguration;
         this.messageIdFactory = messageIdFactory;
         this.delete = prepareDelete(session);
         this.insert = prepareInsert(session);
@@ -197,20 +199,28 @@ public class CassandraMessageIdToImapUidDAO {
     public Mono<Boolean> updateMetadata(ComposedMessageIdWithMetaData composedMessageIdWithMetaData, ModSeq oldModSeq) {
         ComposedMessageId composedMessageId = composedMessageIdWithMetaData.getComposedMessageId();
         Flags flags = composedMessageIdWithMetaData.getFlags();
-        return cassandraAsyncExecutor.executeReturnApplied(update.bind()
-                .setLong(MOD_SEQ, composedMessageIdWithMetaData.getModSeq().asLong())
-                .setBool(ANSWERED, flags.contains(Flag.ANSWERED))
-                .setBool(DELETED, flags.contains(Flag.DELETED))
-                .setBool(DRAFT, flags.contains(Flag.DRAFT))
-                .setBool(FLAGGED, flags.contains(Flag.FLAGGED))
-                .setBool(RECENT, flags.contains(Flag.RECENT))
-                .setBool(SEEN, flags.contains(Flag.SEEN))
-                .setBool(USER, flags.contains(Flag.USER))
-                .setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags()))
-                .setUUID(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
-                .setUUID(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
-                .setLong(IMAP_UID, composedMessageId.getUid().asLong())
-                .setLong(MOD_SEQ_CONDITION, oldModSeq.asLong()));
+        return cassandraAsyncExecutor.executeReturnApplied(updateBoundStatement(composedMessageIdWithMetaData, composedMessageId, flags, oldModSeq));
+    }
+
+    private BoundStatement updateBoundStatement(ComposedMessageIdWithMetaData composedMessageIdWithMetaData, ComposedMessageId composedMessageId, Flags flags,
+                                                ModSeq oldModSeq) {
+        final BoundStatement boundStatement = update.bind()
+            .setLong(MOD_SEQ, composedMessageIdWithMetaData.getModSeq().asLong())
+            .setBool(ANSWERED, flags.contains(Flag.ANSWERED))
+            .setBool(DELETED, flags.contains(Flag.DELETED))
+            .setBool(DRAFT, flags.contains(Flag.DRAFT))
+            .setBool(FLAGGED, flags.contains(Flag.FLAGGED))
+            .setBool(RECENT, flags.contains(Flag.RECENT))
+            .setBool(SEEN, flags.contains(Flag.SEEN))
+            .setBool(USER, flags.contains(Flag.USER))
+            .setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags()))
+            .setUUID(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
+            .setUUID(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
+            .setLong(IMAP_UID, composedMessageId.getUid().asLong());
+        if (cassandraConfiguration.isMessageWriteStrongConsistency()) {
+            return boundStatement.setLong(MOD_SEQ_CONDITION, oldModSeq.asLong());
+        }
+        return boundStatement;
     }
 
     public Flux<ComposedMessageIdWithMetaData> retrieve(CassandraMessageId messageId, Optional<CassandraId> mailboxId, ConsistencyChoice readConsistencyChoice) {

@@ -74,6 +74,7 @@ public class CassandraConfiguration {
     private static final String ATTACHMENT_V2_MIGRATION_READ_TIMEOUT = "attachment.v2.migration.read.timeout";
     private static final String MESSAGE_ATTACHMENTID_READ_TIMEOUT = "message.attachmentids.read.timeout";
     private static final String MESSAGE_READ_STRONG_CONSISTENCY = "message.read.strong.consistency";
+    private static final String MESSAGE_WRITE_STRONG_CONSISTENCY = "message.write.strong.consistency.unsafe";
     private static final String CONSISTENCY_LEVEL_REGULAR = "cassandra.consistency_level.regular";
     private static final String CONSISTENCY_LEVEL_LIGHTWEIGHT_TRANSACTION = "cassandra.consistency_level.lightweight_transaction";
 
@@ -97,6 +98,7 @@ public class CassandraConfiguration {
         private Optional<Float> mailboxCountersReadRepairMax = Optional.empty();
         private Optional<Float> mailboxCountersReadRepairChanceOneHundred = Optional.empty();
         private Optional<Boolean> messageReadStrongConsistency = Optional.empty();
+        private Optional<Boolean> messageWriteStrongConsistency = Optional.empty();
 
         public Builder messageReadStrongConsistency(boolean value) {
             this.messageReadStrongConsistency = Optional.of(value);
@@ -105,6 +107,16 @@ public class CassandraConfiguration {
 
         public Builder messageReadStrongConsistency(Optional<Boolean> value) {
             this.messageReadStrongConsistency = value;
+            return this;
+        }
+
+        public Builder messageWriteStrongConsistency(boolean value) {
+            this.messageWriteStrongConsistency = Optional.of(value);
+            return this;
+        }
+
+        public Builder messageWriteStrongConsistency(Optional<Boolean> value) {
+            this.messageWriteStrongConsistency = value;
             return this;
         }
 
@@ -314,7 +326,8 @@ public class CassandraConfiguration {
                 mailboxReadRepair.orElse(DEFAULT_MAILBOX_READ_REPAIR),
                 mailboxCountersReadRepairMax.orElse(DEFAULT_MAX_MAILBOX_COUNTERS_READ_REPAIR_CHANCE),
                 mailboxCountersReadRepairChanceOneHundred.orElse(DEFAULT_ONE_HUNDRED_MAILBOX_COUNTERS_READ_REPAIR_CHANCE),
-                messageReadStrongConsistency.orElse(DEFAULT_STRONG_CONSISTENCY));
+                messageReadStrongConsistency.orElse(DEFAULT_STRONG_CONSISTENCY),
+                messageWriteStrongConsistency.orElse(DEFAULT_STRONG_CONSISTENCY));
         }
     }
 
@@ -358,6 +371,8 @@ public class CassandraConfiguration {
                 propertiesConfiguration.getFloat(MAILBOX_ONE_HUNDRED_COUNTERS_READ_REPAIR, null)))
             .messageReadStrongConsistency(Optional.ofNullable(
                 propertiesConfiguration.getBoolean(MESSAGE_READ_STRONG_CONSISTENCY, null)))
+            .messageWriteStrongConsistency(Optional.ofNullable(
+                propertiesConfiguration.getBoolean(MESSAGE_WRITE_STRONG_CONSISTENCY, null)))
             .build();
     }
 
@@ -378,6 +393,7 @@ public class CassandraConfiguration {
     private final float mailboxCountersReadRepairChanceMax;
     private final float mailboxCountersReadRepairChanceOneHundred;
     private final boolean messageReadStrongConsistency;
+    private final boolean messageWriteStrongConsistency;
 
     @VisibleForTesting
     CassandraConfiguration(int aclMaxRetry, int messageReadChunkSize, int expungeChunkSize,
@@ -386,7 +402,8 @@ public class CassandraConfiguration {
                            int blobPartSize, final int attachmentV2MigrationReadTimeout, int messageAttachmentIdsReadTimeout,
                            String consistencyLevelRegular, String consistencyLevelLightweightTransaction,
                            float mailboxReadRepair, float mailboxCountersReadRepairChanceMax,
-                           float mailboxCountersReadRepairChanceOneHundred, boolean messageReadStrongConsistency) {
+                           float mailboxCountersReadRepairChanceOneHundred, boolean messageReadStrongConsistency,
+                           boolean messageWriteStrongConsistency) {
         this.aclMaxRetry = aclMaxRetry;
         this.messageReadChunkSize = messageReadChunkSize;
         this.expungeChunkSize = expungeChunkSize;
@@ -404,6 +421,11 @@ public class CassandraConfiguration {
         this.mailboxCountersReadRepairChanceMax = mailboxCountersReadRepairChanceMax;
         this.mailboxCountersReadRepairChanceOneHundred = mailboxCountersReadRepairChanceOneHundred;
         this.messageReadStrongConsistency = messageReadStrongConsistency;
+        this.messageWriteStrongConsistency = messageWriteStrongConsistency;
+    }
+
+    public boolean isMessageWriteStrongConsistency() {
+        return messageWriteStrongConsistency;
     }
 
     public boolean isMessageReadStrongConsistency() {
