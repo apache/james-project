@@ -70,14 +70,14 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraMessageIdToImapUidDAO {
-    public enum ReadConsistency {
+    public enum ConsistencyChoice {
         STRONG(CassandraConsistenciesConfiguration::getLightweightTransaction),
         WEAK(CassandraConsistenciesConfiguration::getRegular);
 
         private final Function<CassandraConsistenciesConfiguration, ConsistencyLevel> consistencyLevelChoice;
 
 
-        ReadConsistency(Function<CassandraConsistenciesConfiguration, ConsistencyLevel> consistencyLevelChoice) {
+        ConsistencyChoice(Function<CassandraConsistenciesConfiguration, ConsistencyLevel> consistencyLevelChoice) {
             this.consistencyLevelChoice = consistencyLevelChoice;
         }
 
@@ -213,16 +213,16 @@ public class CassandraMessageIdToImapUidDAO {
                 .setLong(MOD_SEQ_CONDITION, oldModSeq.asLong()));
     }
 
-    public Flux<ComposedMessageIdWithMetaData> retrieve(CassandraMessageId messageId, Optional<CassandraId> mailboxId, ReadConsistency readConsistency) {
+    public Flux<ComposedMessageIdWithMetaData> retrieve(CassandraMessageId messageId, Optional<CassandraId> mailboxId, ConsistencyChoice readConsistencyChoice) {
         return cassandraAsyncExecutor.executeRows(
                     selectStatement(messageId, mailboxId)
-                    .setConsistencyLevel(readConsistency.choose(consistenciesConfiguration)))
+                    .setConsistencyLevel(readConsistencyChoice.choose(consistenciesConfiguration)))
                 .map(this::toComposedMessageIdWithMetadata);
     }
 
     @VisibleForTesting
     public Flux<ComposedMessageIdWithMetaData> retrieve(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
-        return retrieve(messageId, mailboxId, ReadConsistency.STRONG);
+        return retrieve(messageId, mailboxId, ConsistencyChoice.STRONG);
     }
 
     public Flux<ComposedMessageIdWithMetaData> retrieveAllMessages() {
