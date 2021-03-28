@@ -28,6 +28,7 @@ import javax.mail.Flags;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MessageUid;
@@ -95,7 +96,8 @@ class RecomputeMailboxCountersServiceTest {
         messageIdToImapUidDAO = new CassandraMessageIdToImapUidDAO(
             cassandra.getConf(),
             cassandraCluster.getCassandraConsistenciesConfiguration(),
-            MESSAGE_ID_FACTORY);
+            MESSAGE_ID_FACTORY,
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
         counterDAO = new CassandraMailboxCounterDAO(cassandra.getConf());
         testee = new RecomputeMailboxCountersService(mailboxDAO, imapUidToMessageIdDAO, messageIdToImapUidDAO, counterDAO);
     }

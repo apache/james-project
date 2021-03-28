@@ -661,7 +661,7 @@ public abstract class MessageIdMapperTest {
     }
 
     @Test
-    void setFlagsShouldWorkWithConcurrencyWithAdd() throws Exception {
+    public void setFlagsShouldWorkWithConcurrencyWithAdd() throws Exception {
         Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.THREAD_SAFE_FLAGS_UPDATE));
         message1.setUid(mapperProvider.generateMessageUid());
         message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
@@ -684,7 +684,7 @@ public abstract class MessageIdMapperTest {
     }
 
     @Test
-    void setFlagsShouldWorkWithConcurrencyWithRemove() throws Exception {
+    public void setFlagsShouldWorkWithConcurrencyWithRemove() throws Exception {
         Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.THREAD_SAFE_FLAGS_UPDATE));
         message1.setUid(mapperProvider.generateMessageUid());
         message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));

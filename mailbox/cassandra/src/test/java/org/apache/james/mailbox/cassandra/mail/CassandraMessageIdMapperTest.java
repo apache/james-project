@@ -64,7 +64,8 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
     protected CassandraMapperProvider provideMapper() {
         return new CassandraMapperProvider(
             cassandraCluster.getCassandraCluster(),
-            cassandraCluster.getCassandraConsistenciesConfiguration());
+            cassandraCluster.getCassandraConsistenciesConfiguration(),
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     @Test

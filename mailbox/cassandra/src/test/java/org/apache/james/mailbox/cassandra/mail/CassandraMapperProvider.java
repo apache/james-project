@@ -56,14 +56,15 @@ public class CassandraMapperProvider implements MapperProvider {
     private CassandraMailboxSessionMapperFactory mapperFactory;
 
     public CassandraMapperProvider(CassandraCluster cassandra,
-                                   CassandraConsistenciesConfiguration cassandraConsistenciesConfiguration) {
+                                   CassandraConsistenciesConfiguration cassandraConsistenciesConfiguration,
+                                   CassandraConfiguration cassandraConfiguration) {
         this.cassandra = cassandra;
         messageUidProvider = new MessageUidProvider();
         cassandraModSeqProvider = new CassandraModSeqProvider(
                 this.cassandra.getConf(),
-                CassandraConfiguration.DEFAULT_CONFIGURATION,
+                cassandraConfiguration,
                 cassandraConsistenciesConfiguration);
-        mapperFactory = createMapperFactory();
+        mapperFactory = createMapperFactory(cassandraConfiguration);
     }
 
     @Override
@@ -86,9 +87,10 @@ public class CassandraMapperProvider implements MapperProvider {
         return mapperFactory.getMessageIdMapper(mailboxSession);
     }
 
-    private CassandraMailboxSessionMapperFactory createMapperFactory() {
+    private CassandraMailboxSessionMapperFactory createMapperFactory(CassandraConfiguration cassandraConfiguration) {
         return TestCassandraMailboxSessionMapperFactory.forTests(cassandra,
-            new CassandraMessageId.Factory());
+            new CassandraMessageId.Factory(),
+            cassandraConfiguration);
     }
 
     @Override

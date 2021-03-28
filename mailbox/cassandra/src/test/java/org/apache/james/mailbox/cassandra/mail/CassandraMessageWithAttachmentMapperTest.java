@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageWithAttachmentMapperTest;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -32,6 +33,7 @@ class CassandraMessageWithAttachmentMapperTest extends MessageWithAttachmentMapp
     protected MapperProvider createMapperProvider() {
         return new CassandraMapperProvider(
             cassandraCluster.getCassandraCluster(),
-            cassandraCluster.getCassandraConsistenciesConfiguration());
+            cassandraCluster.getCassandraConsistenciesConfiguration(),
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 }

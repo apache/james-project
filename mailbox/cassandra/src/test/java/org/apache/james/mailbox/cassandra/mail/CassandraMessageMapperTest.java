@@ -62,7 +62,8 @@ class CassandraMessageMapperTest extends MessageMapperTest {
     protected MapperProvider createMapperProvider() {
         return new CassandraMapperProvider(
             cassandraCluster.getCassandraCluster(),
-            cassandraCluster.getCassandraConsistenciesConfiguration());
+            cassandraCluster.getCassandraConsistenciesConfiguration(),
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     @Nested
