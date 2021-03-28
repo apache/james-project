@@ -19,6 +19,9 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import static org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV3DAO.ConsistencyChoice.STRONG;
+import static org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV3DAO.ConsistencyChoice.WEAK;
+
 import java.security.SecureRandom;
 import java.time.Duration;
 
@@ -101,7 +104,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
             return mailboxDAO.retrieveMailbox(id)
                 .flatMap(mailboxEntry -> SolveMailboxInconsistenciesService.Inconsistency
                     .detectMailboxDaoInconsistency(mailboxEntry,
-                        mailboxPathV3DAO.retrieve(mailboxEntry.generateAssociatedPath()))
+                        mailboxPathV3DAO.retrieve(mailboxEntry.generateAssociatedPath(), STRONG))
                     .flatMap(inconsistency ->
                         inconsistency.fix(new SolveMailboxInconsistenciesService.Context(), mailboxDAO, mailboxPathV3DAO)
                             .then(Mono.just(mailboxEntry))));
@@ -111,11 +114,17 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     private Mono<Mailbox> performReadRepair(MailboxPath path) {
         if (shouldReadRepair()) {
-            return mailboxPathV3DAO.retrieve(path)
+            return mailboxPathV3DAO.retrieve(path, STRONG)
                 .flatMap(this::performPathReadRepair);
         }
-        return mailboxPathV3DAO.retrieve(path);
+        return mailboxPathV3DAO.retrieve(path, consistencyChoice());
+    }
 
+    private CassandraMailboxPathV3DAO.ConsistencyChoice consistencyChoice() {
+        if (cassandraConfiguration.isMailboxReadStrongConsistency()) {
+            return STRONG;
+        }
+        return WEAK;
     }
 
     private Flux<Mailbox> performReadRepair(Flux<Mailbox> pathEntries) {
@@ -250,13 +259,13 @@ public class CassandraMailboxMapper implements MailboxMapper {
             .flatMapMany(needSupport -> {
                 if (needSupport) {
                     return Flux.concat(
-                        mailboxPathV3DAO.listUserMailboxes(fixedNamespace, fixedUser),
+                        mailboxPathV3DAO.listUserMailboxes(fixedNamespace, fixedUser, consistencyChoice()),
                         Flux.concat(
                                 mailboxPathV2DAO.listUserMailboxes(fixedNamespace, fixedUser),
                                 mailboxPathDAO.listUserMailboxes(fixedNamespace, fixedUser))
                             .flatMap(this::retrieveMailbox, CONCURRENCY));
                 }
-                return mailboxPathV3DAO.listUserMailboxes(fixedNamespace, fixedUser);
+                return mailboxPathV3DAO.listUserMailboxes(fixedNamespace, fixedUser, consistencyChoice());
             });
     }
 
