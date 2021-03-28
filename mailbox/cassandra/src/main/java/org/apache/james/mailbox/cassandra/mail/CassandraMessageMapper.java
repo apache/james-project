@@ -19,8 +19,9 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO.ConsistencyChoice.STRONG;
-import static org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO.ConsistencyChoice.WEAK;
+import static org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration.ConsistencyChoice;
+import static org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration.ConsistencyChoice.STRONG;
+import static org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration.ConsistencyChoice.WEAK;
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.security.SecureRandom;
@@ -418,7 +419,7 @@ public class CassandraMessageMapper implements MessageMapper {
         }
     }
 
-    private CassandraMessageIdToImapUidDAO.ConsistencyChoice chooseReadConsistencyUponWrites() {
+    private ConsistencyChoice chooseReadConsistencyUponWrites() {
         if (cassandraConfiguration.isMessageWriteStrongConsistency()) {
             return STRONG;
         }

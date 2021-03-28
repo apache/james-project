@@ -20,11 +20,27 @@
 package org.apache.james.backends.cassandra.init.configuration;
 
 import java.util.Objects;
+import java.util.function.Function;
 
 import com.datastax.driver.core.ConsistencyLevel;
 import com.google.common.base.MoreObjects;
 
 public class CassandraConsistenciesConfiguration {
+    public enum ConsistencyChoice {
+        WEAK(CassandraConsistenciesConfiguration::getRegular),
+        STRONG(CassandraConsistenciesConfiguration::getLightweightTransaction);
+
+        private final Function<CassandraConsistenciesConfiguration, ConsistencyLevel> choice;
+
+        ConsistencyChoice(Function<CassandraConsistenciesConfiguration, ConsistencyLevel> choice) {
+            this.choice = choice;
+        }
+
+        public ConsistencyLevel choose(CassandraConsistenciesConfiguration configuration) {
+            return choice.apply(configuration);
+        }
+    }
+
     public static final CassandraConsistenciesConfiguration DEFAULT = new CassandraConsistenciesConfiguration(ConsistencyLevel.QUORUM, ConsistencyLevel.SERIAL);
 
     public static ConsistencyLevel fromString(String value) {

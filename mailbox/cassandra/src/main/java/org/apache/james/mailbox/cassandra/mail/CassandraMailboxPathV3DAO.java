@@ -32,11 +32,10 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMailboxPathV3Tab
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxPathV3Table.UIDVALIDITY;
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxPathV3Table.USER;
 
-import java.util.function.Function;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration.ConsistencyChoice;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.core.Username;
@@ -58,22 +57,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraMailboxPathV3DAO {
-    // todo factorize me in CassandraConsistenciesConfiguration
-    public enum ConsistencyChoice {
-        WEAK(CassandraConsistenciesConfiguration::getRegular),
-        STRONG(CassandraConsistenciesConfiguration::getLightweightTransaction);
-
-        private final Function<CassandraConsistenciesConfiguration, ConsistencyLevel> choice;
-
-        ConsistencyChoice(Function<CassandraConsistenciesConfiguration, ConsistencyLevel> choice) {
-            this.choice = choice;
-        }
-
-        public ConsistencyLevel choose(CassandraConsistenciesConfiguration configuration) {
-            return choice.apply(configuration);
-        }
-    }
-
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final CassandraUtils cassandraUtils;
     private final PreparedStatement delete;

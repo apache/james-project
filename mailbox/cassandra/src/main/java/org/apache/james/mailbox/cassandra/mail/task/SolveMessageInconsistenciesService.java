@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail.task;
 
-import static org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO.ConsistencyChoice.STRONG;
+import static org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration.ConsistencyChoice.STRONG;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.time.Duration;

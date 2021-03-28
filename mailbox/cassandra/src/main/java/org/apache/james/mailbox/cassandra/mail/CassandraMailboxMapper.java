@@ -19,8 +19,8 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV3DAO.ConsistencyChoice.STRONG;
-import static org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV3DAO.ConsistencyChoice.WEAK;
+import static org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration.ConsistencyChoice.STRONG;
+import static org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration.ConsistencyChoice.WEAK;
 
 import java.security.SecureRandom;
 import java.time.Duration;
@@ -29,6 +29,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.Username;
@@ -120,7 +121,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
         return mailboxPathV3DAO.retrieve(path, consistencyChoice());
     }
 
-    private CassandraMailboxPathV3DAO.ConsistencyChoice consistencyChoice() {
+    private CassandraConsistenciesConfiguration.ConsistencyChoice consistencyChoice() {
         if (cassandraConfiguration.isMailboxReadStrongConsistency()) {
             return STRONG;
         }
