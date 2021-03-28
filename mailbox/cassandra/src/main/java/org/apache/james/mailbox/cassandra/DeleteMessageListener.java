@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra;
 
+import static org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO.ConsistencyChoice.STRONG;
+import static org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO.ConsistencyChoice.WEAK;
 import static org.apache.james.util.FunctionalUtils.negate;
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
@@ -27,6 +29,7 @@ import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventListener;
@@ -95,13 +98,16 @@ public class DeleteMessageListener implements EventListener.GroupEventListener {
     private final CassandraMailboxCounterDAO counterDAO;
     private final CassandraMailboxRecentsDAO recentsDAO;
     private final BlobStore blobStore;
+    private final CassandraConfiguration cassandraConfiguration;
 
     @Inject
     public DeleteMessageListener(CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageDAO messageDAO,
                                  CassandraMessageDAOV3 messageDAOV3, CassandraAttachmentDAOV2 attachmentDAO, CassandraAttachmentOwnerDAO ownerDAO,
                                  CassandraAttachmentMessageIdDAO attachmentMessageIdDAO, CassandraACLMapper aclMapper,
                                  CassandraUserMailboxRightsDAO rightsDAO, CassandraApplicableFlagDAO applicableFlagDAO,
-                                 CassandraFirstUnseenDAO firstUnseenDAO, CassandraDeletedMessageDAO deletedMessageDAO, CassandraMailboxCounterDAO counterDAO, CassandraMailboxRecentsDAO recentsDAO, BlobStore blobStore) {
+                                 CassandraFirstUnseenDAO firstUnseenDAO, CassandraDeletedMessageDAO deletedMessageDAO,
+                                 CassandraMailboxCounterDAO counterDAO, CassandraMailboxRecentsDAO recentsDAO, BlobStore blobStore,
+                                 CassandraConfiguration cassandraConfiguration) {
         this.imapUidDAO = imapUidDAO;
         this.messageIdDAO = messageIdDAO;
         this.messageDAO = messageDAO;
@@ -117,6 +123,7 @@ public class DeleteMessageListener implements EventListener.GroupEventListener {
         this.counterDAO = counterDAO;
         this.recentsDAO = recentsDAO;
         this.blobStore = blobStore;
+        this.cassandraConfiguration = cassandraConfiguration;
     }
 
     @Override
@@ -239,15 +246,22 @@ public class DeleteMessageListener implements EventListener.GroupEventListener {
     }
 
     private Mono<Boolean> isReferenced(CassandraMessageId id) {
-        return imapUidDAO.retrieve(id, ALL_MAILBOXES, CassandraMessageIdToImapUidDAO.ConsistencyChoice.STRONG)
+        return imapUidDAO.retrieve(id, ALL_MAILBOXES, chooseReadConsistencyUponWrites())
             .hasElements()
             .map(negate());
     }
 
     private Mono<Boolean> isReferenced(CassandraMessageId id, CassandraId excludedId) {
-        return imapUidDAO.retrieve(id, ALL_MAILBOXES, CassandraMessageIdToImapUidDAO.ConsistencyChoice.STRONG)
+        return imapUidDAO.retrieve(id, ALL_MAILBOXES, chooseReadConsistencyUponWrites())
             .filter(metadata -> !metadata.getComposedMessageId().getMailboxId().equals(excludedId))
             .hasElements()
             .map(negate());
+    }
+
+    private CassandraMessageIdToImapUidDAO.ConsistencyChoice chooseReadConsistencyUponWrites() {
+        if (cassandraConfiguration.isMessageWriteStrongConsistency()) {
+            return STRONG;
+        }
+        return WEAK;
     }
 }

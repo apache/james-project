@@ -155,6 +155,13 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         }
     }
 
+    private CassandraMessageIdToImapUidDAO.ConsistencyChoice chooseReadConsistencyUponWrites() {
+        if (cassandraConfiguration.isMessageWriteStrongConsistency()) {
+            return STRONG;
+        }
+        return WEAK;
+    }
+
     @Override
     public void save(MailboxMessage mailboxMessage) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailboxMessage.getMailboxId();
@@ -220,7 +227,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     }
 
     private Mono<Void> retrieveAndDeleteIndices(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
-        return imapUidDAO.retrieve(messageId, mailboxId, STRONG)
+        return imapUidDAO.retrieve(messageId, mailboxId, chooseReadConsistencyUponWrites())
             .flatMap(this::deleteIds, ReactorUtils.DEFAULT_CONCURRENCY)
             .then();
     }
@@ -283,7 +290,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     private Mono<List<Pair<Flags, ComposedMessageIdWithMetaData>>> updateFlags(MailboxId mailboxId, MessageId messageId, Flags newState, MessageManager.FlagsUpdateMode updateMode) {
         CassandraId cassandraId = (CassandraId) mailboxId;
-        return imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.of(cassandraId), STRONG)
+        return imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.of(cassandraId), chooseReadConsistencyUponWrites())
             .flatMap(oldComposedId -> updateFlags(newState, updateMode, cassandraId, oldComposedId), ReactorUtils.DEFAULT_CONCURRENCY)
             .switchIfEmpty(Mono.error(MailboxDeleteDuringUpdateException::new))
             .collectList();
