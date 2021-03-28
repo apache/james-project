@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail.task;
 
+import static org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV3DAO.ConsistencyChoice.STRONG;
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.util.Collection;
@@ -423,7 +424,7 @@ public class SolveMailboxInconsistenciesService {
     }
 
     private Mono<Inconsistency> detectMailboxDaoInconsistency(Mailbox mailboxEntry) {
-        Mono<Mailbox> pathEntry = mailboxPathV3DAO.retrieve(mailboxEntry.generateAssociatedPath());
+        Mono<Mailbox> pathEntry = mailboxPathV3DAO.retrieve(mailboxEntry.generateAssociatedPath(), STRONG);
         return Inconsistency.detectMailboxDaoInconsistency(mailboxEntry, pathEntry);
     }
 

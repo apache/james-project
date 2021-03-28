@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import static org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration.ConsistencyChoice.STRONG;
 import static org.apache.james.mailbox.cassandra.mail.MailboxFixture.MAILBOX_1;
 import static org.apache.james.mailbox.cassandra.mail.MailboxFixture.MAILBOX_2;
 import static org.apache.james.mailbox.cassandra.mail.MailboxFixture.MAILBOX_3;
@@ -95,7 +96,7 @@ class CassandraMailboxPathV3DAOTest {
         testee.save(MAILBOX_3).block();
 
         List<Mailbox> cassandraIds = testee
-            .listUserMailboxes(USER_INBOX_MAILBOXPATH.getNamespace(), USER_INBOX_MAILBOXPATH.getUser())
+            .listUserMailboxes(USER_INBOX_MAILBOXPATH.getNamespace(), USER_INBOX_MAILBOXPATH.getUser(), STRONG)
             .collectList()
             .block();
 
