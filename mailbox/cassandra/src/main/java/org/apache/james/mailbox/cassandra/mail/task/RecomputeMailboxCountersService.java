@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail.task;
 
-import static org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO.ReadConsistency.STRONG;
+import static org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO.ConsistencyChoice.STRONG;
 
 import java.util.Objects;
 import java.util.Optional;
