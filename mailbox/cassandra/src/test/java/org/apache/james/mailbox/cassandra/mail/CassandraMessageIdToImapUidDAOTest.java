@@ -29,6 +29,7 @@ import javax.mail.Flags.Flag;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
@@ -63,7 +64,8 @@ class CassandraMessageIdToImapUidDAOTest {
         testee = new CassandraMessageIdToImapUidDAO(
             cassandra.getConf(),
             cassandraCluster.getCassandraConsistenciesConfiguration(),
-            messageIdFactory);
+            messageIdFactory,
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     @Test

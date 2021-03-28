@@ -31,6 +31,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.Scenario;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.MessageUid;
@@ -104,7 +105,8 @@ public class SolveMessageInconsistenciesServiceTest {
         imapUidDAO = new CassandraMessageIdToImapUidDAO(
             cassandra.getConf(),
             cassandraCluster.getCassandraConsistenciesConfiguration(),
-            new CassandraMessageId.Factory());
+            new CassandraMessageId.Factory(),
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
         messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new CassandraMessageId.Factory());
         testee = new SolveMessageInconsistenciesService(imapUidDAO, messageIdDAO);
     }
