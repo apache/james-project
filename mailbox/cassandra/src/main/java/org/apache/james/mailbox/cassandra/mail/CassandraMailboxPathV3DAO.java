@@ -46,7 +46,6 @@ import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.util.FunctionalUtils;
 import org.apache.james.util.ReactorUtils;
 
-import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
@@ -63,13 +62,13 @@ public class CassandraMailboxPathV3DAO {
     private final PreparedStatement select;
     private final PreparedStatement selectUser;
     private final PreparedStatement selectAll;
-    private final ConsistencyLevel consistencyLevel;
+    private final CassandraConsistenciesConfiguration consistenciesConfiguration;
 
     @Inject
     public CassandraMailboxPathV3DAO(Session session, CassandraUtils cassandraUtils,
                                      CassandraConsistenciesConfiguration consistenciesConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
-        this.consistencyLevel = consistenciesConfiguration.getLightweightTransaction();
+        this.consistenciesConfiguration = consistenciesConfiguration;
         this.cassandraUtils = cassandraUtils;
         this.insert = prepareInsert(session);
         this.delete = prepareDelete(session);
@@ -123,7 +122,7 @@ public class CassandraMailboxPathV3DAO {
                 .setString(NAMESPACE, mailboxPath.getNamespace())
                 .setString(USER, sanitizeUser(mailboxPath.getUser()))
                 .setString(MAILBOX_NAME, mailboxPath.getName())
-                .setConsistencyLevel(consistencyLevel))
+                .setConsistencyLevel(consistenciesConfiguration.getLightweightTransaction()))
             .map(this::fromRowToCassandraIdAndPath)
             .map(FunctionalUtils.toFunction(this::logGhostMailboxSuccess))
             .switchIfEmpty(ReactorUtils.executeAndEmpty(() -> logGhostMailboxFailure(mailboxPath)));
@@ -133,8 +132,7 @@ public class CassandraMailboxPathV3DAO {
         return cassandraAsyncExecutor.execute(
             selectUser.bind()
                 .setString(NAMESPACE, namespace)
-                .setString(USER, sanitizeUser(user))
-                .setConsistencyLevel(consistencyLevel))
+                .setString(USER, sanitizeUser(user)))
             .flatMapMany(cassandraUtils::convertToFlux)
             .map(this::fromRowToCassandraIdAndPath)
             .map(FunctionalUtils.toFunction(this::logReadSuccess));
