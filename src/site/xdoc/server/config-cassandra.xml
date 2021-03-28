@@ -149,16 +149,23 @@
         <dt><strong>mailbox.blob.part.size</strong></dt>
         <dd>Optional. Defaults to 102400 (100KB).<br/> Controls the size of blob parts used to store messages.</dd>
 
+        <dt><strong>mailbox.read.strong.consistency</strong></dt>
+        <dd>Optional. Boolean, defaults to true. Disabling should be considered experimental.
+            If enabled, regular consistency level is used for read transactions for mailbox. Not doing so might result
+            in stale reads as the system.paxos table will not be checked for latest updates. Better performance are expected
+            by turning it off. Note that reads performed as part of write transactions are always performed with a strong
+            consistency.</dd>
+
         <dt><strong>message.read.strong.consistency</strong></dt>
         <dd>Optional. Boolean, defaults to true. Disabling should be considered experimental.
-            If enabled, regular consistency level is used for read transactions for message. This might result
+            If enabled, regular consistency level is used for read transactions for message. Not doing so might result
             in stale reads as the system.paxos table will not be checked for latest updates. Better performance are expected
             by turning it off. Note that reads performed as part of write transactions are always performed with a strong
             consistency.</dd>
 
         <dt><strong>message.write.strong.consistency.unsafe</strong></dt>
         <dd>Optional. Boolean, defaults to true. Disabling should be considered experimental and unsafe.
-            If enabled, Lightweight transactions will no longer be used upon messages operation (table `imapUidTable`).
+            If disabled, Lightweight transactions will no longer be used upon messages operation (table `imapUidTable`).
             As message flags updates relies so far on a read-before-write model, it exposes yourself to data races leading to
             potentially update loss. Better performance are expected
             by turning it off. Reads performed as part of write transaction are also performed with a relaxed consistency.</dd>
