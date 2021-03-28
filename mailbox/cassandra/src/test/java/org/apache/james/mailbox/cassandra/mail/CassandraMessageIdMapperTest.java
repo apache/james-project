@@ -241,7 +241,8 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
             CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(
                 cassandra.getConf(),
                 cassandraCluster.getCassandraConsistenciesConfiguration(),
-                new CassandraMessageId.Factory());
+                new CassandraMessageId.Factory(),
+                CassandraConfiguration.DEFAULT_CONFIGURATION);
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.Metadata))

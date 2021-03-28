@@ -836,7 +836,8 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             return new CassandraMessageIdToImapUidDAO(
                 cassandraCluster.getConf(),
                 cassandra.getCassandraConsistenciesConfiguration(),
-                new CassandraMessageId.Factory());
+                new CassandraMessageId.Factory(),
+                CassandraConfiguration.DEFAULT_CONFIGURATION);
         }
 
         private CassandraMessageDAOV3 messageDAO(CassandraCluster cassandraCluster) {

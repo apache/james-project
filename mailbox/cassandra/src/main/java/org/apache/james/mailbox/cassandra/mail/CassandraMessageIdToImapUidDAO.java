@@ -47,6 +47,7 @@ import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.MessageUid;
@@ -63,7 +64,9 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
+import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.core.querybuilder.Update;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 
@@ -97,11 +100,12 @@ public class CassandraMessageIdToImapUidDAO {
     private final PreparedStatement selectAll;
     private final PreparedStatement select;
     private final PreparedStatement listStatement;
+    private final CassandraConfiguration cassandraConfiguration;
     private final CassandraConsistenciesConfiguration consistenciesConfiguration;
 
     @Inject
     public CassandraMessageIdToImapUidDAO(Session session, CassandraConsistenciesConfiguration consistenciesConfiguration,
-                                          CassandraMessageId.Factory messageIdFactory) {
+                                          CassandraMessageId.Factory messageIdFactory, CassandraConfiguration cassandraConfiguration) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.consistenciesConfiguration = consistenciesConfiguration;
         this.cassandraConfiguration = cassandraConfiguration;
@@ -122,37 +126,47 @@ public class CassandraMessageIdToImapUidDAO {
     }
 
     private PreparedStatement prepareInsert(Session session) {
-        return session.prepare(insertInto(TABLE_NAME)
-                .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
-                .value(MAILBOX_ID, bindMarker(MAILBOX_ID))
-                .value(IMAP_UID, bindMarker(IMAP_UID))
-                .value(MOD_SEQ, bindMarker(MOD_SEQ))
-                .value(ANSWERED, bindMarker(ANSWERED))
-                .value(DELETED, bindMarker(DELETED))
-                .value(DRAFT, bindMarker(DRAFT))
-                .value(FLAGGED, bindMarker(FLAGGED))
-                .value(RECENT, bindMarker(RECENT))
-                .value(SEEN, bindMarker(SEEN))
-                .value(USER, bindMarker(USER))
-                .value(USER_FLAGS, bindMarker(USER_FLAGS))
-                .ifNotExists());
+        Insert insert = insertInto(TABLE_NAME)
+            .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
+            .value(MAILBOX_ID, bindMarker(MAILBOX_ID))
+            .value(IMAP_UID, bindMarker(IMAP_UID))
+            .value(MOD_SEQ, bindMarker(MOD_SEQ))
+            .value(ANSWERED, bindMarker(ANSWERED))
+            .value(DELETED, bindMarker(DELETED))
+            .value(DRAFT, bindMarker(DRAFT))
+            .value(FLAGGED, bindMarker(FLAGGED))
+            .value(RECENT, bindMarker(RECENT))
+            .value(SEEN, bindMarker(SEEN))
+            .value(USER, bindMarker(USER))
+            .value(USER_FLAGS, bindMarker(USER_FLAGS));
+        if (cassandraConfiguration.isMessageWriteStrongConsistency()) {
+            return session.prepare(insert.ifNotExists());
+        } else {
+            return session.prepare(insert);
+        }
     }
 
     private PreparedStatement prepareUpdate(Session session) {
-        return session.prepare(update(TABLE_NAME)
-                .with(set(MOD_SEQ, bindMarker(MOD_SEQ)))
-                .and(set(ANSWERED, bindMarker(ANSWERED)))
-                .and(set(DELETED, bindMarker(DELETED)))
-                .and(set(DRAFT, bindMarker(DRAFT)))
-                .and(set(FLAGGED, bindMarker(FLAGGED)))
-                .and(set(RECENT, bindMarker(RECENT)))
-                .and(set(SEEN, bindMarker(SEEN)))
-                .and(set(USER, bindMarker(USER)))
-                .and(set(USER_FLAGS, bindMarker(USER_FLAGS)))
-                .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID)))
-                .and(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
-                .and(eq(IMAP_UID, bindMarker(IMAP_UID)))
+        Update.Where update = update(TABLE_NAME)
+            .with(set(MOD_SEQ, bindMarker(MOD_SEQ)))
+            .and(set(ANSWERED, bindMarker(ANSWERED)))
+            .and(set(DELETED, bindMarker(DELETED)))
+            .and(set(DRAFT, bindMarker(DRAFT)))
+            .and(set(FLAGGED, bindMarker(FLAGGED)))
+            .and(set(RECENT, bindMarker(RECENT)))
+            .and(set(SEEN, bindMarker(SEEN)))
+            .and(set(USER, bindMarker(USER)))
+            .and(set(USER_FLAGS, bindMarker(USER_FLAGS)))
+            .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID)))
+            .and(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
+            .and(eq(IMAP_UID, bindMarker(IMAP_UID)));
+
+        if (cassandraConfiguration.isMessageWriteStrongConsistency()) {
+            return session.prepare(update
                 .onlyIf(eq(MOD_SEQ, bindMarker(MOD_SEQ_CONDITION))));
+        } else {
+            return session.prepare(update);
+        }
     }
 
     private PreparedStatement prepareSelectAll(Session session) {
