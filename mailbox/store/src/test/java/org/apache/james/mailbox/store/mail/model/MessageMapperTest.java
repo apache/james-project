@@ -910,7 +910,7 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    void userFlagsUpdateShouldWorkInConcurrentEnvironment() throws Exception {
+    public void userFlagsUpdateShouldWorkInConcurrentEnvironment() throws Exception {
         Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.THREAD_SAFE_FLAGS_UPDATE));
 
         saveMessages();
@@ -931,7 +931,7 @@ public abstract class MessageMapperTest {
     }
 
     @Test
-    void setFlagsShouldWorkWithConcurrencyWithRemove() throws Exception {
+    public void setFlagsShouldWorkWithConcurrencyWithRemove() throws Exception {
         Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.THREAD_SAFE_FLAGS_UPDATE));
         saveMessages();
 
