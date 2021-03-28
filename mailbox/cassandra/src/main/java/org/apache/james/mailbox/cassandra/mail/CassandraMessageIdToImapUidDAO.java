@@ -41,7 +41,6 @@ import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.MOD_SE
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.TABLE_NAME;
 
 import java.util.Optional;
-import java.util.function.Function;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
@@ -49,6 +48,7 @@ import javax.mail.Flags.Flag;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration.ConsistencyChoice;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
@@ -59,7 +59,6 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 
 import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
@@ -74,22 +73,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraMessageIdToImapUidDAO {
-    public enum ConsistencyChoice {
-        STRONG(CassandraConsistenciesConfiguration::getLightweightTransaction),
-        WEAK(CassandraConsistenciesConfiguration::getRegular);
-
-        private final Function<CassandraConsistenciesConfiguration, ConsistencyLevel> consistencyLevelChoice;
-
-
-        ConsistencyChoice(Function<CassandraConsistenciesConfiguration, ConsistencyLevel> consistencyLevelChoice) {
-            this.consistencyLevelChoice = consistencyLevelChoice;
-        }
-
-        public ConsistencyLevel choose(CassandraConsistenciesConfiguration configuration) {
-            return consistencyLevelChoice.apply(configuration);
-        }
-    }
-
     private static final String MOD_SEQ_CONDITION = "modSeqCondition";
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
