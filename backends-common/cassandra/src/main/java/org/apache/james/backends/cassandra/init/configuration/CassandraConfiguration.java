@@ -535,8 +535,10 @@ public class CassandraConfiguration {
                 && Objects.equals(this.fetchNextPageInAdvanceRow, that.fetchNextPageInAdvanceRow)
                 && Objects.equals(this.blobPartSize, that.blobPartSize)
                 && Objects.equals(this.attachmentV2MigrationReadTimeout, that.attachmentV2MigrationReadTimeout)
+                && Objects.equals(this.mailboxReadStrongConsistency, that.mailboxReadStrongConsistency)
                 && Objects.equals(this.messageAttachmentIdsReadTimeout, that.messageAttachmentIdsReadTimeout)
                 && Objects.equals(this.messageReadStrongConsistency, that.messageReadStrongConsistency)
+                && Objects.equals(this.messageWriteStrongConsistency, that.messageWriteStrongConsistency)
                 && Objects.equals(this.consistencyLevelRegular, that.consistencyLevelRegular)
                 && Objects.equals(this.consistencyLevelLightweightTransaction, that.consistencyLevelLightweightTransaction);
         }
@@ -550,7 +552,7 @@ public class CassandraConfiguration {
             mailboxCountersReadRepairChanceOneHundred, mailboxCountersReadRepairChanceMax,
             blobPartSize, attachmentV2MigrationReadTimeout, messageAttachmentIdsReadTimeout,
             consistencyLevelRegular, consistencyLevelLightweightTransaction, mailboxReadRepair,
-            messageReadStrongConsistency);
+            messageReadStrongConsistency, mailboxReadStrongConsistency, messageWriteStrongConsistency);
     }
 
     @Override
@@ -571,6 +573,8 @@ public class CassandraConfiguration {
             .add("attachmentV2MigrationReadTimeout", attachmentV2MigrationReadTimeout)
             .add("messageAttachmentIdsReadTimeout", messageAttachmentIdsReadTimeout)
             .add("messageReadStrongConsistency", messageReadStrongConsistency)
+            .add("messageWriteStrongConsistency", messageWriteStrongConsistency)
+            .add("mailboxReadStrongConsistency", mailboxReadStrongConsistency)
             .add("consistencyLevelRegular", consistencyLevelRegular)
             .add("consistencyLevelLightweightTransaction", consistencyLevelLightweightTransaction)
             .toString();
