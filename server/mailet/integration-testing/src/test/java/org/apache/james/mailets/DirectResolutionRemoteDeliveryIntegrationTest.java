@@ -38,6 +38,7 @@ import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
@@ -97,6 +98,9 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
             .withMailetContainer(TemporaryJamesServer.simpleMailetContainerConfiguration()
                 .putProcessor(directResolutionTransport())
                 .putProcessor(CommonProcessors.bounces()))
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .doNotVerifyIdentity()
+                .build())
             .build(temporaryFolder);
         jamesServer.start();
 
@@ -132,6 +136,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
         dataProbe.addUser(FROM, PASSWORD);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, RECIPIENT);
 
         awaitAtMostOneMinute
@@ -157,6 +162,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
         dataProbe.addUser(FROM, PASSWORD);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, RECIPIENT);
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
@@ -184,6 +190,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
         dataProbe.addUser(FROM, PASSWORD);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, RECIPIENT);
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
@@ -220,6 +227,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
         dataProbe.addUser(FROM, PASSWORD);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, RECIPIENT);
 
         awaitAtMostOneMinute

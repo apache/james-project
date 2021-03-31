@@ -488,6 +488,7 @@ public class ICSAttachmentWorkflowTest {
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
+        dataProbe.addUser(FROM, PASSWORD);
 
         messageWithoutICSAttached = MimeMessageBuilder.mimeMessageBuilder()
             .setMultipartWithBodyParts(
@@ -550,6 +551,7 @@ public class ICSAttachmentWorkflowTest {
     @Test
     void calendarAttachmentShouldNotBePublishedInMQWhenNoICalAttachment() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(messageWithoutICSAttached)
@@ -567,6 +569,7 @@ public class ICSAttachmentWorkflowTest {
     @Test
     void calendarAttachmentShouldBePublishedInMQWhenMatchingWorkflowConfiguration() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(messageWithICSAttached)
@@ -600,6 +603,7 @@ public class ICSAttachmentWorkflowTest {
     @Test
     void headersShouldNotBeAddedInMailWhenNoICalAttachment() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(messageWithoutICSAttached)
@@ -622,6 +626,7 @@ public class ICSAttachmentWorkflowTest {
     @Test
     void headersShouldBeAddedInMailWhenOneICalAttachment() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(messageWithICSAttached)
@@ -643,6 +648,7 @@ public class ICSAttachmentWorkflowTest {
     @Test
     void headersShouldBeAddedInMailWhenOneBase64ICalAttachment() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(messageWithICSBase64Attached)
@@ -664,6 +670,7 @@ public class ICSAttachmentWorkflowTest {
     @Test
     void base64CalendarAttachmentShouldBePublishedInMQWhenMatchingWorkflowConfiguration() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(messageWithICSBase64Attached)
@@ -690,6 +697,7 @@ public class ICSAttachmentWorkflowTest {
     @Test
     void yahooBase64CalendarAttachmentShouldBePublishedInMQWhenMatchingWorkflowConfiguration() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(yahooInvitationMessage)
@@ -717,6 +725,7 @@ public class ICSAttachmentWorkflowTest {
     @Test
     void headersShouldBeFilledOnlyWithOneICalAttachmentWhenMailHasSeveral() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(messageWithThreeICSAttached)
@@ -738,6 +747,7 @@ public class ICSAttachmentWorkflowTest {
     @Test
     void pipelineShouldSendSeveralJSONOverRabbitMQWhenSeveralAttachments() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(messageWithThreeICSAttached)
@@ -777,6 +787,7 @@ public class ICSAttachmentWorkflowTest {
         MimeMessage calendarMessage = MimeMessageUtil.mimeMessageFromStream(ClassLoader.getSystemResourceAsStream("eml/calendar.eml"));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(calendarMessage)

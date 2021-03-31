@@ -76,6 +76,7 @@ class AddFooterTest {
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
+        dataProbe.addUser(FROM, PASSWORD);
     }
 
     @AfterEach
@@ -86,6 +87,7 @@ class AddFooterTest {
     @Test
     void shouldAddFooterWhenSimpleMessage() throws Exception {
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -105,6 +107,7 @@ class AddFooterTest {
     @Test
     void shouldAddFooterWhenMultipartMessage() throws Exception {
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
