@@ -37,6 +37,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetContainer;
+import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
@@ -88,6 +89,9 @@ class GroupMappingTest {
 
         jamesServer = TemporaryJamesServer.builder()
             .withMailetContainer(mailetContainer)
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .doNotVerifyIdentity()
+                .build())
             .build(temporaryFolder);
         jamesServer.start();
 

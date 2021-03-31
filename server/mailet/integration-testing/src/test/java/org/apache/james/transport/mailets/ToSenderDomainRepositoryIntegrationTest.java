@@ -74,6 +74,7 @@ class ToSenderDomainRepositoryIntegrationTest {
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(RECIPIENT, PASSWORD)
             .sendMessage(RECIPIENT, RECIPIENT);
 
         awaitAtMostOneMinute.until(
@@ -95,6 +96,7 @@ class ToSenderDomainRepositoryIntegrationTest {
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(RECIPIENT, PASSWORD)
             .sendMessage(RECIPIENT, RECIPIENT);
 
         awaitAtMostOneMinute.until(
@@ -118,6 +120,7 @@ class ToSenderDomainRepositoryIntegrationTest {
         probe.createRepository(DOMAIN_URL);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(RECIPIENT, PASSWORD)
             .sendMessage(RECIPIENT, RECIPIENT);
 
         awaitAtMostOneMinute.until(
@@ -144,6 +147,7 @@ class ToSenderDomainRepositoryIntegrationTest {
         MailRepositoryProbeImpl mailRepositoryProbe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(RECIPIENT, PASSWORD)
             .sendMessage(RECIPIENT, RECIPIENT);
 
         awaitAtMostOneMinute.until(
@@ -167,6 +171,7 @@ class ToSenderDomainRepositoryIntegrationTest {
         probe.createRepository(DOMAIN_URL);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(RECIPIENT, PASSWORD)
             .sendMessage(RECIPIENT, RECIPIENT);
 
         awaitAtMostOneMinute.until(
@@ -187,6 +192,7 @@ class ToSenderDomainRepositoryIntegrationTest {
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(RECIPIENT, PASSWORD)
             .sendMessage(RECIPIENT, RECIPIENT)
             .sendMessage(RECIPIENT, RECIPIENT);
 

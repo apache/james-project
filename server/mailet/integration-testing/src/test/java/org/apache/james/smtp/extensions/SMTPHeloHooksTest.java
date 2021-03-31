@@ -94,6 +94,7 @@ public class SMTPHeloHooksTest {
             .addHook(RecordingHeloHook.class.getCanonicalName()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, TO);
 
         awaitAtMostOneMinute.until(() -> resultChecker.getResults().size() > 0);
@@ -107,6 +108,7 @@ public class SMTPHeloHooksTest {
             .addHook(DeclinedHeloHook.class.getCanonicalName()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, TO);
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
@@ -121,6 +123,7 @@ public class SMTPHeloHooksTest {
             .addHook(OkHeloHook.class.getCanonicalName()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, TO);
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
@@ -136,6 +139,7 @@ public class SMTPHeloHooksTest {
             .addHook(DenyHeloHook.class.getCanonicalName()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, TO);
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
@@ -152,7 +156,7 @@ public class SMTPHeloHooksTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort());
 
-        assertThatThrownBy(() -> messageSender.sendMessage(FROM, TO))
+        assertThatThrownBy(() -> messageSender.authenticate(FROM, PASSWORD).sendMessage(FROM, TO))
             .isInstanceOf(SMTPSendingException.class)
             .hasMessageContaining("Error upon step Helo: 554 Email rejected");
     }
@@ -164,7 +168,7 @@ public class SMTPHeloHooksTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort());
 
-        assertThatThrownBy(() -> messageSender.sendMessage(FROM, TO))
+        assertThatThrownBy(() -> messageSender.authenticate(FROM, PASSWORD).sendMessage(FROM, TO))
             .isInstanceOf(SMTPSendingException.class)
             .hasMessageContaining("Error upon step Helo: 554 Email rejected");
     }
@@ -176,7 +180,7 @@ public class SMTPHeloHooksTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort());
 
-        assertThatThrownBy(() -> messageSender.sendMessage(FROM, TO))
+        assertThatThrownBy(() -> messageSender.authenticate(FROM, PASSWORD).sendMessage(FROM, TO))
             .isInstanceOf(SMTPSendingException.class)
             .hasMessageContaining("Error upon step Helo: 451 Temporary problem. Please try again later");
     }

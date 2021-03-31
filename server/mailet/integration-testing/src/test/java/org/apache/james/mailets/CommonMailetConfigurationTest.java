@@ -57,6 +57,7 @@ class CommonMailetConfigurationTest {
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
+        dataProbe.addUser(FROM, PASSWORD);
     }
 
     @AfterEach
@@ -71,6 +72,7 @@ class CommonMailetConfigurationTest {
     @Test
     void simpleMailShouldBeSent() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, RECIPIENT);
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
@@ -82,6 +84,7 @@ class CommonMailetConfigurationTest {
     @Test
     void simpleMailShouldBeSentToUpperCaseRecipient() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, RECIPIENT.toUpperCase(Locale.US));
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())

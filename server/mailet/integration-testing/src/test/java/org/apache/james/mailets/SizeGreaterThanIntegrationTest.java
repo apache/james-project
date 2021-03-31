@@ -83,6 +83,7 @@ class SizeGreaterThanIntegrationTest {
     public void mailShouldGoToErrorRepositoryWhenSizeExceeded() throws Exception {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER, PASSWORD)
             .sendMessageWithHeaders(SENDER, RECIPIENT, "01234567\r\n".repeat(1025));
 
         awaitAtMostOneMinute.until(() -> jamesServer.getProbe(MailRepositoryProbeImpl.class).getRepositoryMailCount(ERROR_REPOSITORY) == 1);
@@ -91,6 +92,7 @@ class SizeGreaterThanIntegrationTest {
     @Test
     public void mailShouldBeDeliveredWhenSizeWithinLimit() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER, PASSWORD)
             .sendMessageWithHeaders(SENDER, RECIPIENT, "01234567\r\n".repeat(1000));
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())

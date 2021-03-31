@@ -89,6 +89,7 @@ class StripAttachmentTest {
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
+        dataProbe.addUser(FROM, PASSWORD);
     }
 
     @AfterEach
@@ -120,6 +121,7 @@ class StripAttachmentTest {
             .build();
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)

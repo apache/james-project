@@ -133,6 +133,7 @@ class AliasMappingTest {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/sources/" + BOB_ALIAS);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(ALICE_ADDRESS, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
@@ -151,6 +152,7 @@ class AliasMappingTest {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/sources/" + BOB_ALIAS);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(ALICE_ADDRESS, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
@@ -169,6 +171,7 @@ class AliasMappingTest {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + UPPER_BOB_ADDRESS + "/sources/" + BOB_ALIAS);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(ALICE_ADDRESS, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
@@ -187,6 +190,7 @@ class AliasMappingTest {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/sources/" + UPPER_BOB_ALIAS);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(ALICE_ADDRESS, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
@@ -206,6 +210,7 @@ class AliasMappingTest {
         webAdminApi.put(ForwardRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/targets/" + CEDRIC_ADDRESS);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(ALICE_ADDRESS, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
@@ -225,6 +230,7 @@ class AliasMappingTest {
         webAdminApi.put(ForwardRoutes.ROOT_PATH + "/" + ALICE_ADDRESS + "/targets/" + BOB_ALIAS);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(CEDRIC_ADDRESS, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
@@ -244,6 +250,7 @@ class AliasMappingTest {
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ADDRESS + "/" + BOB_ALIAS);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(ALICE_ADDRESS, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
@@ -263,6 +270,7 @@ class AliasMappingTest {
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ADDRESS + "/" + BOB_ADDRESS);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(ALICE_ADDRESS, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
@@ -282,6 +290,7 @@ class AliasMappingTest {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ALIAS + "/sources/" + BOB_ALIAS_2);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(ALICE_ADDRESS, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
@@ -301,6 +310,7 @@ class AliasMappingTest {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + ALICE_ADDRESS + "/sources/" + BOB_ALIAS);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(CEDRIC_ADDRESS, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
@@ -327,6 +337,7 @@ class AliasMappingTest {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + BOB_ADDRESS + "/sources/" + aliasWithEncodedSlash);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(ALICE_ADDRESS, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
@@ -347,6 +358,7 @@ class AliasMappingTest {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + userWithEncodedSlash + "/sources/" + BOB_ALIAS);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(ALICE_ADDRESS, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
@@ -366,6 +378,7 @@ class AliasMappingTest {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + userWithEncodedAt + "/sources/" + aliasWithEncodedAt);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(ALICE_ADDRESS, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
@@ -386,6 +399,7 @@ class AliasMappingTest {
         webAdminApi.put("/domains/" + DOMAIN_2 + "/aliases/" + DOMAIN);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(ALICE_ADDRESS, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
@@ -404,6 +418,7 @@ class AliasMappingTest {
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ADDRESS + "/" + BOB_ALIAS);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(ALICE_ADDRESS, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)

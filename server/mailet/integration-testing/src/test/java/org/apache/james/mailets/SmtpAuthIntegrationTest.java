@@ -32,6 +32,7 @@ import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
@@ -79,6 +80,9 @@ class SmtpAuthIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE)
             .withMailetContainer(mailetContainer)
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .doNotVerifyIdentity()
+                .build())
             .build(temporaryFolder);
         jamesServer.start();
 

@@ -5818,7 +5818,7 @@ public abstract class SetMessagesMethodTest {
             .recipient(fromAddress)
             .build();
         try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, jmapServer.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue(), DOMAIN)) {
-            messageSender.sendMessage(mail);
+            messageSender.authenticate(USERNAME.asString(), PASSWORD).sendMessage(mail);
         }
 
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
