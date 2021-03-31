@@ -63,7 +63,7 @@ public abstract class AbstractSenderAuthIdentifyVerificationRcptHook implements 
             return HookResult.DECLINED;
         } else {
             // Validate that unauthenticated users do not use local addresses in MAIL FROM
-            if (belongsToLocalDomain(sender)) {
+            if (belongsToLocalDomain(sender) && !session.isRelayingAllowed()) {
                 return AUTH_REQUIRED;
             } else {
                 return HookResult.DECLINED;
