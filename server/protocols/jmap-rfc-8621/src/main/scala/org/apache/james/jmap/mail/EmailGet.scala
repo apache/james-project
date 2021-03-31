@@ -113,8 +113,8 @@ case class SpecificHeaderRequest(property: NonEmptyString, headerName: String, p
 }
 
 case class EmailChangesRequest(accountId: AccountId,
-                                sinceState: State,
-                                maxChanged: Option[Limit]) extends WithAccountId
+                               sinceState: State,
+                               maxChanges: Option[Limit]) extends WithAccountId
 
 
 case class EmailChangesResponse(accountId: AccountId,

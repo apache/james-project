@@ -47,9 +47,9 @@ class EmailChangesMethod @Inject()(val metricFactory: MetricFactory,
     SMono({
       val accountId: JavaAccountId = JavaAccountId.fromUsername(mailboxSession.getUser)
       if (capabilities.contains(JAMES_SHARES)) {
-        SMono[EmailChanges](emailChangeRepository.getSinceStateWithDelegation(accountId, JavaState.of(request.sinceState.value), request.maxChanged.toJava))
+        SMono[EmailChanges](emailChangeRepository.getSinceStateWithDelegation(accountId, JavaState.of(request.sinceState.value), request.maxChanges.toJava))
       } else {
-        SMono[EmailChanges](emailChangeRepository.getSinceState(accountId, JavaState.of(request.sinceState.value), request.maxChanged.toJava))
+        SMono[EmailChanges](emailChangeRepository.getSinceState(accountId, JavaState.of(request.sinceState.value), request.maxChanges.toJava))
       }
     })
       .map(emailChanges => EmailChangesResponse(

@@ -863,6 +863,72 @@ trait EmailChangesMethodContract {
   }
 
   @Test
+  def maxChangesShouldBeTakenIntoAccount(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
+    val path: MailboxPath = MailboxPath.forUser(BOB, "mailbox1")
+
+    mailboxProbe.createMailbox(path)
+
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+
+    val messageId1: String = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId.serialize
+    val messageId2: String = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId.serialize
+    val messageId3: String = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId.serialize
+    val messageId4: String = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId.serialize
+    val messageId5: String = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId.serialize
+    val messageId6: String = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId.serialize
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/changes",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "sinceState": "${State.INITIAL.getValue}",
+         |      "maxChanges": 38
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .whenIgnoringPaths("methodResponses[0][1].newState")
+        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .isEqualTo(
+          s"""{
+             |    "sessionState": "${SESSION_STATE.value}",
+             |    "methodResponses": [
+             |      [ "Email/changes", {
+             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "oldState": "${State.INITIAL.getValue}",
+             |        "hasMoreChanges": false,
+             |        "created": ["$messageId1", "$messageId2", "$messageId3", "$messageId4", "$messageId5", "$messageId6"],
+             |        "updated": [],
+             |        "destroyed": []
+             |      }, "c1"]
+             |    ]
+             |}""".stripMargin)
+    }
+  }
+
+  @Test
   def emailChangesShouldReturnNoChangesWhenNoNewerState(server: GuiceJamesServer): Unit = {
     val request =
       s"""{
