@@ -20,6 +20,7 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
+import javax.inject.Inject
 import org.apache.james.jmap.api.change.{MailboxChangeRepository, MailboxChanges, State => JavaState}
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_MAIL}
@@ -34,7 +35,6 @@ import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.{JsError, JsSuccess}
 import reactor.core.scala.publisher.SMono
 
-import javax.inject.Inject
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 
@@ -54,9 +54,9 @@ class MailboxChangesMethod @Inject()(mailboxSerializer: MailboxSerializer,
       val accountId: JavaAccountId = JavaAccountId.fromUsername(mailboxSession.getUser)
       val state: JavaState = JavaState.of(request.sinceState.value)
       if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
-        mailboxChangeRepository.getSinceStateWithDelegation(accountId, state, request.maxChanged.toJava)
+        mailboxChangeRepository.getSinceStateWithDelegation(accountId, state, request.maxChanges.toJava)
       } else {
-        mailboxChangeRepository.getSinceState(accountId, state, request.maxChanged.toJava)
+        mailboxChangeRepository.getSinceState(accountId, state, request.maxChanges.toJava)
       }})
       .map(mailboxChanges => MailboxChangesResponse(
         accountId = request.accountId,
