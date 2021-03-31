@@ -24,6 +24,7 @@ import java.time.format.DateTimeFormatter
 
 import eu.timepit.refined.api.{RefType, Validate}
 import org.apache.james.core.MailAddress
+import org.apache.james.jmap.api.change.Limit
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{AccountId, Properties, SetError, State, UTCDate}
 import org.apache.james.jmap.mail.HasMoreChanges
@@ -95,4 +96,9 @@ package object json {
   private[json] implicit val utcDateWrites: Writes[UTCDate] =
     utcDate => JsString(utcDate.asUTC.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")))
   private[json] implicit val hasMoreChangesWrites: Writes[HasMoreChanges] = Json.valueWrites[HasMoreChanges]
+  private[json] implicit val limitReads: Reads[Limit] = {
+    case JsNumber(underlying) if underlying > 0 => JsSuccess(Limit.of(underlying.intValue))
+    case JsNumber(underlying) if underlying <= 0 => JsError("Expecting a positive integer as Limit")
+    case _ => JsError("Expecting a number as Limit")
+  }
 }
