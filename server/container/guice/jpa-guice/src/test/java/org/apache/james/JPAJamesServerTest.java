@@ -75,6 +75,7 @@ class JPAJamesServerTest implements JamesServerContract {
         // ~ 12 KB email
         int imapPort = jamesServer.getProbe(ImapGuiceProbe.class).getImapPort();
         smtpMessageSender.connect(JAMES_SERVER_HOST, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(USER, PASSWORD)
             .sendMessageWithHeaders(USER, USER, "header: toto\\r\\n\\r\\n" + Strings.repeat("0123456789\n", 1024));
         AWAIT.until(() -> testIMAPClient.connect(JAMES_SERVER_HOST, imapPort)
             .login(USER, PASSWORD)

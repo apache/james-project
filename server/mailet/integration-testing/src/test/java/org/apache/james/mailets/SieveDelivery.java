@@ -61,6 +61,7 @@ class SieveDelivery {
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addUser(RECIPIENT, PASSWORD);
+        dataProbe.addUser(FROM, PASSWORD);
 
         jamesServer.getProbe(MailboxProbeImpl.class)
             .createMailbox(MailboxConstants.USER_NAMESPACE, RECIPIENT, TARGETED_MAILBOX);
@@ -79,6 +80,7 @@ class SieveDelivery {
             "fileinto \"" + TARGETED_MAILBOX + "\";");
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, RECIPIENT);
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())

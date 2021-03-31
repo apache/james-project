@@ -72,6 +72,7 @@ class DisabledSpoolerTest {
     @Test
     void emailsShouldNotBeDequeuedWhenZeroSpoolerThreads(GuiceJamesServer server) throws Exception {
         smtpMessageSender.connect(LOCALHOST_IP, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(ALICE.asString(), ALICE_PASSWORD)
             .sendMessageWithHeaders(ALICE.asString(), BOB.asString(), MESSAGE);
 
         Thread.sleep(5000);

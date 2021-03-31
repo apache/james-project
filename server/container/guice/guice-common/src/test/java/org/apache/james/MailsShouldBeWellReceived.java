@@ -85,7 +85,8 @@ interface MailsShouldBeWellReceived {
     default void mailsContentWithUnicodeCharactersShouldBeKeptUnChanged(GuiceJamesServer server) throws Exception {
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(JAMES_USER, PASSWORD);
+            .addUser(JAMES_USER, PASSWORD)
+            .addUser(SENDER, PASSWORD);
 
         MailboxProbeImpl mailboxProbe = server.getProbe(MailboxProbeImpl.class);
         mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
@@ -102,7 +103,7 @@ interface MailsShouldBeWellReceived {
                 .recipient(JAMES_USER)
                 .mimeMessage(mimeMessage);
 
-            sender.sendMessage(mail);
+            sender.authenticate(SENDER, PASSWORD).sendMessage(mail);
         }
 
         CALMLY_AWAIT.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
@@ -123,7 +124,8 @@ interface MailsShouldBeWellReceived {
     default void mailsShouldBeWellReceived(GuiceJamesServer server) throws Exception {
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(JAMES_USER, PASSWORD);
+            .addUser(JAMES_USER, PASSWORD)
+            .addUser(SENDER, PASSWORD);
 
         MailboxProbeImpl mailboxProbe = server.getProbe(MailboxProbeImpl.class);
         mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
@@ -132,7 +134,7 @@ interface MailsShouldBeWellReceived {
         String message = Resources.toString(Resources.getResource("eml/htmlMail.eml"), StandardCharsets.UTF_8);
 
         try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
-            sender.connect(JAMES_SERVER_HOST, smtpPort);
+            sender.connect(JAMES_SERVER_HOST, smtpPort).authenticate(SENDER, PASSWORD);
             sendUniqueMessage(sender, message);
         }
 
@@ -152,7 +154,8 @@ interface MailsShouldBeWellReceived {
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
             .addUser(JAMES_USER, PASSWORD)
-            .addUser(OTHER_USER, PASSWORD_OTHER);
+            .addUser(OTHER_USER, PASSWORD_OTHER)
+            .addUser(SENDER, PASSWORD);
 
         MailboxProbeImpl mailboxProbe = server.getProbe(MailboxProbeImpl.class);
         mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
@@ -162,7 +165,7 @@ interface MailsShouldBeWellReceived {
         String message = Resources.toString(Resources.getResource("eml/htmlMail.eml"), StandardCharsets.UTF_8);
 
         try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
-            sender.connect(JAMES_SERVER_HOST, smtpPort);
+            sender.connect(JAMES_SERVER_HOST, smtpPort).authenticate(SENDER, PASSWORD);
             sendUniqueMessageToTwoUsers(sender, message);
         }
 
@@ -184,8 +187,9 @@ interface MailsShouldBeWellReceived {
     @Test
     default void mailsShouldBeWellReceivedByTenRecipient(GuiceJamesServer server) throws Exception {
         server.getProbe(DataProbeImpl.class).fluent()
-                .addDomain(DOMAIN)
-                .addUser(JAMES_USER, PASSWORD);
+            .addDomain(DOMAIN)
+            .addUser(JAMES_USER, PASSWORD)
+            .addUser(SENDER, PASSWORD);
 
         ImmutableList<String> users = generateNUsers(10);
 
@@ -203,7 +207,7 @@ interface MailsShouldBeWellReceived {
         String message = Resources.toString(Resources.getResource("eml/htmlMail.eml"), StandardCharsets.UTF_8);
 
         try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
-            sender.connect(JAMES_SERVER_HOST, smtpPort);
+            sender.connect(JAMES_SERVER_HOST, smtpPort).authenticate(SENDER, PASSWORD);
             sendUniqueMessageToUsers(sender, message, users);
         }
 
@@ -227,7 +231,8 @@ interface MailsShouldBeWellReceived {
     default void oneHundredMailsShouldBeWellReceived(GuiceJamesServer server) throws Exception {
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
-            .addUser(JAMES_USER, PASSWORD);
+            .addUser(JAMES_USER, PASSWORD)
+            .addUser(SENDER, PASSWORD);
 
         MailboxProbeImpl mailboxProbe = server.getProbe(MailboxProbeImpl.class);
         mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
@@ -240,7 +245,7 @@ interface MailsShouldBeWellReceived {
         try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
             Mono.fromRunnable(
                 Throwing.runnable(() -> {
-                    sender.connect(JAMES_SERVER_HOST, smtpPort);
+                    sender.connect(JAMES_SERVER_HOST, smtpPort).authenticate(SENDER, PASSWORD);
                     sendUniqueMessage(sender, message);
             }))
                 .repeat(messageCount - 1)

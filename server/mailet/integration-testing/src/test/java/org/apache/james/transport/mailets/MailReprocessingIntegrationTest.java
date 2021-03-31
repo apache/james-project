@@ -108,6 +108,7 @@ class MailReprocessingIntegrationTest {
     void reprocessingShouldAllowToTargetASpecificProcessor() throws Exception {
         // Given an incoming email
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -136,6 +137,7 @@ class MailReprocessingIntegrationTest {
     void reprocessingShouldPreserveStateWhenProcessorIsNotSpecified() throws Exception {
         // Given an incoming email
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -180,6 +182,7 @@ class MailReprocessingIntegrationTest {
     void reprocessingShouldProcessAsErrorWhenUnknownMailProcessor() throws Exception {
         // Given an incoming email
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()

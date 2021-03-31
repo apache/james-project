@@ -131,6 +131,7 @@ class DKIMIntegrationTest {
         dataProbe.addDomain(DEFAULT_DOMAIN);
 
         dataProbe.addUser(RECIPIENT, PASSWORD);
+        dataProbe.addUser(FROM, PASSWORD);
     }
 
     @AfterEach
@@ -141,6 +142,7 @@ class DKIMIntegrationTest {
     @Test
     void incomingMessageShouldBeReceivedSignedAndChecked() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, RECIPIENT);
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())

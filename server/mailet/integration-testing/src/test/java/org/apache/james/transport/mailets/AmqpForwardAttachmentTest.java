@@ -100,6 +100,7 @@ class AmqpForwardAttachmentTest {
         DataProbe dataprobe = jamesServer.getProbe(DataProbeImpl.class);
         dataprobe.addDomain(DEFAULT_DOMAIN);
         dataprobe.addUser(RECIPIENT, PASSWORD);
+        dataprobe.addUser(FROM, PASSWORD);
     }
 
     @AfterEach
@@ -120,6 +121,7 @@ class AmqpForwardAttachmentTest {
             .setSubject("test");
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)

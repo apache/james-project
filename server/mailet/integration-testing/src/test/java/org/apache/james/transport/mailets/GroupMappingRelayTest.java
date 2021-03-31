@@ -111,6 +111,7 @@ class GroupMappingRelayTest {
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + externalMail);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)

@@ -99,6 +99,7 @@ class ToRepositoryIntegrationTest {
     @Test
     void incomingShouldBeStoredInProcessorByDefault() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(RECIPIENT, PASSWORD)
             .sendMessage(RECIPIENT, RECIPIENT)
             .sendMessage(RECIPIENT, RECIPIENT);
 
@@ -108,6 +109,7 @@ class ToRepositoryIntegrationTest {
     @Test
     void userShouldBeAbleToAccessReprocessedMails() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(RECIPIENT, PASSWORD)
             .sendMessage(RECIPIENT, RECIPIENT)
             .sendMessage(RECIPIENT, RECIPIENT);
 
@@ -138,6 +140,7 @@ class ToRepositoryIntegrationTest {
     @Test
     void userShouldBeAbleToAccessReprocessedMail() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(RECIPIENT, PASSWORD)
             .sendMessage(RECIPIENT, RECIPIENT)
             .sendMessage(RECIPIENT, RECIPIENT);
 

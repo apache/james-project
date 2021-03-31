@@ -92,6 +92,7 @@ class SenderIsLocalIntegrationTest {
     @Test
     void shouldMatchLocalSender() throws Exception {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(RECIPIENT, PASSWORD)
             .sendMessage(RECIPIENT, RECIPIENT);
 
         awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(LOCAL_SENDER_REPOSITORY) == 1);
@@ -102,6 +103,7 @@ class SenderIsLocalIntegrationTest {
         webAdminApi.put(AliasRoutes.ROOT_PATH + "/" + RECIPIENT + "/sources/" + ALIAS);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(RECIPIENT, PASSWORD)
             .sendMessage(ALIAS, RECIPIENT);
 
         awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(LOCAL_SENDER_REPOSITORY) == 1);
