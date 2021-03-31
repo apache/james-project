@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.json
 
-import org.apache.james.jmap.api.change.Limit
 import org.apache.james.jmap.api.model.Preview
 import org.apache.james.jmap.core.{Properties, State}
 import org.apache.james.jmap.mail.Email.Size
@@ -110,11 +109,6 @@ object EmailGetSerializer {
   private implicit val headersWrites: Writes[EmailHeader] = Json.writes[EmailHeader]
   private implicit val bodyValueWrites: Writes[EmailBodyValue] = Json.writes[EmailBodyValue]
   private implicit val emailIdsReads: Reads[EmailIds] = Json.valueReads[EmailIds]
-  private implicit val limitReads: Reads[Limit] = {
-    case JsNumber(underlying) if underlying > 0 => JsSuccess(Limit.of(underlying.intValue))
-    case JsNumber(underlying) if underlying <= 0 => JsError("Expecting a positive integer as Limit")
-    case _ => JsError("Expecting a number as Limit")
-  }
   private implicit val emailGetRequestReads: Reads[EmailGetRequest] = Json.reads[EmailGetRequest]
 
   private implicit val emailChangesRequestReads: Reads[EmailChangesRequest] = Json.reads[EmailChangesRequest]
