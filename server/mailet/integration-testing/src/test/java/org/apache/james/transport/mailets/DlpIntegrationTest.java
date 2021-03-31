@@ -117,6 +117,7 @@ class DlpIntegrationTest {
             .put("/dlp/rules/" + DEFAULT_DOMAIN);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -150,6 +151,7 @@ class DlpIntegrationTest {
             .put("/dlp/rules/" + DEFAULT_DOMAIN);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -189,6 +191,7 @@ class DlpIntegrationTest {
             .put("/dlp/rules/" + DEFAULT_DOMAIN);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -228,6 +231,7 @@ class DlpIntegrationTest {
             .put("/dlp/rules/" + DEFAULT_DOMAIN);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()

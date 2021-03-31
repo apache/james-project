@@ -27,6 +27,7 @@ import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMin
 import java.io.File;
 
 import org.apache.james.mailets.TemporaryJamesServer;
+import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
@@ -52,6 +53,9 @@ class SmtpNullSenderTest {
     @BeforeEach
     void setUp(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
+            .withSmtpConfiguration(SmtpConfiguration.builder()
+                .doNotVerifyIdentity()
+                .build())
             .build(temporaryFolder);
         jamesServer.start();
 

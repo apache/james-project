@@ -83,6 +83,7 @@ class BounceIntegrationTest {
         setup(temporaryFolder, DSNBounce.class);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER, SENDER_PASSWORD)
             .sendMessage(SENDER, RECIPIENT);
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
@@ -96,6 +97,7 @@ class BounceIntegrationTest {
         setup(temporaryFolder, DSNBounce.class);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER, SENDER_PASSWORD)
             .sendMessageWithHeaders(SENDER, RECIPIENT,
                 "From: " + OTHER + "\r\n" +
                     "To: " + RECIPIENT + "\r\n" +
@@ -115,6 +117,7 @@ class BounceIntegrationTest {
         setup(temporaryFolder, DSNBounce.class);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER, SENDER_PASSWORD)
             .sendMessageWithHeaders(SENDER, RECIPIENT,
                 "From: " + OTHER + "\r\n" +
                     "To: " + RECIPIENT + "\r\n" +
@@ -151,6 +154,7 @@ class BounceIntegrationTest {
                 .fluent()
                 .addDomain(DEFAULT_DOMAIN)
                 .addUser(RECIPIENT, PASSWORD)
+                .addUser("any@" + DEFAULT_DOMAIN, PASSWORD)
                 .addUser(SENDER, SENDER_PASSWORD)
                 .addUser(OTHER, OTHER_PASSWORD)
                 .addUser(POSTMASTER, POSTMASTER_PASSWORD);
@@ -161,6 +165,7 @@ class BounceIntegrationTest {
         setup(temporaryFolder, Bounce.class);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER, SENDER_PASSWORD)
             .sendMessage(SENDER, RECIPIENT);
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
@@ -174,6 +179,7 @@ class BounceIntegrationTest {
         setup(temporaryFolder, Forward.class, Pair.of("forwardTo", SENDER));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate("any@" + DEFAULT_DOMAIN, PASSWORD)
             .sendMessage("any@" + DEFAULT_DOMAIN, RECIPIENT);
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
@@ -187,6 +193,7 @@ class BounceIntegrationTest {
         setup(temporaryFolder, Redirect.class, Pair.of("recipients", SENDER));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate("any@" + DEFAULT_DOMAIN, PASSWORD)
             .sendMessage("any@" + DEFAULT_DOMAIN, RECIPIENT);
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
@@ -200,6 +207,7 @@ class BounceIntegrationTest {
         setup(temporaryFolder, Resend.class, Pair.of("recipients", SENDER));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate("any@" + DEFAULT_DOMAIN, PASSWORD)
             .sendMessage("any@" + DEFAULT_DOMAIN, RECIPIENT);
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
@@ -213,6 +221,7 @@ class BounceIntegrationTest {
         setup(temporaryFolder, NotifySender.class);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER, SENDER_PASSWORD)
             .sendMessage(SENDER, RECIPIENT);
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
@@ -226,6 +235,7 @@ class BounceIntegrationTest {
         setup(temporaryFolder, NotifyPostmaster.class);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate("any@" + DEFAULT_DOMAIN, PASSWORD)
             .sendMessage("any@" + DEFAULT_DOMAIN, RECIPIENT);
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())

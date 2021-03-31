@@ -114,6 +114,7 @@ class DomainMappingTest {
         webAdminApi.body(DOMAIN1).put("/domainMappings/" + DOMAIN2);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
@@ -132,6 +133,7 @@ class DomainMappingTest {
         webAdminApi.put("/domains/" + DOMAIN1 + "/aliases/" + DOMAIN2);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
@@ -151,6 +153,7 @@ class DomainMappingTest {
         webAdminApi.put("/domains/" + DOMAIN2 + "/aliases/" + DOMAIN1);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
@@ -170,6 +173,7 @@ class DomainMappingTest {
         webAdminApi.put("/domains/" + DOMAIN1 + "/aliases/" + DOMAIN2);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
@@ -189,6 +193,7 @@ class DomainMappingTest {
         webAdminApi.put("/domains/" + DOMAIN1 + "/aliases/" + DOMAIN2);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
@@ -210,6 +215,7 @@ class DomainMappingTest {
         webAdminApi.put("/domains/" + DOMAIN1 + "/aliases/" + DOMAIN2);
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER, PASSWORD)
             .sendMessage(FakeMail.builder()
                 .name("name")
                 .mimeMessage(message)
