@@ -146,7 +146,7 @@ public class MailDispatcher {
 
                 restoreHeaders(mail.getMessage(), savedHeaders);
             } catch (Exception ex) {
-                LOGGER.error("Error while storing mail.", ex);
+                LOGGER.error("Error while storing mail. This is a final exception.", ex);
                 errors.add(recipient);
             }
         }
@@ -155,7 +155,7 @@ public class MailDispatcher {
 
     private Mono<Void> storeMailWithRetry(Mail mail, MailAddress recipient) {
        return Mono.fromRunnable((ThrowingRunnable)() -> mailStore.storeMail(recipient, mail))
-           .doOnError(error -> LOGGER.error("Error While storing mail.", error))
+           .doOnError(error -> LOGGER.warn("Error While storing mail. This error will be retried.", error))
            .subscribeOn(scheduler)
            .retryWhen(Retry.backoff(RETRIES, FIRST_BACKOFF).maxBackoff(MAX_BACKOFF).scheduler(Schedulers.elastic()))
            .then();
