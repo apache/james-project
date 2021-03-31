@@ -1,0 +1,22 @@
+Return-Path: <tungexplorer@linagora.com>
+X-JAMES-MDN-JMAP-MESSAGE-ID: 49c73510-9108-11eb-a5a7-11eb7059e7ef
+Delivered-To: magiclan@linagora.com
+MIME-Version: 1.0
+Content-Type: multipart/report; report-type=disposition-notification;
+ boundary="-=Part.e.fbba3f3ef449cf21.1788130035a.be0dce94fc2486bf=-"
+To: magiclan@linagora.com
+X-LINAGORA-Copy-Delivery-Done: 1
+From: tungexplorer@linagora.com
+Subject: Read: test
+Date: Tue, 30 Mar 2021 03:31:50 +0000
+Message-ID: <Mime4j.f.9089aa43e656a14b.1788130035c@linagora.com>
+
+---=Part.e.fbba3f3ef449cf21.1788130035a.be0dce94fc2486bf=-
+Content-Type: text/plain; charset=UTF-8
+
+This is simple body of human-readable part
+---=Part.e.fbba3f3ef449cf21.1788130035a.be0dce94fc2486bf=-
+Content-Type: message/disposition-notification; charset=UTF-8
+
+Final-Recipient: rfc822; tungexplorer@linagora.com
+Disposition: manual-action/MDN-sent-manually;displayed

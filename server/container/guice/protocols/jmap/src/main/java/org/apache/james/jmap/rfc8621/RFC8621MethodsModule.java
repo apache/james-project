@@ -42,6 +42,7 @@ import org.apache.james.jmap.method.EmailQueryMethod;
 import org.apache.james.jmap.method.EmailSetMethod;
 import org.apache.james.jmap.method.EmailSubmissionSetMethod;
 import org.apache.james.jmap.method.IdentityGetMethod;
+import org.apache.james.jmap.method.MDNParseMethod;
 import org.apache.james.jmap.method.MailboxChangesMethod;
 import org.apache.james.jmap.method.MailboxGetMethod;
 import org.apache.james.jmap.method.MailboxQueryMethod;
@@ -99,6 +100,7 @@ public class RFC8621MethodsModule extends AbstractModule {
         methods.addBinding().to(IdentityGetMethod.class);
         methods.addBinding().to(ThreadChangesMethod.class);
         methods.addBinding().to(ThreadGetMethod.class);
+        methods.addBinding().to(MDNParseMethod.class);
 
         Multibinder<JMAPRoutes> routes = Multibinder.newSetBinder(binder(), JMAPRoutes.class);
         routes.addBinding().to(SessionRoutes.class);

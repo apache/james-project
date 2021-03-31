@@ -79,7 +79,11 @@ public class FinalRecipient implements Field {
 
     @Override
     public String formattedValue() {
-        return FIELD_NAME + ": " + addressType.getType() + "; " + finalRecipient.formatted();
+        return FIELD_NAME + ": " + fieldValue();
+    }
+
+    public String fieldValue() {
+        return addressType.getType() + "; " + finalRecipient.formatted();
     }
 
     @Override

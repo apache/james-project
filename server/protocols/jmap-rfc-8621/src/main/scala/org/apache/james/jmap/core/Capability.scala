@@ -20,13 +20,12 @@
 package org.apache.james.jmap.core
 
 import java.net.URL
-
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.string.Uri
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE, JMAP_WEBSOCKET}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_MDN, JMAP_VACATION_RESPONSE, JMAP_WEBSOCKET}
 import org.apache.james.jmap.core.CoreCapabilityProperties.CollationAlgorithm
 import org.apache.james.jmap.core.MailCapability.EmailQuerySortOption
 import org.apache.james.jmap.core.UnsignedInt.{UnsignedInt, UnsignedIntConstraint}
@@ -48,6 +47,7 @@ object CapabilityIdentifier {
   val JMAP_WEBSOCKET: CapabilityIdentifier = "urn:ietf:params:jmap:websocket"
   val JAMES_QUOTA: CapabilityIdentifier = "urn:apache:james:params:jmap:mail:quota"
   val JAMES_SHARES: CapabilityIdentifier = "urn:apache:james:params:jmap:mail:shares"
+  val JMAP_MDN: CapabilityIdentifier = "urn:ietf:params:jmap:mdn"
 }
 
 trait CapabilityProperties {
@@ -147,6 +147,13 @@ final case class SharesCapabilityProperties() extends CapabilityProperties {
 
 final case class SharesCapability(properties: SharesCapabilityProperties = SharesCapabilityProperties(),
                                   identifier: CapabilityIdentifier = JAMES_SHARES) extends Capability
+
+final case class MDNCapabilityProperties() extends CapabilityProperties {
+  override def jsonify(): JsObject = Json.obj()
+}
+
+final case class MDNCapability(properties: MDNCapabilityProperties = MDNCapabilityProperties(),
+                               identifier: CapabilityIdentifier = JMAP_MDN) extends Capability
 
 final case class VacationResponseCapabilityProperties() extends CapabilityProperties {
   override def jsonify(): JsObject = Json.obj()

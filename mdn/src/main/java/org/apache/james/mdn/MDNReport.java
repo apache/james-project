@@ -204,6 +204,10 @@ public class MDNReport {
         return errorFields;
     }
 
+    public ImmutableList<ExtensionField> getExtensionFields() {
+        return extensionFields;
+    }
+
     public String formattedValue() {
         Stream<Optional<? extends Field>> definedFields =
             Stream.of(

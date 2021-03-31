@@ -1,0 +1,41 @@
+Return-Path: <tungexplorer@linagora.com>
+X-JAMES-MDN-JMAP-MESSAGE-ID: 49c73510-9108-11eb-a5a7-11eb7059e7ef
+Delivered-To: magiclan@linagora.com
+MIME-Version: 1.0
+Content-Type: multipart/report; report-type=disposition-notification;
+ boundary="-=Part.e.fbba3f3ef449cf21.1788130035a.be0dce94fc2486bf=-"
+To: magiclan@linagora.com
+X-LINAGORA-Copy-Delivery-Done: 1
+From: tungexplorer@linagora.com
+Subject: Read: test
+Date: Tue, 30 Mar 2021 03:31:50 +0000
+Message-ID: <Mime4j.f.9089aa43e656a14b.1788130035c@linagora.com>
+
+---=Part.e.fbba3f3ef449cf21.1788130035a.be0dce94fc2486bf=-
+Content-Type: text/plain; charset=UTF-8
+
+To: magiclan@linagora.com
+Subject: test
+Message was displayed on Tue Mar 30 2021 10:31:50 GMT+0700 (Indochina Time)
+---=Part.e.fbba3f3ef449cf21.1788130035a.be0dce94fc2486bf=-
+Content-Type: message/disposition-notification; charset=UTF-8
+
+Reporting-UA: OpenPaaS Unified Inbox; UA_Product
+Original-Recipient: rfc822; tungexplorer@linagora.com
+Final-Recipient: rfc822; tungexplorer@linagora.com
+Original-Message-ID: <633c6811-f897-ec7c-642a-2360366e1b93@linagora.com>
+Disposition: manual-action/MDN-sent-manually;displayed
+Error: Message1
+Error: Message2
+X-OPENPAAS-IP: 177.177.177.77
+X-OPENPAAS-PORT: 8000
+
+---=Part.e.fbba3f3ef449cf21.1788130035a.be0dce94fc2486bf=-
+Content-Type: message/rfc822
+
+Subject: test
+To: magiclan@linagora.com
+Content-Type: text/plain
+
+This is content of original message, that already on third bodypart
+---=Part.e.fbba3f3ef449cf21.1788130035a.be0dce94fc2486bf=-

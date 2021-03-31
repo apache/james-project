@@ -23,6 +23,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 
 /**
@@ -87,8 +88,11 @@ public class ReportingUserAgent implements Field {
 
     @Override
     public String formattedValue() {
-        return FIELD_NAME + ": " + userAgentName + "; "
-            + userAgentProduct.orElse("");
+        return FIELD_NAME + ": " + fieldValue();
+    }
+
+    public String fieldValue() {
+        return Joiner.on("; ").skipNulls().join(userAgentName, userAgentProduct.orElse(null));
     }
 
     @Override

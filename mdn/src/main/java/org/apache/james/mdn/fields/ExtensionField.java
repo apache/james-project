@@ -90,4 +90,12 @@ public class ExtensionField implements Field {
     public String toString() {
         return formattedValue();
     }
+
+    public String getFieldName() {
+        return fieldName;
+    }
+
+    public String getRawValue() {
+        return rawValue;
+    }
 }

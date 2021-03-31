@@ -29,11 +29,23 @@ import java.util.regex.Pattern;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.mdn.action.mode.DispositionActionMode;
+import org.apache.james.mdn.fields.AddressType;
 import org.apache.james.mdn.fields.Disposition;
+import org.apache.james.mdn.fields.ExtensionField;
+import org.apache.james.mdn.fields.FinalRecipient;
+import org.apache.james.mdn.fields.Gateway;
+import org.apache.james.mdn.fields.OriginalRecipient;
+import org.apache.james.mdn.fields.ReportingUserAgent;
+import org.apache.james.mdn.fields.Text;
+import org.apache.james.mdn.modifier.DispositionModifier;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.message.BodyPart;
+import org.apache.james.mime4j.message.BodyPartBuilder;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
+import org.apache.james.mime4j.message.MultipartBuilder;
+import org.apache.james.mime4j.message.SingleBodyBuilder;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -213,6 +225,198 @@ class MDNTest {
 
         assertThat(asString(message))
             .containsPattern(Pattern.compile("Content-Type: multipart/report;.*(\r\n.+)*report-type=disposition-notification.*(\r\n.+)*\r\n\r\n"));
+    }
+
+    @Test
+    public void parseShouldThrowWhenNonMultipartMessage() throws Exception {
+        Message message = Message.Builder.of()
+            .setBody("content", StandardCharsets.UTF_8)
+            .build();
+        assertThatThrownBy(() -> MDN.parse(message))
+            .isInstanceOf(MDN.MDNParseContentTypeException.class)
+            .hasMessage("MDN Message must be multipart");
+    }
+
+    @Test
+    public void parseShouldThrowWhenMultipartWithSinglePart() throws Exception {
+        Message message = Message.Builder.of()
+            .setBody(MultipartBuilder.create()
+                .setSubType("report")
+                .addTextPart("content", StandardCharsets.UTF_8)
+                .build())
+            .build();
+        assertThatThrownBy(() -> MDN.parse(message))
+            .isInstanceOf(MDN.MDNParseBodyPartInvalidException.class)
+            .hasMessage("MDN Message must contain at least two parts");
+    }
+
+    @Test
+    public void parseShouldThrowWhenSecondPartWithBadContentType() throws Exception {
+        Message message = Message.Builder.of()
+            .setBody(MultipartBuilder.create()
+                .setSubType("report")
+                .addTextPart("first", StandardCharsets.UTF_8)
+                .addTextPart("second", StandardCharsets.UTF_8)
+                .build())
+            .build();
+        assertThatThrownBy(() -> MDN.parse(message))
+            .isInstanceOf(MDN.MDNParseException.class)
+            .hasMessage("MDN can not extract. Body part is invalid");
+    }
+
+    @Test
+    public void parseShouldFailWhenMDNMissingMustBeProperties() throws Exception {
+        Message message = Message.Builder.of()
+            .setBody(MultipartBuilder.create("report")
+                .addTextPart("first", StandardCharsets.UTF_8)
+                .addBodyPart(BodyPartBuilder
+                    .create()
+                    .setBody(SingleBodyBuilder.create()
+                        .setText("Final-Recipient: rfc822; final_recipient")
+                        .buildText())
+                    .setContentType("message/disposition-notification")
+                    .build())
+                .build())
+            .build();
+        assertThatThrownBy(() -> MDN.parse(message))
+            .isInstanceOf(MDN.MDNParseException.class)
+            .hasMessage("MDN can not extract. Body part is invalid");
+    }
+
+    @Test
+    public void parseShouldSuccessWithValidMDN() throws Exception {
+        BodyPart mdnBodyPart = BodyPartBuilder
+            .create()
+            .setBody(SingleBodyBuilder.create()
+                .setText("Reporting-UA: UA_name; UA_product\r\n" +
+                        "MDN-Gateway: rfc822; apache.org\r\n" +
+                        "Original-Recipient: rfc822; originalRecipient\r\n" +
+                        "Final-Recipient: rfc822; final_recipient\r\n" +
+                        "Original-Message-ID: <original@message.id>\r\n" +
+                        "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n" +
+                        "Error: Message1\r\n" +
+                        "Error: Message2\r\n" +
+                        "X-OPENPAAS-IP: 177.177.177.77\r\n" +
+                        "X-OPENPAAS-PORT: 8000\r\n" +
+                        "".replace(System.lineSeparator(), "\r\n").strip())
+                .buildText())
+            .setContentType("message/disposition-notification")
+            .build();
+
+        Message message = Message.Builder.of()
+            .setBody(MultipartBuilder.create("report")
+                .addTextPart("first", StandardCharsets.UTF_8)
+                .addBodyPart(mdnBodyPart)
+                .build())
+            .build();
+        MDN mdnActual = MDN.parse(message);
+        MDNReport mdnReportExpect = MDNReport.builder()
+            .reportingUserAgentField(ReportingUserAgent.builder()
+                .userAgentName("UA_name")
+                .userAgentProduct("UA_product")
+                .build())
+            .gatewayField(Gateway.builder()
+                .nameType(AddressType.RFC_822)
+                .name(Text.fromRawText("apache.org"))
+                .build())
+            .originalRecipientField(OriginalRecipient.builder()
+                .originalRecipient(Text.fromRawText("originalRecipient"))
+                .addressType(AddressType.RFC_822)
+                .build())
+            .finalRecipientField(FinalRecipient.builder()
+                .finalRecipient(Text.fromRawText("final_recipient"))
+                .addressType(AddressType.RFC_822)
+                .build())
+            .originalMessageIdField("<original@message.id>")
+            .dispositionField(Disposition.builder()
+                .actionMode(DispositionActionMode.Automatic)
+                .sendingMode(DispositionSendingMode.Automatic)
+                .type(DispositionType.Processed)
+                .addModifier(DispositionModifier.Error)
+                .addModifier(DispositionModifier.Failed)
+                .build())
+            .addErrorField("Message1")
+            .addErrorField("Message2")
+            .withExtensionField(ExtensionField.builder()
+                .fieldName("X-OPENPAAS-IP")
+                .rawValue(" 177.177.177.77")
+                .build())
+            .withExtensionField(ExtensionField.builder()
+                .fieldName("X-OPENPAAS-PORT")
+                .rawValue(" 8000")
+                .build())
+            .build();
+
+        MDN mdnExpect = MDN.builder()
+            .report(mdnReportExpect)
+            .humanReadableText("first")
+            .build();
+        assertThat(mdnActual).isEqualTo(mdnExpect);
+    }
+
+    @Test
+    public void parseShouldSuccessWithMDNHasMinimalProperties() throws Exception {
+        Message message = Message.Builder.of()
+            .setBody(MultipartBuilder.create("report")
+                .addTextPart("first", StandardCharsets.UTF_8)
+                .addBodyPart(BodyPartBuilder
+                    .create()
+                    .setBody(SingleBodyBuilder.create()
+                        .setText("Final-Recipient: rfc822; final_recipient\r\n" +
+                            "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n" +
+                            "".replace(System.lineSeparator(), "\r\n").strip())
+                        .buildText())
+                    .setContentType("message/disposition-notification")
+                    .build())
+                .build())
+            .build();
+        MDN mdnActual = MDN.parse(message);
+        MDNReport mdnReportExpect = MDNReport.builder()
+            .finalRecipientField(FinalRecipient.builder()
+                .finalRecipient(Text.fromRawText("final_recipient"))
+                .addressType(AddressType.RFC_822)
+                .build())
+            .dispositionField(Disposition.builder()
+                .actionMode(DispositionActionMode.Automatic)
+                .sendingMode(DispositionSendingMode.Automatic)
+                .type(DispositionType.Processed)
+                .addModifier(DispositionModifier.Error)
+                .addModifier(DispositionModifier.Failed)
+                .build())
+            .build();
+
+        MDN mdnExpect = MDN.builder()
+            .report(mdnReportExpect)
+            .humanReadableText("first")
+            .build();
+        assertThat(mdnActual).isEqualTo(mdnExpect);
+    }
+
+    @Test
+    public void includeOriginalMessageShouldReturnTrueWhenMDNHasContentOfOriginalMessage() throws Exception {
+        Message message = Message.Builder.of()
+            .setBody(MultipartBuilder.create("report")
+                .addTextPart("first", StandardCharsets.UTF_8)
+                .addBodyPart(BodyPartBuilder
+                    .create()
+                    .setBody(SingleBodyBuilder.create()
+                        .setText(
+                                "Final-Recipient: rfc822; final_recipient\r\n" +
+                                "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n" +
+                                "".replace(System.lineSeparator(), "\r\n").strip())
+                        .buildText())
+                    .setContentType("message/disposition-notification")
+                    .build())
+                .addBodyPart(
+                    BodyPartBuilder.create()
+                        .setBody(Message.Builder.of()
+                            .setSubject("Subject of the original message")
+                            .setBody("Content of the original message", StandardCharsets.UTF_8)
+                            .build()))
+                .build())
+            .build();
+        MDN mdnActual = MDN.parse(message);
+        assertThat(mdnActual.getOriginalMessage()).isPresent();
     }
 
     private String asString(Message message) throws Exception {

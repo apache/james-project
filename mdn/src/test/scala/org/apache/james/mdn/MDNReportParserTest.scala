@@ -47,7 +47,7 @@ class MDNReportParserTest {
       |Error: Message2
       |X-OPENPAAS-IP: 177.177.177.77
       |X-OPENPAAS-PORT: 8000
-      |""".replaceAllLiterally(System.lineSeparator(), "\r\n")
+      |""".replace(System.lineSeparator(), "\r\n")
       .stripMargin
     val expected = Some(MDNReport.builder
       .reportingUserAgentField(ReportingUserAgent.builder
@@ -87,7 +87,7 @@ class MDNReportParserTest {
   def parseShouldReturnMdnReportWhenMinimalSubset(): Unit = {
     val minimal = """Final-Recipient: rfc822; final_recipient
       |Disposition: automatic-action/MDN-sent-automatically;processed
-      |""".replaceAllLiterally(System.lineSeparator(), "\r\n")
+      |""".replace(System.lineSeparator(), "\r\n")
       .stripMargin
     val disposition = Disposition.builder
       .actionMode(DispositionActionMode.Automatic)
@@ -107,7 +107,7 @@ class MDNReportParserTest {
     val duplicated = """Final-Recipient: rfc822; final_recipient
       |Final-Recipient: rfc822; final_recipient
       |Disposition: automatic-action/MDN-sent-automatically;processed
-      |""".replaceAllLiterally(System.lineSeparator(), "\r\n")
+      |""".replace(System.lineSeparator(), "\r\n")
       .stripMargin
     val actual = MDNReportParser.parse(duplicated).toOption
     assertThat(actual.isEmpty)

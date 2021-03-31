@@ -298,7 +298,7 @@ class MDNReportFormattingTest {
             .formattedValue();
 
         assertThat(report)
-            .isEqualTo("Reporting-UA: UA_name; \r\n" +
+            .isEqualTo("Reporting-UA: UA_name\r\n" +
                 "Original-Recipient: rfc822; originalRecipient\r\n" +
                 "Final-Recipient: rfc822; final_recipient\r\n" +
                 "Original-Message-ID: original_message_id\r\n" +

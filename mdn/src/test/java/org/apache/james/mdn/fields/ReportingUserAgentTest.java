@@ -154,7 +154,7 @@ class ReportingUserAgentTest {
                 .userAgentName(USER_AGENT_NAME)
                 .build()
                 .formattedValue())
-            .isEqualTo("Reporting-UA: name; ");
+            .isEqualTo("Reporting-UA: name");
     }
 
     @Test
@@ -185,5 +185,32 @@ class ReportingUserAgentTest {
                 .build()
                 .formattedValue())
             .isEqualTo("Reporting-UA: name; product");
+    }
+
+    @Test
+    void fieldValueShouldDontHaveSemiColonWhenAgentProductIsNull() {
+        assertThat(ReportingUserAgent.builder()
+            .userAgentName(USER_AGENT_NAME)
+            .build()
+            .fieldValue())
+            .isEqualTo("name");
+    }
+
+    @Test
+    void fieldValueShouldSuccessWithFullProperties() {
+        assertThat(ReportingUserAgent.builder()
+            .userAgentName(USER_AGENT_NAME)
+            .userAgentProduct(USER_AGENT_PRODUCT)
+            .build()
+            .fieldValue())
+            .isEqualTo("name; product");
+    }
+
+    @Test
+    void fieldValueShouldFailWhenAgentNameIsNull() {
+        assertThatThrownBy(() -> ReportingUserAgent.builder()
+            .userAgentProduct(USER_AGENT_PRODUCT)
+            .build())
+            .isInstanceOf(NullPointerException.class);
     }
 }
