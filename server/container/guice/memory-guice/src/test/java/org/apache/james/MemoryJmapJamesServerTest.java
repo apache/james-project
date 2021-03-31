@@ -39,7 +39,7 @@ class MemoryJmapJamesServerTest {
     }
 
     @Nested
-    class JmapJamesServerTest implements JmapJamesServerContract {
+    class JmapJamesServerTest implements JmapJamesServerContract, MailsShouldBeWellReceived {
         @RegisterExtension
         JamesServerExtension jamesServerExtension = extensionBuilder().build();
     }
