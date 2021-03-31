@@ -15,3 +15,138 @@ Don't forget to add your key to https://downloads.apache.org/james/KEYS
 
     $ ssh people.apache.org
     $ cd /www/www.apache.org/dist/james
+
+== Release cheat sheet
+
+First, discuss your intention to perform a release on server-dev mailing list, to ensure a consensus would be reached
+before starting this time-consuming process.
+
+Then you can prepare the release materials:
+
+ * Ensure the `CHANGELOG.md` and `upgrade-instructions.md` files are up to date.
+ * Freeze your version in it and initiate a new iteration.
+ * Write a blog post within `/src/homepage/_post` about your release.
+ * Update the documentation website `/docs`, `src/site`, and `README.md` to point to your new release.
+ * Update the `/dockerfiles`
+
+Open a pull request to validate the changes.
+
+Once merged, it is time for the maven release.
+
+Set up your maven configuration in `~/.m2/settings.xml` :
+
+[source,bash]
+----
+<settings>
+  <servers>
+    <server>
+      <id>apache.snapshots.https</id>
+      <username>apacheId</username>
+      <password>xxxxxx</password>
+    </server>
+    <!-- To stage a release of some part of Maven -->
+    <server>
+      <id>apache.releases.https</id>
+      <username>apacheId</username>
+      <password>xxxxxxxx</password>
+    </server>
+    <server>
+      <id>svn.apache.org</id>
+      <username>apacheId</username>
+      <password>xxxxxx</password>
+    </server>
+
+  </servers>
+</settings>
+----
+
+Ensure that released branch HEAD have a clean green build on the CI.
+
+Run these commands to perform a release, from the master branch:
+
+[source,bash]
+----
+mvn clean install -DskipTests -Djib.skip -Dmaven.javadoc.skip=true -T 4
+
+mvn deploy -DskipTests -Dskip.jib -Dmaven.javadoc.skip=true -T 8
+
+mvn release:clean
+
+mvn release:prepare -Darguments="-Dmaven.javadoc.skip=true -DskipTests -Dskip.jib" -DautoVersionSubmodules=true
+
+mvn release:perform -Darguments="-Dmaven.javadoc.skip=true -DskipTests -Dskip.jib" -DautoVersionSubmodules=true
+----
+
+Failure to react when being prompted for git or GPG credentials might abort the release. GPG agent with a reasonable session time can be used to unlock the key before hand and reduce this risk.
+
+Then visit https://repository.apache.org/#stagingRepositories[Apache maven repository], go in staging repository, close
+the corresponding artifact before performing the vote.
+
+Send the following voting template on the server-dev mailing list to call the vote:
+
+[source]
+----
+Subject: Call for vote: Apache James x.x.x
+
+Hi,
+
+I would like to propose a new vote for x.x.x release of the Apache James server.
+
+You can find:
+
+ - The maven release staged in repository.apache.org as the
+artifact #xxx:
+https://repository.apache.org/content/repositories/orgapachejames-xxx/
+ - The changelog for
+x.x.x:
+https://github.com/apache/james-project/blob/master/CHANGELOG.md
+ - The compatibility instructions/upgrade
+recommendation:
+https://github.com/apache/james-project/blob/master/upgrade-instructions.md#360-version
+
+[You can comment on major changes ]
+
+Voting rules:
+ - This is a majority approval: this release may not be vetoed.
+ - A quorum of 3 binding votes is required
+ - The vote starts at XXXXXX xxxth of xxxxx xxxx, xxxx UTC+x
+ - The vote ends at XXXXXX xxxth of xxxxx xxxx, xxxx UTC+x
+
+You can answer to it just with +1 and -1. Down-votes may be motivated.
+
+3 binding votes are expected move forward on this release.
+
+Cheers,
+
+PMC member name
+----
+
+After the voting period, do the voting aftermaths. Reply in the voting thread:
+
+[source]
+----
+Hi all,
+
+I am happy to announce you the vote for the x.x.x release did succeed.
+
+The release received X positive votes, X of them being binding.
+
+Thanks to all contributors, developers and committers who made this
+possible!
+
+In the coming hours, I will finalize the release process, namely:
+
+- Publish the maven artifacts
+- Upgrade the download page and the (old) website
+- Announce the release
+
+Cheers,
+
+PMC member name
+----
+
+Once done:
+ * Update the downloadable artifacts (/server/app) - to be more detailed soon
+ * Deploy website changes
+ * Send an announce on server-user
+ * Send an Apache foundation wide announce
