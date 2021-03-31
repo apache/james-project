@@ -75,7 +75,7 @@ case class HasMoreChanges(value: Boolean) extends AnyVal
 
 case class MailboxChangesRequest(accountId: AccountId,
                                  sinceState: State,
-                                 maxChanged: Option[Limit]) extends WithAccountId
+                                 maxChanges: Option[Limit]) extends WithAccountId
 
 case class MailboxChangesResponse(accountId: AccountId,
                                   oldState: State,

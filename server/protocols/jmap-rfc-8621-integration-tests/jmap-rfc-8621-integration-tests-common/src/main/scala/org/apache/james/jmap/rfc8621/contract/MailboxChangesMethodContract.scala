@@ -1277,6 +1277,83 @@ trait MailboxChangesMethodContract {
   }
 
   @Test
+  def maxChangesShouldBeTakenIntoAccount(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
+
+    val provisioningState: State = provisionSystemMailboxes(server)
+
+    val mailboxId1: String = mailboxProbe
+      .createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
+      .serialize
+
+    val mailboxId2: String = mailboxProbe
+      .createMailbox(MailboxPath.forUser(BOB, "mailbox2"))
+      .serialize
+
+    val mailboxId3: String = mailboxProbe
+      .createMailbox(MailboxPath.forUser(BOB, "mailbox3"))
+      .serialize
+
+    val mailboxId4: String = mailboxProbe
+      .createMailbox(MailboxPath.forUser(BOB, "mailbox4"))
+      .serialize
+
+    val mailboxId5: String = mailboxProbe
+      .createMailbox(MailboxPath.forUser(BOB, "mailbox5"))
+      .serialize
+
+    val mailboxId6: String = mailboxProbe
+      .createMailbox(MailboxPath.forUser(BOB, "mailbox6"))
+      .serialize
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Mailbox/changes",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "sinceState": "${provisioningState.getValue}",
+         |      "maxChanges": 38
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .whenIgnoringPaths("methodResponses[0][1].newState")
+        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .isEqualTo(
+          s"""{
+             |    "sessionState": "${SESSION_STATE.value}",
+             |    "methodResponses": [
+             |      [ "Mailbox/changes", {
+             |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |        "oldState": "${provisioningState.getValue}",
+             |        "hasMoreChanges": false,
+             |        "updatedProperties": null,
+             |        "created": ["$mailboxId1", "$mailboxId2", "$mailboxId3", "$mailboxId4", "$mailboxId5", "$mailboxId6"],
+             |        "updated": [],
+             |        "destroyed": []
+             |      }, "c1"]
+             |    ]
+             |}""".stripMargin)
+    }
+  }
+
+  @Test
   def mailboxChangesShouldFailWhenAccountIdNotFound(server: GuiceJamesServer): Unit = {
     val jmapGuiceProbe:JmapGuiceProbe = server.getProbe(classOf[JmapGuiceProbe])
     val oldState: State = jmapGuiceProbe.getLatestMailboxState(AccountId.fromUsername(BOB))
