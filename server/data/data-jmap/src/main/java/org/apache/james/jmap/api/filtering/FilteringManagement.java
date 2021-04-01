@@ -36,8 +36,8 @@ public interface FilteringManagement {
         return defineRulesForUser(username, Arrays.asList(rules), ifInState);
     }
 
-    default Publisher<Version> clearRulesForUser(Username username, Optional<Version> ifInState) {
-        return defineRulesForUser(username, ImmutableList.of(), ifInState);
+    default Publisher<Version> clearRulesForUser(Username username) {
+        return defineRulesForUser(username, ImmutableList.of(), Optional.empty());
     }
 
     Publisher<Rules> listRulesForUser(Username username);

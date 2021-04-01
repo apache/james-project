@@ -56,4 +56,8 @@ public class Version {
     public String asString() {
         return String.valueOf(version);
     }
+
+    public int asInteger() {
+        return version;
+    }
 }

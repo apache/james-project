@@ -77,7 +77,7 @@ public interface FilteringManagementContract {
         FilteringManagement testee = instantiateFilteringManagement(eventStore);
 
         Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_1, RULE_2)).block();
-        Mono.from(testee.defineRulesForUser(USERNAME, Optional.of(new Version(0)), RULE_2, RULE_1)).block();
+        Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_2, RULE_1)).block();
 
         assertThat(Mono.from(testee.listRulesForUser(USERNAME)).block())
             .isEqualTo(new Rules(ImmutableList.of(RULE_2, RULE_1), new Version(1)));
@@ -123,7 +123,7 @@ public interface FilteringManagementContract {
         FilteringManagement testee = instantiateFilteringManagement(eventStore);
 
         Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2, RULE_1)).block();
-        Mono.from(testee.clearRulesForUser(USERNAME, Optional.of(new Version(0)))).block();
+        Mono.from(testee.clearRulesForUser(USERNAME)).block();
 
         assertThat(Mono.from(testee.listRulesForUser(USERNAME)).block())
             .isEqualTo(new Rules(ImmutableList.of(), new Version(1)));
@@ -166,4 +166,66 @@ public interface FilteringManagementContract {
         assertThat(Mono.from(testee.defineRulesForUser(USERNAME, Optional.of(new Version(0)), RULE_3, RULE_2)).block())
             .isEqualTo(new Version(1));
     }
+
+    @Test
+    default void givenARulesWithVersionIsOneThenUpdateRulesWithIfInStateIsOneShouldSucceed(EventStore eventStore) {
+        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+
+        Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2, RULE_1)).block();
+        Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2)).block();
+
+        assertThat(Mono.from(testee.listRulesForUser(USERNAME)).block())
+            .isEqualTo(new Rules(ImmutableList.of(RULE_3, RULE_2), new Version(1)));
+
+        assertThat(Mono.from(testee.defineRulesForUser(USERNAME, Optional.of(new Version(1)), RULE_3, RULE_2)).block())
+            .isEqualTo(new Version(2));
+    }
+
+    @Test
+    default void setRulesWithEmptyIfInStateWhenNonStateIsDefinedShouldSucceed(EventStore eventStore) {
+        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+
+        assertThat(Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2)).block())
+            .isEqualTo(new Version(0));
+    }
+
+    @Test
+    default void setRulesWithEmptyIfInStateWhenAStateIsDefinedShouldSucceed(EventStore eventStore) {
+        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+
+        Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2)).block();
+
+        assertThat(Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2)).block())
+            .isEqualTo(new Version(1));
+    }
+
+    @Test
+    default void setRulesWithIfInStateIsInitialWhenNonStateIsDefinedShouldSucceed(EventStore eventStore) {
+        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+
+        assertThat(Mono.from(testee.defineRulesForUser(USERNAME, Optional.of(Version.INITIAL), RULE_3, RULE_2)).block())
+            .isEqualTo(new Version(0));
+    }
+
+    @Test
+    default void setRulesWithIfInStateIsInitialWhenAStateIsDefinedShouldFail(EventStore eventStore) {
+        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+
+        Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2, RULE_1)).block();
+
+        assertThat(Mono.from(testee.listRulesForUser(USERNAME)).block())
+            .isEqualTo(new Rules(ImmutableList.of(RULE_3, RULE_2, RULE_1), new Version(0)));
+
+        assertThatThrownBy(() -> Mono.from(testee.defineRulesForUser(USERNAME, Optional.of(Version.INITIAL), RULE_2, RULE_1)).block())
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    default void setRulesWithIfInStateIsOneWhenNonStateIsDefinedShouldFail(EventStore eventStore) {
+        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+
+        assertThatThrownBy(() -> Mono.from(testee.defineRulesForUser(USERNAME, Optional.of(new Version(1)), RULE_2, RULE_1)).block())
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
 }
