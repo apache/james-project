@@ -33,6 +33,7 @@ import static org.apache.james.jmap.JmapCommonRequests.getAllMailboxesIds;
 import static org.apache.james.jmap.JmapCommonRequests.getLatestMessageId;
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
 import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsForAccount;
+import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsInMailbox;
 import static org.apache.james.jmap.LocalHostURIBuilder.baseUri;
 import static org.apache.james.mailbox.backup.ZipAssert.EntryChecks.hasName;
 import static org.apache.james.mailbox.backup.ZipAssert.assertThatZip;
@@ -247,6 +248,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
             .select(TestIMAPClient.INBOX);
 
         testIMAPClient.moveFirstMessage(MAILBOX_NAME);
+        WAIT_TWO_MINUTES.until(() -> listMessageIdsInMailbox(homerAccessToken, otherMailboxId.serialize()).size() == 1);
 
         testIMAPClient.delete(MAILBOX_NAME);
 
