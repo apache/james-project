@@ -68,7 +68,7 @@ public class FilteringAggregate {
 
     public List<? extends Event> defineRules(DefineRulesCommand storeCommand) {
         Preconditions.checkArgument(shouldNotContainDuplicates(storeCommand.getRules()));
-        Preconditions.checkArgument(expectedState(storeCommand.getIfInState()));
+        Preconditions.checkArgument(expectedState(storeCommand.getIfInState()), "Provided state must be as same as the current state");
         ImmutableList<RuleSetDefined> events = ImmutableList.of(
             new RuleSetDefined(aggregateId, history.getNextEventId(), ImmutableList.copyOf(storeCommand.getRules())));
         events.forEach(this::apply);
