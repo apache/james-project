@@ -1165,7 +1165,6 @@ trait EmailSubmissionSetMethodContract {
                    |}""".stripMargin)
   }
 
-
   @Test
   def setShouldFailWhenOnSuccessDestroyEmailMissesTheCreationIdSharp(server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder
