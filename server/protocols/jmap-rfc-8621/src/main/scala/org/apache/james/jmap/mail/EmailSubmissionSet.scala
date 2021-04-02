@@ -21,6 +21,7 @@ package org.apache.james.jmap.mail
 
 import java.util.UUID
 
+import cats.implicits._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
@@ -28,7 +29,6 @@ import org.apache.james.core.MailAddress
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{AccountId, Id, Properties, SetError, State}
-import org.apache.james.jmap.mail.EmailSet.UnparsedMessageId
 import org.apache.james.jmap.mail.EmailSubmissionSet.EmailSubmissionCreationId
 import org.apache.james.jmap.method.{EmailSubmissionCreationParseException, WithAccountId}
 import org.apache.james.mailbox.model.MessageId
@@ -44,13 +44,25 @@ object EmailSubmissionId {
 
 case class EmailSubmissionSetRequest(accountId: AccountId,
                                      create: Option[Map[EmailSubmissionCreationId, JsObject]],
-                                     onSuccessUpdateEmail: Option[Map[UnparsedMessageId, JsObject]],
+                                     onSuccessUpdateEmail: Option[Map[EmailSubmissionCreationId, JsObject]],
                                      onSuccessDestroyEmail: Option[DestroyIds]) extends WithAccountId {
-  def implicitEmailSetRequest: EmailSetRequest = EmailSetRequest(
-    accountId = accountId,
-    create = None,
-    update = onSuccessUpdateEmail,
-    destroy = onSuccessDestroyEmail)
+  def implicitEmailSetRequest(messageIdResolver: EmailSubmissionCreationId => Either[IllegalArgumentException, MessageId]): Either[IllegalArgumentException, EmailSetRequest] =
+    onSuccessUpdateEmail.map(map => map.toList
+      .map {
+        case (creationId, json) => messageIdResolver.apply(creationId).map(messageId => (EmailSet.asUnparsed(messageId), json))
+      }
+      .sequence
+      .map(list => list.toMap)
+      .map(resolvedOnSuccessUpdateEmail => EmailSetRequest(
+        accountId = accountId,
+        create = None,
+        update = Some(resolvedOnSuccessUpdateEmail),
+        destroy = onSuccessDestroyEmail)))
+      .getOrElse(scala.Right(EmailSetRequest(
+        accountId = accountId,
+        create = None,
+        update = None,
+        destroy = onSuccessDestroyEmail)))
 }
 
 case class EmailSubmissionSetResponse(accountId: AccountId,

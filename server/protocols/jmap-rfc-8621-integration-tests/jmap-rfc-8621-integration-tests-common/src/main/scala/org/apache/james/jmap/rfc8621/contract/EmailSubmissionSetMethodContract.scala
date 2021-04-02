@@ -857,7 +857,7 @@ trait EmailSubmissionSetMethodContract {
          |         }
          |       },
          |       "onSuccessUpdateEmail": {
-         |         "${messageId.serialize}": {
+         |         "#k1490": {
          |           "keywords": {"$$sent":true}
          |         }
          |       }

@@ -23,6 +23,7 @@ import java.io.InputStream
 
 import cats.implicits._
 import eu.timepit.refined.auto._
+import eu.timepit.refined.refineV
 import javax.annotation.PreDestroy
 import javax.inject.Inject
 import javax.mail.Address
@@ -30,6 +31,7 @@ import javax.mail.Message.RecipientType
 import javax.mail.internet.{InternetAddress, MimeMessage}
 import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
+import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
 import org.apache.james.jmap.core.{ClientId, Id, Invocation, Properties, ServerId, SetError, State}
@@ -39,7 +41,7 @@ import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreati
 import org.apache.james.jmap.method.EmailSubmissionSetMethod.{LOGGER, MAIL_METADATA_USERNAME_ATTRIBUTE}
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.lifecycle.api.{LifecycleUtil, Startable}
-import org.apache.james.mailbox.model.{FetchGroup, MessageResult}
+import org.apache.james.mailbox.model.{FetchGroup, MessageId, MessageResult}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.queue.api.MailQueueFactory.SPOOL
@@ -47,7 +49,6 @@ import org.apache.james.queue.api.{MailQueue, MailQueueFactory}
 import org.apache.james.rrt.api.CanSendFrom
 import org.apache.james.server.core.{MailImpl, MimeMessageSource, MimeMessageWrapper}
 import org.apache.mailet.{Attribute, AttributeName, AttributeValue}
-import org.reactivestreams.Publisher
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json._
 import reactor.core.scala.publisher.{SFlux, SMono}
@@ -91,7 +92,9 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
   sealed trait CreationResult {
     def emailSubmissionCreationId: EmailSubmissionCreationId
   }
-  case class CreationSuccess(emailSubmissionCreationId: EmailSubmissionCreationId, emailSubmissionCreationResponse: EmailSubmissionCreationResponse) extends CreationResult
+  case class CreationSuccess(emailSubmissionCreationId: EmailSubmissionCreationId,
+                             emailSubmissionCreationResponse: EmailSubmissionCreationResponse,
+                             messageId: MessageId) extends CreationResult
   case class CreationFailure(emailSubmissionCreationId: EmailSubmissionCreationId, exception: Throwable) extends CreationResult {
     def asSetError: SetError = exception match {
       case e: EmailSubmissionCreationParseException => e.setError
@@ -126,6 +129,29 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         case _ => None
       }
       .toMap
+
+    def resolveMessageId(creationId: EmailSubmissionCreationId): Either[IllegalArgumentException, MessageId] = {
+      if (creationId.startsWith("#")) {
+        val realId = creationId.substring(1)
+        val validatedId: Either[String, EmailSubmissionCreationId] = refineV[IdConstraint](realId)
+        validatedId
+          .left.map(s => new IllegalArgumentException(s))
+          .flatMap(id => retrieveMessageId(id)
+            .map(scala.Right(_))
+            .getOrElse(Left(new IllegalArgumentException(s"$creationId cannot be referenced in current method call"))))
+      } else {
+        Left(new IllegalArgumentException(s"$creationId cannot be retrieved as storage for EmailSubmission is not yet implemented"))
+      }
+    }
+
+    private def retrieveMessageId(creationId: EmailSubmissionCreationId): Option[MessageId] =
+      created.flatMap {
+        case success: CreationSuccess => Some(success)
+        case _: CreationFailure => None
+      }.filter(_.emailSubmissionCreationId.equals(creationId))
+        .map(_.messageId)
+        .toList
+        .headOption
   }
 
   def init: Unit =
@@ -135,28 +161,32 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
     Try(queue.close())
       .recover(e => LOGGER.debug("error closing queue", e))
 
-  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailSubmissionSetRequest): Publisher[InvocationWithContext] = {
-    val result = for {
-      createdResults <- create(request, mailboxSession, invocation.processingContext)
-    } yield InvocationWithContext(
-      invocation = Invocation(
-        methodName = invocation.invocation.methodName,
-        arguments = Arguments(serializer.serializeEmailSubmissionSetResponse(EmailSubmissionSetResponse(
-            accountId = request.accountId,
-            newState = State.INSTANCE,
-            created = Some(createdResults._1.retrieveCreated).filter(_.nonEmpty),
-            notCreated = Some(createdResults._1.retrieveErrors).filter(_.nonEmpty)))
-          .as[JsObject]),
-        methodCallId = invocation.invocation.methodCallId),
-      processingContext = createdResults._2)
+  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailSubmissionSetRequest): SFlux[InvocationWithContext] =
+    create(request, mailboxSession, invocation.processingContext)
+      .flatMapMany(createdResults => {
+        val explicitInvocation: InvocationWithContext = InvocationWithContext(
+          invocation = Invocation(
+            methodName = invocation.invocation.methodName,
+            arguments = Arguments(serializer.serializeEmailSubmissionSetResponse(EmailSubmissionSetResponse(
+              accountId = request.accountId,
+              newState = State.INSTANCE,
+              created = Some(createdResults._1.retrieveCreated).filter(_.nonEmpty),
+              notCreated = Some(createdResults._1.retrieveErrors).filter(_.nonEmpty)))
+              .as[JsObject]),
+            methodCallId = invocation.invocation.methodCallId),
+          processingContext = createdResults._2)
 
-    SFlux.concat(result,
-      emailSetMethod.doProcess(
-        capabilities = capabilities,
-        invocation = invocation,
-        mailboxSession = mailboxSession,
-        request = request.implicitEmailSetRequest))
-  }
+
+        val emailSetCall: SMono[InvocationWithContext] = request.implicitEmailSetRequest(createdResults._1.resolveMessageId)
+          .fold(e => SMono.error(e),
+            emailSetRequest => emailSetMethod.doProcess(
+              capabilities = capabilities,
+              invocation = invocation,
+              mailboxSession = mailboxSession,
+              request = emailSetRequest))
+
+        SFlux.concat(SMono.just(explicitInvocation), emailSetCall)
+      })
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailSubmissionSetRequest] =
     serializer.deserializeEmailSubmissionSetRequest(invocation.arguments.value) match {
@@ -185,12 +215,14 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
                             processingContext: ProcessingContext): (CreationResult, ProcessingContext) =
     parseCreate(jsObject)
       .flatMap(emailSubmissionCreationRequest => sendEmail(mailboxSession, emailSubmissionCreationRequest))
-      .flatMap(creationResponse => recordCreationIdInProcessingContext(emailSubmissionCreationId, processingContext, creationResponse.id)
-        .map(context => (creationResponse, context)))
+      .flatMap {
+        case (creationResponse, messageId) =>
+          recordCreationIdInProcessingContext(emailSubmissionCreationId, processingContext, creationResponse.id)
+            .map(context => (creationResponse, messageId, context))
+      }
       .fold(e => (CreationFailure(emailSubmissionCreationId, e), processingContext),
-        creationResponseWithUpdatedContext => {
-          (CreationSuccess(emailSubmissionCreationId, creationResponseWithUpdatedContext._1), creationResponseWithUpdatedContext._2)
-        })
+        creation =>
+          (CreationSuccess(emailSubmissionCreationId, creation._1, creation._2), creation._3))
 
   private def parseCreate(jsObject: JsObject): Either[EmailSubmissionCreationParseException, EmailSubmissionCreationRequest] =
     EmailSubmissionCreationRequest.validateProperties(jsObject)
@@ -208,7 +240,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
     }
 
   private def sendEmail(mailboxSession: MailboxSession,
-                        request: EmailSubmissionCreationRequest): Either[Throwable, EmailSubmissionCreationResponse] = {
+                        request: EmailSubmissionCreationRequest): Either[Throwable, (EmailSubmissionCreationResponse, MessageId)] = {
     val message: Either[Exception, MessageResult] = messageIdManager.getMessage(request.emailId, FetchGroup.FULL_CONTENT, mailboxSession)
       .asScala
       .toList
@@ -236,7 +268,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       } yield {
         EmailSubmissionCreationResponse(submissionId)
       }
-      result.toEither
+      result.toEither.map(response => (response, request.emailId))
     })
   }
 
