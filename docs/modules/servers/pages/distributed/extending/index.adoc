@@ -3,6 +3,8 @@
 
 == Available extension mechanisms
 
+image::mail-processing-hexagons.png[Extension mechanisms for the Distributed Server]
+
 The Distributed Server exposes several interfaces allowing the user to write custom extensions in
 order to extend the Distributed Server behavior.
 
