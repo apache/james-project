@@ -22,12 +22,14 @@ We speak of:
  protocols configuration files to learn more.
  
  - **Back-office servers** handles other services like:
+
     - Mail processing.
     - Remote delivery.
     - Event processing.
     - Task execution.
 
 Front-line servers will likely not handle back office responsibilities (but be sure to have back-office servers that do!).
+
   - xref:distributed/configure/mailetcontainer.adoc[Mail processing can be switched off].
   - xref:distributed/configure/listeners.adoc[Mailbox event processing can be switched off].
   - xref:distributed/configure/rabbitmq.adoc[Task execution can be switched off].
