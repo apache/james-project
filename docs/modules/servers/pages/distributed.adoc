@@ -18,7 +18,7 @@ This server is:
 In this section of the documentation, we will introduce you to:
 
 * xref:distributed/objectives.adoc[Objectives and motivation of the Distributed Server]
-* xref:distributed/architecture.adoc[Overview of architecture]
+* xref:distributed/architecture/index.adoc[Overview of architecture]
 * xref:distributed/run.adoc[Running the Distributed Server]
 * xref:distributed/run-docker.adoc[Run the Distributed Server with Docker]
 * xref:distributed/configure/index.adoc[Configure the Distributed Server]
