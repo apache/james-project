@@ -188,11 +188,13 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         SFlux.concat(SMono.just(explicitInvocation), emailSetCall)
       })
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailSubmissionSetRequest] =
-    serializer.deserializeEmailSubmissionSetRequest(invocation.arguments.value) match {
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailSubmissionSetRequest] = {
+    val maybeRequestRequest = serializer.deserializeEmailSubmissionSetRequest(invocation.arguments.value) match {
       case JsSuccess(emailSubmissionSetRequest, _) => Right(emailSubmissionSetRequest)
       case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
     }
+    maybeRequestRequest.flatMap(_.validate)
+  }
 
   private def create(request: EmailSubmissionSetRequest,
                      session: MailboxSession,

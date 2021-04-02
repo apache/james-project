@@ -22,11 +22,12 @@ package org.apache.james.jmap.mail
 import java.util.UUID
 
 import cats.implicits._
+import eu.timepit.refined.auto.autoUnwrap
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.core.MailAddress
-import org.apache.james.jmap.core.Id.Id
+import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{AccountId, Id, Properties, SetError, State}
 import org.apache.james.jmap.mail.EmailSubmissionSet.EmailSubmissionCreationId
@@ -63,6 +64,33 @@ case class EmailSubmissionSetRequest(accountId: AccountId,
         create = None,
         update = None,
         destroy = onSuccessDestroyEmail)))
+
+  def validate: Either[IllegalArgumentException, EmailSubmissionSetRequest] = {
+    val supportedCreationIds: List[EmailSubmissionCreationId] = create.getOrElse(Map()).keys.toList
+
+    onSuccessUpdateEmail.getOrElse(Map())
+      .keys
+      .toList
+      .map(id => validate(id, supportedCreationIds))
+      .sequence
+      .map(_ => this)
+  }
+
+  private def validate(creationId: EmailSubmissionCreationId, supportedCreationIds: List[EmailSubmissionCreationId]): Either[IllegalArgumentException, EmailSubmissionCreationId] = {
+    if (creationId.startsWith("#")) {
+      val realId = creationId.substring(1)
+      val validatedId: Either[String, EmailSubmissionCreationId] = refineV[IdConstraint](realId)
+      validatedId
+        .left.map(s => new IllegalArgumentException(s))
+        .flatMap(id => if (supportedCreationIds.contains(id)) {
+          scala.Right(id)
+        } else {
+          Left(new IllegalArgumentException(s"$creationId cannot be referenced in current method call"))
+        })
+    } else {
+      Left(new IllegalArgumentException(s"$creationId cannot be retrieved as storage for EmailSubmission is not yet implemented"))
+    }
+  }
 }
 
 case class EmailSubmissionSetResponse(accountId: AccountId,
