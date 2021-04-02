@@ -1167,7 +1167,7 @@ trait EmailSubmissionSetMethodContract {
 
 
   @Test
-  def test(server: GuiceJamesServer): Unit = {
+  def setShouldFailWhenOnSuccessDestroyEmailMissesTheCreationIdSharp(server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
@@ -1206,7 +1206,7 @@ trait EmailSubmissionSetMethodContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(requestBob)
     .when
-      .post.prettyPeek()
+      .post
     .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
@@ -1231,7 +1231,7 @@ trait EmailSubmissionSetMethodContract {
   }
 
   @Test
-  def test2(server: GuiceJamesServer): Unit = {
+  def setShouldFailWhenOnSuccessDestroyEmailDoesNotReferenceACreationWithinThisCall(server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
@@ -1270,7 +1270,7 @@ trait EmailSubmissionSetMethodContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(requestBob)
     .when
-      .post.prettyPeek()
+      .post
     .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
