@@ -1100,7 +1100,7 @@ trait EmailSubmissionSetMethodContract {
          |           }
          |         }
          |       },
-         |       "onSuccessDestroyEmail": ["${messageId.serialize}"]
+         |       "onSuccessDestroyEmail": ["#k1490"]
          |   }, "c1"],
          |   ["Email/get",
          |     {
@@ -1163,6 +1163,135 @@ trait EmailSubmissionSetMethodContract {
                    |        ]
                    |    ]
                    |}""".stripMargin)
+  }
+
+
+  @Test
+  def test(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(BOB.asString)
+      .setFrom(BOB.asString)
+      .setTo(ANDRE.asString)
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+
+    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+      .build(message))
+      .getMessageId
+
+    val requestBob =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [
+         |     ["EmailSubmission/set", {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "create": {
+         |         "k1490": {
+         |           "emailId": "${messageId.serialize}",
+         |           "envelope": {
+         |             "mailFrom": {"email": "${BOB.asString}"},
+         |             "rcptTo": [{"email": "${ANDRE.asString}"}]
+         |           }
+         |         }
+         |       },
+         |       "onSuccessDestroyEmail": ["notFound"]
+         |   }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(requestBob)
+    .when
+      .post.prettyPeek()
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(s"""{
+                    |    "sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+                    |    "methodResponses": [
+                    |        [
+                    |            "error",
+                    |            {
+                    |                "type": "invalidArguments",
+                    |                "description": "notFound cannot be retrieved as storage for EmailSubmission is not yet implemented"
+                    |            },
+                    |            "c1"
+                    |        ]
+                    |    ]
+                    |}""".stripMargin)
+  }
+
+  @Test
+  def test2(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(BOB.asString)
+      .setFrom(BOB.asString)
+      .setTo(ANDRE.asString)
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+
+    val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobDraftsPath)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobDraftsPath, AppendCommand.builder()
+      .build(message))
+      .getMessageId
+
+    val requestBob =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [
+         |     ["EmailSubmission/set", {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "create": {
+         |         "k1490": {
+         |           "emailId": "${messageId.serialize}",
+         |           "envelope": {
+         |             "mailFrom": {"email": "${BOB.asString}"},
+         |             "rcptTo": [{"email": "${ANDRE.asString}"}]
+         |           }
+         |         }
+         |       },
+         |       "onSuccessDestroyEmail": ["#notFound"]
+         |   }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(requestBob)
+    .when
+      .post.prettyPeek()
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(s"""{
+                    |    "sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+                    |    "methodResponses": [
+                    |        [
+                    |            "error",
+                    |            {
+                    |                "type": "invalidArguments",
+                    |                "description": "#notFound cannot be referenced in current method call"
+                    |            },
+                    |            "c1"
+                    |        ]
+                    |    ]
+                    |}""".stripMargin)
   }
 
   @Test
