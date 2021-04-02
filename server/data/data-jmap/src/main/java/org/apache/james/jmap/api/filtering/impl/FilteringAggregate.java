@@ -20,6 +20,7 @@
 package org.apache.james.jmap.api.filtering.impl;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventId;
@@ -65,10 +66,11 @@ public class FilteringAggregate {
         this.history = history;
     }
 
-    public List<? extends Event> defineRules(List<Rule> rules) {
-        Preconditions.checkArgument(shouldNotContainDuplicates(rules));
+    public List<? extends Event> defineRules(DefineRulesCommand storeCommand) {
+        Preconditions.checkArgument(shouldNotContainDuplicates(storeCommand.getRules()));
+        Preconditions.checkArgument(expectedState(storeCommand.getIfInState()), "Provided state must be as same as the current state");
         ImmutableList<RuleSetDefined> events = ImmutableList.of(
-            new RuleSetDefined(aggregateId, history.getNextEventId(), ImmutableList.copyOf(rules)));
+            new RuleSetDefined(aggregateId, history.getNextEventId(), ImmutableList.copyOf(storeCommand.getRules())));
         events.forEach(this::apply);
         return events;
     }
@@ -79,6 +81,14 @@ public class FilteringAggregate {
             .distinct()
             .count();
         return uniqueIdCount == rules.size();
+    }
+
+    private boolean expectedState(Optional<Version> ifInState) {
+        return ifInState.map(requestedVersion -> history.getVersionAsJava()
+                .map(eventId -> new Version(eventId.value()))
+                .orElse(Version.INITIAL)
+                .equals(requestedVersion))
+            .orElse(true);
     }
 
     public Rules listRules() {

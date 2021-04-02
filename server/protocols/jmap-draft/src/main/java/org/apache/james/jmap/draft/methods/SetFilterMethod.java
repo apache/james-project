@@ -24,6 +24,7 @@ import static org.apache.james.util.ReactorUtils.context;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -155,7 +156,7 @@ public class SetFilterMethod implements Method {
         ensureNoDuplicatedRules(rules);
         ensureNoMultipleMailboxesRules(rules);
 
-        return Mono.from(filteringManagement.defineRulesForUser(username, rules))
+        return Mono.from(filteringManagement.defineRulesForUser(username, rules, Optional.empty()))
             .thenReturn(JmapResponse.builder()
                 .methodCallId(methodCallId)
                 .responseName(RESPONSE_NAME)

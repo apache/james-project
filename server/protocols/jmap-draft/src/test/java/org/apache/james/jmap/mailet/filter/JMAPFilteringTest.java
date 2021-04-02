@@ -694,6 +694,7 @@ class JMAPFilteringTest {
             MailboxId mailbox3Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_3");
 
             Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+                Optional.empty(),
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
@@ -731,6 +732,7 @@ class JMAPFilteringTest {
             MailboxId mailbox3Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_3");
 
             Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+                Optional.empty(),
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
@@ -755,6 +757,7 @@ class JMAPFilteringTest {
             MailboxId mailbox1Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_1");
 
             Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+                Optional.empty(),
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
@@ -824,6 +827,7 @@ class JMAPFilteringTest {
         void serviceShouldNotThrowWhenUnknownMailboxId(JMAPFilteringTestSystem testSystem) throws Exception {
             String unknownMailboxId = "4242";
             Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+                Optional.empty(),
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
@@ -842,6 +846,7 @@ class JMAPFilteringTest {
         void mailDirectiveShouldNotBeSetWhenUnknownMailboxId(JMAPFilteringTestSystem testSystem) throws Exception {
             String unknownMailboxId = "4242";
             Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+                Optional.empty(),
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
@@ -862,6 +867,7 @@ class JMAPFilteringTest {
         void rulesWithInvalidMailboxIdsShouldBeSkept(JMAPFilteringTestSystem testSystem) throws Exception {
             String unknownMailboxId = "4242";
             Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+                Optional.empty(),
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
@@ -890,6 +896,7 @@ class JMAPFilteringTest {
             String unknownMailboxId = "4242";
 
             Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+                Optional.empty(),
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")

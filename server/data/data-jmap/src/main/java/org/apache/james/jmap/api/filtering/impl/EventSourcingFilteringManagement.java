@@ -20,6 +20,7 @@
 package org.apache.james.jmap.api.filtering.impl;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -27,6 +28,7 @@ import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.EventSourcingSystem;
 import org.apache.james.eventsourcing.Subscriber;
 import org.apache.james.eventsourcing.eventstore.EventStore;
+import org.apache.james.eventsourcing.eventstore.History;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.api.filtering.Rules;
@@ -56,8 +58,12 @@ public class EventSourcingFilteringManagement implements FilteringManagement {
     }
 
     @Override
-    public Publisher<Void> defineRulesForUser(Username username, List<Rule> rules) {
-        return Mono.from(eventSourcingSystem.dispatch(new DefineRulesCommand(username, rules))).then();
+    public Publisher<Version> defineRulesForUser(Username username, List<Rule> rules, Optional<Version> ifInState) {
+        return Mono.from(eventSourcingSystem.dispatch(new DefineRulesCommand(username, rules, ifInState)))
+            .then(Mono.from(eventStore.getEventsOfAggregate(new FilteringAggregateId(username)))
+                .map(History::getVersionAsJava)
+                .map(eventIdOptional -> eventIdOptional.map(eventId -> new Version(eventId.value()))
+                    .orElse(Version.INITIAL)));
     }
 
     @Override
