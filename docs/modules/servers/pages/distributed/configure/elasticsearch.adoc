@@ -111,6 +111,9 @@ xref:distributed/operate/webadmin.adoc#reindexing_all_mails[a full re-indexing]n
 
 == Exporting metrics directly to ElasticSearch
 
+WARNING: A separate ElasticSearch server is required, as an ElasticSearch 6.3 is needed, which is
+not compatible with ElasticSearch 7.10, required by James.
+
 For configuring the metric reporting on ElasticSearch :
 
 .elasticsearch.properties content
@@ -136,7 +139,7 @@ For configuring the metric reporting on ElasticSearch :
 
 == SSL Trusting Configuration
 
-By default James will use the system TrustStore to validate https server certificates, if the certificate on
+By default, James will use the system TrustStore to validate https server certificates, if the certificate on
 ES side is already in the system TrustStore, you can leave the sslValidationStrategy property empty or set it to default.
 
 .elasticsearch.properties content
