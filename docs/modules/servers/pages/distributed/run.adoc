@@ -84,23 +84,3 @@ objectstorage.s3.region=eu-west-1
 objectstorage.s3.accessKeyId=accessKey1
 objectstorage.s3.secretKey=secretKey1
 ----
-
-== Guice-cassandra-rabbitmq-ldap
-
-You can follow the same guide to build and run
-guice-cassandra-rabbitmq-s3-ldap artifact, except that:
-
- * The *jar* and *libs* needs to be retrieve from
-server/container/guice/cassandra-rabbitmq-ldap-guice/target after
-compilation
- * The sample configuration can be found in
-https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/cassandra-rabbitmq-ldap/destination/conf[dockerfiles/run/guice/cassandra-rabbitmq-ldap/destination/conf]
- * You need to configure James to be connecting to a running LDAP server.
-The configuration file is located in
-https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/cassandra-rabbitmq-ldap/destination/conf/usersrepository.xml[dockerfiles/run/guice/cassandra-rabbitmq-ldap/destination/conf/usersrepository.xml]
- * You can then launch James via this command:
-
-[source,bash]
-----
-$ java -Dworking.directory=. -jar target/james-server-cassandra-rabbitmq-ldap-guice.jar
-----

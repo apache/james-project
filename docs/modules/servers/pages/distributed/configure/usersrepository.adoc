@@ -40,8 +40,8 @@ acting on the behalf of any user.
 
 == Configuring a LDAP
 
-If you run the LDAP fashion of the distributed server, you need to configure the properties for accessing
-your LDAP server in this file.
+Alternatively you can authenticate your users against a LDAP server. You need to configure
+the properties for accessing your LDAP server in this file.
 
 Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq-ldap/destination/conf/usersrepository.xml[example]
 to get some examples and hints.
