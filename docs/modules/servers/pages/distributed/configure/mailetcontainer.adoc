@@ -5,7 +5,7 @@ This documents explains how to configure Mail processing. Mails pass through the
 MailetContainer is a Matchers (condition for executing a mailet) and Mailets (execution units that perform
 actions based on incoming mail) pipeline arranged into processors (List of mailet/matcher pairs allowing
 better logical organisation). You can read more about these concepts on
-xref:distributed/architecture.adoc#_mail_processing[the mailet container feature description].
+xref:distributed/architecture/index.adoc#_mail_processing[the mailet container feature description].
 
 Apache James Server includes a number of xref:distributed/configure/mailets.adoc[Packaged Mailets] and
 xref:distributed/configure/matchers.adoc[Packaged Matchers].
