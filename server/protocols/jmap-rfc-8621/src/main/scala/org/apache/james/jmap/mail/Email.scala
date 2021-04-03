@@ -27,13 +27,13 @@ import cats.implicits._
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
-import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
 import javax.inject.Inject
 import org.apache.james.jmap.api.model.Preview
 import org.apache.james.jmap.api.projections.{MessageFastViewPrecomputedProperties, MessageFastViewProjection}
+import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{Properties, UTCDate}
 import org.apache.james.jmap.mail.BracketHeader.sanitize
 import org.apache.james.jmap.mail.Email.{Size, sanitizeSize}
@@ -61,8 +61,7 @@ import scala.util.{Failure, Success, Try}
 object Email {
   private val logger: Logger = LoggerFactory.getLogger(classOf[EmailView])
 
-  type UnparsedEmailIdConstraint = NonEmpty
-  type UnparsedEmailId = String Refined UnparsedEmailIdConstraint
+  type UnparsedEmailId = String Refined IdConstraint
 
   val defaultProperties: Properties = Properties("id", "blobId", "threadId", "mailboxIds", "keywords", "size",
     "receivedAt", "messageId", "inReplyTo", "references", "sender", "from",
@@ -75,7 +74,7 @@ object Email {
   val idProperty: Properties = Properties("id")
 
   def asUnparsed(messageId: MessageId): Try[UnparsedEmailId] =
-    refined.refineV[UnparsedEmailIdConstraint](messageId.serialize()) match {
+    refined.refineV[IdConstraint](messageId.serialize()) match {
       case Left(e) => Failure(new IllegalArgumentException(e))
       case scala.Right(value) => Success(value)
     }

@@ -20,12 +20,12 @@
 package org.apache.james.jmap.json
 
 import eu.timepit.refined._
-import eu.timepit.refined.collection.NonEmpty
 import javax.inject.Inject
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{ClientId, Properties, SetError, State}
-import org.apache.james.jmap.mail.MailboxGet.{UnparsedMailboxId, UnparsedMailboxIdConstraint}
+import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
 import org.apache.james.jmap.mail.MailboxSetRequest.MailboxCreationId
 import org.apache.james.jmap.mail.{DelegatedNamespace, Ids, IsSubscribed, Mailbox, MailboxChangesRequest, MailboxChangesResponse, MailboxCreationRequest, MailboxCreationResponse, MailboxGetRequest, MailboxGetResponse, MailboxNamespace, MailboxPatchObject, MailboxRights, MailboxSetRequest, MailboxSetResponse, MailboxUpdateResponse, MayAddItems, MayCreateChild, MayDelete, MayReadItems, MayRemoveItems, MayRename, MaySetKeywords, MaySetSeen, MaySubmit, NotFound, PersonalNamespace, Quota, QuotaId, QuotaRoot, Quotas, RemoveEmailsOnDestroy, Rfc4314Rights, Right, Rights, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads, Value}
 import org.apache.james.mailbox.Role
@@ -120,10 +120,10 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
   private implicit val mailboxPatchObject: Reads[MailboxPatchObject] = Json.valueReads[MailboxPatchObject]
 
   private implicit val mapPatchObjectByMailboxIdReads: Reads[Map[UnparsedMailboxId, MailboxPatchObject]] =
-    Reads.mapReads[UnparsedMailboxId, MailboxPatchObject] {string => refineV[UnparsedMailboxIdConstraint](string).fold(JsError(_), id => JsSuccess(id)) }
+    Reads.mapReads[UnparsedMailboxId, MailboxPatchObject] {string => refineV[IdConstraint](string).fold(JsError(_), id => JsSuccess(id)) }
 
   private implicit val mapCreationRequestByMailBoxCreationId: Reads[Map[MailboxCreationId, JsObject]] =
-    Reads.mapReads[MailboxCreationId, JsObject] {string => refineV[NonEmpty](string).fold(JsError(_), id => JsSuccess(id)) }
+    Reads.mapReads[MailboxCreationId, JsObject] {string => refineV[IdConstraint](string).fold(JsError(_), id => JsSuccess(id)) }
 
   private implicit val mailboxSetRequestReads: Reads[MailboxSetRequest] = Json.reads[MailboxSetRequest]
 

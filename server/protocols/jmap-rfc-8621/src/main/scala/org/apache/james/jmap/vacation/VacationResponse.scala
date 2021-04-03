@@ -21,9 +21,8 @@ package org.apache.james.jmap.vacation
 
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
-import eu.timepit.refined.collection.NonEmpty
 import org.apache.james.jmap.api.vacation.Vacation
-import org.apache.james.jmap.core.Id.Id
+import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.{Properties, UTCDate}
 import org.apache.james.jmap.mail.Subject
 
@@ -41,7 +40,7 @@ object VacationResponse {
   val VACATION_RESPONSE_ID: Id = "singleton"
   val UNPARSED_SINGLETON: UnparsedVacationResponseId = "singleton"
 
-  type UnparsedVacationResponseId = String Refined NonEmpty
+  type UnparsedVacationResponseId = String Refined IdConstraint
 
   def asRfc8621(vacation: Vacation) = VacationResponse(
     id = VacationResponseId(),
