@@ -223,8 +223,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
             .map(context => (creationResponse, messageId, context))
       }
       .fold(e => (CreationFailure(emailSubmissionCreationId, e), processingContext),
-        creation =>
-          (CreationSuccess(emailSubmissionCreationId, creation._1, creation._2), creation._3))
+        creation => CreationSuccess(emailSubmissionCreationId, creation._1, creation._2) -> creation._3)
 
   private def parseCreate(jsObject: JsObject): Either[EmailSubmissionCreationParseException, EmailSubmissionCreationRequest] =
     EmailSubmissionCreationRequest.validateProperties(jsObject)
