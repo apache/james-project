@@ -1059,7 +1059,7 @@ trait MailboxSetMethodContract {
          |      "notCreated": {
          |        "C42": {
          |          "type": "invalidArguments",
-         |          "description": "'/parentId' property in mailbox object is not valid: Predicate isEmpty() did not fail."
+         |          "description": "'/parentId' property in mailbox object is not valid: Left predicate of ((!(0 < 1) && !(0 > 255)) && \\"\\".matches(\\"^[#a-zA-Z0-9-_]*$$\\")) failed: Predicate taking size() = 0 failed: Left predicate of (!(0 < 1) && !(0 > 255)) failed: Predicate (0 < 1) did not fail."
          |        }
          |      }
          |    },

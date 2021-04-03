@@ -21,8 +21,8 @@ package org.apache.james.jmap.mail
 
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
-import eu.timepit.refined.collection.NonEmpty
 import org.apache.james.jmap.api.change.{EmailChanges, Limit, MailboxChanges}
+import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{AccountId, Properties, State}
 import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
 import org.apache.james.jmap.method.WithAccountId
@@ -31,10 +31,9 @@ import org.apache.james.mailbox.model.MailboxId
 import scala.util.{Failure, Try}
 
 object MailboxGet {
-  type UnparsedMailboxIdConstraint = NonEmpty
-  type UnparsedMailboxId = String Refined UnparsedMailboxIdConstraint
+  type UnparsedMailboxId = String Refined IdConstraint
 
-  def asUnparsed(mailboxId: MailboxId): UnparsedMailboxId = refined.refineV[UnparsedMailboxIdConstraint](mailboxId.serialize()) match {
+  def asUnparsed(mailboxId: MailboxId): UnparsedMailboxId = refined.refineV[IdConstraint](mailboxId.serialize()) match {
     case Left(e) => throw new IllegalArgumentException(e)
     case scala.Right(value) => value
   }

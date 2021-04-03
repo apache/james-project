@@ -26,6 +26,7 @@ import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
+import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
 import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, Properties, SetError, State}
 import org.apache.james.jmap.json.MailboxSerializer
@@ -46,7 +47,7 @@ case class MailboxSetRequest(accountId: AccountId,
                              onDestroyRemoveEmails: Option[RemoveEmailsOnDestroy]) extends WithAccountId
 
 object MailboxSetRequest {
-  type MailboxCreationId = String Refined NonEmpty
+  type MailboxCreationId = String Refined IdConstraint
 }
 
 case class RemoveEmailsOnDestroy(value: Boolean) extends AnyVal
