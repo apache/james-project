@@ -86,21 +86,21 @@ public class RFC8621MethodsModule extends AbstractModule {
 
         Multibinder<Method> methods = Multibinder.newSetBinder(binder(), Method.class);
         methods.addBinding().to(CoreEchoMethod.class);
+        methods.addBinding().to(EmailChangesMethod.class);
+        methods.addBinding().to(EmailGetMethod.class);
+        methods.addBinding().to(EmailQueryMethod.class);
+        methods.addBinding().to(EmailSetMethod.class);
+        methods.addBinding().to(EmailSubmissionSetMethod.class);
+        methods.addBinding().to(IdentityGetMethod.class);
+        methods.addBinding().to(MailboxChangesMethod.class);
         methods.addBinding().to(MailboxGetMethod.class);
         methods.addBinding().to(MailboxQueryMethod.class);
         methods.addBinding().to(MailboxSetMethod.class);
-        methods.addBinding().to(MailboxChangesMethod.class);
-        methods.addBinding().to(EmailGetMethod.class);
-        methods.addBinding().to(EmailSetMethod.class);
-        methods.addBinding().to(EmailSubmissionSetMethod.class);
-        methods.addBinding().to(EmailQueryMethod.class);
-        methods.addBinding().to(EmailChangesMethod.class);
-        methods.addBinding().to(VacationResponseGetMethod.class);
-        methods.addBinding().to(VacationResponseSetMethod.class);
-        methods.addBinding().to(IdentityGetMethod.class);
+        methods.addBinding().to(MDNParseMethod.class);
         methods.addBinding().to(ThreadChangesMethod.class);
         methods.addBinding().to(ThreadGetMethod.class);
-        methods.addBinding().to(MDNParseMethod.class);
+        methods.addBinding().to(VacationResponseGetMethod.class);
+        methods.addBinding().to(VacationResponseSetMethod.class);
 
         Multibinder<JMAPRoutes> routes = Multibinder.newSetBinder(binder(), JMAPRoutes.class);
         routes.addBinding().to(SessionRoutes.class);
