@@ -888,6 +888,9 @@ For **create** and **update**:
   server-defined maximum.
 - `tooManyMailboxes`: The change to the set of Mailboxes that this Email is in would exceed a server-defined maximum.
 
+> :warning:
+> Email/set create will reject emails in several mailboxes
+
 ## Email/copy
 
 > :warning:
