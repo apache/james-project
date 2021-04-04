@@ -117,7 +117,7 @@ This is a standard "/get" method as described in [@!RFC8620], Section 5.1. The *
 ## Mailbox/changes
 
 > :warning:
-> Naive implementation
+> isSubscribed changes will not be returned by this call.
 
 This is a standard "/changes" method as described in [@!RFC8620], Section 5.2 but with one extra argument to the response:
 
