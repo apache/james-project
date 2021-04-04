@@ -906,7 +906,7 @@ For successfully copied Email objects, the *created* response contains the *id*,
 ## Email/import
 
 > :warning:
-> Not implemented yet
+> Partially implemented
 
 The *Email/import* method adds messages [@!RFC5322] to the set of Emails in an account. The server MUST support messages with Email Address Internationalization (EAI) headers [@!RFC6532]. The messages must first be uploaded as blobs using the standard upload mechanism. The method takes the following arguments:
 
@@ -923,6 +923,10 @@ An **EmailImport** object has the following properties:
   The id of the blob containing the raw message [@!RFC5322].
 - **mailboxIds**: `Id[Boolean]`
   The ids of the Mailboxes to assign this Email to. At least one Mailbox MUST be given.
+
+> :warning:
+> So far, only a single mailboxId is supported
+
 - **keywords**: `String[Boolean]` (default: \{\})
   The keywords to apply to the Email.
 - **receivedAt**: `UTCDate` (default: time of most recent Received header, or time of import on server if none)
