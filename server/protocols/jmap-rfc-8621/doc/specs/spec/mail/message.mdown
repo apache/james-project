@@ -727,8 +727,6 @@ If zero properties are specified on the FilterCondition, the condition MUST alwa
 > - allInThreadHaveKeyword
 > - someInThreadHaveKeyword
 > - noneInThreadHaveKeyword
-> - text
-> - body
 >
 > Also please note that inMailbox and inMailboxOtherThan filters are rejected
 > when nested in operator. They need to be specified in a filter condition.
