@@ -38,6 +38,7 @@ import org.apache.james.jmap.jwt.JWTAuthenticationStrategy;
 import org.apache.james.jmap.method.CoreEchoMethod;
 import org.apache.james.jmap.method.EmailChangesMethod;
 import org.apache.james.jmap.method.EmailGetMethod;
+import org.apache.james.jmap.method.EmailImportMethod;
 import org.apache.james.jmap.method.EmailQueryMethod;
 import org.apache.james.jmap.method.EmailSetMethod;
 import org.apache.james.jmap.method.EmailSubmissionSetMethod;
@@ -87,6 +88,7 @@ public class RFC8621MethodsModule extends AbstractModule {
         Multibinder<Method> methods = Multibinder.newSetBinder(binder(), Method.class);
         methods.addBinding().to(CoreEchoMethod.class);
         methods.addBinding().to(EmailChangesMethod.class);
+        methods.addBinding().to(EmailImportMethod.class);
         methods.addBinding().to(EmailGetMethod.class);
         methods.addBinding().to(EmailQueryMethod.class);
         methods.addBinding().to(EmailSetMethod.class);
