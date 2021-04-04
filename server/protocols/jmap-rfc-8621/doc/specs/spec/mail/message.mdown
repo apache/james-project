@@ -656,9 +656,6 @@ and response:
 
 ## Email/changes
 
-> :warning:
->  Not implemented yet: Naive implementation
-
 This is a standard "/changes" method as described in [@!RFC8620], Section 5.2. If generating intermediate states for a large set of changes, it is recommended that newer changes be returned first, as these are generally of more interest to users.
 
 ## Email/query
