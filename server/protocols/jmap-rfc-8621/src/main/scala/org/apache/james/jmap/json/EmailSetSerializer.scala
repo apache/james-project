@@ -29,6 +29,7 @@ import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{Id, SetError, State, UTCDate}
 import org.apache.james.jmap.mail.KeywordsFactory.STRICT_KEYWORDS_FACTORY
 import org.apache.james.jmap.mail.{AddressesHeaderValue, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, Attachment, BlobId, Charset, ClientBody, ClientCid, ClientEmailBodyValue, ClientPartId, DateHeaderValue, DestroyIds, Disposition, EmailAddress, EmailAddressGroup, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailSetRequest, EmailSetResponse, EmailSetUpdate, EmailerName, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, Type, URLsHeaderValue, UnparsedMessageId}
+import org.apache.james.jmap.mail.{AddressesHeaderValue, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, Attachment, BlobId, Charset, ClientBody, ClientCid, ClientEmailBodyValue, ClientPartId, DateHeaderValue, DestroyIds, Disposition, EmailAddress, EmailAddressGroup, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailImport, EmailImportRequest, EmailImportResponse, EmailSetRequest, EmailSetResponse, EmailSetUpdate, EmailerName, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, Type, URLsHeaderValue}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json.{Format, JsArray, JsBoolean, JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
 
@@ -407,6 +408,13 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
 
     case _ => JsError("Expecting a JsObject to represent a creation request")
   }
+  private implicit val emailImportReads: Reads[EmailImport] = Json.reads[EmailImport]
+  private implicit val importMapRead: Reads[Map[EmailCreationId, EmailImport]] =
+    Reads.mapReads[EmailCreationId, EmailImport]{s => refineV[IdConstraint](s)
+      .fold(e => JsError(s"email creationId needs to match id constraints: $e"),
+        id => JsSuccess(EmailCreationId(id))) } (emailImportReads)
+  private implicit val emailImportRequestReads: Reads[EmailImportRequest] = Json.reads[EmailImportRequest]
+  private implicit val emailImportResponseWrite: OWrites[EmailImportResponse] = Json.writes[EmailImportResponse]
 
   def deserialize(input: JsValue): JsResult[EmailSetRequest] = Json.fromJson[EmailSetRequest](input)
 
@@ -415,4 +423,8 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   def deserializeEmailSetUpdate(input: JsValue): JsResult[EmailSetUpdate] = Json.fromJson[EmailSetUpdate](input)
 
   def serialize(response: EmailSetResponse): JsObject = Json.toJsObject(response)
+
+  def deserializeEmailImportRequest(input: JsValue): JsResult[EmailImportRequest] = Json.fromJson[EmailImportRequest](input)
+
+  def serializeEmailImportResponse(response: EmailImportResponse): JsObject = Json.toJsObject(response)
 }
