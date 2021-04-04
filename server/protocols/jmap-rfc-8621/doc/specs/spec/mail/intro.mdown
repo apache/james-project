@@ -132,9 +132,8 @@ This represents support for the VacationResponse data type and associated API me
 
 ### urn:apache:james:params:jmap:mail:shares extension
 
-<aside class="notice">
-  Implemented
-</aside>
+> :information_source:
+> Implemented
 
 This extension is specific to the Apache James server as it relies on a common shared storage allowing arbitrary cross-account entity access.
 
@@ -145,9 +144,8 @@ This extension to the JMAP specification enables to:
 
 ### urn:apache:james:params:jmap:mail:quota
 
-<aside class="notice">
-  Implemented
-</aside>
+> :information_source:
+> Implemented
 
 This represents support for the Quota data type and associated API methods. Servers supporting this specification MUST add this property to the capabilities object.
 
