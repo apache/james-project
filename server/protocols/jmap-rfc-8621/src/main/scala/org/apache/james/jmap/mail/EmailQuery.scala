@@ -158,7 +158,6 @@ sealed trait SortProperty {
 case object ReceivedAtSortProperty extends SortProperty {
   override def toSortClause: Either[UnsupportedSortException, SortClause] = scala.Right(SortClause.Arrival)
 }
-
 case object AllInThreadHaveKeywordSortProperty extends SortProperty {
   override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("allInThreadHaveKeyword"))
 }
@@ -166,21 +165,20 @@ case object SomeInThreadHaveKeywordSortProperty extends SortProperty {
   override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("someInThreadHaveKeyword"))
 }
 case object SizeSortProperty extends SortProperty {
-  override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("size"))
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = scala.Right(SortClause.Size)
 }
 case object FromSortProperty extends SortProperty {
-  override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("from"))
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = scala.Right(SortClause.MailboxFrom)
 }
 case object ToSortProperty extends SortProperty {
-  override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("to"))
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = scala.Right(SortClause.MailboxTo)
 }
 case object SubjectSortProperty extends SortProperty {
-  override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("subject"))
+  override def toSortClause: Either[UnsupportedSortException, SortClause] = scala.Right(SortClause.BaseSubject)
 }
 case object HasKeywordSortProperty extends SortProperty {
   override def toSortClause: Either[UnsupportedSortException, SortClause] = Left(UnsupportedSortException("hasKeyword"))
 }
-
 case object SentAtSortProperty extends SortProperty {
   override def toSortClause: Either[UnsupportedSortException, SortClause] = scala.Right(SortClause.SentDate)
 }
