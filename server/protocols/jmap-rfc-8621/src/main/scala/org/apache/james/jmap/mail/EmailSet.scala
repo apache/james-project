@@ -179,13 +179,13 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
                                              blobResolvers: BlobResolvers,
                                              htmlTextExtractor: HtmlTextExtractor,
                                              mailboxSession: MailboxSession): Either[Throwable, MultipartBuilder] = {
-    val maybeAttachments: Either[Throwable, List[(Attachment, Blob, Array[Byte])]] =
+    val maybeAttachments: Either[Throwable, List[LoadedAttachment]] =
       attachments
         .map(loadWithMetadata(blobResolvers, mailboxSession))
         .sequence
 
     maybeAttachments.map(list => {
-      (list.filter(_._1.isInline), list.filter(!_._1.isInline)) match {
+      (list.filter(_.isInline), list.filter(!_.isInline)) match {
         case (Nil, normalAttachments) => createMixedBody(maybeHtmlBody, maybeTextBody, normalAttachments, htmlTextExtractor)
         case (inlineAttachments, Nil) => createRelatedBody(maybeHtmlBody, maybeTextBody, inlineAttachments, htmlTextExtractor)
         case (inlineAttachments, normalAttachments) => createMixedRelatedBody(maybeHtmlBody, maybeTextBody, inlineAttachments, normalAttachments, htmlTextExtractor)
@@ -193,9 +193,9 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
     })
   }
 
-  private def loadWithMetadata(blobResolvers: BlobResolvers, mailboxSession: MailboxSession)(attachment: Attachment): Either[Throwable, (Attachment, Blob, Array[Byte])] =
+  private def loadWithMetadata(blobResolvers: BlobResolvers, mailboxSession: MailboxSession)(attachment: Attachment): Either[Throwable, LoadedAttachment] =
     Try(blobResolvers.resolve(attachment.blobId, mailboxSession).subscribeOn(Schedulers.elastic()).block())
-      .toEither.flatMap(blob => load(blob).map(content => (attachment, blob, content)))
+      .toEither.flatMap(blob => load(blob).map(content => LoadedAttachment(attachment, blob, content)))
 
   private def load(blob: Blob): Either[Throwable, Array[Byte]] =
     Using(blob.content) {
@@ -204,51 +204,53 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
 
   private def createMixedRelatedBody(maybeHtmlBody: Option[String],
                                      maybeTextBody: Option[String],
-                                     inlineAttachments: List[(Attachment, Blob, Array[Byte])],
-                                     normalAttachments: List[(Attachment, Blob, Array[Byte])],
-                                     htmlTextExtractor: HtmlTextExtractor) = {
+                                     inlineAttachments: List[LoadedAttachment],
+                                     normalAttachments: List[LoadedAttachment],
+                                     htmlTextExtractor: HtmlTextExtractor): MultipartBuilder = {
     val mixedMultipartBuilder = MultipartBuilder.create(SubType.MIXED_SUBTYPE)
     val relatedMultipartBuilder = MultipartBuilder.create(SubType.RELATED_SUBTYPE)
     relatedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(createAlternativeBody(maybeHtmlBody, maybeTextBody, htmlTextExtractor).build))
     inlineAttachments.foldLeft(relatedMultipartBuilder) {
-      case (acc, (attachment, blob, content)) =>
-        acc.addBodyPart(toBodypartBuilder(attachment, blob, content))
+      case (acc, loadedAttachment) =>
+        acc.addBodyPart(toBodypartBuilder(loadedAttachment))
         acc
     }
 
     mixedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(relatedMultipartBuilder.build))
 
     normalAttachments.foldLeft(mixedMultipartBuilder) {
-      case (acc, (attachment, blob, content)) =>
-        acc.addBodyPart(toBodypartBuilder(attachment, blob, content))
+      case (acc, loadedAttachment) =>
+        acc.addBodyPart(toBodypartBuilder(loadedAttachment))
         acc
     }
   }
 
-  private def createMixedBody(maybeHtmlBody: Option[String], maybeTextBody: Option[String], normalAttachments: List[(Attachment, Blob, Array[Byte])], htmlTextExtractor: HtmlTextExtractor) = {
+  private def createMixedBody(maybeHtmlBody: Option[String], maybeTextBody: Option[String], normalAttachments: List[LoadedAttachment], htmlTextExtractor: HtmlTextExtractor) = {
     val mixedMultipartBuilder = MultipartBuilder.create(SubType.MIXED_SUBTYPE)
     mixedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(createAlternativeBody(maybeHtmlBody, maybeTextBody, htmlTextExtractor).build))
     normalAttachments.foldLeft(mixedMultipartBuilder) {
-      case (acc, (attachment, blob, content)) =>
-        acc.addBodyPart(toBodypartBuilder(attachment, blob, content))
+      case (acc, loadedAttachment) =>
+        acc.addBodyPart(toBodypartBuilder(loadedAttachment))
         acc
     }
   }
 
-  private def createRelatedBody(maybeHtmlBody: Option[String], maybeTextBody: Option[String], inlineAttachments: List[(Attachment, Blob, Array[Byte])], htmlTextExtractor: HtmlTextExtractor) = {
+  private def createRelatedBody(maybeHtmlBody: Option[String], maybeTextBody: Option[String], inlineAttachments: List[LoadedAttachment], htmlTextExtractor: HtmlTextExtractor) = {
     val relatedMultipartBuilder = MultipartBuilder.create(SubType.RELATED_SUBTYPE)
     relatedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(createAlternativeBody(maybeHtmlBody, maybeTextBody, htmlTextExtractor).build))
     inlineAttachments.foldLeft(relatedMultipartBuilder) {
-      case (acc, (attachment, blob, content)) =>
-        acc.addBodyPart(toBodypartBuilder(attachment, blob, content))
+      case (acc, loadedAttachment) =>
+        acc.addBodyPart(toBodypartBuilder(loadedAttachment))
         acc
     }
     relatedMultipartBuilder
   }
 
-  private def toBodypartBuilder(attachment: Attachment, blob: Blob, content: Array[Byte]) = {
+  private def toBodypartBuilder(loadedAttachment: LoadedAttachment) = {
     val bodypartBuilder = BodyPartBuilder.create()
-    bodypartBuilder.setBody(content, attachment.`type`.value)
+    val attachment = loadedAttachment.attachment
+    val blob = loadedAttachment.blob
+    bodypartBuilder.setBody(loadedAttachment.content, attachment.`type`.value)
       .setField(contentTypeField(attachment, blob))
       .setContentDisposition(attachment.disposition.getOrElse(Disposition.ATTACHMENT).value)
     attachment.cid.map(_.asField).foreach(bodypartBuilder.addField)
@@ -313,6 +315,10 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
       }
     }).sequence.map(_ => ())
   }
+}
+
+case class LoadedAttachment(attachment: Attachment, blob: Blob, content: Array[Byte]) {
+  def isInline: Boolean = attachment.isInline
 }
 
 case class DestroyIds(value: Seq[UnparsedMessageId])
