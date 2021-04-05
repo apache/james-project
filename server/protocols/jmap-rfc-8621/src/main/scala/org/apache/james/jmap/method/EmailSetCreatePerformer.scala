@@ -31,10 +31,12 @@ import org.apache.james.jmap.json.EmailSetSerializer
 import org.apache.james.jmap.mail.EmailSet.EmailCreationId
 import org.apache.james.jmap.mail.{BlobId, Email, EmailCreationRequest, EmailCreationResponse, EmailSetRequest}
 import org.apache.james.jmap.method.EmailSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
+import org.apache.james.jmap.routes.{BlobNotFoundException, BlobResolvers}
 import org.apache.james.mailbox.MessageManager.AppendCommand
-import org.apache.james.mailbox.exception.{AttachmentNotFoundException, MailboxNotFoundException}
+import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.MailboxId
-import org.apache.james.mailbox.{AttachmentContentLoader, AttachmentManager, MailboxManager, MailboxSession}
+import org.apache.james.mailbox.{MailboxManager, MailboxSession}
+import org.apache.james.mime4j.dom.Message
 import org.apache.james.util.html.HtmlTextExtractor
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
@@ -62,7 +64,7 @@ object EmailSetCreatePerformer {
   case class CreationFailure(clientId: EmailCreationId, e: Throwable) extends CreationResult {
     def asMessageSetError: SetError = e match {
       case e: MailboxNotFoundException => SetError.notFound(SetErrorDescription("Mailbox " + e.getMessage))
-      case e: AttachmentNotFoundException => SetError.invalidArguments(SetErrorDescription(s"${e.getMessage}"), Some(Properties("attachments")))
+      case e: BlobNotFoundException => SetError.invalidArguments(SetErrorDescription(s"Attachment not found: ${e.blobId.value}"), Some(Properties("attachments")))
       case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
       case _ => SetError.serverFail(SetErrorDescription(e.getMessage))
     }
@@ -70,8 +72,7 @@ object EmailSetCreatePerformer {
 }
 
 class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
-                                        attachmentManager: AttachmentManager,
-                                        attachmentContentLoader: AttachmentContentLoader,
+                                        blobResolvers: BlobResolvers,
                                         htmlTextExtractor: HtmlTextExtractor,
                                         mailboxManager: MailboxManager) {
 
@@ -89,22 +90,26 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
     if (mailboxIds.size != 1) {
       SMono.just(CreationFailure(clientId, new IllegalArgumentException("mailboxIds need to have size 1")))
     } else {
-      request.toMime4JMessage(attachmentManager, attachmentContentLoader, htmlTextExtractor, mailboxSession)
-        .fold(e => SMono.just(CreationFailure(clientId, e)),
-          message => SMono.fromCallable[CreationResult](() => {
-            val appendResult = mailboxManager.getMailbox(mailboxIds.head, mailboxSession)
-              .appendMessage(AppendCommand.builder()
-                .recent()
-                .withFlags(request.keywords.map(_.asFlags).getOrElse(new Flags()))
-                .withInternalDate(Date.from(request.receivedAt.getOrElse(UTCDate(ZonedDateTime.now())).asUTC.toInstant))
-                .build(message),
-                mailboxSession)
-
-            val blobId: Option[BlobId] = BlobId.of(appendResult.getId.getMessageId).toOption
-            CreationSuccess(clientId, EmailCreationResponse(appendResult.getId.getMessageId, blobId, blobId, Email.sanitizeSize(appendResult.getSize)))
-          })
-            .subscribeOn(Schedulers.elastic())
-            .onErrorResume(e => SMono.just[CreationResult](CreationFailure(clientId, e))))
+      SMono.fromCallable(() => request.toMime4JMessage(blobResolvers, htmlTextExtractor, mailboxSession))
+        .flatMap(either => either.fold(e => SMono.just(CreationFailure(clientId, e)),
+          message => SMono.fromCallable[CreationResult](() => append(clientId, asAppendCommand(request, message), mailboxSession, mailboxIds))))
+        .onErrorResume(e => SMono.just[CreationResult](CreationFailure(clientId, e)))
+        .subscribeOn(Schedulers.elastic())
     }
   }
+
+  private def append(clientId: EmailCreationId, appendCommand: AppendCommand, mailboxSession: MailboxSession, mailboxIds: List[MailboxId]): CreationSuccess = {
+    val appendResult = mailboxManager.getMailbox(mailboxIds.head, mailboxSession)
+      .appendMessage(appendCommand, mailboxSession)
+
+    val blobId: Option[BlobId] = BlobId.of(appendResult.getId.getMessageId).toOption
+    CreationSuccess(clientId, EmailCreationResponse(appendResult.getId.getMessageId, blobId, blobId, Email.sanitizeSize(appendResult.getSize)))
+  }
+
+  private def asAppendCommand(request: EmailCreationRequest, message: Message): AppendCommand =
+    AppendCommand.builder()
+      .recent()
+      .withFlags(request.keywords.map(_.asFlags).getOrElse(new Flags()))
+      .withInternalDate(Date.from(request.receivedAt.getOrElse(UTCDate(ZonedDateTime.now())).asUTC.toInstant))
+      .build(message)
 }
