@@ -464,7 +464,7 @@ trait BackReferenceContract {
            |         "path":"ids[0]"
            |       }
            |      },
-           |      "comparator": [{
+           |      "sort": [{
            |        "property":"receivedAt",
            |        "isAscending": false
            |      }]
