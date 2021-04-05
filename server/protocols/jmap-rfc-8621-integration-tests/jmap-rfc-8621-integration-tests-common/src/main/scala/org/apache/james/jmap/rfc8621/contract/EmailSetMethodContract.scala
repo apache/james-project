@@ -3729,6 +3729,115 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def createShouldSupportAttachedMessages(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(ANDRE.asString())
+      .setFrom(ANDRE.asString())
+      .setSubject("I'm happy to be attached")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val attachedMessageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .getMessageId
+
+    val blobId: String = attachedMessageId.serialize()
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa": {
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "subject": "World domination",
+         |          "attachments": [
+         |            {
+         |              "blobId": "$blobId",
+         |              "charset":"us-ascii",
+         |              "disposition": "attachment",
+         |              "type":"message/rfc822"
+         |            }
+         |          ]
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |      {
+         |        "accountId": "$ACCOUNT_ID",
+         |        "ids": ["#aaaaaa"],
+         |        "properties": ["mailboxIds", "subject", "attachments"],
+         |        "bodyProperties": ["partId", "blobId", "size", "type", "charset", "disposition"]
+         |      },
+         |    "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    val responseAsJson = Json.parse(response)
+      .\("methodResponses")
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = responseAsJson
+      .\("id")
+      .get.asInstanceOf[JsString].value
+    val size = responseAsJson
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].created.aaaaaa")
+      .isEqualTo(
+        s"""{
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
+
+    assertThatJson(response)
+      .inPath(s"methodResponses[1][1].list[0]")
+      .isEqualTo(
+        s"""{
+           |  "id": "$messageId",
+           |  "mailboxIds": {
+           |    "${mailboxId.serialize}": true
+           |  },
+           |  "subject": "World domination",
+           |  "attachments": [
+           |    {
+           |      "partId": "4",
+           |      "blobId": "${messageId}_4",
+           |      "size": 155,
+           |      "type": "message/rfc822",
+           |      "charset": "us-ascii",
+           |      "disposition": "attachment"
+           |    }
+           |  ]
+           |}""".stripMargin)
+  }
+
+  @Test
   def createShouldFailWhenAttachmentNotFound(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(BOB)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
