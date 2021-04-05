@@ -108,6 +108,8 @@ public interface CassandraModule {
     }
 
     class TableBuilder {
+        private static final double DISABLED = 0d;
+
         private final Builder originalBuilderReference;
         private final String tableName;
         private Optional<String> comment;
@@ -142,7 +144,10 @@ public interface CassandraModule {
             return originalBuilderReference.addTable(
                 new CassandraTable(tableName,
                     options.orElse(Function.identity())
-                        .apply(createStatement.withOptions().comment(comment.get()))));
+                        .apply(createStatement.withOptions()
+                            .comment(comment.get())
+                            .readRepairChance(DISABLED)
+                            .dcLocalReadRepairChance(DISABLED))));
         }
     }
 
