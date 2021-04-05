@@ -90,7 +90,9 @@ public abstract class DeploymentValidation {
     @Test
     public void validateDeploymentWithMailsFromSmtp() throws Exception {
         SMTPMessageSender smtpMessageSender = new SMTPMessageSender("another-domain");
-        smtpSystem.connect(smtpMessageSender).sendMessage("test@" + DOMAIN, USER_ADDRESS);
+        smtpSystem.connect(smtpMessageSender)
+            .authenticate(USER_ADDRESS, PASSWORD)
+            .sendMessage(USER_ADDRESS, USER_ADDRESS);
         imapClient.connect(getConfiguration().getAddress(), getConfiguration().getImapPort().getValue());
         imapClient.login(USER_ADDRESS, PASSWORD);
         awaitAtMostTenSeconds.until(this::checkMailDelivery);
