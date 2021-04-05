@@ -138,12 +138,12 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
   private def matchesInMailboxSortedBySentAt(request: EmailQueryRequest): Boolean =
     configuration.isEmailQueryViewEnabled &&
       request.filter.exists(_.inMailboxFilterOnly) &&
-      request.comparator.contains(Set(Comparator.SENT_AT_DESC))
+      request.sort.contains(Set(Comparator.SENT_AT_DESC))
 
   private def matchesInMailboxAfterSortedBySentAt(request: EmailQueryRequest): Boolean =
     configuration.isEmailQueryViewEnabled &&
       request.filter.exists(_.inMailboxAndAfterFilterOnly) &&
-      request.comparator.contains(Set(Comparator.SENT_AT_DESC))
+      request.sort.contains(Set(Comparator.SENT_AT_DESC))
 
   private def toResponse(request: EmailQueryRequest, position: Position, limitToUse: Limit, ids: Seq[MessageId]): EmailQueryResponse =
     EmailQueryResponse(accountId = request.accountId,
@@ -159,7 +159,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
       .collectSeq()
 
   private def searchQueryFromRequest(request: EmailQueryRequest, capabilities: Set[CapabilityIdentifier], session: MailboxSession): Either[UnsupportedOperationException, MultimailboxesSearchQuery] = {
-    val comparators: List[Comparator] = request.comparator.getOrElse(Set()).toList
+    val comparators: List[Comparator] = request.sort.getOrElse(Set()).toList
 
     comparators.map(_.toSort)
       .sequence

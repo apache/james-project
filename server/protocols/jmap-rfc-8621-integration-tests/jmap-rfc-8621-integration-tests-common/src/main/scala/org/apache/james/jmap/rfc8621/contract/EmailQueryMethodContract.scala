@@ -1605,7 +1605,7 @@ trait EmailQueryMethodContract {
          |    "Email/query",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "comparator": [{
+         |      "sort": [{
          |        "property":"sentAt",
          |        "isAscending": false
          |      }]
@@ -1677,7 +1677,7 @@ trait EmailQueryMethodContract {
          |      "filter": {
          |        "inMailbox": "${mailboxId.serialize}"
          |      },
-         |      "comparator": [{
+         |      "sort": [{
          |        "property":"sentAt",
          |        "isAscending": false
          |      }]
@@ -1755,7 +1755,7 @@ trait EmailQueryMethodContract {
          |    "Email/query",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "comparator": [{
+         |      "sort": [{
          |        "property":"sentAt",
          |        "isAscending": true
          |      }]
@@ -1833,7 +1833,7 @@ trait EmailQueryMethodContract {
          |    "Email/query",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "comparator": [{
+         |      "sort": [{
          |        "property":"sentAt"
          |      }]
          |    },
@@ -1897,7 +1897,7 @@ trait EmailQueryMethodContract {
          |    "Email/query",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "comparator": [{
+         |      "sort": [{
          |        "property":"sentAt"
          |      }]
          |    },
@@ -2006,7 +2006,7 @@ trait EmailQueryMethodContract {
          |    "Email/query",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "comparator": [{
+         |      "sort": [{
          |        "property":"receivedAt"
          |      }]
          |    },
@@ -2060,7 +2060,7 @@ trait EmailQueryMethodContract {
          |    "Email/query",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "comparator": [{
+         |      "sort": [{
          |        "property":"receivedAt",
          |        "isAscending": true
          |      }]
@@ -2115,7 +2115,7 @@ trait EmailQueryMethodContract {
          |    "Email/query",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "comparator": [{
+         |      "sort": [{
          |        "property":"receivedAt",
          |        "isAscending": false
          |      }]
@@ -2159,7 +2159,7 @@ trait EmailQueryMethodContract {
          |      "filter": {
          |        "inMailbox": "${otherMailboxId.serialize}"
          |        },
-         |      "comparator": [{
+         |      "sort": [{
          |        "isAscending":true
          |      }]
          |    },
@@ -2184,7 +2184,7 @@ trait EmailQueryMethodContract {
         .isEqualTo("""
          {
             "type": "invalidArguments",
-            "description": "{\"errors\":[{\"path\":\"obj.comparator[0].property\",\"messages\":[\"error.path.missing\"]}]}"
+            "description": "{\"errors\":[{\"path\":\"obj.sort[0].property\",\"messages\":[\"error.path.missing\"]}]}"
           }
          """)
     }
@@ -2255,7 +2255,7 @@ trait EmailQueryMethodContract {
          |      "filter": {
          |        "inMailbox": "${otherMailboxId.serialize}"
          |        },
-         |      "comparator": [{
+         |      "sort": [{
          |        "property":"unsupported",
          |        "isAscending":true
          |      }]
@@ -2281,7 +2281,7 @@ trait EmailQueryMethodContract {
         .isEqualTo("""
          {
             "type": "invalidArguments",
-            "description": "{\"errors\":[{\"path\":\"obj.comparator[0].property\",\"messages\":[\"'unsupported' is not a supported sort property\"]}]}"
+            "description": "{\"errors\":[{\"path\":\"obj.sort[0].property\",\"messages\":[\"'unsupported' is not a supported sort property\"]}]}"
           }
          """)
     }
@@ -2307,7 +2307,7 @@ trait EmailQueryMethodContract {
          |    "Email/query",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "comparator": [{
+         |      "sort": [{
          |        "property":"$unsupported"
          |      }]
          |    },
@@ -3212,7 +3212,7 @@ trait EmailQueryMethodContract {
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "limit": 1,
-         |      "comparator": [{
+         |      "sort": [{
          |        "property":"receivedAt",
          |        "isAscending": false
          |      }]
@@ -3301,7 +3301,7 @@ trait EmailQueryMethodContract {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "limit": 2,
          |      "position": 2,
-         |      "comparator": [{
+         |      "sort": [{
          |        "property":"receivedAt",
          |        "isAscending": false
          |      }]
@@ -3475,7 +3475,7 @@ trait EmailQueryMethodContract {
          |    "Email/query",
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "comparator": [{
+         |      "sort": [{
          |        "property":"receivedAt",
          |        "isAscending": false
          |      }]
@@ -3530,7 +3530,7 @@ trait EmailQueryMethodContract {
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "limit": 2000,
-         |      "comparator": [{
+         |      "sort": [{
          |        "property":"receivedAt",
          |        "isAscending": false
          |      }]
@@ -3586,7 +3586,7 @@ trait EmailQueryMethodContract {
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "position": 1,
-         |      "comparator": [{
+         |      "sort": [{
          |        "property":"receivedAt",
          |        "isAscending": false
          |      }]
@@ -3651,7 +3651,7 @@ trait EmailQueryMethodContract {
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "position": 0,
-         |      "comparator": [{
+         |      "sort": [{
          |        "property":"receivedAt",
          |        "isAscending": false
          |      }]

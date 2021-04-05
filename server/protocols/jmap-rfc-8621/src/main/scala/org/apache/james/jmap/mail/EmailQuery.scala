@@ -123,7 +123,7 @@ case class EmailQueryRequest(accountId: AccountId,
                              position: Option[PositionUnparsed],
                              limit: Option[LimitUnparsed],
                              filter: Option[FilterQuery],
-                             comparator: Option[Set[Comparator]],
+                             sort: Option[Set[Comparator]],
                              collapseThreads: Option[CollapseThreads],
                              anchor: Option[Anchor],
                              anchorOffset: Option[AnchorOffset]) extends WithAccountId {
