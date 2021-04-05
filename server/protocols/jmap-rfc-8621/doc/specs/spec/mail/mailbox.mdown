@@ -198,7 +198,6 @@ For **destroy**:
 
 > :warning:
 > Restrictions:
-> - "parentId" updates only succeeds if the given mailbox has no child.
 > - all updates to shared mailboxes by a sharee are forbidden.
 > - Updates to server-set fields are rejected, even if they match the server value.
 > - as "role" and "sortOrder" are server-set by the current James implementation, updating them is not supported.
