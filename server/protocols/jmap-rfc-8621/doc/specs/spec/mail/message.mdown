@@ -769,10 +769,6 @@ The following values for the *property* field on the Comparator object SHOULD be
 
 > :warning:
 > These properties are not supported yet for sorting:
-> - size
-> - from
-> - to
-> - subject
 > - hasKeyword
 > - allInThreadHaveKeyword
 > - someInThreadHaveKeyword
