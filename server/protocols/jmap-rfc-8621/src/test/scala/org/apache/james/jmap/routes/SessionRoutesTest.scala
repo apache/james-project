@@ -141,7 +141,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |      "maxMailboxDepth" : null,
                          |      "maxSizeMailboxName" : 200,
                          |      "maxSizeAttachmentsPerEmail" : 20000000,
-                         |      "emailQuerySortOptions" : ["receivedAt", "sentAt"],
+                         |      "emailQuerySortOptions" : ["receivedAt", "sentAt", "size", "from", "to", "subject"],
                          |      "mayCreateTopLevelMailbox" : true
                          |    },
                          |    "urn:ietf:params:jmap:websocket": {
@@ -181,7 +181,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |          "maxMailboxDepth" : null,
                          |          "maxSizeMailboxName" : 200,
                          |          "maxSizeAttachmentsPerEmail" : 20000000,
-                         |          "emailQuerySortOptions" : ["receivedAt", "sentAt"],
+                         |          "emailQuerySortOptions" : ["receivedAt", "sentAt", "size", "from", "to", "subject"],
                          |          "mayCreateTopLevelMailbox" : true
                          |        },
                          |        "urn:apache:james:params:jmap:mail:quota": {},

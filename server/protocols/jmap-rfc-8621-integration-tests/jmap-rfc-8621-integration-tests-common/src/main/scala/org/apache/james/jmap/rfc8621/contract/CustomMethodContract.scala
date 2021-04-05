@@ -68,7 +68,7 @@ object CustomMethodContract {
       |      "maxMailboxDepth" : null,
       |      "maxSizeMailboxName" : 200,
       |      "maxSizeAttachmentsPerEmail" : 20000000,
-      |      "emailQuerySortOptions" : ["receivedAt", "sentAt"],
+      |      "emailQuerySortOptions" : ["receivedAt", "sentAt", "size", "from", "to", "subject"],
       |      "mayCreateTopLevelMailbox" : true
       |    },
       |    "urn:ietf:params:jmap:websocket": {
@@ -110,7 +110,7 @@ object CustomMethodContract {
       |          "maxMailboxDepth" : null,
       |          "maxSizeMailboxName" : 200,
       |          "maxSizeAttachmentsPerEmail" : 20000000,
-      |          "emailQuerySortOptions" : ["receivedAt", "sentAt"],
+      |          "emailQuerySortOptions" : ["receivedAt", "sentAt", "size", "from", "to", "subject"],
       |          "mayCreateTopLevelMailbox" : true
       |        },
       |        "urn:apache:james:params:jmap:mail:quota": {},
