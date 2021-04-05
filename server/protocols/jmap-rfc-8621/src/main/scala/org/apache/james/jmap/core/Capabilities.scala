@@ -44,7 +44,7 @@ object DefaultCapabilities {
       MaxMailboxDepth(None),
       MaxSizeMailboxName(200L),
       MaxSizeAttachmentsPerEmail(20_000_000L),
-      emailQuerySortOptions = List("receivedAt", "sentAt"),
+      emailQuerySortOptions = List("receivedAt", "sentAt", "size", "from", "to", "subject"),
       MayCreateTopLevelMailbox(true)))
   val QUOTA_CAPABILITY = QuotaCapability()
   val SHARES_CAPABILITY = SharesCapability()
