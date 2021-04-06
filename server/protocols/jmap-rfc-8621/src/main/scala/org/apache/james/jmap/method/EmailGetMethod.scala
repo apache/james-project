@@ -30,8 +30,7 @@ import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, Properties, State}
 import org.apache.james.jmap.json.{EmailGetSerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.Email.UnparsedEmailId
-import org.apache.james.jmap.mail.{Email, EmailBodyPart, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound, EmailView, EmailViewReaderFactory, SpecificHeaderRequest}
+import org.apache.james.jmap.mail.{Email, EmailBodyPart, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound, EmailView, EmailViewReaderFactory, SpecificHeaderRequest, UnparsedEmailId}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MessageId
@@ -172,7 +171,7 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
 
   private def asMessageId(id: UnparsedEmailId): Either[(UnparsedEmailId, IllegalArgumentException),  MessageId] =
     try {
-      Right(messageIdFactory.fromString(id))
+      Right(messageIdFactory.fromString(id.id))
     } catch {
       case e: Exception => Left((id, new IllegalArgumentException(e)))
     }

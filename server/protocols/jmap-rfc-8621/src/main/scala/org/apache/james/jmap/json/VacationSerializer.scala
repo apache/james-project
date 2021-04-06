@@ -19,15 +19,26 @@
 
 package org.apache.james.jmap.json
 
+import eu.timepit.refined
+import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{Properties, State}
 import org.apache.james.jmap.mail.Subject
 import org.apache.james.jmap.vacation.VacationResponse.VACATION_RESPONSE_ID
-import org.apache.james.jmap.vacation.{FromDate, HtmlBody, IsEnabled, TextBody, ToDate, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound, VacationResponsePatchObject, VacationResponseSetError, VacationResponseSetRequest, VacationResponseSetResponse, VacationResponseUpdateResponse}
+import org.apache.james.jmap.vacation.{FromDate, HtmlBody, IsEnabled, TextBody, ToDate, UnparsedVacationResponseId, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound, VacationResponsePatchObject, VacationResponseSetError, VacationResponseSetRequest, VacationResponseSetResponse, VacationResponseUpdateResponse}
 import play.api.libs.json._
 
 import scala.language.implicitConversions
 
 object VacationSerializer {
+
+  private implicit val unparsedMessageIdWrites: Writes[UnparsedVacationResponseId] = Json.valueWrites[UnparsedVacationResponseId]
+  private implicit val unparsedMessageIdReads: Reads[UnparsedVacationResponseId] = {
+    case JsString(string) => refined.refineV[IdConstraint](string)
+      .fold(
+        e => JsError(s"vacation response id does not match Id constraints: $e"),
+        id => JsSuccess(UnparsedVacationResponseId(id)))
+    case _ => JsError("vacation response id needs to be represented by a JsString")
+  }
   private implicit val isEnabledReads: Reads[IsEnabled] = Json.valueReads[IsEnabled]
   private implicit val vacationResponsePatchObjectReads: Reads[VacationResponsePatchObject] = {
     case jsObject: JsObject => JsSuccess(VacationResponsePatchObject(jsObject))
@@ -62,7 +73,7 @@ object VacationSerializer {
   private implicit val vacationResponseGetRequest: Reads[VacationResponseGetRequest] = Json.reads[VacationResponseGetRequest]
 
   private implicit val vacationResponseNotFoundWrites: Writes[VacationResponseNotFound] =
-    notFound => JsArray(notFound.value.toList.map(id => JsString(id.value)))
+    notFound => JsArray(notFound.value.toList.map(id => JsString(id.id.value)))
 
   private implicit val vacationResponseGetResponseWrites: Writes[VacationResponseGetResponse] = Json.writes[VacationResponseGetResponse]
 

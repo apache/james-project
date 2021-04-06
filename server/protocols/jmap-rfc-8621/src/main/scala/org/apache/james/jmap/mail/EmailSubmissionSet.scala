@@ -30,19 +30,15 @@ import org.apache.james.core.MailAddress
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{AccountId, Id, Properties, SetError, State}
-import org.apache.james.jmap.mail.EmailSet.UnparsedMessageId
-import org.apache.james.jmap.mail.EmailSubmissionSet.EmailSubmissionCreationId
 import org.apache.james.jmap.method.{EmailSubmissionCreationParseException, WithAccountId}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json.JsObject
 
-object EmailSubmissionSet {
-  type EmailSubmissionCreationId = Id
-}
-
 object EmailSubmissionId {
   def generate: EmailSubmissionId = EmailSubmissionId(Id.validate(UUID.randomUUID().toString).toOption.get)
 }
+
+case class EmailSubmissionCreationId(id: Id)
 
 case class EmailSubmissionSetRequest(accountId: AccountId,
                                      create: Option[Map[EmailSubmissionCreationId, JsObject]],
@@ -98,18 +94,18 @@ case class EmailSubmissionSetRequest(accountId: AccountId,
       .map(_ => this)
 
   private def validate(creationId: EmailSubmissionCreationId, supportedCreationIds: List[EmailSubmissionCreationId]): Either[IllegalArgumentException, EmailSubmissionCreationId] = {
-    if (creationId.startsWith("#")) {
-      val realId = creationId.substring(1)
-      val validatedId: Either[String, EmailSubmissionCreationId] = refineV[IdConstraint](realId)
+    if (creationId.id.startsWith("#")) {
+      val realId = creationId.id.substring(1)
+      val validatedId: Either[String, Id] = refineV[IdConstraint](realId)
       validatedId
         .left.map(s => new IllegalArgumentException(s))
-        .flatMap(id => if (supportedCreationIds.contains(id)) {
-          scala.Right(id)
+        .flatMap(id => if (supportedCreationIds.contains(EmailSubmissionCreationId(id))) {
+          scala.Right(EmailSubmissionCreationId(id))
         } else {
-          Left(new IllegalArgumentException(s"$creationId cannot be referenced in current method call"))
+          Left(new IllegalArgumentException(s"${creationId.id} cannot be referenced in current method call"))
         })
     } else {
-      Left(new IllegalArgumentException(s"$creationId cannot be retrieved as storage for EmailSubmission is not yet implemented"))
+      Left(new IllegalArgumentException(s"${creationId.id} cannot be retrieved as storage for EmailSubmission is not yet implemented"))
     }
   }
 }

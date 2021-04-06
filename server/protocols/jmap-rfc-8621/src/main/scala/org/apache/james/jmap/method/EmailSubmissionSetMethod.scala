@@ -31,13 +31,12 @@ import javax.mail.Message.RecipientType
 import javax.mail.internet.{InternetAddress, MimeMessage}
 import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
-import org.apache.james.jmap.core.Id.IdConstraint
+import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
-import org.apache.james.jmap.core.{ClientId, Id, Invocation, Properties, ServerId, SetError, State}
+import org.apache.james.jmap.core.{ClientId, Invocation, Properties, ServerId, SetError, State}
 import org.apache.james.jmap.json.{EmailSubmissionSetSerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.EmailSubmissionSet.EmailSubmissionCreationId
-import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope}
+import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope}
 import org.apache.james.jmap.method.EmailSubmissionSetMethod.{LOGGER, MAIL_METADATA_USERNAME_ATTRIBUTE}
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.lifecycle.api.{LifecycleUtil, Startable}
@@ -131,12 +130,12 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       .toMap
 
     def resolveMessageId(creationId: EmailSubmissionCreationId): Either[IllegalArgumentException, MessageId] = {
-      if (creationId.startsWith("#")) {
-        val realId = creationId.substring(1)
-        val validatedId: Either[String, EmailSubmissionCreationId] = refineV[IdConstraint](realId)
+      if (creationId.id.startsWith("#")) {
+        val realId = creationId.id.substring(1)
+        val validatedId: Either[String, Id] = refineV[IdConstraint](realId)
         validatedId
           .left.map(s => new IllegalArgumentException(s))
-          .flatMap(id => retrieveMessageId(id)
+          .flatMap(id => retrieveMessageId(EmailSubmissionCreationId(id))
             .map(scala.Right(_))
             .getOrElse(Left(new IllegalArgumentException(s"$creationId cannot be referenced in current method call"))))
       } else {
@@ -217,10 +216,9 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
                             processingContext: ProcessingContext): (CreationResult, ProcessingContext) =
     parseCreate(jsObject)
       .flatMap(emailSubmissionCreationRequest => sendEmail(mailboxSession, emailSubmissionCreationRequest))
-      .flatMap {
+      .map {
         case (creationResponse, messageId) =>
-          recordCreationIdInProcessingContext(emailSubmissionCreationId, processingContext, creationResponse.id)
-            .map(context => (creationResponse, messageId, context))
+          (creationResponse, messageId, recordCreationIdInProcessingContext(emailSubmissionCreationId, processingContext, creationResponse.id))
       }
       .fold(e => (CreationFailure(emailSubmissionCreationId, e), processingContext),
         creation => CreationSuccess(emailSubmissionCreationId, creation._1, creation._2) -> creation._3)
@@ -325,11 +323,6 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
 
   private def recordCreationIdInProcessingContext(emailSubmissionCreationId: EmailSubmissionCreationId,
                                                   processingContext: ProcessingContext,
-                                                  emailSubmissionId: EmailSubmissionId): Either[IllegalArgumentException, ProcessingContext] =
-    for {
-      creationId <- Id.validate(emailSubmissionCreationId)
-      serverAssignedId <- Id.validate(emailSubmissionId.value)
-    } yield {
-      processingContext.recordCreatedId(ClientId(creationId), ServerId(serverAssignedId))
-    }
+                                                  emailSubmissionId: EmailSubmissionId): ProcessingContext =
+      processingContext.recordCreatedId(ClientId(emailSubmissionCreationId.id), ServerId(emailSubmissionId.value))
 }

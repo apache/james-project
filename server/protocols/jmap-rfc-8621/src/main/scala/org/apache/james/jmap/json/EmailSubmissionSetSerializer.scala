@@ -19,29 +19,31 @@
 
 package org.apache.james.jmap.json
 
+import eu.timepit.refined
 import eu.timepit.refined.refineV
 import javax.inject.Inject
 import org.apache.james.core.MailAddress
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{SetError, State}
-import org.apache.james.jmap.mail.EmailSet.{UnparsedMessageId, UnparsedMessageIdConstraint}
-import org.apache.james.jmap.mail.EmailSubmissionSet.EmailSubmissionCreationId
-import org.apache.james.jmap.mail.{DestroyIds, EmailSubmissionAddress, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope}
+import org.apache.james.jmap.mail.{DestroyIds, EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, UnparsedMessageId}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json.{JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, Reads, Writes}
 
 import scala.util.Try
 
 class EmailSubmissionSetSerializer @Inject()(messageIdFactory: MessageId.Factory) {
+  private implicit val creationIdFormat: Reads[EmailSubmissionCreationId] = Json.valueFormat[EmailSubmissionCreationId]
   private implicit val mapCreationRequestByEmailSubmissionCreationId: Reads[Map[EmailSubmissionCreationId, JsObject]] =
-    Reads.mapReads[EmailSubmissionCreationId, JsObject] {string => refineV[IdConstraint](string).fold(JsError(_), id => JsSuccess(id)) }
+    Reads.mapReads[EmailSubmissionCreationId, JsObject] {string => refineV[IdConstraint](string)
+      .fold(e => JsError(s"email submission creationId needs to match id contraints: $e"),
+        id => JsSuccess(EmailSubmissionCreationId(id))) }
 
   private implicit val messageIdReads: Reads[MessageId] = {
     case JsString(serializedMessageId) => Try(JsSuccess(messageIdFactory.fromString(serializedMessageId)))
-      .fold(_ => JsError("Invalid messageId"), messageId => messageId)
+      .fold(e => JsError(s"Invalid messageId: ${e.getMessage}"), messageId => messageId)
     case _ => JsError("Expecting messageId to be represented by a JsString")
   }
-  private implicit val notCreatedWrites: Writes[Map[EmailSubmissionCreationId, SetError]] = mapWrites[EmailSubmissionCreationId, SetError](_.value, setErrorWrites)
+  private implicit val notCreatedWrites: Writes[Map[EmailSubmissionCreationId, SetError]] = mapWrites[EmailSubmissionCreationId, SetError](_.id.value, setErrorWrites)
 
   private implicit val mailAddressReads: Reads[MailAddress] = {
     case JsString(value) => Try(JsSuccess(new MailAddress(value)))
@@ -50,7 +52,17 @@ class EmailSubmissionSetSerializer @Inject()(messageIdFactory: MessageId.Factory
   }
 
   private implicit val emailUpdatesMapReads: Reads[Map[UnparsedMessageId, JsObject]] =
-    Reads.mapReads[UnparsedMessageId, JsObject] {string => refineV[UnparsedMessageIdConstraint](string).fold(JsError(_), id => JsSuccess(id)) }
+    Reads.mapReads[UnparsedMessageId, JsObject] {string => refineV[IdConstraint](string)
+      .fold(e => JsError(s"messageId needs to match id contraints: $e"),
+        id => JsSuccess(UnparsedMessageId(id))) }
+  private implicit val unparsedMessageIdReads: Reads[UnparsedMessageId] = {
+    case JsString(string) => refined.refineV[IdConstraint](string)
+      .fold(
+        e => JsError(s"messageId does not match Id constraints: $e"),
+        id => JsSuccess(UnparsedMessageId(id)))
+    case _ => JsError("messageId needs to be represented by a JsString")
+  }
+  private implicit val unparsedMessageIdWrites: Writes[UnparsedMessageId] = Json.valueWrites[UnparsedMessageId]
   private implicit val destroyIdsReads: Reads[DestroyIds] = Json.valueFormat[DestroyIds]
 
   private implicit val emailSubmissionSetRequestReads: Reads[EmailSubmissionSetRequest] = Json.reads[EmailSubmissionSetRequest]
@@ -68,7 +80,7 @@ class EmailSubmissionSetSerializer @Inject()(messageIdFactory: MessageId.Factory
   private implicit def emailSubmissionSetResponseWrites(implicit emailSubmissionCreationResponseWrites: Writes[EmailSubmissionCreationResponse]): Writes[EmailSubmissionSetResponse] = Json.writes[EmailSubmissionSetResponse]
 
   private implicit def emailSubmissionMapCreationResponseWrites(implicit emailSubmissionSetCreationResponseWrites: Writes[EmailSubmissionCreationResponse]): Writes[Map[EmailSubmissionCreationId, EmailSubmissionCreationResponse]] =
-    mapWrites[EmailSubmissionCreationId, EmailSubmissionCreationResponse](_.value, emailSubmissionSetCreationResponseWrites)
+    mapWrites[EmailSubmissionCreationId, EmailSubmissionCreationResponse](_.id.value, emailSubmissionSetCreationResponseWrites)
 
   def deserializeEmailSubmissionSetRequest(input: JsValue): JsResult[EmailSubmissionSetRequest] = Json.fromJson[EmailSubmissionSetRequest](input)
 

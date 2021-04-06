@@ -19,10 +19,9 @@
 
 package org.apache.james.jmap.vacation
 
-import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.api.vacation.Vacation
-import org.apache.james.jmap.core.Id.{Id, IdConstraint}
+import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.{Properties, UTCDate}
 import org.apache.james.jmap.mail.Subject
 
@@ -38,9 +37,7 @@ case class HtmlBody(value: String) extends AnyVal
 
 object VacationResponse {
   val VACATION_RESPONSE_ID: Id = "singleton"
-  val UNPARSED_SINGLETON: UnparsedVacationResponseId = "singleton"
-
-  type UnparsedVacationResponseId = String Refined IdConstraint
+  val UNPARSED_SINGLETON: UnparsedVacationResponseId = UnparsedVacationResponseId("singleton")
 
   def asRfc8621(vacation: Vacation) = VacationResponse(
     id = VacationResponseId(),
@@ -57,6 +54,8 @@ object VacationResponse {
 
   def propertiesFiltered(requestedProperties: Properties) : Properties = idProperty ++ requestedProperties
 }
+
+case class UnparsedVacationResponseId(id: Id)
 
 case class VacationResponse(id: VacationResponseId,
                            isEnabled: IsEnabled,

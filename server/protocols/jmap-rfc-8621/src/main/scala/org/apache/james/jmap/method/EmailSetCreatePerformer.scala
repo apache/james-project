@@ -28,8 +28,7 @@ import javax.mail.Flags
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Properties, SetError, UTCDate}
 import org.apache.james.jmap.json.EmailSetSerializer
-import org.apache.james.jmap.mail.EmailSet.EmailCreationId
-import org.apache.james.jmap.mail.{BlobId, Email, EmailCreationRequest, EmailCreationResponse, EmailSetRequest}
+import org.apache.james.jmap.mail.{BlobId, Email, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailSetRequest}
 import org.apache.james.jmap.method.EmailSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.exception.{AttachmentNotFoundException, MailboxNotFoundException}

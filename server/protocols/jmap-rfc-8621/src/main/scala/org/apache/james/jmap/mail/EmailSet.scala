@@ -26,13 +26,10 @@ import cats.implicits._
 import com.google.common.net.MediaType
 import com.google.common.net.MediaType.{HTML_UTF_8, PLAIN_TEXT_UTF_8}
 import eu.timepit.refined
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.collection.NonEmpty
-import org.apache.james.jmap.core.Id.Id
+import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.{AccountId, SetError, State, UTCDate}
 import org.apache.james.jmap.mail.Disposition.INLINE
 import org.apache.james.jmap.mail.Email.Size
-import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId}
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.mailbox.exception.AttachmentNotFoundException
 import org.apache.james.mailbox.model.{AttachmentId, AttachmentMetadata, Cid, MessageId}
@@ -52,18 +49,17 @@ import scala.jdk.OptionConverters._
 import scala.util.{Right, Try}
 
 object EmailSet {
-  type EmailCreationId = Id
-  type UnparsedMessageIdConstraint = NonEmpty
-  type UnparsedMessageId = String Refined UnparsedMessageIdConstraint
-
-  def asUnparsed(messageId: MessageId): UnparsedMessageId = refined.refineV[UnparsedMessageIdConstraint](messageId.serialize()) match {
+  def asUnparsed(messageId: MessageId): UnparsedMessageId = refined.refineV[IdConstraint](messageId.serialize()) match {
     case Left(e) => throw new IllegalArgumentException(e)
-    case scala.Right(value) => value
+    case scala.Right(value) => UnparsedMessageId(value)
   }
 
   def parse(messageIdFactory: MessageId.Factory)(unparsed: UnparsedMessageId): Try[MessageId] =
-    Try(messageIdFactory.fromString(unparsed.value))
+    Try(messageIdFactory.fromString(unparsed.id.value))
 }
+
+case class EmailCreationId(id: Id)
+case class UnparsedMessageId(id: Id)
 
 object SubType {
   val HTML_SUBTYPE = "html"

@@ -20,26 +20,22 @@
 package org.apache.james.jmap.mail
 
 import eu.timepit.refined
-import eu.timepit.refined.api.Refined
 import org.apache.james.jmap.api.change.{EmailChanges, Limit, MailboxChanges}
-import org.apache.james.jmap.core.Id.IdConstraint
+import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.{AccountId, Properties, State}
-import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.mailbox.model.MailboxId
 
 import scala.util.{Failure, Try}
 
 object MailboxGet {
-  type UnparsedMailboxId = String Refined IdConstraint
-
   def asUnparsed(mailboxId: MailboxId): UnparsedMailboxId = refined.refineV[IdConstraint](mailboxId.serialize()) match {
     case Left(e) => throw new IllegalArgumentException(e)
-    case scala.Right(value) => value
+    case scala.Right(value) => UnparsedMailboxId(value)
   }
 
   def parse(mailboxIdFactory: MailboxId.Factory)(unparsed: UnparsedMailboxId): Try[MailboxId] =
-    parseString(mailboxIdFactory)(unparsed.value)
+    parseString(mailboxIdFactory)(unparsed.id.value)
 
   def parseString(mailboxIdFactory: MailboxId.Factory)(unparsed: String): Try[MailboxId] =
     unparsed match {
@@ -48,6 +44,8 @@ object MailboxGet {
       case _ => Try(mailboxIdFactory.fromString(unparsed))
     }
 }
+
+case class UnparsedMailboxId(id: Id)
 
 case class Ids(value: List[UnparsedMailboxId])
 

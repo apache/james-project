@@ -26,8 +26,7 @@ import org.apache.james.jmap.core.{AccountId, Properties, State}
 import org.apache.james.jmap.json.Fixture.id
 import org.apache.james.jmap.json.VacationResponseGetSerializationTest.{ACCOUNT_ID, PROPERTIES, SINGLETON_ID}
 import org.apache.james.jmap.json.VacationResponseSerializationTest.VACATION_RESPONSE
-import org.apache.james.jmap.vacation.VacationResponse.UnparsedVacationResponseId
-import org.apache.james.jmap.vacation.{VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseIds, VacationResponseNotFound}
+import org.apache.james.jmap.vacation.{UnparsedVacationResponseId, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseIds, VacationResponseNotFound}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsSuccess, Json}
@@ -35,7 +34,7 @@ import play.api.libs.json.{JsSuccess, Json}
 object VacationResponseGetSerializationTest {
   private val ACCOUNT_ID: AccountId = AccountId(id)
 
-  private val SINGLETON_ID: UnparsedVacationResponseId = "singleton"
+  private val SINGLETON_ID: UnparsedVacationResponseId = UnparsedVacationResponseId("singleton")
   private val PROPERTIES: Properties = Properties("isEnabled", "fromDate")
 }
 
@@ -44,7 +43,7 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
     "succeed on invalid VacationResponseId" in {
       val expectedRequestObject = VacationResponseGetRequest(
         accountId = ACCOUNT_ID,
-        ids = Some(VacationResponseIds(List("invalid"))),
+        ids = Some(VacationResponseIds(List(UnparsedVacationResponseId("invalid")))),
         properties = None)
 
       VacationSerializer.deserializeVacationResponseGetRequest(
@@ -136,7 +135,7 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
     "succeed when multiple ids" in {
       val expectedRequestObject = VacationResponseGetRequest(
         accountId = ACCOUNT_ID,
-        ids = Some(VacationResponseIds(List(SINGLETON_ID, "randomId"))),
+        ids = Some(VacationResponseIds(List(SINGLETON_ID, UnparsedVacationResponseId("randomId")))),
         properties = Some(PROPERTIES))
 
       VacationSerializer.deserializeVacationResponseGetRequest(
@@ -156,7 +155,7 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
         accountId = ACCOUNT_ID,
         state = State.INSTANCE,
         list = List(VACATION_RESPONSE),
-        notFound = VacationResponseNotFound(Set("randomId1", "randomId2")))
+        notFound = VacationResponseNotFound(Set(UnparsedVacationResponseId("randomId1"), UnparsedVacationResponseId("randomId2"))))
 
       val expectedJson: String =
         s"""

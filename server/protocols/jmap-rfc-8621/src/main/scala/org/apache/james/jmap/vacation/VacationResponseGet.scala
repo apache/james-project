@@ -21,7 +21,6 @@ package org.apache.james.jmap.vacation
 
 import org.apache.james.jmap.core.{AccountId, Properties, State}
 import org.apache.james.jmap.method.WithAccountId
-import org.apache.james.jmap.vacation.VacationResponse.UnparsedVacationResponseId
 
 case class VacationResponseIds(value: List[UnparsedVacationResponseId])
 

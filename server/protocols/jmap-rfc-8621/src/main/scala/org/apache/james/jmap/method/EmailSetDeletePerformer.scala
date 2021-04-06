@@ -22,8 +22,7 @@ package org.apache.james.jmap.method
 import javax.inject.Inject
 import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.mail.EmailSet.UnparsedMessageId
-import org.apache.james.jmap.mail.{DestroyIds, EmailSet, EmailSetRequest}
+import org.apache.james.jmap.mail.{DestroyIds, EmailSet, EmailSetRequest, UnparsedMessageId}
 import org.apache.james.jmap.method.EmailSetDeletePerformer.{DestroyFailure, DestroyResult, DestroyResults}
 import org.apache.james.mailbox.model.{DeleteResult, MessageId}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}

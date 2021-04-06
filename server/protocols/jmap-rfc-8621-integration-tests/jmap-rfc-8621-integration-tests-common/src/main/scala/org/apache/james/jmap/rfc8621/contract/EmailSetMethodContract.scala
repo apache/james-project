@@ -4967,7 +4967,7 @@ trait EmailSetMethodContract {
            |        "notDestroyed": {
            |          "invalid": {
            |            "type": "invalidArguments",
-           |            "description": "invalid is not a messageId: ${invalidMessageIdMessage("invalid")}"
+           |            "description": "UnparsedMessageId(invalid) is not a messageId: ${invalidMessageIdMessage("invalid")}"
            |          }
            |        }
            |      }, "c1"]]
@@ -5595,7 +5595,7 @@ trait EmailSetMethodContract {
            |        "notDestroyed": {
            |          "invalid": {
            |            "type": "invalidArguments",
-           |            "description": "invalid is not a messageId: ${invalidMessageIdMessage("invalid")}"
+           |            "description": "UnparsedMessageId(invalid) is not a messageId: ${invalidMessageIdMessage("invalid")}"
            |          }
            |        }
            |      }, "c1"]
