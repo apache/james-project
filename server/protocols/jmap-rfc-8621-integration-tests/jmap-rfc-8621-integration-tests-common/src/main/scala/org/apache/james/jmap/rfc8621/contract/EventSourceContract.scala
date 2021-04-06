@@ -255,6 +255,7 @@ trait EventSourceContract {
       .hasSize(1)
     assertThat(seq.head)
       .startsWith("event: state\ndata: {\"@type\":\"StateChange\",\"changed\":{\"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6\":{\"Mailbox\":")
+    assertThat(seq.head).doesNotContain("pushState")
     assertThat(seq.head).endsWith("\n\n")
   }
 

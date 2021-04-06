@@ -197,6 +197,10 @@ object ResponseSerializer {
         JsObject(Map(
           "@type" -> JsString("StateChange"),
           "changed" -> changeWrites.writes(stateChange.changes))))
+  private val stateChangeWritesNoPushState: Writes[StateChange] = stateChange =>
+      JsObject(Map(
+        "@type" -> JsString("StateChange"),
+        "changed" -> changeWrites.writes(stateChange.changes)))
 
   private implicit val webSocketResponseWrites: Writes[WebSocketResponse] = response => {
     val apiResponseJson: JsObject = responseObjectFormat.writes(response.responseObject)
@@ -219,6 +223,12 @@ object ResponseSerializer {
     case response: WebSocketResponse => webSocketResponseWrites.writes(response)
     case error: WebSocketError => webSocketErrorWrites.writes(error)
   }
+  private val sseOutboundWrites: Writes[OutboundMessage] = {
+    case pingMessage: PingMessage => pingWrites.writes(pingMessage)
+    case stateChange: StateChange => stateChangeWritesNoPushState.writes(stateChange)
+    case response: WebSocketResponse => webSocketResponseWrites.writes(response)
+    case error: WebSocketError => webSocketErrorWrites.writes(error)
+  }
 
   def serialize(session: Session): JsValue = Json.toJson(session)
 
@@ -231,6 +241,8 @@ object ResponseSerializer {
   def serialize(errors: JsError): JsValue = Json.toJson(errors)
 
   def serialize(outboundMessage: OutboundMessage): JsValue = Json.toJson(outboundMessage)
+
+  def serializeSSE(outboundMessage: OutboundMessage): JsValue = sseOutboundWrites.writes(outboundMessage)
 
   def deserializeRequestObject(input: String): JsResult[RequestObject] = Json.parse(input).validate[RequestObject]
 
