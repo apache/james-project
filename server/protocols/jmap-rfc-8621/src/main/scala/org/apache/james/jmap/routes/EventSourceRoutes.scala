@@ -213,7 +213,7 @@ class EventSourceRoutes@Inject() (@Named(InjectionKeys.RFC_8621) val authenticat
       case _: PingMessage => "ping"
       case _: StateChange => "state"
     }
-    s"event: $event\ndata: ${Json.stringify(ResponseSerializer.serialize(outboundMessage))}\n\n"
+    s"event: $event\ndata: ${Json.stringify(ResponseSerializer.serializeSSE(outboundMessage))}\n\n"
   }
 
   private def handleConnectionEstablishmentError(throwable: Throwable, response: HttpServerResponse): SMono[Void] = throwable match {
