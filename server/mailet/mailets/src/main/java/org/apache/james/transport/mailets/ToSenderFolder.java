@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * processed by the upcoming processor mailets, or not.
  * 
  * <pre>
- * &lt;mailet match="RecipientIsLocal" class="ToSenderFolder"&gt;
+ * &lt;mailet match="SenderIsLocal" class="ToSenderFolder"&gt;
  *    &lt;folder&gt; <i>Sent Items</i> &lt;/folder&gt;
  *    &lt;consume&gt; <i>false</i> &lt;/consume&gt;
  * &lt;/mailet&gt;
