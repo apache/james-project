@@ -24,21 +24,26 @@ import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JM
 import org.apache.james.jmap.core.Invocation
 import org.apache.james.jmap.core.Invocation._
 import org.apache.james.jmap.json.{MDNParseSerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.{BlobId, MDNParseRequest, MDNParseResponse, MDNParseResults, MDNParsed}
+import org.apache.james.jmap.mail.{BlobId, BlobUnParsableException, MDNParseRequest, MDNParseResponse, MDNParseResults, MDNParsed}
 import org.apache.james.jmap.routes.{BlobNotFoundException, BlobResolvers, SessionSupplier}
-import org.apache.james.mailbox.MailboxSession
+import org.apache.james.mailbox.model.{MessageId, MultimailboxesSearchQuery, SearchQuery}
+import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.mdn.MDN
+import org.apache.james.mdn.fields.OriginalMessageId
 import org.apache.james.metrics.api.MetricFactory
+import org.apache.james.mime4j.dom.Message
 import org.apache.james.mime4j.message.DefaultMessageBuilder
 import play.api.libs.json.{JsError, JsObject, JsSuccess, Json}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import java.io.InputStream
 import javax.inject.Inject
+import scala.jdk.OptionConverters._
 import scala.util.Try
 
 class MDNParseMethod @Inject()(val blobResolvers: BlobResolvers,
                                val metricFactory: MetricFactory,
+                               val mdnEmailIdResolver: MDNEmailIdResolver,
                                val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[MDNParseRequest] {
   override val methodName: MethodName = MethodName("MDN/parse")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_MDN, JMAP_MAIL, JMAP_CORE)
@@ -77,29 +82,51 @@ class MDNParseMethod @Inject()(val blobResolvers: BlobResolvers,
 
     val parsed: SFlux[MDNParseResults] = SFlux.fromIterable(parsedIds)
       .flatMap(blobId => toParseResults(blobId, mailboxSession))
-      .map(_.fold(e => MDNParseResults.notFound(e.blobId), result => result))
 
     SFlux.merge(Seq(parsed, SFlux.fromIterable(invalid)))
       .reduce(MDNParseResults.empty())(MDNParseResults.merge)
       .map(_.asResponse(request.accountId))
   }
 
-  private def toParseResults(blobId: BlobId, mailboxSession: MailboxSession): SMono[Either[BlobNotFoundException, MDNParseResults]] =
+  private def toParseResults(blobId: BlobId, mailboxSession: MailboxSession): SMono[MDNParseResults] =
     blobResolvers.resolve(blobId, mailboxSession)
-      .map(blob => Right(parse(blob.blobId, blob.content)))
+      .flatMap(blob => parse(blob.blobId, blob.content)
+        .flatMap(mdnAndMsg => buildMDNParseResults(blobId, mdnAndMsg._1, mdnAndMsg._2, mailboxSession)))
       .onErrorResume {
-        case e: BlobNotFoundException => SMono.just(Left(e))
+        case e: BlobNotFoundException => SMono.just(MDNParseResults.notFound(e.blobId))
+        case e: BlobUnParsableException => SMono.just(MDNParseResults.notParse(e.blobId))
+        case _ => SMono.just(MDNParseResults.notParse(blobId))
       }
 
-  private def parse(blobId: BlobId, blobContent: InputStream): MDNParseResults = {
+  private def buildMDNParseResults(blobId: BlobId, mdn: MDN, message: Message, session: MailboxSession): SMono[MDNParseResults] =
+    mdnEmailIdResolver.resolveForEmailId(mdn.getReport.getOriginalMessageIdField.toScala, session)
+      .map(messageId => MDNParsed.fromMDN(mdn, message, messageId))
+      .map(mdnParsed => MDNParseResults.parse(blobId, mdnParsed))
+
+  private def parse(blobId: BlobId, blobContent: InputStream): SMono[(MDN, Message)] = {
     val maybeMdn = for {
       message <- Try(new DefaultMessageBuilder().parseMessage(blobContent))
       mdn <- Try(MDN.parse(message))
-      jmapMdn = MDNParsed.fromMDN(mdn, message)
     } yield {
-      MDNParseResults.parse(blobId, jmapMdn)
+      (mdn, message)
     }
-
-    maybeMdn.fold(_ => MDNParseResults.notParse(blobId), result => result)
+    maybeMdn.fold(_ => SMono.raiseError(BlobUnParsableException(blobId)), result => SMono.just(result))
   }
+}
+
+object MDNEmailIdResolver {
+  val NUMBER_OF_ORIGINAL_MESSAGE_ID_VALID: Int = 1
+}
+
+case class MDNEmailIdResolver @Inject()(mailboxManager: MailboxManager) {
+  import MDNEmailIdResolver.NUMBER_OF_ORIGINAL_MESSAGE_ID_VALID
+
+  def resolveForEmailId(originalMessageId: Option[OriginalMessageId], session: MailboxSession): SMono[Option[MessageId]] =
+    originalMessageId.map(originalMsg => {
+      val searchByRFC822MessageId: MultimailboxesSearchQuery = MultimailboxesSearchQuery.from(SearchQuery.of(SearchQuery.mimeMessageID(originalMsg.getOriginalMessageId))).build
+      SFlux.fromPublisher(mailboxManager.search(searchByRFC822MessageId, session, NUMBER_OF_ORIGINAL_MESSAGE_ID_VALID + 1)).collectSeq().map {
+        case Seq(first) => Some(first)
+        case _ => None
+      }
+    }).getOrElse(SMono.just(None))
 }

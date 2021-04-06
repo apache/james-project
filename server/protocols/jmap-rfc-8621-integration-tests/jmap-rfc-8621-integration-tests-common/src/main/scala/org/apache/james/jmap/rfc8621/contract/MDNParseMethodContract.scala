@@ -32,7 +32,7 @@ import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.{MailboxPath, MessageId}
 import org.apache.james.mime4j.dom.Message
-import org.apache.james.mime4j.message.MultipartBuilder
+import org.apache.james.mime4j.message.{BodyPartBuilder, MultipartBuilder, SingleBodyBuilder}
 import org.apache.james.modules.MailboxProbeImpl
 import org.apache.james.util.ClassLoaderUtils
 import org.apache.james.utils.DataProbeImpl
@@ -190,7 +190,7 @@ trait MDNParseMethodContract {
       .inPath("methodResponses[0][1].parsed")
       .isEqualTo(
         s"""{
-           |    "1": {
+           |    "${messageId1.serialize()}": {
            |        "subject": "Read: test",
            |        "textBody": "This is simple body of human-readable part",
            |        "finalRecipient": "rfc822; tungexplorer@linagora.com",
@@ -201,7 +201,7 @@ trait MDNParseMethodContract {
            |            "type": "displayed"
            |        }
            |    },
-           |    "2": {
+           |    "${messageId2.serialize()}": {
            |        "subject": "Read: test",
            |        "textBody": "This is simple body of human-readable part",
            |        "finalRecipient": "rfc822; tungexplorer@linagora.com",
@@ -212,7 +212,7 @@ trait MDNParseMethodContract {
            |            "type": "displayed"
            |        }
            |    },
-           |    "3": {
+           |    "${messageId3.serialize()}": {
            |        "subject": "Read: test",
            |        "textBody": "This is simple body of human-readable part",
            |        "finalRecipient": "rfc822; tungexplorer@linagora.com",
@@ -695,5 +695,146 @@ trait MDNParseMethodContract {
          |    },
          |    "c1"]]
          |}""".stripMargin)
+  }
+
+  @Test
+  def forEmailIdShouldReturnWhenOriginalMessageIdIsRelated(guiceJamesServer: GuiceJamesServer): Unit = {
+    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(path)
+
+    val originalMessageId: MessageId = mailboxProbe
+      .appendMessage(BOB.asString(), path, AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mdn_relate_original_message.eml")))
+      .getMessageId
+
+    val mdnBodyPart = BodyPartBuilder
+      .create
+      .setBody(SingleBodyBuilder.create
+        .setText(s"""Reporting-UA: UA_name; UA_product
+                    |MDN-Gateway: smtp; apache.org
+                    |Original-Recipient: rfc822; originalRecipient
+                    |Final-Recipient: rfc822; ${BOB.asString()}
+                    |Original-Message-ID: <messageId1@Atlassian.JIRA>
+                    |Disposition: automatic-action/MDN-sent-automatically;processed/error,failed
+                    |""".replace(System.lineSeparator(), "\r\n")
+          .stripMargin)
+        .buildText)
+      .setContentType("message/disposition-notification")
+      .build
+
+    val mdnMessageId = mailboxProbe
+      .appendMessage(BOB.asString(), path, AppendCommand.builder()
+        .build(Message.Builder
+          .of
+          .setSubject("Subject MDN")
+          .setSender(BOB.asString())
+          .setFrom(BOB.asString())
+          .setBody(MultipartBuilder.create("report")
+            .addTextPart("This is body of text part", StandardCharsets.UTF_8)
+            .addBodyPart(mdnBodyPart)
+            .build)
+          .build))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mdn",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "MDN/parse",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "blobIds": [ "${mdnMessageId.serialize()}" ]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitConditionFactory.untilAsserted {
+      () => {
+        val response = `given`
+          .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+          .body(request)
+        .when
+          .post
+        .`then`
+          .statusCode(SC_OK)
+          .contentType(JSON)
+          .extract
+          .body
+          .asString
+
+        assertThatJson(response)
+          .inPath(s"methodResponses[0][1].parsed.${mdnMessageId.serialize()}.forEmailId")
+          .isEqualTo(s""""${originalMessageId.serialize}"""")
+      }
+    }
+  }
+
+  @Test
+  def forEmailIdShouldBeNullWhenOriginalMessageIdIsNotFound(guiceJamesServer: GuiceJamesServer): Unit = {
+    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(path)
+    val mdnBodyPart = BodyPartBuilder
+      .create
+      .setBody(SingleBodyBuilder.create
+        .setText(s"""Reporting-UA: UA_name; UA_product
+                    |MDN-Gateway: smtp; apache.org
+                    |Original-Recipient: rfc822; originalRecipient
+                    |Final-Recipient: rfc822; final_recipient
+                    |Original-Message-ID: <notFound@Atlassian.JIRA>
+                    |Disposition: automatic-action/MDN-sent-automatically;processed/error,failed
+                    |""".replace(System.lineSeparator(), "\r\n")
+          .stripMargin)
+        .buildText)
+      .setContentType("message/disposition-notification")
+      .build
+
+    val mdnMessageId = mailboxProbe
+      .appendMessage(BOB.asString(), path, AppendCommand.builder()
+        .build(Message.Builder
+          .of
+          .setSubject("Subject MDN")
+          .setSender(BOB.asString())
+          .setFrom(BOB.asString())
+          .setBody(MultipartBuilder.create("report")
+            .addTextPart("This is body of text part", StandardCharsets.UTF_8)
+            .addBodyPart(mdnBodyPart)
+            .build)
+          .build))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mdn",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "MDN/parse",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "blobIds": [ "${mdnMessageId.serialize()}" ]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath(s"methodResponses[0][1].parsed.${mdnMessageId.serialize()}.forEmailId").isAbsent()
   }
 }

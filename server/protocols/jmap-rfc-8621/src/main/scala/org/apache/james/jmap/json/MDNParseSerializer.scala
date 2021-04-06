@@ -20,6 +20,7 @@
 package org.apache.james.jmap.json
 
 import org.apache.james.jmap.mail.{BlobId, BlobIds, ErrorField, FinalRecipientField, ForEmailIdField, IncludeOriginalMessageField, MDNDisposition, MDNNotFound, MDNNotParsable, MDNParseRequest, MDNParseResponse, MDNParsed, OriginalMessageIdField, OriginalRecipientField, ReportUAField, SubjectField, TextBodyField}
+import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json._
 
 object MDNParseSerializer {
@@ -28,6 +29,7 @@ object MDNParseSerializer {
   private implicit val mdnNotFoundWrites: Writes[MDNNotFound] = Json.valueWrites[MDNNotFound]
   private implicit val mdnNotParsableWrites: Writes[MDNNotParsable] = Json.valueWrites[MDNNotParsable]
   private implicit val mdnDispositionWrites: Writes[MDNDisposition] = Json.writes[MDNDisposition]
+  private implicit val messageIdWrites: Writes[MessageId] = id => JsString(id.serialize())
   private implicit val mdnForEmailIdFieldWrites: Writes[ForEmailIdField] = Json.valueWrites[ForEmailIdField]
   private implicit val mdnSubjectFieldWrites: Writes[SubjectField] = Json.valueWrites[SubjectField]
   private implicit val mdnTextBodyFieldWrites: Writes[TextBodyField] = Json.valueWrites[TextBodyField]

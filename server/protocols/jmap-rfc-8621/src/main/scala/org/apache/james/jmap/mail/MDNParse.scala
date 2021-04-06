@@ -23,6 +23,7 @@ import eu.timepit.refined.api.Refined
 import org.apache.james.jmap.core.{AccountId, Id}
 import org.apache.james.jmap.mail.MDNParse._
 import org.apache.james.jmap.method.WithAccountId
+import org.apache.james.mailbox.model.MessageId
 import org.apache.james.mdn.MDN
 import org.apache.james.mdn.fields.{Disposition => JavaDisposition}
 import org.apache.james.mime4j.dom.Message
@@ -39,8 +40,10 @@ case class BlobIds(value: Seq[UnparsedBlobId])
 
 case class RequestTooLargeException(description: String) extends Exception
 
+case class BlobUnParsableException(blobId: BlobId) extends RuntimeException
+
 case object MDNParseRequest {
-  val MAXIMUM_NUMBER_OF_BLOB_IDS: 16 = 16
+  val MAXIMUM_NUMBER_OF_BLOB_IDS: Int = 16
 }
 
 case class MDNParseRequest(accountId: AccountId,
@@ -80,7 +83,7 @@ case class MDNDisposition(actionMode: String,
                           sendingMode: String,
                           `type`: String)
 
-case class ForEmailIdField(value: String) extends AnyVal
+case class ForEmailIdField(originalMessageId: MessageId) extends AnyVal
 
 case class SubjectField(value: String) extends AnyVal
 
@@ -103,9 +106,9 @@ object IncludeOriginalMessageField {
 case class IncludeOriginalMessageField(value: Boolean) extends AnyVal
 
 object MDNParsed {
-  def fromMDN(mdn: MDN, message: Message): MDNParsed = {
+  def fromMDN(mdn: MDN, message: Message, originalMessageId: Option[MessageId]): MDNParsed = {
     val report = mdn.getReport
-    MDNParsed(forEmailId = None,
+    MDNParsed(forEmailId = originalMessageId.map(msgId => ForEmailIdField(msgId)),
       subject = Option(message.getSubject).map(SubjectField),
       textBody = Some(TextBodyField(mdn.getHumanReadableText)),
       reportingUA = report.getReportingUserAgentField
