@@ -72,7 +72,7 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
           case (processingContext, (clientId, response)) =>
             Id.validate(response.id.serialize)
               .fold(_ => processingContext,
-                serverId => processingContext.recordCreatedId(ClientId(clientId), ServerId(serverId)))
+                serverId => processingContext.recordCreatedId(ClientId(clientId.id), ServerId(serverId)))
         }))
   }
 

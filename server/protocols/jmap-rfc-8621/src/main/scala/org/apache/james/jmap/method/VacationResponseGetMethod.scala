@@ -29,8 +29,8 @@ import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, MissingCapabilityException, Properties}
 import org.apache.james.jmap.json.{ResponseSerializer, VacationSerializer}
 import org.apache.james.jmap.routes.SessionSupplier
-import org.apache.james.jmap.vacation.VacationResponse.{UNPARSED_SINGLETON, UnparsedVacationResponseId}
-import org.apache.james.jmap.vacation.{VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseNotFound}
+import org.apache.james.jmap.vacation.VacationResponse.UNPARSED_SINGLETON
+import org.apache.james.jmap.vacation.{UnparsedVacationResponseId, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseNotFound}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.{JsError, JsObject, JsSuccess}

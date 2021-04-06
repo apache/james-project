@@ -22,8 +22,7 @@ package org.apache.james.jmap.method
 import javax.inject.Inject
 import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
-import org.apache.james.jmap.mail.{MailboxGet, MailboxSetError, MailboxSetRequest, RemoveEmailsOnDestroy}
+import org.apache.james.jmap.mail.{MailboxGet, MailboxSetError, MailboxSetRequest, RemoveEmailsOnDestroy, UnparsedMailboxId}
 import org.apache.james.jmap.method.MailboxSetDeletePerformer.{MailboxDeletionFailure, MailboxDeletionResult, MailboxDeletionResults, MailboxDeletionSuccess}
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MessageRange}
@@ -40,7 +39,7 @@ object MailboxSetDeletePerformer {
       case e: MailboxHasMailException => MailboxSetError.mailboxHasEmail(SetErrorDescription(s"${e.mailboxId.serialize} is not empty"))
       case e: MailboxHasChildException => MailboxSetError.mailboxHasChild(SetErrorDescription(s"${e.mailboxId.serialize} has child mailboxes"))
       case e: SystemMailboxChangeException => SetError.invalidArguments(SetErrorDescription("System mailboxes cannot be destroyed"))
-      case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(s"${mailboxId} is not a mailboxId: ${e.getMessage}"))
+      case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(s"${mailboxId.id} is not a mailboxId: ${e.getMessage}"))
       case _ => SetError.serverFail(SetErrorDescription(exception.getMessage))
     }
   }

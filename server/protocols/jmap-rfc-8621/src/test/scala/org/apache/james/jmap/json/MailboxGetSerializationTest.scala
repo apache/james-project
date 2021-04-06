@@ -27,8 +27,7 @@ import org.apache.james.jmap.core.{AccountId, Properties}
 import org.apache.james.jmap.json.Fixture._
 import org.apache.james.jmap.json.MailboxGetSerializationTest._
 import org.apache.james.jmap.json.MailboxSerializationTest.MAILBOX
-import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
-import org.apache.james.jmap.mail.{Ids, Mailbox, MailboxGetRequest, MailboxGetResponse, NotFound}
+import org.apache.james.jmap.mail.{Ids, Mailbox, MailboxGetRequest, MailboxGetResponse, NotFound, UnparsedMailboxId}
 import org.apache.james.mailbox.model.{MailboxId, TestId}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -41,8 +40,8 @@ object MailboxGetSerializationTest {
 
   private val ACCOUNT_ID: AccountId = AccountId(id)
 
-  private val MAILBOX_ID_1: UnparsedMailboxId = "1"
-  private val MAILBOX_ID_2: UnparsedMailboxId = "2"
+  private val MAILBOX_ID_1: UnparsedMailboxId = UnparsedMailboxId("1")
+  private val MAILBOX_ID_2: UnparsedMailboxId = UnparsedMailboxId("2")
 
   private val PROPERTIES: Properties = Properties("name", "role")
 }

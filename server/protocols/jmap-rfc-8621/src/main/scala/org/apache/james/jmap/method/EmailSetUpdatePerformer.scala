@@ -27,9 +27,8 @@ import javax.mail.Flags
 import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.json.EmailSetSerializer
-import org.apache.james.jmap.mail.EmailSet.UnparsedMessageId
 import org.apache.james.jmap.mail.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
-import org.apache.james.jmap.mail.{EmailSet, EmailSetRequest, MailboxIds, ValidatedEmailSetUpdate}
+import org.apache.james.jmap.mail.{EmailSet, EmailSetRequest, MailboxIds, UnparsedMessageId, ValidatedEmailSetUpdate}
 import org.apache.james.jmap.method.EmailSetUpdatePerformer.{EmailUpdateFailure, EmailUpdateResult, EmailUpdateResults, EmailUpdateSuccess}
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode
 import org.apache.james.mailbox.exception.MailboxNotFoundException

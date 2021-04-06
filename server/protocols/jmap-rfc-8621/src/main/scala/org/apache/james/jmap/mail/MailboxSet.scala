@@ -26,14 +26,12 @@ import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.core.Id.IdConstraint
+import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
 import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, Properties, SetError, State}
 import org.apache.james.jmap.json.MailboxSerializer
-import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail.MailboxPatchObject.MailboxPatchObjectKey
-import org.apache.james.jmap.mail.MailboxSetRequest.MailboxCreationId
 import org.apache.james.jmap.method.{MailboxCreationParseException, WithAccountId}
 import org.apache.james.mailbox.model.{MailboxId, MailboxACL => JavaMailboxACL}
 import org.apache.james.mailbox.{MailboxSession, Role}
@@ -46,9 +44,7 @@ case class MailboxSetRequest(accountId: AccountId,
                              destroy: Option[Seq[UnparsedMailboxId]],
                              onDestroyRemoveEmails: Option[RemoveEmailsOnDestroy]) extends WithAccountId
 
-object MailboxSetRequest {
-  type MailboxCreationId = String Refined IdConstraint
-}
+case class MailboxCreationId(id: Id)
 
 case class RemoveEmailsOnDestroy(value: Boolean) extends AnyVal
 

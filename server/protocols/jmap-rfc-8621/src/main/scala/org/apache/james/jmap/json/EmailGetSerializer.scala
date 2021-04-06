@@ -19,10 +19,12 @@
 
 package org.apache.james.jmap.json
 
+import eu.timepit.refined
 import org.apache.james.jmap.api.model.Preview
+import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{Properties, State}
 import org.apache.james.jmap.mail.Email.Size
-import org.apache.james.jmap.mail.{AddressesHeaderValue, BlobId, Charset, DateHeaderValue, Disposition, EmailAddress, EmailAddressGroup, EmailBody, EmailBodyMetadata, EmailBodyPart, EmailBodyValue, EmailChangesRequest, EmailChangesResponse, EmailFastView, EmailFullView, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailHeaderView, EmailHeaders, EmailIds, EmailMetadata, EmailMetadataView, EmailNotFound, EmailView, EmailerName, FetchAllBodyValues, FetchHTMLBodyValues, FetchTextBodyValues, GroupName, GroupedAddressesHeaderValue, HasAttachment, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, PartId, RawHeaderValue, Subject, TextHeaderValue, ThreadId, Type, URLsHeaderValue}
+import org.apache.james.jmap.mail.{AddressesHeaderValue, BlobId, Charset, DateHeaderValue, Disposition, EmailAddress, EmailAddressGroup, EmailBody, EmailBodyMetadata, EmailBodyPart, EmailBodyValue, EmailChangesRequest, EmailChangesResponse, EmailFastView, EmailFullView, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailHeaderView, EmailHeaders, EmailIds, EmailMetadata, EmailMetadataView, EmailNotFound, EmailView, EmailerName, FetchAllBodyValues, FetchHTMLBodyValues, FetchTextBodyValues, GroupName, GroupedAddressesHeaderValue, HasAttachment, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, PartId, RawHeaderValue, Subject, TextHeaderValue, ThreadId, Type, URLsHeaderValue, UnparsedEmailId}
 import org.apache.james.mailbox.model.{Cid, MailboxId, MessageId}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -108,6 +110,14 @@ object EmailGetSerializer {
   }
   private implicit val headersWrites: Writes[EmailHeader] = Json.writes[EmailHeader]
   private implicit val bodyValueWrites: Writes[EmailBodyValue] = Json.writes[EmailBodyValue]
+  private implicit val unparsedMessageIdWrites: Writes[UnparsedEmailId] = Json.valueWrites[UnparsedEmailId]
+  private implicit val unparsedMessageIdReads: Reads[UnparsedEmailId] = {
+    case JsString(string) => refined.refineV[IdConstraint](string)
+      .fold(
+        e => JsError(s"emailId does not match Id constraints: $e"),
+        id => JsSuccess(UnparsedEmailId(id)))
+    case _ => JsError("emailId needs to be represented by a JsString")
+  }
   private implicit val emailIdsReads: Reads[EmailIds] = Json.valueReads[EmailIds]
   private implicit val emailGetRequestReads: Reads[EmailGetRequest] = Json.reads[EmailGetRequest]
 

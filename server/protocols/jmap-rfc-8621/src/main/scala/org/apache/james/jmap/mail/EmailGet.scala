@@ -27,7 +27,6 @@ import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.jmap.api.change.Limit
 import org.apache.james.jmap.core.{AccountId, Properties, State}
-import org.apache.james.jmap.mail.Email.UnparsedEmailId
 import org.apache.james.jmap.mail.EmailGetRequest.MaxBodyValueBytes
 import org.apache.james.jmap.mail.EmailHeaders.SPECIFIC_HEADER_PREFIX
 import org.apache.james.jmap.method.WithAccountId

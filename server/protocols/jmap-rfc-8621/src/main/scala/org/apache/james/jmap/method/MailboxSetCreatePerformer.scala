@@ -24,8 +24,7 @@ import javax.inject.Inject
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{ClientId, Id, Properties, ServerId, SetError}
 import org.apache.james.jmap.json.MailboxSerializer
-import org.apache.james.jmap.mail.MailboxSetRequest.MailboxCreationId
-import org.apache.james.jmap.mail.{IsSubscribed, MailboxCreationRequest, MailboxCreationResponse, MailboxRights, MailboxSetRequest, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads}
+import org.apache.james.jmap.mail.{IsSubscribed, MailboxCreationId, MailboxCreationRequest, MailboxCreationResponse, MailboxRights, MailboxSetRequest, SortOrder, TotalEmails, TotalThreads, UnreadEmails, UnreadThreads}
 import org.apache.james.jmap.method.MailboxSetCreatePerformer.{MailboxCreationFailure, MailboxCreationResult, MailboxCreationResults, MailboxCreationSuccess}
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.jmap.utils.quotas.QuotaLoaderWithPreloadedDefaultFactory
@@ -129,7 +128,7 @@ class MailboxSetCreatePerformer @Inject()(serializer: MailboxSerializer,
     }
     mailboxCreationRequest.parentId
       .map(maybeParentId => for {
-        parentId <- Try(mailboxIdFactory.fromString(maybeParentId.value))
+        parentId <- Try(mailboxIdFactory.fromString(maybeParentId.id))
           .toEither
           .left
           .map(e => new IllegalArgumentException(e.getMessage, e))
@@ -148,14 +147,13 @@ class MailboxSetCreatePerformer @Inject()(serializer: MailboxSerializer,
 
   private def recordCreationIdInProcessingContext(mailboxCreationId: MailboxCreationId,
                                                   processingContext: ProcessingContext,
-                                                  mailboxId: MailboxId): Either[IllegalArgumentException, ProcessingContext] = {
+                                                  mailboxId: MailboxId): Either[IllegalArgumentException, ProcessingContext] =
     for {
-      creationId <- Id.validate(mailboxCreationId)
       serverAssignedId <- Id.validate(mailboxId.serialize())
     } yield {
-      processingContext.recordCreatedId(ClientId(creationId), ServerId(serverAssignedId))
+      processingContext.recordCreatedId(ClientId(mailboxCreationId.id), ServerId(serverAssignedId))
     }
-  }
+
   private def mailboxSetError(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): SetError =
     errors.head match {
       case (path, Seq()) => SetError.invalidArguments(SetErrorDescription(s"'$path' property in mailbox object is not valid"))

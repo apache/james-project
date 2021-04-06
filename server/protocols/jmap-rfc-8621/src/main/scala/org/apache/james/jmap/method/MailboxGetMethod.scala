@@ -28,8 +28,7 @@ import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, Properties, State}
 import org.apache.james.jmap.http.MailboxesProvisioner
 import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.MailboxGet.UnparsedMailboxId
-import org.apache.james.jmap.mail.{Mailbox, MailboxFactory, MailboxGet, MailboxGetRequest, MailboxGetResponse, NotFound, PersonalNamespace, Subscriptions}
+import org.apache.james.jmap.mail.{Mailbox, MailboxFactory, MailboxGet, MailboxGetRequest, MailboxGetResponse, NotFound, PersonalNamespace, Subscriptions, UnparsedMailboxId}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.jmap.utils.quotas.{QuotaLoaderWithPreloadedDefault, QuotaLoaderWithPreloadedDefaultFactory}
 import org.apache.james.mailbox.exception.MailboxNotFoundException
@@ -118,7 +117,7 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
           case None => getAllMailboxes(capabilities, mailboxSession)
             .map(MailboxGetResults.found)
           case Some(ids) => SFlux.fromIterable(ids.value)
-            .flatMap(id => Try(mailboxIdFactory.fromString(id.value))
+            .flatMap(id => Try(mailboxIdFactory.fromString(id.id))
               .fold(e => SMono.just(MailboxGetResults.notFound(id)),
                 mailboxId => getMailboxResultById(capabilities, mailboxId, mailboxSession)),
               maxConcurrency = 5)

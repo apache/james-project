@@ -33,7 +33,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import javax.inject.Inject
 import org.apache.james.jmap.api.model.Preview
 import org.apache.james.jmap.api.projections.{MessageFastViewPrecomputedProperties, MessageFastViewProjection}
-import org.apache.james.jmap.core.Id.IdConstraint
+import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.{Properties, UTCDate}
 import org.apache.james.jmap.mail.BracketHeader.sanitize
 import org.apache.james.jmap.mail.Email.{Size, sanitizeSize}
@@ -61,8 +61,6 @@ import scala.util.{Failure, Success, Try}
 object Email {
   private val logger: Logger = LoggerFactory.getLogger(classOf[EmailView])
 
-  type UnparsedEmailId = String Refined IdConstraint
-
   val defaultProperties: Properties = Properties("id", "blobId", "threadId", "mailboxIds", "keywords", "size",
     "receivedAt", "messageId", "inReplyTo", "references", "sender", "from",
     "to", "cc", "bcc", "replyTo", "subject", "sentAt", "hasAttachment",
@@ -76,7 +74,7 @@ object Email {
   def asUnparsed(messageId: MessageId): Try[UnparsedEmailId] =
     refined.refineV[IdConstraint](messageId.serialize()) match {
       case Left(e) => Failure(new IllegalArgumentException(e))
-      case scala.Right(value) => Success(value)
+      case scala.Right(value) => Success(UnparsedEmailId(value))
     }
 
   type Size = Long Refined NonNegative
@@ -114,6 +112,8 @@ object Email {
     })
   }
 }
+
+case class UnparsedEmailId(id: Id)
 
 object ReadLevel {
   private val metadataProperty: Seq[NonEmptyString] = Seq("id", "size", "mailboxIds",

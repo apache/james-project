@@ -20,15 +20,15 @@
 package org.apache.james.jmap.json
 
 import cats.implicits._
+import eu.timepit.refined
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
 import javax.inject.Inject
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{Id, SetError, State, UTCDate}
-import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId, UnparsedMessageIdConstraint}
 import org.apache.james.jmap.mail.KeywordsFactory.STRICT_KEYWORDS_FACTORY
-import org.apache.james.jmap.mail.{AddressesHeaderValue, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, Attachment, BlobId, Charset, ClientBody, ClientCid, ClientEmailBodyValue, ClientPartId, DateHeaderValue, DestroyIds, Disposition, EmailAddress, EmailAddressGroup, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailSetRequest, EmailSetResponse, EmailSetUpdate, EmailerName, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, Type, URLsHeaderValue}
+import org.apache.james.jmap.mail.{AddressesHeaderValue, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, Attachment, BlobId, Charset, ClientBody, ClientCid, ClientEmailBodyValue, ClientPartId, DateHeaderValue, DestroyIds, Disposition, EmailAddress, EmailAddressGroup, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailSetRequest, EmailSetResponse, EmailSetUpdate, EmailerName, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, Type, URLsHeaderValue, UnparsedMessageId}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json.{Format, JsArray, JsBoolean, JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
 
@@ -184,10 +184,14 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
   }
 
   private implicit val updatesMapReads: Reads[Map[UnparsedMessageId, JsObject]] =
-    Reads.mapReads[UnparsedMessageId, JsObject] {string => refineV[UnparsedMessageIdConstraint](string).fold(JsError(_), id => JsSuccess(id)) }
+    Reads.mapReads[UnparsedMessageId, JsObject] {string => refineV[IdConstraint](string)
+      .fold(e => JsError(s"messageId needs to match id constraints: $e"),
+        id => JsSuccess(UnparsedMessageId(id))) }
 
   private implicit val createsMapReads: Reads[Map[EmailCreationId, JsObject]] =
-    Reads.mapReads[EmailCreationId, JsObject] {s => refineV[IdConstraint](s).fold(JsError(_), JsSuccess(_)) }
+    Reads.mapReads[EmailCreationId, JsObject] {s => refineV[IdConstraint](s)
+      .fold(e => JsError(s"email creationId needs to match id constraints: $e"),
+        id => JsSuccess(EmailCreationId(id))) }
 
   private implicit val keywordReads: Reads[Keyword] = {
     case jsString: JsString => Keyword.parse(jsString.value)
@@ -202,18 +206,33 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
     keywordsMap => STRICT_KEYWORDS_FACTORY.fromSet(keywordsMap.keys.toSet)
       .fold(e => JsError(e.getMessage), keywords => JsSuccess(keywords)))
 
-  private implicit val blobIdFormat: Format[BlobId] = Json.valueFormat[BlobId]
+  private implicit val blobIdWrites: Writes[BlobId] = Json.valueWrites[BlobId]
+  private implicit val blobIdReads: Reads[BlobId] = {
+    case JsString(string) => BlobId.of(string)
+      .toEither.fold(
+        e => JsError(s"blobId does not match Id constraints: $e"),
+        blobId => JsSuccess(blobId))
+    case _ => JsError("blobId needs to be represented by a JsString")
+  }
+  private implicit val unparsedMessageIdWrites: Writes[UnparsedMessageId] = Json.valueWrites[UnparsedMessageId]
+  private implicit val unparsedMessageIdReads: Reads[UnparsedMessageId] = {
+    case JsString(string) => refined.refineV[IdConstraint](string)
+      .fold(
+        e => JsError(s"messageId does not match Id constraints: $e"),
+        id => JsSuccess(UnparsedMessageId(id)))
+    case _ => JsError("messageId needs to be represented by a JsString")
+  }
   private implicit val unitWrites: Writes[Unit] = _ => JsNull
   private implicit val updatedWrites: Writes[Map[MessageId, Unit]] = mapWrites[MessageId, Unit](_.serialize, unitWrites)
-  private implicit val notDestroyedWrites: Writes[Map[UnparsedMessageId, SetError]] = mapWrites[UnparsedMessageId, SetError](_.value, setErrorWrites)
+  private implicit val notDestroyedWrites: Writes[Map[UnparsedMessageId, SetError]] = mapWrites[UnparsedMessageId, SetError](_.id.value, setErrorWrites)
   private implicit val destroyIdsReads: Reads[DestroyIds] = Json.valueFormat[DestroyIds]
   private implicit val destroyIdsWrites: Writes[DestroyIds] = Json.valueWrites[DestroyIds]
   private implicit val emailRequestSetReads: Reads[EmailSetRequest] = Json.reads[EmailSetRequest]
   private implicit val emailCreationResponseWrites: Writes[EmailCreationResponse] = Json.writes[EmailCreationResponse]
   private implicit val createsMapWrites: Writes[Map[EmailCreationId, EmailCreationResponse]] =
-    mapWrites[EmailCreationId, EmailCreationResponse](_.value, emailCreationResponseWrites)
+    mapWrites[EmailCreationId, EmailCreationResponse](_.id.value, emailCreationResponseWrites)
   private implicit val notCreatedMapWrites: Writes[Map[EmailCreationId, SetError]] =
-    mapWrites[EmailCreationId, SetError](_.value, setErrorWrites)
+    mapWrites[EmailCreationId, SetError](_.id.value, setErrorWrites)
 
   private implicit val stateWrites: Writes[State] = Json.valueWrites[State]
   private implicit val emailResponseSetWrites: OWrites[EmailSetResponse] = Json.writes[EmailSetResponse]
