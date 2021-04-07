@@ -91,7 +91,9 @@ class MDNParseMethod @Inject()(val blobResolvers: BlobResolvers,
   private def toParseResults(blobId: BlobId, mailboxSession: MailboxSession): SMono[MDNParseResults] =
     blobResolvers.resolve(blobId, mailboxSession)
       .flatMap(blob => parse(blob.blobId, blob.content)
-        .flatMap(mdnAndMsg => buildMDNParseResults(blobId, mdnAndMsg._1, mdnAndMsg._2, mailboxSession)))
+        .flatMap {
+          case (mdn, message) => buildMDNParseResults(blobId, mdn, message, mailboxSession)
+        }
       .onErrorResume {
         case e: BlobNotFoundException => SMono.just(MDNParseResults.notFound(e.blobId))
         case e: BlobUnParsableException => SMono.just(MDNParseResults.notParse(e.blobId))
