@@ -99,4 +99,31 @@ class FinalRecipientTest {
                 .formattedValue())
             .isEqualTo("Final-Recipient: rfc822; Plop\r\n Glark");
     }
+
+    @Test
+    void fieldValueShouldThrowWhenFinalRecipientIsNull() {
+        assertThatThrownBy(() -> FinalRecipient.builder()
+            .build()
+            .fieldValue())
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void fieldValueShouldSuccessWhenNoSetAddress() {
+        assertThat(FinalRecipient.builder()
+            .finalRecipient(Text.fromRawText("Plop\nGlark"))
+            .build()
+            .fieldValue())
+            .isEqualTo("rfc822; Plop\r\n Glark");
+    }
+
+    @Test
+    void fieldValueShouldSuccessWithFullProperties() {
+        assertThat(FinalRecipient.builder()
+            .finalRecipient(Text.fromRawText("Plop\nGlark"))
+            .addressType(new AddressType("address type 1"))
+            .build()
+            .fieldValue())
+            .isEqualTo("address type 1; Plop\r\n Glark");
+    }
 }

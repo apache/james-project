@@ -17,21 +17,31 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.mail
+package org.apache.james.jmap.rfc8621.memory;
 
-import eu.timepit.refined.refineV
-import org.apache.james.jmap.core.Id
-import org.apache.james.mailbox.model.MessageId
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.jmap.rfc8621.contract.MDNParseMethodContract;
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import scala.util.{Failure, Success, Try}
+import java.util.concurrent.ThreadLocalRandom;
 
-object BlobId {
-  def of(string: String): Try[BlobId] = refineV[Id.IdConstraint](string) match {
-      case scala.Right(value) => Success(BlobId(value))
-      case Left(e) => Failure(new IllegalArgumentException(e))
+import static org.apache.james.MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE;
+
+public class MemoryMDNParseMethodTest implements MDNParseMethodContract {
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE)
+            .overrideWith(new TestJMAPServerModule()))
+        .build();
+
+    @Override
+    public MessageId randomMessageId() {
+        return InMemoryMessageId.of(ThreadLocalRandom.current().nextInt(100000) + 100);
     }
-  def of(messageId: MessageId): Try[BlobId] = of(messageId.serialize())
-  def of(messageId: MessageId, partId: PartId): Try[BlobId] = of(s"${messageId.serialize()}_${partId.serialize}")
 }
-
-case class BlobId(value: Id.Id)

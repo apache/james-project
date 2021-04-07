@@ -81,4 +81,8 @@ object ErrorCode {
   case object UnsupportedFilter extends ErrorCode {
     override def code: String = "unsupportedFilter"
   }
+
+  case object RequestTooLarge extends ErrorCode {
+    override def code: String = "requestTooLarge"
+  }
 }

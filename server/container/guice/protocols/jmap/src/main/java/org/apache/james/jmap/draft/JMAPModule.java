@@ -139,6 +139,7 @@ public class JMAPModule extends AbstractModule {
         supportedCapabilities.addBinding().toInstance(DefaultCapabilities.SHARES_CAPABILITY());
         supportedCapabilities.addBinding().toInstance(DefaultCapabilities.VACATION_RESPONSE_CAPABILITY());
         supportedCapabilities.addBinding().toInstance(DefaultCapabilities.SUBMISSION_CAPABILITY());
+        supportedCapabilities.addBinding().toInstance(DefaultCapabilities.MDN_CAPABILITY());
     }
 
     @ProvidesIntoSet

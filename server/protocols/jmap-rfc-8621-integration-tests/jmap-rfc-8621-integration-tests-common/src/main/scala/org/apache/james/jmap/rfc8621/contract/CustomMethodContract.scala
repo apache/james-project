@@ -78,7 +78,8 @@ object CustomMethodContract {
       |    "urn:apache:james:params:jmap:mail:quota": {},
       |    "$CUSTOM": {"custom": "property"},
       |    "urn:apache:james:params:jmap:mail:shares": {},
-      |    "urn:ietf:params:jmap:vacationresponse":{}
+      |    "urn:ietf:params:jmap:vacationresponse":{},
+      |    "urn:ietf:params:jmap:mdn":{}
       |  },
       |  "accounts" : {
       |    "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6" : {
@@ -115,7 +116,8 @@ object CustomMethodContract {
       |        "urn:apache:james:params:jmap:mail:quota": {},
       |        "urn:apache:james:params:jmap:mail:shares": {},
       |        "$CUSTOM": {"custom": "property"},
-      |        "urn:ietf:params:jmap:vacationresponse":{}
+      |        "urn:ietf:params:jmap:vacationresponse":{},
+      |        "urn:ietf:params:jmap:mdn":{}
       |      }
       |    }
       |  },
@@ -127,7 +129,8 @@ object CustomMethodContract {
       |    "urn:apache:james:params:jmap:mail:quota": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
       |    "urn:apache:james:params:jmap:mail:shares": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
       |    "$CUSTOM": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-      |    "urn:ietf:params:jmap:vacationresponse": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+      |    "urn:ietf:params:jmap:vacationresponse": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+      |    "urn:ietf:params:jmap:mdn": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
       |  },
       |  "username" : "bob@domain.tld",
       |  "apiUrl" : "http://domain.com/jmap",

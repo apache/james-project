@@ -99,4 +99,30 @@ class OriginalRecipientTest {
                 .formattedValue())
             .isEqualTo("Original-Recipient: rfc822; multiline\r\n address");
     }
+
+    @Test
+    void fieldValueShouldDontHaveSemiColonWhenAgentProductIsNull() {
+        assertThat(OriginalRecipient.builder()
+            .originalRecipient(Text.fromRawText("multiline\naddress"))
+            .build()
+            .fieldValue())
+            .isEqualTo("rfc822; multiline\r\n address");
+    }
+
+    @Test
+    void fieldValueShouldSuccessWithFullProperties() {
+        assertThat(OriginalRecipient.builder()
+            .originalRecipient(Text.fromRawText("multiline\naddress"))
+            .addressType(new AddressType("address"))
+            .build()
+            .fieldValue())
+            .isEqualTo("address; multiline\r\n address");
+    }
+
+    @Test
+    void fieldValueShouldFailWhenAgentNameIsNull() {
+        assertThatThrownBy(() -> OriginalRecipient.builder()
+            .build())
+            .isInstanceOf(NullPointerException.class);
+    }
 }

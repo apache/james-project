@@ -365,7 +365,7 @@ public abstract class SendMDNMethodTest {
             .get("/download/" + blobId)
         .then()
             .statusCode(200)
-            .body(containsString("Reporting-UA: reportingUA;"))
+            .body(containsString("Reporting-UA: reportingUA"))
             .body(containsString("Final-Recipient: rfc822; homer@domain.tld"))
             .body(containsString("Original-Message-ID: "))
             .body(containsString("Disposition: automatic-action/MDN-sent-automatically;processed"));

@@ -99,7 +99,11 @@ public class OriginalRecipient implements Field {
 
     @Override
     public String formattedValue() {
-        return FIELD_NAME + ": " + addressType.getType() + "; " + originalRecipient.formatted();
+        return FIELD_NAME + ": " + fieldValue();
+    }
+
+    public String fieldValue() {
+        return addressType.getType() + "; " + originalRecipient.formatted();
     }
 
     @Override

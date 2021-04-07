@@ -48,6 +48,7 @@ object DefaultCapabilities {
       MayCreateTopLevelMailbox(true)))
   val QUOTA_CAPABILITY = QuotaCapability()
   val SHARES_CAPABILITY = SharesCapability()
+  val MDN_CAPABILITY = MDNCapability()
   val VACATION_RESPONSE_CAPABILITY = VacationResponseCapability()
   val SUBMISSION_CAPABILITY = SubmissionCapability()
 
