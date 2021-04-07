@@ -108,7 +108,7 @@ case class IncludeOriginalMessageField(value: Boolean) extends AnyVal
 object MDNParsed {
   def fromMDN(mdn: MDN, message: Message, originalMessageId: Option[MessageId]): MDNParsed = {
     val report = mdn.getReport
-    MDNParsed(forEmailId = originalMessageId.map(msgId => ForEmailIdField(msgId)),
+    MDNParsed(forEmailId = originalMessageId.map(ForEmailIdField(_)),
       subject = Option(message.getSubject).map(SubjectField),
       textBody = Some(TextBodyField(mdn.getHumanReadableText)),
       reportingUA = report.getReportingUserAgentField
