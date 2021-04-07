@@ -45,8 +45,9 @@ case class IdentityName(name: String) extends AnyVal
 case class TextSignature(name: String) extends AnyVal
 case class HtmlSignature(name: String) extends AnyVal
 case class MayDeleteIdentity(value: Boolean) extends AnyVal
+case class IdentityId(id: Id)
 
-case class Identity(id: Id,
+case class Identity(id: IdentityId,
                     name: IdentityName,
                     email: MailAddress,
                     replyTo: Option[List[EmailAddress]],
@@ -69,7 +70,7 @@ class IdentityFactory @Inject()(canSendFrom: CanSendFrom) {
       .flatMap(address =>
         from(address).map(id =>
           Identity(
-            id = id,
+            id = IdentityId(id),
             name = IdentityName(address.asString()),
             email = address,
             replyTo = None,
