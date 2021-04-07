@@ -57,7 +57,7 @@ class MDNParseMethod @Inject()(val blobResolvers: BlobResolvers,
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, MDNParseRequest] =
     MDNParseSerializer.deserializeMDNParseRequest(invocation.arguments.value) match {
-      case JsSuccess(emailGetRequest, _) => emailGetRequest.validate
+      case JsSuccess(mdnParseRequest, _) => mdnParseRequest.validate
       case errors: JsError => Left(new IllegalArgumentException(Json.stringify(ResponseSerializer.serialize(errors))))
     }
 
@@ -93,7 +93,7 @@ class MDNParseMethod @Inject()(val blobResolvers: BlobResolvers,
       .flatMap(blob => parse(blob.blobId, blob.content)
         .flatMap {
           case (mdn, message) => buildMDNParseResults(blobId, mdn, message, mailboxSession)
-        }
+        })
       .onErrorResume {
         case e: BlobNotFoundException => SMono.just(MDNParseResults.notFound(e.blobId))
         case e: BlobUnParsableException => SMono.just(MDNParseResults.notParse(e.blobId))
@@ -106,7 +106,7 @@ class MDNParseMethod @Inject()(val blobResolvers: BlobResolvers,
       .map(mdnParsed => MDNParseResults.parse(blobId, mdnParsed))
 
   private def parse(blobId: BlobId, blobContent: InputStream): SMono[(MDN, Message)] = {
-    val maybeMdn = for {
+    val maybeMdn: Try[(MDN, Message)] = for {
       message <- Try(new DefaultMessageBuilder().parseMessage(blobContent))
       mdn <- Try(MDN.parse(message))
     } yield {
