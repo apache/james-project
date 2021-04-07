@@ -23,7 +23,6 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.core._
 import org.apache.james.jmap.json.{IdentitySerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{Identity, IdentityFactory, IdentityGetRequest, IdentityGetResponse}
@@ -65,9 +64,5 @@ class IdentityGetMethod @Inject() (identityFactory: IdentityFactory,
   private def getIdentities(request: IdentityGetRequest,
                             mailboxSession: MailboxSession): SMono[IdentityGetResponse] =
     SMono.fromCallable(() => identityFactory.listIdentities(mailboxSession))
-      .map(identities => IdentityGetResponse(
-        accountId = request.accountId,
-        list = identities,
-        state = INSTANCE))
-
+      .map(request.computeResponse)
 }

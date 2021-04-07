@@ -28,6 +28,7 @@ import eu.timepit.refined.refineV
 import javax.inject.Inject
 import org.apache.james.core.MailAddress
 import org.apache.james.jmap.core.Id.Id
+import org.apache.james.jmap.core.State.INSTANCE
 import org.apache.james.jmap.core.{AccountId, Properties, State}
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.mailbox.MailboxSession
@@ -46,6 +47,9 @@ case class TextSignature(name: String) extends AnyVal
 case class HtmlSignature(name: String) extends AnyVal
 case class MayDeleteIdentity(value: Boolean) extends AnyVal
 case class IdentityId(id: Id)
+case class IdentityIds(ids: List[IdentityId]) {
+  def contains(identityId: IdentityId): Boolean = ids.contains(identityId)
+}
 
 case class Identity(id: IdentityId,
                     name: IdentityName,
@@ -57,11 +61,26 @@ case class Identity(id: IdentityId,
                     mayDelete: MayDeleteIdentity)
 
 case class IdentityGetRequest(accountId: AccountId,
-                              properties: Option[Properties]) extends WithAccountId
+                              ids: Option[IdentityIds],
+                              properties: Option[Properties]) extends WithAccountId {
+  def computeResponse(identities: List[Identity]): IdentityGetResponse = {
+    val list: Option[List[Identity]] = Some(identities.filter(identity => isRequested(identity.id))).filter(_.nonEmpty)
+    val notFound: Option[List[IdentityId]] = ids.map(ids => ids.ids.filter(id => !identities.map(_.id).contains(id))).filter(_.nonEmpty)
+
+    IdentityGetResponse(
+      accountId = accountId,
+      state = INSTANCE,
+      list = list,
+      notFound = notFound.map(IdentityIds))
+  }
+
+  private def isRequested(id: IdentityId): Boolean = ids.forall(_.contains(id))
+}
 
 case class IdentityGetResponse(accountId: AccountId,
-                              state: State,
-                              list: List[Identity])
+                               state: State,
+                               list: Option[List[Identity]],
+                               notFound: Option[IdentityIds])
 
 class IdentityFactory @Inject()(canSendFrom: CanSendFrom) {
   def listIdentities(session: MailboxSession): List[Identity] =
