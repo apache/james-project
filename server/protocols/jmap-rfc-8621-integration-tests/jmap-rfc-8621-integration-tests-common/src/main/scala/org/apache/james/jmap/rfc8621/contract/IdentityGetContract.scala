@@ -140,6 +140,51 @@ trait IdentityGetContract {
   }
 
   @Test
+  def getIdentityShouldSupportIdsField(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [[
+         |    "Identity/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["idNotFound", "6310e0a86aedaad878f634a5ff5c2cb8bb3c2401319305ef3272591ebcdc6cb4"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response =  `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1]")
+      .isEqualTo(
+      s"""{
+        |    "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        |    "state": "${INSTANCE.value}",
+        |    "list": [
+        |        {
+        |            "id": "6310e0a86aedaad878f634a5ff5c2cb8bb3c2401319305ef3272591ebcdc6cb4",
+        |            "name": "bob-alias@domain.tld",
+        |            "email": "bob-alias@domain.tld",
+        |            "mayDelete": false
+        |        }
+        |    ],
+        |    "notFound": ["idNotFound"]
+        |}""".stripMargin)
+  }
+
+  @Test
   def getIdentityShouldReturnDomainAliases(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("bob-alias", "domain.tld", "bob@domain.tld")
     server.getProbe(classOf[DataProbeImpl]).addDomainAliasMapping("domain-alias.tld", "domain.tld")

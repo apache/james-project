@@ -26,6 +26,7 @@ import play.api.libs.json.{Format, JsArray, JsObject, JsResult, JsSuccess, JsVal
 object IdentitySerializer {
   private implicit val emailerNameReads: Writes[EmailerName] = Json.valueWrites[EmailerName]
   private implicit val identityIdFormat: Format[IdentityId] = Json.valueFormat[IdentityId]
+  private implicit val identityIdsFormat: Format[IdentityIds] = Json.valueFormat[IdentityIds]
   private implicit val emailAddressReads: Writes[EmailAddress] = Json.writes[EmailAddress]
   private implicit val nameWrites: Writes[IdentityName] = Json.valueWrites[IdentityName]
   private implicit val textSignatureWrites: Writes[TextSignature] = Json.valueWrites[TextSignature]
