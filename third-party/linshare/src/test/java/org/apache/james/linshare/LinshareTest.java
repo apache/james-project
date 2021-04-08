@@ -32,9 +32,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.http.HttpStatus;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.linshare.client.TechnicalAccountResponse;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -42,6 +44,7 @@ import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 
+@Tag(Unstable.TAG)
 class LinshareTest {
 
     @RegisterExtension
