@@ -4,12 +4,22 @@
 James relies on the https://metrics.dropwizard.io/4.1.2/manual/core.html[Dropwizard metric library]
 for keeping track of some core metrics of James.
 
-Such metrics are made available via JMX. You can connect for instance using VisualVM and the associated
-mbean plugins.
+Such metrics are exposed over HTTP and can be made available by using **extensions.routes** in https://github.com/apache/james-project/blob/master/docs/modules/servers/pages/distributed/configure/webadmin.adoc[webadmin.properties] file:
+....
+extensions.routes=org.apache.james.webadmin.dropwizard.MetricsRoutes
+....
 
-You can also export the metrics to ElasticSearch and visualize them with https://grafana.com/[Grafana].
-See xref:distributed/configure/elasticsearch.adoc#_exporting_metrics_directly_to_elasticsearch[elaticseach.properties]
-documentation for more details on how to set this up.
+Once exposed, you can use https://prometheus.io/[Prometheus] to scrape and visualize them with https://grafana.com/[Grafana].
+Below here is the sample scrape job in **prometheus.yml** file:
+....
+  - job_name: 'Apache James'
+    scrape_interval: 30s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['james:8000']
+....
+
+You can also export the metrics to ElasticSearch and visualize them in https://grafana.com/[Grafana] dashboards.
 
 If some metrics seem abnormally slow despite in depth database
 performance tuning, feedback is appreciated as well on the bug tracker,
@@ -95,25 +105,35 @@ This is for instance how the JMAP dashboard looks like:
 
 image::metrics.png[metrics for the JMAP protocol request latencies]
 
-== Running and configuring Grafana
+== Running and configuring Prometheus/Grafana
 
-The following command allow you to run a fresh grafana server :
-
-....
-docker run -i -p 3000:3000 grafana/grafana
-....
-
-Once running, you need to set up an ElasticSearch data-source : - select
-proxy mode - Select version 2.x of ElasticSearch - make the URL point
-your ES node - Specify the index name. By default, it should be :
+The following docker-compose.yml file will allow you to run a fresh prometheus/grafana montoring stack:
 
 ....
-[james-metrics-]YYYY-MM
+version: '3'
+
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+   # volumes:
+    #  - ./conf/grafana/grafana.ini:/etc/grafana/grafana.ini
+    #  - ./conf/grafana/provisioning:/etc/grafana/provisioning
+   # Copy 
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes: #Map your scrape config to prometheus container.
+      - ./conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
 ....
+
+Once running, you need to set up Prometheus datasource for Grafana. Datasource name should match with the name provided in dashboard json files. Or else you will have to edit Grafana dashboards afterward.
 
 Import the different dashboards you want.
 
-You then need to enable reporting through ElasticSearch. Modify your
-James ElasticSearch configuration file accordingly. To help you doing
-this, you can take a look to
-https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/elasticsearch.properties[elasticsearch.properties].
+You can also pre-load the Datasource and dashboards by using https://grafana.com/tutorials/provision-dashboards-and-data-sources/[Grafana provision.]
+
