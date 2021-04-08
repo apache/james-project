@@ -29,14 +29,17 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.List;
 
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.linshare.LinshareExtension;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import feign.FeignException;
 
+@Tag(Unstable.TAG)
 class LinshareAPITest {
     private static final String USER1_MAIL = "user1@linshare.org";
     private static final String USER2_MAIL = "user2@linshare.org";

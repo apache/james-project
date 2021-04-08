@@ -35,13 +35,16 @@ import org.apache.james.blob.export.api.BlobExportMechanism;
 import org.apache.james.blob.export.api.FileExtension;
 import org.apache.james.blob.memory.MemoryBlobStoreFactory;
 import org.apache.james.core.MailAddress;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.linshare.client.Document;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import reactor.core.publisher.Mono;
 
+@Tag(Unstable.TAG)
 class LinshareBlobExportMechanismTest {
     private static final String FILE_CONTENT = "content";
     private static final String EXPLANATION = "Explanation about the file being shared";
