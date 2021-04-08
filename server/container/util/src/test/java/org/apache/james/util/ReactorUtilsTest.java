@@ -476,83 +476,105 @@ class ReactorUtilsTest {
         }
 
         @Test
-        void givenAFluxOnOneByteShouldConsumeOnlyTheReadBytesAndThePrefetch() throws IOException, InterruptedException {
+        void givenALongFluxAllDataShouldNotBeReadWhenPartialReads() throws Exception {
             AtomicInteger generateElements = new AtomicInteger(0);
-            Flux<ByteBuffer> source = Flux.range(0, 10)
-                .subscribeOn(Schedulers.elastic())
-                .limitRate(2)
-                .doOnRequest(request -> generateElements.getAndAdd((int) request))
-                .map(index -> new byte[] {(byte) (int) index})
-                .map(ByteBuffer::wrap);
 
-            InputStream inputStream = ReactorUtils.toInputStream(source);
-            byte[] readBytes = IOUtils.readFully(inputStream, 5);
-
-            assertThat(readBytes).contains(0, 1, 2, 3, 4);
-            //make sure reactor is done with prefetch
-            Thread.sleep(200);
-            assertThat(generateElements.get()).isEqualTo(6);
-        }
-
-        @Test
-        void givenAFluxOf3BytesShouldConsumeOnlyTheReadBytesAndThePrefetch() throws IOException, InterruptedException {
-            AtomicInteger generateElements = new AtomicInteger(0);
+            // ReactorUtils.toInputStream has a 1024 sized buffer, request 2 elements upfront, and one when reading the first batch
             Flux<ByteBuffer> source = Flux.just(
-                new byte[] {0, 1, 2},
-                new byte[] {3, 4, 5},
-                new byte[] {6, 7, 8})
+                "a".repeat(1025).getBytes(StandardCharsets.UTF_8),
+                "b".repeat(1025).getBytes(StandardCharsets.UTF_8),
+                "c".repeat(1025).getBytes(StandardCharsets.UTF_8),
+                "d".repeat(1025).getBytes(StandardCharsets.UTF_8),
+                "e".repeat(1025).getBytes(StandardCharsets.UTF_8),
+                "f".repeat(1025).getBytes(StandardCharsets.UTF_8),
+                "g".repeat(1025).getBytes(StandardCharsets.UTF_8),
+                "h".repeat(1025).getBytes(StandardCharsets.UTF_8),
+                "1".repeat(1025).getBytes(StandardCharsets.UTF_8))
                     .subscribeOn(Schedulers.elastic())
                     .map(ByteBuffer::wrap)
                     .limitRate(2)
                     .doOnRequest(request -> generateElements.getAndAdd((int) request));
 
             InputStream inputStream = ReactorUtils.toInputStream(source);
-            byte[] readBytes = IOUtils.readFully(inputStream, 5);
+            inputStream.read();
 
-            assertThat(readBytes).contains(0, 1, 2, 3, 4);
             //make sure reactor is done with prefetch
             Thread.sleep(200);
             assertThat(generateElements.get()).isEqualTo(3);
         }
 
         @Test
-        void givenAFluxOf3BytesWithAnEmptyByteArrayShouldConsumeOnlyTheReadBytesAndThePrefetch() throws IOException {
+        void additionalRequestsShouldBeDoneWhenChunksDoNotFillTheBuffer() throws Exception {
             AtomicInteger generateElements = new AtomicInteger(0);
+
+            // ReactorUtils.toInputStream has a 1024 sized buffer, request 2 elements upfront, and one when reading the first batch, one more to get the remaining byte
             Flux<ByteBuffer> source = Flux.just(
-                new byte[] {0, 1, 2},
-                new byte[] {},
-                new byte[] {3, 4, 5},
-                new byte[] {6, 7, 8},
-                new byte[] {9, 10, 11})
+                "a".repeat(1023).getBytes(StandardCharsets.UTF_8),
+                "b".repeat(1023).getBytes(StandardCharsets.UTF_8),
+                "c".repeat(1023).getBytes(StandardCharsets.UTF_8),
+                "d".repeat(1023).getBytes(StandardCharsets.UTF_8),
+                "e".repeat(1023).getBytes(StandardCharsets.UTF_8),
+                "f".repeat(1023).getBytes(StandardCharsets.UTF_8),
+                "g".repeat(1023).getBytes(StandardCharsets.UTF_8),
+                "h".repeat(1023).getBytes(StandardCharsets.UTF_8),
+                "1".repeat(1023).getBytes(StandardCharsets.UTF_8))
                     .subscribeOn(Schedulers.elastic())
                     .map(ByteBuffer::wrap)
                     .limitRate(2)
                     .doOnRequest(request -> generateElements.getAndAdd((int) request));
 
             InputStream inputStream = ReactorUtils.toInputStream(source);
-            IOUtils.readFully(inputStream, 5);
+            inputStream.read();
 
-            byte[] readBytesBis = IOUtils.readFully(inputStream, 2);
-            assertThat(readBytesBis).contains(5,6);
+            //make sure reactor is done with prefetch
+            Thread.sleep(200);
+            assertThat(generateElements.get()).isEqualTo(4);
         }
 
         @Test
-        void givenAnEmptyFluxShouldConsumeOnlyThePrefetch() throws IOException, InterruptedException {
+        void remainingsOfTheBufferShouldNotBeDiscardedAcrossReads() throws Exception {
             AtomicInteger generateElements = new AtomicInteger(0);
-            Flux<ByteBuffer> source = Flux.<byte[]>empty()
+
+            Flux<ByteBuffer> source = Flux.just(
+                "a".repeat(1023).getBytes(StandardCharsets.UTF_8),
+                "b".repeat(1023).getBytes(StandardCharsets.UTF_8),
+                "c".repeat(1023).getBytes(StandardCharsets.UTF_8),
+                "d".repeat(1023).getBytes(StandardCharsets.UTF_8))
                     .subscribeOn(Schedulers.elastic())
                     .map(ByteBuffer::wrap)
                     .limitRate(2)
                     .doOnRequest(request -> generateElements.getAndAdd((int) request));
 
             InputStream inputStream = ReactorUtils.toInputStream(source);
-            byte[] readBytes = new byte[5];
-            inputStream.read(readBytes, 0, readBytes.length);
 
-            assertThat(readBytes).contains(0, 0, 0, 0, 0);
-            //make sure reactor is done with prefetch
-            Thread.sleep(200);
-            assertThat(generateElements.get()).isEqualTo(1);
+            assertThat(new String(IOUtils.readFully(inputStream, 1023), StandardCharsets.UTF_8))
+                .isEqualTo("a".repeat(1023));
+            assertThat(new String(IOUtils.readFully(inputStream, 1023), StandardCharsets.UTF_8))
+                .isEqualTo("b".repeat(1023));
+            assertThat(new String(IOUtils.readFully(inputStream, 1023), StandardCharsets.UTF_8))
+                .isEqualTo("c".repeat(1023));
+            assertThat(new String(IOUtils.readFully(inputStream, 1023), StandardCharsets.UTF_8))
+                .isEqualTo("d".repeat(1023));
+        }
+
+        @Test
+        void readSizeCanExceedBufferSize() throws Exception {
+            AtomicInteger generateElements = new AtomicInteger(0);
+
+            Flux<ByteBuffer> source = Flux.just(
+                "a".repeat(1023).getBytes(StandardCharsets.UTF_8),
+                "b".repeat(1023).getBytes(StandardCharsets.UTF_8),
+                "c".repeat(1023).getBytes(StandardCharsets.UTF_8),
+                "d".repeat(1023).getBytes(StandardCharsets.UTF_8))
+                    .subscribeOn(Schedulers.elastic())
+                    .map(ByteBuffer::wrap)
+                    .limitRate(2)
+                    .doOnRequest(request -> generateElements.getAndAdd((int) request));
+
+            InputStream inputStream = ReactorUtils.toInputStream(source);
+
+            assertThat(new String(IOUtils.readFully(inputStream, 2049), StandardCharsets.UTF_8))
+                .isEqualTo("a".repeat(1023) + "b".repeat(1023) + "ccc");
         }
     }
 

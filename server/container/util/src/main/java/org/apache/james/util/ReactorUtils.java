@@ -33,6 +33,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,19 +120,28 @@ public class ReactorUtils {
     static class PipedStreamSubscriber extends BaseSubscriber<ByteBuffer> {
         private final PipedOutputStream out;
         private final WritableByteChannel channel;
+        private Optional<Subscription> subscription;
 
         PipedStreamSubscriber(PipedInputStream in) {
             try {
                 this.out = new PipedOutputStream(in);
                 this.channel = Channels.newChannel(out);
+                this.subscription = Optional.empty();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
 
         @Override
+        protected void hookOnSubscribe(Subscription subscription) {
+            this.subscription = Optional.of(subscription);
+            subscription.request(2);
+        }
+
+        @Override
         protected void hookOnNext(ByteBuffer payload) {
             try {
+                subscription.ifPresent(sub -> sub.request(1));
                 channel.write(payload);
             } catch (IOException e) {
                 throw new RuntimeException(e);
