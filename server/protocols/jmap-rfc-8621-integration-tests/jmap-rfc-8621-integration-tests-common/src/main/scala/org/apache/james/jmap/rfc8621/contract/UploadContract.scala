@@ -32,7 +32,7 @@ import org.apache.james.jmap.rfc8621.contract.UploadContract.{BIG_INPUT, VALID_I
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.Matchers.equalTo
-import org.junit.jupiter.api.{BeforeEach, Test}
+import org.junit.jupiter.api.{BeforeEach, RepeatedTest, Test}
 import play.api.libs.json.{JsString, Json}
 
 object UploadContract {
@@ -55,7 +55,7 @@ trait UploadContract {
       .build
   }
 
-  @Test
+  @RepeatedTest(10)
   def shouldUploadFileAndAllowToDownloadIt(): Unit = {
     val uploadResponse: String = `given`
       .basePath("")

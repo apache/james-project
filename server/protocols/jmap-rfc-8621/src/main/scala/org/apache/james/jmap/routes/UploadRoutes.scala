@@ -137,8 +137,10 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
           .fold[SMono[Void]](
             e => SMono.raiseError(e),
             value => if (value) {
-              SMono.fromCallable(() => ReactorUtils.toInputStream(request.receive.asByteBuffer))
-              .flatMap(content => handle(targetAccountId, contentType, content, session, response))
+              SMono(Mono.usingWhen[Void, InputStream](
+                Mono.fromCallable(() => ReactorUtils.toInputStream(request.receive.asByteBuffer())),
+                (content: InputStream) => Mono.from(handle(targetAccountId, contentType, content, session, response)),
+                (content: InputStream) => Mono.fromCallable(() => content.close())))
             } else {
               SMono.raiseError(ForbiddenException())
             })

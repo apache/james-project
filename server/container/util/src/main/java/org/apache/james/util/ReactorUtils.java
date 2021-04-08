@@ -21,9 +21,12 @@ package org.apache.james.util;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.WritableByteChannel;
 import java.time.Duration;
-import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -35,10 +38,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Signal;
 import reactor.core.publisher.SynchronousSink;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.concurrent.Queues;
 import reactor.util.context.Context;
 
@@ -89,7 +94,10 @@ public class ReactorUtils {
     }
 
     public static InputStream toInputStream(Flux<ByteBuffer> byteArrays) {
-        return new StreamInputStream(byteArrays.toIterable(1).iterator());
+        PipedInputStream in = new PipedInputStream();
+        byteArrays.subscribeOn(Schedulers.elastic())
+            .subscribe(new PipedStreamSubscriber(in));
+        return in;
     }
 
     public static Flux<ByteBuffer> toChunks(InputStream inputStream, int bufferSize) {
@@ -108,52 +116,52 @@ public class ReactorUtils {
             }).defaultIfEmpty(ByteBuffer.wrap(new byte[0]));
     }
 
-    private static class StreamInputStream extends InputStream {
-        private static final int NO_MORE_DATA = -1;
+    static class PipedStreamSubscriber extends BaseSubscriber<ByteBuffer> {
+        private final PipedOutputStream out;
+        private final WritableByteChannel channel;
 
-        private final Iterator<ByteBuffer> source;
-        private Optional<ByteBuffer> currentItemByteStream;
-
-        StreamInputStream(Iterator<ByteBuffer> source) {
-            this.source = source;
-            this.currentItemByteStream = Optional.empty();
-        }
-
-        @Override
-        public int read(byte[] b, int off, int len) throws IOException {
-            return nextNonEmptyBuffer()
-                .map(buffer -> {
-                    int toRead = Math.min(len, buffer.remaining());
-                    buffer.get(b, off, toRead);
-                    return toRead;
-                })
-                .orElse(NO_MORE_DATA);
-        }
-
-        @Override
-        public int read() {
-            return nextNonEmptyBuffer()
-                .map(ReactorUtils::byteToInt)
-                .orElse(NO_MORE_DATA);
-        }
-
-        private Optional<ByteBuffer> nextNonEmptyBuffer() {
-            Boolean needsNewBuffer = currentItemByteStream.map(buffer -> !buffer.hasRemaining()).orElse(true);
-            if (needsNewBuffer) {
-                if (source.hasNext()) {
-                    currentItemByteStream = Optional.of(source.next());
-                    return nextNonEmptyBuffer();
-                } else {
-                    return Optional.empty();
-                }
+        PipedStreamSubscriber(PipedInputStream in) {
+            try {
+                this.out = new PipedOutputStream(in);
+                this.channel = Channels.newChannel(out);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-            return currentItemByteStream;
         }
 
-    }
+        @Override
+        protected void hookOnNext(ByteBuffer payload) {
+            try {
+                channel.write(payload);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
-    private static int byteToInt(ByteBuffer buffer) {
-        return buffer.get() & 0xff;
+        @Override
+        protected void hookOnComplete() {
+            close();
+        }
+
+        @Override
+        protected void hookOnError(Throwable error) {
+            LOGGER.error("Failure processing stream", error);
+            close();
+        }
+
+        @Override
+        protected void hookOnCancel() {
+            close();
+        }
+
+        private void close() {
+            try {
+                channel.close();
+                out.close();
+            } catch (IOException e) {
+                LOGGER.warn("Error closing pipe", e);
+            }
+        }
     }
 
     public static Consumer<Signal<?>> logOnError(Consumer<Throwable> errorLogStatement) {
