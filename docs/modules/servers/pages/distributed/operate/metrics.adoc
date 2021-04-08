@@ -121,7 +121,7 @@ services:
    # volumes:
     #  - ./conf/grafana/grafana.ini:/etc/grafana/grafana.ini
     #  - ./conf/grafana/provisioning:/etc/grafana/provisioning
-   # Copy 
+
   prometheus:
     image: prom/prometheus:latest
     restart: unless-stopped
