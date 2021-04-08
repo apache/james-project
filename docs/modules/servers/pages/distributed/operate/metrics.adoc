@@ -12,8 +12,34 @@ extensions.routes=org.apache.james.webadmin.dropwizard.MetricsRoutes
 Once exposed, you can use https://prometheus.io/[Prometheus] to scrape and visualize them with https://grafana.com/[Grafana].
 Below here is the sample scrape job in **prometheus.yml** file:
 ....
+# my global config
+global:
+  scrape_interval:     15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      # - alertmanager:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9090']
   - job_name: 'Apache James'
-    scrape_interval: 30s
+    scrape_interval: 5s
     metrics_path: /metrics
     static_configs:
       - targets: ['james:8000']
@@ -104,6 +130,29 @@ Latencies for SpamAssassin Spam detection and feedback. Note that this is releva
 This is for instance how the JMAP dashboard looks like:
 
 image::metrics.png[metrics for the JMAP protocol request latencies]
+
+== Running and configuring ElasticSearch/Grafana
+
+The following command allow you to run a fresh grafana server :
+
+....
+docker run -i -p 3000:3000 grafana/grafana
+....
+
+Once running, you need to set up an ElasticSearch data-source : - select
+proxy mode - Select version 2.x of ElasticSearch - make the URL point
+your ES node - Specify the index name. By default, it should be :
+
+....
+[james-metrics-]YYYY-MM
+....
+
+Import the different dashboards you want.
+
+You then need to enable reporting through ElasticSearch. Modify your
+James ElasticSearch configuration file accordingly. To help you doing
+this, you can take a look to
+https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/elasticsearch.properties[elasticsearch.properties].
 
 == Running and configuring Prometheus/Grafana
 
