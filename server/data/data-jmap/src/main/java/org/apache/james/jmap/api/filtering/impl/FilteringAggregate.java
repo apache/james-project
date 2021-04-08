@@ -25,6 +25,7 @@ import java.util.Optional;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.eventsourcing.eventstore.History;
+import org.apache.james.jmap.api.exception.StateMismatchException;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.api.filtering.Rules;
 import org.apache.james.jmap.api.filtering.Version;
@@ -68,7 +69,7 @@ public class FilteringAggregate {
 
     public List<? extends Event> defineRules(DefineRulesCommand storeCommand) {
         Preconditions.checkArgument(shouldNotContainDuplicates(storeCommand.getRules()));
-        Preconditions.checkArgument(expectedState(storeCommand.getIfInState()), "Provided state must be as same as the current state");
+        StateMismatchException.checkState(expectedState(storeCommand.getIfInState()), "Provided state must be as same as the current state");
         ImmutableList<RuleSetDefined> events = ImmutableList.of(
             new RuleSetDefined(aggregateId, history.getNextEventId(), ImmutableList.copyOf(storeCommand.getRules())));
         events.forEach(this::apply);
