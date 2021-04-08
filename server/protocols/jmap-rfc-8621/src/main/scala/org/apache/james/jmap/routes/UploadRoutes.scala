@@ -20,6 +20,7 @@
 package org.apache.james.jmap.routes
 
 import java.io.InputStream
+import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.util.stream
 import java.util.stream.Stream
@@ -137,7 +138,10 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
           .fold[SMono[Void]](
             e => SMono.raiseError(e),
             value => if (value) {
-              SMono.fromCallable(() => ReactorUtils.toInputStream(request.receive.asByteBuffer))
+              SMono.fromCallable(() => ReactorUtils.toInputStream(request.receive
+                // Unwrapping to byte array needed to solve data races and buffer reordering when using .asByteBuffer()
+                .asByteArray()
+                .map(array => ByteBuffer.wrap(array))))
               .flatMap(content => handle(targetAccountId, contentType, content, session, response))
             } else {
               SMono.raiseError(ForbiddenException())
