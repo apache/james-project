@@ -33,6 +33,7 @@ import java.util.Optional;
 
 import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.eventstore.EventStore;
+import org.apache.james.jmap.api.exception.StateMismatchException;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
 import org.junit.jupiter.api.Test;
 
@@ -154,7 +155,7 @@ public interface FilteringManagementContract {
         Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2, RULE_1)).block();
 
         assertThatThrownBy(() -> Mono.from(testee.defineRulesForUser(USERNAME, Optional.of(new Version(1)), RULE_2, RULE_1)).block())
-            .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(StateMismatchException.class);
     }
 
     @Test
@@ -217,7 +218,7 @@ public interface FilteringManagementContract {
             .isEqualTo(new Rules(ImmutableList.of(RULE_3, RULE_2, RULE_1), new Version(0)));
 
         assertThatThrownBy(() -> Mono.from(testee.defineRulesForUser(USERNAME, Optional.of(Version.INITIAL), RULE_2, RULE_1)).block())
-            .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(StateMismatchException.class);
     }
 
     @Test
@@ -225,7 +226,7 @@ public interface FilteringManagementContract {
         FilteringManagement testee = instantiateFilteringManagement(eventStore);
 
         assertThatThrownBy(() -> Mono.from(testee.defineRulesForUser(USERNAME, Optional.of(new Version(1)), RULE_2, RULE_1)).block())
-            .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(StateMismatchException.class);
     }
 
 }

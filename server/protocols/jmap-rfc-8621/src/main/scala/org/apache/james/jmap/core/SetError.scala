@@ -33,6 +33,7 @@ object SetError {
   val invalidPatchValue: SetErrorType = "invalidPatch"
   val notFoundValue: SetErrorType = "notFound"
   val forbiddenValue: SetErrorType = "forbidden"
+  val stateMismatchValue: SetErrorType = "stateMismatch"
 
   def invalidArguments(description: SetErrorDescription, properties: Option[Properties] = None): SetError =
     SetError(invalidArgumentValue, description, properties)
@@ -48,6 +49,9 @@ object SetError {
 
   def forbidden(description: SetErrorDescription, properties: Properties): SetError =
     SetError(forbiddenValue, description, Some(properties))
+
+  def stateMismatch(description: SetErrorDescription, properties: Properties): SetError =
+    SetError(stateMismatchValue, description, Some(properties))
 }
 
 case class SetError(`type`: SetErrorType, description: SetErrorDescription, properties: Option[Properties])
