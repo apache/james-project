@@ -4,7 +4,14 @@
 James relies on the https://metrics.dropwizard.io/4.1.2/manual/core.html[Dropwizard metric library]
 for keeping track of some core metrics of James.
 
-Such metrics are exposed over HTTP and can be made available by using **extensions.routes** in https://github.com/apache/james-project/blob/master/docs/modules/servers/pages/distributed/configure/webadmin.adoc[webadmin.properties] file:
+Such metrics are made available via JMX. You can connect for instance using VisualVM and the associated
+mbean plugins.
+
+You can also export the metrics to ElasticSearch and visualize them with https://grafana.com/[Grafana].
+See xref:distributed/configure/elasticsearch.adoc#_exporting_metrics_directly_to_elasticsearch[elaticseach.properties]
+documentation for more details on how to set this up.
+
+If you prefer Prometheus, metrics can also be exposed over HTTP and made available by using **extensions.routes** in https://github.com/apache/james-project/blob/master/docs/modules/servers/pages/distributed/configure/webadmin.adoc[webadmin.properties] file:
 ....
 extensions.routes=org.apache.james.webadmin.dropwizard.MetricsRoutes
 ....
