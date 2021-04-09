@@ -24,7 +24,6 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
-import org.apache.james.jmap.api.change.MailboxChange;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.api.change.MailboxChangeRepositoryContract;
 import org.apache.james.jmap.api.change.State;
@@ -47,7 +46,7 @@ public class CassandraMailboxChangeRepositoryTest implements MailboxChangeReposi
     @BeforeEach
     public void setUp(CassandraCluster cassandra) {
         mailboxChangeRepositoryDAO = new MailboxChangeRepositoryDAO(cassandra.getConf(), cassandra.getTypesProvider());
-        mailboxChangeRepository = new CassandraMailboxChangeRepository(mailboxChangeRepositoryDAO);
+        mailboxChangeRepository = new CassandraMailboxChangeRepository(mailboxChangeRepositoryDAO, DEFAULT_NUMBER_OF_CHANGES);
     }
 
     @Override

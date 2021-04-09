@@ -22,6 +22,9 @@ package org.apache.james.jmap.memory.change;
 import java.util.Comparator;
 import java.util.Optional;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.apache.james.jmap.api.change.EmailChange;
 import org.apache.james.jmap.api.change.EmailChangeRepository;
 import org.apache.james.jmap.api.change.EmailChanges;
@@ -40,11 +43,14 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MemoryEmailChangeRepository implements EmailChangeRepository {
-    public static final Limit DEFAULT_NUMBER_OF_CHANGES = Limit.of(5);
+    public static final String LIMIT_NAME = "emailChangeDefaultLimit";
 
     private final Multimap<AccountId, EmailChange> emailChangeMap;
+    private final Limit defaultLimit;
 
-    public MemoryEmailChangeRepository() {
+    @Inject
+    public MemoryEmailChangeRepository(@Named(LIMIT_NAME) Limit defaultLimit) {
+        this.defaultLimit = defaultLimit;
         this.emailChangeMap = Multimaps.synchronizedListMultimap(ArrayListMultimap.create());
     }
 
@@ -72,7 +78,7 @@ public class MemoryEmailChangeRepository implements EmailChangeRepository {
 
         return resolveAllChanges(accountId, state)
             .filter(change -> !change.isDelegated())
-            .collect(new EmailChangeCollector(state, maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
+            .collect(new EmailChangeCollector(state, maxChanges.orElse(defaultLimit)));
     }
 
     @Override
@@ -81,7 +87,7 @@ public class MemoryEmailChangeRepository implements EmailChangeRepository {
         Preconditions.checkNotNull(state);
 
         return resolveAllChanges(accountId, state)
-            .collect(new EmailChangeCollector(state, maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
+            .collect(new EmailChangeCollector(state, maxChanges.orElse(defaultLimit)));
     }
 
     @Override

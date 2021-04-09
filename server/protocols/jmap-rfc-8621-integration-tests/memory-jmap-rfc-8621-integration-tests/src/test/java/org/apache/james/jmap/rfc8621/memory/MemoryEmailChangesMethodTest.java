@@ -24,17 +24,24 @@ import static org.apache.james.MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
+import org.apache.james.jmap.api.change.Limit;
 import org.apache.james.jmap.api.change.State;
+import org.apache.james.jmap.memory.change.MemoryEmailChangeRepository;
+import org.apache.james.jmap.memory.change.MemoryMailboxChangeRepository;
 import org.apache.james.jmap.rfc8621.contract.EmailChangesMethodContract;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.google.inject.name.Names;
 
 public class MemoryEmailChangesMethodTest implements EmailChangesMethodContract {
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE)
-            .overrideWith(new TestJMAPServerModule()))
+            .overrideWith(new TestJMAPServerModule())
+            .overrideWith(binder -> binder.bind(Limit.class).annotatedWith(Names.named(MemoryMailboxChangeRepository.LIMIT_NAME)).toInstance(Limit.of(5)))
+            .overrideWith(binder -> binder.bind(Limit.class).annotatedWith(Names.named(MemoryEmailChangeRepository.LIMIT_NAME)).toInstance(Limit.of(5))))
         .build();
 
     @Override
