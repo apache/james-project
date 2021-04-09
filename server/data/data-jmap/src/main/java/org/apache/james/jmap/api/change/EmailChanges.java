@@ -107,8 +107,7 @@ public class EmailChanges {
             Set<MessageId> updatedTemp = Sets.difference(
                 ImmutableSet.<MessageId>builder()
                     .addAll(updated)
-                    .addAll(Sets.difference(ImmutableSet.copyOf(change.getUpdated()),
-                        createdTemp))
+                    .addAll(ImmutableSet.copyOf(change.getUpdated()))
                     .build(),
                 ImmutableSet.copyOf(change.getDestroyed()));
             destroyedTemp.addAll(Sets.difference(
