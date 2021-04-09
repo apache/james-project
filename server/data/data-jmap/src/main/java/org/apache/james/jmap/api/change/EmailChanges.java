@@ -69,7 +69,7 @@ public class EmailChanges {
 
             @Override
             public Set<Characteristics> characteristics() {
-                return Sets.immutableEnumSet(Characteristics.UNORDERED);
+                return ImmutableSet.of();
             }
         }
 
