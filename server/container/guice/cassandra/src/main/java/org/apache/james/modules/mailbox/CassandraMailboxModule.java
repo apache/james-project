@@ -30,6 +30,7 @@ import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.jmap.api.change.EmailChangeRepository;
+import org.apache.james.jmap.api.change.Limit;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.api.change.State;
 import org.apache.james.jmap.cassandra.change.CassandraEmailChangeRepository;
@@ -199,6 +200,9 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(RightManager.class).to(StoreRightManager.class);
         bind(SessionProvider.class).to(SessionProviderImpl.class);
         bind(AttachmentContentLoader.class).to(AttachmentManager.class);
+
+        bind(Limit.class).annotatedWith(Names.named(CassandraEmailChangeRepository.LIMIT_NAME)).toInstance(Limit.of(256));
+        bind(Limit.class).annotatedWith(Names.named(CassandraMailboxChangeRepository.LIMIT_NAME)).toInstance(Limit.of(256));
 
         bind(ReIndexer.class).to(ReIndexerImpl.class);
         bind(MessageIdReIndexer.class).to(MessageIdReIndexerImpl.class);

@@ -25,8 +25,8 @@ import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.api.change.MailboxChangeRepositoryContract;
 import org.apache.james.jmap.api.change.State;
 import org.apache.james.mailbox.model.MailboxId;
-import org.junit.jupiter.api.BeforeEach;
 import org.apache.james.mailbox.model.TestId;
+import org.junit.jupiter.api.BeforeEach;
 
 public class MemoryMailboxChangeRepositoryTest implements MailboxChangeRepositoryContract {
     MailboxChangeRepository mailboxChangeRepository;
@@ -35,7 +35,7 @@ public class MemoryMailboxChangeRepositoryTest implements MailboxChangeRepositor
 
     @BeforeEach
     void setup() {
-        mailboxChangeRepository = new MemoryMailboxChangeRepository();
+        mailboxChangeRepository = new MemoryMailboxChangeRepository(DEFAULT_NUMBER_OF_CHANGES);
         stateFactory = new State.DefaultFactory();
     }
 

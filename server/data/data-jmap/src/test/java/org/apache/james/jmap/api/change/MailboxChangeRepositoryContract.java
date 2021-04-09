@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableList;
 public interface MailboxChangeRepositoryContract {
     AccountId ACCOUNT_ID = AccountId.fromUsername(BOB);
     ZonedDateTime DATE = ZonedDateTime.now();
+    Limit DEFAULT_NUMBER_OF_CHANGES = Limit.of(5);
 
     State.Factory stateFactory();
 
@@ -376,7 +377,7 @@ public interface MailboxChangeRepositoryContract {
     }
 
     @Test
-    default void getChangesShouldReturnThrowWhenNumberOfChangesExceedMaxChanges() {
+    default void getChangesShouldThrowWhenNumberOfChangesExceedMaxChanges() {
         MailboxChangeRepository repository = mailboxChangeRepository();
         State.Factory stateFactory = stateFactory();
         State referenceState = stateFactory.generate();

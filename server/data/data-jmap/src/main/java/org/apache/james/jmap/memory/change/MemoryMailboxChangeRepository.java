@@ -23,6 +23,9 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.apache.james.jmap.api.change.Limit;
 import org.apache.james.jmap.api.change.MailboxChange;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
@@ -41,11 +44,14 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MemoryMailboxChangeRepository implements MailboxChangeRepository {
-    public static final Limit DEFAULT_NUMBER_OF_CHANGES = Limit.of(5);
+    public static final String LIMIT_NAME = "mailboxChangeDefaultLimit";
 
     private final Multimap<AccountId, MailboxChange> mailboxChangeMap;
+    private final Limit defaultLimit;
 
-    public MemoryMailboxChangeRepository() {
+    @Inject
+    public MemoryMailboxChangeRepository(@Named(LIMIT_NAME) Limit defaultLimit) {
+        this.defaultLimit = defaultLimit;
         this.mailboxChangeMap = Multimaps.synchronizedListMultimap(ArrayListMultimap.create());
     }
 
@@ -63,7 +69,7 @@ public class MemoryMailboxChangeRepository implements MailboxChangeRepository {
             return Flux.fromIterable(mailboxChangeMap.get(accountId))
                 .filter(Predicate.not(MailboxChange::isDelegated))
                 .sort(Comparator.comparing(MailboxChange::getDate))
-                .collect(new MailboxChangeCollector(state, maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
+                .collect(new MailboxChangeCollector(state, maxChanges.orElse(defaultLimit)));
         }
 
         return findByState(accountId, state)
@@ -71,7 +77,7 @@ public class MemoryMailboxChangeRepository implements MailboxChangeRepository {
                 .filter(change -> change.getDate().isAfter(currentState.getDate()))
                 .filter(Predicate.not(MailboxChange::isDelegated))
                 .sort(Comparator.comparing(MailboxChange::getDate)))
-            .collect(new MailboxChangeCollector(state, maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
+            .collect(new MailboxChangeCollector(state, maxChanges.orElse(defaultLimit)));
     }
 
     @Override
@@ -82,14 +88,14 @@ public class MemoryMailboxChangeRepository implements MailboxChangeRepository {
         if (state.equals(State.INITIAL)) {
             return Flux.fromIterable(mailboxChangeMap.get(accountId))
                 .sort(Comparator.comparing(MailboxChange::getDate))
-                .collect(new MailboxChangeCollector(state, maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
+                .collect(new MailboxChangeCollector(state, maxChanges.orElse(defaultLimit)));
         }
 
         return findByState(accountId, state)
             .flatMapMany(currentState -> Flux.fromIterable(mailboxChangeMap.get(accountId))
                 .filter(change -> change.getDate().isAfter(currentState.getDate()))
                 .sort(Comparator.comparing(MailboxChange::getDate)))
-            .collect(new MailboxChangeCollector(state, maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
+            .collect(new MailboxChangeCollector(state, maxChanges.orElse(defaultLimit)));
     }
 
     private Mono<MailboxChange> findByState(AccountId accountId, State state) {
