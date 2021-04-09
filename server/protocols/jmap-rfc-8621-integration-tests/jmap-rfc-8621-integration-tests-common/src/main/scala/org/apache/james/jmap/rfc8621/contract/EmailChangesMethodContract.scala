@@ -198,6 +198,116 @@ trait EmailChangesMethodContract {
   }
 
   @Test
+  def shouldFailWithCannotCalculateChangesWhenSingleChangeIsTooLarge(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
+    val path: MailboxPath = MailboxPath.forUser(BOB, "mailbox1")
+
+    mailboxProbe.createMailbox(path)
+
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId1: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
+    val state1: State = waitForNextState(server, AccountId.fromUsername(BOB), State.INITIAL)
+    val messageId2: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
+    val state2: State = waitForNextState(server, AccountId.fromUsername(BOB), State.INITIAL)
+    val messageId3: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
+    val state3: State = waitForNextState(server, AccountId.fromUsername(BOB), State.INITIAL)
+    val messageId4: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
+    val state4: State = waitForNextState(server, AccountId.fromUsername(BOB), State.INITIAL)
+    val messageId5: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
+    val state5: State = waitForNextState(server, AccountId.fromUsername(BOB), State.INITIAL)
+    val messageId6: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
+    val state6: State = waitForNextState(server, AccountId.fromUsername(BOB), State.INITIAL)
+
+    val updateEmail =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |  ["Email/set",
+         |    {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "update": {
+         |        "${messageId1.serialize}":{
+         |          "keywords/$$flagged": true
+         |        },
+         |        "${messageId2.serialize}":{
+         |          "keywords/$$flagged": true
+         |        },
+         |        "${messageId3.serialize}":{
+         |          "keywords/$$flagged": true
+         |        },
+         |        "${messageId4.serialize}":{
+         |          "keywords/$$flagged": true
+         |        },
+         |        "${messageId5.serialize}":{
+         |          "keywords/$$flagged": true
+         |        },
+         |        "${messageId6.serialize}":{
+         |          "keywords/$$flagged": true
+         |        }
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    `with`()
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(updateEmail)
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/changes",
+         |    {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "sinceState": "${state6.getValue}"
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .inPath("methodResponses[0]")
+        .isEqualTo(
+          s"""[
+             |  "error",
+             |  {
+             |    "type": "cannotCalculateChanges",
+             |    "description": "Current change collector limit 5 is exceeded by a single change, hence we cannot calculate changes."
+             |  },
+             |  "c1"
+             |]""".stripMargin)
+    }
+  }
+
+
+
+  @Test
   def shouldReturnUpdatedWhenMessageMove(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
     val path: MailboxPath = MailboxPath.forUser(BOB, "mailbox1")
