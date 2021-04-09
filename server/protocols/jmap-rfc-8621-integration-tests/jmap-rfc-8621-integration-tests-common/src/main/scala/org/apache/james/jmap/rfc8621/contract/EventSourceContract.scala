@@ -51,7 +51,7 @@ trait EventSourceContract {
     val port = server.getProbe(classOf[JmapGuiceProbe]).getJmapPort.getValue
 
     val status = HttpClient.create
-      .baseUrl(s"http://127.0.0.1:$port/eventSource?ping=0&closeAfter=no")
+      .baseUrl(s"http://127.0.0.1:$port/eventSource?ping=0&closeafter=no")
       .headers(builder => {
         builder.add("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
         builder.add("Accept", ACCEPT_RFC8621_VERSION_HEADER)
@@ -67,7 +67,7 @@ trait EventSourceContract {
     val port = server.getProbe(classOf[JmapGuiceProbe]).getJmapPort.getValue
 
     val status = HttpClient.create
-      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=*&closeAfter=no")
+      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=*&closeafter=no")
       .headers(builder => {
         builder.add("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
         builder.add("Accept", ACCEPT_RFC8621_VERSION_HEADER)
@@ -81,7 +81,7 @@ trait EventSourceContract {
   }
 
   @Test
-  def closeAfterQueryParamIsCompulsory(server: GuiceJamesServer): Unit = {
+  def closeafterQueryParamIsCompulsory(server: GuiceJamesServer): Unit = {
     val port = server.getProbe(classOf[JmapGuiceProbe]).getJmapPort.getValue
 
     val status = HttpClient.create
@@ -99,11 +99,11 @@ trait EventSourceContract {
   }
 
   @Test
-  def shouldRejectInvalidCloseAfter(server: GuiceJamesServer): Unit = {
+  def shouldRejectInvalidCloseafter(server: GuiceJamesServer): Unit = {
     val port = server.getProbe(classOf[JmapGuiceProbe]).getJmapPort.getValue
 
     val status = HttpClient.create
-      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=*&ping=0&closeAfter=bad")
+      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=*&ping=0&closeafter=bad")
       .headers(builder => {
         builder.add("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
         builder.add("Accept", ACCEPT_RFC8621_VERSION_HEADER)
@@ -121,7 +121,7 @@ trait EventSourceContract {
     val port = server.getProbe(classOf[JmapGuiceProbe]).getJmapPort.getValue
 
     val status = HttpClient.create
-      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=*&ping=bad&closeAfter=no")
+      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=*&ping=bad&closeafter=no")
       .headers(builder => {
         builder.add("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
         builder.add("Accept", ACCEPT_RFC8621_VERSION_HEADER)
@@ -139,7 +139,7 @@ trait EventSourceContract {
     val port = server.getProbe(classOf[JmapGuiceProbe]).getJmapPort.getValue
 
     val status = HttpClient.create
-      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=bad&ping=0&closeAfter=no")
+      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=bad&ping=0&closeafter=no")
       .headers(builder => {
         builder.add("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
         builder.add("Accept", ACCEPT_RFC8621_VERSION_HEADER)
@@ -157,7 +157,7 @@ trait EventSourceContract {
     val port = server.getProbe(classOf[JmapGuiceProbe]).getJmapPort.getValue
 
     val status = HttpClient.create
-      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=Email&ping=0&closeAfter=no")
+      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=Email&ping=0&closeafter=no")
       .headers(builder => {
         builder.add("Accept", ACCEPT_RFC8621_VERSION_HEADER)
       })
@@ -175,7 +175,7 @@ trait EventSourceContract {
 
     val seq = new ListBuffer[String]()
     HttpClient.create
-      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=*&ping=0&closeAfter=no")
+      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=*&ping=0&closeafter=no")
       .headers(builder => {
         builder.add("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
         builder.add("Accept", ACCEPT_RFC8621_VERSION_HEADER)
@@ -202,7 +202,7 @@ trait EventSourceContract {
 
     val seq = new ListBuffer[String]()
     HttpClient.create
-      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=Email&ping=0&closeAfter=no")
+      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=Email&ping=0&closeafter=no")
       .headers(builder => {
         builder.add("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
         builder.add("Accept", ACCEPT_RFC8621_VERSION_HEADER)
@@ -231,7 +231,7 @@ trait EventSourceContract {
 
     val seq = new ListBuffer[String]()
     HttpClient.create
-      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=Mailbox,Email,VacationResponse,Thread,Identity,EmailSubmission,EmailDelivery&ping=0&closeAfter=no")
+      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=Mailbox,Email,VacationResponse,Thread,Identity,EmailSubmission,EmailDelivery&ping=0&closeafter=no")
       .headers(builder => {
         builder.add("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
         builder.add("Accept", ACCEPT_RFC8621_VERSION_HEADER)
@@ -264,7 +264,7 @@ trait EventSourceContract {
 
     val seq = new ListBuffer[String]()
     HttpClient.create
-      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=*&ping=1&closeAfter=no")
+      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=*&ping=1&closeafter=no")
       .headers(builder => {
         builder.add("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
         builder.add("Accept", ACCEPT_RFC8621_VERSION_HEADER)
@@ -292,7 +292,7 @@ trait EventSourceContract {
 
     val seq = new ListBuffer[String]()
     HttpClient.create
-      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=*&ping=0&closeAfter=no")
+      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=*&ping=0&closeafter=no")
       .headers(builder => {
         builder.add("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
         builder.add("Accept", ACCEPT_RFC8621_VERSION_HEADER)
@@ -320,12 +320,12 @@ trait EventSourceContract {
   }
 
   @Test
-  def sseShouldCloseAfterEventWhenCloseAfterState(server: GuiceJamesServer): Unit = {
+  def sseShouldCloseafterEventWhenCloseafterState(server: GuiceJamesServer): Unit = {
     val port = server.getProbe(classOf[JmapGuiceProbe]).getJmapPort.getValue
 
     val seq = new ListBuffer[String]()
     HttpClient.create
-      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=*&ping=0&closeAfter=state")
+      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=*&ping=0&closeafter=state")
       .headers(builder => {
         builder.add("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
         builder.add("Accept", ACCEPT_RFC8621_VERSION_HEADER)
@@ -359,7 +359,7 @@ trait EventSourceContract {
 
     val seq = new ListBuffer[String]()
     HttpClient.create
-      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=*&ping=0&closeAfter=no")
+      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=*&ping=0&closeafter=no")
       .headers(builder => {
         builder.add("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
         builder.add("Accept", ACCEPT_RFC8621_VERSION_HEADER)

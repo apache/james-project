@@ -85,10 +85,10 @@ object EventSourceOptions {
     }
 
   private def retrieveCloseAfter(request: HttpServerRequest): Either[IllegalArgumentException, CloseAfter] =
-    queryParam(request, "closeAfter") match {
-      case None => Left(new IllegalArgumentException("closeAfter parameter is compulsory"))
+    queryParam(request, "closeafter") match {
+      case None => Left(new IllegalArgumentException("closeafter parameter is compulsory"))
       case Some(List(value)) => CloseAfter.parse(value)
-      case _ => Left(new IllegalArgumentException("closeAfter query parameter must be constituted of a single string value"))
+      case _ => Left(new IllegalArgumentException("closeafter query parameter must be constituted of a single string value"))
     }
 
   private def queryParam(httpRequest: HttpServerRequest, parameterName: String): Option[List[String]] = queryParam(parameterName, httpRequest.uri)
