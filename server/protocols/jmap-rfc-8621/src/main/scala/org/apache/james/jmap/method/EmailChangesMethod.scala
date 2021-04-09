@@ -21,11 +21,11 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.Inject
-import org.apache.james.jmap.api.change.{EmailChangeRepository, EmailChanges, State => JavaState}
+import org.apache.james.jmap.api.change.{CanNotCalculateChangesException, EmailChangeRepository, EmailChanges, State => JavaState}
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{Invocation, State}
+import org.apache.james.jmap.core.{ErrorCode, Invocation, State}
 import org.apache.james.jmap.json.{EmailGetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{EmailChangesRequest, EmailChangesResponse, HasMoreChanges}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -66,6 +66,10 @@ class EmailChangesMethod @Inject()(val metricFactory: MetricFactory,
           arguments = Arguments(EmailGetSerializer.serializeChanges(response)),
           methodCallId = invocation.invocation.methodCallId),
         processingContext = invocation.processingContext))
+      .onErrorResume {
+        case e: CanNotCalculateChangesException => SMono.just(InvocationWithContext(Invocation.error(ErrorCode.CannotCalculateChanges, e.getMessage, invocation.invocation.methodCallId), invocation.processingContext))
+        case e => SMono.error(e)
+      }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailChangesRequest] =
     EmailGetSerializer.deserializeEmailChangesRequest(invocation.arguments.value) match {

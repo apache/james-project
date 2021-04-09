@@ -376,7 +376,7 @@ public interface MailboxChangeRepositoryContract {
     }
 
     @Test
-    default void getChangesShouldReturnEmptyWhenNumberOfChangesExceedMaxChanges() {
+    default void getChangesShouldReturnThrowWhenNumberOfChangesExceedMaxChanges() {
         MailboxChangeRepository repository = mailboxChangeRepository();
         State.Factory stateFactory = stateFactory();
         State referenceState = stateFactory.generate();
@@ -389,8 +389,9 @@ public interface MailboxChangeRepositoryContract {
         repository.save(oldState).block();
         repository.save(change1).block();
 
-        assertThat(repository.getSinceState(ACCOUNT_ID, referenceState, Optional.of(Limit.of(1))).block().getAllChanges())
-            .isEmpty();
+        assertThatThrownBy(() -> repository.getSinceState(ACCOUNT_ID, referenceState, Optional.of(Limit.of(1))).block().getAllChanges())
+            .isInstanceOf(CanNotCalculateChangesException.class)
+            .hasMessage("Current change collector limit 1 is exceeded by a single change, hence we cannot calculate changes.");
     }
 
     @Test
@@ -424,12 +425,12 @@ public interface MailboxChangeRepositoryContract {
         MailboxId id3 = generateNewMailboxId();
         MailboxChange oldState = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id1)).build();
         MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).created(ImmutableList.of(id2, id3)).build();
-        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).updated(ImmutableList.of(id2, id3)).build();
+        MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).updated(ImmutableList.of(id2, id1)).build();
         repository.save(oldState).block();
         repository.save(change1).block();
         repository.save(change2).block();
 
-        assertThat(repository.getSinceState(ACCOUNT_ID, referenceState, Optional.of(Limit.of(1))).block().hasMoreChanges())
+        assertThat(repository.getSinceState(ACCOUNT_ID, referenceState, Optional.of(Limit.of(2))).block().hasMoreChanges())
             .isTrue();
     }
 
