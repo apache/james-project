@@ -139,7 +139,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
   private def asRanges(metaData: Map[MessageId, Traversable[ComposedMessageIdWithMetaData]]) =
     MessageRange.toRanges(metaData.values
       .flatten.map(_.getComposedMessageId.getUid)
-      .toList.asJava)
+      .toList.distinct.asJava)
       .asScala.toList
 
   private def updateFlagsByRange(mailboxId: MailboxId,
