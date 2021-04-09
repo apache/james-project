@@ -24,7 +24,7 @@ import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
-import io.restassured.RestAssured.{`given`, requestSpecification}
+import io.restassured.RestAssured.{`given`, `with`, requestSpecification}
 import io.restassured.builder.ResponseSpecBuilder
 import io.restassured.http.ContentType.JSON
 import javax.mail.Flags
@@ -38,7 +38,7 @@ import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.draft.JmapGuiceProbe
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
 import org.apache.james.mailbox.model.{MailboxACL, MailboxPath, MessageId}
@@ -193,6 +193,94 @@ trait EmailChangesMethodContract {
              |        "destroyed": []
              |      }, "c1"]
              |    ]
+             |}""".stripMargin)
+    }
+  }
+
+  @Test
+  def shouldReturnUpdatedWhenMessageMove(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
+    val path: MailboxPath = MailboxPath.forUser(BOB, "mailbox1")
+
+    val mailboxId1 = mailboxProbe.createMailbox(path)
+    val mailboxId2 = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox2"))
+
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
+
+    val oldState: State = waitForNextState(server, AccountId.fromUsername(BOB), State.INITIAL)
+
+    val updateEmail =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |  ["Email/set",
+         |    {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "update": {
+         |        "${messageId.serialize}":{
+         |          "mailboxIds": {
+         |            "${mailboxId2.serialize()}": true
+         |          }
+         |        }
+         |      }
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    `with`()
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(updateEmail)
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/changes",
+         |    {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "sinceState": "${oldState.getValue}"
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .whenIgnoringPaths("methodResponses[0][1].newState")
+        .inPath("methodResponses[0][1]")
+        .isEqualTo(
+          s"""{
+             |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |  "oldState": "${oldState.getValue}",
+             |  "hasMoreChanges": false,
+             |  "created": ["${messageId.serialize()}"],
+             |  "updated": ["${messageId.serialize()}"],
+             |  "destroyed": []
              |}""".stripMargin)
     }
   }
