@@ -34,6 +34,7 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
 public interface EmailChangeRepositoryContract {
+    Limit DEFAULT_NUMBER_OF_CHANGES = Limit.of(5);
     AccountId ACCOUNT_ID = AccountId.fromUsername(BOB);
     ZonedDateTime DATE = ZonedDateTime.now();
 

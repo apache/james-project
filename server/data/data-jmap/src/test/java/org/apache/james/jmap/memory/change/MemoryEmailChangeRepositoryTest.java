@@ -29,11 +29,12 @@ import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.jupiter.api.BeforeEach;
 
 public class MemoryEmailChangeRepositoryTest implements EmailChangeRepositoryContract {
+
     EmailChangeRepository emailChangeRepository;
 
     @BeforeEach
     void setup() {
-        emailChangeRepository = new MemoryEmailChangeRepository();
+        emailChangeRepository = new MemoryEmailChangeRepository(DEFAULT_NUMBER_OF_CHANGES);
     }
 
     @Override
