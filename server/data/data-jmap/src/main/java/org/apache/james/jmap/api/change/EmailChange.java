@@ -23,20 +23,28 @@ import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.model.AccountId;
+import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.events.MailboxEvents.Expunged;
 import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageId;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 public class EmailChange implements JmapChange {
     public static class Builder {
@@ -123,10 +131,14 @@ public class EmailChange implements JmapChange {
 
     public static class Factory {
         private final State.Factory stateFactory;
+        private final MessageIdManager messageIdManager;
+        private final SessionProvider sessionProvider;
 
         @Inject
-        public Factory(State.Factory stateFactory) {
+        public Factory(State.Factory stateFactory, MessageIdManager messageIdManager, SessionProvider sessionProvider) {
             this.stateFactory = stateFactory;
+            this.messageIdManager = messageIdManager;
+            this.sessionProvider = sessionProvider;
         }
 
         public List<JmapChange> fromAdded(Added messageAdded, ZonedDateTime now, List<AccountId> sharees) {
@@ -173,26 +185,28 @@ public class EmailChange implements JmapChange {
                 .collect(Guavate.toImmutableList());
         }
 
-        public List<JmapChange> fromExpunged(Expunged expunged, ZonedDateTime now, List<AccountId> sharees) {
-            EmailChange ownerChange = EmailChange.builder()
-                .accountId(AccountId.fromUsername(expunged.getUsername()))
-                .state(stateFactory.generate())
-                .date(now)
-                .isDelegated(false)
-                .destroyed(expunged.getMessageIds())
-                .build();
+        public List<JmapChange> fromExpunged(Expunged expunged, ZonedDateTime now, List<Username> sharees) throws MailboxException {
+
+            EmailChange ownerChange = fromExpunged(expunged, now, expunged.getUsername());
 
             Stream<EmailChange> shareeChanges = sharees.stream()
-                .map(shareeId -> EmailChange.builder()
-                    .accountId(shareeId)
-                    .state(stateFactory.generate())
-                    .date(now)
-                    .isDelegated(true)
-                    .destroyed(expunged.getMessageIds())
-                    .build());
+                .map(Throwing.<Username, EmailChange>function(shareeId -> fromExpunged(expunged, now, shareeId)).sneakyThrow());
 
             return Stream.concat(Stream.of(ownerChange), shareeChanges)
                 .collect(Guavate.toImmutableList());
+        }
+
+        private EmailChange fromExpunged(Expunged expunged, ZonedDateTime now, Username username) throws MailboxException {
+            Set<MessageId> accessibleMessageIds = messageIdManager.accessibleMessages(expunged.getMessageIds(), sessionProvider.createSystemSession(username));
+
+            return EmailChange.builder()
+                .accountId(AccountId.fromUsername(username))
+                .state(stateFactory.generate())
+                .date(now)
+                .isDelegated(false)
+                .updated(Sets.intersection(ImmutableSet.copyOf(expunged.getMessageIds()), accessibleMessageIds))
+                .destroyed(Sets.difference(ImmutableSet.copyOf(expunged.getMessageIds()), accessibleMessageIds))
+                .build();
         }
     }
 
