@@ -129,6 +129,10 @@ public class EmailChanges {
         }
 
         public EmailChanges build() {
+            if (hasMoreChanges && created.isEmpty() && updated.isEmpty() && destroyed.isEmpty()) {
+                throw new CanNotCalculateChangesException(String.format("Current change collector limit %d is exceeded by a single change, hence we cannot calculate changes.", limit.getValue()));
+            }
+
             return new EmailChanges(state, hasMoreChanges, created, updated, destroyed);
         }
     }
