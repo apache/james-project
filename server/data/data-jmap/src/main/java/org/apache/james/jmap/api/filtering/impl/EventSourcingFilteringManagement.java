@@ -76,4 +76,17 @@ public class EventSourcingFilteringManagement implements FilteringManagement {
             .map(history -> FilteringAggregate.load(aggregateId, history).listRules())
             .defaultIfEmpty(new Rules(ImmutableList.of(), Version.INITIAL));
     }
+
+    @Override
+    public Publisher<Version> getLatestVersion(Username username) {
+        Preconditions.checkNotNull(username);
+
+        FilteringAggregateId aggregateId = new FilteringAggregateId(username);
+
+        return Mono.from(eventStore.getEventsOfAggregate(aggregateId))
+            .map(History::getVersionAsJava)
+            .map(eventIdOptional -> eventIdOptional.map(eventId -> new Version(eventId.value()))
+                .orElse(Version.INITIAL));
+    }
+
 }

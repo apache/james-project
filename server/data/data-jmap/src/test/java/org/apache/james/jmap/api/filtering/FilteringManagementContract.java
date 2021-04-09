@@ -229,4 +229,36 @@ public interface FilteringManagementContract {
             .isInstanceOf(StateMismatchException.class);
     }
 
+    @Test
+    default void getLatestVersionWhenNonVersionIsDefinedShouldReturnVersionInitial(EventStore eventStore) {
+        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+
+        assertThat(Mono.from(testee.getLatestVersion(USERNAME)).block())
+            .isEqualTo(Version.INITIAL);
+    }
+
+    @Test
+    default void getLatestVersionAfterSetRulesFirstTimeShouldReturnVersionZero(EventStore eventStore) {
+        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+
+        Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2, RULE_1)).block();
+
+        assertThat(Mono.from(testee.getLatestVersion(USERNAME)).block())
+            .isEqualTo(new Version(0));
+    }
+
+    @Test
+    default void getLatestVersionAfterSetRulesNotSucceedShouldReturnOldVersion(EventStore eventStore) {
+        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+
+        Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2, RULE_1)).block();
+        assertThat(Mono.from(testee.getLatestVersion(USERNAME)).block())
+            .isEqualTo(new Version(0));
+
+        assertThatThrownBy(() -> Mono.from(testee.defineRulesForUser(USERNAME, Optional.of(new Version(1)), RULE_3, RULE_2, RULE_1)).block())
+            .isInstanceOf(StateMismatchException.class);
+        assertThat(Mono.from(testee.getLatestVersion(USERNAME)).block())
+            .isEqualTo(new Version(0));
+    }
+
 }
