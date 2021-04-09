@@ -659,7 +659,7 @@ public interface EmailChangeRepositoryContract {
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(emailChanges.getCreated()).containsExactlyInAnyOrder(messageId2, messageId3, messageId6, messageId7, messageId8);
-            softly.assertThat(emailChanges.getUpdated()).containsExactlyInAnyOrder(messageId1);
+            softly.assertThat(emailChanges.getUpdated()).containsExactlyInAnyOrder(messageId2, messageId3, messageId6, messageId7, messageId1);
             softly.assertThat(emailChanges.getDestroyed()).containsExactlyInAnyOrder(messageId9, messageId10);
         });
     }
@@ -1279,7 +1279,7 @@ public interface EmailChangeRepositoryContract {
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(emailChanges.getCreated()).containsExactlyInAnyOrder(messageId2, messageId3, messageId6, messageId7, messageId8);
-            softly.assertThat(emailChanges.getUpdated()).containsExactlyInAnyOrder(messageId1);
+            softly.assertThat(emailChanges.getUpdated()).containsExactlyInAnyOrder(messageId2, messageId3, messageId6, messageId7, messageId1);
             softly.assertThat(emailChanges.getDestroyed()).containsExactlyInAnyOrder(messageId9, messageId10);
         });
     }

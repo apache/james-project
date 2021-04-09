@@ -455,7 +455,7 @@ trait EmailChangesMethodContract {
              |        "oldState": "${State.INITIAL.getValue}",
              |        "hasMoreChanges": false,
              |        "created": ["${messageId1.serialize}", "${messageId2.serialize}"],
-             |        "updated": [],
+             |        "updated": ["${messageId2.serialize}"],
              |        "destroyed": []
              |      }, "c1"]
              |    ]
