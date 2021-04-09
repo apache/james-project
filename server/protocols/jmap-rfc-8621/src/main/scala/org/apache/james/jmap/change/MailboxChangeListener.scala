@@ -89,9 +89,9 @@ case class MailboxChangeListener @Inject() (@Named(InjectionKeys.JMAP) eventBus:
           mailboxChangeFactory.fromFlagsUpdated(flagsUpdated, now, sharees).asScala
             .concat(emailChangeFactory.fromFlagsUpdated(flagsUpdated, now, sharees).asScala)
         case expunged: Expunged =>
-          val sharees = getSharees(mailboxId, username).asJava
-          mailboxChangeFactory.fromExpunged(expunged, now, sharees).asScala
-            .concat(emailChangeFactory.fromExpunged(expunged, now, sharees).asScala)
+          val sharees = getSharees(mailboxId, username)
+          mailboxChangeFactory.fromExpunged(expunged, now, sharees.asJava).asScala
+            .concat(emailChangeFactory.fromExpunged(expunged, now, sharees.map(_.getIdentifier).map(Username.of).asJava).asScala)
       })
       .flatMap(saveChangeEvent, DEFAULT_CONCURRENCY)
       .`then`()
