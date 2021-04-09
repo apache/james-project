@@ -1,17 +1,10 @@
 = Distributed James Server &mdash; Metrics
 :navtitle: Metrics
-
+        
 James relies on the https://metrics.dropwizard.io/4.1.2/manual/core.html[Dropwizard metric library]
 for keeping track of some core metrics of James.
 
-Such metrics are made available via JMX. You can connect for instance using VisualVM and the associated
-mbean plugins.
-
-You can also export the metrics to ElasticSearch and visualize them with https://grafana.com/[Grafana].
-See xref:distributed/configure/elasticsearch.adoc#_exporting_metrics_directly_to_elasticsearch[elaticseach.properties]
-documentation for more details on how to set this up.
-
-If you prefer Prometheus, metrics can also be exposed over HTTP and made available by using **extensions.routes** in https://github.com/apache/james-project/blob/master/docs/modules/servers/pages/distributed/configure/webadmin.adoc[webadmin.properties] file:
+Such metrics are exposed over HTTP and made available by using ``extensions.routes`` in https://github.com/apache/james-project/blob/master/docs/modules/servers/pages/distributed/configure/webadmin.adoc[webadmin.properties] file:
 ....
 extensions.routes=org.apache.james.webadmin.dropwizard.MetricsRoutes
 ....
@@ -19,23 +12,16 @@ extensions.routes=org.apache.james.webadmin.dropwizard.MetricsRoutes
 Once exposed, you can use https://prometheus.io/[Prometheus] to scrape and visualize them with https://grafana.com/[Grafana].
 Below here is the sample scrape job in **prometheus.yml** file:
 ....
-# my global config
 global:
   scrape_interval:     15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
   evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
   # scrape_timeout is set to the global default (10s).
 
-# Alertmanager configuration
 alerting:
   alertmanagers:
   - static_configs:
     - targets:
       # - alertmanager:9093
-
-# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
-rule_files:
-  # - "first_rules.yml"
-  # - "second_rules.yml"
 
 # A scrape configuration containing exactly one endpoint to scrape:
 # Here it's Prometheus itself.
@@ -51,8 +37,6 @@ scrape_configs:
     static_configs:
       - targets: ['james:8000']
 ....
-
-You can also export the metrics to ElasticSearch and visualize them in https://grafana.com/[Grafana] dashboards.
 
 If some metrics seem abnormally slow despite in depth database
 performance tuning, feedback is appreciated as well on the bug tracker,
@@ -138,32 +122,55 @@ This is for instance how the JMAP dashboard looks like:
 
 image::metrics.png[metrics for the JMAP protocol request latencies]
 
-== Running and configuring ElasticSearch/Grafana
+== Pre-load Prometheus datasource and dashboards to Grafana
 
-The following command allow you to run a fresh grafana server :
+You can download all the above dashboards and use https://grafana.com/tutorials/provision-dashboards-and-data-sources/[Grafana provision] to make the metrics datasource and dashboards available right after container creation.
 
-....
-docker run -i -p 3000:3000 grafana/grafana
-....
+Update the https://github.com/grafana/grafana/blob/master/conf/sample.ini[grafana.ini] configuration file in the ``/etc/grafana/grafana.ini`` to override default configuration options. You only need to change the provisioning folder path:
 
-Once running, you need to set up an ElasticSearch data-source : - select
-proxy mode - Select version 2.x of ElasticSearch - make the URL point
-your ES node - Specify the index name. By default, it should be :
+```
+;provisioning = /etc/grafana/provisioning
+```
 
-....
-[james-metrics-]YYYY-MM
-....
+Create the provisioning folder tree and copy all the dashboard json files to ``/provisioning/james/``
 
-Import the different dashboards you want.
+    |-- provisioning
+        |-- dashboards
+            |-- defaults.yml
+            |-- james
+        |-- datasources
+            |-- prometheus.yml
+        |-- notifiers
+        |-- plugins
 
-You then need to enable reporting through ElasticSearch. Modify your
-James ElasticSearch configuration file accordingly. To help you doing
-this, you can take a look to
-https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/elasticsearch.properties[elasticsearch.properties].
+Sample config file for provisioned dashboard:
+```
+apiVersion: 1
+
+providers:
+  - name: Default    # A uniquely identifiable name for the provider
+    folder: Services # The folder where to place the dashboards
+    type: file
+    options:
+      path:  /etc/grafana/provisioning/dashboards/james
+```
+
+Sample config file for provisioned datasource:
+```
+apiVersion: 1
+
+datasources:
+  - name: prometheus
+    type: prometheus
+    url: http://Prometheus_IP_Address:Port
+    editable: true
+    
+```
 
 == Running and configuring Prometheus/Grafana
 
-The following docker-compose.yml file will allow you to run a fresh prometheus/grafana montoring stack:
+The following ``docker-compose.yml`` file will allow you to run a fresh prometheus/grafana montoring stack:
+
 
 ....
 version: '3'
@@ -174,9 +181,9 @@ services:
     container_name: grafana
     ports:
       - "3000:3000"
-   # volumes:
-    #  - ./conf/grafana/grafana.ini:/etc/grafana/grafana.ini
-    #  - ./conf/grafana/provisioning:/etc/grafana/provisioning
+    volumes: #Map your provision config to grafana container
+      - /path/to/grafana.ini:/etc/grafana/grafana.ini
+      - /path/to/grafana/provisioning:/etc/grafana/provisioning
 
   prometheus:
     image: prom/prometheus:latest
@@ -187,9 +194,6 @@ services:
       - ./conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
 ....
 
-Once running, you need to set up Prometheus datasource for Grafana. Datasource name should match with the name provided in dashboard json files. Or else you will have to edit Grafana dashboards afterward.
+Once running, Prometheus datasource and dashboards will be ready on your Grafana. Datasource name should match with the name provided in dashboard json files. Or else you will have to edit Grafana dashboards afterward.
 
-Import the different dashboards you want.
-
-You can also pre-load the Datasource and dashboards by using https://grafana.com/tutorials/provision-dashboards-and-data-sources/[Grafana provision.]
-
+Feel free to expore the dashboards you want.
