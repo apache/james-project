@@ -72,7 +72,7 @@ class MailboxChangeListenerTest {
     stateFactory = new State.DefaultFactory
     mailboxChangeFactory = new MailboxChange.Factory(stateFactory)
     mailboxChangeRepository = new MemoryMailboxChangeRepository()
-    emailChangeFactory = new EmailChange.Factory(stateFactory)
+    emailChangeFactory = new EmailChange.Factory(stateFactory, resources.getMessageIdManager, resources.getMailboxManager)
     emailChangeRepository = new MemoryEmailChangeRepository()
     val eventBus = new EventBus {
       override def register(listener: EventListener.ReactiveEventListener, key: RegistrationKey): Publisher[Registration] = Mono.empty()
