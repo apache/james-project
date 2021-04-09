@@ -20,10 +20,11 @@
 package org.apache.james.jmap.core
 
 import java.net.URL
+import java.time.temporal.ChronoUnit
 
 import org.apache.commons.configuration2.Configuration
 import org.apache.james.jmap.core.JmapRfc8621Configuration.UPLOAD_LIMIT_30_MB
-import org.apache.james.util.Size
+import org.apache.james.util.{DurationParser, Size}
 
 object JmapRfc8621Configuration {
   val LOCALHOST_URL_PREFIX: String = "http://localhost"
@@ -31,6 +32,7 @@ object JmapRfc8621Configuration {
   val LOCALHOST_CONFIGURATION: JmapRfc8621Configuration = JmapRfc8621Configuration(LOCALHOST_URL_PREFIX, UPLOAD_LIMIT_30_MB)
   val URL_PREFIX_PROPERTIES: String = "url.prefix"
   val UPLOAD_LIMIT_PROPERTIES: String = "upload.max.size"
+  val PUSH_AGGREGATION_WINDOW_DURATION_PROPERTIES: String = "push.aggregation.window.duration"
 
   def from(configuration: Configuration): JmapRfc8621Configuration = {
     JmapRfc8621Configuration(
@@ -38,11 +40,15 @@ object JmapRfc8621Configuration {
       maxUploadSize = Option(configuration.getString(UPLOAD_LIMIT_PROPERTIES, null))
         .map(Size.parse)
         .map(MaxSizeUpload.of(_).get)
-        .getOrElse(UPLOAD_LIMIT_30_MB))
+        .getOrElse(UPLOAD_LIMIT_30_MB),
+      pushAggregationWindowDuration = Option(configuration.getString(PUSH_AGGREGATION_WINDOW_DURATION_PROPERTIES, null))
+        .map(s => DurationParser.parse(s, ChronoUnit.SECONDS)))
   }
 }
 
-case class JmapRfc8621Configuration(urlPrefixString: String, maxUploadSize: MaxSizeUpload = UPLOAD_LIMIT_30_MB) {
+case class JmapRfc8621Configuration(urlPrefixString: String,
+                                    maxUploadSize: MaxSizeUpload = UPLOAD_LIMIT_30_MB,
+                                    pushAggregationWindowDuration: Option[java.time.Duration] = None) {
   val urlPrefix: URL = new URL(urlPrefixString)
   val apiUrl: URL = new URL(s"$urlPrefixString/jmap")
   val downloadUrl: URL = new URL(urlPrefixString + "/download/{accountId}/{blobId}/?type={type}&name={name}")

@@ -43,6 +43,7 @@ import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes, InjectionKeys => 
 import org.apache.james.mailbox.MailboxSession
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
+import reactor.core.Disposable
 import reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST
 import reactor.core.publisher.{Mono, Sinks}
 import reactor.core.scala.publisher.{SFlux, SMono}
@@ -50,14 +51,33 @@ import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 import reactor.netty.http.websocket.{WebsocketInbound, WebsocketOutbound}
 
+import scala.collection.mutable
+
 object WebSocketRoutes {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[WebSocketRoutes])
 }
 
-case class ClientContext(outbound: Sinks.Many[OutboundMessage], pushRegistration: AtomicReference[Registration], session: MailboxSession) {
+object ClientContext {
+  def initial(outbound: Sinks.Many[OutboundMessage], session: MailboxSession): ClientContext = ClientContext(outbound,
+    new AtomicReference[Registration](),
+    mutable.Map(),
+    session)
+}
+
+case class ClientContext(outbound: Sinks.Many[OutboundMessage],
+                         pushRegistration: AtomicReference[Registration],
+                         subscriptions: mutable.Map[Disposable, Disposable],
+                         session: MailboxSession) {
   def withRegistration(registration: Registration): Unit = withRegistration(Some(registration))
 
-  def clean(): Unit = withRegistration(None)
+  def clean(): Unit = {
+    subscriptions.keys.foreach(_.dispose())
+    subscriptions.clear()
+
+    withRegistration(None)
+  }
+
+  def withSubscription(disposable: Disposable): Unit = subscriptions.put(disposable, disposable)
 
   def withRegistration(registration: Option[Registration]): Unit = Option(pushRegistration.getAndSet(registration.orNull))
     .foreach(oldRegistration => SMono.fromCallable(() => oldRegistration.unregister())
@@ -68,6 +88,7 @@ case class ClientContext(outbound: Sinks.Many[OutboundMessage], pushRegistration
 class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
                                  userProvisioner: UserProvisioning,
                                  @Named(JMAPInjectionKeys.JMAP) eventBus: EventBus,
+                                 stateChangeAggregatorFactory: StateChangeAggregatorFactory,
                                  jmapApi: JMAPApi,
                                  mailboxChangeRepository: MailboxChangeRepository,
                                  emailChangeRepository: EmailChangeRepository) extends JMAPRoutes {
@@ -104,7 +125,7 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
       .subscribeOn(Schedulers.elastic())
       .subscribe()
 
-    val context = ClientContext(sink, new AtomicReference[Registration](), session)
+    val context = ClientContext.initial(sink, session)
     SFlux[WebSocketFrame](in.aggregateFrames()
       .receiveFrames())
       .map(frame => {
@@ -133,8 +154,15 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
               .doOnNext(next => clientContext.outbound.emitNext(next, FAIL_FAST))
               .`then`()
           case pushEnable: WebSocketPushEnable =>
+            val stateChangeSink: Sinks.Many[StateChange] = Sinks.many().unicast().onBackpressureBuffer()
+
+            clientContext.withSubscription(stateChangeAggregatorFactory.createAggregator()
+              .aggregate(stateChangeSink.asFlux())
+              .flatMap(stateChange => SMono.fromCallable(() => clientContext.outbound.emitNext(stateChange, FAIL_FAST)))
+              .subscribe())
+
             SMono(eventBus.register(
-                StateChangeListener(pushEnable.dataTypes.getOrElse(TypeName.ALL), clientContext.outbound),
+                StateChangeListener(pushEnable.dataTypes.getOrElse(TypeName.ALL), stateChangeSink),
                 AccountIdRegistrationKey.of(clientContext.session.getUser)))
               .doOnNext(newRegistration => clientContext.withRegistration(newRegistration))
               .`then`(sendPushStateIfRequested(pushEnable, clientContext))

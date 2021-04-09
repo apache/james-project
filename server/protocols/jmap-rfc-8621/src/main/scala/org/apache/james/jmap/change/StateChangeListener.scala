@@ -21,13 +21,13 @@ package org.apache.james.jmap.change
 
 import org.apache.james.events.Event
 import org.apache.james.events.EventListener.ReactiveEventListener
-import org.apache.james.jmap.core.OutboundMessage
+import org.apache.james.jmap.core.StateChange
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Sinks
 import reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST
 import reactor.core.scala.publisher.SMono
 
-case class StateChangeListener(types: Set[TypeName], sink: Sinks.Many[OutboundMessage]) extends ReactiveEventListener {
+case class StateChangeListener(types: Set[TypeName], sink: Sinks.Many[StateChange]) extends ReactiveEventListener {
   override def reactiveEvent(event: Event): Publisher[Void] =
     event match {
       case stateChangeEvent: StateChangeEvent =>
