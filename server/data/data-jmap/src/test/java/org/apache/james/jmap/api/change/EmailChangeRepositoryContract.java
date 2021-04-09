@@ -445,7 +445,7 @@ public interface EmailChangeRepositoryContract {
     }
 
     @Test
-    default void getChangesShouldReturnEmptyWhenNumberOfChangesExceedMaxChanges() {
+    default void getChangesShoulThrowWhenNumberOfChangesExceedMaxChanges() {
         EmailChangeRepository repository = emailChangeRepository();
 
         State state = generateNewState();
@@ -470,18 +470,12 @@ public interface EmailChangeRepositoryContract {
             .isDelegated(false)
             .created(messageId2, messageId3)
             .build();
-        EmailChange change2 = EmailChange.builder()
-            .accountId(ACCOUNT_ID)
-            .state(generateNewState())
-            .date(DATE)
-            .isDelegated(false)
-            .created(messageId4, messageId5)
-            .build();
         repository.save(oldState).block();
         repository.save(change1).block();
 
-        assertThat(repository.getSinceState(ACCOUNT_ID, state, Optional.of(Limit.of(1))).block().getAllChanges())
-            .isEmpty();
+        assertThatThrownBy(() -> repository.getSinceState(ACCOUNT_ID, state, Optional.of(Limit.of(1))).block().getAllChanges())
+            .isInstanceOf(CanNotCalculateChangesException.class)
+            .hasMessage("Current change collector limit 1 is exceeded by a single change, hence we cannot calculate changes.");
     }
 
     @Test
@@ -552,13 +546,13 @@ public interface EmailChangeRepositoryContract {
             .state(generateNewState())
             .date(DATE)
             .isDelegated(false)
-            .updated(messageId2, messageId3)
+            .updated(messageId2, messageId1)
             .build();
         repository.save(oldState).block();
         repository.save(change1).block();
         repository.save(change2).block();
 
-        assertThat(repository.getSinceState(ACCOUNT_ID, state, Optional.of(Limit.of(1))).block().hasMoreChanges())
+        assertThat(repository.getSinceState(ACCOUNT_ID, state, Optional.of(Limit.of(2))).block().hasMoreChanges())
             .isTrue();
     }
 
@@ -1083,7 +1077,7 @@ public interface EmailChangeRepositoryContract {
     }
 
     @Test
-    default void getSinceStateWithDelegationShouldReturnEmptyWhenNumberOfChangesExceedMaxChanges() {
+    default void getSinceStateWithDelegationShouldThrowWhenNumberOfChangesExceedMaxChanges() {
         EmailChangeRepository repository = emailChangeRepository();
 
         State state = generateNewState();
@@ -1112,8 +1106,9 @@ public interface EmailChangeRepositoryContract {
         repository.save(oldState).block();
         repository.save(change1).block();
 
-        assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, state, Optional.of(Limit.of(1))).block().getAllChanges())
-            .isEmpty();
+        assertThatThrownBy(() -> repository.getSinceStateWithDelegation(ACCOUNT_ID, state, Optional.of(Limit.of(1))).block().getAllChanges())
+            .isInstanceOf(CanNotCalculateChangesException.class)
+            .hasMessage("Current change collector limit 1 is exceeded by a single change, hence we cannot calculate changes.");
     }
 
     @Test
@@ -1182,7 +1177,7 @@ public interface EmailChangeRepositoryContract {
         repository.save(change1).block();
         repository.save(change2).block();
 
-        assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, state, Optional.of(Limit.of(1))).block().hasMoreChanges())
+        assertThat(repository.getSinceStateWithDelegation(ACCOUNT_ID, state, Optional.of(Limit.of(2))).block().hasMoreChanges())
             .isTrue();
     }
 
