@@ -46,7 +46,7 @@ public class CassandraEmailChangeRepositoryTest implements EmailChangeRepository
     @BeforeEach
     public void setUp(CassandraCluster cassandra) {
         emailChangeRepositoryDAO = new EmailChangeRepositoryDAO(cassandra.getConf(), cassandra.getTypesProvider());
-        emailChangeRepository = new CassandraEmailChangeRepository(emailChangeRepositoryDAO);
+        emailChangeRepository = new CassandraEmailChangeRepository(emailChangeRepositoryDAO, DEFAULT_NUMBER_OF_CHANGES);
     }
 
     @Override

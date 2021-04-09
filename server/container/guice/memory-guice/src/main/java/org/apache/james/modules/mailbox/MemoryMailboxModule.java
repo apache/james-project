@@ -27,6 +27,7 @@ import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthorizator;
 import org.apache.james.events.EventListener;
 import org.apache.james.jmap.api.change.EmailChangeRepository;
+import org.apache.james.jmap.api.change.Limit;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.api.change.State;
 import org.apache.james.jmap.memory.change.MemoryEmailChangeRepository;
@@ -139,6 +140,9 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(StoreRightManager.class).in(Scopes.SINGLETON);
         bind(MemoryDeletedMessageMetadataVault.class).in(Scopes.SINGLETON);
         bind(SessionProviderImpl.class).in(Scopes.SINGLETON);
+
+        bind(Limit.class).annotatedWith(Names.named(MemoryEmailChangeRepository.LIMIT_NAME)).toInstance(Limit.of(256));
+        bind(Limit.class).annotatedWith(Names.named(MemoryMailboxChangeRepository.LIMIT_NAME)).toInstance(Limit.of(256));
 
         Multibinder.newSetBinder(binder(), MailboxManagerDefinition.class)
             .addBinding()
