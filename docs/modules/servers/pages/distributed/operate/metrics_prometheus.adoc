@@ -196,4 +196,6 @@ services:
 
 Once running, Prometheus datasource and dashboards will be ready on your Grafana. Datasource name should match with the name provided in dashboard json files. Or else you will have to edit Grafana dashboards afterward.
 
+image::preload-dashboards.png[Pre-loaded dashboards]
+
 Feel free to expore the dashboards you want.
