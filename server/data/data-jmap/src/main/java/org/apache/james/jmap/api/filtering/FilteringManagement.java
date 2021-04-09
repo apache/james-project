@@ -42,4 +42,5 @@ public interface FilteringManagement {
 
     Publisher<Rules> listRulesForUser(Username username);
 
+    Publisher<Version> getLatestVersion(Username username);
 }
