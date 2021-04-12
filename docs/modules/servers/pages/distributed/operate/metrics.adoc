@@ -11,6 +11,7 @@ We also support displaying them via https://grafana.com/[Grafana]. Two methods c
 
  - Prometheus metric collection - Data are exposed on a HTTP endpoint for Prometheus scrape.
  - ElasticSearch metric collection - This method is depreciated and will be removed in next version.
+ 
 == Expose metrics for Prometheus collection
 
 Metrics can be exposed over HTTP and made available by using ``extensions.routes`` in James https://github.com/apache/james-project/blob/master/docs/modules/servers/pages/distributed/configure/webadmin.adoc[webadmin.properties] file:
