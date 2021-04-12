@@ -53,6 +53,7 @@ import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFact
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.junit.categories.BasicFeature;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
@@ -260,6 +261,9 @@ class ConsistencyTasksIntegrationTest {
         assertThatCode(() -> testIMAPClient.create(TEST_MAILBOX)).doesNotThrowAnyException();
     }
 
+    @Tag(Unstable.TAG)
+    // The creation of the initial inconsistency is unstable:
+    // Expecting: 0L to be greater than or equal to: 1L within 10 seconds.
     @Test
     void shouldRecomputeMailboxCounters(GuiceJamesServer server) throws Exception {
         server.getProbe(TestingSessionProbe.class)
