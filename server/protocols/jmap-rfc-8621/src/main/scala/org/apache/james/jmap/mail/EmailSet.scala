@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.jmap.mail
 
-import java.io.IOException
 import java.nio.charset.{StandardCharsets, Charset => NioCharset}
 import java.util.Date
 
@@ -34,9 +33,9 @@ import org.apache.james.jmap.mail.Disposition.INLINE
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.EmailSet.{EmailCreationId, UnparsedMessageId}
 import org.apache.james.jmap.method.WithAccountId
-import org.apache.james.mailbox.exception.AttachmentNotFoundException
-import org.apache.james.mailbox.model.{AttachmentId, AttachmentMetadata, Cid, MessageId}
-import org.apache.james.mailbox.{AttachmentContentLoader, AttachmentManager, MailboxSession}
+import org.apache.james.jmap.routes.{Blob, BlobResolvers}
+import org.apache.james.mailbox.MailboxSession
+import org.apache.james.mailbox.model.{Cid, MessageId}
 import org.apache.james.mime4j.codec.EncoderUtil
 import org.apache.james.mime4j.codec.EncoderUtil.Usage
 import org.apache.james.mime4j.dom.field.{ContentIdField, ContentTypeField, FieldName}
@@ -46,10 +45,11 @@ import org.apache.james.mime4j.message.{BodyPartBuilder, MultipartBuilder}
 import org.apache.james.mime4j.stream.{Field, NameValuePair, RawField}
 import org.apache.james.util.html.HtmlTextExtractor
 import play.api.libs.json.JsObject
+import reactor.core.scheduler.Schedulers
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
-import scala.util.{Right, Try}
+import scala.util.{Right, Try, Using}
 
 object EmailSet {
   type EmailCreationId = Id
@@ -124,10 +124,9 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
                                 bodyValues: Option[Map[ClientPartId, ClientEmailBodyValue]],
                                 specificHeaders: List[EmailHeader],
                                 attachments: Option[List[Attachment]]) {
-  def toMime4JMessage(attachmentManager: AttachmentManager,
-                      attachmentContentLoader: AttachmentContentLoader,
+  def toMime4JMessage(blobResolvers: BlobResolvers,
                       htmlTextExtractor: HtmlTextExtractor,
-                      mailboxSession: MailboxSession): Either[Exception, Message] =
+                      mailboxSession: MailboxSession): Either[Throwable, Message] =
     validateHtmlBody
       .flatMap(maybeHtmlBody => validateTextBody.map((maybeHtmlBody, _)))
       .flatMap {
@@ -148,7 +147,7 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
             .flatMap(_ => {
               specificHeaders.map(_.asField).foreach(builder.addField)
               attachments.filter(_.nonEmpty).map(attachments =>
-                createMultipartWithAttachments(maybeHtmlBody, maybeTextBody, attachments, attachmentManager, attachmentContentLoader, htmlTextExtractor, mailboxSession)
+                createMultipartWithAttachments(maybeHtmlBody, maybeTextBody, attachments, blobResolvers, htmlTextExtractor, mailboxSession)
                   .map(multipartBuilder => {
                     builder.setBody(multipartBuilder)
                     builder.build
@@ -177,20 +176,16 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
   private def createMultipartWithAttachments(maybeHtmlBody: Option[String],
                                              maybeTextBody: Option[String],
                                              attachments: List[Attachment],
-                                             attachmentManager: AttachmentManager,
-                                             attachmentContentLoader: AttachmentContentLoader,
+                                             blobResolvers: BlobResolvers,
                                              htmlTextExtractor: HtmlTextExtractor,
-                                             mailboxSession: MailboxSession): Either[Exception, MultipartBuilder] = {
-    val maybeAttachments: Either[Exception, List[(Attachment, AttachmentMetadata, Array[Byte])]] =
+                                             mailboxSession: MailboxSession): Either[Throwable, MultipartBuilder] = {
+    val maybeAttachments: Either[Throwable, List[LoadedAttachment]] =
       attachments
-        .map(attachment => getAttachmentMetadata(attachment, attachmentManager, mailboxSession))
-        .map(attachmentMetadataList => attachmentMetadataList
-          .flatMap(attachmentAndMetadata => loadAttachment(attachmentAndMetadata._1, attachmentAndMetadata._2, attachmentContentLoader, mailboxSession)))
+        .map(loadWithMetadata(blobResolvers, mailboxSession))
         .sequence
 
     maybeAttachments.map(list => {
-
-      (list.filter(_._1.isInline), list.filter(!_._1.isInline)) match {
+      (list.filter(_.isInline), list.filter(!_.isInline)) match {
         case (Nil, normalAttachments) => createMixedBody(maybeHtmlBody, maybeTextBody, normalAttachments, htmlTextExtractor)
         case (inlineAttachments, Nil) => createRelatedBody(maybeHtmlBody, maybeTextBody, inlineAttachments, htmlTextExtractor)
         case (inlineAttachments, normalAttachments) => createMixedRelatedBody(maybeHtmlBody, maybeTextBody, inlineAttachments, normalAttachments, htmlTextExtractor)
@@ -198,54 +193,65 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
     })
   }
 
+  private def loadWithMetadata(blobResolvers: BlobResolvers, mailboxSession: MailboxSession)(attachment: Attachment): Either[Throwable, LoadedAttachment] =
+    Try(blobResolvers.resolve(attachment.blobId, mailboxSession).subscribeOn(Schedulers.elastic()).block())
+      .toEither.flatMap(blob => load(blob).map(content => LoadedAttachment(attachment, blob, content)))
+
+  private def load(blob: Blob): Either[Throwable, Array[Byte]] =
+    Using(blob.content) {
+      _.readAllBytes()
+    }.toEither
+
   private def createMixedRelatedBody(maybeHtmlBody: Option[String],
                                      maybeTextBody: Option[String],
-                                     inlineAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])],
-                                     normalAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])],
-                                     htmlTextExtractor: HtmlTextExtractor) = {
+                                     inlineAttachments: List[LoadedAttachment],
+                                     normalAttachments: List[LoadedAttachment],
+                                     htmlTextExtractor: HtmlTextExtractor): MultipartBuilder = {
     val mixedMultipartBuilder = MultipartBuilder.create(SubType.MIXED_SUBTYPE)
     val relatedMultipartBuilder = MultipartBuilder.create(SubType.RELATED_SUBTYPE)
     relatedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(createAlternativeBody(maybeHtmlBody, maybeTextBody, htmlTextExtractor).build))
     inlineAttachments.foldLeft(relatedMultipartBuilder) {
-      case (acc, (attachment, storedMetadata, content)) =>
-        acc.addBodyPart(toBodypartBuilder(attachment, storedMetadata, content))
+      case (acc, loadedAttachment) =>
+        acc.addBodyPart(toBodypartBuilder(loadedAttachment))
         acc
     }
 
     mixedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(relatedMultipartBuilder.build))
 
     normalAttachments.foldLeft(mixedMultipartBuilder) {
-      case (acc, (attachment, storedMetadata, content)) =>
-        acc.addBodyPart(toBodypartBuilder(attachment, storedMetadata, content))
+      case (acc, loadedAttachment) =>
+        acc.addBodyPart(toBodypartBuilder(loadedAttachment))
         acc
     }
   }
 
-  private def createMixedBody(maybeHtmlBody: Option[String], maybeTextBody: Option[String], normalAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])], htmlTextExtractor: HtmlTextExtractor) = {
+  private def createMixedBody(maybeHtmlBody: Option[String], maybeTextBody: Option[String], normalAttachments: List[LoadedAttachment], htmlTextExtractor: HtmlTextExtractor) = {
     val mixedMultipartBuilder = MultipartBuilder.create(SubType.MIXED_SUBTYPE)
     mixedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(createAlternativeBody(maybeHtmlBody, maybeTextBody, htmlTextExtractor).build))
     normalAttachments.foldLeft(mixedMultipartBuilder) {
-      case (acc, (attachment, storedMetadata, content)) =>
-        acc.addBodyPart(toBodypartBuilder(attachment, storedMetadata, content))
+      case (acc, loadedAttachment) =>
+        acc.addBodyPart(toBodypartBuilder(loadedAttachment))
         acc
     }
   }
 
-  private def createRelatedBody(maybeHtmlBody: Option[String], maybeTextBody: Option[String], inlineAttachments: List[(Attachment, AttachmentMetadata, Array[Byte])], htmlTextExtractor: HtmlTextExtractor) = {
+  private def createRelatedBody(maybeHtmlBody: Option[String], maybeTextBody: Option[String], inlineAttachments: List[LoadedAttachment], htmlTextExtractor: HtmlTextExtractor) = {
     val relatedMultipartBuilder = MultipartBuilder.create(SubType.RELATED_SUBTYPE)
     relatedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(createAlternativeBody(maybeHtmlBody, maybeTextBody, htmlTextExtractor).build))
     inlineAttachments.foldLeft(relatedMultipartBuilder) {
-      case (acc, (attachment, storedMetadata, content)) =>
-        acc.addBodyPart(toBodypartBuilder(attachment, storedMetadata, content))
+      case (acc, loadedAttachment) =>
+        acc.addBodyPart(toBodypartBuilder(loadedAttachment))
         acc
     }
     relatedMultipartBuilder
   }
 
-  private def toBodypartBuilder(attachment: Attachment, storedMetadata: AttachmentMetadata, content: Array[Byte]) = {
+  private def toBodypartBuilder(loadedAttachment: LoadedAttachment) = {
     val bodypartBuilder = BodyPartBuilder.create()
-    bodypartBuilder.setBody(content, attachment.`type`.value)
-      .setField(contentTypeField(attachment, storedMetadata))
+    val attachment = loadedAttachment.attachment
+    val blob = loadedAttachment.blob
+    bodypartBuilder.setBody(loadedAttachment.content, attachment.`type`.value)
+      .setField(contentTypeField(attachment, blob))
       .setContentDisposition(attachment.disposition.getOrElse(Disposition.ATTACHMENT).value)
     attachment.cid.map(_.asField).foreach(bodypartBuilder.addField)
     attachment.location.map(_.asField).foreach(bodypartBuilder.addField)
@@ -253,8 +259,8 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
     bodypartBuilder
   }
 
-  private def contentTypeField(attachment: Attachment, attachmentMetadata: AttachmentMetadata): ContentTypeField = {
-    val typeAsField: ContentTypeField = attachmentMetadata.getType.asMime4J
+  private def contentTypeField(attachment: Attachment, blob: Blob): ContentTypeField = {
+    val typeAsField: ContentTypeField = blob.contentType.asMime4J
     if (attachment.name.isDefined) {
       Fields.contentType(typeAsField.getMimeType,
         Map.newBuilder[String, String]
@@ -272,25 +278,6 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
       .asScala
       .filter(!_._1.equals("name"))
       .toMap
-
-  private def getAttachmentMetadata(attachment: Attachment,
-                                    attachmentManager: AttachmentManager,
-                                    mailboxSession: MailboxSession): Either[AttachmentNotFoundException, (Attachment, AttachmentMetadata)] =
-    Try(attachmentManager.getAttachment(AttachmentId.from(attachment.blobId.value.toString), mailboxSession))
-      .fold(e => Left(new AttachmentNotFoundException(attachment.blobId.value.value, s"Attachment not found: ${attachment.blobId.value}", e)),
-        attachmentMetadata => Right((attachment, attachmentMetadata)))
-
-  private def loadAttachment(attachment: Attachment,
-                             attachmentMetadata: AttachmentMetadata,
-                             attachmentContentLoader: AttachmentContentLoader,
-                             mailboxSession: MailboxSession): Either[Exception, (Attachment, AttachmentMetadata, Array[Byte])] =
-    Try(attachmentContentLoader.load(attachmentMetadata, mailboxSession))
-      .toEither
-      .fold(e => e match {
-        case e: AttachmentNotFoundException => Left(new AttachmentNotFoundException(attachment.blobId.value.value, s"Attachment not found: ${attachment.blobId.value}", e))
-        case e: IOException => Left(e)
-      },
-        inputStream => scala.Right((attachment, attachmentMetadata, inputStream.readAllBytes())))
 
   def validateHtmlBody: Either[IllegalArgumentException, Option[String]] = htmlBody match {
     case None => Right(None)
@@ -328,6 +315,10 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
       }
     }).sequence.map(_ => ())
   }
+}
+
+case class LoadedAttachment(attachment: Attachment, blob: Blob, content: Array[Byte]) {
+  def isInline: Boolean = attachment.isInline
 }
 
 case class DestroyIds(value: Seq[UnparsedMessageId])
