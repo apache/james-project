@@ -70,7 +70,7 @@ Create the provisioning folder tree and copy all the dashboard json files to ``/
             |-- defaults.yml
             |-- james
         |-- datasources
-            |-- prometheus.yml
+            |-- prometheus_ds.yml
         |-- notifiers
         |-- plugins
         
