@@ -12,7 +12,7 @@ All those three components will be started with a single command.
 
 You can retrieve the docker-compose file : ( docker-compose file and james image name should be changed) 
 
-    $ wget https://raw.githubusercontent.com/apache/james-project/master/dockerfiles/run/docker-compose-branch-master.yml
+    $ wget https://raw.githubusercontent.com/apache/james-project/master/dockerfiles/run/docker-compose.yml
    
 
 Then, you just have to start the services:
