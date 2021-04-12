@@ -136,7 +136,7 @@ object CustomMethodContract {
       |  "apiUrl" : "http://domain.com/jmap",
       |  "downloadUrl" : "http://domain.com/download/{accountId}/{blobId}/?type={type}&name={name}",
       |  "uploadUrl" : "http://domain.com/upload/{accountId}",
-      |  "eventSourceUrl" : "http://domain.com/eventSource?types={types}&closeAfter={closeAfter}&ping={ping}",
+      |  "eventSourceUrl" : "http://domain.com/eventSource?types={types}&closeAfter={closeafter}&ping={ping}",
       |  "state" : "2c9f1b12-b35a-43e6-9af2-0106fb53a943"
       |}""".stripMargin
 }

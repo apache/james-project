@@ -203,7 +203,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |  "apiUrl" : "$LOCALHOST_URL_PREFIX/jmap",
                          |  "downloadUrl" : "$LOCALHOST_URL_PREFIX/$downloadPath",
                          |  "uploadUrl" : "$LOCALHOST_URL_PREFIX/upload/{accountId}",
-                         |  "eventSourceUrl" : "$LOCALHOST_URL_PREFIX/eventSource?types={types}&closeAfter={closeAfter}&ping={ping}",
+                         |  "eventSourceUrl" : "$LOCALHOST_URL_PREFIX/eventSource?types={types}&closeAfter={closeafter}&ping={ping}",
                          |  "state" : "${INSTANCE.value}"
                          |}""".stripMargin
 

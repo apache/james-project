@@ -44,7 +44,7 @@ class JmapRfc8621ConfigurationTest extends AnyWordSpec with Matchers {
       jmapRfc8621Configuration.apiUrl must be(new URL("http://random-domain.com/jmap"))
       jmapRfc8621Configuration.downloadUrl must be(new URL("http://random-domain.com/download/{accountId}/{blobId}/?type={type}&name={name}"))
       jmapRfc8621Configuration.uploadUrl must be(new URL("http://random-domain.com/upload/{accountId}"))
-      jmapRfc8621Configuration.eventSourceUrl must be(new URL("http://random-domain.com/eventSource?types={types}&closeAfter={closeAfter}&ping={ping}"))
+      jmapRfc8621Configuration.eventSourceUrl must be(new URL("http://random-domain.com/eventSource?types={types}&closeAfter={closeafter}&ping={ping}"))
     }
 
     "load default config for urlPrefix when no configuration provided" in {
@@ -53,7 +53,7 @@ class JmapRfc8621ConfigurationTest extends AnyWordSpec with Matchers {
       jmapRfc8621Configuration.apiUrl must be(new URL("http://localhost/jmap"))
       jmapRfc8621Configuration.downloadUrl must be(new URL("http://localhost/download/{accountId}/{blobId}/?type={type}&name={name}"))
       jmapRfc8621Configuration.uploadUrl must be(new URL("http://localhost/upload/{accountId}"))
-      jmapRfc8621Configuration.eventSourceUrl must be(new URL("http://localhost/eventSource?types={types}&closeAfter={closeAfter}&ping={ping}"))
+      jmapRfc8621Configuration.eventSourceUrl must be(new URL("http://localhost/eventSource?types={types}&closeAfter={closeafter}&ping={ping}"))
     }
   }
 }
