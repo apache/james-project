@@ -74,8 +74,32 @@ Create the provisioning folder tree and copy all the dashboard json files to ``/
         |-- notifiers
         |-- plugins
         
-        
-The following ``docker-compose.yml`` file will allow you to run a fresh prometheus/grafana montoring stack:
+Define the folder path for pre-load dashboard json files in `defaults.yml`:
+```
+apiVersion: 1
+
+providers:
+  - name: Default    # A uniquely identifiable name for the provider
+    folder: Services # The folder where to place the dashboards
+    type: file
+    options:
+      path:  /etc/grafana/provisioning/dashboards/james
+```
+
+Define the configuration for pre-load Prometheus datasource in `prometheus_ds.yml`:
+
+```
+apiVersion: 1
+
+datasources:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus_server_ip:9090
+    editable: true
+```    
+    
+
+Finally define volume mount for `grafana.ini` and provisioning folder path in ``docker-compose.yml`` and start prometheus/grafana montoring stack:
 
 ```
 version: '3'
@@ -102,6 +126,8 @@ services:
 Once running, Prometheus datasource and dashboards will be ready on your Grafana. Datasource name should match with the name provided in dashboard json files. Or else you will have to edit Grafana dashboards afterward.
 
 image::preload-dashboards.png[Pre-loaded dashboards]
+
+*Note: For communication between multiple docker-compose projects, see https://stackoverflow.com/questions/38088279/communication-between-multiple-docker-compose-projects[here] for example. An easier approach is to merge James and Metric docker-compose files together.
 
 == Available metrics
 
