@@ -206,6 +206,21 @@ svn rm 3.5.0
 svn commit -m "Archive James release 3.5.0"
 ----
 
+=== Push docker containers
+
+WARNING: Docker images are not considered as an official Apache release materials yet the Apache JAMES PMC members decided
+to offer their community with a set of maintained docker images, for convenience.
+
+Docker images includes:
+
+- apache/james:memory-3.x.x built from https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/memory
+- apache/james:jpa-3.x.x built from https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/jpa
+- apache/james:demo-3.x.x built from https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/provisioned
+- apache/james:cassandra-3.x.x build from https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/cassandra
+- apache/james:distributed-3.x.x built from https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/cassandra-rabbitmq
+
+As a committer contact the INFRA and hand them your docker-hub account to get the permission.
+
 === Other steps
 
 Once done:
