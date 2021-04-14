@@ -160,12 +160,12 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
       <ul>
         <li>Source code (ZIP Format):
           <a href="https://www.apache.org/dyn/closer.lua/james/server/3.6.0/james-project-3.6.0-source-release.zip">james-project-3.6.0-source-release.zip</a>
-          [<a href="https://downloads.apache.org/james/server/3.6.0/james-project-3.6.0-source-release.zip.sha256">SHA-512</a>]
+          [<a href="https://downloads.apache.org/james/server/3.6.0/james-project-3.6.0-source-release.zip.sha512">SHA-512</a>]
           [<a href="https://downloads.apache.org/james/server/3.6.0/james-project-3.6.0-source-release.zip.asc">PGP</a>]</li>
 
         <li>Binary (ZIP Format) for Spring wiring:
           <a href="https://www.apache.org/dyn/closer.lua/james/server/3.6.0/james-server-app-3.6.0-app.zip">apache-james-3.6.0-app.zip</a>
-          [<a href="https://downloads.apache.org/james/server/3.6.0/james-server-app-3.6.0-app.zip.sha256">SHA-512</a>]
+          [<a href="https://downloads.apache.org/james/server/3.6.0/james-server-app-3.6.0-app.zip.sha512">SHA-512</a>]
           [<a href="https://downloads.apache.org/james/server/3.6.0/james-server-app-3.6.0-app.zip.asc">PGP</a>]
         </li>
 
