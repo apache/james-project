@@ -10,7 +10,7 @@ services:
       - rabbitmq
       - swift
     entrypoint: bash -c "java -Dworking.directory=/root/ -Dlogback.configurationFile=/root/conf/logback.xml -jar james-server.jar"
-    image: linagora/james-rabbitmq-project:latest
+    image: apache/james:distributed-3.6.0
     container_name: james
     hostname: james.local
     ports:
