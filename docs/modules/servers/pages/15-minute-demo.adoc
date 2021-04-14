@@ -53,32 +53,16 @@ Docker will pull the image and start the container.
 To run commands using the James CLI, you can use the running container via Docker:
 
 ----
-docker exec james java -jar /root/james-cli.jar \
-    -h \<<HOST>> -p \<<PORT>> \<<COMMAND>>
+docker exec james james-cli <<COMMAND>>
 ----
 
-In this demo, we are using host 127.0.0.1 and port 9999, so every command looks like:
-
-----
-docker exec james java -jar /root/james-cli.jar \
-    -h 127.0.0.1 -p 9999 \<<COMMAND>>
-----
-
-Host 127.0.0.1 is of course localhost, and the use of port 9999 is completely arbitrary.
-
-To make this demo a little easier to use, set this up as a bash script by copying and pasting this script:
-
-[source,bash]
-----
-printf '#!/bin/bash\n\ndocker exec james java -jar /root/james-cli.jar -h 127.0.0.1 -p 9999 $@' >> james ; chmod +x james
-----
 ****
 
 As an example, list all the domains currently in use by James:
 
 [source,bash]
 ----
-./james listDomains
+docker exec james james-cli listDomains
 ----
 
 You should notice that a default domain, james.local, has been created
@@ -87,7 +71,7 @@ List all the current users:
 
 [source,bash]
 ----
-./james listUsers
+docker exec james james-clivv listUsers
 ----
 
 You should see users ``user01@james.local``, ``user02@james.local``, and ``user03@james.local``.
@@ -96,28 +80,28 @@ Create a new "test.local" domain:
 
 [source,bash]
 ----
-./james addDomain test.local
+docker exec james james-cli addDomain test.local
 ----
 
 List the domains again to ensure that "test.local" has successfully been added:
 
 [source,bash]
 ----
-./james listDomains
+docker exec james james-clivv listDomains
 ----
 
 Add the user "testuser" to the "test.local" domain with password "password":
 
 [source,bash]
 ----
-./james addUser testuser@test.local password
+docker exec james james-cliv addUser testuser@test.local password
 ----
 
 You should now see your newly created user:
 
 [source,bash]
 ----
-./james listUsers
+docker exec james james-cli listUsers
 ----
 
 == Connect to the server with an email client
