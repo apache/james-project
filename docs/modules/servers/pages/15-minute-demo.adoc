@@ -34,7 +34,7 @@ Now run the James demo server using this command:
 
 [source,bash]
 ----
-docker run -d -p "25:25" -p "143:143" -p "127.0.0.1:8000:8000" -v $(pwd)/webadmin.properties:/root/conf/webadmin.properties --name james linagora/james-jpa-sample:3.4.0
+docker run -d -p "25:25" -p "143:143" -p "127.0.0.1:8000:8000" -v $(pwd)/webadmin.properties:/root/conf/webadmin.properties --name james apache/james:demo-3.6.0
 ----
 
 Explanation:

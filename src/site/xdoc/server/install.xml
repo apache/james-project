@@ -90,7 +90,7 @@
       </p>
 
       <p>A <a href="https://github.com/apache/james-project/blob/james-project-3.3.0/dockerfiles/run/docker-compose.yml">
-          docker-compose</a> is available for Guice + Cassandra + ElasticSearch</p>
+          docker-compose</a> is available for Guice + Cassandra + ElasticSearch + RabbitMQ</p>
   </section>
 
   <section name="Install Step by Step">
