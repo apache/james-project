@@ -8,7 +8,7 @@ services:
       - cassandra
       - tika
       - rabbitmq
-      - swift
+      - s3
     entrypoint: bash -c "java -Dworking.directory=/root/ -Dlogback.configurationFile=/root/conf/logback.xml -jar james-server.jar"
     image: apache/james:distributed-3.6.0
     container_name: james
@@ -42,10 +42,13 @@ services:
       - "5672:5672"
       - "15672:15672"
 
-  swift:
-    image: linagora/openstack-keystone-swift:pike
-    ports:
-      - "5000:5000"
-      - "8080:8080"
-      - "35357:35357"
+  s3:
+    image: zenko/cloudserver:8.2.6
+    container_name: s3.docker.test
+    environment:
+      - SCALITY_ACCESS_KEY_ID=accessKey1
+      - SCALITY_SECRET_ACCESS_KEY=secretKey1
+      - S3BACKEND=mem
+      - LOG_LEVEL=trace
+      - REMOTE_MANAGEMENT_DISABLE=1
 
