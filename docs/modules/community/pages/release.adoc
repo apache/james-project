@@ -196,7 +196,7 @@ svn propset svn:mime-type application/octet-stream $1.asc
 
 Once done it is time to commit! `svn commit -m "Upload convenience artifacts for James release 3.x.x"`
 
-The convenience binaries will then be available. Checks that the links of the download page works.
+The convenience binaries will then be available. Check that the links of the download page works.
 
 Cleanup: Only supported release lines should be maintained. Archive the previous release by deleting them from `repos/dist/release` - the INFRA will automatically move them to archive:
 
