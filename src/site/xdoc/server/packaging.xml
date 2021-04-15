@@ -206,6 +206,67 @@
             </p>
         </section>
 
+        <section name="Docker matrix">
+            <p>
+                <table>
+                    <tr>
+                        <th>Image name</th>
+                        <th>Deployment model</th>
+                        <th>General persistence</th>
+                        <th>Blob persistence</th>
+                        <th>Queue type</th>
+                        <th>Search</th>
+                        <th>Supported protocols</th>
+                    </tr>
+                    <tr>
+                        <td>apache/james:distributed-3.6.0</td>
+                        <td>Multi-node</td>
+                        <td>Cassandra</td>
+                        <td>S3 or Cassandra</td>
+                        <td>RabbitMQ</td>
+                        <td>ElasticSearch</td>
+                        <td>SMTP, IMAP, JMAP, POP3, LMTP, WebAdmin</td>
+                    </tr>
+                    <tr>
+                        <td>apache/james:jpa-3.6.0</td>
+                        <td>Single node</td>
+                        <td>Embedded Derby database (JPA, SQL)</td>
+                        <td>Not applicable</td>
+                        <td>In VM</td>
+                        <td>Index Lucene on the filesystem</td>
+                        <td>SMTP, IMAP, POP3, LMTP, WebAdmin</td>
+                    </tr>
+                    <tr>
+                        <td>apache/james:demo-3.6.0</td>
+                        <td>Pre-provisioned Single node instance to ease project discovery</td>
+                        <td>Embedded Derby database (JPA, SQL)</td>
+                        <td>Not applicable</td>
+                        <td>In VM</td>
+                        <td>Index Lucene on the filesystem</td>
+                        <td>SMTP, IMAP, POP3, LMTP, WebAdmin</td>
+                    </tr>
+                    <tr>
+                        <td>apache/james:memory-3.6.0</td>
+                        <td>Single node for test purposes</td>
+                        <td>Memory (no persistence)</td>
+                        <td>Memory (no persistence)</td>
+                        <td>In VM</td>
+                        <td>Scroll on in memory data</td>
+                        <td>SMTP, IMAP, JMAP, POP3, LMTP, WebAdmin</td>
+                    </tr>
+                    <tr>
+                        <td>apache/james:cassandra-3.6.0</td>
+                        <td>Single node on top of a shared database</td>
+                        <td>Cassandra</td>
+                        <td>Cassandra</td>
+                        <td>In VM</td>
+                        <td>ElasticSearch</td>
+                        <td>SMTP, IMAP, JMAP, POP3, LMTP, WebAdmin</td>
+                    </tr>
+                </table>
+            </p>
+        </section>
+
     </body>
 
 </document>
