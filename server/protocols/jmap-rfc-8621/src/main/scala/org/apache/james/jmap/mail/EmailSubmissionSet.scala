@@ -44,16 +44,20 @@ case class EmailSubmissionSetRequest(accountId: AccountId,
                                      create: Option[Map[EmailSubmissionCreationId, JsObject]],
                                      onSuccessUpdateEmail: Option[Map[EmailSubmissionCreationId, JsObject]],
                                      onSuccessDestroyEmail: Option[List[EmailSubmissionCreationId]]) extends WithAccountId {
-  def implicitEmailSetRequest(messageIdResolver: EmailSubmissionCreationId => Either[IllegalArgumentException, MessageId]): Either[IllegalArgumentException, EmailSetRequest] =
+  def implicitEmailSetRequest(messageIdResolver: EmailSubmissionCreationId => Either[IllegalArgumentException, MessageId]): Either[IllegalArgumentException, Option[EmailSetRequest]] =
     for {
       update <- resolveOnSuccessUpdateEmail(messageIdResolver)
       destroy <- resolveOnSuccessDestroyEmail(messageIdResolver)
     } yield {
-      EmailSetRequest(
-        accountId = accountId,
-        create = None,
-        update = update,
-        destroy = destroy.map(DestroyIds(_)))
+      if (update.isEmpty && destroy.isEmpty) {
+        None
+      } else {
+        Some(EmailSetRequest(
+          accountId = accountId,
+          create = None,
+          update = update,
+          destroy = destroy.map(DestroyIds(_))))
+      }
     }
 
   def resolveOnSuccessUpdateEmail(messageIdResolver: EmailSubmissionCreationId => Either[IllegalArgumentException, MessageId]): Either[IllegalArgumentException, Option[Map[UnparsedMessageId, JsObject]]]=

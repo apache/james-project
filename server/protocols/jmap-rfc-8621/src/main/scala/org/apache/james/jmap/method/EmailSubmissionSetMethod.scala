@@ -177,11 +177,13 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
 
         val emailSetCall: SMono[InvocationWithContext] = request.implicitEmailSetRequest(createdResults._1.resolveMessageId)
           .fold(e => SMono.error(e),
-            emailSetRequest => emailSetMethod.doProcess(
-              capabilities = capabilities,
-              invocation = invocation,
-              mailboxSession = mailboxSession,
-              request = emailSetRequest))
+            maybeEmailSetRequest => maybeEmailSetRequest.map(emailSetRequest =>
+                emailSetMethod.doProcess(
+                  capabilities = capabilities,
+                  invocation = invocation,
+                  mailboxSession = mailboxSession,
+                  request = emailSetRequest))
+              .getOrElse(SMono.empty))
 
         SFlux.concat(SMono.just(explicitInvocation), emailSetCall)
       })
