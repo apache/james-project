@@ -36,7 +36,7 @@ import org.apache.james.jmap.core.{ClientId, Id, Invocation, Properties, ServerI
 import org.apache.james.jmap.json.{EmailSubmissionSetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.EmailSubmissionSet.EmailSubmissionCreationId
 import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope}
-import org.apache.james.jmap.method.EmailSubmissionSetMethod.{LOGGER, MAIL_METADATA_USERNAME_ATTRIBUTE}
+import org.apache.james.jmap.method.EmailSubmissionSetMethod.{CreationFailure, CreationResult, CreationResults, CreationSuccess, LOGGER, MAIL_METADATA_USERNAME_ATTRIBUTE}
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.lifecycle.api.{LifecycleUtil, Startable}
 import org.apache.james.mailbox.model.{FetchGroup, MessageResult}
@@ -62,31 +62,6 @@ object EmailSubmissionSetMethod {
   val noRecipients: SetErrorType = "noRecipients"
   val forbiddenFrom: SetErrorType = "forbiddenFrom"
   val forbiddenMailFrom: SetErrorType = "forbiddenMailFrom"
-}
-
-case class EmailSubmissionCreationParseException(setError: SetError) extends Exception
-case class NoRecipientException() extends Exception
-case class ForbiddenFromException(from: String) extends Exception
-case class ForbiddenMailFromException(from: List[String]) extends Exception
-
-case class MessageMimeMessageSource(id: String, message: MessageResult) extends MimeMessageSource {
-  override def getSourceId: String = id
-
-  override def getInputStream: InputStream = message.getFullContent.getInputStream
-
-  override def getMessageSize: Long = message.getFullContent.size()
-}
-
-class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerializer,
-                                         messageIdManager: MessageIdManager,
-                                         mailQueueFactory: MailQueueFactory[_ <: MailQueue],
-                                         canSendFrom: CanSendFrom,
-                                         emailSetMethod: EmailSetMethod,
-                                         val metricFactory: MetricFactory,
-                                         val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[EmailSubmissionSetRequest] with Startable {
-  override val methodName: MethodName = MethodName("EmailSubmission/set")
-  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, EMAIL_SUBMISSION)
-  var queue: MailQueue = _
 
   sealed trait CreationResult {
     def emailSubmissionCreationId: EmailSubmissionCreationId
@@ -127,9 +102,33 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       }
       .toMap
   }
+}
 
-  def init: Unit =
-    queue = mailQueueFactory.createQueue(SPOOL)
+case class EmailSubmissionCreationParseException(setError: SetError) extends Exception
+case class NoRecipientException() extends Exception
+case class ForbiddenFromException(from: String) extends Exception
+case class ForbiddenMailFromException(from: List[String]) extends Exception
+
+case class MessageMimeMessageSource(id: String, message: MessageResult) extends MimeMessageSource {
+  override def getSourceId: String = id
+
+  override def getInputStream: InputStream = message.getFullContent.getInputStream
+
+  override def getMessageSize: Long = message.getFullContent.size()
+}
+
+class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerializer,
+                                         messageIdManager: MessageIdManager,
+                                         mailQueueFactory: MailQueueFactory[_ <: MailQueue],
+                                         canSendFrom: CanSendFrom,
+                                         emailSetMethod: EmailSetMethod,
+                                         val metricFactory: MetricFactory,
+                                         val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[EmailSubmissionSetRequest] with Startable {
+  override val methodName: MethodName = MethodName("EmailSubmission/set")
+  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, EMAIL_SUBMISSION)
+  var queue: MailQueue = _
+
+  def init: Unit = queue = mailQueueFactory.createQueue(SPOOL)
 
   @PreDestroy def dispose: Unit =
     Try(queue.close())
