@@ -28,7 +28,7 @@ mvn clean install
  * Cassandra 3.11.10
  * ElasticSearch 7.10.2
  * RabbitMQ-Management 3.8.1
- * Swift ObjectStorage 2.15.1 or Zenko Cloudserver or AWS S3
+ * Zenko Cloudserver or AWS S3 compatible API
 
 ### James Launch
 
@@ -69,16 +69,4 @@ objectstorage.s3.endPoint=http://s3.docker.test:8000/
 objectstorage.s3.region=eu-west-1
 objectstorage.s3.accessKeyId=accessKey1
 objectstorage.s3.secretKey=secretKey1
-```
-
-## Guice-cassandra-rabbitmq-ldap
-
-You can follow the same guide to build and run guice-cassandra-rabbitmq-swift-ldap artifact, except that:
- - The **jar** and **libs** needs to be retrieve from server/container/guice/cassandra-rabbitmq-ldap-guice/target after compilation
- - The sample configuration can be found in [dockerfiles/run/guice/cassandra-rabbitmq-ldap/destination/conf](https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/cassandra-rabbitmq-ldap/destination/conf)
- - You need to configure James to be connecting to a running LDAP server. The configuration file is located in [dockerfiles/run/guice/cassandra-rabbitmq-ldap/destination/conf/usersrepository.xml](https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/cassandra-rabbitmq-ldap/destination/conf/usersrepository.xml)
- - You can then launch James via this command:
-
-```bash
-$ java -Dworking.directory=. -jar target/james-server-cassandra-rabbitmq-ldap-guice.jar
 ```

@@ -106,7 +106,7 @@
                     </item>
                     <item name="2. Packaging" href="/server/packaging.html" />
                     <item name="3. Install James" href="/server/install.html" collapse="true">
-                        <item name="Cassandra-RabbitMQ-Swift-guice" href="/server/install/guice-cassandra-rabbitmq.html" />
+                        <item name="Cassandra-RabbitMQ-S3-guice" href="/server/install/guice-cassandra-rabbitmq-s3.html" />
                         <item name="Cassandra-guice" href="/server/install/guice-cassandra.html" />
                         <item name="JPA-guice" href="/server/install/guice-jpa.html" />
                         <item name="JPA-SMTP-guice" href="/server/install/guice-jpa-smtp.html" />
