@@ -7,16 +7,127 @@ for keeping track of some core metrics of James.
 Such metrics are made available via JMX. You can connect for instance using VisualVM and the associated
 mbean plugins.
 
-You can also export the metrics to ElasticSearch and visualize them with https://grafana.com/[Grafana].
-See xref:distributed/configure/elasticsearch.adoc#_exporting_metrics_directly_to_elasticsearch[elaticseach.properties]
-documentation for more details on how to set this up.
+We also support displaying them via https://grafana.com/[Grafana]. Two methods can be used to back grafana display:
 
-If some metrics seem abnormally slow despite in depth database
-performance tuning, feedback is appreciated as well on the bug tracker,
-the user mailing list or our Gitter channel (see our
-http://james.apache.org/#second[community page]) . Any additional
-details categorizing the slowness are appreciated as well (details of
-the slow requests for instance).
+ - Prometheus metric collection - Data are exposed on a HTTP endpoint for Prometheus scrape.
+ - ElasticSearch metric collection - This method is depreciated and will be removed in next version.
+ 
+== Expose metrics for Prometheus collection
+
+Metrics can be exposed over HTTP and made available by using ``extensions.routes`` in James https://github.com/apache/james-project/blob/master/docs/modules/servers/pages/distributed/configure/webadmin.adoc[webadmin.properties] file:
+....
+extensions.routes=org.apache.james.webadmin.dropwizard.MetricsRoutes
+....
+You can test the result by accessing to: 
+....
+http://james_server:8000/metrics
+....
+
+== Running James with Prometheus
+
+Make the below changes to scrape job config in ``prometheus.yml`` to collect the data for Grafana dashboard.
+....
+global:
+  scrape_interval:     15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      # - alertmanager:9093
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9090']
+  - job_name: 'Apache James'
+    scrape_interval: 5s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['james:8000']
+....
+
+You can download the dashboard json files and use https://grafana.com/tutorials/provision-dashboards-and-data-sources/[Grafana provision] to make the metrics datasource and dashboards available after container creation. [Insert link to Prometheus json files.]
+
+Update the https://github.com/grafana/grafana/blob/master/conf/sample.ini[grafana.ini] configuration file in the ``/etc/grafana/grafana.ini`` to override default configuration options. You only need to change the provisioning folder path:
+
+```
+;provisioning = /etc/grafana/provisioning
+```
+
+Create the provisioning folder tree and copy all the dashboard json files to ``/provisioning/dashboards/james/``
+
+    |-- provisioning
+        |-- dashboards
+            |-- defaults.yml
+            |-- james
+        |-- datasources
+            |-- prometheus_ds.yml
+        |-- notifiers
+        |-- plugins
+        
+Define the folder path for pre-load dashboard json files in `defaults.yml`:
+```
+apiVersion: 1
+
+providers:
+  - name: Default    # A uniquely identifiable name for the provider
+    folder: Services # The folder where to place the dashboards
+    type: file
+    options:
+      path:  /etc/grafana/provisioning/dashboards/james
+```
+
+Define the configuration for pre-load Prometheus datasource in `prometheus_ds.yml`:
+
+```
+apiVersion: 1
+
+datasources:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus_server_ip:9090
+    editable: true
+```    
+    
+
+Finally define volume mount for `grafana.ini` and provisioning folder path in ``docker-compose.yml`` and start prometheus/grafana montoring stack:
+
+```
+version: '3'
+
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes: #Map your provision config to grafana container
+      - /path/to/grafana.ini:/etc/grafana/grafana.ini
+      - /path/to/grafana/provisioning:/etc/grafana/provisioning
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes: #Map your scrape config to prometheus container.
+      - ./conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml    
+```
+
+Once running, Prometheus datasource and dashboards will be ready on your Grafana. Datasource name should match with the name provided in dashboard json files. Or else you will have to edit Grafana dashboards afterward.
+
+image::preload-dashboards.png[Pre-loaded dashboards]
+
+*Note: For communication between multiple docker-compose projects, see https://stackoverflow.com/questions/38088279/communication-between-multiple-docker-compose-projects[here] for example. An easier approach is to merge James and Metric docker-compose files together.
 
 == Available metrics
 
@@ -95,7 +206,7 @@ This is for instance how the JMAP dashboard looks like:
 
 image::metrics.png[metrics for the JMAP protocol request latencies]
 
-== Running and configuring Grafana
+== Expose metrics for Elasticsearch collection
 
 The following command allow you to run a fresh grafana server :
 
@@ -117,3 +228,10 @@ You then need to enable reporting through ElasticSearch. Modify your
 James ElasticSearch configuration file accordingly. To help you doing
 this, you can take a look to
 https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/elasticsearch.properties[elasticsearch.properties].
+
+If some metrics seem abnormally slow despite in depth database
+performance tuning, feedback is appreciated as well on the bug tracker,
+the user mailing list or our Gitter channel (see our
+http://james.apache.org/#second[community page]) . Any additional
+details categorizing the slowness are appreciated as well (details of
+the slow requests for instance).

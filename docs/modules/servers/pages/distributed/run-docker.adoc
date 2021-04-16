@@ -10,20 +10,21 @@ When you try James this way, you will use the most current state of James.
 It will be configured to run with Cassandra & ElasticSearch.
 All those three components will be started with a single command.
 
-You can retrieve the docker-compose file :
+You can retrieve the docker-compose file : ( docker-compose file and james image name should be changed) 
 
     $ wget https://raw.githubusercontent.com/apache/james-project/master/dockerfiles/run/docker-compose.yml
+   
 
 Then, you just have to start the services:
 
-    $ docker-compose up
+    $ docker-compose up -d
 
 Wait a few seconds in order to have all those services start up. You will see the following log when James is available:
 james           | Started : true
 
 A default domain, james.local, has been created. You can see this by running:
 
-    $ docker exec james java -jar /root/james-cli.jar -h 127.0.0.1 -p 9999 listdomains
+    $ docker exec james james-cli -h 127.0.0.1 -p 9999 listdomains
 
 James will respond to IMAP port 143 and SMTP port 25.
 You have to create users before playing with james. You may also want to create other domains.
