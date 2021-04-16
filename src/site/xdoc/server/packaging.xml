@@ -40,11 +40,11 @@
                 <li><a href="https://github.com/apache/james-project/tree/master/server/app">Spring</a>: Allows you to
                     choose across various available implementations for each component. Requires more configuration effort.</li>
                 <li><a href="https://github.com/apache/james-project/tree/master/server/container/guice/cassandra-guice">
-                    Cassandra-guice</a>: Ships a James server storing emails in Cassandra and index them in ElasticSearch.</li>
-                <li><a href="https://github.com/apache/james-project/tree/master/server/container/guice/cassandra-ldap-guice">
-                    Cassandra-guice-ldap</a>: Ships a James server storing emails in Cassandra and index them in ElasticSearch. User are authenticated against a LDAP server.</li>
+                    Cassandra-guice</a>: Ships a James server storing emails in Cassandra and index them in ElasticSearch targeting single server deployment. Optional support for LDAP authentication.</li>
+                <li><a href="https://github.com/apache/james-project/tree/master/server/container/guice/cassandra-rabbitmq-guice">
+                    Distributed: cassandra-rabbitmq-guice</a>: Ships a James server storing emails in Cassandra and index them in ElasticSearch targeting multi node deployments. S3 is used to store blobs. RabbitMQ is used for inter-node messaging. Optional support for LDAP authentication.</li>
                 <li><a href="https://github.com/apache/james-project/tree/master/server/container/guice/jpa-guice">
-                    Jpa-Guice</a>: Ships a James server storing emails in a SQL database (derby by default) accessed with JPA and Lucene to index emails.</li>
+                    Jpa-Guice</a>: Ships a James server storing emails in a SQL database (derby by default) accessed with JPA and Lucene to index emails and targets single node deployment.</li>
                 <li><a href="https://github.com/apache/james-project/tree/master/server/container/guice/jpa-smtp">
                     Jpa-Smtp</a>: A tiny SMTP server shiped without mailbox, using SQL database to store data, accessed by JPA.</li>
             </ul>
@@ -61,7 +61,7 @@
                         <th>Packaging</th>
                         <th>Spring</th>
                         <th>Cassandra-guice</th>
-                        <th>Cassandra-ldap-guice</th>
+                        <th>Distributed Cassandra-rabbitMQ-guice</th>
                         <th>Jpa-guice</th>
                         <th>Jpa-smtp</th>
                     </tr>
@@ -76,9 +76,9 @@
                     <tr>
                         <td>Docker image</td>
                         <td><a href="https://github.com/apache/james-project/tree/master/dockerfiles/run/spring">Available</a></td>
-                        <td><a href="https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/cassandra">Available</a></td>
-                        <td><a href="https://github.com/apache/james-project/tree/master/dockerfilehttps://github.com/apache/james-project/tree/master/dockerfiles/run/guice/jpas/run/guice/cassandra-ldap">Available</a></td>
-                        <td><a href="https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/jpa">Available</a></td>
+                        <td>apache/james:cassandra-3.6.0</td>
+                        <td>apache/james:distributed-3.6.0</td>
+                        <td>apache/james:jpa-3.6.0</td>
                         <td>None</td>
                     </tr>
                     <tr>
@@ -88,6 +88,14 @@
                         <td>Yes</td>
                         <td>Yes</td>
                         <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td>Deployment model</td>
+                        <td>Single node</td>
+                        <td>Single node</td>
+                        <td>Multi node</td>
+                        <td>Single node</td>
+                        <td>Single node</td>
                     </tr>
                     <tr>
                         <td>Supports IMAP</td>
@@ -138,12 +146,12 @@
                         <td>Yes</td>
                     </tr>
                     <tr>
-                        <td>Supports Grafana metrics</td>
+                        <td>Supports Grafana metrics (Prometheus)</td>
                         <td>No</td>
                         <td>Yes</td>
                         <td>Yes</td>
-                        <td>No</td>
-                        <td>No</td>
+                        <td>Yes</td>
+                        <td>Yes</td>
                     </tr>
                     <tr>
                         <td>Mailbox implementation</td>
@@ -174,7 +182,7 @@
                         <td>Mail queue implementation</td>
                         <td>ActiveMQ</td>
                         <td>ActiveMQ</td>
-                        <td>ActiveMQ</td>
+                        <td>RabbitMQ</td>
                         <td>ActiveMQ</td>
                         <td>ActiveMQ</td>
                     </tr>
@@ -198,7 +206,7 @@
                         <td>Installation instructions</td>
                         <td><a href="install.html">Here</a></td>
                         <td><a href="install/guice-cassandra.html">Here</a></td>
-                        <td><a href="install/guice-cassandra.html">Here</a></td>
+                        <td><a href="install/guice-cassandra-rabbitmq-s3.html">Here</a></td>
                         <td><a href="install/guice-jpa.html">Here</a></td>
                         <td><a href="install/guice-jpa-smtp.html">Here</a></td>
                     </tr>
