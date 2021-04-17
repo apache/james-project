@@ -126,6 +126,17 @@ public class SMTPMessageSender extends ExternalResource implements Closeable, Af
         return this;
     }
 
+    public SMTPMessageSender sendMessageNoSender(String recipient) throws IOException {
+        doHelo();
+        doSetSender("");
+        doAddRcpt(recipient);
+        doData("subject: test\r\n" +
+            "\r\n" +
+            "content\r\n" +
+            ".\r\n");
+        return this;
+    }
+
     public SMTPMessageSender sendMessage(Mail mail) throws MessagingException, IOException {
         String from = mail.getMaybeSender().asString();
         ImmutableList<String> recipients = mail.getRecipients().stream()

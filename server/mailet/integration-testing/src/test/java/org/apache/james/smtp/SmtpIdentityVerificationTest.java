@@ -22,6 +22,7 @@ package org.apache.james.smtp;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.File;
@@ -87,6 +88,42 @@ class SmtpIdentityVerificationTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(USER, PASSWORD).sendMessage(USER, USER);
+    }
+
+    @Test
+    void verifyIdentityShouldRejectNullSenderWHenAuthenticated(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .requireAuthentication()
+            .verifyIdentity());
+
+        assertThatThrownBy(() ->
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .authenticate(USER, PASSWORD)
+                .sendMessageNoSender(USER))
+            .isEqualTo(new SMTPSendingException(SmtpSendingStep.RCPT, "503 5.7.1 Incorrect Authentication for Specified Email Address\n"));
+    }
+
+    @Test
+    void verifyIdentityShouldAcceptNullSenderWhenNotAuthenticated(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .verifyIdentity());
+
+        assertThatCode(() ->
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .sendMessageNoSender(USER))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    void verifyIdentityShouldAcceptNullSenderWhenAuthenticationRequired(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .requireAuthentication()
+            .verifyIdentity());
+
+        assertThatCode(() ->
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .sendMessageNoSender(USER))
+            .doesNotThrowAnyException();
     }
 
     @Test

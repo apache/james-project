@@ -86,8 +86,10 @@ public abstract class AbstractSenderAuthIdentifyVerificationRcptHook implements 
     }
 
     private boolean belongsToLocalDomain(MaybeSender maybeSender) {
-        Preconditions.checkArgument(!maybeSender.isNullSender());
-        return isLocalDomain(maybeSender.get().getDomain());
+        return maybeSender.asOptional()
+            .map(MailAddress::getDomain)
+            .filter(this::isLocalDomain)
+            .isPresent();
     }
 
     /**
