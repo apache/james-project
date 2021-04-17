@@ -18,9 +18,11 @@
   under the License.                                           
  -->
 
+<!-- Read https://james.apache.org/server/config-users.html for further details -->
+
 <usersrepository name="LocalUsers" class="org.apache.james.user.jpa.JPAUsersRepository">
     <destination URL="file://users/"/>
-    <algorithm>MD5</algorithm>
+    <algorithm>SHA-512</algorithm>
     <enableVirtualHosting>true</enableVirtualHosting>
     <enableForwarding>true</enableForwarding>
 </usersrepository>
