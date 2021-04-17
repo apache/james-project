@@ -19,10 +19,12 @@
   under the License.
  -->
 
+<!-- Read https://james.apache.org/server/config-smtp-lmtp.html#SMTP_Configuration for further details -->
+
 <smtpservers>
     <smtpserver enabled="true">
         <jmxName>smtpserver-global</jmxName>
-        <bind>0.0.0.0:1025</bind>
+        <bind>0.0.0.0:25</bind>
         <connectionBacklog>200</connectionBacklog>
         <tls socketTLS="false" startTLS="false">
             <keystore>file://conf/keystore</keystore>
@@ -34,7 +36,7 @@
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <authRequired>false</authRequired>
-        <authorizedAddresses>0.0.0.0/0</authorizedAddresses>
+        <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
         <verifyIdentity>true</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>
         <addressBracketsEnforcement>true</addressBracketsEnforcement>
@@ -46,7 +48,7 @@
     </smtpserver>
     <smtpserver enabled="true">
         <jmxName>smtpserver-TLS</jmxName>
-        <bind>0.0.0.0:1465</bind>
+        <bind>0.0.0.0:465</bind>
         <connectionBacklog>200</connectionBacklog>
         <tls socketTLS="true" startTLS="false">
             <keystore>file://conf/keystore</keystore>
@@ -61,7 +63,7 @@
            Authorize only local users
         -->
         <authRequired>true</authRequired>
-        <authorizedAddresses>0.0.0.0/0</authorizedAddresses>
+        <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
         <!-- Trust authenticated users -->
         <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>
@@ -74,7 +76,7 @@
     </smtpserver>
     <smtpserver enabled="true">
         <jmxName>smtpserver-authenticated</jmxName>
-        <bind>0.0.0.0:1587</bind>
+        <bind>0.0.0.0:587</bind>
         <connectionBacklog>200</connectionBacklog>
         <tls socketTLS="false" startTLS="true">
             <keystore>file://conf/keystore</keystore>
@@ -89,7 +91,7 @@
            Authorize only local users
         -->
         <authRequired>true</authRequired>
-        <authorizedAddresses>0.0.0.0/0</authorizedAddresses>
+        <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
         <!-- Trust authenticated users -->
         <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>

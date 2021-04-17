@@ -19,7 +19,10 @@
   under the License.
  -->
 
+<!-- Read https://james.apache.org/server/config-mailrepositorystore.html for further details -->
+
 <mailrepositorystore>
+    <defaultProtocol>file</defaultProtocol>
     <mailrepositories>
         <!-- File based repositories.  These repositories store all message data -->
         <!-- in the file system. -->

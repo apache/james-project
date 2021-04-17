@@ -19,12 +19,14 @@
   under the License.
  -->
 
+<!-- Read https://james.apache.org/server/config-mailetcontainer.html for further details -->
+
 <mailetcontainer enableJmx="true">
 
     <context>
         <!-- When the domain part of the postmaster mailAddress is missing, the default domain is appended.
         You can configure it to (for example) <postmaster>postmaster@myDomain.com</postmaster> -->
-        <postmaster>postmaster@localhost</postmaster>
+        <postmaster>postmaster</postmaster>
     </context>
 
     <spooler>
@@ -42,9 +44,12 @@
         </processor>
 
         <processor state="error" enableJmx="true">
-            <mailet match="All" class="Bounce"/>
+            <mailet match="All" class="Bounce">
+                <onMailetException>ignore</onMailetException>
+            </mailet>
             <mailet match="All" class="ToRepository">
                 <repositoryPath>file://var/mail/error/</repositoryPath>
+                <onMailetException>ignore</onMailetException>
             </mailet>
         </processor>
 
@@ -56,8 +61,11 @@
                 <matcher match="SentByMailet"/>
             </matcher>
 
+            <mailet match="All" class="RemoveMimeHeader">
+                <name>bcc</name>
+                <onMailetException>ignore</onMailetException>
+            </mailet>
             <mailet match="All" class="RecipientRewriteTable" />
-            <mailet match="RecipientIsLocal" class="LocalDelivery"/>
             <mailet match="HostIsLocal" class="ToProcessor">
                 <processor>local-address-error</processor>
                 <notice>550 - Requested action not taken: no such user here</notice>
