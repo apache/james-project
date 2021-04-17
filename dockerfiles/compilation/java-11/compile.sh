@@ -21,9 +21,8 @@ GLOW_ROOT_LIB=${GLOW_ROOT_DIR}/lib
 ORIGIN=/origin
 CASSANDRA_DESTINATION=/cassandra/destination
 CASSANDRA_RABBITMQ_DESTINATION=/cassandra-rabbitmq/destination
-CASSANDRA_RABBITMQ_LDAP_DESTINATION=/cassandra-rabbitmq-ldap/destination
 JPA_DESTINATION=/jpa/destination
-JPA_SMTP_DESTINATION=/jpa-smpt/destination
+JPA_SMTP_DESTINATION=/jpa-smtp/destination
 MEMORY_DESTINATION=/memory/destination
 SPRING_DESTINATION=/spring/destination
 SWAGGER_DESTINATION=/swagger
@@ -71,43 +70,30 @@ unzip $GLOW_ROOT_ZIP
 # Retrieve result
 
 if [ $? -eq 0 ]; then
-   if [ -d "$CASSANDRA_RABBITMQ_LDAP_DESTINATION" ]; then
-      echo "Copying cassandra - rabbitMQ - Ldap JARs"
-      cp server/container/guice/cassandra-rabbitmq-guice/target/james-server-cassandra-rabbitmq-guice.jar $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
-      cp -r server/container/guice/cassandra-rabbitmq-guice/target/james-server-cassandra-rabbitmq-guice.lib $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
-      cp server/container/cli/target/james-server-cli.jar $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
-      cp -r server/container/cli/target/james-server-cli.lib $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
-      mkdir -p ${CASSANDRA_RABBITMQ_LDAP_DESTINATION}/glowroot
-      cp -r ${GLOW_ROOT_DIR}/* ${CASSANDRA_RABBITMQ_LDAP_DESTINATION}/glowroot || true
-   fi
 
    if [ -d "$CASSANDRA_RABBITMQ_DESTINATION" ]; then
       echo "Copying cassandra RabbitMQ JARs"
-      cp server/container/guice/cassandra-rabbitmq-guice/target/james-server-cassandra-rabbitmq-guice.jar $CASSANDRA_RABBITMQ_DESTINATION || true
-      cp -r server/container/guice/cassandra-rabbitmq-guice/target/james-server-cassandra-rabbitmq-guice.lib $CASSANDRA_RABBITMQ_DESTINATION || true
+      cp server/container/guice/cassandra-rabbitmq-guice/target/james-server-distributed-guice.zip $CASSANDRA_RABBITMQ_DESTINATION || true
       cp server/container/cli/target/james-server-cli.jar $CASSANDRA_RABBITMQ_DESTINATION || true
       cp -r server/container/cli/target/james-server-cli.lib $CASSANDRA_RABBITMQ_DESTINATION || true
+
       mkdir -p ${CASSANDRA_RABBITMQ_DESTINATION}/glowroot
       cp -r ${GLOW_ROOT_DIR}/* ${CASSANDRA_RABBITMQ_DESTINATION}/glowroot || true
    fi
 
    if [ -d "$CASSANDRA_DESTINATION" ]; then
       echo "Copying cassandra JARs"
-      cp server/container/guice/cassandra-guice/target/james-server-cassandra-guice.jar $CASSANDRA_DESTINATION || true
-      cp -r server/container/guice/cassandra-guice/target/james-server-cassandra-guice.lib $CASSANDRA_DESTINATION || true
+      cp server/container/guice/cassandra-guice/target/james-server-cassandra-guice.zip $CASSANDRA_DESTINATION || true
       cp server/container/cli/target/james-server-cli.jar $CASSANDRA_DESTINATION || true
       cp -r server/container/cli/target/james-server-cli.lib $CASSANDRA_DESTINATION || true
 
-      cp server/container/guice/cassandra-guice/target/james-server-cassandra-guice.jar $CASSANDRA_DESTINATION || true
-      cp -r server/container/guice/cassandra-guice/target/james-server-cassandra-guice.lib $CASSANDRA_DESTINATION || true
       mkdir -p ${CASSANDRA_DESTINATION}/glowroot
       cp -r ${GLOW_ROOT_DIR}/* ${CASSANDRA_DESTINATION}/glowroot || true
    fi
 
    if [ -d "$JPA_DESTINATION" ]; then
       echo "Copying JPA jars"
-      cp server/container/guice/jpa-guice/target/james-server-jpa-guice.jar $JPA_DESTINATION || true
-      cp -r server/container/guice/jpa-guice/target/james-server-jpa-guice.lib $JPA_DESTINATION || true
+      cp server/container/guice/jpa-guice/target/james-server-jpa-guice.zip $JPA_DESTINATION || true
       cp server/container/cli/target/james-server-cli.jar $JPA_DESTINATION || true
       cp -r server/container/cli/target/james-server-cli.lib $JPA_DESTINATION || true
       mkdir -p ${JPA_DESTINATION}/glowroot
@@ -116,8 +102,7 @@ if [ $? -eq 0 ]; then
 
    if [ -d "$JPA_SMTP_DESTINATION" ]; then
       echo "Copying JPA-SMTP jars"
-      cp server/container/guice/jpa-smpt/target/james-server-jpa-smtp-guice.jar $JPA_SMTP_DESTINATION || true
-      cp -r server/container/guice/jpa-smpt/target/james-server-jpa-smtp-guice.lib $JPA_SMTP_DESTINATION || true
+      cp server/container/guice/jpa-smtp/target/james-server-jpa-smtp-guice.zip $JPA_SMTP_DESTINATION || true
       cp server/container/cli/target/james-server-cli.jar $JPA_SMTP_DESTINATION || true
       cp -r server/container/cli/target/james-server-cli.lib $JPA_SMTP_DESTINATION || true
       mkdir -p ${JPA_SMTP_DESTINATION}/glowroot

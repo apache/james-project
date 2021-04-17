@@ -15,13 +15,16 @@ FROM adoptopenjdk:11-jre-hotspot
 EXPOSE 25 143 465 587 4000 8000
 
 WORKDIR /root
+RUN apt-get update && apt-get install -y unzip
 
 # Get data we need to run James : build results and configuration
-ADD destination/james-server-jpa-smtp-guice.jar /root/james-server-jpa-smtp-guice.jar
-ADD destination/james-server-jpa-smtp-guice.lib /root/james-server-jpa-smtp-guice.lib
+ADD destination/james-server-jpa-smtp-guice.zip /root
+RUN unzip james-server-jpa-smtp-guice.zip && \
+   cp -r /root/james-server-jpa-smtp-guice/* /root && \
+   rm james-server-jpa-smtp-guice.zip && \
+   rm -r james-server-jpa-smtp-guice
 ADD destination/james-server-cli.jar /root/james-cli.jar
 ADD destination/james-server-cli.lib /root/james-server-cli.lib
-ADD destination/conf /root/conf
 ADD destination/glowroot/plugins /root/glowroot/plugins
 ADD destination/glowroot/glowroot.jar /root/glowroot/glowroot.jar
 ADD destination/glowroot/lib/glowroot-embedded-collector.jar /root/glowroot/lib/glowroot-embedded-collector.jar
