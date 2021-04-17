@@ -1,0 +1,8 @@
+== Apache James Server Command Line Interface
+
+To invoke the James CLI from shell during your development process:
+
+[source]
+----
+java -jar james-server-cli.jar -h localhost -p 9999 help
+----
