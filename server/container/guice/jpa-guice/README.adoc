@@ -1,0 +1,31 @@
+= Guice-JPA Server How-to
+
+This server target single node James deployments. By default, the derby database is used.
+
+== Requirements
+
+ * Java 11 SDK
+
+== Running
+
+To run james, you have to create a directory containing required configuration files.
+
+James requires the configuration to be in a subfolder of working directory that is called
+**conf**. A sample directory is provided with some default values you may need to replace.
+You will need to update its content to match your needs.
+
+You also need to generate a keystore with the following command:
+
+[source]
+----
+$ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
+----
+
+Once everything is set up, you just have to run the jar with:
+
+[source]
+----
+$ java -javaagent:james-server-jpa-guice.lib/openjpa-3.1.2.jar -Dworking.directory=. -Dlogback.configurationFile=conf/logback.xml -jar james-server-jpa-guice.jar
+----
+
+Note that binding ports below 1024 requires administrative rights.
