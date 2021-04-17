@@ -22,7 +22,10 @@ RUN apt-get update && apt-get install -y unzip
 
 # Get data we need to run James : build results and configuration
 ADD destination/james-server-memory-guice.zip /root
-RUN unzip james-server-memory-guice.zip && cp -r /root/james-server-memory-guice/* /root
+RUN unzip james-server-memory-guice.zip && \
+  cp -r /root/james-server-memory-guice/* /root && \
+  rm james-server-memory-guice.zip && \
+  rm -r james-server-memory-guice
 ADD destination/james-server-cli.jar /root/james-cli.jar
 ADD destination/james-server-cli.lib /root/james-server-cli.lib
 ADD destination/conf /root/conf

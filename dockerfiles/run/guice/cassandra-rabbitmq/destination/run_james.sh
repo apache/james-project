@@ -2,4 +2,8 @@
 if [ "$GLOWROOT_ACTIVATED" == "true" ]; then
     GLOWROOT_OPTIONS=-javaagent:/root/glowroot/glowroot.jar
 fi
-java -Dlogback.configurationFile=/root/conf/logback.xml -Dworking.directory=/root/ $JVM_OPTIONS $GLOWROOT_OPTIONS -jar james-server.jar
+
+java -Dworking.directory=. \
+  $GLOWROOT_OPTIONS \
+  $JVM_OPTIONS \
+  -Dlogback.configurationFile=conf/logback.xml -jar james-server-cassandra-rabbitmq-guice.jar
