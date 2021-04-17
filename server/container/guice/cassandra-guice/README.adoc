@@ -1,0 +1,46 @@
+= Cassandra Guice Server How-to
+
+*WARNING*: This server only targets single James node deployment on top of a shared database.
+
+It do not target deployments with multiple James nodes as is misses inter-node communication capabilities.
+
+== Requirements
+
+ * Java 11 SDK
+
+Third party compulsory dependencies:
+
+ * Cassandra 3.11.10
+ * ElasticSearch 7.10.2
+
+[source]
+----
+$ docker run -d -p 9042:9042 --name=cassandra cassandra:3.11.10
+$ docker run -d -p 9200:9200 --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+----
+
+== Running
+
+To run james, you have to create a directory containing required configuration files.
+
+James requires the configuration to be in a subfolder of working directory that is called
+**conf**. A sample directory is provided with some default values you may need to replace,
+especially compulsory third party software endpoints.
+
+You will need to update its content to match your needs.
+
+You also need to generate a keystore with the following command:
+
+[source]
+----
+$ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
+----
+
+Once everything is set up, you just have to run the jar with:
+
+[source]
+----
+$ java -Dworking.directory=. -Dlogback.configurationFile=conf/logback.xml -jar james-server-cassandra-guice.jar
+----
+
+Note that binding ports below 1024 requires administrative rights.
