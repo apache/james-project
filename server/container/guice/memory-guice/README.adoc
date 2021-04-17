@@ -23,7 +23,7 @@ Once everything is set up, you just have to run the jar with:
 
 [source]
 ----
-$ java -Dworking.directory=. -jar james-server-memory-guice.jar
+$ java -Dworking.directory=. -Dlogback.configurationFile=conf/logback.xml -jar james-server-memory-guice.jar
 ----
 
 Note that binding ports below 1024 requires administrative rights.
