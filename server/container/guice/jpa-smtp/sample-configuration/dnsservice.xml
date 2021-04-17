@@ -18,6 +18,8 @@
   under the License.                                           
  -->
 
+<!-- Read https://james.apache.org/server/config-dnsservice.html for further details -->
+
 <dnsservice>
   <autodiscover>true</autodiscover>
   <authoritative>false</authoritative>

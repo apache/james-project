@@ -17,9 +17,10 @@
   specific language governing permissions and limitations      
   under the License.                                           
  -->
+<!-- Read https://james.apache.org/server/config-domainlist.html for further details -->
 
-<domainlist class="org.apache.james.domainlist.jpa.JPADomainList">
-    <autodetect>false</autodetect>
-    <autodetectIP>false</autodetectIP>
+<domainlist>
+    <autodetect>true</autodetect>
+    <autodetectIP>true</autodetectIP>
     <defaultDomain>localhost</defaultDomain>
 </domainlist>
