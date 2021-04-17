@@ -26,3 +26,17 @@
     <enableForwarding>true</enableForwarding>
 </usersrepository>
 
+
+        <!-- LDAP support example-->
+        <!--
+        <usersrepository name="LocalUsers"
+            ldapHost="ldap://myldapserver:389"
+            principal="uid=ldapUser,ou=system"
+            credentials="password"
+            userBase="ou=People,o=myorg.com,ou=system"
+            userIdAttribute="uid"
+            userObjectClass="person">
+          <enableVirtualHosting>true</enableVirtualHosting>
+          <enableForwarding>true</enableForwarding>
+        </usersrepository>
+        -->
