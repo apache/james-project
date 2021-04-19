@@ -44,6 +44,7 @@ import org.apache.james.jmap.method.EmailSetMethod;
 import org.apache.james.jmap.method.EmailSubmissionSetMethod;
 import org.apache.james.jmap.method.IdentityGetMethod;
 import org.apache.james.jmap.method.MDNParseMethod;
+import org.apache.james.jmap.method.MDNSendMethod;
 import org.apache.james.jmap.method.MailboxChangesMethod;
 import org.apache.james.jmap.method.MailboxGetMethod;
 import org.apache.james.jmap.method.MailboxQueryMethod;
@@ -84,6 +85,7 @@ public class RFC8621MethodsModule extends AbstractModule {
         bind(ZoneIdProvider.class).to(SystemZoneIdProvider.class);
 
         bind(EmailSubmissionSetMethod.class).in(Scopes.SINGLETON);
+        bind(MDNSendMethod.class).in(Scopes.SINGLETON);
 
         Multibinder<Method> methods = Multibinder.newSetBinder(binder(), Method.class);
         methods.addBinding().to(CoreEchoMethod.class);
@@ -103,6 +105,8 @@ public class RFC8621MethodsModule extends AbstractModule {
         methods.addBinding().to(ThreadGetMethod.class);
         methods.addBinding().to(VacationResponseGetMethod.class);
         methods.addBinding().to(VacationResponseSetMethod.class);
+        methods.addBinding().to(MDNParseMethod.class);
+        methods.addBinding().to(MDNSendMethod.class);
 
         Multibinder<JMAPRoutes> routes = Multibinder.newSetBinder(binder(), JMAPRoutes.class);
         routes.addBinding().to(SessionRoutes.class);
@@ -150,5 +154,12 @@ public class RFC8621MethodsModule extends AbstractModule {
         return InitilizationOperationBuilder
                 .forClass(EmailSubmissionSetMethod.class)
                 .init(instance::init);
+    }
+
+    @ProvidesIntoSet
+    InitializationOperation initMDNSends(MDNSendMethod instance) {
+        return InitilizationOperationBuilder
+            .forClass(MDNSendMethod.class)
+            .init(instance::init);
     }
 }

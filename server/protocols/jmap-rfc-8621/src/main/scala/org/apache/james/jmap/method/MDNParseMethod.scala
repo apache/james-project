@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_MDN}
 import org.apache.james.jmap.core.Invocation
 import org.apache.james.jmap.core.Invocation._
-import org.apache.james.jmap.json.{MDNParseSerializer, ResponseSerializer}
+import org.apache.james.jmap.json.{MDNSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{BlobId, BlobUnParsableException, MDNParseRequest, MDNParseResponse, MDNParseResults, MDNParsed}
 import org.apache.james.jmap.routes.{BlobNotFoundException, BlobResolvers, SessionSupplier}
 import org.apache.james.mailbox.model.{MessageId, MultimailboxesSearchQuery, SearchQuery}
@@ -41,7 +41,8 @@ import javax.inject.Inject
 import scala.jdk.OptionConverters._
 import scala.util.Try
 
-class MDNParseMethod @Inject()(val blobResolvers: BlobResolvers,
+class MDNParseMethod @Inject()(serializer: MDNSerializer,
+                               val blobResolvers: BlobResolvers,
                                val metricFactory: MetricFactory,
                                val mdnEmailIdResolver: MDNEmailIdResolver,
                                val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[MDNParseRequest] {
@@ -56,7 +57,7 @@ class MDNParseMethod @Inject()(val blobResolvers: BlobResolvers,
       .map(InvocationWithContext(_, invocation.processingContext))
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, MDNParseRequest] =
-    MDNParseSerializer.deserializeMDNParseRequest(invocation.arguments.value) match {
+    serializer.deserializeMDNParseRequest(invocation.arguments.value) match {
       case JsSuccess(mdnParseRequest, _) => mdnParseRequest.validate
       case errors: JsError => Left(new IllegalArgumentException(Json.stringify(ResponseSerializer.serialize(errors))))
     }
@@ -67,7 +68,7 @@ class MDNParseMethod @Inject()(val blobResolvers: BlobResolvers,
     computeResponse(request, mailboxSession)
       .map(res => Invocation(
         methodName,
-        Arguments(MDNParseSerializer.serialize(res).as[JsObject]),
+        Arguments(serializer.serializeMDNParseResponse(res).as[JsObject]),
         invocation.methodCallId))
 
   private def computeResponse(request: MDNParseRequest,

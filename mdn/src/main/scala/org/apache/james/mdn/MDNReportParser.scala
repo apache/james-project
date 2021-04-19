@@ -96,7 +96,7 @@ class MDNReportParser(val input: ParserInput) extends Parser {
 
   /*    reporting-ua-field = "Reporting-UA" ":" OWS ua-name OWS [
                                    ";" OWS ua-product OWS ]    */
-  private[mdn] def reportingUaField: Rule1[ReportingUserAgent] = rule {
+  def reportingUaField: Rule1[ReportingUserAgent] = rule {
     ("Reporting-UA" ~ ":" ~ ows ~ capture(uaName) ~ ows ~ (";" ~ ows ~ capture(uaProduct) ~ ows).?) ~> ((uaName: String, uaProduct: Option[String]) => {
      val builder = ReportingUserAgent.builder()
         .userAgentName(uaName)
@@ -184,7 +184,7 @@ class MDNReportParser(val input: ParserInput) extends Parser {
   /*    final-recipient-field =
              "Final-Recipient" ":" OWS address-type OWS
              ";" OWS generic-address OWS    */
-  private[mdn] def finalRecipientField : Rule1[FinalRecipient] = rule {
+  def finalRecipientField : Rule1[FinalRecipient] = rule {
     ("Final-Recipient" ~ ":" ~ ows ~ capture(addressType) ~ ows ~ ";" ~ ows ~ capture(genericAddress) ~ ows) ~> ((addrType : String, genericAddr : String) =>
     FinalRecipient
       .builder()

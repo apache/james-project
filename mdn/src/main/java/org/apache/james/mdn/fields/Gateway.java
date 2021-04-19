@@ -22,6 +22,7 @@ package org.apache.james.mdn.fields;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 
 /**
@@ -69,7 +70,11 @@ public class Gateway implements Field {
 
     @Override
     public String formattedValue() {
-        return FIELD_NAME + ": " + nameType.getType() + ";" + name.formatted();
+        return FIELD_NAME + ": " + fieldValue();
+    }
+
+    public String fieldValue() {
+        return Joiner.on(";").skipNulls().join(nameType.getType(), name.formatted());
     }
 
     public AddressType getNameType() {

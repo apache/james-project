@@ -28,6 +28,12 @@ object Properties {
   def empty(): Properties = Properties()
 
   def apply(values: NonEmptyString*): Properties = Properties(values.toSet)
+
+  def toProperties(strings: Set[String]): Properties = Properties(strings
+    .flatMap(string => {
+      val refinedValue: Either[String, NonEmptyString] = refineV[NonEmpty](string)
+      refinedValue.fold(_ => None, Some(_))
+    }))
 }
 
 case class Properties(value: Set[NonEmptyString]) {

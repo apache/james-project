@@ -17,36 +17,31 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.probe;
+package org.apache.james.jmap.rfc8621.memory;
 
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.Date;
+import static org.apache.james.MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE;
 
-import javax.mail.Flags;
-
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.ComposedMessageId;
-import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.jmap.rfc8621.contract.MDNSendMethodContract;
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public interface MailboxProbe {
+import java.util.concurrent.ThreadLocalRandom;
 
-    MailboxId createMailbox(String namespace, String user, String name);
+public class MemoryMDNSendMethodTest implements MDNSendMethodContract {
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE)
+            .overrideWith(new TestJMAPServerModule()))
+        .build();
 
-    MailboxId getMailboxId(String namespace, String user, String name);
-
-    Collection<String> listUserMailboxes(String user);
-
-    void deleteMailbox(String namespace, String user, String name);
-
-    ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate,
-            boolean isRecent, Flags flags) throws MailboxException;
-
-    Collection<String> listSubscriptions(String user) throws Exception;
-
-    Collection<MessageId> searchMessage(MultimailboxesSearchQuery expression, String user, long limit);
-
+    @Override
+    public MessageId randomMessageId() {
+        return InMemoryMessageId.of(ThreadLocalRandom.current().nextInt(100000) + 100);
+    }
 }

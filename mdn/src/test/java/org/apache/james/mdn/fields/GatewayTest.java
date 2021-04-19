@@ -19,12 +19,11 @@
 
 package org.apache.james.mdn.fields;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.api.Test;
 
-import nl.jqno.equalsverifier.EqualsVerifier;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class GatewayTest {
     @Test
@@ -86,4 +85,24 @@ class GatewayTest {
             .formattedValue())
             .isEqualTo("MDN-Gateway: custom;address");
     }
+
+    @Test
+    void fieldValueShouldDisplayAddress() {
+        assertThat(Gateway.builder()
+                .name(Text.fromRawText("address"))
+                .build()
+                .fieldValue())
+                .isEqualTo("dns;address");
+    }
+
+    @Test
+    void fieldValueShouldDisplayMultilineAddress() {
+        assertThat(Gateway.builder()
+                .nameType(AddressType.UNKNOWN)
+                .name(Text.fromRawText("address\nmultiline"))
+                .build()
+                .fieldValue())
+                .isEqualTo("unknown;address\r\n multiline");
+    }
+
 }

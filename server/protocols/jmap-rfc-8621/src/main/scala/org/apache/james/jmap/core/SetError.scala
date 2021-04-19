@@ -34,6 +34,12 @@ object SetError {
   val notFoundValue: SetErrorType = "notFound"
   val forbiddenValue: SetErrorType = "forbidden"
   val stateMismatchValue: SetErrorType = "stateMismatch"
+  val mdnAlreadySentValue: SetErrorType = "mdnAlreadySent"
+  val forbiddenFromValue: SetErrorType = "forbiddenFrom"
+  val overQuotaValue: SetErrorType = "overQuota"
+  val tooLargeValue: SetErrorType = "tooLarge"
+  val rateLimitValue: SetErrorType = "rateLimit"
+
 
   def invalidArguments(description: SetErrorDescription, properties: Option[Properties] = None): SetError =
     SetError(invalidArgumentValue, description, properties)
@@ -52,6 +58,9 @@ object SetError {
 
   def stateMismatch(description: SetErrorDescription, properties: Properties): SetError =
     SetError(stateMismatchValue, description, Some(properties))
+
+  def mdnAlreadySent(description: SetErrorDescription): SetError =
+    SetError(SetError.mdnAlreadySentValue,description, None)
 }
 
 case class SetError(`type`: SetErrorType, description: SetErrorDescription, properties: Option[Properties])
