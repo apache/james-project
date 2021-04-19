@@ -226,8 +226,7 @@ object MDNSendResults {
 
 case class MDNSendCreateSuccess(mdnCreationId: MDNSendCreationId,
                                 createResponse: MDNSendCreateResponse,
-                                forEmailId: MessageId,
-                                mdnId: MDNId)
+                                forEmailId: MessageId)
 
 case class MDNSendResults(sent: Option[Map[MDNSendCreationId, MDNSendCreateResponse]],
                           notSent: Option[Map[MDNSendCreationId, SetError]],

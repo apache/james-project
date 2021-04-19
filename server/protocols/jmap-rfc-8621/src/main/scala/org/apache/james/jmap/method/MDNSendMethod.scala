@@ -21,8 +21,8 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_MDN}
+import org.apache.james.jmap.core.Invocation
 import org.apache.james.jmap.core.Invocation._
-import org.apache.james.jmap.core.{ClientId, Invocation, ServerId}
 import org.apache.james.jmap.json.{MDNSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.MDN._
 import org.apache.james.jmap.mail.MDNSend.MDN_ALREADY_SENT_FLAG
@@ -122,9 +122,8 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
                             processingContext: ProcessingContext): (MDNSendResults, ProcessingContext) =
     parseMDNRequest(jsObject)
       .flatMap(createRequest => sendMDN(session, mdnSendCreationId, createRequest))
-      .map(successResult => successResult -> recordCreationIdInProcessingContext(successResult.mdnCreationId, successResult.mdnId, processingContext))
       .fold(error => (MDNSendResults.notSent(mdnSendCreationId, error) -> processingContext),
-        creation => MDNSendResults.sent(creation._1) -> creation._2)
+        creation => MDNSendResults.sent(creation) -> processingContext)
 
   private def parseMDNRequest(jsObject: JsObject): Either[MDNSendRequestInvalidException, MDNSendCreateRequest] =
     MDNSendCreateRequest.validateProperties(jsObject)
@@ -146,8 +145,7 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
       MDNSendCreateSuccess(
         mdnCreationId = mdnSendCreationId,
         createResponse = mailAndResponseAndId._2,
-        forEmailId = mdnRelatedMessageResultAlready.getMessageId,
-        mdnId = mailAndResponseAndId._3)
+        forEmailId = mdnRelatedMessageResultAlready.getMessageId)
     }
 
   private def retrieveRelatedMessageResult(session: MailboxSession, requestEntry: MDNSendCreateRequest): Either[MDNSendNotFoundException, MessageResult] =
@@ -165,22 +163,17 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
       scala.Right(relatedMessageResult)
     }
 
-  private def recordCreationIdInProcessingContext(mdnSendCreationId: MDNSendCreationId,
-                                                  mdnId: MDNId,
-                                                  processingContext: ProcessingContext): ProcessingContext =
-    processingContext.recordCreatedId(ClientId(mdnSendCreationId.id), ServerId(mdnId.value))
-
-  private def buildMailAndResponse(sender: String, requestEntry: MDNSendCreateRequest, originalMessage: Message): Either[Exception, (MailImpl, MDNSendCreateResponse, MDNId)] =
+  private def buildMailAndResponse(sender: String, requestEntry: MDNSendCreateRequest, originalMessage: Message): Either[Exception, (MailImpl, MDNSendCreateResponse)] =
     for {
       originalRecipient <- getMDNRecipient(originalMessage)
       mdn = buildMDN(requestEntry, originalMessage, originalRecipient)
       subject = buildMessageSubject(requestEntry, originalMessage)
-      (mailImpl, mimeMessage, mdnId) = buildMailAndMimeMessage(sender, subject, mdn)
+      (mailImpl, mimeMessage) = buildMailAndMimeMessage(sender, subject, mdn)
     } yield {
-      (mailImpl, buildMDNSendCreateResponse(requestEntry, mdn, mimeMessage), mdnId)
+      (mailImpl, buildMDNSendCreateResponse(requestEntry, mdn, mimeMessage))
     }
 
-  private def buildMailAndMimeMessage(sender: String, subject: String, mdn: MDN): (MailImpl, MimeMessage, MDNId) = {
+  private def buildMailAndMimeMessage(sender: String, subject: String, mdn: MDN): (MailImpl, MimeMessage) = {
     val finalRecipient: String = mdn.getReport.getFinalRecipientField.getFinalRecipient.formatted()
     val mimeMessage: MimeMessage = mdn.asMimeMessage()
     mimeMessage.setFrom(sender)
@@ -188,14 +181,13 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
     mimeMessage.setSubject(subject)
     mimeMessage.saveChanges()
 
-    val mdnId: MDNId = MDNId.generate
     val mailImpl: MailImpl = MailImpl.builder()
-      .name(mdnId.value)
+      .name(MDNId.generate.value)
       .sender(sender)
       .addRecipient(finalRecipient)
       .mimeMessage(mimeMessage)
       .build()
-    (mailImpl, mimeMessage, mdnId)
+    mailImpl -> mimeMessage
   }
 
   private def getMDNRecipient(originalMessage: Message): Either[MDNSendNotFoundException, String] =
