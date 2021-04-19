@@ -59,7 +59,7 @@ case class MDNSendNotFoundException(description: String) extends Exception
 
 case class MDNSendForbiddenException() extends Exception
 
-case class MDNSendForbiddenFromException() extends Exception
+case class MDNSendForbiddenFromException(description: String) extends Exception
 
 case class MDNSendOverQuotaException() extends Exception
 
@@ -70,6 +70,8 @@ case class MDNSendRateLimitException() extends Exception
 case class MDNSendInvalidPropertiesException() extends Exception
 
 case class MDNSendAlreadySentException() extends Exception
+
+case class IdentityIdNotFoundException(description: String) extends Exception
 
 object MDNSendCreateRequest {
   private val assignableProperties: Set[String] = Set("forEmailId", "subject", "textBody", "reportingUA",
@@ -197,17 +199,8 @@ object MDNSendResults {
       case _: MDNSendForbiddenException => SetError(SetError.forbiddenValue,
         SetErrorDescription("Violate an Access Control List (ACL) or other permissions policy."),
         None)
-      case _: MDNSendForbiddenFromException => SetError(SetError.forbiddenFromValue,
-        SetErrorDescription("The user is not allowed to use the given \"finalRecipient\" property."),
-        None)
-      case _: MDNSendOverQuotaException => SetError(SetError.overQuotaValue,
-        SetErrorDescription("Exceed a server-defined limit on the number or total size of sent MDNs."),
-        None)
-      case _: MDNSendTooLargeException => SetError(SetError.tooLargeValue,
-        SetErrorDescription("Limit for the maximum size of an MDN or more generally, on email message."),
-        None)
-      case _: MDNSendRateLimitException => SetError(SetError.rateLimitValue,
-        SetErrorDescription("Too many MDNs or email messages have been created recently, and a server-defined rate limit has been reached. It may work if tried again later."),
+      case forbiddenFrom: MDNSendForbiddenFromException => SetError(SetError.forbiddenFromValue,
+        SetErrorDescription(forbiddenFrom.description),
         None)
       case _: MDNSendInvalidPropertiesException => SetError(SetError.invalidArgumentValue,
         SetErrorDescription("The record given is invalid in some way."),

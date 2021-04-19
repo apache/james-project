@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.mail
 
+import org.apache.james.core.MailAddress
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Properties, SetError}
 import org.apache.james.mailbox.model.MessageId
@@ -62,6 +63,8 @@ case class FinalRecipientField(value: String) extends AnyVal {
   def asJava: Try[FinalRecipient] = new MDNReportParser("Final-Recipient: " + value)
     .finalRecipientField
     .run()
+
+  def getMailAddress: Try[MailAddress] = Try(new MailAddress(asJava.get.getFinalRecipient.formatted()))
 
   def valid: Either[MDNSendRequestInvalidException, FinalRecipientField] =
     asJava match {

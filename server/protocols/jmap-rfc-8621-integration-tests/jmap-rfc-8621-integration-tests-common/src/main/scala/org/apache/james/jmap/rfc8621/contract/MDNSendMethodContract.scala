@@ -130,7 +130,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "I64588216",
+         |        "identityId": "$ANDRE_ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${emailIdRelated.serialize()}",
@@ -186,9 +186,9 @@ trait MDNSendMethodContract {
            |                "accountId": "$ANDRE_ACCOUNT_ID",
            |                "sent": {
            |                    "k1546": {
-           |                        "finalRecipient": "rfc822; ${BOB.asString}",
+           |                        "finalRecipient": "rfc822; ${ANDRE.asString}",
            |                        "includeOriginalMessage": false,
-           |                        "originalRecipient": "rfc822; ${BOB.asString()}"
+           |                        "originalRecipient": "rfc822; ${ANDRE.asString()}"
            |                    }
            |                }
            |            },
@@ -246,15 +246,13 @@ trait MDNSendMethodContract {
   @Test
   def mdnSendShouldBeSuccessWhenRequestAssignFinalRecipient(guiceJamesServer: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+    guiceJamesServer.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("david", "domain.tld", "andre@domain.tld")
 
     val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
     mailboxProbe.createMailbox(bobMailBoxPath)
 
     val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
     mailboxProbe.createMailbox(andreMailBoxPath)
-
-    val davidMailBoxPath: MailboxPath = MailboxPath.inbox(DAVID)
-    mailboxProbe.createMailbox(davidMailBoxPath)
 
     val emailIdRelated: MessageId = mailboxProbe
       .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
@@ -273,7 +271,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "I64588216",
+         |        "identityId": "$DAVID_ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${emailIdRelated.serialize()}",
@@ -327,7 +325,7 @@ trait MDNSendMethodContract {
            |                "sent": {
            |                    "k1546": {
            |                        "includeOriginalMessage": false,
-           |                        "originalRecipient": "rfc822; ${BOB.asString()}"
+           |                        "originalRecipient": "rfc822; ${ANDRE.asString()}"
            |                    }
            |                }
            |            },
@@ -347,10 +345,6 @@ trait MDNSendMethodContract {
            |        ]
            |    ]
            |}""".stripMargin)
-
-    awaitAtMostTenSeconds.untilAsserted { () =>
-      assert(getFirstMessageInMailBox(guiceJamesServer, DAVID).isDefined)
-    }
   }
 
   @Test
@@ -380,7 +374,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "I64588216",
+         |        "identityId": "$ANDRE_ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${emailIdRelated.serialize()}",
@@ -449,7 +443,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "I64588216",
+         |        "identityId": "$ANDRE_ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${emailIdRelated.serialize()}",
@@ -498,6 +492,75 @@ trait MDNSendMethodContract {
   }
 
   @Test
+  def mdnSendShouldBeFailWhenIdentityIsNotAllowedToUseFinalRecipient(guiceJamesServer: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+
+    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
+    mailboxProbe.createMailbox(andreMailBoxPath)
+
+    val emailIdRelated: MessageId = mailboxProbe
+      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+        .build(buildOriginalMessage("1")))
+      .getMessageId
+
+    val mdnSendRequest: String =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail",
+         |    "urn:ietf:params:jmap:mdn"
+         |  ],
+         |  "methodCalls": [
+         |    [
+         |      "MDN/send",
+         |      {
+         |        "accountId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "$ANDRE_ACCOUNT_ID",
+         |        "send": {
+         |          "k1546": {
+         |            "forEmailId": "${emailIdRelated.serialize()}",
+         |            "subject": "Read receipt for: World domination",
+         |            "textBody": "This receipt shows that the email has been displayed on your recipient's computer. ",
+         |            "finalRecipient" : "rfc822; ${CEDRIC.asString}",
+         |            "disposition": {
+         |              "actionMode": "manual-action",
+         |              "sendingMode": "mdn-sent-manually",
+         |              "type": "displayed"
+         |            }
+         |          }
+         |        }
+         |      },
+         |      "c1"
+         |    ]
+         |  ]
+         |}""".stripMargin
+
+    val mdnSendResponse: String =
+      `given`(
+        baseRequestSpecBuilder(guiceJamesServer)
+          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+          .setBody(mdnSendRequest)
+          .build, new ResponseSpecBuilder().build)
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+    assertThatJson(mdnSendResponse)
+      .inPath(s"methodResponses[0][1].notSent")
+      .isEqualTo("""{
+                   |    "k1546": {
+                   |        "type": "forbiddenFrom",
+                   |        "description": "The user is not allowed to use the given \"finalRecipient\" property"
+                   |    }
+                   |}""".stripMargin)
+  }
+
+  @Test
   def implicitEmailSetShouldNotBeAttemptedWhenMDNIsNotSent(guiceJamesServer: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
 
@@ -521,7 +584,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "I64588216",
+         |        "identityId": "$ANDRE_ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${emailIdRelated.serialize()}",
@@ -588,7 +651,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "I64588216",
+         |        "identityId": "$ANDRE_ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${emailIdRelated.serialize()}",
@@ -635,9 +698,9 @@ trait MDNSendMethodContract {
            |                "accountId": "$ANDRE_ACCOUNT_ID",
            |                "sent": {
            |                    "k1546": {
-           |                        "finalRecipient": "rfc822; ${BOB.asString}",
+           |                        "finalRecipient": "rfc822; ${ANDRE.asString}",
            |                        "includeOriginalMessage": false,
-           |                        "originalRecipient": "rfc822; ${BOB.asString}"
+           |                        "originalRecipient": "rfc822; ${ANDRE.asString}"
            |                    }
            |                }
            |            },
@@ -682,7 +745,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "I64588216",
+         |        "identityId": "$ANDRE_ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${relatedEmailId1.serialize()}",
@@ -756,22 +819,22 @@ trait MDNSendMethodContract {
            |					"k1546": {
            |						"subject": "[Received] Subject of original message1",
            |						"textBody": "The email has been displayed on your recipient's computer",
-           |						"originalRecipient": "rfc822; ${BOB.asString()}",
-           |						"finalRecipient": "rfc822; ${BOB.asString()}",
+           |						"originalRecipient": "rfc822; ${ANDRE.asString()}",
+           |						"finalRecipient": "rfc822; ${ANDRE.asString()}",
            |						"includeOriginalMessage": false
            |					},
            |					"k1547": {
            |						"subject": "[Received] Subject of original message2",
            |						"textBody": "The email has been displayed on your recipient's computer",
-           |						"originalRecipient": "rfc822; ${BOB.asString()}",
-           |						"finalRecipient": "rfc822; ${BOB.asString()}",
+           |						"originalRecipient": "rfc822; ${ANDRE.asString()}",
+           |						"finalRecipient": "rfc822; ${ANDRE.asString()}",
            |						"includeOriginalMessage": false
            |					},
            |					"k1548": {
            |						"subject": "[Received] Subject of original message3",
            |						"textBody": "The email has been displayed on your recipient's computer",
-           |						"originalRecipient": "rfc822; ${BOB.asString()}",
-           |						"finalRecipient": "rfc822; ${BOB.asString()}",
+           |						"originalRecipient": "rfc822; ${ANDRE.asString()}",
+           |						"finalRecipient": "rfc822; ${ANDRE.asString()}",
            |						"includeOriginalMessage": false
            |					}
            |				}
@@ -827,7 +890,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "I64588216",
+         |        "identityId": "$ANDRE_ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${validEmailId1.serialize()}",
@@ -900,8 +963,8 @@ trait MDNSendMethodContract {
                    |                    "k1546": {
                    |                        "subject": "[Received] Subject of original message1",
                    |                        "textBody": "The email has been displayed on your recipient's computer",
-                   |                        "originalRecipient": "rfc822; ${BOB.asString()}",
-                   |                        "finalRecipient": "rfc822; ${BOB.asString()}",
+                   |                        "originalRecipient": "rfc822; ${ANDRE.asString()}",
+                   |                        "finalRecipient": "rfc822; ${ANDRE.asString()}",
                    |                        "includeOriginalMessage": false
                    |                    }
                    |                },
@@ -959,8 +1022,8 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "identityId": "I64588216",
+         |        "accountId": "$ACCOUNT_ID",
+         |        "identityId": "$ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${emailIdRelated.serialize()}",
@@ -1026,7 +1089,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "ue150411c",
-         |        "identityId": "I64588216",
+         |        "identityId": "$ANDRE_ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "Md45b47b4877521042cec0938",
@@ -1083,7 +1146,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "ue150411c",
-         |        "identityId": "I64588216",
+         |        "identityId": "$ANDRE_ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "Md45b47b4877521042cec0938",
@@ -1147,8 +1210,8 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "identityId": "I64588216",
+         |        "accountId": "${ACCOUNT_ID}",
+         |        "identityId": "$ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${randomMessageId.serialize()}",
@@ -1228,7 +1291,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "I64588216",
+         |        "identityId": "$ANDRE_ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${emailIdRelated.serialize()}",
@@ -1276,6 +1339,95 @@ trait MDNSendMethodContract {
   }
 
   @Test
+  def mdnSendShouldReturnNotFoundWhenIdentityIdIsNotExits(guiceJamesServer: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+
+    val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
+    mailboxProbe.createMailbox(bobMailBoxPath)
+
+    val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
+    mailboxProbe.createMailbox(andreMailBoxPath)
+
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setSender(BOB.asString)
+      .setFrom(BOB.asString)
+      .setTo(ANDRE.asString)
+      .setBody("Body of mail, that mdn related", StandardCharsets.UTF_8)
+      .build
+
+    val emailIdRelated: MessageId = mailboxProbe
+      .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
+        .build(message))
+      .getMessageId
+
+    val request: String =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail",
+         |    "urn:ietf:params:jmap:mdn"
+         |  ],
+         |  "methodCalls": [
+         |    [
+         |      "MDN/send",
+         |      {
+         |        "accountId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "notFound",
+         |        "send": {
+         |          "k1546": {
+         |            "forEmailId": "${emailIdRelated.serialize()}",
+         |            "disposition": {
+         |              "actionMode": "manual-action",
+         |              "sendingMode": "mdn-sent-manually",
+         |              "type": "displayed"
+         |            }
+         |          }
+         |        },
+         |        "onSuccessUpdateEmail": {
+         |          "#k1546": {
+         |            "keywords/mdnsent": true
+         |          }
+         |        }
+         |      },
+         |      "c1"
+         |    ]
+         |  ]
+         |}""".stripMargin
+
+    val response: String =
+      `given`(
+        baseRequestSpecBuilder(guiceJamesServer)
+          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+          .setBody(request)
+          .build, new ResponseSpecBuilder().build)
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+    assertThatJson(response)
+      .isEqualTo(s"""{
+                   |    "sessionState": "${SESSION_STATE.value}",
+                   |    "methodResponses": [
+                   |        [
+                   |            "error",
+                   |            {
+                   |                "type": "invalidArguments",
+                   |                "description": "The IdentityId cannot be found"
+                   |            },
+                   |            "c1"
+                   |        ]
+                   |    ]
+                   |}""".stripMargin)
+  }
+
+  @Test
   def mdnSendShouldBeFailWhenWrongAccountId(guiceJamesServer: GuiceJamesServer): Unit = {
     val path: MailboxPath = MailboxPath.inbox(BOB)
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
@@ -1293,7 +1445,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "unknownAccountId",
-         |        "identityId": "I64588216",
+         |        "identityId": "$ANDRE_ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "1",
@@ -1364,7 +1516,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "identityId": "I64588216",
+         |        "identityId": "$ANDRE_ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${emailIdRelated.serialize()}",
@@ -1437,7 +1589,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "identityId": "I64588216",
+         |        "identityId": "$ANDRE_ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${emailIdRelated.serialize()}",
@@ -1519,7 +1671,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "I64588216",
+         |        "identityId": "$ANDRE_ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${emailIdRelated.serialize()}",
@@ -1591,7 +1743,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "I64588216",
+         |        "identityId": "$ANDRE_ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${emailIdRelated.serialize()}",
@@ -1672,7 +1824,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "I64588216",
+         |        "identityId": "$ANDRE_ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${emailIdRelated.serialize()}",
@@ -1743,7 +1895,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "I64588216",
+         |        "identityId": "$ANDRE_ACCOUNT_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${emailIdRelated.serialize()}",
