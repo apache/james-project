@@ -105,7 +105,6 @@ public class RFC8621MethodsModule extends AbstractModule {
         methods.addBinding().to(ThreadGetMethod.class);
         methods.addBinding().to(VacationResponseGetMethod.class);
         methods.addBinding().to(VacationResponseSetMethod.class);
-        methods.addBinding().to(MDNParseMethod.class);
         methods.addBinding().to(MDNSendMethod.class);
 
         Multibinder<JMAPRoutes> routes = Multibinder.newSetBinder(binder(), JMAPRoutes.class);

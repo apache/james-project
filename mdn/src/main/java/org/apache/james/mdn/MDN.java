@@ -27,12 +27,14 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
+import javax.activation.DataHandler;
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.javax.MimeMultipartReport;
@@ -206,9 +208,13 @@ public class MDN {
         multipart.setReportType(DISPOSITION_NOTIFICATION_REPORT_TYPE);
         multipart.addBodyPart(computeHumanReadablePart());
         multipart.addBodyPart(computeReportPart());
-        if (message.isPresent()) {
-            multipart.addBodyPart(computeOriginalMessagePart());
-        }
+        message.ifPresent(message1 -> {
+            try {
+                multipart.addBodyPart(computeOriginalMessagePart(message1));
+            } catch (MessagingException e) {
+                e.printStackTrace();
+            }
+        });
 
         // The optional third part, the original message is omitted.
         // We don't want to propogate over-sized, virus infected or
@@ -238,11 +244,11 @@ public class MDN {
         return mdnPart;
     }
 
-    public BodyPart computeOriginalMessagePart() throws MessagingException {
-        Preconditions.checkState(message.isPresent());
+    public BodyPart computeOriginalMessagePart(Message message) throws MessagingException {
         MimeBodyPart originalMessagePart = new MimeBodyPart();
         try {
-            originalMessagePart.setText(new String(DefaultMessageWriter.asBytes(message.get()), StandardCharsets.UTF_8));
+            ByteArrayDataSource source = new ByteArrayDataSource(DefaultMessageWriter.asBytes(message), "message/rfc822");
+            originalMessagePart.setDataHandler(new DataHandler(source));
             return originalMessagePart;
         } catch (IOException e) {
             throw new MessagingException("Could not write message as bytes", e);

@@ -49,7 +49,7 @@ case class ReportUAField(value: String) extends AnyVal {
     .reportingUaField
     .run()
 
-  def valid: Either[MDNSendRequestInvalidException, ReportUAField] =
+  def validate: Either[MDNSendRequestInvalidException, ReportUAField] =
     asJava match {
       case Success(_) => scala.Right(this)
       case Failure(_) => Left(MDNSendRequestInvalidException(
@@ -64,9 +64,13 @@ case class FinalRecipientField(value: String) extends AnyVal {
     .finalRecipientField
     .run()
 
-  def getMailAddress: Try[MailAddress] = Try(new MailAddress(asJava.get.getFinalRecipient.formatted()))
+  def getMailAddress: Try[MailAddress] =
+    for {
+      javaFinalRecipient <- asJava
+      mailAddress = new MailAddress(javaFinalRecipient.getFinalRecipient.formatted())
+    } yield mailAddress
 
-  def valid: Either[MDNSendRequestInvalidException, FinalRecipientField] =
+  def validate: Either[MDNSendRequestInvalidException, FinalRecipientField] =
     asJava match {
       case Success(_) => scala.Right(this)
       case Failure(_) => Left(MDNSendRequestInvalidException(
@@ -114,7 +118,7 @@ case class MDNDisposition(actionMode: String,
         .orElseThrow(() => MDNDispositionInvalidException("Disposition \"SendingMode\" is invalid.")))
       .build())
 
-  def valid: Either[MDNSendRequestInvalidException, MDNDisposition] =
+  def validate: Either[MDNSendRequestInvalidException, MDNDisposition] =
     asJava match {
       case Success(_) => scala.Right(this)
       case Failure(exception) => exception match {

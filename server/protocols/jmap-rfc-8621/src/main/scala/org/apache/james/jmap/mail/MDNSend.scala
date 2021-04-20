@@ -100,19 +100,19 @@ case class MDNSendCreateRequest(forEmailId: ForEmailIdField,
       .flatMap(_ => validateFinalRecipient)
 
   def validateDisposition: Either[MDNSendRequestInvalidException, MDNSendCreateRequest] =
-    disposition.valid
+    disposition.validate
       .fold(error => Left(error), _ => scala.Right(this))
 
   def validateReportUA: Either[MDNSendRequestInvalidException, MDNSendCreateRequest] =
     reportingUA match {
       case None => scala.Right(this)
-      case Some(value) => value.valid.fold(error => Left(error), _ => scala.Right(this))
+      case Some(value) => value.validate.fold(error => Left(error), _ => scala.Right(this))
     }
 
   def validateFinalRecipient: Either[MDNSendRequestInvalidException, MDNSendCreateRequest] =
     finalRecipient match {
       case None => scala.Right(this)
-      case Some(value) => value.valid.fold(error => Left(error), _ => scala.Right(this))
+      case Some(value) => value.validate.fold(error => Left(error), _ => scala.Right(this))
     }
 }
 
@@ -212,8 +212,8 @@ object MDNSendResults {
   }
 
   def merge(result1: MDNSendResults, result2: MDNSendResults): MDNSendResults = MDNSendResults(
-    sent = (result1.sent ++ result2.sent).reduceOption((sent1, sent2) => sent1 ++ sent2),
-    notSent = (result1.notSent ++ result2.notSent).reduceOption((notSent1, notSent2) => notSent1 ++ notSent2),
+    sent = (result1.sent ++ result2.sent).reduceOption(_ ++ _),
+    notSent = (result1.notSent ++ result2.notSent).reduceOption(_ ++ _),
     mdnSentIdResolver = result1.mdnSentIdResolver ++ result2.mdnSentIdResolver)
 }
 

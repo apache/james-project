@@ -66,9 +66,9 @@ class MDNParseMethod @Inject()(serializer: MDNSerializer,
                                 invocation: Invocation,
                                 mailboxSession: MailboxSession): SMono[Invocation] =
     computeResponse(request, mailboxSession)
-      .map(res => Invocation(
+      .map(response => Invocation(
         methodName,
-        Arguments(serializer.serializeMDNParseResponse(res).as[JsObject]),
+        Arguments(serializer.serializeMDNParseResponse(response).as[JsObject]),
         invocation.methodCallId))
 
   private def computeResponse(request: MDNParseRequest,
