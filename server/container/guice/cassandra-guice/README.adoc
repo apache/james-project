@@ -24,8 +24,8 @@ $ docker run -d -p 9200:9200 --name=elasticsearch --env 'discovery.type=single-n
 To run james, you have to create a directory containing required configuration files.
 
 James requires the configuration to be in a subfolder of working directory that is called
-**conf**. A sample directory is provided with some default values you may need to replace,
-especially compulsory third party software endpoints.
+**conf**. A [sample directory](https://github.com/apache/james-project/tree/master/server/container/guice/cassandra-guice/sample-configuration)
+is provided with some default values you may need to replace, especially compulsory third party software endpoints.
 
 You will need to update its content to match your needs.
 
