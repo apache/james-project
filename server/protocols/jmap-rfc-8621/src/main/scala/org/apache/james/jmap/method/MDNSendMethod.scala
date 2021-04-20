@@ -59,7 +59,7 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
                               mailQueueFactory: MailQueueFactory[_ <: MailQueue],
                               messageIdManager: MessageIdManager,
                               emailSetMethod: EmailSetMethod,
-                              val identifyStore: IdentifyStore,
+                              val identifyResolver: IdentifyResolver,
                               val metricFactory: MetricFactory,
                               val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[MDNSendRequest] with Startable {
   override val methodName: MethodName = MethodName("MDN/send")
@@ -77,7 +77,7 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
                          invocation: InvocationWithContext,
                          mailboxSession: MailboxSession,
                          request: MDNSendRequest): SFlux[InvocationWithContext] = {
-    identifyStore.resolveIdentityId(request.identityId, mailboxSession)
+    identifyResolver.resolveIdentityId(request.identityId, mailboxSession)
       .flatMap(maybeIdentity => if (maybeIdentity.isEmpty) {
         SMono.raiseError(IdentityIdNotFoundException("The IdentityId cannot be found"))
       } else {
@@ -212,21 +212,17 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
       .map(mailbox => mailbox.getAddress)
       .toRight(MDNSendNotFoundException("Invalid \"Disposition-Notification-To\" header field."))
 
-  private def getMDNFinalRecipient(requestEntry: MDNSendCreateRequest, identity: Identity): Either[MDNSendForbiddenFromException, FinalRecipient] = {
-    if (requestEntry.finalRecipient.isEmpty) {
-      scala.Right(FinalRecipient.builder()
-        .finalRecipient(Text.fromRawText(identity.email.asString()))
-        .build())
-    }
-    else {
-      val tryMailAddress: Try[MailAddress] = requestEntry.finalRecipient.get.getMailAddress
-      if (tryMailAddress.isSuccess && tryMailAddress.get.equals(identity.email)) {
-        scala.Right(requestEntry.finalRecipient.get.asJava.get)
-      } else {
-        Left(MDNSendForbiddenFromException("The user is not allowed to use the given \"finalRecipient\" property"))
+  private def getMDNFinalRecipient(requestEntry: MDNSendCreateRequest, identity: Identity): Either[MDNSendForbiddenFromException, FinalRecipient] =
+    requestEntry.finalRecipient
+      .map(finalRecipient => finalRecipient.getMailAddress)
+      .map(mayBeMailAddress => (mayBeMailAddress.isSuccess && mayBeMailAddress.get.equals(identity.email)))
+      .map {
+        case true => scala.Right(requestEntry.finalRecipient.get.asJava.get)
+        case false => Left(MDNSendForbiddenFromException("The user is not allowed to use the given \"finalRecipient\" property"))
       }
-    }
-  }
+      .getOrElse(scala.Right(FinalRecipient.builder()
+        .finalRecipient(Text.fromRawText(identity.email.asString()))
+        .build()))
 
   private def buildMDN(requestEntry: MDNSendCreateRequest, originalMessage: Message, finalRecipient: FinalRecipient): MDN = {
     val reportBuilder: MDNReport.Builder = MDNReport.builder()

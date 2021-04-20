@@ -113,7 +113,7 @@ trait MDNSendMethodContract {
     val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
-    val emailIdRelated: MessageId = mailboxProbe
+    val relatedEmailId: MessageId = mailboxProbe
       .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
@@ -130,10 +130,10 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "$ANDRE_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
-         |            "forEmailId": "${emailIdRelated.serialize()}",
+         |            "forEmailId": "${relatedEmailId.serialize()}",
          |            "subject": "Read receipt for: World domination",
          |            "textBody": "This receipt shows that the email has been displayed on your recipient's computer. ",
          |            "reportingUA": "joes-pc.cs.example.com; Foomail 97.1",
@@ -201,7 +201,7 @@ trait MDNSendMethodContract {
            |                "oldState": "23",
            |                "newState": "42",
            |                "updated": {
-           |                    "${emailIdRelated.serialize()}": null
+           |                    "${relatedEmailId.serialize()}": null
            |                }
            |            },
            |            "c1"
@@ -254,7 +254,7 @@ trait MDNSendMethodContract {
     val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
-    val emailIdRelated: MessageId = mailboxProbe
+    val relatedEmailId: MessageId = mailboxProbe
       .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
@@ -271,10 +271,10 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$DAVID_ACCOUNT_ID",
+         |        "identityId": "$DAVID_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
-         |            "forEmailId": "${emailIdRelated.serialize()}",
+         |            "forEmailId": "${relatedEmailId.serialize()}",
          |            "subject": "Read receipt for: World domination",
          |            "textBody": "This receipt shows that the email has been displayed on your recipient's computer. ",
          |            "finalRecipient": "rfc822; ${DAVID.asString()}",
@@ -338,7 +338,7 @@ trait MDNSendMethodContract {
            |                "oldState": "23",
            |                "newState": "42",
            |                "updated": {
-           |                    "${emailIdRelated.serialize()}": null
+           |                    "${relatedEmailId.serialize()}": null
            |                }
            |            },
            |            "c1"
@@ -357,7 +357,7 @@ trait MDNSendMethodContract {
     val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
-    val emailIdRelated: MessageId = mailboxProbe
+    val relatedEmailId: MessageId = mailboxProbe
       .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
@@ -374,10 +374,10 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "$ANDRE_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
-         |            "forEmailId": "${emailIdRelated.serialize()}",
+         |            "forEmailId": "${relatedEmailId.serialize()}",
          |            "subject": "Read receipt for: World domination",
          |            "textBody": "This receipt shows that the email has been displayed on your recipient's computer. ",
          |            "disposition": {
@@ -426,7 +426,7 @@ trait MDNSendMethodContract {
     val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
-    val emailIdRelated: MessageId = mailboxProbe
+    val relatedEmailId: MessageId = mailboxProbe
       .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
@@ -443,10 +443,10 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "$ANDRE_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
-         |            "forEmailId": "${emailIdRelated.serialize()}",
+         |            "forEmailId": "${relatedEmailId.serialize()}",
          |            "subject": "Read receipt for: World domination",
          |            "textBody": "This receipt shows that the email has been displayed on your recipient's computer. ",
          |            "finalRecipient" : "invalid",
@@ -498,7 +498,7 @@ trait MDNSendMethodContract {
     val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
-    val emailIdRelated: MessageId = mailboxProbe
+    val relatedEmailId: MessageId = mailboxProbe
       .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
@@ -515,10 +515,10 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "$ANDRE_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
-         |            "forEmailId": "${emailIdRelated.serialize()}",
+         |            "forEmailId": "${relatedEmailId.serialize()}",
          |            "subject": "Read receipt for: World domination",
          |            "textBody": "This receipt shows that the email has been displayed on your recipient's computer. ",
          |            "finalRecipient" : "rfc822; ${CEDRIC.asString}",
@@ -567,7 +567,7 @@ trait MDNSendMethodContract {
     val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
-    val emailIdRelated: MessageId = mailboxProbe
+    val relatedEmailId: MessageId = mailboxProbe
       .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
@@ -584,10 +584,10 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "$ANDRE_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
-         |            "forEmailId": "${emailIdRelated.serialize()}",
+         |            "forEmailId": "${relatedEmailId.serialize()}",
          |            "subject": "Read receipt for: World domination",
          |            "textBody": "This receipt shows that the email has been displayed on your recipient's computer. ",
          |            "finalRecipient" : "invalid",
@@ -634,7 +634,7 @@ trait MDNSendMethodContract {
     val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
-    val emailIdRelated: MessageId = mailboxProbe
+    val relatedEmailId: MessageId = mailboxProbe
       .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
@@ -651,10 +651,10 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "$ANDRE_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
-         |            "forEmailId": "${emailIdRelated.serialize()}",
+         |            "forEmailId": "${relatedEmailId.serialize()}",
          |            "subject": "Read receipt for: World domination",
          |            "textBody": "This receipt shows that the email has been displayed on your recipient's computer. ",
          |            "disposition": {
@@ -745,7 +745,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "$ANDRE_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${relatedEmailId1.serialize()}",
@@ -890,7 +890,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "$ANDRE_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${validEmailId1.serialize()}",
@@ -1006,7 +1006,7 @@ trait MDNSendMethodContract {
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
-    val emailIdRelated: MessageId = mailboxProbe
+    val relatedEmailId: MessageId = mailboxProbe
       .appendMessage(BOB.asString(), path, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
@@ -1023,10 +1023,10 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ACCOUNT_ID",
-         |        "identityId": "$ACCOUNT_ID",
+         |        "identityId": "$IDENTITY_ID",
          |        "send": {
          |          "k1546": {
-         |            "forEmailId": "${emailIdRelated.serialize()}",
+         |            "forEmailId": "${relatedEmailId.serialize()}",
          |            "disposition": {
          |              "actionMode": "manual-action",
          |              "sendingMode": "mdn-sent-manually",
@@ -1089,7 +1089,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "ue150411c",
-         |        "identityId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "$ANDRE_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "Md45b47b4877521042cec0938",
@@ -1146,7 +1146,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "ue150411c",
-         |        "identityId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "$ANDRE_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "Md45b47b4877521042cec0938",
@@ -1210,8 +1210,8 @@ trait MDNSendMethodContract {
          |    [
          |      "MDN/send",
          |      {
-         |        "accountId": "${ACCOUNT_ID}",
-         |        "identityId": "$ACCOUNT_ID",
+         |        "accountId": "$ACCOUNT_ID",
+         |        "identityId": "$IDENTITY_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "${randomMessageId.serialize()}",
@@ -1274,7 +1274,7 @@ trait MDNSendMethodContract {
       .setBody("Body of mail, that mdn related", StandardCharsets.UTF_8)
       .build
 
-    val emailIdRelated: MessageId = mailboxProbe
+    val relatedEmailId: MessageId = mailboxProbe
       .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(message))
       .getMessageId
@@ -1291,10 +1291,10 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "$ANDRE_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
-         |            "forEmailId": "${emailIdRelated.serialize()}",
+         |            "forEmailId": "${relatedEmailId.serialize()}",
          |            "disposition": {
          |              "actionMode": "manual-action",
          |              "sendingMode": "mdn-sent-manually",
@@ -1339,7 +1339,7 @@ trait MDNSendMethodContract {
   }
 
   @Test
-  def mdnSendShouldReturnNotFoundWhenIdentityIdIsNotExits(guiceJamesServer: GuiceJamesServer): Unit = {
+  def mdnSendShouldReturnNotFoundWhenIdentityDoesNotExist(guiceJamesServer: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
 
     val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
@@ -1357,7 +1357,7 @@ trait MDNSendMethodContract {
       .setBody("Body of mail, that mdn related", StandardCharsets.UTF_8)
       .build
 
-    val emailIdRelated: MessageId = mailboxProbe
+    val relatedEmailId: MessageId = mailboxProbe
       .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(message))
       .getMessageId
@@ -1377,7 +1377,7 @@ trait MDNSendMethodContract {
          |        "identityId": "notFound",
          |        "send": {
          |          "k1546": {
-         |            "forEmailId": "${emailIdRelated.serialize()}",
+         |            "forEmailId": "${relatedEmailId.serialize()}",
          |            "disposition": {
          |              "actionMode": "manual-action",
          |              "sendingMode": "mdn-sent-manually",
@@ -1445,7 +1445,7 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "unknownAccountId",
-         |        "identityId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "$ANDRE_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
          |            "forEmailId": "1",
@@ -1499,7 +1499,7 @@ trait MDNSendMethodContract {
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
-    val emailIdRelated: MessageId = mailboxProbe
+    val relatedEmailId: MessageId = mailboxProbe
       .appendMessage(BOB.asString(), path, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
@@ -1516,10 +1516,10 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "identityId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "$ANDRE_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
-         |            "forEmailId": "${emailIdRelated.serialize()}",
+         |            "forEmailId": "${relatedEmailId.serialize()}",
          |            "subject": "Read receipt for: World domination",
          |            "textBody": "This receipt shows that the email has been displayed on your recipient's computer. ",
          |            "reportingUA": "joes-pc.cs.example.com; Foomail 97.1",
@@ -1572,7 +1572,7 @@ trait MDNSendMethodContract {
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
-    val emailIdRelated: MessageId = mailboxProbe
+    val relatedEmailId: MessageId = mailboxProbe
       .appendMessage(BOB.asString(), path, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
@@ -1589,10 +1589,10 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |        "identityId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "$ANDRE_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
-         |            "forEmailId": "${emailIdRelated.serialize()}",
+         |            "forEmailId": "${relatedEmailId.serialize()}",
          |            "subject": "Read receipt for: World domination",
          |            "textBody": "This receipt shows that the email has been displayed on your recipient's computer. ",
          |            "reportingUA": "joes-pc.cs.example.com; Foomail 97.1",
@@ -1654,7 +1654,7 @@ trait MDNSendMethodContract {
     val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
-    val emailIdRelated: MessageId = mailboxProbe
+    val relatedEmailId: MessageId = mailboxProbe
       .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
@@ -1671,10 +1671,10 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "$ANDRE_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
-         |            "forEmailId": "${emailIdRelated.serialize()}",
+         |            "forEmailId": "${relatedEmailId.serialize()}",
          |            "textBody": "This receipt shows that the email has been displayed on your recipient's computer. ",
          |            "reportingUA": "joes-pc.cs.example.com; Foomail 97.1",
          |            "disposition": {
@@ -1726,7 +1726,7 @@ trait MDNSendMethodContract {
     val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
-    val emailIdRelated: MessageId = mailboxProbe
+    val relatedEmailId: MessageId = mailboxProbe
       .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
@@ -1743,10 +1743,10 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "$ANDRE_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
-         |            "forEmailId": "${emailIdRelated.serialize()}",
+         |            "forEmailId": "${relatedEmailId.serialize()}",
          |            "reportingUA": "joes-pc.cs.example.com; Foomail 97.1",
          |            "disposition": {
          |              "actionMode": "manual-action",
@@ -1797,7 +1797,7 @@ trait MDNSendMethodContract {
     val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
-    val emailIdRelated: MessageId = mailboxProbe
+    val relatedEmailId: MessageId = mailboxProbe
       .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(Message.Builder
           .of
@@ -1824,10 +1824,10 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "$ANDRE_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
-         |            "forEmailId": "${emailIdRelated.serialize()}",
+         |            "forEmailId": "${relatedEmailId.serialize()}",
          |            "reportingUA": "joes-pc.cs.example.com; Foomail 97.1",
          |            "disposition": {
          |              "actionMode": "manual-action",
@@ -1878,7 +1878,7 @@ trait MDNSendMethodContract {
     val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
     mailboxProbe.createMailbox(andreMailBoxPath)
 
-    val emailIdRelated: MessageId = mailboxProbe
+    val relatedEmailId: MessageId = mailboxProbe
       .appendMessage(ANDRE.asString(), andreMailBoxPath, AppendCommand.builder()
         .build(buildOriginalMessage("1")))
       .getMessageId
@@ -1895,10 +1895,10 @@ trait MDNSendMethodContract {
          |      "MDN/send",
          |      {
          |        "accountId": "$ANDRE_ACCOUNT_ID",
-         |        "identityId": "$ANDRE_ACCOUNT_ID",
+         |        "identityId": "$ANDRE_IDENTITY_ID",
          |        "send": {
          |          "k1546": {
-         |            "forEmailId": "${emailIdRelated.serialize()}",
+         |            "forEmailId": "${relatedEmailId.serialize()}",
          |            "subject": "Read receipt for: World domination",
          |            "textBody": "This receipt shows that the email has been displayed on your recipient's computer. ",
          |            "reportingUA": "joes-pc.cs.example.com; Foomail 97.1",

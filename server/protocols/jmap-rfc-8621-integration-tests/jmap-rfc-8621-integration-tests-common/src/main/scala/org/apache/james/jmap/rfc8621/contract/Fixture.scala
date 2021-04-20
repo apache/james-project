@@ -43,6 +43,11 @@ object Fixture {
   val ANDRE_ACCOUNT_ID: String = "1e8584548eca20f26faf6becc1704a0f352839f12c208a47fbd486d60f491f7c"
   val DAVID_ACCOUNT_ID: String = "a63dc794489dca3a428ae19c0632425619aa2d8551cd8dab26f4b9a87c774342"
 
+  val IDENTITY_ID: String = "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
+  val DAVID_IDENTITY_ID: String = "a63dc794489dca3a428ae19c0632425619aa2d8551cd8dab26f4b9a87c774342"
+  val ANDRE_IDENTITY_ID: String = "1e8584548eca20f26faf6becc1704a0f352839f12c208a47fbd486d60f491f7c"
+
+
   def createTestMessage: Message = Message.Builder
       .of
       .setSubject("test")

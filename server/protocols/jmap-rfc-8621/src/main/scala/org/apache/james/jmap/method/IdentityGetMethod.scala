@@ -68,7 +68,7 @@ class IdentityGetMethod @Inject() (identityFactory: IdentityFactory,
       .map(request.computeResponse)
 }
 
-case class IdentifyStore @Inject()(identityFactory: IdentityFactory) {
+case class IdentifyResolver @Inject()(identityFactory: IdentityFactory) {
 
   def resolveIdentityId(identityId: IdentityId, session: MailboxSession): SMono[Option[Identity]] =
     SMono.fromCallable(() => identityFactory.listIdentities(session)
