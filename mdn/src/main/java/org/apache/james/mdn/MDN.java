@@ -36,6 +36,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
+import com.github.fge.lambdas.Throwing;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.javax.MimeMultipartReport;
 import org.apache.james.mime4j.Charsets;
@@ -208,13 +209,8 @@ public class MDN {
         multipart.setReportType(DISPOSITION_NOTIFICATION_REPORT_TYPE);
         multipart.addBodyPart(computeHumanReadablePart());
         multipart.addBodyPart(computeReportPart());
-        message.ifPresent(message1 -> {
-            try {
-                multipart.addBodyPart(computeOriginalMessagePart(message1));
-            } catch (MessagingException e) {
-                e.printStackTrace();
-            }
-        });
+        message.ifPresent(Throwing.consumer(originalMessage -> multipart.addBodyPart(computeOriginalMessagePart((Message) originalMessage)))
+                .sneakyThrow());
 
         // The optional third part, the original message is omitted.
         // We don't want to propogate over-sized, virus infected or

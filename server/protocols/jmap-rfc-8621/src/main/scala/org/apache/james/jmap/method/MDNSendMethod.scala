@@ -32,7 +32,7 @@ import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.lifecycle.api.Startable
 import org.apache.james.mailbox.model.{FetchGroup, MessageResult}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
-import org.apache.james.mdn.fields.{ExtensionField, FinalRecipient, Text}
+import org.apache.james.mdn.fields.{ExtensionField, FinalRecipient, OriginalRecipient, Text}
 import org.apache.james.mdn.{MDN, MDNReport}
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.mime4j.codec.DecodeMonitor
@@ -173,7 +173,8 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
     for {
       mailRecipient <- getMailRecipient(originalMessage)
       mdnFinalRecipient <- getMDNFinalRecipient(requestEntry, identity)
-      mdn = buildMDN(requestEntry, originalMessage, mdnFinalRecipient)
+      mdnOriginalRecipient = OriginalRecipient.builder().originalRecipient(Text.fromRawText(sender)).build()
+      mdn = buildMDN(requestEntry, originalMessage, mdnFinalRecipient, mdnOriginalRecipient)
       subject = buildMessageSubject(requestEntry, originalMessage)
       (mailImpl, mimeMessage) = buildMailAndMimeMessage(sender, mailRecipient, subject, mdn)
     } yield {
@@ -219,11 +220,11 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
         .finalRecipient(Text.fromRawText(identity.email.asString()))
         .build()))
 
-  private def buildMDN(requestEntry: MDNSendCreateRequest, originalMessage: Message, finalRecipient: FinalRecipient): MDN = {
+  private def buildMDN(requestEntry: MDNSendCreateRequest, originalMessage: Message, finalRecipient: FinalRecipient, originalRecipient: OriginalRecipient): MDN = {
     val reportBuilder: MDNReport.Builder = MDNReport.builder()
       .dispositionField(requestEntry.disposition.asJava.get)
       .finalRecipientField(finalRecipient)
-      .originalRecipientField(originalMessage.getTo.asScala.head.toString)
+      .originalRecipientField(originalRecipient)
 
     originalMessage.getHeader.getFields("Message-ID")
       .asScala
