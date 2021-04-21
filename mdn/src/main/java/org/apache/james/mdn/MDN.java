@@ -36,7 +36,6 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
-import com.github.fge.lambdas.Throwing;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.javax.MimeMultipartReport;
 import org.apache.james.mime4j.Charsets;
@@ -50,6 +49,7 @@ import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.mime4j.stream.NameValuePair;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
