@@ -48,6 +48,9 @@ import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.util.MimeMessageUtil;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
@@ -169,12 +172,16 @@ class RecipientRewriteTableProcessorTest {
                 .add(MailAddressFixture.OTHER_AT_JAMES.toString())
                 .build();
 
+        Attribute attribute = AttributeName.of("dont-loose-my-attribute").withValue(AttributeValue.of("ok ?"));
+        mail.setAttribute(attribute);
+
         processor.handleMappings(mappings, mail, MailAddressFixture.OTHER_AT_JAMES);
 
         FakeMailContext.SentMail expected = FakeMailContext.sentMailBuilder()
                 .sender(MailAddressFixture.ANY_AT_JAMES)
                 .recipients(ImmutableList.of(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES))
                 .fromMailet()
+                .attribute(attribute)
                 .message(message)
                 .build();
 

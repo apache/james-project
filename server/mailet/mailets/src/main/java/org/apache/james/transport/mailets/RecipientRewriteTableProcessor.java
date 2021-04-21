@@ -277,13 +277,9 @@ public class RecipientRewriteTableProcessor {
     private void forwardToRemoteAddress(Mail mail, MailAddress recipient, Collection<MailAddress> remoteRecipients) {
         if (!remoteRecipients.isEmpty()) {
             try {
-                mailetContext.sendMail(
-                    MailImpl.builder()
-                        .name(mail.getName())
-                        .sender(mail.getMaybeSender())
-                        .addRecipients(ImmutableList.copyOf(remoteRecipients))
-                        .mimeMessage(mail.getMessage())
-                        .build());
+                Mail duplicate = mail.duplicate();
+                duplicate.setRecipients(ImmutableList.copyOf(remoteRecipients));
+                mailetContext.sendMail(duplicate);
                 LOGGER.info("Mail for {} forwarded to {}", recipient, remoteRecipients);
             } catch (MessagingException ex) {
                 LOGGER.warn("Error forwarding mail to {}", remoteRecipients);
