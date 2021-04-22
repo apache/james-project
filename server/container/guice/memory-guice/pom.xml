@@ -84,6 +84,11 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-cli</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-memory</artifactId>
         </dependency>
         <dependency>
@@ -241,6 +246,70 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <configuration>
+                    <from>
+                        <image>adoptopenjdk:11-jdk-hotspot</image>
+                    </from>
+                    <to>
+                        <image>apache/james</image>
+                        <tags>
+                            <tag>memory-latest</tag>
+                        </tags>
+                    </to>
+                    <container>
+                        <mainClass>org.apache.james.MemoryJamesServerMain</mainClass>
+                        <ports>
+                            <port>80</port> <!-- JMAP -->
+                            <port>143</port> <!-- IMAP -->
+                            <port>993</port> <!-- IMAPS -->
+                            <port>25</port> <!-- SMTP -->
+                            <port>465</port> <!-- SMTP + STARTTLS -->
+                            <port>587</port> <!-- SMTPS -->
+                            <port>4000</port> <!-- GLOWROOT, if activated -->
+                            <port>8000</port> <!-- WEBADMIN -->
+                        </ports>
+                        <appRoot>/root</appRoot>
+                        <jvmFlags>
+                            <jvmFlag>-Dlogback.configurationFile=/root/conf/logback.xml</jvmFlag>
+                            <jvmFlag>-Dworking.directory=/root/</jvmFlag>
+                        </jvmFlags>
+                        <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
+                    </container>
+                    <extraDirectories>
+                        <paths>
+                            <path>
+                                <from>sample-configuration</from>
+                                <into>/root/conf</into>
+                            </path>
+                            <path>
+                                <from>src/main/scripts</from>
+                                <into>/usr/bin</into>
+                            </path>
+                            <path>
+                                <from>src/main/extensions-jars</from>
+                                <into>/root/extensions-jars</into>
+                            </path>
+                        </paths>
+                        <permissions>
+                            <permission>
+                                <file>/usr/bin/james-cli</file>
+                                <mode>755</mode> <!-- Read/write/execute for owner, read/execute for group/other -->
+                            </permission>
+                        </permissions>
+                    </extraDirectories>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>dockerBuild</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
