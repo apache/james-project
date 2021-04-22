@@ -349,7 +349,7 @@
                 <executions>
                     <execution>
                         <goals>
-                            <goal>dockerBuild</goal>
+                            <goal>buildTar</goal>
                         </goals>
                         <phase>package</phase>
                     </execution>
