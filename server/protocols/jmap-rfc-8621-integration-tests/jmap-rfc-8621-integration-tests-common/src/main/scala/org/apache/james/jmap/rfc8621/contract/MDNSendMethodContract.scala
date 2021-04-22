@@ -21,8 +21,8 @@ package org.apache.james.jmap.rfc8621.contract
 
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
-import io.restassured.builder.ResponseSpecBuilder
 import io.restassured.http.ContentType.JSON
+import io.restassured.specification.RequestSpecification
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
@@ -87,6 +87,12 @@ trait MDNSendMethodContract {
       .setBody(s"Body of mail$tag, that mdn related", StandardCharsets.UTF_8)
       .build
 
+  private def buildBOBRequestSpecification(server: GuiceJamesServer): RequestSpecification =
+    baseRequestSpecBuilder(server)
+      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .build
+
   def randomMessageId: MessageId
 
   @BeforeEach
@@ -99,13 +105,14 @@ trait MDNSendMethodContract {
       .addUser(DAVID.asString, DAVID.asString())
 
     requestSpecification = baseRequestSpecBuilder(server)
-      .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+      .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .build()
   }
 
   @Test
-  def mdnSendShouldBeSuccessAndSendMailSuccessfully(guiceJamesServer: GuiceJamesServer): Unit = {
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+  def mdnSendShouldBeSuccessAndSendMailSuccessfully(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
     val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
     val bobInboxId: MailboxId = mailboxProbe.createMailbox(bobMailBoxPath)
@@ -118,7 +125,7 @@ trait MDNSendMethodContract {
         .build(buildOriginalMessage("1")))
       .getMessageId
 
-    val mdnSendRequest: String =
+    val request: String =
       s"""{
          |  "using": [
          |    "urn:ietf:params:jmap:core",
@@ -159,12 +166,9 @@ trait MDNSendMethodContract {
          |}""".stripMargin
 
    val mdnSendResponse: String =
-      `given`(
-        baseRequestSpecBuilder(guiceJamesServer)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
-          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-          .setBody(mdnSendRequest)
-          .build, new ResponseSpecBuilder().build)
+      `given`
+        .body(request)
+      .when
         .post
       .`then`
         .statusCode(SC_OK)
@@ -223,11 +227,9 @@ trait MDNSendMethodContract {
 
     awaitAtMostTenSeconds.untilAsserted { () =>
       val response: String =
-        `given`(
-          baseRequestSpecBuilder(guiceJamesServer)
-            .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-            .setBody(requestQueryMDNMessage)
-            .build, new ResponseSpecBuilder().build)
+        `given`(buildBOBRequestSpecification(server))
+          .body(requestQueryMDNMessage)
+        .when
           .post
         .`then`
           .statusCode(SC_OK)
@@ -244,9 +246,9 @@ trait MDNSendMethodContract {
   }
 
   @Test
-  def mdnSendShouldBeSuccessWhenRequestAssignFinalRecipient(guiceJamesServer: GuiceJamesServer): Unit = {
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
-    guiceJamesServer.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("david", "domain.tld", "andre@domain.tld")
+  def mdnSendShouldBeSuccessWhenRequestAssignFinalRecipient(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
+    server.getProbe(classOf[DataProbeImpl]).addUserAliasMapping("david", "domain.tld", "andre@domain.tld")
 
     val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
     mailboxProbe.createMailbox(bobMailBoxPath)
@@ -259,7 +261,7 @@ trait MDNSendMethodContract {
         .build(buildOriginalMessage("1")))
       .getMessageId
 
-    val mdnSendRequest: String =
+    val request: String =
       s"""{
          |  "using": [
          |    "urn:ietf:params:jmap:core",
@@ -297,12 +299,9 @@ trait MDNSendMethodContract {
          |}""".stripMargin
 
     val mdnSendResponse: String =
-      `given`(
-        baseRequestSpecBuilder(guiceJamesServer)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
-          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-          .setBody(mdnSendRequest)
-          .build, new ResponseSpecBuilder().build)
+      `given`
+        .body(request)
+      .when
         .post
       .`then`
         .statusCode(SC_OK)
@@ -348,8 +347,8 @@ trait MDNSendMethodContract {
   }
 
   @Test
-  def mdnSendShouldBeFailWhenDispositionPropertyIsInvalid(guiceJamesServer: GuiceJamesServer): Unit = {
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+  def mdnSendShouldBeFailWhenDispositionPropertyIsInvalid(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
     val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
     mailboxProbe.createMailbox(bobMailBoxPath)
@@ -362,7 +361,7 @@ trait MDNSendMethodContract {
         .build(buildOriginalMessage("1")))
       .getMessageId
 
-    val mdnSendRequest: String =
+    val request: String =
       s"""{
          |  "using": [
          |    "urn:ietf:params:jmap:core",
@@ -394,12 +393,9 @@ trait MDNSendMethodContract {
          |}""".stripMargin
 
     val mdnSendResponse: String =
-      `given`(
-        baseRequestSpecBuilder(guiceJamesServer)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
-          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-          .setBody(mdnSendRequest)
-          .build, new ResponseSpecBuilder().build)
+      `given`
+        .body(request)
+      .when
         .post
       .`then`
         .statusCode(SC_OK)
@@ -420,8 +416,8 @@ trait MDNSendMethodContract {
   }
 
   @Test
-  def mdnSendShouldBeFailWhenFinalRecipientIsInvalid(guiceJamesServer: GuiceJamesServer): Unit = {
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+  def mdnSendShouldBeFailWhenFinalRecipientIsInvalid(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
     val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
     mailboxProbe.createMailbox(andreMailBoxPath)
@@ -431,7 +427,7 @@ trait MDNSendMethodContract {
         .build(buildOriginalMessage("1")))
       .getMessageId
 
-    val mdnSendRequest: String =
+    val request: String =
       s"""{
          |  "using": [
          |    "urn:ietf:params:jmap:core",
@@ -464,12 +460,9 @@ trait MDNSendMethodContract {
          |}""".stripMargin
 
     val mdnSendResponse: String =
-      `given`(
-        baseRequestSpecBuilder(guiceJamesServer)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
-          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-          .setBody(mdnSendRequest)
-          .build, new ResponseSpecBuilder().build)
+      `given`
+        .body(request)
+      .when
         .post
       .`then`
         .statusCode(SC_OK)
@@ -492,8 +485,8 @@ trait MDNSendMethodContract {
   }
 
   @Test
-  def mdnSendShouldBeFailWhenIdentityIsNotAllowedToUseFinalRecipient(guiceJamesServer: GuiceJamesServer): Unit = {
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+  def mdnSendShouldBeFailWhenIdentityIsNotAllowedToUseFinalRecipient(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
     val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
     mailboxProbe.createMailbox(andreMailBoxPath)
@@ -503,7 +496,7 @@ trait MDNSendMethodContract {
         .build(buildOriginalMessage("1")))
       .getMessageId
 
-    val mdnSendRequest: String =
+    val request: String =
       s"""{
          |  "using": [
          |    "urn:ietf:params:jmap:core",
@@ -536,12 +529,9 @@ trait MDNSendMethodContract {
          |}""".stripMargin
 
     val mdnSendResponse: String =
-      `given`(
-        baseRequestSpecBuilder(guiceJamesServer)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
-          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-          .setBody(mdnSendRequest)
-          .build, new ResponseSpecBuilder().build)
+      `given`
+        .body(request)
+      .when
         .post
       .`then`
         .statusCode(SC_OK)
@@ -561,8 +551,8 @@ trait MDNSendMethodContract {
   }
 
   @Test
-  def implicitEmailSetShouldNotBeAttemptedWhenMDNIsNotSent(guiceJamesServer: GuiceJamesServer): Unit = {
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+  def implicitEmailSetShouldNotBeAttemptedWhenMDNIsNotSent(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
     val andreMailBoxPath: MailboxPath = MailboxPath.inbox(ANDRE)
     mailboxProbe.createMailbox(andreMailBoxPath)
@@ -572,7 +562,7 @@ trait MDNSendMethodContract {
         .build(buildOriginalMessage("1")))
       .getMessageId
 
-    val mdnSendRequest: String =
+    val request: String =
       s"""{
          |  "using": [
          |    "urn:ietf:params:jmap:core",
@@ -605,12 +595,9 @@ trait MDNSendMethodContract {
          |}""".stripMargin
 
     val mdnSendResponse: String =
-      `given`(
-        baseRequestSpecBuilder(guiceJamesServer)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
-          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-          .setBody(mdnSendRequest)
-          .build, new ResponseSpecBuilder().build)
+      `given`
+        .body(request)
+      .when
         .post
       .`then`
         .statusCode(SC_OK)
@@ -625,8 +612,8 @@ trait MDNSendMethodContract {
   }
 
   @Test
-  def implicitEmailSetShouldNotBeAttemptedWhenOnSuccessUpdateEmailIsNull(guiceJamesServer: GuiceJamesServer): Unit = {
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+  def implicitEmailSetShouldNotBeAttemptedWhenOnSuccessUpdateEmailIsNull(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
     val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
     mailboxProbe.createMailbox(bobMailBoxPath)
@@ -639,7 +626,7 @@ trait MDNSendMethodContract {
         .build(buildOriginalMessage("1")))
       .getMessageId
 
-    val mdnSendRequest: String =
+    val request: String =
       s"""{
          |  "using": [
          |    "urn:ietf:params:jmap:core",
@@ -671,12 +658,9 @@ trait MDNSendMethodContract {
          |}""".stripMargin
 
     val mdnSendResponse: String =
-      `given`(
-        baseRequestSpecBuilder(guiceJamesServer)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
-          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-          .setBody(mdnSendRequest)
-          .build, new ResponseSpecBuilder().build)
+      `given`
+        .body(request)
+      .when
         .post
       .`then`
         .statusCode(SC_OK)
@@ -711,8 +695,8 @@ trait MDNSendMethodContract {
   }
 
   @Test
-  def mdnSendShouldAcceptSeveralMDNObjects(guiceJamesServer: GuiceJamesServer): Unit = {
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+  def mdnSendShouldAcceptSeveralMDNObjects(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
     val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
     mailboxProbe.createMailbox(bobMailBoxPath)
@@ -733,7 +717,7 @@ trait MDNSendMethodContract {
         .build(buildOriginalMessage("3")))
       .getMessageId
 
-    val mdnSendRequest: String =
+    val request: String =
       s"""{
          |  "using": [
          |    "urn:ietf:params:jmap:core",
@@ -790,12 +774,9 @@ trait MDNSendMethodContract {
          |}""".stripMargin
 
    val mdnSendResponse: String =
-      `given`(
-        baseRequestSpecBuilder(guiceJamesServer)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
-          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-          .setBody(mdnSendRequest)
-          .build, new ResponseSpecBuilder().build)
+      `given`
+        .body(request)
+      .when
         .post
       .`then`
         .statusCode(SC_OK)
@@ -860,8 +841,8 @@ trait MDNSendMethodContract {
   }
 
   @Test
-  def mdnSendMixValidAndNotFoundAndInvalid(guiceJamesServer: GuiceJamesServer): Unit = {
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+  def mdnSendMixValidAndNotFoundAndInvalid(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
     val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
     mailboxProbe.createMailbox(bobMailBoxPath)
@@ -878,7 +859,7 @@ trait MDNSendMethodContract {
         .build(buildOriginalMessage("2")))
       .getMessageId
 
-    val mdnSendRequest: String =
+    val request: String =
       s"""{
          |  "using": [
          |    "urn:ietf:params:jmap:core",
@@ -935,12 +916,9 @@ trait MDNSendMethodContract {
          |}""".stripMargin
 
    val mdnSendResponse: String =
-      `given`(
-        baseRequestSpecBuilder(guiceJamesServer)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
-          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-          .setBody(mdnSendRequest)
-          .build, new ResponseSpecBuilder().build)
+      `given`
+        .body(request)
+      .when
         .post
       .`then`
         .statusCode(SC_OK)
@@ -1001,9 +979,9 @@ trait MDNSendMethodContract {
   }
 
   @Test
-  def mdnSendShouldBeFailWhenMDNHasAlreadyBeenSet(guiceJamesServer: GuiceJamesServer): Unit = {
+  def mdnSendShouldBeFailWhenMDNHasAlreadyBeenSet(server: GuiceJamesServer): Unit = {
     val path: MailboxPath = MailboxPath.inbox(BOB)
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val relatedEmailId: MessageId = mailboxProbe
@@ -1045,26 +1023,25 @@ trait MDNSendMethodContract {
          |  ]
          |}""".stripMargin
 
-    `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
-    .when
-      .post
-    .`then`
-      .statusCode(SC_OK)
-      .contentType(JSON)
+      `given`(buildBOBRequestSpecification(server))
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
 
-    val response: String = `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
-    .when
-      .post
-    .`then`
-      .statusCode(SC_OK)
-      .contentType(JSON)
-      .extract
-      .body
-      .asString
+    val response: String =
+      `given`(buildBOBRequestSpecification(server))
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
 
     assertThatJson(response)
       .inPath(s"methodResponses[0][1].notSent")
@@ -1077,7 +1054,7 @@ trait MDNSendMethodContract {
   }
 
   @Test
-  def mdnSendShouldReturnUnknownMethodWhenMissingOneCapability(): Unit = {
+  def mdnSendShouldReturnUnknownMethodWhenMissingOneCapability(server: GuiceJamesServer): Unit = {
     val request: String =
       s"""{
          |  "using": [
@@ -1111,17 +1088,17 @@ trait MDNSendMethodContract {
          |  ]
          |}""".stripMargin
 
-    val response: String = `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
-    .when
-      .post
-    .`then`
-      .statusCode(SC_OK)
-      .contentType(JSON)
-      .extract
-      .body
-      .asString
+    val response: String =
+      `given`
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
 
     assertThatJson(response).isEqualTo(
       s"""{
@@ -1137,8 +1114,8 @@ trait MDNSendMethodContract {
   }
 
   @Test
-  def mdnSendShouldReturnUnknownMethodWhenMissingAllCapabilities(): Unit = {
-    val request =
+  def mdnSendShouldReturnUnknownMethodWhenMissingAllCapabilities(server: GuiceJamesServer): Unit = {
+    val request: String =
       s"""{
          |  "using": [],
          |  "methodCalls": [
@@ -1168,17 +1145,17 @@ trait MDNSendMethodContract {
          |  ]
          |}""".stripMargin
 
-    val response = `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
-    .when
-      .post
-    .`then`
-      .statusCode(SC_OK)
-      .contentType(JSON)
-      .extract
-      .body
-      .asString
+    val response: String =
+      `given`(buildBOBRequestSpecification(server))
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
 
     assertThatJson(response).isEqualTo(
       s"""{
@@ -1194,9 +1171,9 @@ trait MDNSendMethodContract {
   }
 
   @Test
-  def mdnSendShouldReturnNotFoundWhenForEmailIdIsNotExist(guiceJamesServer: GuiceJamesServer): Unit = {
+  def mdnSendShouldReturnNotFoundWhenForEmailIdIsNotExist(server: GuiceJamesServer): Unit = {
     val path: MailboxPath = MailboxPath.inbox(BOB)
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val request: String =
@@ -1233,17 +1210,17 @@ trait MDNSendMethodContract {
          |  ]
          |}""".stripMargin
 
-    val response = `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
-    .when
-      .post
-    .`then`
-      .statusCode(SC_OK)
-      .contentType(JSON)
-      .extract
-      .body
-      .asString
+    val response: String =
+      `given`(buildBOBRequestSpecification(server))
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
 
     assertThatJson(response)
       .inPath("methodResponses[0][1].notSent")
@@ -1256,8 +1233,8 @@ trait MDNSendMethodContract {
   }
 
   @Test
-  def mdnSendShouldReturnNotFoundWhenMessageRelateHasNotDispositionNotificationTo(guiceJamesServer: GuiceJamesServer): Unit = {
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+  def mdnSendShouldReturnNotFoundWhenMessageRelateHasNotDispositionNotificationTo(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
     val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
     mailboxProbe.createMailbox(bobMailBoxPath)
@@ -1314,12 +1291,9 @@ trait MDNSendMethodContract {
          |}""".stripMargin
 
     val response: String =
-      `given`(
-        baseRequestSpecBuilder(guiceJamesServer)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
-          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-          .setBody(request)
-          .build, new ResponseSpecBuilder().build)
+      `given`
+        .body(request)
+      .when
         .post
       .`then`
         .statusCode(SC_OK)
@@ -1339,8 +1313,8 @@ trait MDNSendMethodContract {
   }
 
   @Test
-  def mdnSendShouldReturnInvalidWhenIdentityDoesNotExist(guiceJamesServer: GuiceJamesServer): Unit = {
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+  def mdnSendShouldReturnInvalidWhenIdentityDoesNotExist(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
     val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
     mailboxProbe.createMailbox(bobMailBoxPath)
@@ -1397,12 +1371,9 @@ trait MDNSendMethodContract {
          |}""".stripMargin
 
     val response: String =
-      `given`(
-        baseRequestSpecBuilder(guiceJamesServer)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
-          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-          .setBody(request)
-          .build, new ResponseSpecBuilder().build)
+      `given`
+        .body(request)
+      .when
         .post
       .`then`
         .statusCode(SC_OK)
@@ -1428,9 +1399,9 @@ trait MDNSendMethodContract {
   }
 
   @Test
-  def mdnSendShouldBeFailWhenWrongAccountId(guiceJamesServer: GuiceJamesServer): Unit = {
+  def mdnSendShouldBeFailWhenWrongAccountId(server: GuiceJamesServer): Unit = {
     val path: MailboxPath = MailboxPath.inbox(BOB)
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val request: String =
@@ -1468,8 +1439,7 @@ trait MDNSendMethodContract {
          |}""".stripMargin
 
     val response: String =
-      `given`
-        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      `given`(buildBOBRequestSpecification(server))
         .body(request)
       .when
         .post
@@ -1494,9 +1464,9 @@ trait MDNSendMethodContract {
   }
 
   @Test
-  def mdnSendShouldBeFailWhenOnSuccessUpdateEmailMissesTheCreationIdSharp(guiceJamesServer: GuiceJamesServer): Unit = {
+  def mdnSendShouldBeFailWhenOnSuccessUpdateEmailMissesTheCreationIdSharp(server: GuiceJamesServer): Unit = {
     val path: MailboxPath = MailboxPath.inbox(BOB)
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val relatedEmailId: MessageId = mailboxProbe
@@ -1541,17 +1511,17 @@ trait MDNSendMethodContract {
          |  ]
          |}""".stripMargin
 
-    val response: String = `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
-    .when
-      .post
-    .`then`
-      .statusCode(SC_OK)
-      .contentType(JSON)
-      .extract
-      .body
-      .asString
+    val response: String =
+      `given`(buildBOBRequestSpecification(server))
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
 
     assertThatJson(response)
       .inPath("methodResponses[0]")
@@ -1567,9 +1537,9 @@ trait MDNSendMethodContract {
   }
 
   @Test
-  def mdnSendShouldBeFailWhenOnSuccessUpdateEmailDoesNotReferenceACreationWithinThisCall(guiceJamesServer: GuiceJamesServer): Unit = {
+  def mdnSendShouldBeFailWhenOnSuccessUpdateEmailDoesNotReferenceACreationWithinThisCall(server: GuiceJamesServer): Unit = {
     val path: MailboxPath = MailboxPath.inbox(BOB)
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
     val relatedEmailId: MessageId = mailboxProbe
@@ -1614,17 +1584,17 @@ trait MDNSendMethodContract {
          |  ]
          |}""".stripMargin
 
-    val response: String = `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
-    .when
-      .post
-    .`then`
-      .statusCode(SC_OK)
-      .contentType(JSON)
-      .extract
-      .body
-      .asString
+    val response: String =
+      `given`(buildBOBRequestSpecification(server))
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
 
     assertThatJson(response)
       .isEqualTo(
@@ -1645,8 +1615,8 @@ trait MDNSendMethodContract {
 
   @Tag(TAG_MDN_MESSAGE_FORMAT)
   @Test
-  def mdnSendShouldReturnSubjectWhenRequestDoNotSet(guiceJamesServer: GuiceJamesServer): Unit = {
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+  def mdnSendShouldReturnSubjectWhenRequestDoNotSet(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
     val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
     mailboxProbe.createMailbox(bobMailBoxPath)
@@ -1659,7 +1629,7 @@ trait MDNSendMethodContract {
         .build(buildOriginalMessage("1")))
       .getMessageId
 
-    val mdnSendRequest: String =
+    val request: String =
       s"""{
          |  "using": [
          |    "urn:ietf:params:jmap:core",
@@ -1696,12 +1666,9 @@ trait MDNSendMethodContract {
          |}""".stripMargin
 
     val mdnSendResponse: String =
-      `given`(
-        baseRequestSpecBuilder(guiceJamesServer)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
-          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-          .setBody(mdnSendRequest)
-          .build, new ResponseSpecBuilder().build)
+      `given`
+        .body(request)
+      .when
         .post
       .`then`
         .statusCode(SC_OK)
@@ -1717,8 +1684,8 @@ trait MDNSendMethodContract {
 
   @Tag(TAG_MDN_MESSAGE_FORMAT)
   @Test
-  def mdnSendShouldReturnTextBodyWhenRequestDoNotSet(guiceJamesServer: GuiceJamesServer): Unit = {
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+  def mdnSendShouldReturnTextBodyWhenRequestDoNotSet(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
     val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
     mailboxProbe.createMailbox(bobMailBoxPath)
@@ -1731,7 +1698,7 @@ trait MDNSendMethodContract {
         .build(buildOriginalMessage("1")))
       .getMessageId
 
-    val mdnSendRequest: String =
+    val request: String =
       s"""{
          |  "using": [
          |    "urn:ietf:params:jmap:core",
@@ -1767,12 +1734,9 @@ trait MDNSendMethodContract {
          |}""".stripMargin
 
     val mdnSendResponse: String =
-      `given`(
-        baseRequestSpecBuilder(guiceJamesServer)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
-          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-          .setBody(mdnSendRequest)
-          .build, new ResponseSpecBuilder().build)
+      `given`
+        .body(request)
+      .when
         .post
       .`then`
         .statusCode(SC_OK)
@@ -1788,8 +1752,8 @@ trait MDNSendMethodContract {
 
   @Tag(TAG_MDN_MESSAGE_FORMAT)
   @Test
-  def mdnSendShouldReturnOriginalMessageIdWhenRelatedMessageHasMessageIDHeader(guiceJamesServer: GuiceJamesServer): Unit = {
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+  def mdnSendShouldReturnOriginalMessageIdWhenRelatedMessageHasMessageIDHeader(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
     val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
     mailboxProbe.createMailbox(bobMailBoxPath)
@@ -1812,7 +1776,7 @@ trait MDNSendMethodContract {
         ))
       .getMessageId
 
-    val mdnSendRequest: String =
+    val request: String =
       s"""{
          |  "using": [
          |    "urn:ietf:params:jmap:core",
@@ -1848,12 +1812,9 @@ trait MDNSendMethodContract {
          |}""".stripMargin
 
     val mdnSendResponse: String =
-      `given`(
-        baseRequestSpecBuilder(guiceJamesServer)
-          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
-          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-          .setBody(mdnSendRequest)
-          .build, new ResponseSpecBuilder().build)
+      `given`
+        .body(request)
+      .when
         .post
       .`then`
         .statusCode(SC_OK)
@@ -1869,8 +1830,8 @@ trait MDNSendMethodContract {
 
   @Tag(TAG_MDN_MESSAGE_FORMAT)
   @Test
-  def mdnMessageShouldHasThirdBodyPartWhenIncludeOriginalMessageIsTrue(guiceJamesServer: GuiceJamesServer): Unit = {
-    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+  def mdnMessageShouldHasThirdBodyPartWhenIncludeOriginalMessageIsTrue(server: GuiceJamesServer): Unit = {
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 
     val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
     mailboxProbe.createMailbox(bobMailBoxPath)
@@ -1883,7 +1844,7 @@ trait MDNSendMethodContract {
         .build(buildOriginalMessage("1")))
       .getMessageId
 
-    val mdnSendRequest: String =
+    val request: String =
       s"""{
          |  "using": [
          |    "urn:ietf:params:jmap:core",
@@ -1924,12 +1885,9 @@ trait MDNSendMethodContract {
          |  ]
          |}""".stripMargin
 
-    `given`(
-      baseRequestSpecBuilder(guiceJamesServer)
-        .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
-        .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .setBody(mdnSendRequest)
-        .build, new ResponseSpecBuilder().build)
+    `given`
+      .body(request)
+    .when
       .post
     .`then`
       .statusCode(SC_OK)
@@ -1939,7 +1897,7 @@ trait MDNSendMethodContract {
       .asString
 
     awaitAtMostTenSeconds.untilAsserted { () =>
-      val mdnBodyPartCounter = getFirstMessageInMailBox(guiceJamesServer, BOB)
+      val mdnBodyPartCounter = getFirstMessageInMailBox(server, BOB)
         .filter(msg => msg.isMultipart)
         .map(msg => msg.getBody.asInstanceOf[Multipart].getBodyParts)
       assert(mdnBodyPartCounter.isDefined && mdnBodyPartCounter.get.size == 3)
