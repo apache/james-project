@@ -1339,7 +1339,7 @@ trait MDNSendMethodContract {
   }
 
   @Test
-  def mdnSendShouldReturnNotFoundWhenIdentityDoesNotExist(guiceJamesServer: GuiceJamesServer): Unit = {
+  def mdnSendShouldReturnInvalidWhenIdentityDoesNotExist(guiceJamesServer: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
 
     val bobMailBoxPath: MailboxPath = MailboxPath.inbox(BOB)
@@ -1942,7 +1942,7 @@ trait MDNSendMethodContract {
       val mdnBodyPartCounter = getFirstMessageInMailBox(guiceJamesServer, BOB)
         .filter(msg => msg.isMultipart)
         .map(msg => msg.getBody.asInstanceOf[Multipart].getBodyParts)
-      assert(mdnBodyPartCounter.isDefined && mdnBodyPartCounter.get.size > 2)
+      assert(mdnBodyPartCounter.isDefined && mdnBodyPartCounter.get.size == 3)
     }
   }
 }
