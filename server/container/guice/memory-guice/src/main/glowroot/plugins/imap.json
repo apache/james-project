@@ -1,0 +1,19 @@
+{
+  "name": "IMAP Plugin",
+  "id": "imap",
+  "instrumentation": [
+    {
+      "className": "org.apache.james.imap.processor.base.AbstractChainedProcessor",
+      "methodName": "doProcess",
+      "methodParameterTypes": [
+        ".."
+      ],
+      "captureKind": "transaction",
+      "transactionType": "IMAP",
+      "transactionNameTemplate": "IMAP processor : {{this.class.name}}",
+      "alreadyInTransactionBehavior": "capture-trace-entry",
+      "traceEntryMessageTemplate": "{{this.class.name}}.{{methodName}}",
+      "timerName": "imapProcessor"
+    }
+  ]
+}
