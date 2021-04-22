@@ -29,7 +29,7 @@ limitations under the License.
     <fileSets>
         <!-- include README -->
         <fileSet>
-            <directory>.</directory>
+            <directory>src/assemble</directory>
             <directoryMode>0755</directoryMode>
             <outputDirectory>/</outputDirectory>
             <includes>
@@ -64,7 +64,7 @@ limitations under the License.
             <lineEnding>crlf</lineEnding>
         </file>
         <file>
-            <source>README.adoc</source>
+            <source>src/assemble/README.adoc</source>
             <outputDirectory>/</outputDirectory>
             <fileMode>0644</fileMode>
             <lineEnding>crlf</lineEnding>
