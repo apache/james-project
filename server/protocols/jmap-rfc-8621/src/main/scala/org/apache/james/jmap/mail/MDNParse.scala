@@ -25,10 +25,8 @@ import org.apache.james.jmap.mail.MDNParse._
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.mailbox.model.MessageId
 import org.apache.james.mdn.MDN
-import org.apache.james.mdn.fields.{Disposition => JavaDisposition}
 import org.apache.james.mime4j.dom.Message
 
-import java.util.Locale
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 
@@ -71,39 +69,6 @@ object MDNNotParsable {
 case class MDNNotParsable(value: Set[UnparsedBlobId]) {
   def merge(other: MDNNotParsable): MDNNotParsable = MDNNotParsable(this.value ++ other.value)
 }
-
-object MDNDisposition {
-  def fromJava(javaDisposition: JavaDisposition): MDNDisposition =
-    MDNDisposition(actionMode = javaDisposition.getActionMode.getValue,
-      sendingMode = javaDisposition.getSendingMode.getValue.toLowerCase(Locale.US),
-      `type` = javaDisposition.getType.getValue)
-}
-
-case class MDNDisposition(actionMode: String,
-                          sendingMode: String,
-                          `type`: String)
-
-case class ForEmailIdField(originalMessageId: MessageId) extends AnyVal
-
-case class SubjectField(value: String) extends AnyVal
-
-case class TextBodyField(value: String) extends AnyVal
-
-case class ReportUAField(value: String) extends AnyVal
-
-case class FinalRecipientField(value: String) extends AnyVal
-
-case class OriginalRecipientField(value: String) extends AnyVal
-
-case class OriginalMessageIdField(value: String) extends AnyVal
-
-case class ErrorField(value: String) extends AnyVal
-
-object IncludeOriginalMessageField {
-  def default: IncludeOriginalMessageField = IncludeOriginalMessageField(false)
-}
-
-case class IncludeOriginalMessageField(value: Boolean) extends AnyVal
 
 object MDNParsed {
   def fromMDN(mdn: MDN, message: Message, originalMessageId: Option[MessageId]): MDNParsed = {

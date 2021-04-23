@@ -20,12 +20,13 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
+
 import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core._
 import org.apache.james.jmap.json.{IdentitySerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.{Identity, IdentityFactory, IdentityGetRequest, IdentityGetResponse}
+import org.apache.james.jmap.mail.{Identity, IdentityFactory, IdentityGetRequest, IdentityGetResponse, IdentityId}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
@@ -65,4 +66,12 @@ class IdentityGetMethod @Inject() (identityFactory: IdentityFactory,
                             mailboxSession: MailboxSession): SMono[IdentityGetResponse] =
     SMono.fromCallable(() => identityFactory.listIdentities(mailboxSession))
       .map(request.computeResponse)
+}
+
+case class IdentityResolver @Inject()(identityFactory: IdentityFactory) {
+
+  def resolveIdentityId(identityId: IdentityId, session: MailboxSession): SMono[Option[Identity]] =
+    SMono.fromCallable(() => identityFactory.listIdentities(session)
+      .find(identity => identity.id.equals(identityId)))
+      .subscribeOn(Schedulers.elastic())
 }

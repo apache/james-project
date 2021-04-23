@@ -42,6 +42,8 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.Wildcard;
 import org.apache.james.mailbox.probe.MailboxProbe;
@@ -175,5 +177,18 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
     public Collection<String> listSubscriptions(String user) throws Exception {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(Username.of(user));
         return subscriptionManager.subscriptions(mailboxSession);
+    }
+
+    @Override
+    public Collection<MessageId> searchMessage(MultimailboxesSearchQuery expression, String user, long limit) {
+        MailboxSession mailboxSession = null;
+        try {
+            mailboxSession = mailboxManager.createSystemSession(Username.of(user));
+            return block(Flux.from(mailboxManager.search(expression, mailboxSession, limit)).collectList());
+        } catch (MailboxException e) {
+            throw new RuntimeException(e);
+        } finally {
+            closeSession(mailboxSession);
+        }
     }
 }

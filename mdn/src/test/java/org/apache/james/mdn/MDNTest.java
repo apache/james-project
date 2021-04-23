@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import javax.mail.internet.MimeMessage;
@@ -417,6 +418,32 @@ class MDNTest {
             .build();
         MDN mdnActual = MDN.parse(message);
         assertThat(mdnActual.getOriginalMessage()).isPresent();
+    }
+
+    @Test
+    public void originalMessageShouldBeContainInMimeMessage() throws Exception {
+        MDN mdn = MDN.builder()
+            .humanReadableText("humanReadableText")
+            .report(MINIMAL_REPORT)
+            .message(Optional.of(Message.Builder
+                .of()
+                .setSubject("Subject of original message$tag")
+                .setBody("Body of message", StandardCharsets.UTF_8)
+                .build()))
+            .build();
+        MimeMessage mimeMessage = mdn.asMimeMessage();
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        mimeMessage.writeTo(byteArrayOutputStream);
+
+        assertThat(byteArrayOutputStream.toString(StandardCharsets.UTF_8))
+            .contains("Content-Type: message/rfc822\r\n" +
+                "\r\n" +
+                "MIME-Version: 1.0\r\n" +
+                "Subject: Subject of original message$tag\r\n" +
+                "Content-Type: text/plain; charset=UTF-8\r\n" +
+                "\r\n" +
+                "Body of message");
     }
 
     private String asString(Message message) throws Exception {

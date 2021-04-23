@@ -27,12 +27,14 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
+import javax.activation.DataHandler;
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.javax.MimeMultipartReport;
@@ -43,9 +45,11 @@ import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.dom.SingleBody;
 import org.apache.james.mime4j.message.BasicBodyFactory;
 import org.apache.james.mime4j.message.BodyPartBuilder;
+import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.mime4j.stream.NameValuePair;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
@@ -205,6 +209,9 @@ public class MDN {
         multipart.setReportType(DISPOSITION_NOTIFICATION_REPORT_TYPE);
         multipart.addBodyPart(computeHumanReadablePart());
         multipart.addBodyPart(computeReportPart());
+        message.ifPresent(Throwing.consumer(originalMessage -> multipart.addBodyPart(computeOriginalMessagePart((Message) originalMessage)))
+                .sneakyThrow());
+
         // The optional third part, the original message is omitted.
         // We don't want to propogate over-sized, virus infected or
         // other undesirable mail!
@@ -231,6 +238,17 @@ public class MDN {
         MimeBodyPart mdnPart = new MimeBodyPart();
         mdnPart.setContent(report.formattedValue(), DISPOSITION_CONTENT_TYPE);
         return mdnPart;
+    }
+
+    public BodyPart computeOriginalMessagePart(Message message) throws MessagingException {
+        MimeBodyPart originalMessagePart = new MimeBodyPart();
+        try {
+            ByteArrayDataSource source = new ByteArrayDataSource(DefaultMessageWriter.asBytes(message), "message/rfc822");
+            originalMessagePart.setDataHandler(new DataHandler(source));
+            return originalMessagePart;
+        } catch (IOException e) {
+            throw new MessagingException("Could not write message as bytes", e);
+        }
     }
 
     public Message.Builder asMime4JMessageBuilder() throws IOException {
