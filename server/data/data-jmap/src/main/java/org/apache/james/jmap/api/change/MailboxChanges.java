@@ -69,7 +69,7 @@ public class MailboxChanges {
 
             @Override
             public Set<Characteristics> characteristics() {
-                return Sets.immutableEnumSet(Characteristics.UNORDERED);
+                return ImmutableSet.of();
             }
         }
 
@@ -133,6 +133,10 @@ public class MailboxChanges {
         }
 
         public MailboxChanges build() {
+            if (hasMoreChanges && created.isEmpty() && updated.isEmpty() && destroyed.isEmpty()) {
+                throw new CanNotCalculateChangesException(String.format("Current change collector limit %d is exceeded by a single change, hence we cannot calculate changes.", limit.getValue()));
+            }
+
             return new MailboxChanges(state, hasMoreChanges, isCountChangeOnly, created, updated, destroyed);
         }
 

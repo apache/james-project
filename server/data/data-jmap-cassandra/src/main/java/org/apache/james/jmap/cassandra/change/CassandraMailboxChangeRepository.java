@@ -22,6 +22,7 @@ package org.apache.james.jmap.cassandra.change;
 import java.util.Optional;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.james.jmap.api.change.Limit;
 import org.apache.james.jmap.api.change.MailboxChange;
@@ -37,13 +38,15 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraMailboxChangeRepository implements MailboxChangeRepository {
-    public static final Limit DEFAULT_NUMBER_OF_CHANGES = Limit.of(5);
+    public static final String LIMIT_NAME = "mailboxChangeDefaultLimit";
 
     private final MailboxChangeRepositoryDAO mailboxChangeRepositoryDAO;
+    private final Limit defaultLimit;
 
     @Inject
-    public CassandraMailboxChangeRepository(MailboxChangeRepositoryDAO mailboxChangeRepositoryDAO) {
+    public CassandraMailboxChangeRepository(MailboxChangeRepositoryDAO mailboxChangeRepositoryDAO, @Named(LIMIT_NAME) Limit defaultLimit) {
         this.mailboxChangeRepositoryDAO = mailboxChangeRepositoryDAO;
+        this.defaultLimit = defaultLimit;
     }
 
     @Override
@@ -60,14 +63,14 @@ public class CassandraMailboxChangeRepository implements MailboxChangeRepository
         if (state.equals(State.INITIAL)) {
             return mailboxChangeRepositoryDAO.getAllChanges(accountId)
                 .filter(change -> !change.isDelegated())
-                .collect(new MailboxChanges.MailboxChangesBuilder.MailboxChangeCollector(state, maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
+                .collect(new MailboxChanges.MailboxChangesBuilder.MailboxChangeCollector(state, maxChanges.orElse(defaultLimit)));
         }
 
         return mailboxChangeRepositoryDAO.getChangesSince(accountId, state)
             .switchIfEmpty(Flux.error(new ChangeNotFoundException(state, String.format("State '%s' could not be found", state.getValue()))))
             .filter(change -> !change.isDelegated())
             .filter(change -> !change.getState().equals(state))
-            .collect(new MailboxChanges.MailboxChangesBuilder.MailboxChangeCollector(state, maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
+            .collect(new MailboxChanges.MailboxChangesBuilder.MailboxChangeCollector(state, maxChanges.orElse(defaultLimit)));
     }
 
     @Override
@@ -78,13 +81,13 @@ public class CassandraMailboxChangeRepository implements MailboxChangeRepository
 
         if (state.equals(State.INITIAL)) {
             return mailboxChangeRepositoryDAO.getAllChanges(accountId)
-                .collect(new MailboxChanges.MailboxChangesBuilder.MailboxChangeCollector(state, maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
+                .collect(new MailboxChanges.MailboxChangesBuilder.MailboxChangeCollector(state, maxChanges.orElse(defaultLimit)));
         }
 
         return mailboxChangeRepositoryDAO.getChangesSince(accountId, state)
             .switchIfEmpty(Flux.error(new ChangeNotFoundException(state, String.format("State '%s' could not be found", state.getValue()))))
             .filter(change -> !change.getState().equals(state))
-            .collect(new MailboxChanges.MailboxChangesBuilder.MailboxChangeCollector(state, maxChanges.orElse(DEFAULT_NUMBER_OF_CHANGES)));
+            .collect(new MailboxChanges.MailboxChangesBuilder.MailboxChangeCollector(state, maxChanges.orElse(defaultLimit)));
     }
 
     @Override

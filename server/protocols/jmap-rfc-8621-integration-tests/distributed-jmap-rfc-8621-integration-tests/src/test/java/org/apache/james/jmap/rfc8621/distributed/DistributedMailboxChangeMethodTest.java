@@ -25,7 +25,10 @@ import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
+import org.apache.james.jmap.api.change.Limit;
 import org.apache.james.jmap.api.change.State;
+import org.apache.james.jmap.cassandra.change.CassandraEmailChangeRepository;
+import org.apache.james.jmap.cassandra.change.CassandraMailboxChangeRepository;
 import org.apache.james.jmap.cassandra.change.CassandraStateFactory;
 import org.apache.james.jmap.rfc8621.contract.MailboxChangesMethodContract;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -35,6 +38,8 @@ import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.google.inject.name.Names;
 
 public class DistributedMailboxChangeMethodTest implements MailboxChangesMethodContract {
     @RegisterExtension
@@ -52,7 +57,9 @@ public class DistributedMailboxChangeMethodTest implements MailboxChangesMethodC
         .extension(new RabbitMQExtension())
         .extension(new AwsS3BlobStoreExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule()))
+            .overrideWith(new TestJMAPServerModule())
+            .overrideWith(binder -> binder.bind(Limit.class).annotatedWith(Names.named(CassandraMailboxChangeRepository.LIMIT_NAME)).toInstance(Limit.of(5)))
+            .overrideWith(binder -> binder.bind(Limit.class).annotatedWith(Names.named(CassandraEmailChangeRepository.LIMIT_NAME)).toInstance(Limit.of(5))))
         .build();
 
     @Override
