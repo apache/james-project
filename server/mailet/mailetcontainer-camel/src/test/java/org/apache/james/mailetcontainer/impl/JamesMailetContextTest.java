@@ -108,7 +108,7 @@ class JamesMailetContextTest {
 
     @Test
     void isLocalServerShouldPropagateDomainExceptions() throws Exception {
-        when(domainList.getDomains()).thenThrow(new DomainListException("fail!"));
+        when(domainList.containsDomain(any())).thenThrow(new DomainListException("fail!"));
 
         assertThatThrownBy(() -> testee.isLocalServer(DOMAIN_COM))
             .isInstanceOf(RuntimeException.class);
@@ -249,7 +249,7 @@ class JamesMailetContextTest {
 
     @Test
     void isLocalEmailShouldPropagateDomainExceptions() throws Exception {
-        when(domainList.getDomains()).thenThrow(new DomainListException("fail!"));
+        when(domainList.containsDomain(any())).thenThrow(new DomainListException("fail!"));
 
         assertThatThrownBy(() -> testee.isLocalEmail(mailAddress))
             .isInstanceOf(RuntimeException.class);
