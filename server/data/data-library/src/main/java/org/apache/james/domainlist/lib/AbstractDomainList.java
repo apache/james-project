@@ -97,7 +97,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
             .build(new CacheLoader<>() {
                 @Override
                 public Boolean load(Domain key) throws DomainListException {
-                    return containsDomainInternal(key);
+                    return containsDomainInternal(key) || detectedDomainsContains(key);
                 }
             });
 
@@ -169,8 +169,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     public boolean containsDomain(Domain domain) throws DomainListException {
         if (configuration.isCacheEnabled()) {
             try {
-                boolean internalAnswer = cache.get(domain);
-                return internalAnswer || detectedDomainsContains(domain);
+                return cache.get(domain);
             } catch (ExecutionException e) {
                 if (e.getCause() instanceof DomainListException) {
                     throw (DomainListException) e.getCause();
