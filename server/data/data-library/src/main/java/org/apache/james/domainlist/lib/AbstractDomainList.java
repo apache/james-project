@@ -170,7 +170,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         if (configuration.isCacheEnabled()) {
             try {
                 boolean internalAnswer = cache.get(domain);
-                return internalAnswer || getDomains().contains(domain);
+                return internalAnswer || detectedDomainsContains(domain);
             } catch (ExecutionException e) {
                 if (e.getCause() instanceof DomainListException) {
                     throw (DomainListException) e.getCause();
@@ -179,8 +179,15 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
             }
         } else {
             boolean internalAnswer = containsDomainInternal(domain);
-            return internalAnswer || getDomains().contains(domain);
+            return internalAnswer || detectedDomainsContains(domain);
         }
+    }
+
+    private boolean detectedDomainsContains(Domain domain) throws DomainListException {
+        if (configuration.isAutoDetect() || configuration.isAutoDetectIp()) {
+            return getDomains().contains(domain);
+        }
+        return false;
     }
 
     @Override
