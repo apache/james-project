@@ -22,6 +22,7 @@ package org.apache.james.domainlist.cassandra;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.UnknownHostException;
+import java.time.Duration;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
@@ -29,10 +30,8 @@ import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
-import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
-import org.apache.james.domainlist.lib.DomainListContract;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -40,6 +39,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 class CacheDomainListTest {
 
@@ -57,6 +58,7 @@ class CacheDomainListTest {
             .autoDetect(false)
             .autoDetectIp(false)
             .cacheEnabled(true)
+            .cacheExpiracy(Duration.ofSeconds(1))
             .build());
     }
 
@@ -77,12 +79,30 @@ class CacheDomainListTest {
     }
 
     @Test
-    void additionIsInstant() throws DomainListException {
+    void cacheShouldBeRefreshedPeriodicallyUnderReadLoad(CassandraCluster cassandra) throws DomainListException {
+        domainList.addDomain(DOMAIN_1);
+
+        StatementRecorder statementRecorder = new StatementRecorder();
+        cassandra.getConf().recordStatements(statementRecorder);
+
+        Flux.range(0, 6)
+            .delayElements(Duration.ofMillis(500))
+            .flatMap(Throwing.function(i -> Mono.fromCallable(() ->domainList.containsDomain(DOMAIN_1)).subscribeOn(Schedulers.elastic())))
+            .subscribeOn(Schedulers.elastic())
+            .blockLast();
+
+        assertThat(statementRecorder.listExecutedStatements(
+            StatementRecorder.Selector.preparedStatement("SELECT domain FROM domains WHERE domain=:domain;")))
+            .hasSize(2);
+    }
+
+    @Test
+    void additionIsNotInstant() throws DomainListException {
         domainList.containsDomain(DOMAIN_1);
 
         domainList.addDomain(DOMAIN_1);
 
-        assertThat(domainList.containsDomain(DOMAIN_1)).isEqualTo(true);
+        assertThat(domainList.containsDomain(DOMAIN_1)).isEqualTo(false);
     }
 
     @Test
