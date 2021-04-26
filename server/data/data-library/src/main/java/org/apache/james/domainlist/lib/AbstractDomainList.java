@@ -93,7 +93,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         this.configuration = domainListConfiguration;
 
         this.cache = CacheBuilder.newBuilder()
-            .expireAfterAccess(configuration.getCacheExpiracy())
+            .expireAfterWrite(configuration.getCacheExpiracy())
             .build(new CacheLoader<>() {
                 @Override
                 public Boolean load(Domain key) throws DomainListException {
