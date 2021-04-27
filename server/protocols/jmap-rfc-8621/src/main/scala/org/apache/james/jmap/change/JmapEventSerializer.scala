@@ -20,7 +20,6 @@
 package org.apache.james.jmap.change
 
 import java.util.Optional
-
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
@@ -42,10 +41,10 @@ object StateChangeEventDTO {
     getType = classOf[StateChangeEvent].getCanonicalName,
     getEventId = event.eventId.getId.toString,
     getUsername = event.username.asString(),
-    getMailboxState = event.mailboxState.map(_.value).map(_.toString).toJava,
-    getEmailState = event.emailState.map(_.value).map(_.toString).toJava,
-    getVacationResponseState = event.vacationResponseState.map(_.value).map(_.toString).toJava,
-    getEmailDeliveryState = event.emailDeliveryState.map(_.value).map(_.toString).toJava)
+    getMailboxState = event.getState(MailboxTypeName).map(_.serialize).toJava,
+    getEmailState = event.getState(EmailTypeName).map(_.serialize).toJava,
+    getVacationResponseState = event.getState(VacationResponseTypeName).map(_.serialize).toJava,
+    getEmailDeliveryState = event.getState(EmailDeliveryTypeName).map(_.serialize).toJava)
 }
 
 case class StateChangeEventDTO(@JsonProperty("type") getType: String,
@@ -58,10 +57,11 @@ case class StateChangeEventDTO(@JsonProperty("type") getType: String,
   def toDomainObject: StateChangeEvent = StateChangeEvent(
     eventId = EventId.of(getEventId),
     username = Username.of(getUsername),
-    vacationResponseState = getVacationResponseState.toScala.map(State.fromStringUnchecked),
-    mailboxState = getMailboxState.toScala.map(State.fromStringUnchecked),
-    emailState = getEmailState.toScala.map(State.fromStringUnchecked),
-    emailDeliveryState = getEmailDeliveryState.toScala.map(State.fromStringUnchecked))
+    map = List(VacationResponseTypeName -> getVacationResponseState,
+      MailboxTypeName -> getMailboxState,
+      EmailTypeName -> getEmailState,
+      EmailDeliveryTypeName -> getEmailDeliveryState)
+      .flatMap(element => element._2.toScala.map(stateString => element._1 -> UuidState.fromStringUnchecked(stateString))).toMap)
 }
 
 case class JmapEventSerializer() extends EventSerializer {

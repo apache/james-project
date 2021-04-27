@@ -657,7 +657,7 @@ trait WebSocketContract {
     val globalState1: String = PushState.fromOption(Some(UuidState.fromJava(mailboxState)), None).get.value
     val globalState2: String = PushState.fromOption(None, Some(UuidState.fromJava(emailState))).get.value
     val mailboxStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Mailbox":"${mailboxState.getValue}"}},"pushState":"$globalState1"}"""
-    val emailStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"EmailDelivery":"${emailState.getValue}","Email":"${emailState.getValue}"}},"pushState":"$globalState2"}"""
+    val emailStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Email":"${emailState.getValue}","EmailDelivery":"${emailState.getValue}"}},"pushState":"$globalState2"}"""
 
     assertThat(response.toOption.get.asJava)
       .hasSize(3) // email notification + mailbox notification + API response
@@ -852,7 +852,7 @@ trait WebSocketContract {
     val globalState1: String = PushState.fromOption(Some(UuidState.fromJava(mailboxState)), None).get.value
     val globalState2: String = PushState.fromOption(None, Some(UuidState.fromJava(emailState))).get.value
     val mailboxStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Mailbox":"${mailboxState.getValue}"}},"pushState":"$globalState1"}"""
-    val emailStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"EmailDelivery":"${emailState.getValue}","Email":"${emailState.getValue}"}},"pushState":"$globalState2"}"""
+    val emailStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Email":"${emailState.getValue}","EmailDelivery":"${emailState.getValue}"}},"pushState":"$globalState2"}"""
 
     assertThat(response.toOption.get.asJava)
       .hasSize(3) // email notification + mailbox notification + API response
