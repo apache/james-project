@@ -38,7 +38,7 @@ import org.apache.james.jmap.core.{OutboundMessage, ProblemDetails, RequestId, W
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
-import org.apache.james.jmap.json.ResponseSerializer
+import org.apache.james.jmap.json.{PushSerializer, ResponseSerializer}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes, InjectionKeys => JMAPInjectionKeys}
 import org.apache.james.mailbox.MailboxSession
 import org.slf4j.{Logger, LoggerFactory}
@@ -73,7 +73,9 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
                                  @Named(JMAPInjectionKeys.JMAP) eventBus: EventBus,
                                  jmapApi: JMAPApi,
                                  mailboxChangeRepository: MailboxChangeRepository,
-                                 emailChangeRepository: EmailChangeRepository) extends JMAPRoutes {
+                                 emailChangeRepository: EmailChangeRepository,
+                                 pushSerializer: PushSerializer,
+                                 typeStateFactory: TypeStateFactory) extends JMAPRoutes {
 
   override def routes(): stream.Stream[JMAPRoute] = stream.Stream.of(
     JMAPRoute.builder
@@ -112,13 +114,13 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
 
     out.sendString(
       SFlux.merge(Seq(responseFlux, sink.asFlux()))
-        .map(ResponseSerializer.serialize)
+        .map(pushSerializer.serialize)
         .map(Json.stringify))
       .`then`()
   }
 
   private def handleClientMessages(clientContext: ClientContext)(message: String): SMono[OutboundMessage] =
-    ResponseSerializer.deserializeWebSocketInboundMessage(message)
+    pushSerializer.deserializeWebSocketInboundMessage(message)
       .fold(invalid => {
         val error = asError(None)(new IllegalArgumentException(invalid.toString()))
         SMono.just(error)
@@ -130,7 +132,7 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
               .subscribeOn(Schedulers.elastic)
           case pushEnable: WebSocketPushEnable =>
             SMono(eventBus.register(
-                StateChangeListener(pushEnable.dataTypes.getOrElse(TypeName.ALL), clientContext.outbound),
+                StateChangeListener(pushEnable.dataTypes.getOrElse(typeStateFactory.all.toSet), clientContext.outbound),
                 AccountIdRegistrationKey.of(clientContext.session.getUser)))
               .doOnNext(newRegistration => clientContext.withRegistration(newRegistration))
               .`then`(sendPushStateIfRequested(pushEnable, clientContext))
@@ -154,9 +156,9 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
         emailState <- emailChangeRepository.getLatestStateWithDelegation(JavaAccountId.fromUsername(username))
       } yield {
         StateChange(Map(accountId -> TypeState(
-          MailboxTypeName.asMap(Some(State.fromJava(mailboxState))) ++
-            EmailTypeName.asMap(Some(State.fromJava(emailState))))),
-          Some(PushState.from(mailboxState, emailState)))
+          MailboxTypeName.asMap(Some(UuidState.fromJava(mailboxState))) ++
+            EmailTypeName.asMap(Some(UuidState.fromJava(emailState))))),
+          Some(PushState.from(UuidState(mailboxState.getValue), UuidState(emailState.getValue))))
       })
   }
 
