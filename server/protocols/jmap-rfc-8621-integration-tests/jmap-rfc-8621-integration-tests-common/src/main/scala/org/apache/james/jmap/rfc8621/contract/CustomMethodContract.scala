@@ -28,23 +28,42 @@ import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.events.Event.EventId
+import org.apache.james.events.EventBus
+import org.apache.james.jmap.api.model.AccountId
+import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeEvent, TypeName}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.MethodName
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
-import org.apache.james.jmap.core.{Capability, CapabilityProperties}
+import org.apache.james.jmap.core.{Capability, CapabilityProperties, State}
+import org.apache.james.jmap.draft.JmapGuiceProbe
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.method.{InvocationWithContext, Method}
 import org.apache.james.jmap.rfc8621.contract.CustomMethodContract.CUSTOM
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.MailboxSession
-import org.apache.james.utils.DataProbeImpl
+import org.apache.james.utils.{DataProbeImpl, GuiceProbe}
 import org.junit.jupiter.api.{BeforeEach, Test}
 import org.reactivestreams.Publisher
 import play.api.libs.json.{JsObject, Json}
 import reactor.core.scala.publisher.SMono
+import sttp.capabilities.WebSockets
+import sttp.client3.monad.IdMonad
+import sttp.client3.okhttp.OkHttpSyncBackend
+import sttp.client3.{Identity, RequestT, SttpBackend, asWebSocket, basicRequest}
+import sttp.model.Uri
+import sttp.monad.MonadError
+import sttp.monad.syntax.MonadErrorOps
+import sttp.ws.WebSocketFrame
+import sttp.ws.WebSocketFrame.Text
+
+import java.net.URI
+import javax.inject.{Inject, Named}
+import scala.util.Try
 
 object CustomMethodContract {
   val CUSTOM: CapabilityIdentifier = "urn:apache:james:params:jmap:custom"
+  val eventId = EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4")
 
   private val expected_session_object: String =
     s"""{
@@ -154,6 +173,12 @@ class CustomMethodModule extends AbstractModule {
     Multibinder.newSetBinder(binder(), classOf[Method])
       .addBinding()
       .to(classOf[CustomMethod])
+    Multibinder.newSetBinder(binder(), classOf[TypeName])
+      .addBinding()
+      .toInstance(CustomTypeName)
+    Multibinder.newSetBinder(binder(), classOf[GuiceProbe])
+      .addBinding()
+      .to(classOf[JmapEventBusProbe])
   }
 }
 
@@ -166,7 +191,38 @@ class CustomMethod extends Method {
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, CUSTOM)
 }
 
+object IntState {
+  def parse(string: String): Either[IllegalArgumentException, IntState] = Try(Integer.parseInt(string))
+    .toEither
+    .map(IntState(_))
+    .left.map(new IllegalArgumentException(_))
+}
+
+case class IntState(i: Int) extends State {
+  override def serialize: String = i.toString
+}
+
+case object CustomTypeName extends TypeName {
+  override val asString: String = "MyTypeName"
+
+  override def parse(string: String): Option[TypeName] = string match {
+    case CustomTypeName.asString => Some(CustomTypeName)
+    case _ => None
+  }
+
+  override def parseState(string: String): Either[IllegalArgumentException, IntState] = IntState.parse(string)
+}
+
+class JmapEventBusProbe @Inject() (@Named("JMAP") jmapEventBus: EventBus) extends GuiceProbe {
+  def emitStateChange(stateChangeEvent: StateChangeEvent, accountId: AccountId): Unit =
+    SMono(jmapEventBus.dispatch(stateChangeEvent, AccountIdRegistrationKey(accountId))).block()
+}
+
 trait CustomMethodContract {
+
+  private lazy val backend: SttpBackend[Identity, WebSockets] = OkHttpSyncBackend()
+  private lazy implicit val monadError: MonadError[Identity] = IdMonad
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DataProbeImpl])
@@ -177,6 +233,88 @@ trait CustomMethodContract {
     requestSpecification = baseRequestSpecBuilder(server)
       .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
       .build
+  }
+
+  @Test
+  def pushShouldSupportCustomTypeNameAndIntStateWhenDataTypesAreMyTypeName(server: GuiceJamesServer): Unit = {
+    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val intState = CustomTypeName.parseState("1").toOption.get
+    val stateChangeEvent: StateChangeEvent = StateChangeEvent(eventId = CustomMethodContract.eventId, username = BOB, map = Map(CustomTypeName -> intState))
+    Thread.sleep(100)
+
+    val response: Either[String, String] =
+      authenticatedRequest(server)
+        .response(asWebSocket[Identity, String] {
+          ws =>
+            ws.send(WebSocketFrame.text(
+              """{
+                |  "@type": "WebSocketPushEnable",
+                |  "dataTypes": ["MyTypeName"]
+                |}""".stripMargin))
+
+            Thread.sleep(100)
+
+            server.getProbe(classOf[JmapEventBusProbe])
+              .emitStateChange(stateChangeEvent, accountId)
+
+            ws.receive()
+              .map { case t: Text => t.payload }
+        })
+        .send(backend)
+        .body
+
+    Thread.sleep(100)
+
+    assertThatJson(response.toOption.get)
+      .isEqualTo("""{
+                   |	"@type": "StateChange",
+                   |	"changed": {
+                   |		"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6": {
+                   |			"MyTypeName": "1"
+                   |		}
+                   |	}
+                   |}""".stripMargin)
+  }
+
+  @Test
+  def pushShouldSupportCustomTypeNameAndIntStateWhenDataTypesAreNull(server: GuiceJamesServer): Unit = {
+    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val intState = CustomTypeName.parseState("1").toOption.get
+    val stateChangeEvent: StateChangeEvent = StateChangeEvent(eventId = CustomMethodContract.eventId, username = BOB, map = Map(CustomTypeName -> intState))
+    Thread.sleep(100)
+
+    val response: Either[String, String] =
+      authenticatedRequest(server)
+        .response(asWebSocket[Identity, String] {
+          ws =>
+            ws.send(WebSocketFrame.text(
+              """{
+                |  "@type": "WebSocketPushEnable",
+                |  "dataTypes": null
+                |}""".stripMargin))
+
+            Thread.sleep(100)
+
+            server.getProbe(classOf[JmapEventBusProbe])
+              .emitStateChange(stateChangeEvent, accountId)
+
+            ws.receive()
+              .map { case t: Text => t.payload }
+        })
+        .send(backend)
+        .body
+
+    Thread.sleep(100)
+
+    assertThatJson(response.toOption.get)
+      .isEqualTo("""{
+                   |	"@type": "StateChange",
+                   |	"changed": {
+                   |		"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6": {
+                   |			"MyTypeName": "1"
+                   |		}
+                   |	}
+                   |}""".stripMargin)
   }
 
   @Test
@@ -323,5 +461,15 @@ trait CustomMethodContract {
          |    },
          |    "c1"]]
          |}""".stripMargin)
+  }
+
+  private def authenticatedRequest(server: GuiceJamesServer): RequestT[Identity, Either[String, String], Any] = {
+    val port = server.getProbe(classOf[JmapGuiceProbe])
+      .getJmapPort
+      .getValue
+
+    basicRequest.get(Uri.apply(new URI(s"ws://127.0.0.1:$port/jmap/ws")))
+      .header("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
+      .header("Accept", ACCEPT_RFC8621_VERSION_HEADER)
   }
 }

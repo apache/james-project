@@ -29,6 +29,14 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.jmap.JMAPRoutes;
 import org.apache.james.jmap.JMAPRoutesHandler;
 import org.apache.james.jmap.Version;
+import org.apache.james.jmap.change.EmailDeliveryTypeName$;
+import org.apache.james.jmap.change.EmailSubmissionTypeName$;
+import org.apache.james.jmap.change.EmailTypeName$;
+import org.apache.james.jmap.change.IdentityTypeName$;
+import org.apache.james.jmap.change.MailboxTypeName$;
+import org.apache.james.jmap.change.ThreadTypeName$;
+import org.apache.james.jmap.change.TypeName;
+import org.apache.james.jmap.change.VacationResponseTypeName$;
 import org.apache.james.jmap.core.JmapRfc8621Configuration;
 import org.apache.james.jmap.http.AuthenticationStrategy;
 import org.apache.james.jmap.http.Authenticator;
@@ -118,6 +126,15 @@ public class RFC8621MethodsModule extends AbstractModule {
         Multibinder<AuthenticationStrategy> authenticationStrategies = Multibinder.newSetBinder(binder(), AuthenticationStrategy.class);
         authenticationStrategies.addBinding().to(BasicAuthenticationStrategy.class);
         authenticationStrategies.addBinding().to(JWTAuthenticationStrategy.class);
+
+        Multibinder<TypeName> typeNameMultibinder = Multibinder.newSetBinder(binder(), TypeName.class);
+        typeNameMultibinder.addBinding().toInstance(MailboxTypeName$.MODULE$);
+        typeNameMultibinder.addBinding().toInstance(EmailTypeName$.MODULE$);
+        typeNameMultibinder.addBinding().toInstance(ThreadTypeName$.MODULE$);
+        typeNameMultibinder.addBinding().toInstance(IdentityTypeName$.MODULE$);
+        typeNameMultibinder.addBinding().toInstance(EmailSubmissionTypeName$.MODULE$);
+        typeNameMultibinder.addBinding().toInstance(EmailDeliveryTypeName$.MODULE$);
+        typeNameMultibinder.addBinding().toInstance(VacationResponseTypeName$.MODULE$);
     }
 
     @ProvidesIntoSet
