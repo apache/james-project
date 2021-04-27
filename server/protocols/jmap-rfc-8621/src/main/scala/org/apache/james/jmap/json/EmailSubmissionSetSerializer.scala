@@ -24,7 +24,7 @@ import eu.timepit.refined.refineV
 import javax.inject.Inject
 import org.apache.james.core.MailAddress
 import org.apache.james.jmap.core.Id.IdConstraint
-import org.apache.james.jmap.core.{SetError, State}
+import org.apache.james.jmap.core.{SetError, UuidState}
 import org.apache.james.jmap.mail.{DestroyIds, EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, UnparsedMessageId}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json.{JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, Reads, Writes}
@@ -76,7 +76,7 @@ class EmailSubmissionSetSerializer @Inject()(messageIdFactory: MessageId.Factory
 
   private implicit val emailSubmissionCreationResponseWrites: Writes[EmailSubmissionCreationResponse] = Json.valueWrites[EmailSubmissionCreationResponse]
 
-  private implicit val stateWrites: Writes[State] = Json.valueWrites[State]
+  private implicit val stateWrites: Writes[UuidState] = Json.valueWrites[UuidState]
   private implicit def emailSubmissionSetResponseWrites(implicit emailSubmissionCreationResponseWrites: Writes[EmailSubmissionCreationResponse]): Writes[EmailSubmissionSetResponse] = Json.writes[EmailSubmissionSetResponse]
 
   private implicit def emailSubmissionMapCreationResponseWrites(implicit emailSubmissionSetCreationResponseWrites: Writes[EmailSubmissionCreationResponse]): Writes[Map[EmailSubmissionCreationId, EmailSubmissionCreationResponse]] =

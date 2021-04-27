@@ -30,7 +30,7 @@ import org.apache.james.jmap.InjectionKeys
 import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, JmapChange, MailboxChange, MailboxChangeRepository}
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.change.MailboxChangeListener.LOGGER
-import org.apache.james.jmap.core.State
+import org.apache.james.jmap.core.UuidState
 import org.apache.james.mailbox.events.MailboxEvents.{Added, Expunged, FlagsUpdated, MailboxACLUpdated, MailboxAdded, MailboxDeletion, MailboxEvent, MailboxRenamed}
 import org.apache.james.mailbox.exception.MailboxException
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId}

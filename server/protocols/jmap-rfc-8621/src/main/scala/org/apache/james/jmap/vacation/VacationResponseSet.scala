@@ -25,7 +25,7 @@ import java.time.format.DateTimeFormatter
 import org.apache.james.jmap.api.vacation.Vacation.ID
 import org.apache.james.jmap.api.vacation.VacationPatch
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType, invalidArgumentValue, serverFailValue}
-import org.apache.james.jmap.core.{AccountId, State}
+import org.apache.james.jmap.core.{AccountId, UuidState}
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.util.ValuePatch
 import play.api.libs.json.{JsBoolean, JsNull, JsObject, JsString, JsValue}
@@ -99,7 +99,7 @@ case class VacationResponsePatchObject(jsObject: JsObject) {
 }
 
 case class VacationResponseSetResponse(accountId: AccountId,
-                                       newState: State,
+                                       newState: UuidState,
                                        updated: Option[Map[String, VacationResponseUpdateResponse]],
                                        notUpdated: Option[Map[String, VacationResponseSetError]],
                                        notCreated: Option[Map[String, VacationResponseSetError]],

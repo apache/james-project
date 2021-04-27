@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.vacation
 
-import org.apache.james.jmap.core.{AccountId, Properties, State}
+import org.apache.james.jmap.core.{AccountId, Properties, UuidState}
 import org.apache.james.jmap.method.WithAccountId
 
 case class VacationResponseIds(value: List[UnparsedVacationResponseId])
@@ -33,6 +33,6 @@ case class VacationResponseNotFound(value: Set[UnparsedVacationResponseId]) {
 }
 
 case class VacationResponseGetResponse(accountId: AccountId,
-                                       state: State,
+                                       state: UuidState,
                                        list: List[VacationResponse],
                                        notFound: VacationResponseNotFound)

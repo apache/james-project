@@ -29,7 +29,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.core.MailAddress
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{AccountId, Id, Properties, SetError, State}
+import org.apache.james.jmap.core.{AccountId, Id, Properties, SetError, UuidState}
 import org.apache.james.jmap.method.{EmailSubmissionCreationParseException, WithAccountId}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json.JsObject
@@ -115,7 +115,7 @@ case class EmailSubmissionSetRequest(accountId: AccountId,
 }
 
 case class EmailSubmissionSetResponse(accountId: AccountId,
-                                      newState: State,
+                                      newState: UuidState,
                                       created: Option[Map[EmailSubmissionCreationId, EmailSubmissionCreationResponse]],
                                       notCreated: Option[Map[EmailSubmissionCreationId, SetError]])
 

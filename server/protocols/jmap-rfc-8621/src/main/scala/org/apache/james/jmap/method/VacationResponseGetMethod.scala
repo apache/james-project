@@ -25,7 +25,7 @@ import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.api.vacation.VacationRepository
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_VACATION_RESPONSE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.core.State.INSTANCE
+import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, MissingCapabilityException, Properties}
 import org.apache.james.jmap.json.{ResponseSerializer, VacationSerializer}
 import org.apache.james.jmap.routes.SessionSupplier

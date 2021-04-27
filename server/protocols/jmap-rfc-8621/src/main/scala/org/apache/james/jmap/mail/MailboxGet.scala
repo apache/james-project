@@ -22,7 +22,7 @@ package org.apache.james.jmap.mail
 import eu.timepit.refined
 import org.apache.james.jmap.api.change.{EmailChanges, Limit, MailboxChanges}
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
-import org.apache.james.jmap.core.{AccountId, Properties, State}
+import org.apache.james.jmap.core.{AccountId, Properties, UuidState}
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.mailbox.model.MailboxId
 
@@ -58,7 +58,7 @@ case class NotFound(value: Set[UnparsedMailboxId]) {
 }
 
 case class MailboxGetResponse(accountId: AccountId,
-                              state: State,
+                              state: UuidState,
                               list: List[Mailbox],
                               notFound: NotFound)
 
@@ -71,12 +71,12 @@ object HasMoreChanges {
 case class HasMoreChanges(value: Boolean) extends AnyVal
 
 case class MailboxChangesRequest(accountId: AccountId,
-                                 sinceState: State,
+                                 sinceState: UuidState,
                                  maxChanges: Option[Limit]) extends WithAccountId
 
 case class MailboxChangesResponse(accountId: AccountId,
-                                  oldState: State,
-                                  newState: State,
+                                  oldState: UuidState,
+                                  newState: UuidState,
                                   hasMoreChanges: HasMoreChanges,
                                   updatedProperties: Option[Properties],
                                   created: Set[MailboxId],

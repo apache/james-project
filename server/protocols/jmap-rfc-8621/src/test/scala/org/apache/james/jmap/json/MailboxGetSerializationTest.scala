@@ -22,7 +22,7 @@ package org.apache.james.jmap.json
 import eu.timepit.refined.auto._
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_VACATION_RESPONSE}
-import org.apache.james.jmap.core.State.INSTANCE
+import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.core.{AccountId, Properties}
 import org.apache.james.jmap.json.Fixture._
 import org.apache.james.jmap.json.MailboxGetSerializationTest._

@@ -24,7 +24,7 @@ import org.apache.james.jmap.api.change.EmailChangeRepository
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, State}
+import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, UuidState}
 import org.apache.james.jmap.json.{EmailSetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{EmailSetRequest, EmailSetResponse}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -82,12 +82,12 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
       case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
     }
 
-  private def retrieveState(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[State] =
+  private def retrieveState(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[UuidState] =
     if (capabilities.contains(JAMES_SHARES)) {
       SMono(emailChangeRepository.getLatestStateWithDelegation(JavaAccountId.fromUsername(mailboxSession.getUser)))
-        .map(State.fromJava)
+        .map(UuidState.fromJava)
     } else {
       SMono(emailChangeRepository.getLatestState(JavaAccountId.fromUsername(mailboxSession.getUser)))
-        .map(State.fromJava)
+        .map(UuidState.fromJava)
     }
 }

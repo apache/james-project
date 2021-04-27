@@ -34,7 +34,7 @@ import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EM
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
-import org.apache.james.jmap.core.{ClientId, Invocation, Properties, ServerId, SetError, State}
+import org.apache.james.jmap.core.{ClientId, Invocation, Properties, ServerId, SetError, UuidState}
 import org.apache.james.jmap.json.{EmailSubmissionSetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope}
 import org.apache.james.jmap.method.EmailSubmissionSetMethod.{CreationFailure, CreationResult, CreationResults, CreationSuccess, LOGGER, MAIL_METADATA_USERNAME_ATTRIBUTE}
@@ -167,7 +167,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
             methodName = invocation.invocation.methodName,
             arguments = Arguments(serializer.serializeEmailSubmissionSetResponse(EmailSubmissionSetResponse(
               accountId = request.accountId,
-              newState = State.INSTANCE,
+              newState = UuidState.INSTANCE,
               created = Some(createdResults._1.retrieveCreated).filter(_.nonEmpty),
               notCreated = Some(createdResults._1.retrieveErrors).filter(_.nonEmpty)))
               .as[JsObject]),

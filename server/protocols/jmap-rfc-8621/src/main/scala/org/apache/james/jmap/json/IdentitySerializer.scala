@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.json
 
-import org.apache.james.jmap.core.{Properties, State}
+import org.apache.james.jmap.core.{Properties, UuidState}
 import org.apache.james.jmap.mail._
 import play.api.libs.json.{Format, JsArray, JsObject, JsResult, JsSuccess, JsValue, Json, OWrites, Reads, Writes, __}
 
@@ -34,7 +34,7 @@ object IdentitySerializer {
   private implicit val mayDeleteWrites: Writes[MayDeleteIdentity] = Json.valueWrites[MayDeleteIdentity]
   private implicit val identityWrites: Writes[Identity] = Json.writes[Identity]
   private implicit val identityGetRequestReads: Reads[IdentityGetRequest] = Json.reads[IdentityGetRequest]
-  private implicit val stateWrites: Writes[State] = Json.valueWrites[State]
+  private implicit val stateWrites: Writes[UuidState] = Json.valueWrites[UuidState]
   private implicit val identityGetResponseWrites: OWrites[IdentityGetResponse] = Json.writes[IdentityGetResponse]
 
   def serialize(response: IdentityGetResponse, properties: Properties): JsObject = Json.toJsObject(response)

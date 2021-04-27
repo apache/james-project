@@ -27,8 +27,8 @@ import org.apache.james.jmap.api.change.{EmailChangeRepository, State => JavaSta
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.State.INSTANCE
-import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, Properties, State}
+import org.apache.james.jmap.core.UuidState.INSTANCE
+import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, Properties, UuidState}
 import org.apache.james.jmap.json.{EmailGetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{Email, EmailBodyPart, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound, EmailView, EmailViewReaderFactory, SpecificHeaderRequest, UnparsedEmailId}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -146,7 +146,7 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
         .flatMap(result => SMono[JavaState](emailchangeRepository.getLatestState(JavaAccountId.fromUsername(mailboxSession.getUser)))
           .map(state => EmailGetResponse(
             accountId = request.accountId,
-            state = State.fromJava(state),
+            state = UuidState.fromJava(state),
             list = result.emails.toList,
             notFound = result.notFound)))
     }

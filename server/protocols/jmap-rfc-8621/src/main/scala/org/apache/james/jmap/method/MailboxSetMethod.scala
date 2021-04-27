@@ -25,7 +25,7 @@ import org.apache.james.jmap.api.change.MailboxChangeRepository
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{Invocation, SetError, State}
+import org.apache.james.jmap.core.{Invocation, SetError, UuidState}
 import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{MailboxSetRequest, MailboxSetResponse}
 import org.apache.james.jmap.method.MailboxSetCreatePerformer.MailboxCreationResults
@@ -75,8 +75,8 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
                              creationResults: MailboxCreationResults,
                              deletionResults: MailboxDeletionResults,
                              updateResults: MailboxUpdateResults,
-                             oldState: State,
-                             newState: State): Invocation = {
+                             oldState: UuidState,
+                             newState: UuidState): Invocation = {
     val response = MailboxSetResponse(
       mailboxSetRequest.accountId,
       oldState = Some(oldState),
@@ -93,12 +93,12 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
       invocation.methodCallId)
   }
 
-  private def retrieveState(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[State] =
+  private def retrieveState(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[UuidState] =
     if (capabilities.contains(JAMES_SHARES)) {
       SMono(mailboxChangeRepository.getLatestStateWithDelegation(JavaAccountId.fromUsername(mailboxSession.getUser)))
-        .map(State.fromJava)
+        .map(UuidState.fromJava)
     } else {
       SMono(mailboxChangeRepository.getLatestState(JavaAccountId.fromUsername(mailboxSession.getUser)))
-        .map(State.fromJava)
+        .map(UuidState.fromJava)
     }
 }

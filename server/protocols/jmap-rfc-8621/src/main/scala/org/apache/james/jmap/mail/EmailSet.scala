@@ -26,7 +26,7 @@ import com.google.common.net.MediaType
 import com.google.common.net.MediaType.{HTML_UTF_8, PLAIN_TEXT_UTF_8}
 import eu.timepit.refined
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
-import org.apache.james.jmap.core.{AccountId, SetError, State, UTCDate}
+import org.apache.james.jmap.core.{AccountId, SetError, UTCDate, UuidState}
 import org.apache.james.jmap.mail.Disposition.INLINE
 import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.method.WithAccountId
@@ -325,8 +325,8 @@ case class EmailSetRequest(accountId: AccountId,
                            destroy: Option[DestroyIds]) extends WithAccountId
 
 case class EmailSetResponse(accountId: AccountId,
-                            oldState: Option[State],
-                            newState: State,
+                            oldState: Option[UuidState],
+                            newState: UuidState,
                             created: Option[Map[EmailCreationId, EmailCreationResponse]],
                             notCreated: Option[Map[EmailCreationId, SetError]],
                             updated: Option[Map[MessageId, Unit]],

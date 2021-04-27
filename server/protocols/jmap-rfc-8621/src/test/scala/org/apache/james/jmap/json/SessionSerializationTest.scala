@@ -26,7 +26,7 @@ import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.CoreCapabilityProperties.CollationAlgorithm
 import org.apache.james.jmap.core.MailCapability.EmailQuerySortOption
-import org.apache.james.jmap.core.{Account, Capabilities, CoreCapability, CoreCapabilityProperties, IsPersonal, IsReadOnly, MailCapability, MailCapabilityProperties, MaxCallsInRequest, MaxConcurrentRequests, MaxConcurrentUpload, MaxMailboxDepth, MaxMailboxesPerEmail, MaxObjectsInGet, MaxObjectsInSet, MaxSizeAttachmentsPerEmail, MaxSizeMailboxName, MaxSizeRequest, MaxSizeUpload, MayCreateTopLevelMailbox, QuotaCapability, Session, SharesCapability, State, VacationResponseCapability}
+import org.apache.james.jmap.core.{Account, Capabilities, CoreCapability, CoreCapabilityProperties, IsPersonal, IsReadOnly, MailCapability, MailCapabilityProperties, MaxCallsInRequest, MaxConcurrentRequests, MaxConcurrentUpload, MaxMailboxDepth, MaxMailboxesPerEmail, MaxObjectsInGet, MaxObjectsInSet, MaxSizeAttachmentsPerEmail, MaxSizeMailboxName, MaxSizeRequest, MaxSizeUpload, MayCreateTopLevelMailbox, QuotaCapability, Session, SharesCapability, UuidState, VacationResponseCapability}
 import org.apache.james.jmap.json.SessionSerializationTest.SESSION
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -108,7 +108,7 @@ object SessionSerializationTest {
     downloadUrl = URL,
     uploadUrl = URL,
     eventSourceUrl = URL,
-    state = State.INSTANCE)
+    state = UuidState.INSTANCE)
 
   def readResource(resourceFileName: String): String = {
     Using(Source.fromURL(getClass.getResource(resourceFileName), "UTF-8")) { source =>
@@ -203,7 +203,7 @@ class SessionSerializationTest extends AnyWordSpec with Matchers {
           |  "downloadUrl": "http://james.org",
           |  "uploadUrl": "http://james.org",
           |  "eventSourceUrl": "http://james.org",
-          |  "state": "${State.INSTANCE.value}"
+          |  "state": "${UuidState.INSTANCE.value}"
           |}""".stripMargin)
       ResponseSerializer.serialize(SESSION) should equal(json)
     }

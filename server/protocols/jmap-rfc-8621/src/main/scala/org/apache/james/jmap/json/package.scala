@@ -26,7 +26,7 @@ import eu.timepit.refined.api.{RefType, Validate}
 import org.apache.james.core.MailAddress
 import org.apache.james.jmap.api.change.Limit
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{AccountId, Properties, SetError, State, UTCDate}
+import org.apache.james.jmap.core.{AccountId, Properties, SetError, UTCDate, UuidState}
 import org.apache.james.jmap.mail.HasMoreChanges
 import play.api.libs.json._
 
@@ -81,7 +81,7 @@ package object json {
     case _ => JsError("Expecting js string to represent UTC Date")
   }
 
-  private[json] implicit val stateReads: Reads[State] = Json.valueReads[State]
+  private[json] implicit val stateReads: Reads[UuidState] = Json.valueReads[UuidState]
   private[json] implicit val accountIdWrites: Format[AccountId] = Json.valueFormat[AccountId]
   private[json] implicit val propertiesFormat: Format[Properties] = Json.valueFormat[Properties]
   private[json] implicit val setErrorDescriptionWrites: Writes[SetErrorDescription] = Json.valueWrites[SetErrorDescription]

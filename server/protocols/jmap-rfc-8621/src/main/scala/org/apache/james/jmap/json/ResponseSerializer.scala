@@ -68,8 +68,8 @@ object ResponseSerializer {
   // RequestObject
   private implicit val requestObjectRead: Format[RequestObject] = Json.format[RequestObject]
 
-  private implicit val stateWrites: Writes[State] = Json.valueWrites[State]
   // ResponseObject
+  private implicit val stateWrites: Writes[UuidState] = Json.valueWrites[UuidState]
   private implicit val responseObjectFormat: OFormat[ResponseObject] = Json.format[ResponseObject]
 
   private implicit val maxSizeUploadWrites: Writes[MaxSizeUpload] = Json.valueWrites[MaxSizeUpload]

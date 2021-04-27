@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{ErrorCode, Invocation, State}
+import org.apache.james.jmap.core.{ErrorCode, Invocation, UuidState}
 import org.apache.james.jmap.json.{ResponseSerializer, ThreadSerializer}
 import org.apache.james.jmap.mail.{HasMoreChanges, ThreadChangesRequest, ThreadChangesResponse}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -38,11 +38,11 @@ class ThreadChangesMethod @Inject()(val metricFactory: MetricFactory,
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: ThreadChangesRequest): SMono[InvocationWithContext] =
-    if (request.sinceState.equals(State.INSTANCE)) {
+    if (request.sinceState.equals(UuidState.INSTANCE)) {
       val response: ThreadChangesResponse = ThreadChangesResponse(
         accountId = request.accountId,
-        oldState = State.INSTANCE,
-        newState = State.INSTANCE,
+        oldState = UuidState.INSTANCE,
+        newState = UuidState.INSTANCE,
         hasMoreChanges = HasMoreChanges(false),
         created = List(),
         updated = List(),

@@ -25,7 +25,7 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.api.change.State
 import org.apache.james.jmap.api.model.AccountId
-import org.apache.james.jmap.core.PushState
+import org.apache.james.jmap.core.{PushState, UuidState}
 import org.apache.james.jmap.draft.JmapGuiceProbe
 import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.mailbox.MessageManager.AppendCommand
@@ -471,8 +471,8 @@ trait WebSocketContract {
     val emailState: State = jmapGuiceProbe.getLatestEmailState(accountId)
     val mailboxState: State = jmapGuiceProbe.getLatestMailboxState(accountId)
 
-    val globalState1: String = PushState.fromOption(Some(mailboxState), None).get.value
-    val globalState2: String = PushState.fromOption(None, Some(emailState)).get.value
+    val globalState1: String = PushState.fromOption(Some(UuidState.fromJava(mailboxState)), None).get.value
+    val globalState2: String = PushState.fromOption(None, Some(UuidState.fromJava(emailState))).get.value
     val mailboxStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Mailbox":"${mailboxState.getValue}"}},"pushState":"$globalState1"}"""
     val emailStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Email":"${emailState.getValue}"}},"pushState":"$globalState2"}"""
 
@@ -654,8 +654,8 @@ trait WebSocketContract {
     val mailboxState: State = jmapGuiceProbe.getLatestMailboxState(accountId)
     val emailState: State = jmapGuiceProbe.getLatestEmailState(accountId)
 
-    val globalState1: String = PushState.fromOption(Some(mailboxState), None).get.value
-    val globalState2: String = PushState.fromOption(None, Some(emailState)).get.value
+    val globalState1: String = PushState.fromOption(Some(UuidState.fromJava(mailboxState)), None).get.value
+    val globalState2: String = PushState.fromOption(None, Some(UuidState.fromJava(emailState))).get.value
     val mailboxStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Mailbox":"${mailboxState.getValue}"}},"pushState":"$globalState1"}"""
     val emailStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"EmailDelivery":"${emailState.getValue}","Email":"${emailState.getValue}"}},"pushState":"$globalState2"}"""
 
@@ -849,8 +849,8 @@ trait WebSocketContract {
     val emailState: State = jmapGuiceProbe.getLatestEmailState(accountId)
     val mailboxState: State = jmapGuiceProbe.getLatestMailboxState(accountId)
 
-    val globalState1: String = PushState.fromOption(Some(mailboxState), None).get.value
-    val globalState2: String = PushState.fromOption(None, Some(emailState)).get.value
+    val globalState1: String = PushState.fromOption(Some(UuidState.fromJava(mailboxState)), None).get.value
+    val globalState2: String = PushState.fromOption(None, Some(UuidState.fromJava(emailState))).get.value
     val mailboxStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Mailbox":"${mailboxState.getValue}"}},"pushState":"$globalState1"}"""
     val emailStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"EmailDelivery":"${emailState.getValue}","Email":"${emailState.getValue}"}},"pushState":"$globalState2"}"""
 
@@ -922,8 +922,8 @@ trait WebSocketContract {
     val emailState: State = jmapGuiceProbe.getLatestEmailState(accountId)
     val mailboxState: State = jmapGuiceProbe.getLatestMailboxState(accountId)
 
-    val globalState1: String = PushState.fromOption(Some(mailboxState), None).get.value
-    val globalState2: String = PushState.fromOption(None, Some(emailState)).get.value
+    val globalState1: String = PushState.fromOption(Some(UuidState.fromJava(mailboxState)), None).get.value
+    val globalState2: String = PushState.fromOption(None, Some(UuidState.fromJava(emailState))).get.value
     val mailboxStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Mailbox":"${mailboxState.getValue}"}},"pushState":"$globalState1"}"""
     val emailStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Email":"${emailState.getValue}"}},"pushState":"$globalState2"}"""
 
@@ -986,8 +986,8 @@ trait WebSocketContract {
     val emailState: State = jmapGuiceProbe.getLatestEmailStateWithDelegation(accountId)
     val mailboxState: State = jmapGuiceProbe.getLatestMailboxStateWithDelegation(accountId)
 
-    val globalState1: String = PushState.fromOption(Some(mailboxState), None).get.value
-    val globalState2: String = PushState.fromOption(None, Some(emailState)).get.value
+    val globalState1: String = PushState.fromOption(Some(UuidState.fromJava(mailboxState)), None).get.value
+    val globalState2: String = PushState.fromOption(None, Some(UuidState.fromJava(emailState))).get.value
     val mailboxStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Mailbox":"${mailboxState.getValue}"}},"pushState":"$globalState1"}"""
     val emailStateChange: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Email":"${emailState.getValue}"}},"pushState":"$globalState2"}"""
 
@@ -1131,7 +1131,7 @@ trait WebSocketContract {
     val jmapGuiceProbe: JmapGuiceProbe = server.getProbe(classOf[JmapGuiceProbe])
     val emailState: State = jmapGuiceProbe.getLatestEmailState(accountId)
     val mailboxState: State = jmapGuiceProbe.getLatestMailboxState(accountId)
-    val globalState: PushState = PushState.from(mailboxState, emailState)
+    val globalState: PushState = PushState.from(UuidState(mailboxState.getValue), UuidState(emailState.getValue))
     val pushEnableResponse: String = s"""{"@type":"StateChange","changed":{"$ACCOUNT_ID":{"Mailbox":"${mailboxState.getValue}","Email":"${emailState.getValue}"}},"pushState":"${globalState.value}"}"""
 
     assertThat(response.toOption.get)
