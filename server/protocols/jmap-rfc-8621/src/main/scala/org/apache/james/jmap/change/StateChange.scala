@@ -22,51 +22,86 @@ package org.apache.james.jmap.change
 import org.apache.james.core.Username
 import org.apache.james.events.Event
 import org.apache.james.events.Event.EventId
-import org.apache.james.jmap.api.change.{State => JavaState}
-import org.apache.james.jmap.core.{AccountId, PushState, State, StateChange}
+import org.apache.james.jmap.core.{AccountId, PushState, State, StateChange, UuidState}
 
-object TypeName {
-  val ALL: Set[TypeName] = Set(EmailTypeName, MailboxTypeName, ThreadTypeName, IdentityTypeName, EmailSubmissionTypeName, EmailDeliveryTypeName)
-
-  def parse(string: String): Either[String, TypeName] = string match {
-    case MailboxTypeName.asString => Right(MailboxTypeName)
-    case EmailTypeName.asString => Right(EmailTypeName)
-    case ThreadTypeName.asString => Right(ThreadTypeName)
-    case IdentityTypeName.asString => Right(IdentityTypeName)
-    case EmailSubmissionTypeName.asString => Right(EmailSubmissionTypeName)
-    case EmailDeliveryTypeName.asString => Right(EmailDeliveryTypeName)
-    case VacationResponseTypeName.asString => Right(VacationResponseTypeName)
-    case _ => Left(s"Unknown typeName $string")
-  }
-}
-
-sealed trait TypeName {
+trait TypeName {
   def asMap(maybeState: Option[State]): Map[TypeName, State] =
     maybeState.map(state => Map[TypeName, State](this -> state))
       .getOrElse(Map())
 
   def asString(): String
+  def parse(string: String): Option[TypeName]
+  def parseState(string: String): Either[IllegalArgumentException, State]
 }
 case object MailboxTypeName extends TypeName {
   override val asString: String = "Mailbox"
+
+  override def parse(string: String): Option[TypeName] = string match {
+    case MailboxTypeName.asString => Some(MailboxTypeName)
+    case _ => None
+  }
+
+  override def parseState(string: String): Either[IllegalArgumentException, UuidState] = UuidState.parse(string)
 }
 case object EmailTypeName extends TypeName {
   override val asString: String = "Email"
+
+  override def parse(string: String): Option[TypeName] = string match {
+    case EmailTypeName.asString => Some(EmailTypeName)
+    case _ => None
+  }
+
+  override def parseState(string: String): Either[IllegalArgumentException, UuidState] = UuidState.parse(string)
 }
 case object ThreadTypeName extends TypeName {
   override val asString: String = "Thread"
+
+  override def parse(string: String): Option[TypeName] = string match {
+    case ThreadTypeName.asString => Some(ThreadTypeName)
+    case _ => None
+  }
+
+  override def parseState(string: String): Either[IllegalArgumentException, UuidState] = UuidState.parse(string)
 }
 case object IdentityTypeName extends TypeName {
   override val asString: String = "Identity"
+
+  override def parse(string: String): Option[TypeName] = string match {
+    case IdentityTypeName.asString => Some(IdentityTypeName)
+    case _ => None
+  }
+
+  override def parseState(string: String): Either[IllegalArgumentException, UuidState] = UuidState.parse(string)
 }
 case object EmailSubmissionTypeName extends TypeName {
   override val asString: String = "EmailSubmission"
+
+  override def parse(string: String): Option[TypeName] = string match {
+    case EmailSubmissionTypeName.asString => Some(EmailSubmissionTypeName)
+    case _ => None
+  }
+
+  override def parseState(string: String): Either[IllegalArgumentException, UuidState] = UuidState.parse(string)
 }
 case object EmailDeliveryTypeName extends TypeName {
   override val asString: String = "EmailDelivery"
+
+  override def parse(string: String): Option[TypeName] = string match {
+    case EmailDeliveryTypeName.asString => Some(EmailDeliveryTypeName)
+    case _ => None
+  }
+
+  override def parseState(string: String): Either[IllegalArgumentException, UuidState] = UuidState.parse(string)
 }
 case object VacationResponseTypeName extends TypeName {
   override val asString: String = "VacationResponse"
+
+  override def parse(string: String): Option[TypeName] = string match {
+    case VacationResponseTypeName.asString => Some(VacationResponseTypeName)
+    case _ => None
+  }
+
+  override def parseState(string: String): Either[IllegalArgumentException, UuidState] = UuidState.parse(string)
 }
 
 case class TypeState(changes: Map[TypeName, State]) {
@@ -80,29 +115,21 @@ case class TypeState(changes: Map[TypeName, State]) {
 
 case class StateChangeEvent(eventId: EventId,
                             username: Username,
-                            vacationResponseState: Option[State],
-                            mailboxState: Option[State],
-                            emailState: Option[State],
-                            emailDeliveryState: Option[State]) extends Event {
-  def asStateChange: StateChange =
+                            map: Map[TypeName, State]) extends Event {
+  def asStateChange: StateChange = {
     StateChange(Map(AccountId.from(username).fold(
       failure => throw new IllegalArgumentException(failure),
       success => success) ->
-      TypeState(
-        VacationResponseTypeName.asMap(vacationResponseState) ++
-          MailboxTypeName.asMap(mailboxState) ++
-          EmailDeliveryTypeName.asMap(emailDeliveryState) ++
-          EmailTypeName.asMap(emailState))),
-      PushState.fromOption(
-        mailboxState.map(state => JavaState.of(state.value)),
-        emailState.map(state => JavaState.of(state.value))))
+      TypeState(map)),
+      PushState.fromOption(getState(MailboxTypeName), getState(EmailTypeName)))
+  }
+
+  def getState(typeName: TypeName): Option[State] =
+    map.find(element => element._1.equals(typeName)).map(element => element._2)
 
   override val getUsername: Username = username
 
-  override val isNoop: Boolean = mailboxState.isEmpty &&
-    emailState.isEmpty &&
-    vacationResponseState.isEmpty &&
-    emailDeliveryState.isEmpty
+  override val isNoop: Boolean = map.isEmpty
 
   override val getEventId: EventId = eventId
 }
