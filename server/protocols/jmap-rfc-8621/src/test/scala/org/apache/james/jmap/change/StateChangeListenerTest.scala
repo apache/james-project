@@ -39,10 +39,7 @@ class StateChangeListenerTest {
     val sink: Sinks.Many[OutboundMessage] = Sinks.many().unicast().onBackpressureBuffer()
     val event = StateChangeEvent(eventId = eventId,
       username = Username.of("bob"),
-      mailboxState = Some(mailboxState),
-      emailState = Some(emailState),
-      vacationResponseState = None,
-      emailDeliveryState = None)
+      map = Map(MailboxTypeName -> mailboxState, EmailTypeName -> emailState))
     val listener = StateChangeListener(Set(MailboxTypeName, EmailTypeName), sink)
 
     SMono(listener.reactiveEvent(event)).subscribeOn(Schedulers.elastic()).block()
@@ -60,10 +57,7 @@ class StateChangeListenerTest {
     val sink: Sinks.Many[OutboundMessage] = Sinks.many().unicast().onBackpressureBuffer()
     val event = StateChangeEvent(eventId = eventId,
       username = Username.of("bob"),
-      mailboxState = Some(mailboxState),
-      emailState = Some(emailState),
-      vacationResponseState = None,
-      emailDeliveryState = None)
+      map = Map(MailboxTypeName -> mailboxState, EmailTypeName -> emailState))
     val listener = StateChangeListener(Set(MailboxTypeName), sink)
 
     SMono(listener.reactiveEvent(event)).subscribeOn(Schedulers.elastic()).block()
@@ -80,10 +74,7 @@ class StateChangeListenerTest {
     val sink: Sinks.Many[OutboundMessage] = Sinks.many().unicast().onBackpressureBuffer()
     val event = StateChangeEvent(eventId = eventId,
       username = Username.of("bob"),
-      mailboxState = None,
-      emailState = Some(emailState),
-      vacationResponseState = None,
-      emailDeliveryState = None)
+      map = Map(EmailTypeName -> emailState))
     val listener = StateChangeListener(Set(MailboxTypeName), sink)
 
     SMono(listener.reactiveEvent(event)).subscribeOn(Schedulers.elastic()).block()

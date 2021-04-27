@@ -28,7 +28,7 @@ import org.apache.james.events.EventBus
 import org.apache.james.jmap.InjectionKeys
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.api.vacation.{VacationPatch, VacationRepository}
-import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeEvent}
+import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeEvent, VacationResponseTypeName}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_VACATION_RESPONSE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
@@ -88,11 +88,8 @@ class VacationResponseSetMethod @Inject()(@Named(InjectionKeys.JMAP) eventBus: E
       .map(updateResult => createResponse(invocation.invocation, request, updateResult))
       .flatMap(next => {
         val event = StateChangeEvent(eventId = EventId.random(),
-          mailboxState = None,
-          emailState = None,
-          emailDeliveryState = None,
           username = mailboxSession.getUser,
-          vacationResponseState = Some(State(UUID.randomUUID())))
+          map = Map(VacationResponseTypeName -> UuidState.fromGenerateUuid()))
         val accountId = AccountId.fromUsername(mailboxSession.getUser)
         SMono(eventBus.dispatch(event, AccountIdRegistrationKey(accountId)))
           .`then`(SMono.just(next))
