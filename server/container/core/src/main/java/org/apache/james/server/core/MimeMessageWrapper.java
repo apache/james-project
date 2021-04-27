@@ -359,7 +359,7 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                     loadHeaders();
                 }
                 // 2 == CRLF
-                return (int) (fullSize - initialHeaderSize - HEADER_BODY_SEPARATOR_SIZE);
+                return Math.max(0, (int) (fullSize - initialHeaderSize - HEADER_BODY_SEPARATOR_SIZE));
 
             } catch (IOException e) {
                 throw new MessagingException("Unable to calculate message size");
