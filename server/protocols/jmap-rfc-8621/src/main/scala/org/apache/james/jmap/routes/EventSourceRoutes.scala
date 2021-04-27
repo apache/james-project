@@ -33,12 +33,12 @@ import javax.inject.{Inject, Named}
 import org.apache.james.events.{EventBus, Registration}
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.EVENT_SOURCE
-import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeListener, TypeName}
+import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeListener, TypeName, TypeStateFactory}
 import org.apache.james.jmap.core.{OutboundMessage, PingMessage, ProblemDetails, StateChange}
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
-import org.apache.james.jmap.json.ResponseSerializer
+import org.apache.james.jmap.json.{PushSerializer, ResponseSerializer}
 import org.apache.james.jmap.routes.PingPolicy.Interval
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes, InjectionKeys => JMAPInjectionKeys}
 import org.apache.james.mailbox.MailboxSession
@@ -54,7 +54,7 @@ import scala.jdk.CollectionConverters._
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
-object EventSourceOptions {
+case class EventSourceOptionsFactory @Inject() (typeStateFactory: TypeStateFactory){
   def forRequest(request: HttpServerRequest): Either[IllegalArgumentException, EventSourceOptions] =
     for {
       pingPolicy <- retrievePing(request)
@@ -69,11 +69,9 @@ object EventSourceOptions {
   private def retrieveTypes(request: HttpServerRequest): Either[IllegalArgumentException, Set[TypeName]] =
     queryParam(request, "types") match {
       case None => Left(new IllegalArgumentException("types parameter is compulsory"))
-      case Some(List("*")) => Right(TypeName.ALL)
+      case Some(List("*")) => Right(typeStateFactory.all.toSet)
       case Some(list) => list.flatMap(_.split(","))
-        .map(string =>
-          TypeName.parse(string)
-            .left.map(errorMessage => new IllegalArgumentException(errorMessage)))
+        .map(string => typeStateFactory.parse(string))
         .sequence.map(_.toSet)
     }
 
@@ -105,7 +103,7 @@ object EventSourceOptions {
   }
 }
 
-case class EventSourceOptions(types: Set[TypeName] = TypeName.ALL,
+case class EventSourceOptions(types: Set[TypeName],
                              pingPolicy: PingPolicy = NoPingPolicy,
                              closeAfter: CloseAfter = NoCloseAfter)
 
@@ -155,7 +153,9 @@ case object NoCloseAfter extends CloseAfter {
 
 class EventSourceRoutes@Inject() (@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
                                   userProvisioner: UserProvisioning,
-                                  @Named(JMAPInjectionKeys.JMAP) eventBus: EventBus) extends JMAPRoutes {
+                                  @Named(JMAPInjectionKeys.JMAP) eventBus: EventBus,
+                                  pushSerializer: PushSerializer,
+                                  typeStateFactory: TypeStateFactory) extends JMAPRoutes {
 
   override def routes(): stream.Stream[JMAPRoute] = stream.Stream.of(
     JMAPRoute.builder
@@ -168,7 +168,7 @@ class EventSourceRoutes@Inject() (@Named(InjectionKeys.RFC_8621) val authenticat
       .corsHeaders())
 
   private def handleSSE(request: HttpServerRequest, response: HttpServerResponse): Mono[Void] =
-    EventSourceOptions.forRequest(request)
+    EventSourceOptionsFactory(typeStateFactory).forRequest(request)
       .fold(e => SMono.error[Void](e),
         options => SMono(authenticator.authenticate(request))
           .flatMap((mailboxSession: MailboxSession) => userProvisioner.provisionUser(mailboxSession)
@@ -213,7 +213,7 @@ class EventSourceRoutes@Inject() (@Named(InjectionKeys.RFC_8621) val authenticat
       case _: PingMessage => "ping"
       case _: StateChange => "state"
     }
-    s"event: $event\ndata: ${Json.stringify(ResponseSerializer.serializeSSE(outboundMessage))}\n\n"
+    s"event: $event\ndata: ${Json.stringify(pushSerializer.serializeSSE(outboundMessage))}\n\n"
   }
 
   private def handleConnectionEstablishmentError(throwable: Throwable, response: HttpServerResponse): SMono[Void] = throwable match {
