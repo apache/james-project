@@ -30,6 +30,9 @@ import org.apache.james.util.Host;
 
 import com.datastax.driver.core.HostDistance;
 import com.datastax.driver.core.PoolingOptions;
+import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
+import com.datastax.driver.core.policies.LoadBalancingPolicy;
+import com.datastax.driver.core.policies.TokenAwarePolicy;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
@@ -47,6 +50,7 @@ public class ClusterConfiguration {
         private Optional<Boolean> useSsl;
         private Optional<String> username;
         private Optional<String> password;
+        private Optional<String> localDc;
 
         public Builder() {
             hosts = ImmutableList.builder();
@@ -60,6 +64,7 @@ public class ClusterConfiguration {
             username = Optional.empty();
             password = Optional.empty();
             useSsl = Optional.empty();
+            localDc = Optional.empty();
         }
 
         public Builder host(Host host) {
@@ -163,6 +168,11 @@ public class ClusterConfiguration {
             return connectTimeoutMillis(Optional.of(connectTimeoutMillis));
         }
 
+        public Builder localDc(Optional<String> localDc) {
+            this.localDc = localDc;
+            return this;
+        }
+
         public ClusterConfiguration build() {
             return new ClusterConfiguration(
                 hosts.build(),
@@ -175,7 +185,8 @@ public class ClusterConfiguration {
                 connectTimeoutMillis.orElse(DEFAULT_CONNECT_TIMEOUT_MILLIS),
                 useSsl.orElse(false),
                 username,
-                password);
+                password,
+                localDc);
         }
     }
 
@@ -183,6 +194,7 @@ public class ClusterConfiguration {
     public static final String CASSANDRA_CREATE_KEYSPACE = "cassandra.keyspace.create";
     public static final String CASSANDRA_USER = "cassandra.user";
     public static final String CASSANDRA_PASSWORD = "cassandra.password";
+    public static final String CASSANDRA_LOCAL_DC = "cassandra.local.dc";
     public static final String CASSANDRA_SSL = "cassandra.ssl";
     public static final String READ_TIMEOUT_MILLIS = "cassandra.readTimeoutMillis";
     public static final String CONNECT_TIMEOUT_MILLIS = "cassandra.connectTimeoutMillis";
@@ -216,7 +228,8 @@ public class ClusterConfiguration {
             .connectTimeoutMillis(Optional.ofNullable(configuration.getInteger(CONNECT_TIMEOUT_MILLIS, null)))
             .useSsl(Optional.ofNullable(configuration.getBoolean(CASSANDRA_SSL, null)))
             .username(Optional.ofNullable(configuration.getString(CASSANDRA_USER, null)))
-            .password(Optional.ofNullable(configuration.getString(CASSANDRA_PASSWORD, null)));
+            .password(Optional.ofNullable(configuration.getString(CASSANDRA_PASSWORD, null)))
+            .localDc(Optional.ofNullable(configuration.getString(CASSANDRA_LOCAL_DC, null)));
         if (createKeySpace) {
             builder = builder.createKeyspace();
         }
@@ -273,11 +286,12 @@ public class ClusterConfiguration {
     private final boolean useSsl;
     private final Optional<String> username;
     private final Optional<String> password;
+    private final Optional<String> localDc;
 
     public ClusterConfiguration(List<Host> hosts, boolean createKeyspace, int minDelay, int maxRetry,
                                 Optional<QueryLoggerConfiguration> queryLoggerConfiguration, Optional<PoolingOptions> poolingOptions,
                                 int readTimeoutMillis, int connectTimeoutMillis, boolean useSsl, Optional<String> username,
-                                Optional<String> password) {
+                                Optional<String> password, Optional<String> localDc) {
         this.hosts = hosts;
         this.createKeyspace = createKeyspace;
         this.minDelay = minDelay;
@@ -289,6 +303,7 @@ public class ClusterConfiguration {
         this.useSsl = useSsl;
         this.username = username;
         this.password = password;
+        this.localDc = localDc;
     }
 
     public List<Host> getHosts() {
@@ -335,6 +350,16 @@ public class ClusterConfiguration {
         return password;
     }
 
+    public Optional<LoadBalancingPolicy> getLoadBalancingPolicy() {
+        return localDc.map(value -> new TokenAwarePolicy(DCAwareRoundRobinPolicy.builder()
+            .withLocalDc(value)
+            .build()));
+    }
+
+    Optional<String> getLocalDc() {
+        return localDc;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof ClusterConfiguration) {
@@ -350,7 +375,8 @@ public class ClusterConfiguration {
                 && Objects.equals(this.connectTimeoutMillis, that.connectTimeoutMillis)
                 && Objects.equals(this.useSsl, that.useSsl)
                 && Objects.equals(this.username, that.username)
-                && Objects.equals(this.password, that.password);
+                && Objects.equals(this.password, that.password)
+                && Objects.equals(this.localDc, that.localDc);
         }
         return false;
     }
@@ -358,6 +384,6 @@ public class ClusterConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hash(hosts, createKeyspace, minDelay, maxRetry, queryLoggerConfiguration, poolingOptions,
-            readTimeoutMillis, connectTimeoutMillis, username, useSsl, password);
+            readTimeoutMillis, connectTimeoutMillis, username, useSsl, password, localDc);
     }
 }

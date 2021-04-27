@@ -175,6 +175,11 @@
         <dd>Optional. Defaults to QUORUM.<br/> <a href="https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlConfigConsistency.html">QUORUM, LOCAL_QUORUM, or EACH_QUORUM</a>.</dd>
         <dt><strong>cassandra.consistency_level.lightweight_transaction</strong></dt>
         <dd>Optional. Defaults to SERIAL.<br/> <a href="https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlConfigConsistency.html">SERIAL or LOCAL_SERIAL</a>.</dd>
+        <dt><strong>cassandra.local.dc</strong></dt>
+        <dd>Optional. Allows specifying the local DC as part of the load balancing policy. Specifying it
+            would result in the use of <code>new TokenAwarePolicy(DCAwareRoundRobinPolicy.builder().withLocalDc(value).build())</code> as a LoadBalancingPolicy.
+            This value is useful in a multi-DC Cassandra setup. Be aware of limitations of multi-DC setups for James.
+            Not specifying this value results in the driver's default load balancing policy to be used.</dd>
       </dl>
 
 

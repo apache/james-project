@@ -42,6 +42,8 @@ public class ClusterFactory {
             .addContactPoint(server.getHostName())
             .withPort(server.getPort()));
 
+        configuration.getLoadBalancingPolicy().ifPresent(clusterBuilder::withLoadBalancingPolicy);
+
         configuration.getUsername().ifPresent(username ->
             configuration.getPassword().ifPresent(password ->
                 clusterBuilder.withCredentials(username, password)));

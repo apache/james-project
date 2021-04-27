@@ -73,6 +73,12 @@ Allowed values: https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dml
 |Optional. Allows specifying the driver serial consistency level. Defaults to SERIAL.
 Allowed values: https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlConfigConsistency.html[SERIAL or LOCAL_SERIAL]
 
+|cassandra.local.dc
+|Optional. Allows specifying the local DC as part of the load balancing policy. Specifying it
+would result in the use of `new TokenAwarePolicy(DCAwareRoundRobinPolicy.builder().withLocalDc(value).build())` as a LoadBalancingPolicy.
+This value is useful in a multi-DC Cassandra setup. Be aware of xref:../architecture/consistency-model.html#_about_multi_data_center_setups[limitation of multi-DC setups for James]
+Not specifying this value results in the driver's default load balancing policy to be used.
+
 |===
 
 == Pooling options
