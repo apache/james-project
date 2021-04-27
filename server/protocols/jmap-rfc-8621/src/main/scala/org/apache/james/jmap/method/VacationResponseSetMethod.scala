@@ -32,7 +32,7 @@ import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeEvent}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_VACATION_RESPONSE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{Invocation, State}
+import org.apache.james.jmap.core.{Invocation, UuidState}
 import org.apache.james.jmap.json.{ResponseSerializer, VacationSerializer}
 import org.apache.james.jmap.method.VacationResponseSetMethod.VACATION_RESPONSE_PATCH_OBJECT_KEY
 import org.apache.james.jmap.routes.SessionSupplier
@@ -133,7 +133,7 @@ class VacationResponseSetMethod @Inject()(@Named(InjectionKeys.JMAP) eventBus: E
                              updateResult: VacationResponseUpdateResults): Invocation = {
     val response = VacationResponseSetResponse(
       accountId = vacationResponseSetRequest.accountId,
-      newState = State.INSTANCE,
+      newState = UuidState.INSTANCE,
       updated = Some(updateResult.updateSuccess).filter(_.nonEmpty),
       notUpdated = Some(updateResult.updateFailures).filter(_.nonEmpty),
       notCreated = validateNoCreate(vacationResponseSetRequest),

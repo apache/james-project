@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
 import org.apache.james.events.{Event, EventSerializer}
-import org.apache.james.jmap.core.State
+import org.apache.james.jmap.core.UuidState
 import org.apache.james.json.JsonGenericSerializer
 
 import scala.jdk.OptionConverters._

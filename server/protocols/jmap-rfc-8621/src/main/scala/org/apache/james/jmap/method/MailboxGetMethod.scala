@@ -25,7 +25,7 @@ import org.apache.james.jmap.api.change.MailboxChangeRepository
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, Properties, State}
+import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, Properties, UuidState}
 import org.apache.james.jmap.http.MailboxesProvisioner
 import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{Mailbox, MailboxFactory, MailboxGet, MailboxGetRequest, MailboxGetResponse, NotFound, PersonalNamespace, Subscriptions, UnparsedMailboxId}
@@ -54,7 +54,7 @@ object MailboxGetResults {
 case class MailboxGetResults(mailboxes: Set[Mailbox], notFound: NotFound) {
   def merge(other: MailboxGetResults): MailboxGetResults = MailboxGetResults(this.mailboxes ++ other.mailboxes, this.notFound.merge(other.notFound))
 
-  def asResponse(accountId: AccountId, state: State): MailboxGetResponse = MailboxGetResponse(
+  def asResponse(accountId: AccountId, state: UuidState): MailboxGetResponse = MailboxGetResponse(
     accountId = accountId,
     state = state,
     list = mailboxes.toList.sortBy(_.sortOrder),
@@ -93,13 +93,13 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
 
   }
 
-  private def retrieveState(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[State] =
+  private def retrieveState(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[UuidState] =
     if (capabilities.contains(JAMES_SHARES)) {
       SMono(mailboxChangeRepository.getLatestStateWithDelegation(JavaAccountId.fromUsername(mailboxSession.getUser)))
-        .map(State.fromJava)
+        .map(UuidState.fromJava)
     } else {
       SMono(mailboxChangeRepository.getLatestState(JavaAccountId.fromUsername(mailboxSession.getUser)))
-        .map(State.fromJava)
+        .map(UuidState.fromJava)
     }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, MailboxGetRequest] =

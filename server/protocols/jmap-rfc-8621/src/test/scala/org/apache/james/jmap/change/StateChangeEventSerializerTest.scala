@@ -22,7 +22,7 @@ import org.apache.james.JsonSerializationVerifier
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
 import org.apache.james.jmap.change.StateChangeEventSerializerTest.{EVENT, EVENT_JSON, EVENT_JSON_NO_DELIVERY, EVENT_NO_DELIVERY}
-import org.apache.james.jmap.core.State
+import org.apache.james.jmap.core.UuidState
 import org.apache.james.json.JsonGenericSerializer
 import org.apache.james.json.JsonGenericSerializer.UnknownTypeException
 import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}

@@ -25,7 +25,7 @@ import org.apache.james.jmap.api.change.{CanNotCalculateChangesException, Mailbo
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{CapabilityIdentifier, ErrorCode, Invocation, Properties, State}
+import org.apache.james.jmap.core.{CapabilityIdentifier, ErrorCode, Invocation, Properties, UuidState}
 import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{HasMoreChanges, MailboxChangesRequest, MailboxChangesResponse}
 import org.apache.james.jmap.method.MailboxChangesMethod.updatedProperties
@@ -61,7 +61,7 @@ class MailboxChangesMethod @Inject()(mailboxSerializer: MailboxSerializer,
       .map(mailboxChanges => MailboxChangesResponse(
         accountId = request.accountId,
         oldState = request.sinceState,
-        newState = State.fromMailboxChanges(mailboxChanges),
+        newState = UuidState.fromMailboxChanges(mailboxChanges),
         hasMoreChanges = HasMoreChanges.fromMailboxChanges(mailboxChanges),
         updatedProperties = updateProperties(mailboxChanges),
         created = mailboxChanges.getCreated.asScala.toSet,

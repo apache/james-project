@@ -28,7 +28,7 @@ import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
-import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, Properties, SetError, State}
+import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, Properties, SetError, UuidState}
 import org.apache.james.jmap.json.MailboxSerializer
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail.MailboxPatchObject.MailboxPatchObjectKey
@@ -38,7 +38,7 @@ import org.apache.james.mailbox.{MailboxSession, Role}
 import play.api.libs.json.{JsBoolean, JsError, JsNull, JsObject, JsString, JsSuccess, JsValue}
 
 case class MailboxSetRequest(accountId: AccountId,
-                             ifInState: Option[State],
+                             ifInState: Option[UuidState],
                              create: Option[Map[MailboxCreationId, JsObject]],
                              update: Option[Map[UnparsedMailboxId, MailboxPatchObject]],
                              destroy: Option[Seq[UnparsedMailboxId]],
@@ -209,8 +209,8 @@ case class ValidatedMailboxPatchObject(nameUpdate: Option[NameUpdate],
 }
 
 case class MailboxSetResponse(accountId: AccountId,
-                              oldState: Option[State],
-                              newState: State,
+                              oldState: Option[UuidState],
+                              newState: UuidState,
                               created: Option[Map[MailboxCreationId, MailboxCreationResponse]],
                               updated: Option[Map[MailboxId, MailboxUpdateResponse]],
                               destroyed: Option[Seq[MailboxId]],

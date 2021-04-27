@@ -20,7 +20,7 @@
 package org.apache.james.jmap.json
 
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
-import org.apache.james.jmap.core.{ResponseObject, State}
+import org.apache.james.jmap.core.{ResponseObject, UuidState}
 import org.apache.james.jmap.json.Fixture._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -49,7 +49,7 @@ class ResponseObjectSerializationTest extends AnyWordSpec with Matchers {
 
     "succeed with many Capability, methodCalls" in {
       val expectedResponseObject = ResponseObject(
-        sessionState = State.INSTANCE,
+        sessionState = UuidState.INSTANCE,
         methodResponses = Seq(invocation1, invocation2))
 
       ResponseSerializer.deserializeResponseObject(
@@ -74,7 +74,7 @@ class ResponseObjectSerializationTest extends AnyWordSpec with Matchers {
   "Serialize ResponseObject" should {
     "succeed " in {
       val responseObject: ResponseObject = ResponseObject(
-        sessionState = State.INSTANCE,
+        sessionState = UuidState.INSTANCE,
         methodResponses = Seq(invocation1))
 
       val expectedJson = Json.prettyPrint(Json.parse(

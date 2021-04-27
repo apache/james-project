@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.mail
 
-import org.apache.james.jmap.core.{AccountId, SetError, State, UTCDate}
+import org.apache.james.jmap.core.{AccountId, SetError, UTCDate, UuidState}
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.mailbox.model.MailboxId
 
@@ -42,8 +42,8 @@ case class ValidatedEmailImport(blobId: BlobId,
                                 receivedAt: UTCDate)
 
 case class EmailImportResponse(accountId: AccountId,
-                               oldState: State,
-                               newState: State,
+                               oldState: UuidState,
+                               newState: UuidState,
                                created: Option[Map[EmailCreationId, EmailCreationResponse]],
                                notCreated: Option[Map[EmailCreationId, SetError]])
 

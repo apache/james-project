@@ -22,7 +22,7 @@ package org.apache.james.jmap.json
 import eu.timepit.refined.auto._
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
-import org.apache.james.jmap.core.{AccountId, Properties, State}
+import org.apache.james.jmap.core.{AccountId, Properties, UuidState}
 import org.apache.james.jmap.json.Fixture.id
 import org.apache.james.jmap.json.VacationResponseGetSerializationTest.{ACCOUNT_ID, PROPERTIES, SINGLETON_ID}
 import org.apache.james.jmap.json.VacationResponseSerializationTest.VACATION_RESPONSE
@@ -153,7 +153,7 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
     "succeed" in {
       val actualValue: VacationResponseGetResponse = VacationResponseGetResponse(
         accountId = ACCOUNT_ID,
-        state = State.INSTANCE,
+        state = UuidState.INSTANCE,
         list = List(VACATION_RESPONSE),
         notFound = VacationResponseNotFound(Set(UnparsedVacationResponseId("randomId1"), UnparsedVacationResponseId("randomId2"))))
 

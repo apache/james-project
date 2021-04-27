@@ -30,7 +30,7 @@ import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.api.vacation.VacationPatch
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
-import org.apache.james.jmap.core.State.INSTANCE
+import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.draft.JmapGuiceProbe
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}

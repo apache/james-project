@@ -37,7 +37,7 @@ import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.api.change.State
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
-import org.apache.james.jmap.core.State.INSTANCE
+import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.draft.JmapGuiceProbe
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.EmailGetMethodContract.createTestMessage

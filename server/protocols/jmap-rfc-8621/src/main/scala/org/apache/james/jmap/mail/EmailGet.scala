@@ -26,7 +26,7 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.jmap.api.change.Limit
-import org.apache.james.jmap.core.{AccountId, Properties, State}
+import org.apache.james.jmap.core.{AccountId, Properties, UuidState}
 import org.apache.james.jmap.mail.EmailGetRequest.MaxBodyValueBytes
 import org.apache.james.jmap.mail.EmailHeaders.SPECIFIC_HEADER_PREFIX
 import org.apache.james.jmap.method.WithAccountId
@@ -82,7 +82,7 @@ case class EmailNotFound(value: Set[UnparsedEmailId]) {
 }
 
 case class EmailGetResponse(accountId: AccountId,
-                            state: State,
+                            state: UuidState,
                             list: List[EmailView],
                             notFound: EmailNotFound)
 
@@ -112,13 +112,13 @@ case class SpecificHeaderRequest(property: NonEmptyString, headerName: String, p
 }
 
 case class EmailChangesRequest(accountId: AccountId,
-                               sinceState: State,
+                               sinceState: UuidState,
                                maxChanges: Option[Limit]) extends WithAccountId
 
 
 case class EmailChangesResponse(accountId: AccountId,
-                                oldState: State,
-                                newState: State,
+                                oldState: UuidState,
+                                newState: UuidState,
                                 hasMoreChanges: HasMoreChanges,
                                 created: Set[MessageId],
                                 updated: Set[MessageId],

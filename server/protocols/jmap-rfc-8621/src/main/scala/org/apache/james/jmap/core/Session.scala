@@ -31,7 +31,9 @@ import org.apache.james.core.Username
 import org.apache.james.jmap.api.change.{EmailChanges, MailboxChanges, State => JavaState}
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.Id
-import org.apache.james.jmap.core.State.INSTANCE
+import org.apache.james.jmap.core.UuidState.INSTANCE
+
+import scala.util.Try
 
 case class IsPersonal(value: Boolean) extends AnyVal
 case class IsReadOnly(value: Boolean) extends AnyVal
@@ -75,27 +77,40 @@ final case class Account private(accountId: AccountId,
                                  isReadOnly: IsReadOnly,
                                  accountCapabilities: Set[_ <: Capability])
 
-object State {
+object UuidState {
   type UUIDString = String Refined Uuid
 
-  val INSTANCE: State = fromJava(JavaState.INITIAL)
+  val INSTANCE: UuidState = fromJava(JavaState.INITIAL)
 
-  def fromStringUnchecked(value: String): State = 
+  def fromStringUnchecked(value: String): UuidState =
     refineV[Uuid](value)
       .fold(
         failure => throw new IllegalArgumentException(failure),
-        success => State.fromString(success))
+        success => UuidState.fromString(success))
 
-  def fromString(value: UUIDString): State = State(UUID.fromString(value.value))
+  def fromString(value: UUIDString): UuidState = UuidState(UUID.fromString(value.value))
 
-  def fromMailboxChanges(mailboxChanges: MailboxChanges): State = fromJava(mailboxChanges.getNewState)
+  def fromMailboxChanges(mailboxChanges: MailboxChanges): UuidState = fromJava(mailboxChanges.getNewState)
 
-  def fromEmailChanges(emailChanges: EmailChanges): State = fromJava(emailChanges.getNewState)
+  def fromEmailChanges(emailChanges: EmailChanges): UuidState = fromJava(emailChanges.getNewState)
 
-  def fromJava(javaState: JavaState): State = State(javaState.getValue)
+  def fromJava(javaState: JavaState): UuidState = UuidState(javaState.getValue)
+
+  def fromGenerateUuid(): UuidState = UuidState(UUID.randomUUID())
+
+  def parse(string: String): Either[IllegalArgumentException, UuidState] = Try(UUID.fromString(string))
+    .toEither
+    .map(UuidState(_))
+    .left.map(new IllegalArgumentException(_))
 }
 
-case class State(value: UUID)
+trait State {
+  def serialize: String
+}
+
+case class UuidState(value: UUID) extends State {
+  override def serialize: String = value.toString
+}
 
 final case class Session(capabilities: Capabilities,
                          accounts: List[Account],
@@ -105,4 +120,4 @@ final case class Session(capabilities: Capabilities,
                          downloadUrl: URL,
                          uploadUrl: URL,
                          eventSourceUrl: URL,
-                         state: State = INSTANCE)
+                         state: UuidState = INSTANCE)

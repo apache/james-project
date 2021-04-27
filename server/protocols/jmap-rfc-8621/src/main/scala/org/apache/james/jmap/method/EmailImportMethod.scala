@@ -28,7 +28,7 @@ import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, SetError, State}
+import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, SetError, UuidState}
 import org.apache.james.jmap.json.{EmailSetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{BlobId, Email, EmailCreationId, EmailCreationResponse, EmailImport, EmailImportRequest, EmailImportResponse, ValidatedEmailImport}
 import org.apache.james.jmap.method.EmailImportMethod.{ImportFailure, ImportResult, ImportResults, ImportSuccess, ImportWithBlob}
@@ -175,12 +175,12 @@ class EmailImportMethod @Inject() (val metricFactory: MetricFactory,
     EmailCreationResponse(appendResult.getId.getMessageId, blobId, blobId, Email.sanitizeSize(appendResult.getSize))
   }
 
-  private def retrieveState(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[State] =
+  private def retrieveState(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[UuidState] =
     if (capabilities.contains(JAMES_SHARES)) {
       SMono(emailChangeRepository.getLatestStateWithDelegation(JavaAccountId.fromUsername(mailboxSession.getUser)))
-        .map(State.fromJava)
+        .map(UuidState.fromJava)
     } else {
       SMono(emailChangeRepository.getLatestState(JavaAccountId.fromUsername(mailboxSession.getUser)))
-        .map(State.fromJava)
+        .map(UuidState.fromJava)
     }
 }

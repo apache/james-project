@@ -21,7 +21,7 @@ package org.apache.james.jmap.json
 
 import eu.timepit.refined
 import org.apache.james.jmap.core.Id.IdConstraint
-import org.apache.james.jmap.core.{Properties, State}
+import org.apache.james.jmap.core.{Properties, UuidState}
 import org.apache.james.jmap.mail.Subject
 import org.apache.james.jmap.vacation.VacationResponse.VACATION_RESPONSE_ID
 import org.apache.james.jmap.vacation.{FromDate, HtmlBody, IsEnabled, TextBody, ToDate, UnparsedVacationResponseId, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseId, VacationResponseIds, VacationResponseNotFound, VacationResponsePatchObject, VacationResponseSetError, VacationResponseSetRequest, VacationResponseSetResponse, VacationResponseUpdateResponse}
@@ -50,7 +50,7 @@ object VacationSerializer {
 
   private implicit val vacationResponseSetErrorWrites: Writes[VacationResponseSetError] = Json.writes[VacationResponseSetError]
 
-  private implicit val stateWrites: Writes[State] = Json.valueWrites[State]
+  private implicit val stateWrites: Writes[UuidState] = Json.valueWrites[UuidState]
   private implicit val vacationResponseSetResponseWrites: Writes[VacationResponseSetResponse] = Json.writes[VacationResponseSetResponse]
 
   private implicit val vacationResponseIdWrites: Writes[VacationResponseId] = _ => JsString(VACATION_RESPONSE_ID.value)

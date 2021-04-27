@@ -24,7 +24,7 @@ import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{Invocation, State}
+import org.apache.james.jmap.core.{Invocation, UuidState}
 import org.apache.james.jmap.json.{ResponseSerializer, ThreadSerializer}
 import org.apache.james.jmap.mail.{Thread, ThreadGetRequest, ThreadGetResponse}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -40,7 +40,7 @@ class ThreadGetMethod @Inject()(val metricFactory: MetricFactory,
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: ThreadGetRequest): SMono[InvocationWithContext] = {
     val response = ThreadGetResponse(accountId = request.accountId,
-      state = State.INSTANCE,
+      state = UuidState.INSTANCE,
       list = retrieveThreads(request.ids))
     SMono.just(InvocationWithContext(invocation = Invocation(
       methodName = methodName,
