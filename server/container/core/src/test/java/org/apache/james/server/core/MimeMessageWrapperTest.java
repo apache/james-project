@@ -85,24 +85,27 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
     }
     
     TestableMimeMessageWrapper mw = null;
+    TestableMimeMessageWrapper onlyHeader = null;
     final String content = "Subject: foo\r\nContent-Transfer-Encoding2: plain";
     final String sep = "\r\n\r\n";
     final String body = "bar\r\n";
 
     @Override
-    protected MimeMessage getMessageFromSources(String sources) throws Exception {
+    protected TestableMimeMessageWrapper getMessageFromSources(String sources) throws Exception {
         MimeMessageInputStreamSource mmis = new MimeMessageInputStreamSource("test", new SharedByteArrayInputStream(sources.getBytes()));
         return new TestableMimeMessageWrapper(mmis);
     }
 
     @BeforeEach
     public void setUp() throws Exception {
-        mw = (TestableMimeMessageWrapper) getMessageFromSources(content + sep + body);
+        mw = getMessageFromSources(content + sep + body);
+        onlyHeader = getMessageFromSources(content);
     }
 
     @AfterEach
     public void tearDown() throws Exception {
         LifecycleUtil.dispose(mw);
+        LifecycleUtil.dispose(onlyHeader);
     }
 
     @Test
@@ -246,6 +249,54 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
     @Test
     public void testSize() throws MessagingException {
         assertThat(mw.getSize()).isEqualTo(body.length());
+    }
+
+    @Test
+    public void getSizeShouldReturnZeroWhenNoHeaderAndAddHeader() throws MessagingException {
+        onlyHeader.addHeader("a", "b");
+        assertThat(onlyHeader.getSize()).isEqualTo(0);
+    }
+
+    @Test
+    public void getSizeShouldReturnZeroWhenNoHeader() throws MessagingException {
+        assertThat(onlyHeader.getSize()).isEqualTo(0);
+    }
+
+    @Test
+    public void getSizeShouldReturnZeroWhenSingleChar() throws Exception {
+        assertThat(getMessageFromSources("a").getSize()).isEqualTo(0);
+    }
+
+    @Test
+    public void getSizeShouldReturnZeroWhenSingleCharBody() throws Exception {
+        assertThat(getMessageFromSources("a: b\r\n\r\na").getSize()).isEqualTo(1);
+    }
+
+    @Test
+    public void getSizeShouldReturnZeroWhenEmptyString() throws Exception {
+        assertThat(getMessageFromSources("").getSize()).isEqualTo(0);
+    }
+
+    @Test
+    public void getMessageSizeShouldReturnExpectedValueWhenNoHeader() throws MessagingException {
+        assertThat(onlyHeader.getMessageSize()).isEqualTo(content.length());
+    }
+
+    @Test
+    public void getMessageSizeShouldReturnExpectedValueWhenNoHeaderAndAddHeader() throws Exception {
+        onlyHeader.addHeader("new", "value");
+        assertThat(onlyHeader.getMessageSize()).isEqualTo(
+            IOUtils.consume(onlyHeader.getMessageInputStream()));
+    }
+
+    @Test
+    public void getMessageSizeShouldReturnExpectedValueWhenSingleChar() throws Exception {
+        assertThat(getMessageFromSources("a").getMessageSize()).isEqualTo(1);
+    }
+
+    @Test
+    public void getMessageSizeShouldReturnExpectedValueWhenEmptyString() throws Exception {
+        assertThat(getMessageFromSources("").getMessageSize()).isEqualTo(0);
     }
 
     @Test
