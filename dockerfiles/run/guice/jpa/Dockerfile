@@ -35,6 +35,10 @@ VOLUME /logs
 VOLUME /root/conf
 VOLUME /root/glowroot/plugins
 VOLUME /root/glowroot/data
+# Data for ActiveMQ mailQueue
+VOLUME /root/var
+# Data for derby database
+VOLUME /var/store
 
 ENV PATH="$PATH:/root/glowroot/lib" \
     JVM_OPTIONS="" \
