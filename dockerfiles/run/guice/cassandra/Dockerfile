@@ -31,6 +31,8 @@ ADD destination/glowroot/lib/glowroot-logging-logstash.jar /root/glowroot/lib/gl
 ADD destination/glowroot/admin.json /root/glowroot/admin.json
 ADD destination/run_james.sh /root/run_james.sh
 
+# Data for ActiveMQ mailQueue
+VOLUME /root/var
 VOLUME /logs
 VOLUME /root/conf
 VOLUME /root/glowroot/plugins
