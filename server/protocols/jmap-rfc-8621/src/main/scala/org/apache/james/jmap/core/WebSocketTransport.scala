@@ -22,9 +22,14 @@ package org.apache.james.jmap.core
 import java.nio.charset.StandardCharsets
 
 import com.google.common.hash.Hashing
+import javax.inject.Inject
 import org.apache.james.jmap.api.change.State
 import org.apache.james.jmap.change.{TypeName, TypeState}
 import org.apache.james.jmap.routes.PingPolicy.Interval
+import reactor.core.publisher.{Flux, Mono}
+import reactor.core.scheduler.Schedulers
+
+import scala.jdk.CollectionConverters._
 
 sealed trait WebSocketInboundMessage
 
@@ -55,6 +60,21 @@ object PushState {
 
 case class PushState(value: String)
 
+object StateChange{
+  def aggregate(change1: StateChange, change2: StateChange): StateChange =
+    StateChange(
+      changes = (change1.changes.toSeq ++ change2.changes.toSeq).groupBy(_._1).map {
+        case (accountId, orderedChanges) => (accountId, merge(orderedChanges.map(_._2)))
+      },
+      pushState = change2.pushState.orElse(change1.pushState))
+
+  def merge(typeStates: Seq[TypeState]): TypeState = typeStates.foldLeft(TypeState(Map()))(merge)
+
+  def merge(typeState1: TypeState, typeState2: TypeState): TypeState =
+    TypeState((typeState1.changes ++ typeState2.changes).groupBy(_._1).map {
+      case (typeName, value) => (typeName, value.last._2)
+    })
+}
 case class StateChange(changes: Map[AccountId, TypeState], pushState: Option[PushState]) extends OutboundMessage {
 
   def filter(types: Set[TypeName]): Option[StateChange] =
@@ -67,3 +87,29 @@ case class StateChange(changes: Map[AccountId, TypeState], pushState: Option[Pus
 
 case class WebSocketPushEnable(dataTypes: Option[Set[TypeName]], pushState: Option[PushState]) extends WebSocketInboundMessage
 case object WebSocketPushDisable extends WebSocketInboundMessage
+
+sealed trait StateChangeAggregator {
+  def aggregate(flux: Flux[StateChange]): Flux[StateChange]
+}
+case object NoStateChangeAggregator extends StateChangeAggregator {
+  override def aggregate(flux: Flux[StateChange]): Flux[StateChange] = flux
+}
+class WindowingOutboundAggregator(windowDuration: java.time.Duration) extends StateChangeAggregator {
+  override def aggregate(flux: Flux[StateChange]): Flux[StateChange] =
+    flux.window(windowDuration, Schedulers.elastic())
+      .flatMap(flux => flux.collectList().map(merge)
+        .flatMap(option => option.map(stateChange => Mono.just(stateChange))
+          .getOrElse(Mono.empty[StateChange]())))
+
+  private def merge(stateChanges: java.util.List[StateChange]): Option[StateChange] =
+    stateChanges.asScala
+      .toList
+      .foldLeft[Option[StateChange]](None) {
+        case (agg, stateChange) => Some(agg.map(StateChange.aggregate(_, stateChange)).getOrElse(stateChange))
+      }
+}
+class StateChangeAggregatorFactory @Inject() (jmapRfc8621Configuration: JmapRfc8621Configuration) {
+  def createAggregator(): StateChangeAggregator = jmapRfc8621Configuration.pushAggregationWindowDuration
+    .map(new WindowingOutboundAggregator(_))
+    .getOrElse(NoStateChangeAggregator)
+}

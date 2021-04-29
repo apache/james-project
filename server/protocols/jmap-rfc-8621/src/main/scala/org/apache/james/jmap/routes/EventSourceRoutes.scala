@@ -20,7 +20,6 @@
 package org.apache.james.jmap.routes
 
 import java.nio.charset.StandardCharsets
-import java.util.concurrent.atomic.AtomicReference
 import java.util.stream
 
 import cats.implicits._
@@ -30,11 +29,11 @@ import eu.timepit.refined.refineV
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import io.netty.handler.codec.http.{HttpMethod, QueryStringDecoder}
 import javax.inject.{Inject, Named}
-import org.apache.james.events.{EventBus, Registration}
+import org.apache.james.events.EventBus
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.EVENT_SOURCE
 import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeListener, TypeName}
-import org.apache.james.jmap.core.{OutboundMessage, PingMessage, ProblemDetails, StateChange}
+import org.apache.james.jmap.core.{OutboundMessage, PingMessage, ProblemDetails, StateChange, StateChangeAggregatorFactory}
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
@@ -155,6 +154,7 @@ case object NoCloseAfter extends CloseAfter {
 
 class EventSourceRoutes@Inject() (@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
                                   userProvisioner: UserProvisioning,
+                                  stateChangeAggregatorFactory: StateChangeAggregatorFactory,
                                   @Named(JMAPInjectionKeys.JMAP) eventBus: EventBus) extends JMAPRoutes {
 
   override def routes(): stream.Stream[JMAPRoute] = stream.Stream.of(
@@ -181,19 +181,25 @@ class EventSourceRoutes@Inject() (@Named(InjectionKeys.RFC_8621) val authenticat
 
   private def registerSSE(response: HttpServerResponse, session: MailboxSession, options: EventSourceOptions): SMono[Unit] = {
     val sink: Sinks.Many[OutboundMessage] = Sinks.many().unicast().onBackpressureBuffer()
-    val context = ClientContext(sink, new AtomicReference[Registration](), session)
+    val stateChangeSink: Sinks.Many[StateChange] = Sinks.many().unicast().onBackpressureBuffer()
+    val context = ClientContext.initial(sink, session)
 
     val pingDisposable = options.pingPolicy
       .asFlux()
       .subscribe(ping => context.outbound.emitNext(ping, FAIL_FAST))
 
-    SMono(
+    context.withSubscription(SMono(
       eventBus.register(
-        StateChangeListener(options.types, context.outbound),
+        StateChangeListener(options.types, stateChangeSink),
         AccountIdRegistrationKey.of(session.getUser)))
       .doOnNext(newRegistration => context.withRegistration(newRegistration))
       .subscribeOn(Schedulers.elastic())
-      .subscribe()
+      .subscribe())
+
+    context.withSubscription(stateChangeAggregatorFactory.createAggregator()
+        .aggregate(stateChangeSink.asFlux())
+      .flatMap(stateChange => SMono.fromCallable(() => context.outbound.emitNext(stateChange, FAIL_FAST)))
+      .subscribe())
 
     SMono(response
       .addHeader("Connection", "keep-alive")
