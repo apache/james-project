@@ -1,5 +1,6 @@
-Apache James Project
-====================
+= Apache James Project
+:idprefix:
+:idseparator: -
 
 link:https://gitter.im/apache/james-project[image:https://badges.gitter.im/apache/james-project.svg[Join the chat at link:https://gitter.im/apache/james-project]]
 
@@ -37,9 +38,9 @@ https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolut
 
 There is many other ways one can help us: packaging, communication, etc ...
 
-= How to...
+== Table of contents
 
- * link:#how-to-try-james[How to try James]
+* link:#how-to-try-james[How to try James]
  * link:#how-to-check-the-compilation[How to check the compilation]
  * link:#how-to-run-james-in-docker[How to run James in Docker]
  ** link:#run-james-with-guice-%2Dcassandra-%2Drabbitmq-%2Ds3-%2Delasticsearch[Run James with Guice + Cassandra + RabbitMQ + S3 + ElasticSearch]
@@ -47,18 +48,17 @@ There is many other ways one can help us: packaging, communication, etc ...
  ** link:#run-james-with-guice-%2Djpa-%2Dlucene[Run James with Guice + JPA + Lucene]
  ** link:#run-james-with-spring-%2Djpa[Run James with Spring + JPA]
  * link:#other-useful-commands[Other Useful commands]
- ** link:#how-to-add-a-domain-[How to add a domain?]
- ** link:#how-to-add-a-user-[How to add a user?]
- ** link:#how-to-manage-sieve-scripts-[How to manage SIEVE scripts?]
+ ** link:#how-to-add-a-domain[How to add a domain?]
+ ** link:#how-to-add-a-user[How to add a user?]
+ ** link:#how-to-manage-sieve-scripts[How to manage SIEVE scripts?]
  ** link:#how-to-retrieve-users-and-password-from-my-previous-container[How to retrieve users and password from my previous container?]
  * link:#develop-on-james[Develop on James]
+ ** link:#how-to-build-james[How to build James]
  ** link:#how-to-run-deployment-tests[How to run deployment Tests]
  ** link:#how-to-check-the-merge-of-a-commit[How to check the merge of a commit]
  * link:#generating-a-package-for-james[Generating a package for James]
  * link:#know-more-about-james-design[Know more about James design]
  * link:#articles-for-james-community[Articles for James community]
- ** link:#how-to-build-and-publish-the-website[How to build and publish the website]
- ** link:#how-to-release-via-maven-release-plugin[How to release via maven release plugin]
 
 == How to try James
 
@@ -150,7 +150,7 @@ If you haven't already:
   -t james/project -s HEAD
 
 
-==== How to ?
+==== How-to
 You need a running *cassandra* in docker. To achieve this run:
 
     $ docker run -d --name=cassandra cassandra:3.11.10
@@ -281,7 +281,7 @@ If you haven't already:
   -t james/project -s HEAD
 
 
-==== How to ?
+==== How-to
 We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
 
 Copy your TLS keys to `run/guice/jpa/destination/conf/keystore` or generate it using the following command. The password must be `james72laBalle` to match default configuration.
@@ -318,7 +318,7 @@ If you haven't already:
   -t james/project -s HEAD
 
 
-==== Howto ?
+==== How-to
 
 We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
 
@@ -348,7 +348,7 @@ The base command is different whether you choose guice flavor or spring :
   * guice use : `docker exec james_run java -jar /root/james-cli.jar`
   * spring use : `docker exec james_run /root/james-server-app-3.0.0-beta6-SNAPSHOT/bin/james-cli.sh`
 
-=== How to add a domain ?
+=== How to add a domain?
 
     # Add DOMAIN to 127.0.0.1 in your host /etc/hosts
     $ <your-command-here> -h 127.0.0.1 -p 9999 adddomain DOMAIN
@@ -360,7 +360,7 @@ domain will be created upon James start:
 
     $ --environment DOMAIN=domain.tld
 
-=== How to add a user ?
+=== How to add a user?
 
     $ <your-command-here> -h 127.0.0.1 -p 9999 adduser USER_MAIL_ADDRESS PASSWORD
 
@@ -371,7 +371,7 @@ Where :
 
 You can then just add DOMAIN to your /etc/hosts and you can connect to your james account with for instance Thunderbird.
 
-=== How to manage SIEVE scripts ?
+=== How to manage SIEVE scripts?
 
 Each user can manage his SIEVE scripts through the manage SIEVE mailet.
 
@@ -401,7 +401,20 @@ Beware : you will have concurrency issues if multiple containers are running on 
 
 == Develop on James
 
-James requires at least JDK 11 and Maven 3.6.0 to build.
+=== How to build James
+
+James requires JDK 11 (or newer).
+
+The encouraged method for building and running tests is to use Maven wrapper from
+root directory by running:
+
+`./mvnw install` (when running from project root) or
+`../mvnw install` (when running from a subdirectory)
+
+mvnw (or mvnw.bat) is a small script that downloads the correct Maven distribution into .mvn/wrapper directory
+on first run and uses that.
+It is also possible to use locally installed Maven (3.6+) instead of Maven wrapper by running: `mvn install`
+
 Some parts of James are written in Scala so one might need to enable Scala plugin in IDE.
 
 === How to run deployment Tests
