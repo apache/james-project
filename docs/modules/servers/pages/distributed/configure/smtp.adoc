@@ -171,3 +171,25 @@ to get some examples and hints.
 The configuration is the same of for SMTP.
 
 By default, it is deactivated. You can activate it alongside SMTP and bind for example on port 24.
+
+The default LMTP server stores directly emails in user mailboxes, without further treatment.
+
+However we do ship an alternative handler chain allowing to execute the mailet container, thus achieving a behaviour similar
+to the default SMTP protocol. Here is how to achieve this:
+
+....
+<lmtpservers>
+    <lmtpserver enabled="true">
+        <jmxName>lmtpserver</jmxName>
+        <bind>0.0.0.0:0</bind>
+        <connectionBacklog>200</connectionBacklog>
+        <connectiontimeout>1200</connectiontimeout>
+        <connectionLimit>0</connectionLimit>
+        <connectionLimitPerIP>0</connectionLimitPerIP>
+        <maxmessagesize>0</maxmessagesize>
+        <handlerchain coreHandlersPackage="org.apache.james.lmtpserver.MailetContainerCmdHandlerLoader">
+            <handler class="org.apache.james.lmtpserver.MailetContainerCmdHandlerLoader"/>
+        </handlerchain>
+    </lmtpserver>
+</lmtpservers>
+....
