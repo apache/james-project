@@ -23,8 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 import javax.mail.Folder;
@@ -38,11 +36,6 @@ import javax.mail.search.RecipientStringTerm;
 import javax.mail.search.SearchTerm;
 import javax.mail.search.SubjectTerm;
 
-import org.apache.commons.configuration2.XMLConfiguration;
-import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
-import org.apache.commons.configuration2.builder.fluent.Parameters;
-import org.apache.commons.configuration2.convert.DisabledListDelimiterHandler;
-import org.apache.commons.configuration2.io.FileHandler;
 import org.apache.james.core.Username;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
@@ -55,9 +48,7 @@ import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.apache.james.mime4j.codec.DecoderUtil;
-import org.apache.james.mime4j.codec.EncoderUtil;
-import org.apache.james.mime4j.util.MimeUtil;
+import org.apache.james.protocols.lib.mock.ConfigLoader;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.utils.TestIMAPClient;
 import org.junit.jupiter.api.AfterEach;
@@ -74,19 +65,6 @@ class IMAPServerTest {
     private static final String USER_PASS = "pass";
     public static final String SMALL_MESSAGE = "header: value\r\n\r\nBODY";
     private InMemoryIntegrationResources memoryIntegrationResources;
-
-    private static XMLConfiguration getConfig(InputStream configStream) throws Exception {
-        FileBasedConfigurationBuilder<XMLConfiguration> builder = new FileBasedConfigurationBuilder<>(XMLConfiguration.class)
-            .configure(new Parameters()
-                .xml()
-                .setListDelimiterHandler(new DisabledListDelimiterHandler()));
-        XMLConfiguration xmlConfiguration = builder.getConfiguration();
-        FileHandler fileHandler = new FileHandler(xmlConfiguration);
-        fileHandler.load(configStream);
-        configStream.close();
-
-        return xmlConfiguration;
-    }
 
     @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
@@ -119,7 +97,7 @@ class IMAPServerTest {
                 metricFactory),
             new ImapMetrics(metricFactory));
 
-        imapServer.configure(getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream(configurationFile)));
+        imapServer.configure(ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream(configurationFile)));
         imapServer.init();
 
         return imapServer;
