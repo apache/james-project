@@ -133,7 +133,9 @@ public class StoreMessageIdManager implements MessageIdManager {
 
         assertRightsOnMailboxes(targetMailboxes, mailboxSession, Right.Write);
 
-        Multimap<MailboxId, UpdatedFlags> updatedFlags = messageIdMapper.setFlags(messageId, mailboxIds, newState, replace);
+        Multimap<MailboxId, UpdatedFlags> updatedFlags = messageIdMapper.setFlags(messageId, mailboxIds, newState, replace)
+            .subscribeOn(Schedulers.elastic())
+            .block();
         for (Map.Entry<MailboxId, Collection<UpdatedFlags>> entry : updatedFlags.asMap().entrySet()) {
             dispatchFlagsChange(mailboxSession, entry.getKey(), ImmutableList.copyOf(entry.getValue()), targetMailboxes);
         }

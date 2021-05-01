@@ -118,7 +118,8 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
         mapperFactory.getMessageIdMapper(MAILBOX_SESSION).setFlags(message1.getMessageId(),
             ImmutableList.of(message1.getMailboxId()),
             new Flags(Flags.Flag.DELETED),
-            MessageManager.FlagsUpdateMode.REPLACE);
+            MessageManager.FlagsUpdateMode.REPLACE)
+            .block();
 
         assertThat(statementRecorder.listExecutedStatements(
             StatementRecorder.Selector.preparedStatementStartingWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted," +

@@ -254,14 +254,13 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     }
 
     @Override
-    public Multimap<MailboxId, UpdatedFlags> setFlags(MessageId messageId, List<MailboxId> mailboxIds, Flags newState, MessageManager.FlagsUpdateMode updateMode) throws MailboxException {
+    public Mono<Multimap<MailboxId, UpdatedFlags>> setFlags(MessageId messageId, List<MailboxId> mailboxIds, Flags newState, MessageManager.FlagsUpdateMode updateMode) throws MailboxException {
         return Flux.fromIterable(mailboxIds)
             .distinct()
             .map(mailboxId -> (CassandraId) mailboxId)
             .concatMap(mailboxId -> flagsUpdateWithRetry(newState, updateMode, mailboxId, messageId))
             .flatMap(this::updateCounts, ReactorUtils.DEFAULT_CONCURRENCY)
-            .collect(Guavate.toImmutableListMultimap(Pair::getLeft, Pair::getRight))
-            .block();
+            .collect(Guavate.toImmutableListMultimap(Pair::getLeft, Pair::getRight));
     }
 
     private Flux<Pair<MailboxId, UpdatedFlags>> flagsUpdateWithRetry(Flags newState, MessageManager.FlagsUpdateMode updateMode, MailboxId mailboxId, MessageId messageId) {
