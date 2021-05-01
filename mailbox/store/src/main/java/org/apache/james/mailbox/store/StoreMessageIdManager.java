@@ -286,25 +286,29 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     @Override
     public void setInMailboxes(MessageId messageId, Collection<MailboxId> targetMailboxIds, MailboxSession mailboxSession) throws MailboxException {
-        List<MailboxMessage> currentMailboxMessages = findRelatedMailboxMessages(messageId, mailboxSession);
-
-        MailboxReactorUtils.block(messageMovesWithMailbox(MessageMoves.builder()
-            .targetMailboxIds(targetMailboxIds)
-            .previousMailboxIds(toMailboxIds(currentMailboxMessages))
-            .build(), mailboxSession)
-            .flatMap(Throwing.<MessageMovesWithMailbox, Mono<Void>>function(messageMove -> {
-                MessageMovesWithMailbox refined = messageMove.filterPrevious(hasRightsOnMailbox(mailboxSession, Right.Read));
-
-                if (messageMove.getPreviousMailboxes().isEmpty()) {
-                    LOGGER.info("Tried to access {} not accessible for {}", messageId, mailboxSession.getUser().asString());
-                    return Mono.empty();
-                }
-                if (refined.isChange()) {
-                    return applyMessageMoves(mailboxSession, currentMailboxMessages, refined);
-                }
-                return Mono.empty();
-            }).sneakyThrow())
+        MailboxReactorUtils.block(setInMailboxesReactive(messageId, targetMailboxIds, mailboxSession)
             .subscribeOn(Schedulers.elastic()));
+    }
+
+    @Override
+    public Mono<Void> setInMailboxesReactive(MessageId messageId, Collection<MailboxId> targetMailboxIds, MailboxSession mailboxSession) {
+        return findRelatedMailboxMessages(messageId, mailboxSession)
+            .flatMap(currentMailboxMessages -> messageMovesWithMailbox(MessageMoves.builder()
+                .targetMailboxIds(targetMailboxIds)
+                .previousMailboxIds(toMailboxIds(currentMailboxMessages))
+                .build(), mailboxSession)
+                .flatMap(Throwing.<MessageMovesWithMailbox, Mono<Void>>function(messageMove -> {
+                    MessageMovesWithMailbox refined = messageMove.filterPrevious(hasRightsOnMailbox(mailboxSession, Right.Read));
+
+                    if (messageMove.getPreviousMailboxes().isEmpty()) {
+                        LOGGER.info("Tried to access {} not accessible for {}", messageId, mailboxSession.getUser().asString());
+                        return Mono.empty();
+                    }
+                    if (refined.isChange()) {
+                        return applyMessageMoves(mailboxSession, currentMailboxMessages, refined);
+                    }
+                    return Mono.empty();
+                }).sneakyThrow()));
     }
 
     public void setInMailboxesNoCheck(MessageId messageId, MailboxId targetMailboxId, MailboxSession mailboxSession) throws MailboxException {
@@ -325,11 +329,11 @@ public class StoreMessageIdManager implements MessageIdManager {
             .subscribeOn(Schedulers.elastic()));
     }
 
-    private List<MailboxMessage> findRelatedMailboxMessages(MessageId messageId, MailboxSession mailboxSession) throws MailboxException {
+    private Mono<List<MailboxMessage>> findRelatedMailboxMessages(MessageId messageId, MailboxSession mailboxSession) {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
-        return MailboxReactorUtils.block(messageIdMapper.findReactive(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
-            .collect(Guavate.toImmutableList()));
+        return messageIdMapper.findReactive(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
+            .collect(Guavate.toImmutableList());
     }
 
     private Mono<Void> applyMessageMoves(MailboxSession mailboxSession, List<MailboxMessage> currentMailboxMessages, MessageMovesWithMailbox messageMoves) throws MailboxNotFoundException {
