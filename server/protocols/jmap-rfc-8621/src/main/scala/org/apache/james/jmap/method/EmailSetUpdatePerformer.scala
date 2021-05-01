@@ -219,11 +219,11 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
     if (targetIds.equals(mailboxIds)) {
       SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId))
     } else {
-      SMono.fromCallable(() => messageIdManager.setInMailboxes(messageId, targetIds.value.asJava, session))
-        .subscribeOn(Schedulers.elastic())
+      SMono(messageIdManager.setInMailboxesReactive(messageId, targetIds.value.asJava, session))
         .`then`(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
         .onErrorResume(e => SMono.just[EmailUpdateResult](EmailUpdateFailure(EmailSet.asUnparsed(messageId), e)))
         .switchIfEmpty(SMono.just[EmailUpdateResult](EmailUpdateSuccess(messageId)))
+        .subscribeOn(Schedulers.elastic())
     }
   }
 

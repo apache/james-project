@@ -70,6 +70,8 @@ public interface MessageIdManager {
 
     void setInMailboxes(MessageId messageId, Collection<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
 
+    Publisher<Void> setInMailboxesReactive(MessageId messageId, Collection<MailboxId> mailboxIds, MailboxSession mailboxSession);
+
     default List<MessageResult> getMessage(MessageId messageId, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
         return getMessages(ImmutableList.of(messageId), fetchGroup, mailboxSession);
     }
