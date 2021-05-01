@@ -241,35 +241,31 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
 
   private def sendEmail(mailboxSession: MailboxSession,
                         request: EmailSubmissionCreationRequest): Either[Throwable, (EmailSubmissionCreationResponse, MessageId)] = {
-    val message: Either[Exception, MessageResult] = messageIdManager.getMessage(request.emailId, FetchGroup.FULL_CONTENT, mailboxSession)
-      .asScala
-      .toList
-      .headOption
-      .toRight(MessageNotFoundException(request.emailId))
-
-    message.flatMap(m => {
-      val submissionId = EmailSubmissionId.generate
-
-      val result: Try[EmailSubmissionCreationResponse] = for {
-        message <- toMimeMessage(submissionId.value, m)
-        envelope <- resolveEnvelope(message, request.envelope)
-        validation <- validate(mailboxSession)(message, envelope)
-        mail <- Try({
-          val mailImpl = MailImpl.builder()
-            .name(submissionId.value)
-            .addRecipients(envelope.rcptTo.map(_.email).asJava)
-            .sender(envelope.mailFrom.email)
-            .addAttribute(new Attribute(MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of(mailboxSession.getUser.asString())))
-            .build()
-          mailImpl.setMessageNoCopy(message)
-          mailImpl
-        })
-        enqueue <- Try(queue.enQueue(mail))
-      } yield {
-        EmailSubmissionCreationResponse(submissionId)
-      }
-      result.toEither.map(response => (response, request.emailId))
-    })
+   val result = for {
+      message <- messageIdManager.getMessage(request.emailId, FetchGroup.FULL_CONTENT, mailboxSession)
+        .asScala
+        .toList
+        .headOption
+        .toRight(MessageNotFoundException(request.emailId))
+      submissionId = EmailSubmissionId.generate
+      message <- toMimeMessage(submissionId.value, message).toEither
+      envelope <- resolveEnvelope(message, request.envelope).toEither
+      validation <- validate(mailboxSession)(message, envelope).toEither
+      mail <- Try({
+        val mailImpl = MailImpl.builder()
+          .name(submissionId.value)
+          .addRecipients(envelope.rcptTo.map(_.email).asJava)
+          .sender(envelope.mailFrom.email)
+          .addAttribute(new Attribute(MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of(mailboxSession.getUser.asString())))
+          .build()
+        mailImpl.setMessageNoCopy(message)
+        mailImpl
+      }).toEither
+      enqueue <- Try(queue.enQueue(mail)).toEither
+    } yield {
+      EmailSubmissionCreationResponse(submissionId)
+    }
+     result.map(response => (response, request.emailId))
   }
 
   private def toMimeMessage(name: String, message: MessageResult): Try[MimeMessageWrapper] = {
