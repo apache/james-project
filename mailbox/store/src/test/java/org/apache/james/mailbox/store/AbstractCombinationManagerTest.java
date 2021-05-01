@@ -53,6 +53,8 @@ import org.junit.jupiter.api.Test;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public abstract class AbstractCombinationManagerTest {
 
@@ -534,7 +536,9 @@ public abstract class AbstractCombinationManagerTest {
             .appendMessage(MessageManager.AppendCommand.from(mailContent), session)
             .getId().getMessageId();
 
-        messageIdManager.delete(ImmutableList.of(messageId1, messageId2), session);
+        Mono.from(messageIdManager.delete(ImmutableList.of(messageId1, messageId2), session))
+            .subscribeOn(Schedulers.elastic())
+            .block();
 
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.all());
         assertThat(Flux.from(messageManager1.search(searchQuery, session)).toStream()).isEmpty();

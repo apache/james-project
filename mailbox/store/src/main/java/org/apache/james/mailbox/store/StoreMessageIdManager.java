@@ -187,10 +187,14 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     private ImmutableSet<MailboxId> getAllowedMailboxIds(MailboxSession mailboxSession, Stream<MailboxId> idList, Right... rights) throws MailboxException {
-        return MailboxReactorUtils.block(Flux.fromStream(idList)
+        return MailboxReactorUtils.block(getAllowedMailboxIdsReactive(mailboxSession, idList, rights));
+    }
+
+    private Mono<ImmutableSet<MailboxId>> getAllowedMailboxIdsReactive(MailboxSession mailboxSession, Stream<MailboxId> idList, Right... rights) {
+        return Flux.fromStream(idList)
             .distinct()
             .filterWhen(hasRightsOnMailboxReactive(mailboxSession, rights), DEFAULT_CONCURRENCY)
-            .collect(Guavate.toImmutableSet()));
+            .collect(Guavate.toImmutableSet());
     }
 
     @Override
@@ -215,14 +219,21 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     @Override
-    public DeleteResult delete(List<MessageId> messageIds, MailboxSession mailboxSession) throws MailboxException {
+    public Mono<DeleteResult> delete(List<MessageId> messageIds, MailboxSession mailboxSession) throws MailboxException {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
-        List<MailboxMessage> messageList = messageIdMapper.find(messageIds, MessageMapper.FetchType.Metadata);
-        ImmutableSet<MailboxId> allowedMailboxIds = getAllowedMailboxIds(mailboxSession, messageList
-            .stream()
-            .map(MailboxMessage::getMailboxId), Right.DeleteMessages);
+        return messageIdMapper.findReactive(messageIds, MessageMapper.FetchType.Metadata)
+            .collectList()
+            .flatMap(messageList ->
+                getAllowedMailboxIdsReactive(mailboxSession,
+                    messageList
+                        .stream()
+                        .map(MailboxMessage::getMailboxId),
+                    Right.DeleteMessages)
+                .flatMap(allowedMailboxIds -> deleteInAllowedMailboxes(messageIds, mailboxSession, messageIdMapper, messageList, allowedMailboxIds)));
+    }
 
+    private Mono<DeleteResult> deleteInAllowedMailboxes(List<MessageId> messageIds, MailboxSession mailboxSession, MessageIdMapper messageIdMapper, List<MailboxMessage> messageList, ImmutableSet<MailboxId> allowedMailboxIds) {
         List<MailboxMessage> accessibleMessages = messageList.stream()
             .filter(message -> allowedMailboxIds.contains(message.getMailboxId()))
             .collect(Guavate.toImmutableList());
@@ -232,14 +243,11 @@ public class StoreMessageIdManager implements MessageIdManager {
             .collect(Guavate.toImmutableSet());
         Sets.SetView<MessageId> nonAccessibleMessages = Sets.difference(ImmutableSet.copyOf(messageIds), accessibleMessageIds);
 
-        deleteWithPreHooks(messageIdMapper, accessibleMessages, mailboxSession)
-            .subscribeOn(Schedulers.elastic())
-            .block();
-
-        return DeleteResult.builder()
-            .addDestroyed(accessibleMessageIds)
-            .addNotFound(nonAccessibleMessages)
-            .build();
+        return deleteWithPreHooks(messageIdMapper, accessibleMessages, mailboxSession)
+            .thenReturn(DeleteResult.builder()
+                .addDestroyed(accessibleMessageIds)
+                .addNotFound(nonAccessibleMessages)
+                .build());
     }
 
     private Mono<Void> deleteWithPreHooks(MessageIdMapper messageIdMapper, List<MailboxMessage> messageList, MailboxSession mailboxSession) {

@@ -40,6 +40,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
 public class SetMessagesDestructionProcessor implements SetMessagesProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SetMessagesCreationProcessor.class);
@@ -70,7 +73,9 @@ public class SetMessagesDestructionProcessor implements SetMessagesProcessor {
             if (toBeDestroyed.isEmpty()) {
                 return Stream.empty();
             }
-            DeleteResult deleteResult = messageIdManager.delete(toBeDestroyed, mailboxSession);
+            DeleteResult deleteResult = Mono.from(messageIdManager.delete(toBeDestroyed, mailboxSession))
+                .subscribeOn(Schedulers.elastic())
+                .block();
 
             Stream<SetMessagesResponse> destroyed = deleteResult.getDestroyed().stream()
                 .map(messageId -> SetMessagesResponse.builder().destroyed(messageId).build());
