@@ -120,12 +120,17 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     @Override
     public void setFlags(Flags newState, MessageManager.FlagsUpdateMode replace, MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException {
+        MailboxReactorUtils.block(setFlagsReactive(newState, replace, messageId, mailboxIds, mailboxSession));
+    }
+
+    @Override
+    public Mono<Void> setFlagsReactive(Flags newState, MessageManager.FlagsUpdateMode replace, MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
 
         int concurrency = 4;
 
-        MailboxReactorUtils.block(Flux.fromIterable(mailboxIds)
+        return Flux.fromIterable(mailboxIds)
             .flatMap(mailboxMapper::findMailboxById, concurrency)
             .collect(Guavate.toImmutableList())
             .flatMap(Throwing.<List<Mailbox>, Mono<Void>>function(targetMailboxes -> {
@@ -135,8 +140,7 @@ public class StoreMessageIdManager implements MessageIdManager {
                     .flatMapIterable(updatedFlags -> updatedFlags.asMap().entrySet())
                     .concatMap(entry -> dispatchFlagsChange(mailboxSession, entry.getKey(), ImmutableList.copyOf(entry.getValue()), targetMailboxes))
                     .then();
-            }).sneakyThrow())
-            .subscribeOn(Schedulers.elastic()));
+            }).sneakyThrow());
     }
 
     @Override
