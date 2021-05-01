@@ -217,13 +217,18 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     @Override
     public void delete(Multimap<MessageId, MailboxId> ids) {
-        Flux.fromIterable(ids.asMap()
+        deleteReactive(ids)
+            .block();
+    }
+
+
+    public Mono<Void> deleteReactive(Multimap<MessageId, MailboxId> ids) {
+        return Flux.fromIterable(ids.asMap()
             .entrySet())
             .publishOn(Schedulers.elastic())
             .flatMap(entry -> deleteReactive(entry.getKey(), entry.getValue()), cassandraConfiguration.getExpungeChunkSize(),
                 DEFAULT_CONCURRENCY)
-            .then()
-            .block();
+            .then();
     }
 
     private Mono<Void> retrieveAndDeleteIndices(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
