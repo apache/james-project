@@ -65,6 +65,8 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 class DeletedMessageVaultHookTest {
 
@@ -159,7 +161,7 @@ class DeletedMessageVaultHookTest {
         MessageId messageId = composedId.getMessageId();
         long messageSize = messageSize(messageManager, composedId);
 
-        messageIdManager.delete(ImmutableList.of(messageId), aliceSession);
+        messageIdManager.delete(messageId, aliceSession);
 
         DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(aliceMailbox), messageId, ALICE, messageSize);
         assertThat(Flux.from(messageVault.search(ALICE, Query.ALL)).blockFirst())
@@ -175,7 +177,7 @@ class DeletedMessageVaultHookTest {
             .mapToObj(Throwing.intFunction(i -> appendMessage(messageManager).getMessageId()))
             .collect(Guavate.toImmutableList());
 
-        assertThatCode(() -> messageIdManager.delete(ids, aliceSession))
+        assertThatCode(() -> Mono.from(messageIdManager.delete(ids, aliceSession)).subscribeOn(Schedulers.elastic()).block())
             .doesNotThrowAnyException();
     }
 

@@ -83,6 +83,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public abstract class AbstractMessageIdManagerSideEffectTest {
     private static final Quota<QuotaCountLimit, QuotaCountUsage> OVER_QUOTA = Quota.<QuotaCountLimit, QuotaCountUsage>builder()
@@ -169,7 +170,9 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         MessageMetaData simpleMessageMetaData2 = messageResult2.messageMetaData();
 
         eventBus.register(eventCollector);
-        messageIdManager.delete(ImmutableList.of(messageId1, messageId2), session);
+        Mono.from(messageIdManager.delete(ImmutableList.of(messageId1, messageId2), session))
+            .subscribeOn(Schedulers.elastic())
+            .block();
 
         AbstractListAssert<?, List<? extends Expunged>, Expunged, ObjectAssert<Expunged>> events =
             assertThat(eventCollector.getEvents())
@@ -523,7 +526,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         MessageId messageId = testingData.createNotUsedMessageId();
 
         eventBus.register(eventCollector);
-        messageIdManager.delete(ImmutableList.of(messageId), session);
+        messageIdManager.delete(messageId, session);
 
         assertThat(eventCollector.getEvents()).isEmpty();
     }
