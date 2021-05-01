@@ -206,7 +206,9 @@ public class StoreMessageIdManager implements MessageIdManager {
             .collect(Guavate.toImmutableList());
 
         if (!messageList.isEmpty()) {
-            deleteWithPreHooks(messageIdMapper, messageList, mailboxSession);
+            deleteWithPreHooks(messageIdMapper, messageList, mailboxSession)
+                .subscribeOn(Schedulers.elastic())
+                .block();
             return DeleteResult.destroyed(messageId);
         }
         return DeleteResult.notFound(messageId);
@@ -230,7 +232,9 @@ public class StoreMessageIdManager implements MessageIdManager {
             .collect(Guavate.toImmutableSet());
         Sets.SetView<MessageId> nonAccessibleMessages = Sets.difference(ImmutableSet.copyOf(messageIds), accessibleMessageIds);
 
-        deleteWithPreHooks(messageIdMapper, accessibleMessages, mailboxSession);
+        deleteWithPreHooks(messageIdMapper, accessibleMessages, mailboxSession)
+            .subscribeOn(Schedulers.elastic())
+            .block();
 
         return DeleteResult.builder()
             .addDestroyed(accessibleMessageIds)
@@ -238,38 +242,34 @@ public class StoreMessageIdManager implements MessageIdManager {
             .build();
     }
 
-    private void deleteWithPreHooks(MessageIdMapper messageIdMapper, List<MailboxMessage> messageList, MailboxSession mailboxSession) throws MailboxException {
+    private Mono<Void> deleteWithPreHooks(MessageIdMapper messageIdMapper, List<MailboxMessage> messageList, MailboxSession mailboxSession) {
         ImmutableList<MetadataWithMailboxId> metadataWithMailbox = messageList.stream()
             .map(mailboxMessage -> MetadataWithMailboxId.from(mailboxMessage.metaData(), mailboxMessage.getMailboxId()))
             .collect(Guavate.toImmutableList());
 
-        preDeletionHooks.runHooks(PreDeletionHook.DeleteOperation.from(metadataWithMailbox))
-            .then(Mono.fromRunnable(Throwing.runnable(
-                () -> delete(messageIdMapper, messageList, mailboxSession, metadataWithMailbox))))
-            .block();
+        return preDeletionHooks.runHooks(PreDeletionHook.DeleteOperation.from(metadataWithMailbox))
+            .then(delete(messageIdMapper, messageList, mailboxSession, metadataWithMailbox));
     }
 
-    private void delete(MessageIdMapper messageIdMapper, List<MailboxMessage> messageList, MailboxSession mailboxSession,
-                        ImmutableList<MetadataWithMailboxId> metadataWithMailbox) throws MailboxException {
-        messageIdMapper.delete(
+    private Mono<Void> delete(MessageIdMapper messageIdMapper, List<MailboxMessage> messageList, MailboxSession mailboxSession, ImmutableList<MetadataWithMailboxId> metadataWithMailbox) {
+        MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
+
+        return messageIdMapper.deleteReactive(
             messageList.stream()
                 .collect(Guavate.toImmutableListMultimap(
                     Message::getMessageId,
-                    MailboxMessage::getMailboxId)));
-
-        MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
-        Flux.fromIterable(metadataWithMailbox)
-            .flatMap(metadataWithMailboxId -> mailboxMapper.findMailboxById(metadataWithMailboxId.getMailboxId())
-                .flatMap(mailbox -> eventBus.dispatch(EventFactory.expunged()
-                        .randomEventId()
-                        .mailboxSession(mailboxSession)
-                        .mailbox(mailbox)
-                        .addMetaData(metadataWithMailboxId.getMessageMetaData())
-                        .build(),
-                    new MailboxIdRegistrationKey(metadataWithMailboxId.getMailboxId()))), DEFAULT_CONCURRENCY)
-            .then()
-            .subscribeOn(Schedulers.elastic())
-            .block();
+                    MailboxMessage::getMailboxId)))
+            .then(
+                Flux.fromIterable(metadataWithMailbox)
+                    .flatMap(metadataWithMailboxId -> mailboxMapper.findMailboxById(metadataWithMailboxId.getMailboxId())
+                        .flatMap(mailbox -> eventBus.dispatch(EventFactory.expunged()
+                                .randomEventId()
+                                .mailboxSession(mailboxSession)
+                                .mailbox(mailbox)
+                                .addMetaData(metadataWithMailboxId.getMessageMetaData())
+                                .build(),
+                            new MailboxIdRegistrationKey(metadataWithMailboxId.getMailboxId()))), DEFAULT_CONCURRENCY)
+                    .then());
     }
 
     @Override

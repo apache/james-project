@@ -69,6 +69,10 @@ public interface MessageIdMapper {
             .forEach(this::delete);
     }
 
+    default Mono<Void> deleteReactive(Multimap<MessageId, MailboxId> ids) {
+        return Mono.fromRunnable(() -> delete(ids));
+    }
+
     /**
      * Updates the flags of the messages with the given MessageId in the supplied mailboxes
      *
