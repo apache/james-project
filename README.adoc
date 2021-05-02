@@ -171,7 +171,7 @@ If you want to handle attachment text extraction before indexing in ElasticSearc
 and if you want to use all the JMAP search capabilities, you also need to start *Tika*.
 See http://james.apache.org/server/config-elasticsearch.html#Tika_Configuration[Tika configuration documentation] for more info.
 
-    $ docker run -d --name=tika apache/tika:1.24
+    $ docker run -d --name=tika apache/tika:1.26
 
 We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
 

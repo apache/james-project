@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ### Added
  - JAMES-3524 Support symmetric encryption support on top of BlobStore
+ 
+### Third party software
+ - Upgrading to Apache Tika 1.26 is recommended
+     - 1.25 and before are subject to CVE-2021-28657 CVE-2021-27906 CVE-2021-27807
+     - 1.24 is subject to CVE-2020-9489
 
 ## [3.6.0] - 2021-03-16
 
