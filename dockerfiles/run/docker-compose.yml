@@ -34,7 +34,7 @@ services:
       - "9042:9042"
 
   tika:
-    image: apache/tika:1.24
+    image: apache/tika:1.26
 
   rabbitmq:
     image: rabbitmq:3.8.1-management
