@@ -12,7 +12,46 @@ software documentation. Do not follow this guide blindly!
 
 Note: this section is in progress. It will be updated during all the development process until the release.
 
-Changes to apply between 3.5.x and 3.6.x will be reported here.
+Changes to apply between 3.6.x and 3.7.x will be reported here.
+
+Change list:
+
+ - [Rework message denormalization](#rework-message-denormalization)
+
+### Rework message denormalization
+
+Date: 02/05/2021
+JIRA: https://issues.apache.org/jira/browse/JAMES-3576
+Concerned products: Cassandra Guice servers (including Distributed server)
+
+The table structure had been reworked in order to fasten message reads (metadata and headers) workloads for both IMAP
+and JMAP protocols.
+
+Information previously included solely in `messagev3` table (and thus needed to be read) have been added to both 
+`messageIdTable` (serving IMAP reads) and `imapUidTable` (serving JMAP reads), allowing skipping reading messageV3
+table when retrieving messages METADATA and HEADERS, effectively decreasing Cassandra query workload.
+
+Before deploying the new version of James one need to previously adapt the table structure:
+
+```
+cqlsh:apache_james> ALTER TABLE messageIdTable ADD internalDate timestamp ;
+cqlsh:apache_james> ALTER TABLE messageidtable ADD bodyStartOctet int  ;
+cqlsh:apache_james> ALTER TABLE messageidtable ADD fullContentOctets bigint  ;
+cqlsh:apache_james> ALTER TABLE messageidtable ADD headerContent text  ;
+
+cqlsh:apache_james> ALTER TABLE imapUidTable ADD internalDate timestamp ;
+cqlsh:apache_james> ALTER TABLE imapUidTable ADD bodyStartOctet int  ;
+cqlsh:apache_james> ALTER TABLE imapUidTable ADD fullContentOctets bigint  ;
+cqlsh:apache_james> ALTER TABLE imapUidTable ADD headerContent text  ;
+```
+
+Note that if for some message information is missing from `messageIdTable` or `imapUidTable` then `messagev3` table will
+effectively be read, defaulting to previous behaviour.
+
+We furthermore propose a migration task for adding missing information to `imapUidTable` and `messageIdTable` and thus 
+ensure you leverage the benefits of this change:
+
+See how to [upgrade to the latest schema version](https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-webadmin.md#upgrading-to-the-latest-version) (V11).
 
 Change list:
 

@@ -34,6 +34,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.StatementRecorder.Selector;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -231,7 +232,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
                 // ignoring expected error
             }
 
-            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new CassandraMessageId.Factory());
+            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new HashBlobId.Factory());
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), FetchType.Metadata, 1))
                     .toIterable()
@@ -254,7 +255,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
                 // ignoring expected error
             }
 
-            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new CassandraMessageId.Factory());
+            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new HashBlobId.Factory());
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), FetchType.Metadata, 1))
                     .toIterable()
@@ -277,7 +278,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
                 // ignoring expected error
             }
 
-            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new CassandraMessageId.Factory());
+            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new HashBlobId.Factory());
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), FetchType.Metadata, 1))
                     .toIterable()
@@ -300,7 +301,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
                 // ignoring expected error
             }
 
-            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new CassandraMessageId.Factory());
+            CassandraMessageIdDAO messageIdDAO = new CassandraMessageIdDAO(cassandra.getConf(), new HashBlobId.Factory());
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), FetchType.Metadata, 1))
                     .toIterable()
@@ -325,8 +326,8 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
             CassandraMessageIdToImapUidDAO imapUidDAO = new CassandraMessageIdToImapUidDAO(
                 cassandra.getConf(),
+                new HashBlobId.Factory(),
                 cassandraCluster.getCassandraConsistenciesConfiguration(),
-                new CassandraMessageId.Factory(),
                 CassandraConfiguration.DEFAULT_CONFIGURATION);
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {

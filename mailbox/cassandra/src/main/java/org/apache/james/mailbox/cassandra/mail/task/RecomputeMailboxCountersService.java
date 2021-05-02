@@ -35,6 +35,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMessageMetadata;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
@@ -220,6 +221,7 @@ public class RecomputeMailboxCountersService {
         Counter counter = new Counter(mailboxId);
 
         return imapUidToMessageIdDAO.retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited())
+            .map(CassandraMessageMetadata::getComposedMessageId)
             .flatMap(message -> latestMetadata(mailboxId, message, options), MESSAGE_CONCURRENCY)
             .doOnNext(counter::process)
             .then(Mono.defer(() -> counterDAO.resetCounters(counter.snapshot())))
@@ -244,6 +246,7 @@ public class RecomputeMailboxCountersService {
         CassandraMessageId messageId = (CassandraMessageId) message.getComposedMessageId().getMessageId();
 
         return messageIdToImapUidDAO.retrieve(messageId, Optional.of(mailboxId), STRONG)
+            .map(CassandraMessageMetadata::getComposedMessageId)
             .doOnNext(trustedMessage -> {
                 if (!trustedMessage.equals(message)) {
                     LOGGER.warn("Possible denormalization issue on {}. " +

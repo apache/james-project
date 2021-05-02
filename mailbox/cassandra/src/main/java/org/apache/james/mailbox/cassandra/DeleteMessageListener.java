@@ -51,6 +51,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAOV3;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMessageMetadata;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.mail.MessageAttachmentRepresentation;
 import org.apache.james.mailbox.cassandra.mail.MessageRepresentation;
@@ -159,6 +160,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
         int prefetch = 1;
         return Flux.mergeDelayError(prefetch,
                 messageIdDAO.retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited())
+                    .map(CassandraMessageMetadata::getComposedMessageId)
                     .map(ComposedMessageIdWithMetaData::getComposedMessageId)
                     .concatMap(metadata -> handleMessageDeletionAsPartOfMailboxDeletion((CassandraMessageId) metadata.getMessageId(), mailboxId)
                         .then(imapUidDAO.delete((CassandraMessageId) metadata.getMessageId(), mailboxId))
@@ -254,7 +256,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
 
     private Mono<Boolean> isReferenced(CassandraMessageId id, CassandraId excludedId) {
         return imapUidDAO.retrieve(id, ALL_MAILBOXES, chooseReadConsistencyUponWrites())
-            .filter(metadata -> !metadata.getComposedMessageId().getMailboxId().equals(excludedId))
+            .filter(metadata -> !metadata.getComposedMessageId().getComposedMessageId().getMailboxId().equals(excludedId))
             .hasElements()
             .map(negate());
     }
