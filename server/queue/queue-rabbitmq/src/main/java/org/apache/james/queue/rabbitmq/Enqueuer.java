@@ -68,9 +68,9 @@ class Enqueuer {
         this.enqueueMetric = metricFactory.generate(ENQUEUED_METRIC_NAME_PREFIX + name.asString());
     }
 
-    void enQueue(Mail mail) throws MailQueue.MailQueueException {
+    Mono<Void> enQueue(Mail mail) throws MailQueue.MailQueueException {
         EnqueueId enqueueId = EnqueueId.generate();
-        saveMail(mail)
+        return saveMail(mail)
             .map(partIds -> new MailReference(enqueueId, mail, partIds))
             .flatMap(Throwing.<MailReference, Mono<Void>>function(mailReference -> {
                 EnqueuedItem enqueuedItem = toEnqueuedItems(mailReference);
@@ -79,8 +79,7 @@ class Enqueuer {
                         publishReferenceToRabbit(mailReference))
                         .then();
             }).sneakyThrow())
-            .thenEmpty(Mono.fromRunnable(enqueueMetric::increment))
-            .block();
+            .thenEmpty(Mono.fromRunnable(enqueueMetric::increment));
     }
 
     Mono<Void> reQueue(CassandraMailQueueBrowser.CassandraMailQueueItemView item) {

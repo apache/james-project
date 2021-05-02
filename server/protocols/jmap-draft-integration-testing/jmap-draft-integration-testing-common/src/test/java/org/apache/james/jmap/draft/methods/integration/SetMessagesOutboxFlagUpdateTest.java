@@ -55,12 +55,16 @@ import org.apache.mailet.Mail;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.reactivestreams.Publisher;
+
+import com.github.fge.lambdas.Throwing;
 
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.parsing.Parser;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public abstract class SetMessagesOutboxFlagUpdateTest {
     private static final Username USERNAME = Username.of("username@" + DOMAIN);
@@ -91,6 +95,11 @@ public abstract class SetMessagesOutboxFlagUpdateTest {
 
                 @Override
                 public void enQueue(Mail mail, Duration delay) {
+                }
+
+                @Override
+                public Publisher<Void> enqueueReactive(Mail mail) {
+                    return Mono.fromRunnable(Throwing.runnable(() -> enQueue(mail)).sneakyThrow());
                 }
 
                 @Override

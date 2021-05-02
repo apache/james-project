@@ -74,6 +74,7 @@ import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -303,6 +304,11 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
     @Override
     public void enQueue(Mail mail) throws MailQueueException {
         enQueue(mail, NO_DELAY, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public Publisher<Void> enqueueReactive(Mail mail) {
+        return Mono.fromRunnable(Throwing.runnable(() -> enQueue(mail)).sneakyThrow());
     }
 
     /**
