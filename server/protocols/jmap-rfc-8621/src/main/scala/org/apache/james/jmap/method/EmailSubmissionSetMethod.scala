@@ -199,30 +199,38 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
   private def create(request: EmailSubmissionSetRequest,
                      session: MailboxSession,
                      processingContext: ProcessingContext): SMono[(CreationResults, ProcessingContext)] =
-    SFlux.fromIterable(request.create
-      .getOrElse(Map.empty)
-      .view)
-      .fold((CreationResults(Nil), processingContext)) {
-        (acc : (CreationResults, ProcessingContext), elem: (EmailSubmissionCreationId, JsObject)) => {
+    SFlux.fromIterable(
+      request.create
+        .getOrElse(Map.empty)
+        .view)
+      .fold[SMono[(CreationResults, ProcessingContext)]](SMono.just((CreationResults(Nil), processingContext))) {
+        (acc: SMono[(CreationResults, ProcessingContext)], elem: (EmailSubmissionCreationId, JsObject)) => {
           val (emailSubmissionCreationId, jsObject) = elem
-          val (creationResult, updatedProcessingContext) = createSubmission(session, emailSubmissionCreationId, jsObject, acc._2)
-          (CreationResults(acc._1.created :+ creationResult), updatedProcessingContext)
+          acc.flatMap {
+            case (creationResults, processingContext) =>
+              createSubmission(session, emailSubmissionCreationId, jsObject, processingContext)
+                .map {
+                  case (created, updatedProcessingContext) => CreationResults(creationResults.created :+ created) -> updatedProcessingContext
+                }
+              .switchIfEmpty(SMono.error(new RuntimeException("I should not be empty")))
+          }.cache()
         }
       }
+      .flatMap(x => x)
       .subscribeOn(Schedulers.elastic())
 
   private def createSubmission(mailboxSession: MailboxSession,
                             emailSubmissionCreationId: EmailSubmissionCreationId,
                             jsObject: JsObject,
-                            processingContext: ProcessingContext): (CreationResult, ProcessingContext) =
+                            processingContext: ProcessingContext): SMono[(CreationResult, ProcessingContext)] =
     parseCreate(jsObject)
-      .flatMap(emailSubmissionCreationRequest => sendEmail(mailboxSession, emailSubmissionCreationRequest))
+      .fold(e => SMono.error(e), sendEmail(mailboxSession, _))
       .map {
         case (creationResponse, messageId) =>
-          (creationResponse, messageId, recordCreationIdInProcessingContext(emailSubmissionCreationId, processingContext, creationResponse.id))
+          CreationSuccess(emailSubmissionCreationId, creationResponse, messageId) ->
+            recordCreationIdInProcessingContext(emailSubmissionCreationId, processingContext, creationResponse.id)
       }
-      .fold(e => (CreationFailure(emailSubmissionCreationId, e), processingContext),
-        creation => CreationSuccess(emailSubmissionCreationId, creation._1, creation._2) -> creation._3)
+      .onErrorResume(e => SMono.just((CreationFailure(emailSubmissionCreationId, e), processingContext)))
 
   private def parseCreate(jsObject: JsObject): Either[EmailSubmissionCreationParseException, EmailSubmissionCreationRequest] =
     EmailSubmissionCreationRequest.validateProperties(jsObject)
@@ -240,18 +248,16 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
     }
 
   private def sendEmail(mailboxSession: MailboxSession,
-                        request: EmailSubmissionCreationRequest): Either[Throwable, (EmailSubmissionCreationResponse, MessageId)] = {
-   val result = for {
-      message <- messageIdManager.getMessage(request.emailId, FetchGroup.FULL_CONTENT, mailboxSession)
-        .asScala
-        .toList
-        .headOption
-        .toRight(MessageNotFoundException(request.emailId))
+                        request: EmailSubmissionCreationRequest): SMono[(EmailSubmissionCreationResponse, MessageId)] =
+   for {
+      message <- SFlux(messageIdManager.getMessagesReactive(List(request.emailId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
+        .next
+        .switchIfEmpty(SMono.error(MessageNotFoundException(request.emailId)))
       submissionId = EmailSubmissionId.generate
-      message <- toMimeMessage(submissionId.value, message).toEither
-      envelope <- resolveEnvelope(message, request.envelope).toEither
-      validation <- validate(mailboxSession)(message, envelope).toEither
-      mail <- Try({
+      message <- SMono.fromTry(toMimeMessage(submissionId.value, message))
+      envelope <- SMono.fromTry(resolveEnvelope(message, request.envelope))
+      validation <- SMono.fromTry(validate(mailboxSession)(message, envelope))
+      mail <- SMono.fromCallable(() => {
         val mailImpl = MailImpl.builder()
           .name(submissionId.value)
           .addRecipients(envelope.rcptTo.map(_.email).asJava)
@@ -260,13 +266,11 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
           .build()
         mailImpl.setMessageNoCopy(message)
         mailImpl
-      }).toEither
-      enqueue <- Try(queue.enQueue(mail)).toEither
+      })
+      enqueue <- SMono(queue.enqueueReactive(mail)).`then`(SMono.just(submissionId))
     } yield {
-      EmailSubmissionCreationResponse(submissionId)
+      EmailSubmissionCreationResponse(submissionId) -> request.emailId
     }
-     result.map(response => (response, request.emailId))
-  }
 
   private def toMimeMessage(name: String, message: MessageResult): Try[MimeMessageWrapper] = {
     val source = MessageMimeMessageSource(name, message)

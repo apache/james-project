@@ -105,6 +105,8 @@ public interface MailQueue extends Closeable {
      */
     void enQueue(Mail mail) throws MailQueueException;
 
+    Publisher<Void> enqueueReactive(Mail mail);
+
     /**
      * Dequeue the next ready-to-process Mail of the queue. This method will
      * block until a Mail is ready and then process the operation.

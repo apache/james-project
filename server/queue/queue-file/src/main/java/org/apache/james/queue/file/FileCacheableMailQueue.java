@@ -61,6 +61,7 @@ import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,6 +120,11 @@ public class FileCacheableMailQueue implements ManageableMailQueue {
     @Override
     public MailQueueName getName() {
         return queueName;
+    }
+
+    @Override
+    public Publisher<Void> enqueueReactive(Mail mail) {
+        return Mono.fromRunnable(Throwing.runnable(() -> enQueue(mail)).sneakyThrow());
     }
 
     private void init() throws IOException {

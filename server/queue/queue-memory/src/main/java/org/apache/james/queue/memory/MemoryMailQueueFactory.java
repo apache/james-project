@@ -48,6 +48,7 @@ import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
+import org.reactivestreams.Publisher;
 import org.threeten.extra.Temporals;
 
 import com.github.fge.lambdas.Throwing;
@@ -125,6 +126,11 @@ public class MemoryMailQueueFactory implements MailQueueFactory<MemoryMailQueueF
             } catch (MessagingException e) {
                 throw new MailQueueException("Error while copying mail " + mail.getName(), e);
             }
+        }
+
+        @Override
+        public Publisher<Void> enqueueReactive(Mail mail) {
+            return Mono.fromRunnable(Throwing.runnable(() -> enQueue(mail)).sneakyThrow());
         }
 
         private ZonedDateTime calculateNextDelivery(Duration delay) {
