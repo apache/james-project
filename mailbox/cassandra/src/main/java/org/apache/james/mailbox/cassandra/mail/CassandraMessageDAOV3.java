@@ -170,9 +170,9 @@ public class CassandraMessageDAOV3 {
             .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
     }
 
-    public Mono<Void> save(MailboxMessage message) throws MailboxException {
+    public Mono<Tuple2<BlobId, BlobId>> save(MailboxMessage message) throws MailboxException {
         return saveContent(message)
-            .flatMap(pair -> cassandraAsyncExecutor.executeVoid(boundWriteStatement(message, pair)));
+            .flatMap(pair -> cassandraAsyncExecutor.executeVoid(boundWriteStatement(message, pair)).thenReturn(pair));
     }
 
     public Mono<Void> save(MessageRepresentation message) {

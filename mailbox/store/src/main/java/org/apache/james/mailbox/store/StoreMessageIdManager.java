@@ -70,7 +70,6 @@ import org.apache.james.mailbox.store.mail.model.FlagsFactory;
 import org.apache.james.mailbox.store.mail.model.FlagsFilter;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Message;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.quota.QuotaChecker;
 import org.apache.james.util.FunctionalUtils;
 import org.reactivestreams.Publisher;
@@ -459,20 +458,16 @@ public class StoreMessageIdManager implements MessageIdManager {
             .flatMap(Throwing.<Mailbox, Mono<Void>>function(mailbox -> {
                 MailboxACL.Rfc4314Rights myRights = rightManager.myRights(mailbox, mailboxSession);
                 boolean shouldPreserveFlags = myRights.contains(Right.Write);
-                SimpleMailboxMessage copy =
-                    SimpleMailboxMessage.from(mailboxMessage)
-                        .mailboxId(mailbox.getMailboxId())
-                        .flags(
-                            FlagsFactory
-                                .builder()
-                                .flags(mailboxMessage.createFlags())
-                                .filteringFlags(
-                                    FlagsFilter.builder()
-                                        .systemFlagFilter(f -> shouldPreserveFlags)
-                                        .userFlagFilter(f -> shouldPreserveFlags)
-                                        .build())
-                                .build())
-                        .build();
+                MailboxMessage copy = mailboxMessage.copy(mailbox);
+                copy.setFlags(FlagsFactory
+                    .builder()
+                    .flags(mailboxMessage.createFlags())
+                    .filteringFlags(
+                        FlagsFilter.builder()
+                            .systemFlagFilter(f -> shouldPreserveFlags)
+                            .userFlagFilter(f -> shouldPreserveFlags)
+                            .build())
+                    .build());
 
                 return save(messageIdMapper, copy, mailbox)
                     .flatMap(metadata -> eventBus.dispatch(EventFactory.added()

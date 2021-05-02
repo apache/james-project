@@ -22,6 +22,7 @@ package org.apache.james.mailbox.cassandra.mail;
 import static org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration.ConsistencyChoice;
 import static org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration.ConsistencyChoice.STRONG;
 import static org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration.ConsistencyChoice.WEAK;
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.security.SecureRandom;
@@ -32,13 +33,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
@@ -68,6 +70,7 @@ import org.apache.james.util.streams.Limit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
@@ -79,6 +82,7 @@ import reactor.util.retry.Retry;
 
 public class CassandraMessageMapper implements MessageMapper {
     public static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageMapper.class);
+    private static final byte[] EMPTY_BYTE_ARRAY = {};
 
     private static final int MAX_RETRY = 5;
     private static final Duration MIN_RETRY_BACKOFF = Duration.ofMillis(10);
@@ -97,6 +101,7 @@ public class CassandraMessageMapper implements MessageMapper {
     private final CassandraFirstUnseenDAO firstUnseenDAO;
     private final AttachmentLoader attachmentLoader;
     private final CassandraDeletedMessageDAO deletedMessageDAO;
+    private final BlobStore blobStore;
     private final CassandraConfiguration cassandraConfiguration;
     private final RecomputeMailboxCountersService recomputeMailboxCountersService;
     private final SecureRandom secureRandom;
@@ -107,7 +112,7 @@ public class CassandraMessageMapper implements MessageMapper {
                                   CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMailboxCounterDAO mailboxCounterDAO,
                                   CassandraMailboxRecentsDAO mailboxRecentDAO, CassandraApplicableFlagDAO applicableFlagDAO,
                                   CassandraIndexTableHandler indexTableHandler, CassandraFirstUnseenDAO firstUnseenDAO,
-                                  CassandraDeletedMessageDAO deletedMessageDAO, CassandraConfiguration cassandraConfiguration,
+                                  CassandraDeletedMessageDAO deletedMessageDAO, BlobStore blobStore, CassandraConfiguration cassandraConfiguration,
                                   RecomputeMailboxCountersService recomputeMailboxCountersService) {
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
@@ -122,6 +127,7 @@ public class CassandraMessageMapper implements MessageMapper {
         this.attachmentLoader = new AttachmentLoader(attachmentMapper);
         this.applicableFlagDAO = applicableFlagDAO;
         this.deletedMessageDAO = deletedMessageDAO;
+        this.blobStore = blobStore;
         this.cassandraConfiguration = cassandraConfiguration;
         this.recomputeMailboxCountersService = recomputeMailboxCountersService;
         this.secureRandom = new SecureRandom();
@@ -240,7 +246,8 @@ public class CassandraMessageMapper implements MessageMapper {
     @Override
     public Flux<ComposedMessageIdWithMetaData> listMessagesMetadata(Mailbox mailbox, MessageRange set) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-        return messageIdDAO.retrieveMessages(mailboxId, set, Limit.unlimited());
+        return messageIdDAO.retrieveMessages(mailboxId, set, Limit.unlimited())
+            .map(CassandraMessageMetadata::getComposedMessageId);
     }
 
     @Override
@@ -249,14 +256,22 @@ public class CassandraMessageMapper implements MessageMapper {
 
         Limit limit = Limit.from(limitAsInt);
         return limit.applyOnFlux(messageIdDAO.retrieveMessages(mailboxId, messageRange, limit))
-            .flatMap(id -> retrieveMessage(id, ftype), cassandraConfiguration.getMessageReadChunkSize())
+            .flatMap(metadata -> toMailboxMessage(metadata, ftype), cassandraConfiguration.getMessageReadChunkSize())
             .sort(Comparator.comparing(MailboxMessage::getUid));
     }
 
-    private Mono<MailboxMessage> retrieveMessage(ComposedMessageIdWithMetaData messageId, FetchType fetchType) {
-        return messageDAOV3.retrieveMessage(messageId, fetchType)
-            .switchIfEmpty(messageDAO.retrieveMessage(messageId, fetchType))
-            .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(Pair.of(messageId, messageRepresentation), fetchType));
+    private Mono<MailboxMessage> toMailboxMessage(CassandraMessageMetadata metadata, FetchType fetchType) {
+        if (fetchType == FetchType.Metadata && metadata.isComplete()) {
+            return Mono.just(metadata.asMailboxMessage(EMPTY_BYTE_ARRAY));
+        }
+        if (fetchType == FetchType.Headers && metadata.isComplete()) {
+            return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), metadata.getHeaderContent().get(), SIZE_BASED))
+                .map(metadata::asMailboxMessage);
+        }
+        return messageDAOV3.retrieveMessage(metadata.getComposedMessageId(), fetchType)
+            .switchIfEmpty(messageDAO.retrieveMessage(metadata.getComposedMessageId(), fetchType))
+            .map(messageRepresentation -> Pair.of(metadata.getComposedMessageId(), messageRepresentation))
+            .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, fetchType));
     }
 
     @Override
@@ -290,6 +305,7 @@ public class CassandraMessageMapper implements MessageMapper {
 
         return Flux.fromIterable(MessageRange.toRanges(uids))
             .concatMap(range -> messageIdDAO.retrieveMessages(mailboxId, range, Limit.unlimited()))
+            .map(CassandraMessageMetadata::getComposedMessageId)
             .flatMap(this::expungeOne, cassandraConfiguration.getExpungeChunkSize())
             .collect(Guavate.toImmutableMap(MailboxMessage::getUid, MailboxMessage::metaData))
             .flatMap(messageMap -> indexTableHandler.updateIndexOnDelete(mailboxId, messageMap.values())
@@ -337,9 +353,9 @@ public class CassandraMessageMapper implements MessageMapper {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         return block(addUidAndModseq(message, mailboxId)
-            .flatMap(messageWithUidAndModSeq -> Mono.fromCallable(() -> save(mailbox, messageWithUidAndModSeq))
-                .flatMap(Function.identity())
-                .thenReturn(messageWithUidAndModSeq))
+            .flatMap(Throwing.function((MailboxMessage messageWithUidAndModSeq) ->
+                save(mailbox, messageWithUidAndModSeq)
+                    .thenReturn(messageWithUidAndModSeq)))
             .map(MailboxMessage::metaData));
     }
 
@@ -374,7 +390,8 @@ public class CassandraMessageMapper implements MessageMapper {
     public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagUpdateCalculator, MessageRange range) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
-        Flux<ComposedMessageIdWithMetaData> toBeUpdated = messageIdDAO.retrieveMessages(mailboxId, range, Limit.unlimited());
+        Flux<ComposedMessageIdWithMetaData> toBeUpdated = messageIdDAO.retrieveMessages(mailboxId, range, Limit.unlimited())
+            .map(CassandraMessageMetadata::getComposedMessageId);
 
         return updateFlags(flagUpdateCalculator, mailboxId, toBeUpdated).iterator();
     }
@@ -396,6 +413,7 @@ public class CassandraMessageMapper implements MessageMapper {
             .collectList()
             .flatMapIterable(MessageRange::toRanges)
             .concatMap(range -> messageIdDAO.retrieveMessages(mailboxId, range, Limit.unlimited()))
+            .map(CassandraMessageMetadata::getComposedMessageId)
             .filter(message -> message.getFlags().contains(Flag.RECENT));
         FlagsUpdateCalculator calculator = new FlagsUpdateCalculator(new Flags(Flag.RECENT), FlagsUpdateMode.REMOVE);
 
@@ -416,7 +434,8 @@ public class CassandraMessageMapper implements MessageMapper {
     private Mono<FlagsUpdateStageResult> retryUpdatesStage(CassandraId mailboxId, FlagsUpdateCalculator flagsUpdateCalculator, List<ComposedMessageId> failed) {
         if (!failed.isEmpty()) {
             Flux<ComposedMessageIdWithMetaData> toUpdate = Flux.fromIterable(failed)
-                .flatMap(ids -> imapUidDAO.retrieve((CassandraMessageId) ids.getMessageId(), Optional.of((CassandraId) ids.getMailboxId()), chooseReadConsistencyUponWrites()),
+                .flatMap(ids -> imapUidDAO.retrieve((CassandraMessageId) ids.getMessageId(), Optional.of((CassandraId) ids.getMailboxId()), chooseReadConsistencyUponWrites())
+                        .map(CassandraMessageMetadata::getComposedMessageId),
                     DEFAULT_CONCURRENCY);
             return runUpdateStage(mailboxId, toUpdate, flagsUpdateCalculator);
         } else {
@@ -485,7 +504,10 @@ public class CassandraMessageMapper implements MessageMapper {
     private MessageMetaData setInMailbox(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return block(addUidAndModseq(message, mailboxId)
-            .flatMap(messageWithUidAndModseq -> insertIds(messageWithUidAndModseq, mailboxId)
+            .flatMap(messageWithUidAndModseq ->
+                insertMetadata(messageWithUidAndModseq, mailboxId,
+                    CassandraMessageMetadata.from(messageWithUidAndModseq)
+                        .withMailboxId(mailboxId))
                 .thenReturn(messageWithUidAndModseq))
             .map(MailboxMessage::metaData));
     }
@@ -516,27 +538,28 @@ public class CassandraMessageMapper implements MessageMapper {
     private Mono<Void> save(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return messageDAOV3.save(message)
-            .thenEmpty(insertIds(message, mailboxId));
+            .flatMap(headerAndBodyBlobIds -> insertIds(message, mailboxId, headerAndBodyBlobIds.getT1()));
     }
 
-    private Mono<Void> insertIds(MailboxMessage message, CassandraId mailboxId) {
-        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = computeId(message, mailboxId);
-        return imapUidDAO.insert(composedMessageIdWithMetaData)
+    private Mono<Void> insertIds(MailboxMessage message, CassandraId mailboxId, BlobId headerBlobId) {
+        CassandraMessageMetadata metadata = CassandraMessageMetadata.from(message, headerBlobId);
+
+        return insertMetadata(message, mailboxId, metadata);
+    }
+
+    private Mono<Void> insertMetadata(MailboxMessage message, CassandraId mailboxId, CassandraMessageMetadata metadata) {
+        return imapUidDAO.insert(metadata)
             .then(Flux.merge(
-                messageIdDAO.insert(composedMessageIdWithMetaData)
+                messageIdDAO.insert(metadata)
                     .retryWhen(Retry.backoff(MAX_RETRY, MIN_RETRY_BACKOFF).maxBackoff(MAX_RETRY_BACKOFF)),
                 indexTableHandler.updateIndexOnAdd(message, mailboxId))
             .then());
     }
 
-    private ComposedMessageIdWithMetaData computeId(MailboxMessage message, CassandraId mailboxId) {
-        ComposedMessageIdWithMetaData composedMessageIdWithMetaData = ComposedMessageIdWithMetaData.builder()
-                .composedMessageId(new ComposedMessageId(mailboxId, message.getMessageId(), message.getUid()))
-                .flags(message.createFlags())
-                .modSeq(message.getModSeq())
-                .threadId(message.getThreadId())
-                .build();
-        return composedMessageIdWithMetaData;
+
+    private CassandraMessageMetadata computeId(MailboxMessage message, CassandraId mailboxId) {
+        return CassandraMessageMetadata.from(message)
+            .withMailboxId(mailboxId);
     }
 
     private Mono<Void> insertIds(Collection<MailboxMessage> messages, CassandraId mailboxId) {

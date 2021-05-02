@@ -828,14 +828,14 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
         }
 
         private CassandraMessageIdDAO messageIdDAO(CassandraCluster cassandraCluster) {
-            return new CassandraMessageIdDAO(cassandraCluster.getConf(), new CassandraMessageId.Factory());
+            return new CassandraMessageIdDAO(cassandraCluster.getConf(), new HashBlobId.Factory());
         }
 
         private CassandraMessageIdToImapUidDAO imapUidDAO(CassandraCluster cassandraCluster) {
             return new CassandraMessageIdToImapUidDAO(
                 cassandraCluster.getConf(),
+                new HashBlobId.Factory(),
                 cassandra.getCassandraConsistenciesConfiguration(),
-                new CassandraMessageId.Factory(),
                 CassandraConfiguration.DEFAULT_CONFIGURATION);
         }
 

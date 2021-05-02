@@ -145,11 +145,11 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
             indexTableHandler,
             firstUnseenDAO,
             deletedMessageDAO,
+            blobStore,
             cassandraConfiguration, recomputeMailboxCountersService);
         this.cassandraMessageIdMapper = new CassandraMessageIdMapper(cassandraMailboxMapper, mailboxDAO,
-            cassandraAttachmentMapper,
-            imapUidDAO, messageIdDAO, messageDAO, messageDAOV3, indexTableHandler, modSeqProvider,
-            cassandraConfiguration);
+            cassandraAttachmentMapper, imapUidDAO, messageIdDAO, messageDAO, messageDAOV3, indexTableHandler,
+            modSeqProvider, blobStore, cassandraConfiguration);
         this.cassandraAnnotationMapper = new CassandraAnnotationMapper(session, cassandraUtils);
     }
 
