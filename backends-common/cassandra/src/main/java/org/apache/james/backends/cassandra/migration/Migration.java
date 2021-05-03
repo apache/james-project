@@ -21,8 +21,11 @@ package org.apache.james.backends.cassandra.migration;
 
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public interface Migration {
+    Logger LOGGER = LoggerFactory.getLogger(Migration.class);
 
     void apply() throws InterruptedException;
 
@@ -45,6 +48,7 @@ public interface Migration {
             this.apply();
             return Task.Result.COMPLETED;
         } catch (RuntimeException e) {
+            LOGGER.warn("Error running migration", e);
             return Task.Result.PARTIAL;
         }
     }
