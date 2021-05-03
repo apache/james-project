@@ -348,6 +348,8 @@ The base command is different whether you choose guice flavor or spring :
   * guice use : `docker exec james_run java -jar /root/james-cli.jar`
   * spring use : `docker exec james_run /root/james-server-app-3.0.0-beta6-SNAPSHOT/bin/james-cli.sh`
 
+See https://james.apache.org/server/manage-cli.html[Manage James via the Command Line] for more info.
+
 === How to add a domain ?
 
     # Add DOMAIN to 127.0.0.1 in your host /etc/hosts
