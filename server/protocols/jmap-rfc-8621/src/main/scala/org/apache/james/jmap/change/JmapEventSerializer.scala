@@ -20,6 +20,7 @@
 package org.apache.james.jmap.change
 
 import java.util.Optional
+
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId

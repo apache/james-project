@@ -19,6 +19,9 @@
 
 package org.apache.james.jmap.json
 
+import java.io.InputStream
+import java.net.URL
+
 import eu.timepit.refined.refineV
 import io.netty.handler.codec.http.HttpResponseStatus
 import org.apache.james.core.Username
@@ -31,8 +34,6 @@ import org.apache.james.jmap.core.{Account, Invocation, Session, _}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-import java.io.InputStream
-import java.net.URL
 import scala.collection.{Seq => LegacySeq}
 import scala.language.implicitConversions
 
