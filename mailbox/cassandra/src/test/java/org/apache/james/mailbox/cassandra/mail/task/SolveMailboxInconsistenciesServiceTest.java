@@ -99,15 +99,6 @@ class SolveMailboxInconsistenciesServiceTest {
     }
 
     @Test
-    void fixMailboxInconsistenciesShouldFailWhenVersionIsMissing() {
-        versionDAO.truncateVersion().block();
-
-        assertThatThrownBy(() -> testee.fixMailboxInconsistencies(new Context()).block())
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Schema version 8 is required in order to ensure mailboxPathV3DAO to be correctly populated, got 5");
-    }
-
-    @Test
     void fixMailboxInconsistenciesShouldNotFailWhenIsEqualToMailboxPathV2Migration() {
         versionDAO.truncateVersion().block();
         versionDAO.updateVersion(new SchemaVersion(8)).block();

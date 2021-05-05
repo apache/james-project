@@ -30,8 +30,6 @@ import javax.inject.Inject;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
-import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -47,9 +45,6 @@ import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.util.FunctionalUtils;
-import org.apache.james.util.ReactorUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
@@ -58,46 +53,30 @@ import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
 public class CassandraMailboxMapper implements MailboxMapper {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMailboxMapper.class);
-
     private static final int MAX_RETRY = 5;
     private static final Duration MIN_RETRY_BACKOFF = Duration.ofMillis(10);
     private static final Duration MAX_RETRY_BACKOFF = Duration.ofMillis(1000);
-    private static final SchemaVersion MAILBOX_PATH_V_3_MIGRATION_PERFORMED_VERSION = new SchemaVersion(8);
     private static final int CONCURRENCY = 10;
 
     private final CassandraMailboxDAO mailboxDAO;
-    private final CassandraMailboxPathDAOImpl mailboxPathDAO;
-    private final CassandraMailboxPathV2DAO mailboxPathV2DAO;
     private final CassandraMailboxPathV3DAO mailboxPathV3DAO;
     private final ACLMapper aclMapper;
     private final CassandraUserMailboxRightsDAO userMailboxRightsDAO;
-    private final CassandraSchemaVersionManager versionManager;
     private final CassandraConfiguration cassandraConfiguration;
     private final SecureRandom secureRandom;
 
     @Inject
     public CassandraMailboxMapper(CassandraMailboxDAO mailboxDAO,
-                                  CassandraMailboxPathDAOImpl mailboxPathDAO,
-                                  CassandraMailboxPathV2DAO mailboxPathV2DAO,
                                   CassandraMailboxPathV3DAO mailboxPathV3DAO,
                                   CassandraUserMailboxRightsDAO userMailboxRightsDAO,
                                   ACLMapper aclMapper,
-                                  CassandraSchemaVersionManager versionManager,
                                   CassandraConfiguration cassandraConfiguration) {
         this.mailboxDAO = mailboxDAO;
-        this.mailboxPathDAO = mailboxPathDAO;
-        this.mailboxPathV2DAO = mailboxPathV2DAO;
         this.mailboxPathV3DAO = mailboxPathV3DAO;
         this.userMailboxRightsDAO = userMailboxRightsDAO;
         this.aclMapper = aclMapper;
-        this.versionManager = versionManager;
         this.cassandraConfiguration = cassandraConfiguration;
         this.secureRandom = new SecureRandom();
-    }
-
-    private Mono<Boolean> needMailboxPathPreviousVersionsSupport() {
-        return versionManager.isBefore(MAILBOX_PATH_V_3_MIGRATION_PERFORMED_VERSION);
     }
 
     private Mono<Mailbox> performReadRepair(CassandraId id) {
@@ -160,23 +139,13 @@ public class CassandraMailboxMapper implements MailboxMapper {
                 .retryWhen(Retry.backoff(MAX_RETRY, MIN_RETRY_BACKOFF).maxBackoff(MAX_RETRY_BACKOFF)));
     }
 
-    private Flux<Void> deletePath(Mailbox mailbox) {
-        return needMailboxPathPreviousVersionsSupport()
-            .flatMapMany(needSupport -> {
-                if (needSupport) {
-                    return Flux.merge(
-                        mailboxPathDAO.delete(mailbox.generateAssociatedPath()),
-                        mailboxPathV2DAO.delete(mailbox.generateAssociatedPath()),
-                        mailboxPathV3DAO.delete(mailbox.generateAssociatedPath()));
-                }
-                return Flux.from(mailboxPathV3DAO.delete(mailbox.generateAssociatedPath()));
-            });
+    private Mono<Void> deletePath(Mailbox mailbox) {
+        return mailboxPathV3DAO.delete(mailbox.generateAssociatedPath());
     }
 
     @Override
     public Mono<Mailbox> findMailboxByPath(MailboxPath path) {
         return performReadRepair(path)
-            .switchIfEmpty(fromPreviousTable(path))
             .flatMap(this::addAcl);
     }
 
@@ -193,32 +162,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     @Override
     public Mono<Boolean> pathExists(MailboxPath path) {
         return performReadRepair(path)
-            .switchIfEmpty(fromPreviousTable(path))
             .hasElement();
-    }
-
-    private Mono<Mailbox> fromPreviousTable(MailboxPath path) {
-        return mailboxPathV2DAO.retrieveId(path)
-            .switchIfEmpty(mailboxPathDAO.retrieveId(path))
-            .map(CassandraIdAndPath::getCassandraId)
-            .flatMap(mailboxDAO::retrieveMailbox)
-            .flatMap(this::migrate);
-    }
-
-    private Mono<Mailbox> migrate(Mailbox mailbox) {
-        return mailboxPathV3DAO.save(mailbox)
-            .flatMap(success -> deleteIfSuccess(mailbox, success))
-            .thenReturn(mailbox);
-    }
-
-    private Mono<Void> deleteIfSuccess(Mailbox mailbox, boolean success) {
-        if (success) {
-            return mailboxPathDAO.delete(mailbox.generateAssociatedPath())
-                .then(mailboxPathV2DAO.delete(mailbox.generateAssociatedPath()));
-        }
-        LOGGER.info("Concurrent execution lead to data race while migrating {} to 'mailboxPathV3DAO'.",
-            mailbox.generateAssociatedPath());
-        return Mono.empty();
     }
 
     @Override
@@ -257,24 +201,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     private Flux<Mailbox> listMailboxes(String fixedNamespace, Username fixedUser) {
-        return needMailboxPathPreviousVersionsSupport()
-            .flatMapMany(needSupport -> {
-                if (needSupport) {
-                    return Flux.concat(
-                        mailboxPathV3DAO.listUserMailboxes(fixedNamespace, fixedUser, consistencyChoice()),
-                        Flux.concat(
-                                mailboxPathV2DAO.listUserMailboxes(fixedNamespace, fixedUser),
-                                mailboxPathDAO.listUserMailboxes(fixedNamespace, fixedUser))
-                            .flatMap(this::retrieveMailbox, CONCURRENCY));
-                }
-                return mailboxPathV3DAO.listUserMailboxes(fixedNamespace, fixedUser, consistencyChoice());
-            });
-    }
-
-    private Mono<Mailbox> retrieveMailbox(CassandraIdAndPath idAndPath) {
-        return retrieveMailbox(idAndPath.getCassandraId())
-            .switchIfEmpty(ReactorUtils.executeAndEmpty(
-                () -> LOGGER.warn("Could not retrieve mailbox {} with path {} in mailbox table.", idAndPath.getCassandraId(), idAndPath.getMailboxPath())));
+        return mailboxPathV3DAO.listUserMailboxes(fixedNamespace, fixedUser, consistencyChoice());
     }
 
     @Override

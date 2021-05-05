@@ -26,10 +26,7 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManage
 import org.apache.james.backends.cassandra.versions.SchemaTransition;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.mailbox.cassandra.mail.migration.AclV2Migration;
-import org.apache.james.mailbox.cassandra.mail.migration.MailboxPathV2Migration;
-import org.apache.james.mailbox.cassandra.mail.migration.MailboxPathV3Migration;
 import org.apache.james.mailbox.cassandra.mail.migration.MessageV3Migration;
-import org.apache.james.rrt.cassandra.migration.MappingsSourcesMigration;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
 import org.apache.james.webadmin.routes.CassandraMigrationRoutes;
@@ -41,9 +38,6 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
 public class CassandraRoutesModule extends AbstractModule {
-    private static final SchemaTransition FROM_V5_TO_V6 = SchemaTransition.to(new SchemaVersion(6));
-    private static final SchemaTransition FROM_V6_TO_V7 = SchemaTransition.to(new SchemaVersion(7));
-    private static final SchemaTransition FROM_V7_TO_V8 = SchemaTransition.to(new SchemaVersion(8));
     private static final SchemaTransition FROM_V8_TO_V9 = SchemaTransition.to(new SchemaVersion(9));
     private static final SchemaTransition FROM_V9_TO_V10 = SchemaTransition.to(new SchemaVersion(10));
 
@@ -61,9 +55,6 @@ public class CassandraRoutesModule extends AbstractModule {
         routesMultibinder.addBinding().to(CassandraMailboxMergingRoutes.class);
 
         MapBinder<SchemaTransition, Migration> allMigrationClazzBinder = MapBinder.newMapBinder(binder(), SchemaTransition.class, Migration.class);
-        allMigrationClazzBinder.addBinding(FROM_V5_TO_V6).to(MailboxPathV2Migration.class);
-        allMigrationClazzBinder.addBinding(FROM_V6_TO_V7).to(MappingsSourcesMigration.class);
-        allMigrationClazzBinder.addBinding(FROM_V7_TO_V8).to(MailboxPathV3Migration.class);
         allMigrationClazzBinder.addBinding(FROM_V8_TO_V9).to(MessageV3Migration.class);
         allMigrationClazzBinder.addBinding(FROM_V9_TO_V10).to(AclV2Migration.class);
 

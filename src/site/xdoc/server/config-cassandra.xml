@@ -206,6 +206,8 @@
 
     <subsection name="From V1 to V2">
 
+      <p>Last support on releases 3.5.0</p>
+
       <p>Migration tag on git repository: <a href="https://github.com/apache/james-project/releases/tag/cassandra_migration_v1_to_v2">cassandra_migration_v1_to_v2</a></p>
 
       <p>Goal is to create a messageV2 table that aims at replacing message table. Message table is both storing message
@@ -232,6 +234,8 @@
 
     <subsection name="From V2 to V3">
 
+      <p>Last support on releases 3.5.0</p>
+
       <p>Migration tag on git repository: <a href="https://github.com/apache/james-project/releases/tag/cassandra_migration_v2_to_v3">cassandra_migration_v2_to_v3</a></p>
 
       <p>Goal is to drop <b>message</b> table. After this migration, one can manually delete this table.</p>
@@ -239,6 +243,8 @@
     </subsection>
 
     <subsection name="From V3 to V4">
+
+      <p>Last support on releases 3.5.0</p>
 
       <p>Migration tag on git repository: <a href="https://github.com/apache/james-project/releases/tag/cassandra_migration_v3_to_v4">cassandra_migration_v3_to_v4</a></p>
 
@@ -255,6 +261,8 @@
 
     <subsection name="From V4 to V5">
 
+      <p>Last support on releases 3.5.0</p>
+
       <p>Migration tag on git repository: <a href="https://github.com/apache/james-project/releases/tag/cassandra_migration_v4_to_v5">cassandra_migration_v4_to_v5</a></p>
 
       <p>Goal is to store attachment ids in the separated AttachmentMessageId table.</p>
@@ -270,11 +278,15 @@
 
     <subsection name="From V5 to V6">
 
+      <p>Last support on releases 3.6.x</p>
+
       <p>Goal is to no longer rely on an UDT partition key for mailboxPath tables. Entries will be migrated to mailboxPathV2 table relying on a composite primary key</p>
 
     </subsection>
 
     <subsection name="From V6 to V7">
+
+      <p>Last support on releases 3.6.x</p>
 
       <p>Goal is to populate mapping_sources projection table. This table allows finding the source of a given redirection, which is
       handy for things like mail aliases (I want to list aliases rewritting things to bob). Without this projection table being available,
@@ -285,6 +297,8 @@
 
     <subsection name="From V7 to V8">
 
+      <p>Last support on releases 3.6.x</p>
+
       <p>Add UID_VALIDITY to mailboxPath table in order not to mandate mailbox table reads.</p>
 
     </subsection>
@@ -292,6 +306,13 @@
     <subsection name="From V8 to V9">
 
       <p>Adopt a more compact representation for message properties.</p>
+
+    </subsection>
+
+    <subsection name="From V9 to V10">
+
+      <p>Handles Mailbox ACL transactionality with event-sourcing. We got read of SERIAL consistency upon reads thus unlocking a
+          major performance enhancement.</p>
 
     </subsection>
 

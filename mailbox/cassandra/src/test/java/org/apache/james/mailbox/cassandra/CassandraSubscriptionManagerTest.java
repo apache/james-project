@@ -35,8 +35,6 @@ import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAOImpl;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV2DAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV3DAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
@@ -76,8 +74,6 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
         CassandraMailboxCounterDAO mailboxCounterDAO = null;
         CassandraMailboxRecentsDAO mailboxRecentsDAO = null;
         CassandraMailboxDAO mailboxDAO = null;
-        CassandraMailboxPathDAOImpl mailboxPathDAO = null;
-        CassandraMailboxPathV2DAO mailboxPathV2DAO = null;
         CassandraMailboxPathV3DAO mailboxPathV3DAO = null;
         CassandraFirstUnseenDAO firstUnseenDAO = null;
         CassandraApplicableFlagDAO applicableFlagDAO = null;
@@ -105,8 +101,6 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
                 mailboxCounterDAO,
                 mailboxRecentsDAO,
                 mailboxDAO,
-                mailboxPathDAO,
-                mailboxPathV2DAO,
                 mailboxPathV3DAO,
                 firstUnseenDAO,
                 applicableFlagDAO,
