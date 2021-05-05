@@ -218,13 +218,22 @@ public class AuthenticationRoutes implements JMAPRoutes {
 
     private Mono<Void> handleContinuationTokenRequest(ContinuationTokenRequest request, HttpServerResponse resp) {
         try {
-            ContinuationTokenResponse continuationTokenResponse = ContinuationTokenResponse
+            Mono<String> tokenResponseMono = Mono.fromCallable(() -> ContinuationTokenResponse
                 .builder()
                 .continuationToken(simpleTokenFactory.generateContinuationToken(request.getUsername()))
                 .methods(ContinuationTokenResponse.AuthenticationMethod.PASSWORD)
-                .build();
+                .build())
+                .map(token -> {
+                    try {
+                        return mapper.writeValueAsString(token);
+                    } catch (JsonProcessingException e) {
+                        throw new InternalErrorException("error serialising JMAP API response json");
+                    }
+                })
+                .subscribeOn(Schedulers.parallel());
+
             return resp.header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)
-                .sendString(Mono.just(mapper.writeValueAsString(continuationTokenResponse)))
+                .sendString(tokenResponseMono)
                 .then();
         } catch (Exception e) {
             throw new InternalErrorException("Error while responding to continuation token", e);
