@@ -137,11 +137,6 @@ public class ReactorElasticSearchClient implements AutoCloseable {
         return toReactor(listener -> client.scrollAsync(searchScrollRequest, options, listener));
     }
 
-    @Deprecated
-    public Mono<SearchResponse> search(SearchRequest searchRequest) {
-        return toReactor(listener -> client.searchAsync(searchRequest, RequestOptions.DEFAULT, listener));
-    }
-
     public Mono<SearchResponse> search(SearchRequest searchRequest, RequestOptions options) {
         return toReactor(listener -> client.searchAsync(searchRequest, options, listener));
     }
