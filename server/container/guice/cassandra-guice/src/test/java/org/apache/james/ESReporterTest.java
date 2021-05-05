@@ -43,6 +43,7 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterEach;
@@ -155,7 +156,7 @@ class ESReporterTest {
                 .source(new SearchSourceBuilder()
                     .query(QueryBuilders.matchAllQuery()));
             return !Arrays.stream(client
-                    .search(searchRequest)
+                    .search(searchRequest, RequestOptions.DEFAULT)
                     .block()
                     .getHits()
                     .getHits())
