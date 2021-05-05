@@ -24,18 +24,14 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
-import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RecipientRewriteTableContract;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraRecipientRewriteTableV7Test implements RecipientRewriteTableContract {
-    static final SchemaVersion SCHEMA_VERSION_V7 = new SchemaVersion(7);
-
+class CassandraRecipientRewriteTableTest implements RecipientRewriteTableContract {
     static final CassandraModule MODULE = CassandraModule.aggregateModules(
         CassandraRRTModule.MODULE,
         CassandraSchemaVersionModule.MODULE);
@@ -46,7 +42,6 @@ class CassandraRecipientRewriteTableV7Test implements RecipientRewriteTableContr
     AbstractRecipientRewriteTable recipientRewriteTable;
     CassandraRecipientRewriteTableDAO recipientRewriteTableDAO;
     CassandraMappingsSourcesDAO mappingsSourcesDAO;
-    CassandraSchemaVersionManager schemaVersionManager;
     CassandraSchemaVersionDAO cassandraSchemaVersionDAO;
 
     @BeforeEach
@@ -54,7 +49,6 @@ class CassandraRecipientRewriteTableV7Test implements RecipientRewriteTableContr
         cassandraSchemaVersionDAO = new CassandraSchemaVersionDAO(cassandra.getConf());
         recipientRewriteTableDAO = new CassandraRecipientRewriteTableDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
         mappingsSourcesDAO = new CassandraMappingsSourcesDAO(cassandra.getConf());
-        schemaVersionManager = new CassandraSchemaVersionManager(cassandraSchemaVersionDAO);
 
         setUp();
     }
@@ -66,11 +60,7 @@ class CassandraRecipientRewriteTableV7Test implements RecipientRewriteTableContr
 
     @Override
     public void createRecipientRewriteTable() {
-        CassandraRecipientRewriteTable rrt = new CassandraRecipientRewriteTable(recipientRewriteTableDAO, mappingsSourcesDAO, schemaVersionManager);
-
-        cassandraSchemaVersionDAO.updateVersion(SCHEMA_VERSION_V7).block();
-
-        recipientRewriteTable = rrt;
+        recipientRewriteTable = new CassandraRecipientRewriteTable(recipientRewriteTableDAO, mappingsSourcesDAO);
     }
 
     @Override

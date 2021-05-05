@@ -14,6 +14,23 @@ Note: this section is in progress. It will be updated during all the development
 
 Changes to apply between 3.5.x and 3.6.x will be reported here.
 
+Change list:
+
+ - [Drop Cassandra schema version prior version 8](#drop-cassandra-schema-version-prior-version-8)
+
+### Drop Cassandra schema version prior version 8
+
+Date 05/05/2021
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3578
+
+Concerned products: Distributed James, Cassandra-guice James server
+
+In an effort to simplify the code base, we dropped support for Cassandra schema version prior version 8.
+
+Installation running older schema version than version 5 needs to rely on releases 3.6.x to upgrade to schema version 8,
+before upgrading to an eventual newer version.
+
 ## 3.6.0 version
 
 Changes to apply between 3.5.0 and 3.6.0 are reported here.

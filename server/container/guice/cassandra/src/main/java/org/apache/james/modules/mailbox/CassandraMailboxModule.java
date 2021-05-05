@@ -67,8 +67,6 @@ import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxMapper;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAOImpl;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV2DAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV3DAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
@@ -140,8 +138,6 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(CassandraMailboxDAO.class).in(Scopes.SINGLETON);
         bind(CassandraACLDAOV1.class).in(Scopes.SINGLETON);
         bind(CassandraACLDAOV2.class).in(Scopes.SINGLETON);
-        bind(CassandraMailboxPathDAOImpl.class).in(Scopes.SINGLETON);
-        bind(CassandraMailboxPathV2DAO.class).in(Scopes.SINGLETON);
         bind(CassandraMailboxPathV3DAO.class).in(Scopes.SINGLETON);
         bind(CassandraMailboxRecentsDAO.class).in(Scopes.SINGLETON);
         bind(CassandraMessageDAO.class).in(Scopes.SINGLETON);

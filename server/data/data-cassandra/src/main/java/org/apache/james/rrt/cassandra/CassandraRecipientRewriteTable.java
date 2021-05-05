@@ -23,8 +23,6 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
-import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
@@ -37,19 +35,14 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 
 public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTable {
-    private static final SchemaVersion MAPPINGS_SOURCES_SUPPORTED_VERSION = new SchemaVersion(7);
-
     private final CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO;
     private final CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO;
-    private final CassandraSchemaVersionManager versionManager;
 
     @Inject
     CassandraRecipientRewriteTable(CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO,
-                                   CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO,
-                                   CassandraSchemaVersionManager versionManager) {
+                                   CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO) {
         this.cassandraRecipientRewriteTableDAO = cassandraRecipientRewriteTableDAO;
         this.cassandraMappingsSourcesDAO = cassandraMappingsSourcesDAO;
-        this.versionManager = versionManager;
     }
 
     @Override
@@ -94,10 +87,6 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     public Stream<MappingSource> listSources(Mapping mapping) throws RecipientRewriteTableException {
         Preconditions.checkArgument(listSourcesSupportedType.contains(mapping.getType()),
             "Not supported mapping of type %s", mapping.getType());
-
-        if (versionManager.isBefore(MAPPINGS_SOURCES_SUPPORTED_VERSION).block()) {
-            return super.listSources(mapping);
-        }
 
         return cassandraMappingsSourcesDAO.retrieveSources(mapping).toStream();
     }
