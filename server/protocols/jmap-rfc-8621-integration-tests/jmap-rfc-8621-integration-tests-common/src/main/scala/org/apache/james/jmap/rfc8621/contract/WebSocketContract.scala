@@ -46,8 +46,8 @@ import sttp.client3.{Identity, RequestT, SttpBackend, asWebSocket, basicRequest}
 import sttp.model.Uri
 import sttp.monad.MonadError
 import sttp.monad.syntax.MonadErrorOps
-import sttp.ws.WebSocketFrame
 import sttp.ws.WebSocketFrame.Text
+import sttp.ws.{WebSocket, WebSocketFrame}
 
 import scala.jdk.CollectionConverters._
 
@@ -169,44 +169,6 @@ trait WebSocketContract {
 
     assertThat(response.toOption.get.asJava)
       .hasSize(2)
-  }
-
-  @Test
-  @Timeout(180)
-  def apiRequestsShouldBeProcessedWhenNoRequestId(server: GuiceJamesServer): Unit = {
-    val response: Either[String, String] =
-      authenticatedRequest(server)
-        .response(asWebSocket[Identity, String] {
-          ws =>
-            ws.send(WebSocketFrame.text(
-              """{
-                |  "@type": "Request",
-                |  "using": [ "urn:ietf:params:jmap:core"],
-                |  "methodCalls": [
-                |    [
-                |      "Core/echo",
-                |      {
-                |        "arg1": "arg1data",
-                |        "arg2": "arg2data"
-                |      },
-                |      "c1"
-                |    ]
-                |  ]
-                |}""".stripMargin))
-
-            ws.receive()
-              .map { case t: Text => t.payload }
-        })
-        .send(backend)
-        .body
-
-    assertThatJson(response.toOption.get)
-      .isEqualTo("""{
-                   |  "@type":"Response",
-                   |  "requestId":null,
-                   |  "sessionState":"2c9f1b12-b35a-43e6-9af2-0106fb53a943",
-                   |  "methodResponses":[["Core/echo",{"arg1":"arg1data","arg2":"arg2data"},"c1"]]
-                   |}""".stripMargin)
   }
 
   @Test
@@ -517,6 +479,61 @@ trait WebSocketContract {
     assertThat(response.toOption.get.asJava)
       .hasSize(3) // email notification + mailbox notification + API response
       .contains(mailboxStateChange, emailStateChange)
+  }
+
+  @Test
+  @Timeout(180)
+  def mixingPushAndResponsesShouldBeSupported(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    Thread.sleep(100)
+
+    def createEmail(ws: WebSocket[Identity]): Identity[Unit] = ws.send(WebSocketFrame.text(
+        s"""{
+           |  "@type": "Request",
+           |  "requestId": "req-36",
+           |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+           |  "methodCalls": [
+           |    ["Email/set", {
+           |      "accountId": "$ACCOUNT_ID",
+           |      "create": {
+           |        "aaaaaa":{
+           |          "mailboxIds": {
+           |             "${mailboxId.serialize}": true
+           |          }
+           |        }
+           |      }
+           |    }, "c1"]]
+           |}""".stripMargin))
+
+    val response: Either[String, List[String]] =
+      authenticatedRequest(server)
+        .response(asWebSocket[Identity, List[String]] {
+          ws =>
+            ws.send(WebSocketFrame.text(
+              """{
+                |  "@type": "WebSocketPushEnable",
+                |  "dataTypes": ["Mailbox", "Email"]
+                |}""".stripMargin))
+            Thread.sleep(100)
+            createEmail(ws)
+            createEmail(ws)
+            createEmail(ws)
+            createEmail(ws)
+            createEmail(ws)
+
+            List.range(0, 15)
+              .map(i => ws.receive()
+                .map { case t: Text =>
+                  t.payload
+                })
+        })
+        .send(backend)
+        .body
+
+    // 5 changes, each one generate one response, one email state change, one mailbox state change
+    assertThat(response.toOption.get.asJava).hasSize(15)
   }
 
   @Test

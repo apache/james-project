@@ -57,7 +57,10 @@ object WebSocketRoutes {
 case class ClientContext(outbound: Sinks.Many[OutboundMessage], pushRegistration: AtomicReference[Registration], session: MailboxSession) {
   def withRegistration(registration: Registration): Unit = withRegistration(Some(registration))
 
-  def clean(): Unit = withRegistration(None)
+  def clean(): Unit ={
+    withRegistration(None)
+    outbound.emitComplete(FAIL_FAST)
+  }
 
   def withRegistration(registration: Option[Registration]): Unit = Option(pushRegistration.getAndSet(registration.orNull))
     .foreach(oldRegistration => SMono.fromCallable(() => oldRegistration.unregister())
@@ -96,16 +99,8 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
   private def handleWebSocketConnection(session: MailboxSession)(in: WebsocketInbound, out: WebsocketOutbound): Mono[Void] = {
     val sink: Sinks.Many[OutboundMessage] = Sinks.many().unicast().onBackpressureBuffer()
 
-    out.sendString(
-      sink.asFlux()
-        .map(ResponseSerializer.serialize)
-        .map(Json.stringify),
-      StandardCharsets.UTF_8).`then`
-      .subscribeOn(Schedulers.elastic())
-      .subscribe()
-
     val context = ClientContext(sink, new AtomicReference[Registration](), session)
-    SFlux[WebSocketFrame](in.aggregateFrames()
+    val responseFlux: SFlux[OutboundMessage] = SFlux[WebSocketFrame](in.aggregateFrames()
       .receiveFrames())
       .map(frame => {
         val bytes = new Array[Byte](frame.content().readableBytes)
@@ -114,24 +109,25 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
       })
       .flatMap(message => handleClientMessages(context)(message))
       .doOnTerminate(context.clean)
-      .`then`()
-      .asJava()
+
+    out.sendString(
+      SFlux.merge(Seq(responseFlux, sink.asFlux()))
+        .map(ResponseSerializer.serialize)
+        .map(Json.stringify))
       .`then`()
   }
 
-  private def handleClientMessages(clientContext: ClientContext)(message: String): SMono[Unit] =
+  private def handleClientMessages(clientContext: ClientContext)(message: String): SMono[OutboundMessage] =
     ResponseSerializer.deserializeWebSocketInboundMessage(message)
       .fold(invalid => {
         val error = asError(None)(new IllegalArgumentException(invalid.toString()))
-        SMono.fromCallable(() => clientContext.outbound.emitNext(error, FAIL_FAST))
+        SMono.just(error)
       }, {
           case request: WebSocketRequest =>
             jmapApi.process(request.requestObject, clientContext.session)
               .map[OutboundMessage](WebSocketResponse(request.requestId, _))
               .onErrorResume(e => SMono.just(asError(request.requestId)(e)))
               .subscribeOn(Schedulers.elastic)
-              .doOnNext(next => clientContext.outbound.emitNext(next, FAIL_FAST))
-              .`then`()
           case pushEnable: WebSocketPushEnable =>
             SMono(eventBus.register(
                 StateChangeListener(pushEnable.dataTypes.getOrElse(TypeName.ALL), clientContext.outbound),
@@ -139,14 +135,15 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
               .doOnNext(newRegistration => clientContext.withRegistration(newRegistration))
               .`then`(sendPushStateIfRequested(pushEnable, clientContext))
           case WebSocketPushDisable => SMono.fromCallable(() => clientContext.clean())
+          .`then`(SMono.empty)
       })
 
-  private def sendPushStateIfRequested(pushEnable: WebSocketPushEnable, clientContext: ClientContext): SMono[Unit] =
+  private def sendPushStateIfRequested(pushEnable: WebSocketPushEnable, clientContext: ClientContext): SMono[OutboundMessage] =
     pushEnable.pushState
       .map(_ => sendPushState(clientContext))
       .getOrElse(SMono.empty)
 
-  private def sendPushState(clientContext: ClientContext): SMono[Unit] = {
+  private def sendPushState(clientContext: ClientContext): SMono[OutboundMessage] = {
     val username: Username = clientContext.session.getUser
     val accountId: AccountId = AccountId.from(username).fold(
       failure => throw new IllegalArgumentException(failure),
@@ -156,10 +153,10 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
         mailboxState <- mailboxChangeRepository.getLatestStateWithDelegation(JavaAccountId.fromUsername(username))
         emailState <- emailChangeRepository.getLatestStateWithDelegation(JavaAccountId.fromUsername(username))
       } yield {
-        clientContext.outbound.emitNext(StateChange(Map(accountId -> TypeState(
+        StateChange(Map(accountId -> TypeState(
           MailboxTypeName.asMap(Some(State.fromJava(mailboxState))) ++
             EmailTypeName.asMap(Some(State.fromJava(emailState))))),
-          Some(PushState.from(mailboxState, emailState))), FAIL_FAST)
+          Some(PushState.from(mailboxState, emailState)))
       })
   }
 
