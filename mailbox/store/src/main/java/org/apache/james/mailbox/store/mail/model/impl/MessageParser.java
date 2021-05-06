@@ -88,6 +88,10 @@ public class MessageParser {
         defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
         defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT);
         Message message = defaultMessageBuilder.parseMessage(fullContent);
+        return retrieveAttachments(message);
+    }
+
+    public List<ParsedAttachment> retrieveAttachments(Message message) throws IOException {
         Body body = message.getBody();
         try {
             if (isAttachment(message, Context.BODY)) {

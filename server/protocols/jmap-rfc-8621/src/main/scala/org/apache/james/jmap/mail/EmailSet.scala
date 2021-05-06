@@ -33,11 +33,11 @@ import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.jmap.routes.{Blob, BlobResolvers}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.{Cid, MessageId}
-import org.apache.james.mime4j.codec.EncoderUtil
+import org.apache.james.mime4j.codec.{DecodeMonitor, EncoderUtil}
 import org.apache.james.mime4j.codec.EncoderUtil.Usage
 import org.apache.james.mime4j.dom.field.{ContentIdField, ContentTypeField, FieldName}
 import org.apache.james.mime4j.dom.{Entity, Message}
-import org.apache.james.mime4j.field.Fields
+import org.apache.james.mime4j.field.{ContentIdFieldImpl, Fields}
 import org.apache.james.mime4j.message.{BodyPartBuilder, MultipartBuilder}
 import org.apache.james.mime4j.stream.{Field, NameValuePair, RawField}
 import org.apache.james.util.html.HtmlTextExtractor
@@ -86,7 +86,7 @@ object ClientCid {
 }
 
 case class ClientCid(value: String) {
-  def asField: Field = new RawField("Content-ID", value)
+  def asField: Field = ContentIdFieldImpl.PARSER.parse(new RawField("Content-ID", value), DecodeMonitor.SILENT)
 }
 
 case class Attachment(blobId: BlobId,
