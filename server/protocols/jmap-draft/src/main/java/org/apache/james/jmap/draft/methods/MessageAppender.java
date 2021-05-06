@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.draft.methods;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +48,6 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mime4j.dom.Message;
-import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +79,9 @@ public class MessageAppender {
                                                         MailboxSession session) throws MailboxException {
         Preconditions.checkArgument(!targetMailboxes.isEmpty());
         ImmutableList<MessageAttachmentMetadata> messageAttachments = getMessageAttachments(session, createdEntry.getValue().getAttachments());
-        byte[] messageContent = mimeMessageConverter.convert(createdEntry, messageAttachments, session);
+        Message message = mimeMessageConverter.convertToMime(createdEntry, messageAttachments, session);
+
+        byte[] messageContent = mimeMessageConverter.asBytes(message);
         Date internalDate = Date.from(createdEntry.getValue().getDate().toInstant());
 
         MessageManager mailbox = mailboxManager.getMailbox(targetMailboxes.get(0), session);
@@ -105,6 +105,7 @@ public class MessageAppender {
             .size(messageContent.length)
             .attachments(appendResult.getMessageAttachments())
             .mailboxId(mailbox.getId())
+            .message(message)
             .messageId(ids.getMessageId())
             .build();
     }
@@ -115,7 +116,7 @@ public class MessageAppender {
                                                       MailboxSession session) throws MailboxException {
 
 
-        byte[] messageContent = asBytes(message);
+        byte[] messageContent = mimeMessageConverter.asBytes(message);
         Date internalDate = new Date();
 
         AppendResult appendResult = messageManager.appendMessage(MessageManager.AppendCommand.builder()
@@ -131,16 +132,9 @@ public class MessageAppender {
             .size(messageContent.length)
             .attachments(appendResult.getMessageAttachments())
             .mailboxId(messageManager.getId())
+            .message(message)
             .messageId(ids.getMessageId())
             .build();
-    }
-
-    public byte[] asBytes(Message message) throws MailboxException {
-        try {
-            return DefaultMessageWriter.asBytes(message);
-        } catch (IOException e) {
-            throw new MailboxException("Could not write message as bytes", e);
-        }
     }
 
     private Flags getFlags(CreationMessage message) {

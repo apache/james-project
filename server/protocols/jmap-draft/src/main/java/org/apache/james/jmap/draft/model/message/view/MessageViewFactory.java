@@ -47,6 +47,7 @@ import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -143,6 +144,12 @@ public interface MessageViewFactory<T extends MessageView> {
             return Optional.ofNullable(mimeMessage.getDate())
                 .map(Date::toInstant)
                 .orElse(message.getInternalDate().toInstant());
+        }
+
+        static Message retrieveMessage(MessageFullViewFactory.MetaDataWithContent metaDataWithContent) {
+            return metaDataWithContent.getMessage()
+                .orElseGet(Throwing.supplier(() ->
+                    parse(metaDataWithContent.getContent())).sneakyThrow());
         }
 
         static Message parse(InputStream messageContent) throws IOException {
