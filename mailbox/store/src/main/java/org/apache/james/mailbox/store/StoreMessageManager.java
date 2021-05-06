@@ -88,6 +88,7 @@ import org.apache.james.mailbox.store.quota.QuotaChecker;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.streaming.CountingInputStream;
 import org.apache.james.mime4j.MimeException;
+import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.message.DefaultBodyDescriptorBuilder;
 import org.apache.james.mime4j.message.HeaderImpl;
 import org.apache.james.mime4j.message.MaximalBodyDescriptor;
@@ -305,7 +306,8 @@ public class StoreMessageManager implements MessageManager {
             appendCommand.getInternalDate(),
             session,
             appendCommand.isRecent(),
-            appendCommand.getFlags());
+            appendCommand.getFlags(),
+            appendCommand.getMaybeParsedMessage());
     }
 
     @Override
@@ -330,7 +332,8 @@ public class StoreMessageManager implements MessageManager {
                 InputStreamConsummer.consume(tmpMsgIn);
                 bufferedOut.flush();
                 int bodyStartOctet = getBodyStartOctet(bIn);
-                final File finalFile = file;
+                File finalFile = file;
+                Optional<Message> unparsedMimeMessqage = Optional.empty();
                 return createAndDispatchMessage(computeInternalDate(internalDate),
                     mailboxSession, new Content() {
                         @Override
@@ -343,7 +346,7 @@ public class StoreMessageManager implements MessageManager {
                             return finalFile.length();
                         }
                     }, propertyBuilder,
-                    getFlags(mailboxSession, isRecent, flagsToBeSet), bodyStartOctet);
+                    getFlags(mailboxSession, isRecent, flagsToBeSet), bodyStartOctet, unparsedMimeMessqage);
             }
         } catch (IOException | MimeException e) {
             throw new MailboxException("Unable to parse message", e);
@@ -359,7 +362,7 @@ public class StoreMessageManager implements MessageManager {
         }
     }
 
-    public AppendResult appendMessage(Content msgIn, Date internalDate, final MailboxSession mailboxSession, boolean isRecent, Flags flagsToBeSet) throws MailboxException {
+    private AppendResult appendMessage(Content msgIn, Date internalDate, final MailboxSession mailboxSession, boolean isRecent, Flags flagsToBeSet, Optional<Message> maybeMessage) throws MailboxException {
         if (!isWriteable(mailboxSession)) {
             throw new ReadOnlyException(getMailboxPath());
         }
@@ -371,7 +374,7 @@ public class StoreMessageManager implements MessageManager {
 
             return createAndDispatchMessage(computeInternalDate(internalDate),
                 mailboxSession, msgIn, propertyBuilder,
-                getFlags(mailboxSession, isRecent, flagsToBeSet), bodyStartOctet);
+                getFlags(mailboxSession, isRecent, flagsToBeSet), bodyStartOctet, maybeMessage);
         } catch (IOException | MimeException e) {
             throw new MailboxException("Unable to parse message", e);
         }
@@ -469,12 +472,12 @@ public class StoreMessageManager implements MessageManager {
         return bodyStartOctet;
     }
 
-    private AppendResult createAndDispatchMessage(Date internalDate, MailboxSession mailboxSession, Content content, PropertyBuilder propertyBuilder, Flags flags, int bodyStartOctet) throws MailboxException {
+    private AppendResult createAndDispatchMessage(Date internalDate, MailboxSession mailboxSession, Content content, PropertyBuilder propertyBuilder, Flags flags, int bodyStartOctet, Optional<Message> maybeMessage) throws MailboxException {
             final int size = (int) content.size();
             new QuotaChecker(quotaManager, quotaRootResolver, mailbox).tryAddition(1, size);
 
             return locker.executeWithLock(getMailboxPath(), () -> {
-                Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>> data = messageStorer.appendMessageToStore(mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, mailboxSession);
+                Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>> data = messageStorer.appendMessageToStore(mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, maybeMessage, mailboxSession);
 
                 Mailbox mailbox = getMailboxEntity();
 

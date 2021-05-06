@@ -53,6 +53,7 @@ import org.apache.james.mime4j.dom.field.ContentDispositionField;
 import org.apache.james.mime4j.dom.field.ContentTypeField;
 import org.apache.james.mime4j.dom.field.FieldName;
 import org.apache.james.mime4j.dom.field.UnstructuredField;
+import org.apache.james.mime4j.field.ContentIdFieldImpl;
 import org.apache.james.mime4j.field.Fields;
 import org.apache.james.mime4j.field.UnstructuredFieldImpl;
 import org.apache.james.mime4j.message.BasicBodyFactory;
@@ -325,7 +326,7 @@ public class MIMEMessageConverter {
 
     private void contentId(BodyPartBuilder builder, MessageAttachmentMetadata att) {
         if (att.getCid().isPresent()) {
-            builder.setField(new RawField("Content-ID", att.getCid().get().getValue()));
+            builder.setField(ContentIdFieldImpl.PARSER.parse(new RawField("Content-ID", att.getCid().get().getValue()), DecodeMonitor.SILENT));
         }
     }
 

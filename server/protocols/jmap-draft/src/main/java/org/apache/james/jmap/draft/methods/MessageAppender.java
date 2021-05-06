@@ -90,6 +90,7 @@ public class MessageAppender {
                 .withInternalDate(internalDate)
                 .withFlags(getFlags(createdEntry.getValue()))
                 .notRecent()
+                .withParsedMessage(message)
                 .build(new ByteContent(messageContent)),
             session);
         ComposedMessageId ids = appendResult.getId();
