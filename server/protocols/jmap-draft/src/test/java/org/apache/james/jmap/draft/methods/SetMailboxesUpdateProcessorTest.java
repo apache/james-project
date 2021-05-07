@@ -45,6 +45,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import reactor.core.publisher.Mono;
+
 public class SetMailboxesUpdateProcessorTest {
 
     private MailboxManager mockedMailboxManager;
@@ -79,7 +81,7 @@ public class SetMailboxesUpdateProcessorTest {
         when(mockBuilder.session(mockedMailboxSession))
             .thenReturn(mockBuilder);
         when(mockBuilder.build())
-            .thenReturn(Optional.of(mailbox));
+            .thenReturn(Mono.just(mailbox));
 
         when(mockedMailboxFactory.builder())
             .thenReturn(mockBuilder);

@@ -82,7 +82,8 @@ public class MailboxFactoryTest {
         Optional<Mailbox> mailbox = sut.builder()
                 .id(InMemoryId.of(123))
                 .session(mailboxSession)
-                .build();
+                .build()
+                .blockOptional();
 
         assertThat(mailbox).isEmpty();
     }
@@ -96,7 +97,8 @@ public class MailboxFactoryTest {
         Optional<Mailbox> mailbox = sut.builder()
                 .id(mailboxId)
                 .session(mailboxSession)
-                .build();
+                .build()
+                .blockOptional();
 
         assertThat(mailbox).isPresent();
         assertThat(mailbox.get().getId()).isEqualTo(mailboxId);
@@ -134,7 +136,7 @@ public class MailboxFactoryTest {
         MailboxPath mailboxPath = MailboxPath.forUser(user, "mailbox");
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
 
-        Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath, Optional.empty(), mailboxSession);
+        Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath, Optional.empty(), mailboxSession).block();
         assertThat(id).isEmpty();
     }
 
@@ -147,7 +149,7 @@ public class MailboxFactoryTest {
         MailboxPath mailboxPath = parentMailboxPath.child("mailbox", '.');
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
 
-        Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath, Optional.empty(), mailboxSession);
+        Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath, Optional.empty(), mailboxSession).block();
         assertThat(id).contains(parentId);
     }
 
@@ -162,7 +164,7 @@ public class MailboxFactoryTest {
 
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
 
-        Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath, Optional.empty(), mailboxSession);
+        Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath, Optional.empty(), mailboxSession).block();
         assertThat(id).contains(parentId);
     }
 
@@ -185,7 +187,7 @@ public class MailboxFactoryTest {
                     .count(0)
                     .unseen(0)
                     .build()))),
-            mailboxSession);
+            mailboxSession).block();
         assertThat(id).contains(parentId);
     }
 
@@ -198,7 +200,7 @@ public class MailboxFactoryTest {
             .id(mailboxId.get())
             .session(mailboxSession)
             .build()
-            .get();
+            .block();
 
         assertThat(retrievedMailbox.getNamespace())
             .isEqualTo(MailboxNamespace.personal());
@@ -227,7 +229,7 @@ public class MailboxFactoryTest {
                     .unseen(0)
                     .build()))))
             .build()
-            .get();
+            .block();
 
         assertThat(retrievedMailbox.getParentId())
             .contains(preLoadedId);
@@ -248,7 +250,7 @@ public class MailboxFactoryTest {
             .id(mailboxId.get())
             .session(otherMailboxSession)
             .build()
-            .get();
+            .block();
 
         assertThat(retrievedMailbox.getNamespace())
             .isEqualTo(MailboxNamespace.delegated(user));
@@ -263,7 +265,7 @@ public class MailboxFactoryTest {
             .id(mailboxId.get())
             .session(mailboxSession)
             .build()
-            .get();
+            .block();
 
         softly.assertThat(retrievedMailbox.isMayAddItems()).isTrue();
         softly.assertThat(retrievedMailbox.isMayCreateChild()).isTrue();
@@ -288,7 +290,7 @@ public class MailboxFactoryTest {
             .id(mailboxId.get())
             .session(otherMailboxSession)
             .build()
-            .get();
+            .block();
 
         softly.assertThat(retrievedMailbox.isMayAddItems()).isTrue();
         softly.assertThat(retrievedMailbox.isMayCreateChild()).isFalse();
@@ -313,7 +315,7 @@ public class MailboxFactoryTest {
             .id(mailboxId.get())
             .session(otherMailboxSession)
             .build()
-            .get();
+            .block();
 
         softly.assertThat(retrievedMailbox.isMayAddItems()).isFalse();
         softly.assertThat(retrievedMailbox.isMayCreateChild()).isFalse();
@@ -338,7 +340,7 @@ public class MailboxFactoryTest {
             .id(mailboxId.get())
             .session(otherMailboxSession)
             .build()
-            .get();
+            .block();
 
         softly.assertThat(retrievedMailbox.isMayAddItems()).isFalse();
         softly.assertThat(retrievedMailbox.isMayCreateChild()).isFalse();
@@ -367,7 +369,8 @@ public class MailboxFactoryTest {
         Optional<Mailbox> mailbox = sut.builder()
             .mailboxMetadata(metaData)
             .session(mailboxSession)
-            .build();
+            .build()
+            .blockOptional();
 
         softly.assertThat(mailbox).isPresent();
         softly.assertThat(mailbox).map(Mailbox::getId).contains(metaData.getId());

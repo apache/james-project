@@ -189,8 +189,7 @@ public class EmailQueryViewPopulator {
     }
 
     private Mono<MessageManager> retrieveMailbox(MailboxSession session, MailboxMetaData mailboxMetadata) {
-        return Mono.fromCallable(() -> mailboxManager.getMailbox(mailboxMetadata.getId(), session))
-            .subscribeOn(Schedulers.elastic());
+        return Mono.from(mailboxManager.getMailboxReactive(mailboxMetadata.getId(), session));
     }
 
     private Flux<MessageResult> listAllMessages(MessageManager messageManager, MailboxSession session) {

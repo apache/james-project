@@ -60,7 +60,6 @@ public class InMemoryCurrentQuotaManager implements CurrentQuotaManager {
 
     public CurrentQuotas loadQuotas(QuotaRoot quotaRoot, CurrentQuotaCalculator quotaCalculator, SessionProvider sessionProvider) {
         return quotaCalculator.recalculateCurrentQuotas(quotaRoot, sessionProvider.createSystemSession(Username.of(quotaRoot.getValue())))
-            .subscribeOn(Schedulers.elastic())
             .block();
     }
 
@@ -77,22 +76,20 @@ public class InMemoryCurrentQuotaManager implements CurrentQuotaManager {
     @Override
     public Mono<QuotaCountUsage> getCurrentMessageCount(QuotaRoot quotaRoot) {
         return Mono.fromCallable(() -> quotaCache.get(quotaRoot).get().count())
-            .onErrorMap(this::wrapAsMailboxException)
-            .subscribeOn(Schedulers.elastic());
+            .onErrorMap(this::wrapAsMailboxException);
     }
 
     @Override
     public Mono<QuotaSizeUsage> getCurrentStorage(QuotaRoot quotaRoot) {
         return Mono.fromCallable(() -> quotaCache.get(quotaRoot).get().size())
-            .onErrorMap(this::wrapAsMailboxException)
-            .subscribeOn(Schedulers.elastic());
+            .onErrorMap(this::wrapAsMailboxException);
     }
 
     @Override
     public Mono<CurrentQuotas> getCurrentQuotas(QuotaRoot quotaRoot) {
         return Mono.fromCallable(() -> quotaCache.get(quotaRoot).get())
-            .onErrorMap(this::wrapAsMailboxException)
-            .subscribeOn(Schedulers.elastic());
+            .subscribeOn(Schedulers.elastic())
+            .onErrorMap(this::wrapAsMailboxException);
     }
 
     @Override
@@ -100,8 +97,7 @@ public class InMemoryCurrentQuotaManager implements CurrentQuotaManager {
         return getCurrentQuotas(quotaOperation.quotaRoot())
             .filter(Predicate.not(Predicate.isEqual(CurrentQuotas.from(quotaOperation))))
             .flatMap(storedQuotas -> decrease(new QuotaOperation(quotaOperation.quotaRoot(), storedQuotas.count(), storedQuotas.size()))
-                .then(increase(quotaOperation)))
-            .subscribeOn(Schedulers.elastic());
+                .then(increase(quotaOperation)));
     }
 
     private Mono<Void> updateQuota(QuotaRoot quotaRoot, UnaryOperator<CurrentQuotas> quotaFunction) {
