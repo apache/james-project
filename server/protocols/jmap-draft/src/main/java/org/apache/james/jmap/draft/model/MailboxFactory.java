@@ -26,7 +26,6 @@ import javax.inject.Inject;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.model.mailbox.Mailbox;
 import org.apache.james.jmap.draft.model.mailbox.MailboxNamespace;
-import org.apache.james.jmap.draft.model.mailbox.Quotas;
 import org.apache.james.jmap.draft.model.mailbox.Rights;
 import org.apache.james.jmap.draft.model.mailbox.SortOrder;
 import org.apache.james.jmap.draft.utils.quotas.DefaultQuotaLoader;
@@ -35,7 +34,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.Role;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxCounters;
@@ -52,8 +50,31 @@ import com.google.common.base.Splitter;
 import com.google.common.primitives.Booleans;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class MailboxFactory {
+    private static class MailboxTuple {
+        public static MailboxTuple from(MailboxMetaData metaData) {
+            return new MailboxTuple(metaData.getPath(), metaData.getCounters().sanitize(), metaData.getResolvedAcls());
+        }
+
+        public static Mono<MailboxTuple> from(MessageManager messageManager, MailboxSession session) {
+            return Mono.fromCallable(() ->
+                new MailboxTuple(messageManager.getMailboxPath(), messageManager.getMailboxCounters(session).sanitize(), messageManager.getResolvedAcl(session)))
+                .subscribeOn(Schedulers.elastic());
+        }
+
+        private final MailboxPath mailboxPath;
+        private final MailboxCounters.Sanitized mailboxCounters;
+        private final MailboxACL acl;
+
+        private MailboxTuple(MailboxPath mailboxPath, MailboxCounters.Sanitized mailboxCounters, MailboxACL acl) {
+            this.mailboxPath = mailboxPath;
+            this.mailboxCounters = mailboxCounters;
+            this.acl = acl;
+        }
+    }
+
     private final MailboxManager mailboxManager;
     private final QuotaManager quotaManager;
     private final QuotaRootResolver quotaRootResolver;
@@ -96,36 +117,25 @@ public class MailboxFactory {
             return this;
         }
 
-        public Optional<Mailbox> build() {
+        public Mono<Mailbox> build() {
             Preconditions.checkNotNull(session);
 
-            try {
-                MailboxId mailboxId = computeMailboxId();
-                Mono<MessageManager> mailbox = mailbox(mailboxId).cache();
+            MailboxId mailboxId = computeMailboxId();
 
-                MailboxACL mailboxACL = mailboxMetaData.map(MailboxMetaData::getResolvedAcls)
-                    .orElseGet(Throwing.supplier(() -> retrieveCachedMailbox(mailboxId, mailbox).getResolvedAcl(session)).sneakyThrow());
+            Mono<MailboxTuple> mailbox = mailboxMetaData.map(MailboxTuple::from)
+                .map(Mono::just)
+                .orElse(Mono.from(mailboxFactory.mailboxManager.getMailboxReactive(mailboxId, session))
+                    .flatMap(messageManager -> MailboxTuple.from(messageManager, session)));
 
-                MailboxPath mailboxPath = mailboxMetaData.map(MailboxMetaData::getPath)
-                    .orElseGet(Throwing.supplier(() -> retrieveCachedMailbox(mailboxId, mailbox).getMailboxPath()).sneakyThrow());
-
-                MailboxCounters.Sanitized mailboxCounters = mailboxMetaData.map(MailboxMetaData::getCounters)
-                    .orElseGet(Throwing.supplier(() -> retrieveCachedMailbox(mailboxId, mailbox).getMailboxCounters(session)).sneakyThrow())
-                    .sanitize();
-
-                return Optional.of(mailboxFactory.from(
-                    mailboxId,
-                    mailboxPath,
-                    mailboxCounters,
-                    mailboxACL,
-                    userMailboxesMetadata,
-                    quotaLoader,
-                    session));
-            } catch (MailboxNotFoundException e) {
-                return Optional.empty();
-            } catch (MailboxException e) {
-                throw new RuntimeException(e);
-            }
+            return mailbox.flatMap(tuple -> mailboxFactory.from(
+                mailboxId,
+                tuple.mailboxPath,
+                tuple.mailboxCounters,
+                tuple.acl,
+                userMailboxesMetadata,
+                quotaLoader,
+                session))
+                .onErrorResume(MailboxNotFoundException.class, e -> Mono.empty());
         }
 
         private MailboxId computeMailboxId() {
@@ -137,14 +147,13 @@ public class MailboxFactory {
         }
 
         private Mono<MessageManager> mailbox(MailboxId mailboxId) {
-            return Mono.fromCallable(() -> mailboxFactory.mailboxManager.getMailbox(mailboxId, session));
+            return Mono.from(mailboxFactory.mailboxManager.getMailboxReactive(mailboxId, session));
         }
 
-        private MessageManager retrieveCachedMailbox(MailboxId mailboxId, Mono<MessageManager> mailbox) throws MailboxNotFoundException {
+        private Mono<MessageManager> retrieveCachedMailbox(MailboxId mailboxId, Mono<MessageManager> mailbox) throws MailboxNotFoundException {
             return mailbox
                 .onErrorResume(MailboxNotFoundException.class, any -> Mono.empty())
-                .blockOptional()
-                .orElseThrow(() -> new MailboxNotFoundException(mailboxId));
+                .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(mailboxId)));
         }
     }
 
@@ -160,13 +169,13 @@ public class MailboxFactory {
         return new MailboxBuilder(this, defaultQuotaLoader);
     }
 
-    private Mailbox from(MailboxId mailboxId,
+    private Mono<Mailbox> from(MailboxId mailboxId,
                          MailboxPath mailboxPath,
                          MailboxCounters.Sanitized mailboxCounters,
                          MailboxACL resolvedAcl,
                          Optional<List<MailboxMetaData>> userMailboxesMetadata,
                          QuotaLoader quotaLoader,
-                         MailboxSession mailboxSession) throws MailboxException {
+                         MailboxSession mailboxSession) {
         boolean isOwner = mailboxPath.belongsTo(mailboxSession);
         Optional<Role> role = Role.from(mailboxPath.getName())
             .filter(any -> mailboxPath.belongsTo(mailboxSession));
@@ -175,26 +184,27 @@ public class MailboxFactory {
             .removeEntriesFor(mailboxPath.getUser());
         Username username = mailboxSession.getUser();
 
-        Quotas quotas = quotaLoader.getQuotas(mailboxPath);
-
-        return Mailbox.builder()
-            .id(mailboxId)
-            .name(getName(mailboxPath, mailboxSession))
-            .parentId(getParentIdFromMailboxPath(mailboxPath, userMailboxesMetadata, mailboxSession).orElse(null))
-            .role(role)
-            .unreadMessages(mailboxCounters.getUnseen())
-            .totalMessages(mailboxCounters.getCount())
-            .sortOrder(SortOrder.getSortOrder(role))
-            .sharedWith(rights)
-            .mayAddItems(rights.mayAddItems(username).orElse(isOwner))
-            .mayCreateChild(rights.mayCreateChild(username).orElse(isOwner))
-            .mayDelete(rights.mayDelete(username).orElse(isOwner))
-            .mayReadItems(rights.mayReadItems(username).orElse(isOwner))
-            .mayRemoveItems(rights.mayRemoveItems(username).orElse(isOwner))
-            .mayRename(rights.mayRename(username).orElse(isOwner))
-            .namespace(getNamespace(mailboxPath, isOwner))
-            .quotas(quotas)
-            .build();
+        return Mono.zip(
+                quotaLoader.getQuotas(mailboxPath),
+                getParentIdFromMailboxPath(mailboxPath, userMailboxesMetadata, mailboxSession))
+            .map(tuple -> Mailbox.builder()
+                .id(mailboxId)
+                .name(getName(mailboxPath, mailboxSession))
+                .parentId(tuple.getT2().orElse(null))
+                .role(role)
+                .unreadMessages(mailboxCounters.getUnseen())
+                .totalMessages(mailboxCounters.getCount())
+                .sortOrder(SortOrder.getSortOrder(role))
+                .sharedWith(rights)
+                .mayAddItems(rights.mayAddItems(username).orElse(isOwner))
+                .mayCreateChild(rights.mayCreateChild(username).orElse(isOwner))
+                .mayDelete(rights.mayDelete(username).orElse(isOwner))
+                .mayReadItems(rights.mayReadItems(username).orElse(isOwner))
+                .mayRemoveItems(rights.mayRemoveItems(username).orElse(isOwner))
+                .mayRename(rights.mayRename(username).orElse(isOwner))
+                .namespace(getNamespace(mailboxPath, isOwner))
+                .quotas(tuple.getT1())
+                .build());
     }
 
     private MailboxNamespace getNamespace(MailboxPath mailboxPath, boolean isOwner) {
@@ -215,21 +225,21 @@ public class MailboxFactory {
     }
 
     @VisibleForTesting
-    Optional<MailboxId> getParentIdFromMailboxPath(MailboxPath mailboxPath, Optional<List<MailboxMetaData>> userMailboxesMetadata,
-                                                   MailboxSession mailboxSession) throws MailboxException {
+    Mono<Optional<MailboxId>> getParentIdFromMailboxPath(MailboxPath mailboxPath, Optional<List<MailboxMetaData>> userMailboxesMetadata,
+                                                   MailboxSession mailboxSession) {
         List<MailboxPath> levels = mailboxPath.getHierarchyLevels(mailboxSession.getPathDelimiter());
         if (levels.size() <= 1) {
-            return Optional.empty();
+            return Mono.just(Optional.empty());
         }
         MailboxPath parent = levels.get(levels.size() - 2);
-        return userMailboxesMetadata.map(list -> retrieveParentFromMetadata(parent, list))
+        return userMailboxesMetadata.map(list -> Mono.just(retrieveParentFromMetadata(parent, list)))
             .orElseGet(Throwing.supplier(() -> retrieveParentFromBackend(mailboxSession, parent)).sneakyThrow());
     }
 
-    private Optional<MailboxId> retrieveParentFromBackend(MailboxSession mailboxSession, MailboxPath parent) throws MailboxException {
-        return Optional.of(
-            mailboxManager.getMailbox(parent, mailboxSession)
-                .getId());
+    private Mono<Optional<MailboxId>> retrieveParentFromBackend(MailboxSession mailboxSession, MailboxPath parent) {
+        return Mono.from(mailboxManager.getMailboxReactive(parent, mailboxSession))
+            .map(MessageManager::getId)
+            .map(Optional::of);
     }
 
     private Optional<MailboxId> retrieveParentFromMetadata(MailboxPath parent, List<MailboxMetaData> list) {

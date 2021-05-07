@@ -21,7 +21,6 @@ package org.apache.james.jmap.draft.methods;
 
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 import static org.apache.james.util.ReactorUtils.context;
-import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.util.Comparator;
 import java.util.List;
@@ -57,7 +56,6 @@ import com.google.common.collect.Sets;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class GetMailboxesMethod implements Method {
 
@@ -143,32 +141,26 @@ public class GetMailboxesMethod implements Method {
 
     private Flux<Mailbox> retrieveSpecificMailboxes(MailboxSession mailboxSession, ImmutableList<MailboxId> mailboxIds) {
         return Flux.fromIterable(mailboxIds)
-            .flatMap(mailboxId -> Mono.fromCallable(() ->
-                mailboxFactory.builder()
+            .flatMap(mailboxId -> mailboxFactory.builder()
                     .id(mailboxId)
                     .session(mailboxSession)
                     .usingPreloadedMailboxesMetadata(NO_PRELOADED_METADATA)
-                    .build())
-                .subscribeOn(Schedulers.elastic()), DEFAULT_CONCURRENCY)
-            .handle(publishIfPresent());
+                    .build(), DEFAULT_CONCURRENCY);
     }
 
     private Flux<Mailbox> retrieveAllMailboxes(MailboxSession mailboxSession) {
         Mono<List<MailboxMetaData>> userMailboxesMono = getAllMailboxesMetaData(mailboxSession).collectList();
-        Mono<QuotaLoaderWithDefaultPreloaded> quotaLoaderMono = Mono.fromCallable(() ->
-            new QuotaLoaderWithDefaultPreloaded(quotaRootResolver, quotaManager, mailboxSession))
-            .subscribeOn(Schedulers.elastic());
+        Mono<QuotaLoaderWithDefaultPreloaded> quotaLoaderMono = QuotaLoaderWithDefaultPreloaded.preLoad(quotaRootResolver, quotaManager, mailboxSession);
 
         return userMailboxesMono.zipWith(quotaLoaderMono)
             .flatMapMany(
                 tuple -> Flux.fromIterable(tuple.getT1())
-                    .map(mailboxMetaData -> mailboxFactory.builder()
+                    .flatMap(mailboxMetaData -> mailboxFactory.builder()
                         .mailboxMetadata(mailboxMetaData)
                         .session(mailboxSession)
                         .usingPreloadedMailboxesMetadata(Optional.of(tuple.getT1()))
                         .quotaLoader(tuple.getT2())
-                        .build())
-                    .handle(publishIfPresent()));
+                        .build()));
     }
 
     private Flux<MailboxMetaData> getAllMailboxesMetaData(MailboxSession mailboxSession) {

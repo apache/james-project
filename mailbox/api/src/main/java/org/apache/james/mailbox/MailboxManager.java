@@ -139,6 +139,10 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      */
     MessageManager getMailbox(MailboxId mailboxId, MailboxSession session) throws MailboxException;
 
+    Publisher<MessageManager> getMailboxReactive(MailboxId mailboxId, MailboxSession session);
+
+    Publisher<MessageManager> getMailboxReactive(MailboxPath mailboxPath, MailboxSession session);
+
     /**
      * Creates a new mailbox. Any intermediary mailboxes missing from the
      * hierarchy should be created.

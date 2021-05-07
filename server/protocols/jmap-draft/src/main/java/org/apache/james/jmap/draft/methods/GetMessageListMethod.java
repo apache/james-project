@@ -115,8 +115,7 @@ public class GetMessageListMethod implements Method {
 
         return metricFactory.decorateSupplierWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
             () -> process(methodCallId, mailboxSession, messageListRequest)
-                .subscriberContext(context("GET_MESSAGE_LIST", mdc(messageListRequest))))
-            .subscribeOn(Schedulers.elastic());
+                .subscriberContext(context("GET_MESSAGE_LIST", mdc(messageListRequest))));
     }
 
     private MDCBuilder mdc(GetMessageListRequest messageListRequest) {
@@ -171,8 +170,7 @@ public class GetMessageListMethod implements Method {
             MailboxId mailboxId = mailboxIdFactory.fromString(mailboxIdAsString);
             Limit aLimit = Limit.from(Math.toIntExact(limit));
 
-            return Mono.fromCallable(() -> mailboxManager.getMailbox(mailboxId, mailboxSession))
-                .subscribeOn(Schedulers.elastic())
+            return Mono.from(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
                 .then(emailQueryView.listMailboxContent(mailboxId, aLimit)
                     .skip(position)
                     .take(limit)
@@ -188,8 +186,7 @@ public class GetMessageListMethod implements Method {
             ZonedDateTime after = condition.getAfter().get();
             Limit aLimit = Limit.from(Math.toIntExact(limit));
 
-            return Mono.fromCallable(() -> mailboxManager.getMailbox(mailboxId, mailboxSession))
-                .subscribeOn(Schedulers.elastic())
+            return Mono.from(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
                 .then(emailQueryView.listMailboxContentSinceReceivedAt(mailboxId, after, aLimit)
                     .skip(position)
                     .take(limit)

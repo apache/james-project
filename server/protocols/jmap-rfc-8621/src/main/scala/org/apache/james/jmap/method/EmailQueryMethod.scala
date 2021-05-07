@@ -107,8 +107,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
     val condition: FilterCondition = request.filter.get.asInstanceOf[FilterCondition]
     val mailboxId: MailboxId = condition.inMailbox.get
     val after: ZonedDateTime = condition.after.get.asUTC
-    SMono.fromCallable(() => mailboxManager.getMailbox(mailboxId, mailboxSession))
-      .subscribeOn(Schedulers.elastic())
+    SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
       .`then`(SFlux.fromPublisher(
         emailQueryView.listMailboxContentSinceReceivedAt(mailboxId, after, JavaLimit.from(limitToUse.value)))
         .drop(position.value)
@@ -122,8 +121,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
 
   private def queryViewForListingSortedBySentAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest): SMono[Seq[MessageId]] = {
     val mailboxId: MailboxId = request.filter.get.asInstanceOf[FilterCondition].inMailbox.get
-    SMono.fromCallable(() => mailboxManager.getMailbox(mailboxId, mailboxSession))
-      .subscribeOn(Schedulers.elastic())
+    SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
       .`then`(SFlux.fromPublisher(
         emailQueryView.listMailboxContent(mailboxId, JavaLimit.from(limitToUse.value)))
         .drop(position.value)

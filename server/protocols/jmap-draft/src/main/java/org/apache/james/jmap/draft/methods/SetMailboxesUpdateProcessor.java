@@ -181,6 +181,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
                 .id(mailboxId)
                 .session(mailboxSession)
                 .build()
+                .blockOptional()
                 .orElseThrow(() -> new MailboxNotFoundException(mailboxId));
     }
 

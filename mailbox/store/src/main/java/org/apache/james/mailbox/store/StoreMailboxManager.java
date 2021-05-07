@@ -87,6 +87,7 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
 import org.apache.james.util.FunctionalUtils;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -265,37 +266,50 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public MessageManager getMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
-        final MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        Mailbox mailboxRow = mapper.findMailboxByPath(mailboxPath)
-            .blockOptional()
-            .orElseThrow(() -> {
+        return MailboxReactorUtils.block(getMailboxReactive(mailboxPath, session));
+    }
+
+    @Override
+    public Mono<MessageManager> getMailboxReactive(MailboxPath mailboxPath, MailboxSession session) {
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+
+        return mapper.findMailboxByPath(mailboxPath)
+            .map(Throwing.<Mailbox, MessageManager>function(mailboxRow -> {
+                if (!assertUserHasAccessTo(mailboxRow, session)) {
+                    LOGGER.info("Mailbox '{}' does not belong to user '{}' but to '{}'", mailboxPath, session.getUser(), mailboxRow.getUser());
+                    throw new MailboxNotFoundException(mailboxPath);
+                }
+
+                LOGGER.debug("Loaded mailbox {}", mailboxPath);
+
+                return createMessageManager(mailboxRow, session);
+            }).sneakyThrow())
+            .switchIfEmpty(Mono.fromCallable(() -> {
                 LOGGER.info("Mailbox '{}' not found.", mailboxPath);
-                return new MailboxNotFoundException(mailboxPath);
-            });
-
-        if (!assertUserHasAccessTo(mailboxRow, session)) {
-            LOGGER.info("Mailbox '{}' does not belong to user '{}' but to '{}'", mailboxPath, session.getUser(), mailboxRow.getUser());
-            throw new MailboxNotFoundException(mailboxPath);
-        }
-
-        LOGGER.debug("Loaded mailbox {}", mailboxPath);
-
-        return createMessageManager(mailboxRow, session);
+                throw new MailboxNotFoundException(mailboxPath);
+            }));
     }
 
     @Override
     public MessageManager getMailbox(MailboxId mailboxId, MailboxSession session) throws MailboxException {
+        return block(getMailboxReactive(mailboxId, session));
+    }
+
+    @Override
+    public Publisher<MessageManager> getMailboxReactive(MailboxId mailboxId, MailboxSession session) {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        Mailbox mailboxRow = block(mapper.findMailboxById(mailboxId));
 
-        if (!assertUserHasAccessTo(mailboxRow, session)) {
-            LOGGER.info("Mailbox '{}' does not belong to user '{}' but to '{}'", mailboxId.serialize(), session.getUser(), mailboxRow.getUser());
-            throw new MailboxNotFoundException(mailboxId);
-        }
+        return mapper.findMailboxById(mailboxId)
+            .map(Throwing.<Mailbox, MessageManager>function(mailboxRow -> {
+                if (!assertUserHasAccessTo(mailboxRow, session)) {
+                    LOGGER.info("Mailbox '{} {}' does not belong to user '{}' but to '{}'", mailboxRow.getMailboxId().serialize(), mailboxRow.generateAssociatedPath(), session.getUser(), mailboxRow.getUser());
+                    throw new MailboxNotFoundException(mailboxId);
+                }
 
-        LOGGER.debug("Loaded mailbox {}", mailboxId.serialize());
+                LOGGER.debug("Loaded mailbox {} {}", mailboxRow.getMailboxId().serialize(), mailboxRow.generateAssociatedPath());
 
-        return createMessageManager(mailboxRow, session);
+                return createMessageManager(mailboxRow, session);
+            }).sneakyThrow());
     }
 
     private boolean assertUserHasAccessTo(Mailbox mailbox, MailboxSession session) {
