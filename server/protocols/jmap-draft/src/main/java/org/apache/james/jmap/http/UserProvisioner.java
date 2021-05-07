@@ -35,6 +35,7 @@ import org.apache.james.user.api.UsersRepositoryException;
 import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class UserProvisioner {
     private final UsersRepository usersRepository;
@@ -49,7 +50,9 @@ public class UserProvisioner {
 
     public Mono<Void> provisionUser(MailboxSession session) {
         if (session != null && !usersRepository.isReadOnly()) {
-            return Mono.fromRunnable(() -> createAccountIfNeeded(session));
+            return Mono.fromRunnable(() -> createAccountIfNeeded(session))
+                .subscribeOn(Schedulers.elastic())
+                .then();
         }
         return Mono.empty();
     }
