@@ -22,7 +22,6 @@ package org.apache.james.jmap.utils.quotas
 import javax.inject.Inject
 import org.apache.james.jmap.mail.{QuotaRoot, Quotas}
 import org.apache.james.mailbox.MailboxSession
-import org.apache.james.mailbox.exception.MailboxException
 import org.apache.james.mailbox.model.{MailboxPath, QuotaRoot => ModelQuotaRoot}
 import org.apache.james.mailbox.quota.UserQuotaRootResolver
 import reactor.core.scala.publisher.SMono
@@ -31,14 +30,13 @@ import reactor.core.scala.publisher.SMono
 class QuotaLoaderWithPreloadedDefaultFactory @Inject()(quotaRootResolver: UserQuotaRootResolver, quotaReader: QuotaReader) {
 
   def loadFor(session: MailboxSession): SMono[QuotaLoaderWithPreloadedDefault] =
-    SMono.fromCallable(() => new QuotaLoaderWithPreloadedDefault(
+    getUserDefaultQuotas(session)
+      .map(qotas => new QuotaLoaderWithPreloadedDefault(
         quotaRootResolver,
         quotaReader,
         session,
-        getUserDefaultQuotas(session)))
+        qotas))
 
-
-  @throws[MailboxException]
   private def getUserDefaultQuotas(session:MailboxSession): SMono[Quotas] = {
     val quotaRoot: ModelQuotaRoot = quotaRootResolver.forUser(session.getUser)
     quotaReader.retrieveQuotas(QuotaRoot.toJmap(quotaRoot))
@@ -48,11 +46,10 @@ class QuotaLoaderWithPreloadedDefaultFactory @Inject()(quotaRootResolver: UserQu
 class QuotaLoaderWithPreloadedDefault(quotaRootResolver: UserQuotaRootResolver,
                                       quotaReader: QuotaReader,
                                       session: MailboxSession,
-                                      preloadedUserDefaultQuotas: SMono[Quotas]) extends QuotaLoader {
-  @throws[MailboxException]
+                                      preloadedUserDefaultQuotas: Quotas) extends QuotaLoader {
   override def getQuotas(mailboxPath: MailboxPath): SMono[Quotas] =
     if (mailboxPath.belongsTo(session)) {
-      preloadedUserDefaultQuotas
+      SMono.just(preloadedUserDefaultQuotas)
     } else {
       val quotaRoot: ModelQuotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath)
       quotaReader.retrieveQuotas(QuotaRoot.toJmap(quotaRoot))

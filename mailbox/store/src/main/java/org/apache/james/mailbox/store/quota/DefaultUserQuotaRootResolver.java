@@ -37,6 +37,7 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.quota.QuotaRootDeserializer;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.reactivestreams.Publisher;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -95,12 +96,12 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
     }
 
     @Override
-    public QuotaRoot getQuotaRoot(Mailbox mailbox) throws MailboxException {
+    public QuotaRoot getQuotaRoot(Mailbox mailbox) {
         return getQuotaRoot(mailbox.generateAssociatedPath());
     }
 
     @Override
-    public QuotaRoot getQuotaRoot(MailboxId mailboxId) throws MailboxException {
+    public QuotaRoot getQuotaRoot(MailboxId mailboxId) {
         return getQuotaRootReactive(mailboxId).block();
     }
 
@@ -113,6 +114,16 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
             .map(Mailbox::generateAssociatedPath)
             .map(MailboxPath::getUser)
             .map(this::forUser);
+    }
+
+    @Override
+    public Publisher<QuotaRoot> getQuotaRootReactive(MailboxPath mailboxPath) {
+        return Mono.just(getQuotaRoot(mailboxPath));
+    }
+
+    @Override
+    public Publisher<QuotaRoot> getQuotaRootReactive(Mailbox mailbox) {
+        return Mono.just(getQuotaRoot(mailbox));
     }
 
     @Override

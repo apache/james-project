@@ -136,34 +136,42 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
 
     @Override
     public Map<Quota.Scope, QuotaCountLimit> listMaxMessagesDetails(QuotaRoot quotaRoot) {
+        return listMaxMessagesDetailsReactive(quotaRoot).block();
+    }
+
+    @Override
+    public Mono<Map<Quota.Scope, QuotaCountLimit>> listMaxMessagesDetailsReactive(QuotaRoot quotaRoot) {
         return Flux.merge(
-                perUserQuota.getMaxMessage(quotaRoot)
-                    .map(limit -> Pair.of(Quota.Scope.User, limit)),
-                Mono.justOrEmpty(quotaRoot.getDomain())
-                    .flatMap(perDomainQuota::getMaxMessage)
-                    .map(limit -> Pair.of(Quota.Scope.Domain, limit)),
-                globalQuota.getGlobalMaxMessage()
-                    .map(limit -> Pair.of(Quota.Scope.Global, limit)))
+            perUserQuota.getMaxMessage(quotaRoot)
+                .map(limit -> Pair.of(Quota.Scope.User, limit)),
+            Mono.justOrEmpty(quotaRoot.getDomain())
+                .flatMap(perDomainQuota::getMaxMessage)
+                .map(limit -> Pair.of(Quota.Scope.Domain, limit)),
+            globalQuota.getGlobalMaxMessage()
+                .map(limit -> Pair.of(Quota.Scope.Global, limit)))
             .collect(Guavate.toImmutableMap(
                 Pair::getKey,
-                Pair::getValue))
-            .block();
+                Pair::getValue));
     }
 
     @Override
     public Map<Quota.Scope, QuotaSizeLimit> listMaxStorageDetails(QuotaRoot quotaRoot) {
+        return listMaxStorageDetailsReactive(quotaRoot).block();
+    }
+
+    @Override
+    public Mono<Map<Quota.Scope, QuotaSizeLimit>> listMaxStorageDetailsReactive(QuotaRoot quotaRoot) {
         return Flux.merge(
-                perUserQuota.getMaxStorage(quotaRoot)
-                    .map(limit -> Pair.of(Quota.Scope.User, limit)),
-                Mono.justOrEmpty(quotaRoot.getDomain())
-                    .flatMap(perDomainQuota::getMaxStorage)
-                    .map(limit -> Pair.of(Quota.Scope.Domain, limit)),
-                globalQuota.getGlobalMaxStorage()
-                    .map(limit -> Pair.of(Quota.Scope.Global, limit)))
+            perUserQuota.getMaxStorage(quotaRoot)
+                .map(limit -> Pair.of(Quota.Scope.User, limit)),
+            Mono.justOrEmpty(quotaRoot.getDomain())
+                .flatMap(perDomainQuota::getMaxStorage)
+                .map(limit -> Pair.of(Quota.Scope.Domain, limit)),
+            globalQuota.getGlobalMaxStorage()
+                .map(limit -> Pair.of(Quota.Scope.Global, limit)))
             .collect(Guavate.toImmutableMap(
                 Pair::getKey,
-                Pair::getValue))
-            .block();
+                Pair::getValue));
     }
 
     @Override

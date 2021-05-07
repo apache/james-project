@@ -110,9 +110,7 @@ public class ListeningCurrentQuotaUpdater implements EventListener.ReactiveGroup
     }
 
     private Mono<Void> dispatchNewQuota(QuotaRoot quotaRoot, Username username) {
-        Mono<QuotaManager.Quotas> quotasMono = Mono.fromCallable(() -> quotaManager.getQuotas(quotaRoot));
-
-        return quotasMono.subscribeOn(Schedulers.elastic())
+        return Mono.from(quotaManager.getQuotasReactive(quotaRoot))
             .flatMap(quotas -> eventBus.dispatch(
                 EventFactory.quotaUpdated()
                     .randomEventId()

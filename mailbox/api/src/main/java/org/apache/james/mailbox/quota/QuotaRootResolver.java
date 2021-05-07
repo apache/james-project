@@ -37,9 +37,13 @@ public interface QuotaRootResolver extends QuotaRootDeserializer {
      */
     QuotaRoot getQuotaRoot(MailboxPath mailboxPath) throws MailboxException;
 
+    Publisher<QuotaRoot> getQuotaRootReactive(MailboxPath mailboxPath);
+
     QuotaRoot getQuotaRoot(MailboxId mailboxId) throws MailboxException;
 
     QuotaRoot getQuotaRoot(Mailbox mailbox) throws MailboxException;
+
+    Publisher<QuotaRoot> getQuotaRootReactive(Mailbox mailbox);
 
     Publisher<QuotaRoot> getQuotaRootReactive(MailboxId mailboxId);
 
