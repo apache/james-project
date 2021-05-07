@@ -26,6 +26,9 @@ import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
+import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Mono;
 
 /**
  * This quota manager is intended to be used when you want to deactivate the Quota feature
@@ -51,5 +54,10 @@ public class NoQuotaManager implements QuotaManager {
     @Override
     public Quotas getQuotas(QuotaRoot quotaRoot) {
         return new Quotas(getMessageQuota(quotaRoot), getStorageQuota(quotaRoot));
+    }
+
+    @Override
+    public Publisher<Quotas> getQuotasReactive(QuotaRoot quotaRoot) {
+        return Mono.just(getQuotas(quotaRoot));
     }
 }

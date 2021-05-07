@@ -32,8 +32,12 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.Quota.Scope;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
+
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * This interface describe how to set the max quotas for users
@@ -150,10 +154,28 @@ public interface MaxQuotaManager {
 
     Map<Quota.Scope, QuotaCountLimit> listMaxMessagesDetails(QuotaRoot quotaRoot);
 
+    default Publisher<Map<Scope, QuotaCountLimit>> listMaxMessagesDetailsReactive(QuotaRoot quotaRoot) {
+        return Mono.fromCallable(() -> listMaxMessagesDetails(quotaRoot))
+            .subscribeOn(Schedulers.elastic());
+    }
+
     Map<Quota.Scope, QuotaSizeLimit> listMaxStorageDetails(QuotaRoot quotaRoot);
+
+    default Publisher<Map<Quota.Scope, QuotaSizeLimit>> listMaxStorageDetailsReactive(QuotaRoot quotaRoot) {
+        return Mono.fromCallable(() -> listMaxStorageDetails(quotaRoot))
+            .subscribeOn(Schedulers.elastic());
+    }
+
 
     default QuotaDetails quotaDetails(QuotaRoot quotaRoot) {
         return new QuotaDetails(listMaxMessagesDetails(quotaRoot), listMaxStorageDetails(quotaRoot));
+    }
+
+    default Publisher<QuotaDetails> quotaDetailsReactive(QuotaRoot quotaRoot) {
+        return Mono.zip(
+            Mono.from(listMaxMessagesDetailsReactive(quotaRoot)),
+            Mono.from(listMaxStorageDetailsReactive(quotaRoot)))
+            .map(tuple -> new QuotaDetails(tuple.getT1(), tuple.getT2()));
     }
 
     Optional<QuotaCountLimit> getDomainMaxMessage(Domain domain);

@@ -21,11 +21,11 @@ package org.apache.james.jmap.draft.utils.quotas;
 import javax.inject.Inject;
 
 import org.apache.james.jmap.draft.model.mailbox.Quotas;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
+
+import reactor.core.publisher.Mono;
 
 public class DefaultQuotaLoader extends QuotaLoader {
 
@@ -38,15 +38,18 @@ public class DefaultQuotaLoader extends QuotaLoader {
         this.quotaManager = quotaManager;
     }
 
-    public Quotas getQuotas(MailboxPath mailboxPath) throws MailboxException {
-        QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);
-        Quotas.QuotaId quotaId = Quotas.QuotaId.fromQuotaRoot(quotaRoot);
-        QuotaManager.Quotas quotas = quotaManager.getQuotas(quotaRoot);
-        return Quotas.from(
-            quotaId,
-            Quotas.Quota.from(
-                quotaToValue(quotas.getStorageQuota()),
-                quotaToValue(quotas.getMessageQuota())));
+    public Mono<Quotas> getQuotas(MailboxPath mailboxPath) {
+        return Mono.from(quotaRootResolver.getQuotaRootReactive(mailboxPath))
+            .flatMap(quotaRoot -> Mono.from(quotaManager.getQuotasReactive(quotaRoot))
+                .map(quotas -> {
+                    Quotas.QuotaId quotaId = Quotas.QuotaId.fromQuotaRoot(quotaRoot);
+
+                    return Quotas.from(
+                        quotaId,
+                        Quotas.Quota.from(
+                            quotaToValue(quotas.getStorageQuota()),
+                            quotaToValue(quotas.getMessageQuota())));
+                }));
     }
 
 }

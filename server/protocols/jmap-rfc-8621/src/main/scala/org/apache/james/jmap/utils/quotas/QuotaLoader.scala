@@ -20,11 +20,9 @@
 package org.apache.james.jmap.utils.quotas
 
 import org.apache.james.jmap.mail.Quotas
-import org.apache.james.mailbox.exception.MailboxException
 import org.apache.james.mailbox.model.MailboxPath
 import reactor.core.scala.publisher.SMono
 
 trait QuotaLoader {
-  @throws[MailboxException]
   def getQuotas(mailboxPath: MailboxPath): SMono[Quotas]
 }

@@ -24,13 +24,14 @@ import org.apache.james.core.quota.QuotaLimitValue;
 import org.apache.james.core.quota.QuotaUsageValue;
 import org.apache.james.jmap.draft.model.Number;
 import org.apache.james.jmap.draft.model.mailbox.Quotas;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.Quota;
 
+import reactor.core.publisher.Mono;
+
 public abstract class QuotaLoader {
 
-    public abstract Quotas getQuotas(MailboxPath mailboxPath) throws MailboxException;
+    public abstract Mono<Quotas> getQuotas(MailboxPath mailboxPath);
 
     protected <T extends QuotaLimitValue<T>, U extends QuotaUsageValue<U, T>> Quotas.Value<T, U> quotaToValue(Quota<T, U> quota) {
         return new Quotas.Value<>(

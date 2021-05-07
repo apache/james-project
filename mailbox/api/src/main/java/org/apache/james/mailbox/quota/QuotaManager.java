@@ -25,6 +25,7 @@ import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.reactivestreams.Publisher;
 
 
 /**
@@ -68,4 +69,6 @@ public interface QuotaManager {
     Quota<QuotaSizeLimit, QuotaSizeUsage> getStorageQuota(QuotaRoot quotaRoot) throws MailboxException;
 
     Quotas getQuotas(QuotaRoot quotaRoot) throws MailboxException;
+
+    Publisher<Quotas> getQuotasReactive(QuotaRoot quotaRoot);
 }
