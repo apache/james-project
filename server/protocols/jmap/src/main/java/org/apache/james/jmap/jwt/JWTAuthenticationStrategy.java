@@ -36,6 +36,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.netty.http.server.HttpServerRequest;
 
 public class JWTAuthenticationStrategy implements AuthenticationStrategy {
@@ -61,7 +62,7 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
         return Mono.fromCallable(() -> authHeaders(httpRequest))
             .filter(header -> header.startsWith(AUTHORIZATION_HEADER_PREFIX))
             .map(header -> header.substring(AUTHORIZATION_HEADER_PREFIX.length()))
-            .map(userJWTToken -> {
+            .flatMap(userJWTToken -> Mono.fromCallable(() -> {
                 if (!tokenManager.verify(userJWTToken)) {
                     throw new UnauthorizedException("Failed Jwt verification");
                 }
@@ -74,7 +75,7 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
                 }
 
                 return username;
-            })
+            }).subscribeOn(Schedulers.elastic()))
             .map(mailboxManager::createSystemSession);
     }
 
