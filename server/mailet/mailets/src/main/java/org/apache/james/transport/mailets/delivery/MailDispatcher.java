@@ -43,7 +43,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
 
@@ -90,13 +89,11 @@ public class MailDispatcher {
     private final MailStore mailStore;
     private final boolean consume;
     private final MailetContext mailetContext;
-    private final Scheduler scheduler;
 
     private MailDispatcher(MailStore mailStore, boolean consume, MailetContext mailetContext) {
         this.mailStore = mailStore;
         this.consume = consume;
         this.mailetContext = mailetContext;
-        this.scheduler = Schedulers.elastic();
     }
 
     public void dispatch(Mail mail) throws MessagingException {
@@ -142,7 +139,7 @@ public class MailDispatcher {
                 Map<String, List<String>> savedHeaders = saveHeaders(mail, recipient);
 
                 addSpecificHeadersForRecipient(mail, message, recipient);
-                storeMailWithRetry(mail, recipient).block();
+                storeMailWithRetry(mail, recipient).subscribeOn(Schedulers.immediate()).block();
 
                 restoreHeaders(mail.getMessage(), savedHeaders);
             } catch (Exception ex) {
@@ -156,7 +153,6 @@ public class MailDispatcher {
     private Mono<Void> storeMailWithRetry(Mail mail, MailAddress recipient) {
        return Mono.fromRunnable((ThrowingRunnable)() -> mailStore.storeMail(recipient, mail))
            .doOnError(error -> LOGGER.warn("Error While storing mail. This error will be retried.", error))
-           .subscribeOn(scheduler)
            .retryWhen(Retry.backoff(RETRIES, FIRST_BACKOFF).maxBackoff(MAX_BACKOFF).scheduler(Schedulers.elastic()))
            .then();
     }
