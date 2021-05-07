@@ -19,55 +19,44 @@
 
 package org.apache.james.jmap.change
 
-import java.util.Optional
-
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
 import org.apache.james.events.{Event, EventSerializer}
-import org.apache.james.jmap.core.UuidState
 import org.apache.james.json.JsonGenericSerializer
 
-import scala.jdk.OptionConverters._
+import javax.inject.Inject
+import scala.jdk.CollectionConverters._
 
-object StateChangeEventDTO {
+case class StateChangeEventDTOFactory @Inject()(typeStateFactory: TypeStateFactory) {
   val dtoModule: EventDTOModule[StateChangeEvent, StateChangeEventDTO] = EventDTOModule.forEvent(classOf[StateChangeEvent])
     .convertToDTO(classOf[StateChangeEventDTO])
-    .toDomainObjectConverter(dto => dto.toDomainObject)
-    .toDTOConverter((event, aType) => StateChangeEventDTO.toDTO(event))
+    .toDomainObjectConverter(dto => dto.toDomainObject(typeStateFactory))
+    .toDTOConverter((event, aType) => toDTO(event))
     .typeName(classOf[StateChangeEvent].getCanonicalName)
     .withFactory(EventDTOModule.apply);
 
   def toDTO(event: StateChangeEvent): StateChangeEventDTO = StateChangeEventDTO(
     getType = classOf[StateChangeEvent].getCanonicalName,
     getEventId = event.eventId.getId.toString,
-    getUsername = event.username.asString(),
-    getMailboxState = event.getState(MailboxTypeName).map(_.serialize).toJava,
-    getEmailState = event.getState(EmailTypeName).map(_.serialize).toJava,
-    getVacationResponseState = event.getState(VacationResponseTypeName).map(_.serialize).toJava,
-    getEmailDeliveryState = event.getState(EmailDeliveryTypeName).map(_.serialize).toJava)
+    getUsername = event.username.asString,
+    getTypeStates = event.map.map(element => element._1.asString() -> element._2.serialize).asJava)
 }
 
 case class StateChangeEventDTO(@JsonProperty("type") getType: String,
                                @JsonProperty("eventId") getEventId: String,
                                @JsonProperty("username") getUsername: String,
-                               @JsonProperty("vacationResponseState") getVacationResponseState: Optional[String],
-                               @JsonProperty("mailboxState") getMailboxState: Optional[String],
-                               @JsonProperty("emailState") getEmailState: Optional[String],
-                               @JsonProperty("emailDeliveryState") getEmailDeliveryState: Optional[String]) extends EventDTO {
-  def toDomainObject: StateChangeEvent = StateChangeEvent(
+                               @JsonProperty("typeStates") getTypeStates: java.util.Map[String, String]) extends EventDTO {
+  def toDomainObject(typeStateFactory: TypeStateFactory): StateChangeEvent = StateChangeEvent(
     eventId = EventId.of(getEventId),
     username = Username.of(getUsername),
-    map = List(VacationResponseTypeName -> getVacationResponseState,
-      MailboxTypeName -> getMailboxState,
-      EmailTypeName -> getEmailState,
-      EmailDeliveryTypeName -> getEmailDeliveryState)
-      .flatMap(element => element._2.toScala.map(stateString => element._1 -> UuidState.fromStringUnchecked(stateString))).toMap)
+    map = getTypeStates.asScala.flatMap(element => typeStateFactory.parse(element._1).toOption
+      .flatMap(typeName => typeName.parseState(element._2).toOption.map(state => typeName -> state))).toMap)
 }
 
-case class JmapEventSerializer() extends EventSerializer {
+case class JmapEventSerializer @Inject()(stateChangeEventDTOFactory: StateChangeEventDTOFactory) extends EventSerializer {
   private val genericSerializer: JsonGenericSerializer[StateChangeEvent, StateChangeEventDTO] = JsonGenericSerializer
-    .forModules(StateChangeEventDTO.dtoModule)
+    .forModules(stateChangeEventDTOFactory.dtoModule)
     .withoutNestedType()
 
   override def toJson(event: Event): String = event match {

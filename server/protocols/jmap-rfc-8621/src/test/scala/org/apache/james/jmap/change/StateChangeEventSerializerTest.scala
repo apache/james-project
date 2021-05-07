@@ -21,13 +21,14 @@ package org.apache.james.jmap.change
 import org.apache.james.JsonSerializationVerifier
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
-import org.apache.james.jmap.change.StateChangeEventSerializerTest.{EVENT, EVENT_JSON, EVENT_JSON_NO_DELIVERY, EVENT_NO_DELIVERY}
+import org.apache.james.jmap.change.StateChangeEventSerializerTest.{EVENT, EVENT_EMPTY_TYPE_STATE_MAP, EVENT_JSON, EVENT_JSON_EMPTY_TYPE_STATE_MAP, EVENT_JSON_NO_DELIVERY, EVENT_NO_DELIVERY}
 import org.apache.james.jmap.core.UuidState
 import org.apache.james.json.JsonGenericSerializer
 import org.apache.james.json.JsonGenericSerializer.UnknownTypeException
 import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
 import org.junit.jupiter.api.Test
 
+import scala.jdk.CollectionConverters._
 
 object StateChangeEventSerializerTest {
   val EVENT_ID: EventId = EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4")
@@ -40,13 +41,15 @@ object StateChangeEventSerializerTest {
       EmailDeliveryTypeName -> UuidState.fromStringUnchecked("2d9f1b12-0000-1111-3333-0106fb53a943")))
   val EVENT_JSON: String =
     """{
-      |  "eventId":"6e0dd59d-660e-4d9b-b22f-0354479f47b4",
-      |  "username":"bob",
-      |  "mailboxState":"2c9f1b12-b35a-43e6-9af2-0106fb53a943",
-      |  "emailState":"2d9f1b12-b35a-43e6-9af2-0106fb53a943",
-      |  "emailDeliveryState":"2d9f1b12-0000-1111-3333-0106fb53a943",
-      |  "vacationResponseState":"2d9f1b12-3333-4444-5555-0106fb53a943",
-      |  "type":"org.apache.james.jmap.change.StateChangeEvent"
+      |  "eventId": "6e0dd59d-660e-4d9b-b22f-0354479f47b4",
+      |  "username": "bob",
+      |  "typeStates": {
+      |    "Mailbox": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+      |    "Email": "2d9f1b12-b35a-43e6-9af2-0106fb53a943",
+      |    "EmailDelivery": "2d9f1b12-0000-1111-3333-0106fb53a943",
+      |    "VacationResponse": "2d9f1b12-3333-4444-5555-0106fb53a943"
+      |  },
+      |  "type": "org.apache.james.jmap.change.StateChangeEvent"
       |}""".stripMargin
   val EVENT_NO_DELIVERY: StateChangeEvent = StateChangeEvent(eventId = EVENT_ID,
     username = USERNAME,
@@ -54,19 +57,38 @@ object StateChangeEventSerializerTest {
       EmailTypeName -> UuidState.fromStringUnchecked("2d9f1b12-b35a-43e6-9af2-0106fb53a943")))
   val EVENT_JSON_NO_DELIVERY: String =
     """{
-      |  "eventId":"6e0dd59d-660e-4d9b-b22f-0354479f47b4",
-      |  "username":"bob",
-      |  "mailboxState":"2c9f1b12-b35a-43e6-9af2-0106fb53a943",
-      |  "emailState":"2d9f1b12-b35a-43e6-9af2-0106fb53a943",
-      |  "type":"org.apache.james.jmap.change.StateChangeEvent"
+      |  "type": "org.apache.james.jmap.change.StateChangeEvent",
+      |  "eventId": "6e0dd59d-660e-4d9b-b22f-0354479f47b4",
+      |  "username": "bob",
+      |  "typeStates": {
+      |    "Mailbox": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+      |    "Email": "2d9f1b12-b35a-43e6-9af2-0106fb53a943"
+      |  }
+      |}""".stripMargin
+
+  val EVENT_EMPTY_TYPE_STATE_MAP: StateChangeEvent = StateChangeEvent(eventId = EVENT_ID,
+    username = USERNAME,
+    map = Map())
+  val EVENT_JSON_EMPTY_TYPE_STATE_MAP: String =
+    """{
+      |  "type": "org.apache.james.jmap.change.StateChangeEvent",
+      |  "eventId": "6e0dd59d-660e-4d9b-b22f-0354479f47b4",
+      |  "username": "bob",
+      |  "typeStates": {
+      |
+      |  }
       |}""".stripMargin
 }
 
 class StateChangeEventSerializerTest {
+  val typeNameSet: Set[TypeName] = Set(EmailTypeName, MailboxTypeName, ThreadTypeName, IdentityTypeName, EmailSubmissionTypeName, EmailDeliveryTypeName, VacationResponseTypeName)
+  val typeStateFactory: TypeStateFactory = TypeStateFactory(typeNameSet.asJava)
+  val stateChangeEventDTOFactory: StateChangeEventDTOFactory = StateChangeEventDTOFactory(typeStateFactory)
+
   @Test
   def shouldSerializeKnownEvent(): Unit =
     JsonSerializationVerifier.serializer(JsonGenericSerializer
-      .forModules(StateChangeEventDTO.dtoModule)
+      .forModules(stateChangeEventDTOFactory.dtoModule)
       .withoutNestedType())
       .bean(EVENT)
       .json(EVENT_JSON)
@@ -76,14 +98,16 @@ class StateChangeEventSerializerTest {
   def shouldThrowWhenDeserializeUnknownEvent(): Unit =
     assertThatThrownBy(() =>
       JsonGenericSerializer
-        .forModules(StateChangeEventDTO.dtoModule)
+        .forModules(stateChangeEventDTOFactory.dtoModule)
         .withoutNestedType()
         .deserialize("""{
-                       |  "eventId":"6e0dd59d-660e-4d9b-b22f-0354479f47b4",
-                       |  "username":"bob",
-                       |  "mailboxState":"2c9f1b12-b35a-43e6-9af2-0106fb53a943",
-                       |  "emailState":"2d9f1b12-b35a-43e6-9af2-0106fb53a943",
-                       |  "type":"org.apache.james.jmap.change.Unknown"
+                       |	"eventId": "6e0dd59d-660e-4d9b-b22f-0354479f47b4",
+                       |	"username": "bob",
+                       |	"typeStates": {
+                       |		"Mailbox": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+                       |		"Email": "2d9f1b12-b35a-43e6-9af2-0106fb53a943"
+                       |	},
+                       |	"type": "org.apache.james.jmap.change.Unknown"
                        |}""".stripMargin))
       .isInstanceOf(classOf[UnknownTypeException])
 
@@ -91,8 +115,17 @@ class StateChangeEventSerializerTest {
   def shouldDeserializeWhenAnOptionalFieldIsMissing(): Unit =
     assertThat(
       JsonGenericSerializer
-        .forModules(StateChangeEventDTO.dtoModule)
+        .forModules(stateChangeEventDTOFactory.dtoModule)
         .withoutNestedType()
         .deserialize(EVENT_JSON_NO_DELIVERY.stripMargin))
       .isEqualTo(EVENT_NO_DELIVERY)
+
+  @Test
+  def shouldDeserializeWhenTypeStateMapIsEmpty(): Unit =
+    assertThat(
+      JsonGenericSerializer
+        .forModules(stateChangeEventDTOFactory.dtoModule)
+        .withoutNestedType()
+        .deserialize(EVENT_JSON_EMPTY_TYPE_STATE_MAP.stripMargin))
+      .isEqualTo(EVENT_EMPTY_TYPE_STATE_MAP)
 }
