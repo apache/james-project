@@ -62,6 +62,7 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.util.streams.Limit;
+import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -77,7 +78,7 @@ import reactor.core.publisher.Mono;
  * Mailbox listener failures lead to eventBus retrying their execution, it ensures the result of the deletion to be
  * idempotent.
  */
-public class DeleteMessageListener implements EventListener.GroupEventListener {
+public class DeleteMessageListener implements EventListener.ReactiveGroupEventListener {
     private static final Optional<CassandraId> ALL_MAILBOXES = Optional.empty();
 
     public static class DeleteMessageListenerGroup extends Group {
@@ -138,21 +139,20 @@ public class DeleteMessageListener implements EventListener.GroupEventListener {
     }
 
     @Override
-    public void event(Event event) {
+    public Publisher<Void> reactiveEvent(Event event) {
         if (event instanceof Expunged) {
             Expunged expunged = (Expunged) event;
 
-            handleMessageDeletion(expunged)
-                .block();
+            return handleMessageDeletion(expunged);
         }
         if (event instanceof MailboxDeletion) {
             MailboxDeletion mailboxDeletion = (MailboxDeletion) event;
 
             CassandraId mailboxId = (CassandraId) mailboxDeletion.getMailboxId();
 
-            handleMailboxDeletion(mailboxId)
-                .block();
+            return handleMailboxDeletion(mailboxId);
         }
+        return Mono.empty();
     }
 
     private Mono<Void> handleMailboxDeletion(CassandraId mailboxId) {
