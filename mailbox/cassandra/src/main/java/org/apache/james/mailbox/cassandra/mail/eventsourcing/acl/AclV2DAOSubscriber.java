@@ -20,12 +20,13 @@
 package org.apache.james.mailbox.cassandra.mail.eventsourcing.acl;
 
 import org.apache.james.eventsourcing.Event;
-import org.apache.james.eventsourcing.Subscriber;
+import org.apache.james.eventsourcing.ReactiveSubscriber;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV2;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-public class AclV2DAOSubscriber implements Subscriber {
+public class AclV2DAOSubscriber implements ReactiveSubscriber {
     private final CassandraACLDAOV2 acldaov2;
 
     public AclV2DAOSubscriber(CassandraACLDAOV2 acldaov2) {
@@ -33,15 +34,16 @@ public class AclV2DAOSubscriber implements Subscriber {
     }
 
     @Override
-    public void handle(Event event) {
+    public Mono<Void> handleReactive(Event event) {
         if (event instanceof ACLUpdated) {
             ACLUpdated aclUpdated = (ACLUpdated) event;
 
-            Flux.fromStream(
+            return Flux.fromStream(
                 aclUpdated.getAclDiff()
                     .commands())
                 .flatMap(command -> acldaov2.updateACL(aclUpdated.mailboxId(), command))
-                .blockLast();
+                .then();
         }
+        return Mono.empty();
     }
 }

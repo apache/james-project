@@ -19,11 +19,9 @@
 package org.apache.james.eventsourcing
 
 import javax.inject.Inject
-
 import org.apache.james.eventsourcing.eventstore.{EventStore, EventStoreFailedException}
 import org.reactivestreams.Publisher
 import org.slf4j.LoggerFactory
-
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 object EventBus {
@@ -32,27 +30,20 @@ object EventBus {
 
 class EventBus @Inject() (eventStore: EventStore, subscribers: Set[Subscriber]) {
   @throws[EventStoreFailedException]
-  def publish(events: Iterable[Event]): SMono[Void] = {
+  def publish(events: Iterable[Event]): SMono[Void] =
     SMono(eventStore.appendAll(events))
         .`then`(runHandlers(events, subscribers))
 
-  }
-
-  def runHandlers(events: Iterable[Event], subscribers: Set[Subscriber]): SMono[Void] = {
+  def runHandlers(events: Iterable[Event], subscribers: Set[Subscriber]): SMono[Void] =
     SFlux.fromIterable(events.flatMap((event: Event) => subscribers.map(subscriber => (event, subscriber))))
-      .flatMap(infos => runHandler(infos._1, infos._2))
+      .flatMapSequential(infos => runHandler(infos._1, infos._2))
       .`then`()
       .`then`(SMono.empty)
-  }
 
-  def runHandler(event: Event, subscriber: Subscriber): Publisher[Void] = SMono.fromCallable(() => handle(event, subscriber)).`then`(SMono.empty)
-
-  private def handle(event : Event, subscriber: Subscriber) : Unit = {
-    try {
-      subscriber.handle(event)
-    } catch {
-      case e: Exception =>
+  def runHandler(event: Event, subscriber: Subscriber): Publisher[Void] =
+    SMono(ReactiveSubscriber.asReactiveSubscriber(subscriber).handleReactive(event))
+      .onErrorResume(e => {
         EventBus.LOGGER.error("Error while calling {} for {}", subscriber, event, e)
-    }
-  }
+        SMono.empty
+      })
 }
