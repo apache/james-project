@@ -26,7 +26,6 @@ import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.Username;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -63,15 +62,10 @@ public class DefaultMailboxesProvisioner {
 
     public Mono<Void> createMailboxesIfNeeded(MailboxSession session) {
         return metricFactory.decorateSupplierWithTimerMetric("JMAP-mailboxes-provisioning",
-            () -> {
-                Username username = session.getUser();
-                return createDefaultMailboxes(username);
-            });
+            () -> createDefaultMailboxes(session));
     }
 
-    private Mono<Void> createDefaultMailboxes(Username username) {
-        MailboxSession session = mailboxManager.createSystemSession(username);
-
+    private Mono<Void> createDefaultMailboxes(MailboxSession session) {
         return Flux.fromIterable(DefaultMailboxes.DEFAULT_MAILBOXES)
             .map(toMailboxPath(session))
             .filterWhen(mailboxPath -> mailboxDoesntExist(mailboxPath, session), DEFAULT_CONCURRENCY)
