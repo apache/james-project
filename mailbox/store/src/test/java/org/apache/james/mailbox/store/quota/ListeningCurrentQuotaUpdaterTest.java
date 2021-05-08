@@ -46,6 +46,7 @@ import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.events.MailboxEvents.Expunged;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -67,6 +68,7 @@ class ListeningCurrentQuotaUpdaterTest {
     static final MailboxId MAILBOX_ID = TestId.of(42);
     static final String BENWA = "benwa";
     static final Username USERNAME_BENWA = Username.of(BENWA);
+    static final MailboxPath MAILBOX_PATH = MailboxPath.forUser(USERNAME_BENWA, "path");
     static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot(BENWA, Optional.empty());
     static final QuotaOperation QUOTA = new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(2), QuotaSizeUsage.size(2 * SIZE));
 
@@ -80,8 +82,10 @@ class ListeningCurrentQuotaUpdaterTest {
         mockedCurrentQuotaManager = mock(CurrentQuotaManager.class);
         EventBus eventBus = mock(EventBus.class);
         when(eventBus.dispatch(any(Event.class), anySet())).thenReturn(Mono.empty());
+        QuotaManager quotaManager = mock(QuotaManager.class);
+        when(quotaManager.getQuotasReactive(eq(QUOTA_ROOT))).thenReturn(Mono.empty());
         testee = new ListeningCurrentQuotaUpdater(mockedCurrentQuotaManager, mockedQuotaRootResolver,
-            eventBus, mock(QuotaManager.class));
+            eventBus, quotaManager);
     }
 
     @Test
@@ -94,11 +98,13 @@ class ListeningCurrentQuotaUpdaterTest {
     void addedEventShouldIncreaseCurrentQuotaValues() throws Exception {
         Added added = mock(Added.class);
         when(added.getMailboxId()).thenReturn(MAILBOX_ID);
+        when(added.getMailboxPath()).thenReturn(MAILBOX_PATH);
         when(added.getMetaData(MessageUid.of(36))).thenReturn(new MessageMetaData(MessageUid.of(36), ModSeq.first(),new Flags(), SIZE, new Date(), new DefaultMessageId()));
         when(added.getMetaData(MessageUid.of(38))).thenReturn(new MessageMetaData(MessageUid.of(38), ModSeq.first(),new Flags(), SIZE, new Date(), new DefaultMessageId()));
         when(added.getUids()).thenReturn(Lists.newArrayList(MessageUid.of(36), MessageUid.of(38)));
         when(added.getUsername()).thenReturn(USERNAME_BENWA);
         when(mockedQuotaRootResolver.getQuotaRootReactive(eq(MAILBOX_ID))).thenReturn(Mono.just(QUOTA_ROOT));
+        when(mockedQuotaRootResolver.getQuotaRootReactive(eq(MAILBOX_PATH))).thenReturn(Mono.just(QUOTA_ROOT));
         when(mockedCurrentQuotaManager.increase(QUOTA)).thenAnswer(any -> Mono.empty());
 
         testee.event(added);
@@ -114,6 +120,8 @@ class ListeningCurrentQuotaUpdaterTest {
         when(expunged.getUids()).thenReturn(Lists.newArrayList(MessageUid.of(36), MessageUid.of(38)));
         when(expunged.getMailboxId()).thenReturn(MAILBOX_ID);
         when(expunged.getUsername()).thenReturn(USERNAME_BENWA);
+        when(expunged.getMailboxPath()).thenReturn(MAILBOX_PATH);
+        when(mockedQuotaRootResolver.getQuotaRootReactive(eq(MAILBOX_PATH))).thenReturn(Mono.just(QUOTA_ROOT));
         when(mockedQuotaRootResolver.getQuotaRootReactive(eq(MAILBOX_ID))).thenReturn(Mono.just(QUOTA_ROOT));
         when(mockedCurrentQuotaManager.decrease(QUOTA)).thenAnswer(any -> Mono.empty());
 
@@ -128,6 +136,8 @@ class ListeningCurrentQuotaUpdaterTest {
         when(expunged.getUids()).thenReturn(Lists.<MessageUid>newArrayList());
         when(expunged.getMailboxId()).thenReturn(MAILBOX_ID);
         when(expunged.getUsername()).thenReturn(USERNAME_BENWA);
+        when(expunged.getMailboxPath()).thenReturn(MAILBOX_PATH);
+        when(mockedQuotaRootResolver.getQuotaRootReactive(eq(MAILBOX_PATH))).thenReturn(Mono.just(QUOTA_ROOT));
         when(mockedQuotaRootResolver.getQuotaRootReactive(eq(MAILBOX_ID))).thenReturn(Mono.just(QUOTA_ROOT));
 
         testee.event(expunged);
@@ -141,6 +151,8 @@ class ListeningCurrentQuotaUpdaterTest {
         when(added.getUids()).thenReturn(Lists.<MessageUid>newArrayList());
         when(added.getMailboxId()).thenReturn(MAILBOX_ID);
         when(added.getUsername()).thenReturn(USERNAME_BENWA);
+        when(added.getMailboxPath()).thenReturn(MAILBOX_PATH);
+        when(mockedQuotaRootResolver.getQuotaRootReactive(eq(MAILBOX_PATH))).thenReturn(Mono.just(QUOTA_ROOT));
         when(mockedQuotaRootResolver.getQuotaRootReactive(eq(MAILBOX_ID))).thenReturn(Mono.just(QUOTA_ROOT));
 
         testee.event(added);
