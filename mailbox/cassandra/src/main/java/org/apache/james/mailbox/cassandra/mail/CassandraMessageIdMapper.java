@@ -49,7 +49,6 @@ import org.apache.james.mailbox.store.MailboxReactorUtils;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
-import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.util.FunctionalUtils;
 import org.apache.james.util.ReactorUtils;
@@ -80,14 +79,14 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     private final CassandraMessageDAO messageDAO;
     private final CassandraMessageDAOV3 messageDAOV3;
     private final CassandraIndexTableHandler indexTableHandler;
-    private final ModSeqProvider modSeqProvider;
+    private final CassandraModSeqProvider modSeqProvider;
     private final AttachmentLoader attachmentLoader;
     private final CassandraConfiguration cassandraConfiguration;
 
     public CassandraMessageIdMapper(MailboxMapper mailboxMapper, CassandraMailboxDAO mailboxDAO, CassandraAttachmentMapper attachmentMapper,
                                     CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO,
                                     CassandraMessageDAO messageDAO, CassandraMessageDAOV3 messageDAOV3, CassandraIndexTableHandler indexTableHandler,
-                                    ModSeqProvider modSeqProvider, CassandraConfiguration cassandraConfiguration) {
+                                    CassandraModSeqProvider modSeqProvider, CassandraConfiguration cassandraConfiguration) {
 
         this.mailboxMapper = mailboxMapper;
         this.mailboxDAO = mailboxDAO;
@@ -305,11 +304,11 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         if (identicalFlags(oldComposedId, newFlags)) {
             return Mono.just(Pair.of(oldComposedId.getFlags(), oldComposedId));
         } else {
-            return Mono
-                .fromCallable(() -> new ComposedMessageIdWithMetaData(
+            return modSeqProvider.nextModSeq(cassandraId)
+                .map(modSeq -> new ComposedMessageIdWithMetaData(
                     oldComposedId.getComposedMessageId(),
                     newFlags,
-                    modSeqProvider.nextModSeq(cassandraId)))
+                    modSeq))
             .flatMap(newComposedId -> updateFlags(oldComposedId, newComposedId));
         }
     }
