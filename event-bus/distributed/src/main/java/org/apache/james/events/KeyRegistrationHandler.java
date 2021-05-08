@@ -96,6 +96,7 @@ class KeyRegistrationHandler {
         receiverSubscriber = Optional.of(receiver.consumeAutoAck(registrationQueue.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE))
             .subscribeOn(Schedulers.parallel())
             .flatMap(this::handleDelivery, EventBus.EXECUTION_RATE)
+            .subscribeOn(Schedulers.elastic())
             .subscribe());
     }
 

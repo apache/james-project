@@ -133,6 +133,7 @@ class GroupRegistration implements Registration {
             .publishOn(Schedulers.parallel())
             .filter(delivery -> Objects.nonNull(delivery.getBody()))
             .flatMap(this::deliver, EventBus.EXECUTION_RATE)
+            .subscribeOn(Schedulers.elastic())
             .subscribe();
     }
 
