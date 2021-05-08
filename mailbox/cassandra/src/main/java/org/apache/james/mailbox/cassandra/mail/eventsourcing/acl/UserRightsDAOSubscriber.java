@@ -20,10 +20,13 @@
 package org.apache.james.mailbox.cassandra.mail.eventsourcing.acl;
 
 import org.apache.james.eventsourcing.Event;
-import org.apache.james.eventsourcing.Subscriber;
+import org.apache.james.eventsourcing.ReactiveSubscriber;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
+import org.reactivestreams.Publisher;
 
-public class UserRightsDAOSubscriber implements Subscriber {
+import reactor.core.publisher.Mono;
+
+public class UserRightsDAOSubscriber implements ReactiveSubscriber {
     private final CassandraUserMailboxRightsDAO userRightsDAO;
 
     public UserRightsDAOSubscriber(CassandraUserMailboxRightsDAO userRightsDAO) {
@@ -31,11 +34,11 @@ public class UserRightsDAOSubscriber implements Subscriber {
     }
 
     @Override
-    public void handle(Event event) {
+    public Publisher<Void> handleReactive(Event event) {
         if (event instanceof ACLUpdated) {
             ACLUpdated aclUpdated = (ACLUpdated) event;
-            userRightsDAO.update(aclUpdated.mailboxId(), aclUpdated.getAclDiff())
-                .block();
+            return userRightsDAO.update(aclUpdated.mailboxId(), aclUpdated.getAclDiff());
         }
+        return Mono.empty();
     }
 }

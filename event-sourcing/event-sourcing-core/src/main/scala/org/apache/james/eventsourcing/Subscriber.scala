@@ -18,6 +18,31 @@
  * ***************************************************************/
 package org.apache.james.eventsourcing
 
+import org.reactivestreams.Publisher
+import reactor.core.scala.publisher.SMono
+import reactor.core.scheduler.Schedulers
+
 trait Subscriber {
   def handle(event: Event) : Unit
+}
+
+trait ReactiveSubscriber extends Subscriber {
+  def handleReactive(event: Event): Publisher[Void]
+
+  override def handle(event: Event) : Unit = SMono(handleReactive(event)).block()
+}
+
+object ReactiveSubscriber {
+  def asReactiveSubscriber(subscriber: Subscriber): ReactiveSubscriber = subscriber match {
+    case reactive: ReactiveSubscriber => reactive
+    case nonReactive => new ReactiveSubscriberWrapper(nonReactive)
+  }
+}
+
+class ReactiveSubscriberWrapper(delegate: Subscriber) extends ReactiveSubscriber {
+  override def handle(event: Event) : Unit = delegate.handle(event)
+
+  def handleReactive(event: Event): Publisher[Void] = SMono.fromCallable(() => handle(event))
+    .subscribeOn(Schedulers.elastic())
+    .`then`()
 }
