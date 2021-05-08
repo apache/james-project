@@ -45,7 +45,6 @@ import org.reactivestreams.Publisher;
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class ListeningCurrentQuotaUpdater implements EventListener.ReactiveGroupEventListener, QuotaUpdater {
     public static class ListeningCurrentQuotaUpdaterGroup extends Group {
@@ -82,11 +81,11 @@ public class ListeningCurrentQuotaUpdater implements EventListener.ReactiveGroup
     public Publisher<Void> reactiveEvent(Event event) {
         if (event instanceof Added) {
             Added addedEvent = (Added) event;
-            return Mono.from(quotaRootResolver.getQuotaRootReactive(addedEvent.getMailboxId()))
+            return Mono.from(quotaRootResolver.getQuotaRootReactive(addedEvent.getMailboxPath()))
                 .flatMap(quotaRoot -> handleAddedEvent(addedEvent, quotaRoot));
         } else if (event instanceof Expunged) {
             Expunged expungedEvent = (Expunged) event;
-            return Mono.from(quotaRootResolver.getQuotaRootReactive(expungedEvent.getMailboxId()))
+            return Mono.from(quotaRootResolver.getQuotaRootReactive(expungedEvent.getMailboxPath()))
                 .flatMap(quotaRoot -> handleExpungedEvent(expungedEvent, quotaRoot));
         } else if (event instanceof MailboxDeletion) {
             MailboxDeletion mailboxDeletionEvent = (MailboxDeletion) event;

@@ -37,7 +37,6 @@ import org.apache.james.mailbox.quota.QuotaManager;
 import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 /**
  * Default implementation for the Quota Manager.
