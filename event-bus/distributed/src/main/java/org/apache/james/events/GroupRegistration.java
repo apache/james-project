@@ -145,7 +145,7 @@ class GroupRegistration implements Registration {
             .flatMap(event -> delayGenerator.delayIfHaveTo(currentRetryCount)
                 .flatMap(any -> runListener(event))
                 .onErrorResume(throwable -> retryHandler.handleRetry(event, currentRetryCount, throwable))
-                .then(Mono.<Void>fromRunnable(acknowledgableDelivery::ack)))
+                .then(Mono.<Void>fromRunnable(acknowledgableDelivery::ack).subscribeOn(Schedulers.elastic())))
             .onErrorResume(e -> {
                 LOGGER.error("Unable to process delivery for group {}", group, e);
                 return Mono.fromRunnable(() -> acknowledgableDelivery.nack(!REQUEUE));
