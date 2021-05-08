@@ -147,7 +147,8 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     private boolean shouldReadRepair() {
-        return secureRandom.nextFloat() < cassandraConfiguration.getMailboxReadRepair();
+        return cassandraConfiguration.getMailboxReadRepair() > 0
+            && secureRandom.nextFloat() < cassandraConfiguration.getMailboxReadRepair();
     }
 
 
