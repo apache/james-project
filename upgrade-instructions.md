@@ -47,6 +47,7 @@ Change list:
  - [Recommended upgrade to Cassandra 3.11.10](#recommended-upgrade-to-cassandra-3-1110)
  - [JMS mail queue no longer relies on java serialization](#jms-mail-queue-no-longer-relies-on-java-serialization)
  - [CassandraUsersRepository hash algorithm changes](#cassandrausersrepository-hash-algorithm-changes)
+ - [Recommended upgrade to Elasticsearch 7.10.2](#recommended-upgrade-to-elasticsearch-7102)
 
 ### CassandraUsersRepository hash algorithm changes
 
