@@ -1138,6 +1138,72 @@ trait WebSocketContract {
       .isEqualTo(pushEnableResponse)
   }
 
+  @Test
+  @Timeout(180)
+  def pingShouldWork(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    Thread.sleep(100)
+
+    val response: Either[String, String] =
+      authenticatedRequest(server)
+        .response(asWebSocket[Identity, String] {
+          ws =>
+            Thread.sleep(2100)
+
+            ws.receive()
+              .map { case t: Text =>
+                t.payload
+              }
+        })
+        .send(backend)
+        .body
+
+    Thread.sleep(100)
+
+    assertThatJson(response.toOption.get)
+      .whenIgnoringPaths("interval")
+      .isEqualTo(
+        s"""{}""")
+  }
+
+  @Test
+  @Timeout(180)
+  def multiplePingSignalShouldBeSent(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    Thread.sleep(100)
+
+    val response: Either[String, List[String]] =
+      authenticatedRequest(server)
+        .response(asWebSocket[Identity, List[String]] {
+          ws =>
+            Thread.sleep(2100)
+
+            val m1: String = ws.receive()
+              .map { case t: Text =>
+                t.payload
+              }
+
+            Thread.sleep(2100)
+
+            val m2: String = ws.receive()
+              .map { case t: Text =>
+                t.payload
+              }
+
+            List(m1, m2)
+        })
+        .send(backend)
+        .body
+
+    Thread.sleep(100)
+
+    assertThat(response.toOption.get.size.equals(2))
+  }
+
   private def authenticatedRequest(server: GuiceJamesServer): RequestT[Identity, Either[String, String], Any] = {
     val port = server.getProbe(classOf[JmapGuiceProbe])
       .getJmapPort

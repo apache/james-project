@@ -43,7 +43,7 @@ import org.apache.james.jmap.core.{DefaultCapabilities, JmapRfc8621Configuration
 import org.apache.james.jmap.http.{Authenticator, BasicAuthenticationStrategy, UserProvisioning}
 import org.apache.james.jmap.method.{CoreEchoMethod, Method}
 import org.apache.james.jmap.routes.JMAPApiRoutesTest._
-import org.apache.james.jmap.{JMAPConfiguration, JMAPRoutesHandler, JMAPServer, Version, VersionParser}
+import org.apache.james.jmap._
 import org.apache.james.mailbox.extension.PreDeletionHook
 import org.apache.james.mailbox.inmemory.{InMemoryMailboxManager, MemoryMailboxManagerProvider}
 import org.apache.james.metrics.tests.RecordingMetricFactory
@@ -78,7 +78,7 @@ object JMAPApiRoutesTest {
   private val userProvisionner: UserProvisioning = new UserProvisioning(usersRepository, new RecordingMetricFactory)
   private val JMAP_METHODS: Set[Method] = Set(new CoreEchoMethod)
 
-  private val JMAP_API_ROUTE: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, userProvisionner, new JMAPApi(JMAP_METHODS, DefaultCapabilities.supported(JmapRfc8621Configuration("http://127.0.0.1", "ws://127.0.0.1")).capabilities.toSet))
+  private val JMAP_API_ROUTE: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, userProvisionner, new JMAPApi(JMAP_METHODS, DefaultCapabilities.supported(JmapRfc8621Configuration("http://127.0.0.1", None, "ws://127.0.0.1")).capabilities))
   private val ROUTES_HANDLER: ImmutableSet[JMAPRoutesHandler] = ImmutableSet.of(new JMAPRoutesHandler(Version.RFC8621, JMAP_API_ROUTE))
 
   private val userBase64String: String = Base64.getEncoder.encodeToString("user1:password".getBytes(StandardCharsets.UTF_8))
@@ -442,7 +442,7 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
     when(mockCoreEchoMethod.requiredCapabilities).thenReturn(Set(JMAP_CORE))
 
     val methods: Set[Method] = Set(mockCoreEchoMethod)
-    val apiRoute: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, userProvisionner, new JMAPApi(methods, DefaultCapabilities.supported(JmapRfc8621Configuration("http://127.0.0.1", "ws://127.0.0.1")).capabilities.toSet))
+    val apiRoute: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, userProvisionner, new JMAPApi(methods, DefaultCapabilities.supported(JmapRfc8621Configuration("http://127.0.0.1", None, "ws://127.0.0.1")).capabilities))
     val routesHandler: ImmutableSet[JMAPRoutesHandler] = ImmutableSet.of(new JMAPRoutesHandler(Version.RFC8621, apiRoute))
 
     val versionParser: VersionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT)

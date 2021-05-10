@@ -23,6 +23,8 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicReference
 import java.util.stream
 
+import eu.timepit.refined.numeric.Positive
+import eu.timepit.refined.refineV
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
@@ -44,7 +46,7 @@ import org.apache.james.mailbox.MailboxSession
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST
-import reactor.core.publisher.{Mono, Sinks}
+import reactor.core.publisher.{Flux, Mono, Sinks}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
@@ -75,7 +77,8 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
                                  mailboxChangeRepository: MailboxChangeRepository,
                                  emailChangeRepository: EmailChangeRepository,
                                  pushSerializer: PushSerializer,
-                                 typeStateFactory: TypeStateFactory) extends JMAPRoutes {
+                                 typeStateFactory: TypeStateFactory,
+                                 configuration: JmapRfc8621Configuration) extends JMAPRoutes {
 
   override def routes(): stream.Stream[JMAPRoute] = stream.Stream.of(
     JMAPRoute.builder
@@ -112,10 +115,20 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
       .flatMap(message => handleClientMessages(context)(message))
       .doOnTerminate(context.clean)
 
-    out.sendString(
+    val applicativeMessages: SFlux[OutboundMessage] =
       SFlux.merge(Seq(responseFlux, sink.asFlux()))
-        .map(pushSerializer.serialize)
-        .map(Json.stringify))
+
+    val pings: SFlux[OutboundMessage] = configuration.pingInterval
+      .map(any => SFlux.interval(any)
+        .flatMap(long => {
+          refineV[Positive](long.toInt)
+            .fold(_ => SMono.empty, value => SMono.just(PingMessage(value)))
+        }))
+      .getOrElse(SFlux.empty)
+
+    out.sendString(Flux.merge(pings, applicativeMessages)
+      .map(pushSerializer.serialize)
+      .map(Json.stringify))
       .`then`()
   }
 

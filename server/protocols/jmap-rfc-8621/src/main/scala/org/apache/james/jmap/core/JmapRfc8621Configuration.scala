@@ -19,25 +19,30 @@
 
 package org.apache.james.jmap.core
 
-import java.net.{URI, URL}
-
 import org.apache.commons.configuration2.Configuration
 import org.apache.james.jmap.core.JmapRfc8621Configuration.UPLOAD_LIMIT_30_MB
-import org.apache.james.util.Size
+import org.apache.james.util.{DurationParser, Size}
+
+import java.net.{URI, URL}
+import java.time.temporal.ChronoUnit
+import scala.concurrent.duration.Duration
+import scala.jdk.DurationConverters._
 
 object JmapRfc8621Configuration {
   val LOCALHOST_URL_PREFIX: String = "http://localhost"
   val LOCALHOST_WEBSOCKET_URL_PREFIX: String = "ws://localhost"
   val UPLOAD_LIMIT_30_MB: MaxSizeUpload = MaxSizeUpload.of(Size.of(30L, Size.Unit.M)).get
-  val LOCALHOST_CONFIGURATION: JmapRfc8621Configuration = JmapRfc8621Configuration(LOCALHOST_URL_PREFIX, LOCALHOST_WEBSOCKET_URL_PREFIX, UPLOAD_LIMIT_30_MB)
+  val LOCALHOST_CONFIGURATION: JmapRfc8621Configuration = JmapRfc8621Configuration(LOCALHOST_URL_PREFIX, None, LOCALHOST_WEBSOCKET_URL_PREFIX, UPLOAD_LIMIT_30_MB)
   val URL_PREFIX_PROPERTIES: String = "url.prefix"
   val WEBSOCKET_URL_PREFIX_PROPERTIES: String = "websocket.url.prefix"
+  val WEBSOCKET_INTERVAL_PROPERTIES: String = "websocket.ping.interval"
   val UPLOAD_LIMIT_PROPERTIES: String = "upload.max.size"
 
   def from(configuration: Configuration): JmapRfc8621Configuration = {
     JmapRfc8621Configuration(
       urlPrefixString = Option(configuration.getString(URL_PREFIX_PROPERTIES)).getOrElse(LOCALHOST_URL_PREFIX),
       websocketPrefixString = Option(configuration.getString(WEBSOCKET_URL_PREFIX_PROPERTIES)).getOrElse(LOCALHOST_WEBSOCKET_URL_PREFIX),
+      pingInterval = Option(configuration.getString(WEBSOCKET_INTERVAL_PROPERTIES)).map(DurationParser.parse(_, ChronoUnit.SECONDS).toScala),
       maxUploadSize = Option(configuration.getString(UPLOAD_LIMIT_PROPERTIES, null))
         .map(Size.parse)
         .map(MaxSizeUpload.of(_).get)
@@ -45,11 +50,12 @@ object JmapRfc8621Configuration {
   }
 }
 
-case class JmapRfc8621Configuration(urlPrefixString: String, websocketPrefixString: String, maxUploadSize: MaxSizeUpload = UPLOAD_LIMIT_30_MB) {
+case class JmapRfc8621Configuration(urlPrefixString: String, pingInterval: Option[Duration], websocketPrefixString: String, maxUploadSize: MaxSizeUpload = UPLOAD_LIMIT_30_MB) {
   val urlPrefix: URL = new URL(urlPrefixString)
   val apiUrl: URL = new URL(s"$urlPrefixString/jmap")
   val downloadUrl: URL = new URL(urlPrefixString + "/download/{accountId}/{blobId}/?type={type}&name={name}")
   val uploadUrl: URL = new URL(s"$urlPrefixString/upload/{accountId}")
   val eventSourceUrl: URL = new URL(s"$urlPrefixString/eventSource?types={types}&closeAfter={closeafter}&ping={ping}")
   val webSocketUrl: URI = new URI(s"$websocketPrefixString/jmap/ws")
+  val websocketPingInterval: Option[Duration] = pingInterval
 }

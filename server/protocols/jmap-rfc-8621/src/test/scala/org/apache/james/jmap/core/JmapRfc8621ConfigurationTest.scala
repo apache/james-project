@@ -22,16 +22,19 @@ package org.apache.james.jmap.core
 import java.net.URL
 
 import org.apache.commons.configuration2.{Configuration, PropertiesConfiguration}
-import org.apache.james.jmap.core.JmapRfc8621Configuration.URL_PREFIX_PROPERTIES
+import org.apache.james.jmap.core.JmapRfc8621Configuration.{URL_PREFIX_PROPERTIES, WEBSOCKET_INTERVAL_PROPERTIES}
 import org.apache.james.jmap.core.JmapRfc8621ConfigurationTest.{emptyConfiguration, providedConfiguration}
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+
+import scala.concurrent.duration.Duration
 
 object JmapRfc8621ConfigurationTest {
   val emptyConfiguration: Configuration = new PropertiesConfiguration()
   def providedConfiguration(): Configuration = {
     val configuration: Configuration = new PropertiesConfiguration()
     configuration.addProperty(URL_PREFIX_PROPERTIES, "http://random-domain.com")
+    configuration.addProperty(WEBSOCKET_INTERVAL_PROPERTIES, "20s")
     configuration
   }
 }
@@ -45,6 +48,7 @@ class JmapRfc8621ConfigurationTest extends AnyWordSpec with Matchers {
       jmapRfc8621Configuration.downloadUrl must be(new URL("http://random-domain.com/download/{accountId}/{blobId}/?type={type}&name={name}"))
       jmapRfc8621Configuration.uploadUrl must be(new URL("http://random-domain.com/upload/{accountId}"))
       jmapRfc8621Configuration.eventSourceUrl must be(new URL("http://random-domain.com/eventSource?types={types}&closeAfter={closeafter}&ping={ping}"))
+      jmapRfc8621Configuration.websocketPingInterval must be(Some(Duration.create("20s")))
     }
 
     "load default config for urlPrefix when no configuration provided" in {
@@ -54,6 +58,7 @@ class JmapRfc8621ConfigurationTest extends AnyWordSpec with Matchers {
       jmapRfc8621Configuration.downloadUrl must be(new URL("http://localhost/download/{accountId}/{blobId}/?type={type}&name={name}"))
       jmapRfc8621Configuration.uploadUrl must be(new URL("http://localhost/upload/{accountId}"))
       jmapRfc8621Configuration.eventSourceUrl must be(new URL("http://localhost/eventSource?types={types}&closeAfter={closeafter}&ping={ping}"))
+      jmapRfc8621Configuration.websocketPingInterval must be(None)
     }
   }
 }
