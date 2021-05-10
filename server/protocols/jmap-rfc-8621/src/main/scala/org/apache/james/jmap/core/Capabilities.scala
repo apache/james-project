@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap.core
 
-import java.net.URL
+import java.net.URI
 
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
@@ -35,7 +35,7 @@ object DefaultCapabilities {
       MaxObjectsInSet(500L),
       collationAlgorithms = List("i;unicode-casemap")))
 
-  def webSocketCapability(url: URL) = WebSocketCapability(
+  def webSocketCapability(url: URI) = WebSocketCapability(
     properties = WebSocketCapabilityProperties(SupportsPush(true), url))
 
   val MAIL_CAPABILITY = MailCapability(

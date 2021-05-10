@@ -40,7 +40,7 @@ import org.apache.james.jmap.draft.JmapGuiceProbe
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.method.{InvocationWithContext, Method}
 import org.apache.james.jmap.rfc8621.contract.CustomMethodContract.CUSTOM
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.utils.{DataProbeImpl, GuiceProbe}
 import org.junit.jupiter.api.{BeforeEach, Test}
@@ -92,7 +92,7 @@ object CustomMethodContract {
       |    },
       |    "urn:ietf:params:jmap:websocket": {
       |      "supportsPush": true,
-      |      "url": "http://domain.com/jmap/ws"
+      |      "url": "ws://domain.com/jmap/ws"
       |    },
       |    "urn:apache:james:params:jmap:mail:quota": {},
       |    "$CUSTOM": {"custom": "property"},
@@ -112,7 +112,7 @@ object CustomMethodContract {
       |        },
       |        "urn:ietf:params:jmap:websocket": {
       |            "supportsPush": true,
-      |            "url": "http://domain.com/jmap/ws"
+      |            "url": "ws://domain.com/jmap/ws"
       |        },
       |        "urn:ietf:params:jmap:core" : {
       |          "maxSizeUpload" : 20971520,

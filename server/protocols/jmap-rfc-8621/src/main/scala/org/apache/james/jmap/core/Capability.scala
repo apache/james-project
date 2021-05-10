@@ -19,7 +19,8 @@
 
 package org.apache.james.jmap.core
 
-import java.net.URL
+import java.net.URI
+
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
@@ -95,7 +96,7 @@ final case class CoreCapabilityProperties(maxSizeUpload: MaxSizeUpload,
 }
 
 final case class WebSocketCapabilityProperties(supportsPush: SupportsPush,
-                                               url: URL) extends CapabilityProperties {
+                                               url: URI) extends CapabilityProperties {
   override def jsonify(): JsObject = ResponseSerializer.webSocketPropertiesWrites.writes(this)
 }
 

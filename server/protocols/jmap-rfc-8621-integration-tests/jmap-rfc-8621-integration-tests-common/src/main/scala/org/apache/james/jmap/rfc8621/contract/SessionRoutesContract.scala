@@ -65,7 +65,7 @@ object SessionRoutesContract {
                          |    },
                          |    "urn:ietf:params:jmap:websocket": {
                          |      "supportsPush": true,
-                         |      "url": "http://domain.com/jmap/ws"
+                         |      "url": "ws://domain.com/jmap/ws"
                          |    },
                          |    "urn:apache:james:params:jmap:mail:quota": {},
                          |    "urn:apache:james:params:jmap:mail:shares": {},
@@ -84,7 +84,7 @@ object SessionRoutesContract {
                          |        },
                          |        "urn:ietf:params:jmap:websocket": {
                          |            "supportsPush": true,
-                         |            "url": "http://domain.com/jmap/ws"
+                         |            "url": "ws://domain.com/jmap/ws"
                          |        },
                          |        "urn:ietf:params:jmap:core" : {
                          |          "maxSizeUpload" : 20971520,
