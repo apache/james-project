@@ -146,7 +146,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |    },
                          |    "urn:ietf:params:jmap:websocket": {
                          |      "supportsPush": true,
-                         |      "url": "http://localhost/jmap/ws"
+                         |      "url": "ws://localhost/jmap/ws"
                          |    },
                          |    "urn:apache:james:params:jmap:mail:quota": {},
                          |    "urn:apache:james:params:jmap:mail:shares": {},
@@ -164,7 +164,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |        },
                          |        "urn:ietf:params:jmap:websocket": {
                          |            "supportsPush": true,
-                         |            "url": "http://localhost/jmap/ws"
+                         |            "url": "ws://localhost/jmap/ws"
                          |        },
                          |        "urn:ietf:params:jmap:core" : {
                          |          "maxSizeUpload" : 31457280,
