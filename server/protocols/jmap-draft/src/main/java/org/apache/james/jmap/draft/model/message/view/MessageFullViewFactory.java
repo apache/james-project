@@ -102,8 +102,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
     private Mono<MessageFullView> fromMetaDataWithContent(MetaDataWithContent message, Message mimeMessage) throws IOException {
         MessageContent messageContent = messageContentExtractor.extract(mimeMessage);
         Optional<String> htmlBody = messageContent.getHtmlBody();
-        Optional<String> mainTextContent = messageContent.extractMainTextContent(htmlTextExtractor);
-        Optional<String> textBody = computeTextBodyIfNeeded(messageContent, mainTextContent);
+        Optional<String> textBody = computeTextBodyIfNeeded(messageContent);
 
         return retrieveProjection(messageContent, message.getMessageId(),
                 () -> MessageFullView.hasAttachment(getAttachments(message.getAttachments())))
@@ -196,10 +195,9 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
             .build();
     }
 
-    private Optional<String> computeTextBodyIfNeeded(MessageContent messageContent, Optional<String> mainTextContent) {
+    private Optional<String> computeTextBodyIfNeeded(MessageContent messageContent) {
         return messageContent.getTextBody()
-            .map(Optional::of)
-            .orElse(mainTextContent);
+            .or(() -> messageContent.extractMainTextContent(htmlTextExtractor));
     }
 
     private Optional<String> mainTextContent(MessageContent messageContent) {
