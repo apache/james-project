@@ -20,6 +20,7 @@ package org.apache.james.smtpserver;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -42,6 +43,7 @@ import java.util.List;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.net.ProtocolCommandEvent;
 import org.apache.commons.net.ProtocolCommandListener;
 import org.apache.commons.net.smtp.SMTPClient;
@@ -371,7 +373,9 @@ public class SMTPServerTest {
 
     @AfterEach
     public void tearDown() {
-        smtpServer.destroy();
+        if (smtpServer.isStarted()) {
+            smtpServer.destroy();
+        }
         hashedWheelTimer.stop();
     }
 
@@ -2058,5 +2062,13 @@ public class SMTPServerTest {
         in.close();
         out.close();
         client.close();
+    }
+
+    @Test
+    public void testRejectVerifyIdentityWhenAuthRequiredIsFalse() {
+        smtpConfiguration.setVerifyIdentity();
+
+        assertThatThrownBy(() -> init(smtpConfiguration))
+            .isInstanceOf(ConfigurationException.class);
     }
 }
