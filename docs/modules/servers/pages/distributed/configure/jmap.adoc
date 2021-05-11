@@ -52,6 +52,11 @@ This enables a higher resilience, but the projection needs to be correctly popul
 Defaults to draft for legacy reasons (avoid breaking changes) but setting the value to
 rfc-8621 allow compatibility with other third party apps.
 
+| websocket.ping.interval
+| Optional string. Configuration for ping mechanism in JMAP routes.
+| Determine how often server will send a ping message to client through websocket connection.
+| Supported units are: h (hour), m (minute), s (second), millisecond (ms). Default unit is second (s).
+
 |===
 
 == Wire tapping
