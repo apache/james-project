@@ -108,6 +108,10 @@ public class SMTPTestConfiguration extends BaseHierarchicalConfiguration {
         startTLS = true;
     }
 
+    public void setVerifyIdentity() {
+        verifyIdentity = true;
+    }
+
     public void init() {
 
         addProperty("[@enabled]", true);

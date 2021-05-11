@@ -183,8 +183,12 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
             addressBracketsEnforcement = configuration.getBoolean("addressBracketsEnforcement", true);
 
-            verifyIdentity = configuration.getBoolean("verifyIdentity", true);
+            verifyIdentity = configuration.getBoolean("verifyIdentity", false);
 
+            if (authRequired == AUTH_DISABLED && verifyIdentity) {
+                throw new ConfigurationException(
+                    "SMTP configuration: 'verifyIdentity' can't be set to true if 'authRequired' is set to false.");
+            }
         }
     }
 
