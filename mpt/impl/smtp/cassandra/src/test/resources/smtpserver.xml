@@ -35,7 +35,7 @@
         <connectionLimit>0</connectionLimit>
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <authRequired>false</authRequired>
-        <verifyIdentity>true</verifyIdentity>
+        <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>
         <addressBracketsEnforcement>true</addressBracketsEnforcement>
         <smtpGreeting>mydomain.tld smtp</smtpGreeting>

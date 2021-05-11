@@ -147,9 +147,9 @@ public class SmtpConfigurationTest {
     }
 
     @Test
-    public void verifyIdentityShouldBeEnforcedByDefault() throws IOException {
+    public void verifyIdentityShouldBeDisabledByDefault() throws IOException {
         assertThat(SmtpConfiguration.DEFAULT.serializeAsXml(),
             hasXPath("/smtpservers/smtpserver/verifyIdentity/text()",
-                is("true")));
+                is("false")));
     }
 }

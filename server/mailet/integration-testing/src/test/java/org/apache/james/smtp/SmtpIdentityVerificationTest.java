@@ -104,17 +104,6 @@ class SmtpIdentityVerificationTest {
     }
 
     @Test
-    void verifyIdentityShouldAcceptNullSenderWhenNotAuthenticated(@TempDir File temporaryFolder) throws Exception {
-        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
-            .verifyIdentity());
-
-        assertThatCode(() ->
-            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-                .sendMessageNoSender(USER))
-            .doesNotThrowAnyException();
-    }
-
-    @Test
     void verifyIdentityShouldAcceptNullSenderWhenAuthenticationRequired(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()

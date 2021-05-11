@@ -114,7 +114,7 @@ public class SmtpConfiguration implements SerializableAsXml {
             return new SmtpConfiguration(authorizedAddresses,
                 authRequired.orElse(!AUTH_REQUIRED),
                 bracketEnforcement.orElse(true),
-                verifyIndentity.orElse(true),
+                verifyIndentity.orElse(false),
                 maxMessageSizeInKb.orElse(DEFAULT_DISABLED),
                 addittionalHooks.build());
         }
