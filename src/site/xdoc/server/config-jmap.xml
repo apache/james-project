@@ -61,6 +61,10 @@
                     <dd>Optional. Configuration urlPrefix for JMAP routes.</dd>
                     <dd>Default value: http://localhost.</dd>
 
+                    <dt><strong>websocket.url.prefix</strong></dt>
+                    <dd>Optional. URL for JMAP WebSocket route</dd>
+                    <dd>Default value: ws://localhost</dd>
+
                     <dt><strong>upload.max.size</strong></dt>
                     <dd>Optional. Configuration max size Upload in new JMAP-RFC-8621.</dd>
                     <dd>Default value: 30M. Supported units are B (bytes) K (KB) M (MB) G (GB).</dd>
