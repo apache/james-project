@@ -178,10 +178,6 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
             heloEhloEnforcement = configuration.getBoolean("heloEhloEnforcement", true);
 
-            if (authRequiredString.equals("true")) {
-                authRequired = AUTH_REQUIRED;
-            }
-
             // get the smtpGreeting
             smtpGreeting = configuration.getString("smtpGreeting", null);
 
