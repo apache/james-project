@@ -37,7 +37,7 @@
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <authRequired>false</authRequired>
         <authorizedAddresses>127.0.0.0/8</authorizedAddresses>
-        <verifyIdentity>true</verifyIdentity>
+        <verifyIdentity>false</verifyIdentity>
         <maxmessagesize>0</maxmessagesize>
         <addressBracketsEnforcement>true</addressBracketsEnforcement>
         <smtpGreeting>Apache JAMES awesome SMTP Server</smtpGreeting>
