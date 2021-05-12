@@ -52,8 +52,8 @@ public class MailetContainerHandler extends DataLineJamesMessageHookHandler {
                 .smtpReturnCode(SMTPRetCode.MAIL_OK)
                 .smtpDescription(DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received")
                 .build());
-        } catch (MessagingException e) {
-            return new SMTPResponse(SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.UNDEFINED_STATUS) + "Temporary error deliver message");
+        } catch (Exception e) {
+            return new SMTPResponse(SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.UNDEFINED_STATUS) + " Temporary error deliver message");
         }
     }
 }

@@ -60,6 +60,7 @@ import org.awaitility.Awaitility;
 import org.jboss.netty.util.HashedWheelTimer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 class MailetContainerHandlerTest {
@@ -76,81 +77,186 @@ class MailetContainerHandlerTest {
         }
     }
 
-    private RecordingMailProcessor recordingMailProcessor;
-    private LMTPServerFactory lmtpServerFactory;
-
-    @BeforeEach
-    void setUp()  throws Exception {
-        InMemoryDNSService dnsService = new InMemoryDNSService()
-            .registerMxRecord(Domain.LOCALHOST.asString(), "127.0.0.1")
-            .registerMxRecord("examplebis.local", "127.0.0.1")
-            .registerMxRecord("127.0.0.1", "127.0.0.1");
-        MemoryDomainList domainList = new MemoryDomainList(dnsService);
-        domainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false)
-            .build());
-        recordingMailProcessor = new RecordingMailProcessor();
-
-        domainList.addDomain(Domain.of("examplebis.local"));
-        MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
-
-        usersRepository.addUser(Username.of("bob@examplebis.local"), "pwd");
-
-        FileSystem fileSystem = new FileSystemImpl(Configuration.builder()
-            .workingDirectory("../")
-            .configurationFromClasspath()
-            .build().directories());
-        MemoryRecipientRewriteTable rewriteTable = new MemoryRecipientRewriteTable();
-        rewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
-        AliasReverseResolver aliasReverseResolver = new AliasReverseResolverImpl(rewriteTable);
-        CanSendFrom canSendFrom = new CanSendFromImpl(rewriteTable, aliasReverseResolver);
-        MockProtocolHandlerLoader loader = MockProtocolHandlerLoader.builder()
-            .put(binder -> binder.bind(DomainList.class).toInstance(domainList))
-            .put(binder -> binder.bind(RecipientRewriteTable.class).toInstance(rewriteTable))
-            .put(binder -> binder.bind(CanSendFrom.class).toInstance(canSendFrom))
-            .put(binder -> binder.bind(MailProcessor.class).toInstance(recordingMailProcessor))
-            .put(binder -> binder.bind(FileSystem.class).toInstance(fileSystem))
-            .put(binder -> binder.bind(DNSService.class).toInstance(dnsService))
-            .put(binder -> binder.bind(UsersRepository.class).toInstance(usersRepository))
-            .put(binder -> binder.bind(MetricFactory.class).to(RecordingMetricFactory.class))
-            .build();
-        lmtpServerFactory = new LMTPServerFactory(loader, fileSystem, new RecordingMetricFactory(), new HashedWheelTimer());
-
-        lmtpServerFactory.configure(ConfigLoader.getConfig(ClassLoader.getSystemResourceAsStream("lmtpmailet.xml")));
-        lmtpServerFactory.init();
+    static class ThrowingMailProcessor implements MailProcessor {
+        @Override
+        public void service(Mail mail) {
+            throw new RuntimeException("Oups");
+        }
     }
 
-    @AfterEach
-    void tearDown() {
-        lmtpServerFactory.destroy();
+    @Nested
+    class Normal {
+
+        private RecordingMailProcessor recordingMailProcessor;
+        private LMTPServerFactory lmtpServerFactory;
+
+        @BeforeEach
+        void setUp()  throws Exception {
+            InMemoryDNSService dnsService = new InMemoryDNSService()
+                .registerMxRecord(Domain.LOCALHOST.asString(), "127.0.0.1")
+                .registerMxRecord("examplebis.local", "127.0.0.1")
+                .registerMxRecord("127.0.0.1", "127.0.0.1");
+            MemoryDomainList domainList = new MemoryDomainList(dnsService);
+            domainList.configure(DomainListConfiguration.builder()
+                .autoDetect(false)
+                .autoDetectIp(false)
+                .build());
+            recordingMailProcessor = new RecordingMailProcessor();
+
+            domainList.addDomain(Domain.of("examplebis.local"));
+            MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
+
+            usersRepository.addUser(Username.of("bob@examplebis.local"), "pwd");
+
+            FileSystem fileSystem = new FileSystemImpl(Configuration.builder()
+                .workingDirectory("../")
+                .configurationFromClasspath()
+                .build().directories());
+            MemoryRecipientRewriteTable rewriteTable = new MemoryRecipientRewriteTable();
+            rewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
+            AliasReverseResolver aliasReverseResolver = new AliasReverseResolverImpl(rewriteTable);
+            CanSendFrom canSendFrom = new CanSendFromImpl(rewriteTable, aliasReverseResolver);
+            MockProtocolHandlerLoader loader = MockProtocolHandlerLoader.builder()
+                .put(binder -> binder.bind(DomainList.class).toInstance(domainList))
+                .put(binder -> binder.bind(RecipientRewriteTable.class).toInstance(rewriteTable))
+                .put(binder -> binder.bind(CanSendFrom.class).toInstance(canSendFrom))
+                .put(binder -> binder.bind(MailProcessor.class).toInstance(recordingMailProcessor))
+                .put(binder -> binder.bind(FileSystem.class).toInstance(fileSystem))
+                .put(binder -> binder.bind(DNSService.class).toInstance(dnsService))
+                .put(binder -> binder.bind(UsersRepository.class).toInstance(usersRepository))
+                .put(binder -> binder.bind(MetricFactory.class).to(RecordingMetricFactory.class))
+                .build();
+            lmtpServerFactory = new LMTPServerFactory(loader, fileSystem, new RecordingMetricFactory(), new HashedWheelTimer());
+
+            lmtpServerFactory.configure(ConfigLoader.getConfig(ClassLoader.getSystemResourceAsStream("lmtpmailet.xml")));
+            lmtpServerFactory.init();
+        }
+
+        @AfterEach
+        void tearDown() {
+            lmtpServerFactory.destroy();
+        }
+
+        @Test
+        void emailShouldTriggerTheMailProcessing() throws Exception {
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort()));
+
+            server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("RCPT TO: <bob@examplebis.local>\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("DATA\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.read(ByteBuffer.allocate(1024)); // needed to synchronize
+            server.write(ByteBuffer.wrap(("header:value\r\n\r\nbody").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap((".").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("QUIT\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            Awaitility.await()
+                .untilAsserted(() -> assertThat(recordingMailProcessor.getMails()).hasSize(1));
+        }
+
+        public int getLmtpPort() {
+            return lmtpServerFactory.getServers().stream()
+                .findFirst()
+                .flatMap(server -> server.getListenAddresses().stream().findFirst())
+                .map(InetSocketAddress::getPort)
+                .orElseThrow(() -> new IllegalStateException("LMTP server not defined"));
+        }
     }
 
-    @Test
-    void emailShouldTriggerTheMailProcessing() throws Exception {
-        SocketChannel server = SocketChannel.open();
-        server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort()));
+    @Nested
+    class Throwing {
+        private LMTPServerFactory lmtpServerFactory;
 
-        server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
-        server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
-        server.write(ByteBuffer.wrap(("RCPT TO: <bob@examplebis.local>\r\n").getBytes(StandardCharsets.UTF_8)));
-        server.write(ByteBuffer.wrap(("DATA\r\n").getBytes(StandardCharsets.UTF_8)));
-        server.read(ByteBuffer.allocate(1024)); // needed to synchronize
-        server.write(ByteBuffer.wrap(("header:value\r\n\r\nbody").getBytes(StandardCharsets.UTF_8)));
-        server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
-        server.write(ByteBuffer.wrap((".").getBytes(StandardCharsets.UTF_8)));
-        server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
-        server.write(ByteBuffer.wrap(("QUIT\r\n").getBytes(StandardCharsets.UTF_8)));
+        @BeforeEach
+        void setUp()  throws Exception {
+            InMemoryDNSService dnsService = new InMemoryDNSService()
+                .registerMxRecord(Domain.LOCALHOST.asString(), "127.0.0.1")
+                .registerMxRecord("examplebis.local", "127.0.0.1")
+                .registerMxRecord("127.0.0.1", "127.0.0.1");
+            MemoryDomainList domainList = new MemoryDomainList(dnsService);
+            domainList.configure(DomainListConfiguration.builder()
+                .autoDetect(false)
+                .autoDetectIp(false)
+                .build());
 
-        Awaitility.await()
-            .untilAsserted(() -> assertThat(recordingMailProcessor.getMails()).hasSize(1));
+            domainList.addDomain(Domain.of("examplebis.local"));
+            MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
+
+            usersRepository.addUser(Username.of("bob@examplebis.local"), "pwd");
+
+            FileSystem fileSystem = new FileSystemImpl(Configuration.builder()
+                .workingDirectory("../")
+                .configurationFromClasspath()
+                .build().directories());
+            MemoryRecipientRewriteTable rewriteTable = new MemoryRecipientRewriteTable();
+            rewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
+            AliasReverseResolver aliasReverseResolver = new AliasReverseResolverImpl(rewriteTable);
+            CanSendFrom canSendFrom = new CanSendFromImpl(rewriteTable, aliasReverseResolver);
+            MockProtocolHandlerLoader loader = MockProtocolHandlerLoader.builder()
+                .put(binder -> binder.bind(DomainList.class).toInstance(domainList))
+                .put(binder -> binder.bind(RecipientRewriteTable.class).toInstance(rewriteTable))
+                .put(binder -> binder.bind(CanSendFrom.class).toInstance(canSendFrom))
+                .put(binder -> binder.bind(MailProcessor.class).toInstance(new ThrowingMailProcessor()))
+                .put(binder -> binder.bind(FileSystem.class).toInstance(fileSystem))
+                .put(binder -> binder.bind(DNSService.class).toInstance(dnsService))
+                .put(binder -> binder.bind(UsersRepository.class).toInstance(usersRepository))
+                .put(binder -> binder.bind(MetricFactory.class).to(RecordingMetricFactory.class))
+                .build();
+            lmtpServerFactory = new LMTPServerFactory(loader, fileSystem, new RecordingMetricFactory(), new HashedWheelTimer());
+
+            lmtpServerFactory.configure(ConfigLoader.getConfig(ClassLoader.getSystemResourceAsStream("lmtpmailet.xml")));
+            lmtpServerFactory.init();
+        }
+
+        @AfterEach
+        void tearDown() {
+            lmtpServerFactory.destroy();
+        }
+
+        @Test
+        void emailShouldTriggerTheMailProcessing() throws Exception {
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort()));
+
+            server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("RCPT TO: <bob@examplebis.local>\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("DATA\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.read(ByteBuffer.allocate(1024)); // Read Welcome message
+            server.write(ByteBuffer.wrap(("header:value\r\n\r\nbody").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap((".").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("QUIT\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            server.read(ByteBuffer.allocate(1024)); // Read Capabilities
+            server.read(ByteBuffer.allocate(1024)); // Read LHLO reply string
+            server.read(ByteBuffer.allocate(1024)); // Read MAIL reply string
+            server.read(ByteBuffer.allocate(1024)); // Read RCPT reply string
+
+            ByteBuffer buffer = ByteBuffer.allocate(1024);
+            server.read(buffer); // Read DATA reply string
+            assertThat(new String(readBytes(buffer), StandardCharsets.UTF_8))
+                .startsWith("451 4.0.0 Temporary error deliver message");
+        }
+
+        public int getLmtpPort() {
+            return lmtpServerFactory.getServers().stream()
+                .findFirst()
+                .flatMap(server -> server.getListenAddresses().stream().findFirst())
+                .map(InetSocketAddress::getPort)
+                .orElseThrow(() -> new IllegalStateException("LMTP server not defined"));
+        }
     }
 
-    public int getLmtpPort() {
-        return lmtpServerFactory.getServers().stream()
-            .findFirst()
-            .flatMap(server -> server.getListenAddresses().stream().findFirst())
-            .map(InetSocketAddress::getPort)
-            .orElseThrow(() -> new IllegalStateException("LMTP server not defined"));
+    private byte[] readBytes(ByteBuffer line) {
+        line.rewind();
+        byte[] bline = new byte[line.remaining()];
+        line.get(bline);
+        return bline;
     }
+
 }
