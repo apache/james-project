@@ -72,6 +72,14 @@ import com.google.inject.name.Names;
 import reactor.core.publisher.Flux;
 
 class LmtpServerTest {
+    static int getLmtpPort(LMTPServerFactory lmtpServerFactory) {
+        return lmtpServerFactory.getServers().stream()
+            .findFirst()
+            .flatMap(server -> server.getListenAddresses().stream().findFirst())
+            .map(InetSocketAddress::getPort)
+            .orElseThrow(() -> new IllegalStateException("LMTP server not defined"));
+    }
+
     private InMemoryMailboxManager mailboxManager;
     private LMTPServerFactory lmtpServerFactory;
 
@@ -136,7 +144,7 @@ class LmtpServerTest {
     @Test
     void emailsShouldWellBeReceived() throws Exception {
         SocketChannel server = SocketChannel.open();
-        server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort()));
+        server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
 
         server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
         server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
@@ -161,13 +169,5 @@ class LmtpServerTest {
                         .isEqualTo(1))
                     .doesNotThrowAnyException();
             });
-    }
-
-    public int getLmtpPort() {
-        return lmtpServerFactory.getServers().stream()
-            .findFirst()
-            .flatMap(server -> server.getListenAddresses().stream().findFirst())
-            .map(InetSocketAddress::getPort)
-            .orElseThrow(() -> new IllegalStateException("LMTP server not defined"));
     }
 }

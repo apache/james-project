@@ -21,6 +21,7 @@ package org.apache.james.lmtpserver;
 
 import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
 import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
+import static org.apache.james.lmtpserver.LmtpServerTest.getLmtpPort;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.InetSocketAddress;
@@ -140,7 +141,7 @@ class MailetContainerHandlerTest {
         @Test
         void emailShouldTriggerTheMailProcessing() throws Exception {
             SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort()));
+            server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
 
             server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
             server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
@@ -155,14 +156,6 @@ class MailetContainerHandlerTest {
 
             Awaitility.await()
                 .untilAsserted(() -> assertThat(recordingMailProcessor.getMails()).hasSize(1));
-        }
-
-        public int getLmtpPort() {
-            return lmtpServerFactory.getServers().stream()
-                .findFirst()
-                .flatMap(server -> server.getListenAddresses().stream().findFirst())
-                .map(InetSocketAddress::getPort)
-                .orElseThrow(() -> new IllegalStateException("LMTP server not defined"));
         }
     }
 
@@ -219,7 +212,7 @@ class MailetContainerHandlerTest {
         @Test
         void emailShouldTriggerTheMailProcessing() throws Exception {
             SocketChannel server = SocketChannel.open();
-            server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort()));
+            server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
 
             server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
             server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
@@ -241,14 +234,6 @@ class MailetContainerHandlerTest {
             server.read(buffer); // Read DATA reply string
             assertThat(new String(readBytes(buffer), StandardCharsets.UTF_8))
                 .startsWith("451 4.0.0 Temporary error deliver message");
-        }
-
-        public int getLmtpPort() {
-            return lmtpServerFactory.getServers().stream()
-                .findFirst()
-                .flatMap(server -> server.getListenAddresses().stream().findFirst())
-                .map(InetSocketAddress::getPort)
-                .orElseThrow(() -> new IllegalStateException("LMTP server not defined"));
         }
     }
 
