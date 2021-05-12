@@ -20,7 +20,6 @@
 package org.apache.james.lmtpserver;
 
 import javax.inject.Inject;
-import javax.mail.MessagingException;
 
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.protocols.api.Response;
