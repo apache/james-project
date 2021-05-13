@@ -151,6 +151,7 @@ public class StoreRightManager implements RightManager {
         return mailbox.getACL();
     }
 
+    @Override
     public MailboxACL listRights(MailboxId mailboxId, MailboxSession session) throws MailboxException {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = blockOptional(mapper.findMailboxById(mailboxId))
