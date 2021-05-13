@@ -176,6 +176,8 @@ public interface ProtocolSession {
      * @return Response or null if no response should be written before closing the connection
      */
     Response newFatalErrorResponse();
+
+    Response newCommandNotFoundErrorResponse();
     
     /**
      * Returns the user name associated with this interaction.

@@ -123,6 +123,11 @@ public class ProtocolSessionImpl implements ProtocolSession {
         return null;
     }
 
+    @Override
+    public Response newCommandNotFoundErrorResponse() {
+        return null;
+    }
+
     /**
      * This implementation just clears the sessions state. Sub-classes should
      * overwrite this if needed

@@ -75,4 +75,9 @@ public class POP3SessionImpl extends ProtocolSessionImpl implements POP3Session 
     public Response newFatalErrorResponse() {
         return POP3Response.ERR;
     }
+
+    @Override
+    public Response newCommandNotFoundErrorResponse() {
+        return POP3Response.ERR;
+    }
 }

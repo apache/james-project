@@ -338,6 +338,28 @@ class LmtpServerTest {
                     .isEqualTo(1))
                 .doesNotThrowAnyException();
         }
+
+        @Test
+        void ehloShouldBeRejected() throws Exception {
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(("EHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            assertThat(new String(readBytes(server), StandardCharsets.UTF_8))
+                .contains("500 Unable to process request: the command is unknown");
+        }
+
+        @Test
+        void heloShouldBeRejected() throws Exception {
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(("HELO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            assertThat(new String(readBytes(server), StandardCharsets.UTF_8))
+                .contains("500 Unable to process request: the command is unknown");
+        }
     }
 
     private byte[] readBytes(SocketChannel channel) throws IOException {
