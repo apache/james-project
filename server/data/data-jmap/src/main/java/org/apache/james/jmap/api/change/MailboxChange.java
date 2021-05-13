@@ -130,14 +130,14 @@ public class MailboxChange implements JmapChange {
             this.stateFactory = stateFactory;
         }
 
-        public List<JmapChange> fromMailboxAdded(MailboxAdded mailboxAdded, ZonedDateTime now) {
-            return ImmutableList.of(MailboxChange.builder()
+        public JmapChange fromMailboxAdded(MailboxAdded mailboxAdded, ZonedDateTime now) {
+            return MailboxChange.builder()
                 .accountId(AccountId.fromUsername(mailboxAdded.getUsername()))
                 .state(stateFactory.generate())
                 .date(now)
                 .isCountChange(false)
                 .created(ImmutableList.of(mailboxAdded.getMailboxId()))
-                .build());
+                .build();
         }
 
         public List<JmapChange> fromMailboxRenamed(MailboxRenamed mailboxRenamed, ZonedDateTime now, List<AccountId> sharees) {
