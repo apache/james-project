@@ -263,7 +263,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     }
 
     private Flux<Pair<MailboxId, UpdatedFlags>> flagsUpdateWithRetry(Flags newState, MessageManager.FlagsUpdateMode updateMode, MailboxId mailboxId, MessageId messageId) {
-        return Mono.defer(() -> updateFlags(mailboxId, messageId, newState, updateMode))
+        return updateFlags(mailboxId, messageId, newState, updateMode)
             .retry(cassandraConfiguration.getFlagsUpdateMessageIdMaxRetry())
             .onErrorResume(MailboxDeleteDuringUpdateException.class, e -> {
                 LOGGER.info("Mailbox {} was deleted during flag update", mailboxId);
