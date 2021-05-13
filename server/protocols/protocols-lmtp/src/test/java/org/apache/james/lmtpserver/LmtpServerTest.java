@@ -364,8 +364,8 @@ class LmtpServerTest {
             server.write(ByteBuffer.wrap(("QUIT\r\n").getBytes(StandardCharsets.UTF_8)));
 
             assertThat(new String(dataResponse, StandardCharsets.UTF_8))
-                .contains("250 2.6.0 Message received\r\n" +
-                    "250 2.6.0 Message received");
+                .contains("250 2.6.0 Message received <bob@examplebis.local>\r\n" +
+                    "250 2.6.0 Message received <cedric@examplebis.local>");
         }
 
         @Test
