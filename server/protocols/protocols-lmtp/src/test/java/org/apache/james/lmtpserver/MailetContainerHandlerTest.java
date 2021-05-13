@@ -22,16 +22,22 @@ package org.apache.james.lmtpserver;
 import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
 import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
 import static org.apache.james.lmtpserver.LmtpServerTest.getLmtpPort;
+import static org.apache.mailet.DsnParameters.Notify.DELAY;
+import static org.apache.mailet.DsnParameters.Notify.FAILURE;
+import static org.apache.mailet.DsnParameters.Notify.SUCCESS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.apache.james.core.Domain;
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
@@ -56,13 +62,15 @@ import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
+import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
-import org.awaitility.Awaitility;
 import org.jboss.netty.util.HashedWheelTimer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import com.github.fge.lambdas.Throwing;
 
 class MailetContainerHandlerTest {
     static class RecordingMailProcessor implements MailProcessor {
@@ -86,7 +94,7 @@ class MailetContainerHandlerTest {
     }
 
     @Nested
-    class Normal {
+    class NormalTest {
 
         private RecordingMailProcessor recordingMailProcessor;
         private LMTPServerFactory lmtpServerFactory;
@@ -142,25 +150,127 @@ class MailetContainerHandlerTest {
         void emailShouldTriggerTheMailProcessing() throws Exception {
             SocketChannel server = SocketChannel.open();
             server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
+            readBytes(server);
 
             server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
             server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
             server.write(ByteBuffer.wrap(("RCPT TO: <bob@examplebis.local>\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
             server.write(ByteBuffer.wrap(("DATA\r\n").getBytes(StandardCharsets.UTF_8)));
-            server.read(ByteBuffer.allocate(1024)); // needed to synchronize
+            readBytes(server); // needed to synchronize
             server.write(ByteBuffer.wrap(("header:value\r\n\r\nbody").getBytes(StandardCharsets.UTF_8)));
             server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
             server.write(ByteBuffer.wrap((".").getBytes(StandardCharsets.UTF_8)));
             server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
             server.write(ByteBuffer.wrap(("QUIT\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
 
-            Awaitility.await()
-                .untilAsserted(() -> assertThat(recordingMailProcessor.getMails()).hasSize(1));
+            assertThat(recordingMailProcessor.getMails()).hasSize(1);
         }
     }
 
     @Nested
-    class Throwing {
+    class DSNTest {
+
+        private RecordingMailProcessor recordingMailProcessor;
+        private LMTPServerFactory lmtpServerFactory;
+
+        @BeforeEach
+        void setUp()  throws Exception {
+            InMemoryDNSService dnsService = new InMemoryDNSService()
+                .registerMxRecord(Domain.LOCALHOST.asString(), "127.0.0.1")
+                .registerMxRecord("examplebis.local", "127.0.0.1")
+                .registerMxRecord("127.0.0.1", "127.0.0.1");
+            MemoryDomainList domainList = new MemoryDomainList(dnsService);
+            domainList.configure(DomainListConfiguration.builder()
+                .autoDetect(false)
+                .autoDetectIp(false)
+                .build());
+            recordingMailProcessor = new RecordingMailProcessor();
+
+            domainList.addDomain(Domain.of("examplebis.local"));
+            MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
+
+            usersRepository.addUser(Username.of("bob@examplebis.local"), "pwd");
+
+            FileSystem fileSystem = new FileSystemImpl(Configuration.builder()
+                .workingDirectory("../")
+                .configurationFromClasspath()
+                .build().directories());
+            MemoryRecipientRewriteTable rewriteTable = new MemoryRecipientRewriteTable();
+            rewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
+            AliasReverseResolver aliasReverseResolver = new AliasReverseResolverImpl(rewriteTable);
+            CanSendFrom canSendFrom = new CanSendFromImpl(rewriteTable, aliasReverseResolver);
+            MockProtocolHandlerLoader loader = MockProtocolHandlerLoader.builder()
+                .put(binder -> binder.bind(DomainList.class).toInstance(domainList))
+                .put(binder -> binder.bind(RecipientRewriteTable.class).toInstance(rewriteTable))
+                .put(binder -> binder.bind(CanSendFrom.class).toInstance(canSendFrom))
+                .put(binder -> binder.bind(MailProcessor.class).toInstance(recordingMailProcessor))
+                .put(binder -> binder.bind(FileSystem.class).toInstance(fileSystem))
+                .put(binder -> binder.bind(DNSService.class).toInstance(dnsService))
+                .put(binder -> binder.bind(UsersRepository.class).toInstance(usersRepository))
+                .put(binder -> binder.bind(MetricFactory.class).to(RecordingMetricFactory.class))
+                .build();
+            lmtpServerFactory = new LMTPServerFactory(loader, fileSystem, new RecordingMetricFactory(), new HashedWheelTimer());
+
+            lmtpServerFactory.configure(ConfigLoader.getConfig(ClassLoader.getSystemResourceAsStream("lmtpdsn.xml")));
+            lmtpServerFactory.init();
+        }
+
+        @AfterEach
+        void tearDown() {
+            lmtpServerFactory.destroy();
+        }
+
+        @Test
+        void emailShouldTriggerTheMailProcessing() throws Exception {
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + "> RET=HDRS ENVID=QQ314159\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("RCPT TO: <bob@examplebis.local> NOTIFY=SUCCESS,FAILURE,DELAY ORCPT=rfc822;orcpt1@localhost\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("DATA\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("header:value\r\n\r\nbody").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap((".").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("QUIT\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+
+            assertThat(recordingMailProcessor.getMails())
+                .first()
+                .extracting(Mail::dsnParameters)
+                .satisfies(Throwing.consumer(maybeDSN -> assertThat(maybeDSN)
+                    .isEqualTo(DsnParameters.builder()
+                        .envId(DsnParameters.EnvId.of("QQ314159"))
+                        .ret(DsnParameters.Ret.HDRS)
+                        .addRcptParameter(new MailAddress("bob@examplebis.local"), DsnParameters.RecipientDsnParameters.of(
+                            EnumSet.of(SUCCESS, FAILURE, DELAY), new MailAddress("orcpt1@localhost")))
+                        .build())));
+        }
+
+        @Test
+        void lhloShouldAdvertizeDSN() throws Exception {
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(new String(readBytes(server), StandardCharsets.UTF_8)).contains("250 DSN\r\n");
+        }
+    }
+
+    @Nested
+    class ThrowingTest {
         private LMTPServerFactory lmtpServerFactory;
 
         @BeforeEach
@@ -213,31 +323,32 @@ class MailetContainerHandlerTest {
         void emailShouldTriggerTheMailProcessing() throws Exception {
             SocketChannel server = SocketChannel.open();
             server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
+            readBytes(server);
 
             server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
             server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
             server.write(ByteBuffer.wrap(("RCPT TO: <bob@examplebis.local>\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
             server.write(ByteBuffer.wrap(("DATA\r\n").getBytes(StandardCharsets.UTF_8)));
-            server.read(ByteBuffer.allocate(1024)); // Read Welcome message
+            readBytes(server);
             server.write(ByteBuffer.wrap(("header:value\r\n\r\nbody").getBytes(StandardCharsets.UTF_8)));
             server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
             server.write(ByteBuffer.wrap((".").getBytes(StandardCharsets.UTF_8)));
             server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+            byte[] dataResponse = readBytes(server);
             server.write(ByteBuffer.wrap(("QUIT\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
 
-            server.read(ByteBuffer.allocate(1024)); // Read Capabilities
-            server.read(ByteBuffer.allocate(1024)); // Read LHLO reply string
-            server.read(ByteBuffer.allocate(1024)); // Read MAIL reply string
-            server.read(ByteBuffer.allocate(1024)); // Read RCPT reply string
-
-            ByteBuffer buffer = ByteBuffer.allocate(1024);
-            server.read(buffer); // Read DATA reply string
-            assertThat(new String(readBytes(buffer), StandardCharsets.UTF_8))
+            assertThat(new String(dataResponse, StandardCharsets.UTF_8))
                 .startsWith("451 4.0.0 Temporary error deliver message");
         }
     }
 
-    private byte[] readBytes(ByteBuffer line) {
+    private byte[] readBytes(SocketChannel channel) throws IOException {
+        ByteBuffer line = ByteBuffer.allocate(1024);
+        channel.read(line);
         line.rewind();
         byte[] bline = new byte[line.remaining()];
         line.get(bline);
