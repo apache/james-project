@@ -21,7 +21,7 @@ package org.apache.james.jmap.change
 import org.apache.james.JsonSerializationVerifier
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
-import org.apache.james.jmap.change.StateChangeEventSerializerTest.{EVENT, EVENT_EMPTY_TYPE_STATE_MAP, EVENT_JSON, EVENT_JSON_EMPTY_TYPE_STATE_MAP, EVENT_JSON_NO_DELIVERY, EVENT_NO_DELIVERY}
+import org.apache.james.jmap.change.StateChangeEventSerializerTest.{EVENT, EVENT_EMPTY_TYPE_STATE_MAP, EVENT_ID, EVENT_JSON, EVENT_JSON_EMPTY_TYPE_STATE_MAP, EVENT_JSON_NO_DELIVERY, EVENT_NO_DELIVERY, USERNAME}
 import org.apache.james.jmap.core.UuidState
 import org.apache.james.json.JsonGenericSerializer
 import org.apache.james.json.JsonGenericSerializer.UnknownTypeException
@@ -110,6 +110,23 @@ class StateChangeEventSerializerTest {
                        |	"type": "org.apache.james.jmap.change.Unknown"
                        |}""".stripMargin))
       .isInstanceOf(classOf[UnknownTypeException])
+
+  @Test
+  def shouldDeserializePreviousFormat(): Unit =
+    assertThat(JsonGenericSerializer
+        .forModules(stateChangeEventDTOFactory.dtoModule)
+        .withoutNestedType()
+        .deserialize("""{
+                       |	"eventId": "6e0dd59d-660e-4d9b-b22f-0354479f47b4",
+                       |	"username": "bob",
+                       |  "type": "org.apache.james.jmap.change.StateChangeEvent",
+                       |  "emailState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+                       |  "mailboxState": "2c9f1b12-aaaa-bbbb-cccc-0106fb53a943"
+                       |}""".stripMargin))
+      .isEqualTo(StateChangeEvent(eventId = EVENT_ID,
+        username = USERNAME,
+        map = Map(MailboxTypeName ->UuidState.fromStringUnchecked("2c9f1b12-aaaa-bbbb-cccc-0106fb53a943"),
+          EmailTypeName -> UuidState.fromStringUnchecked("2c9f1b12-b35a-43e6-9af2-0106fb53a943"))))
 
   @Test
   def shouldDeserializeWhenAnOptionalFieldIsMissing(): Unit =
