@@ -19,14 +19,18 @@
 
 package org.apache.james.jmap.change
 
+import java.util.Optional
+
 import com.fasterxml.jackson.annotation.JsonProperty
+import javax.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
 import org.apache.james.events.{Event, EventSerializer}
+import org.apache.james.jmap.core.{State, UuidState}
 import org.apache.james.json.JsonGenericSerializer
 
-import javax.inject.Inject
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 
 case class StateChangeEventDTOFactory @Inject()(typeStateFactory: TypeStateFactory) {
   val dtoModule: EventDTOModule[StateChangeEvent, StateChangeEventDTO] = EventDTOModule.forEvent(classOf[StateChangeEvent])
@@ -40,18 +44,36 @@ case class StateChangeEventDTOFactory @Inject()(typeStateFactory: TypeStateFacto
     getType = classOf[StateChangeEvent].getCanonicalName,
     getEventId = event.eventId.getId.toString,
     getUsername = event.username.asString,
-    getTypeStates = event.map.map(element => element._1.asString() -> element._2.serialize).asJava)
+    getEmailState = Optional.empty(),
+    getMailboxState = Optional.empty(),
+    getVacationResponseState = Optional.empty(),
+    getTypeStates = Optional.of(event.map.map(element => element._1.asString() -> element._2.serialize).asJava))
 }
 
 case class StateChangeEventDTO(@JsonProperty("type") getType: String,
                                @JsonProperty("eventId") getEventId: String,
                                @JsonProperty("username") getUsername: String,
-                               @JsonProperty("typeStates") getTypeStates: java.util.Map[String, String]) extends EventDTO {
+                               // Optionals are used here to maintain backward compatibility with old format
+                               @JsonProperty("vacationResponseState") getVacationResponseState: Optional[String],
+                               @JsonProperty("mailboxState") getMailboxState: Optional[String],
+                               @JsonProperty("emailState") getEmailState: Optional[String],
+                               @JsonProperty("typeStates") getTypeStates: Optional[java.util.Map[String, String]]) extends EventDTO {
   def toDomainObject(typeStateFactory: TypeStateFactory): StateChangeEvent = StateChangeEvent(
     eventId = EventId.of(getEventId),
     username = Username.of(getUsername),
-    map = getTypeStates.asScala.flatMap(element => typeStateFactory.parse(element._1).toOption
+    map = typeStatesFromMap(typeStateFactory))
+
+  private def typeStatesFromMap(typeStateFactory: TypeStateFactory): Map[TypeName, State] =
+    getTypeStates.toScala.map(typeStates => typeStates.asScala.flatMap(element => typeStateFactory.parse(element._1).toOption
       .flatMap(typeName => typeName.parseState(element._2).toOption.map(state => typeName -> state))).toMap)
+      .getOrElse(fallbackToOldFormat())
+
+  private def fallbackToOldFormat(): Map[TypeName, State] =
+    List(
+      getEmailState.toScala.map(UuidState.fromStringUnchecked).map(EmailTypeName -> _),
+      getMailboxState.toScala.map(UuidState.fromStringUnchecked).map(MailboxTypeName -> _),
+      getVacationResponseState.toScala.map(UuidState.fromStringUnchecked).map(VacationResponseTypeName -> _))
+      .flatten.toMap
 }
 
 case class JmapEventSerializer @Inject()(stateChangeEventDTOFactory: StateChangeEventDTOFactory) extends EventSerializer {
