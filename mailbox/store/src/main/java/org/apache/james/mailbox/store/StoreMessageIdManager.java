@@ -46,6 +46,7 @@ import org.apache.james.mailbox.RightManager;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.DeleteResult;
@@ -357,7 +358,7 @@ public class StoreMessageIdManager implements MessageIdManager {
                 .map(mailbox -> Pair.of(message, mailbox)))
             .collect(Guavate.toImmutableList());
 
-        return Mono.fromRunnable(Throwing.runnable(() -> validateQuota(messageMoves, mailboxMessage.get())).sneakyThrow())
+        return validateQuota(messageMoves, mailboxMessage.get())
             .then(Mono.fromRunnable(Throwing.runnable(() ->
                 addMessageToMailboxes(mailboxMessage.get(), messageMoves.addedMailboxes(), mailboxSession)).sneakyThrow()))
             .then(removeMessageFromMailboxes(mailboxMessage.get().getMessageId(), messagesToRemove, mailboxSession))
@@ -415,33 +416,44 @@ public class StoreMessageIdManager implements MessageIdManager {
         return Mono.empty();
     }
 
-    private void validateQuota(MessageMovesWithMailbox messageMoves, MailboxMessage mailboxMessage) throws MailboxException {
+    private Mono<Void> validateQuota(MessageMovesWithMailbox messageMoves, MailboxMessage mailboxMessage) {
         Map<QuotaRoot, Integer> messageCountByQuotaRoot = buildMapQuotaRoot(messageMoves);
-        for (Map.Entry<QuotaRoot, Integer> entry : messageCountByQuotaRoot.entrySet()) {
-            Integer additionalCopyCount = entry.getValue();
-            if (additionalCopyCount > 0) {
-                long additionalOccupiedSpace = additionalCopyCount * mailboxMessage.getFullContentOctets();
-                new QuotaChecker(quotaManager.getQuotas(entry.getKey()), entry.getKey())
-                    .tryAddition(additionalCopyCount, additionalOccupiedSpace);
-            }
-        }
+
+        return Flux.fromIterable(messageCountByQuotaRoot.entrySet())
+            .filter(entry -> entry.getValue() > 0)
+            .flatMap(entry -> Mono.from(quotaManager.getQuotasReactive(entry.getKey()))
+                .map(quotas -> new QuotaChecker(quotas, entry.getKey()))
+                .handle((quotaChecker, sink) -> {
+                    Integer additionalCopyCount = entry.getValue();
+                    long additionalOccupiedSpace = additionalCopyCount * mailboxMessage.getFullContentOctets();
+                    try {
+                        quotaChecker.tryAddition(additionalCopyCount, additionalOccupiedSpace);
+                    } catch (OverQuotaException e) {
+                        sink.error(e);
+                    }
+                }))
+            .then();
     }
 
-    private Map<QuotaRoot, Integer> buildMapQuotaRoot(MessageMovesWithMailbox messageMoves) throws MailboxException {
-        Map<QuotaRoot, Integer> messageCountByQuotaRoot = new HashMap<>();
-        for (Mailbox mailbox : messageMoves.addedMailboxes()) {
-            QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailbox);
-            int currentCount = Optional.ofNullable(messageCountByQuotaRoot.get(quotaRoot))
-                .orElse(0);
-            messageCountByQuotaRoot.put(quotaRoot, currentCount + 1);
+    private Map<QuotaRoot, Integer> buildMapQuotaRoot(MessageMovesWithMailbox messageMoves) {
+        try {
+            Map<QuotaRoot, Integer> messageCountByQuotaRoot = new HashMap<>();
+            for (Mailbox mailbox : messageMoves.addedMailboxes()) {
+                QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailbox);
+                int currentCount = Optional.ofNullable(messageCountByQuotaRoot.get(quotaRoot))
+                    .orElse(0);
+                messageCountByQuotaRoot.put(quotaRoot, currentCount + 1);
+            }
+            for (Mailbox mailbox : messageMoves.removedMailboxes()) {
+                QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailbox);
+                int currentCount = Optional.ofNullable(messageCountByQuotaRoot.get(quotaRoot))
+                    .orElse(0);
+                messageCountByQuotaRoot.put(quotaRoot, currentCount - 1);
+            }
+            return messageCountByQuotaRoot;
+        } catch (MailboxException e) {
+            throw new RuntimeException(e);
         }
-        for (Mailbox mailbox : messageMoves.removedMailboxes()) {
-            QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailbox);
-            int currentCount = Optional.ofNullable(messageCountByQuotaRoot.get(quotaRoot))
-                .orElse(0);
-            messageCountByQuotaRoot.put(quotaRoot, currentCount - 1);
-        }
-        return messageCountByQuotaRoot;
     }
 
     private void addMessageToMailboxes(MailboxMessage mailboxMessage, Set<Mailbox> mailboxes, MailboxSession mailboxSession) throws MailboxException {

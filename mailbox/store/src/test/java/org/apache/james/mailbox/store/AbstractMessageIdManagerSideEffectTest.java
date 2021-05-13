@@ -56,7 +56,6 @@ import org.apache.james.mailbox.events.MailboxEvents.Expunged;
 import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxEvent;
 import org.apache.james.mailbox.events.MessageMoveEvent;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.fixture.MailboxFixture;
@@ -114,6 +113,11 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), StoreMailboxManagerTest.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
         eventCollector = new EventCollector();
         quotaManager = mock(QuotaManager.class);
+
+        when(quotaManager.getQuotasReactive(any(QuotaRoot.class)))
+            .thenReturn(Mono.just(new QuotaManager.Quotas(
+                Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(102)).computedLimit(QuotaCountLimit.unlimited()).build(),
+                Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(2)).computedLimit(QuotaSizeLimit.unlimited()).build())));
 
         session = MailboxSessionUtil.create(ALICE);
         setupMockForPreDeletionHooks();
@@ -382,13 +386,13 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
     }
 
     @Test
-    void setInMailboxesShouldThrowExceptionWhenOverQuota() throws Exception {
+    void setInMailboxesShouldThrowExceptionWhenOverQuota() {
         MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
 
-        when(quotaManager.getQuotas(any(QuotaRoot.class)))
-            .thenReturn(new QuotaManager.Quotas(
+        when(quotaManager.getQuotasReactive(any(QuotaRoot.class)))
+            .thenReturn(Mono.just(new QuotaManager.Quotas(
                 OVER_QUOTA,
-                Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(2)).computedLimit(QuotaSizeLimit.unlimited()).build()));
+                Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(2)).computedLimit(QuotaSizeLimit.unlimited()).build())));
 
         assertThatThrownBy(() -> messageIdManager.setInMailboxes(messageId,
                 ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()),
@@ -553,10 +557,10 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         assertThat(eventCollector.getEvents()).isEmpty();
     }
 
-    protected void givenUnlimitedQuota() throws MailboxException {
-        when(quotaManager.getQuotas(any(QuotaRoot.class)))
-            .thenReturn(new QuotaManager.Quotas(
+    protected void givenUnlimitedQuota() {
+        when(quotaManager.getQuotasReactive(any(QuotaRoot.class)))
+            .thenReturn(Mono.just(new QuotaManager.Quotas(
                 Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(2)).computedLimit(QuotaCountLimit.unlimited()).build(),
-                Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(2)).computedLimit(QuotaSizeLimit.unlimited()).build()));
+                Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(2)).computedLimit(QuotaSizeLimit.unlimited()).build())));
     }
 }
