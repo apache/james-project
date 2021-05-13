@@ -105,12 +105,14 @@ public class CassandraUidProvider implements UidProvider {
     @Override
     public MessageUid nextUid(MailboxId mailboxId) throws MailboxException {
         CassandraId cassandraId = (CassandraId) mailboxId;
-        return nextUids(cassandraId)
+        return nextUidReactive(cassandraId)
             .blockOptional()
             .orElseThrow(() -> new MailboxException("Error during Uid update"));
     }
 
-    public Mono<MessageUid> nextUids(CassandraId cassandraId) {
+    @Override
+    public Mono<MessageUid> nextUidReactive(MailboxId mailboxId) {
+        CassandraId cassandraId = (CassandraId) mailboxId;
         Mono<MessageUid> updateUid = findHighestUid(cassandraId)
             .flatMap(messageUid -> tryUpdateUid(cassandraId, messageUid));
 
@@ -122,7 +124,10 @@ public class CassandraUidProvider implements UidProvider {
             .retryWhen(Retry.backoff(maxUidRetries, firstBackoff).scheduler(Schedulers.elastic()));
     }
 
-    public Mono<List<MessageUid>> nextUids(CassandraId cassandraId, int count) {
+    @Override
+    public Mono<List<MessageUid>> nextUids(MailboxId mailboxId, int count) {
+        CassandraId cassandraId = (CassandraId) mailboxId;
+
         Mono<List<MessageUid>> updateUid = findHighestUid(cassandraId)
             .flatMap(messageUid -> tryUpdateUid(cassandraId, messageUid, count)
                 .map(highest -> range(messageUid, highest)));

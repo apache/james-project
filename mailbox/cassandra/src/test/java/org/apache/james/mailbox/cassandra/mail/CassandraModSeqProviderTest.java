@@ -115,10 +115,10 @@ class CassandraModSeqProviderTest {
                     .times(1)
                     .whenQueryStartsWith("SELECT nextModseq FROM modseq WHERE mailboxId=:mailboxId;"));
 
-        CompletableFuture<ModSeq> operation1 = modSeqProvider.nextModSeq(CASSANDRA_ID)
+        CompletableFuture<ModSeq> operation1 = modSeqProvider.nextModSeqReactive(CASSANDRA_ID)
             .subscribeOn(Schedulers.elastic())
             .toFuture();
-        CompletableFuture<ModSeq> operation2 = modSeqProvider.nextModSeq(CASSANDRA_ID)
+        CompletableFuture<ModSeq> operation2 = modSeqProvider.nextModSeqReactive(CASSANDRA_ID)
             .subscribeOn(Schedulers.elastic())
             .toFuture();
 

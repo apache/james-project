@@ -23,6 +23,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 
+import reactor.core.publisher.Mono;
+
 /**
  * Take care of provide mod-seqences for a given {@link Mailbox}. Be aware that implementations
  * need to be thread-safe!
@@ -56,4 +58,8 @@ public interface ModSeqProvider {
      * Return the highest mod-sequence which were used for the {@link Mailbox}
      */
     ModSeq highestModSeq(MailboxId mailboxId) throws MailboxException;
+
+    default Mono<ModSeq> nextModSeqReactive(MailboxId mailboxId) {
+        return Mono.fromCallable(() -> nextModSeq(mailboxId));
+    }
 }
