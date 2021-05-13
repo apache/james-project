@@ -19,10 +19,14 @@
 
 package org.apache.james.lmtpserver;
 
+import java.util.Collection;
+
 import javax.inject.Inject;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.protocols.api.Response;
+import org.apache.james.protocols.lmtp.LMTPMultiResponse;
 import org.apache.james.protocols.smtp.SMTPResponse;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -32,6 +36,9 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.smtpserver.DataLineJamesMessageHookHandler;
 import org.apache.mailet.Mail;
+
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 public class MailetContainerHandler extends DataLineJamesMessageHookHandler {
     private final MailProcessor mailProcessor;
@@ -43,17 +50,35 @@ public class MailetContainerHandler extends DataLineJamesMessageHookHandler {
 
     @Override
     protected Response processExtensions(SMTPSession session, Mail mail) {
+        Collection<MailAddress> recipients = ImmutableList.copyOf(mail.getRecipients());
         try {
             super.processExtensions(session, mail);
+
+            if (recipients.size() == 0) {
+                // Return 503 see https://datatracker.ietf.org/doc/html/rfc2033#section-4.2
+                AbstractHookableCmdHandler.calcDefaultSMTPResponse(HookResult.builder()
+                    .hookReturnCode(HookReturnCode.ok())
+                    .smtpReturnCode(SMTPRetCode.MAIL_OK)
+                    .smtpDescription(DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received")
+                    .build());
+            }
+
             mailProcessor.service(mail);
 
-            return AbstractHookableCmdHandler.calcDefaultSMTPResponse(HookResult.builder()
-                .hookReturnCode(HookReturnCode.ok())
-                .smtpReturnCode(SMTPRetCode.MAIL_OK)
-                .smtpDescription(DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received")
-                .build());
+            return LMTPMultiResponse.of(
+                recipients.stream()
+                    .map(recipient -> AbstractHookableCmdHandler.calcDefaultSMTPResponse(HookResult.builder()
+                        .hookReturnCode(HookReturnCode.ok())
+                        .smtpReturnCode(SMTPRetCode.MAIL_OK)
+                        .smtpDescription(DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received <" + recipient.asString() + ">")
+                        .build()))
+                    .collect(Guavate.toImmutableList()));
+
         } catch (Exception e) {
-            return new SMTPResponse(SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.UNDEFINED_STATUS) + " Temporary error deliver message");
+            return LMTPMultiResponse.of(
+                recipients.stream()
+                    .map(recipient -> new SMTPResponse(SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.UNDEFINED_STATUS) + " Temporary error deliver message <" + recipient.asString() + ">"))
+                    .collect(Guavate.toImmutableList()));
         }
     }
 }
