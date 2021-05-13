@@ -129,7 +129,7 @@ class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager, mailbo
     val sanitizedCounters: MailboxCounters = mailboxMetaData.getCounters.sanitize()
 
     MailboxValidation.validate(mailboxMetaData.getPath, mailboxSession.getPathDelimiter, sanitizedCounters.getUnseen, sanitizedCounters.getUnseen, sanitizedCounters.getCount, sanitizedCounters.getCount) match {
-      case Left(error) => SMono.raiseError(error)
+      case Left(error) => SMono.error(error)
       case scala.Right(mailboxValidation) =>
         SMono.fromPublisher(quotaLoader.getQuotas(mailboxMetaData.getPath))
           .map(quotas => {
@@ -169,7 +169,7 @@ class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager, mailbo
       val sanitizedCounters: MailboxCounters = messageManager.getMailboxCounters(mailboxSession).sanitize()
 
       MailboxValidation.validate(messageManager.getMailboxPath, mailboxSession.getPathDelimiter, sanitizedCounters.getUnseen, sanitizedCounters.getUnseen, sanitizedCounters.getCount, sanitizedCounters.getCount) match {
-        case Left(error) => SMono.raiseError(error)
+        case Left(error) => SMono.error(error)
         case scala.Right(mailboxValidation) =>
           SMono.fromPublisher(quotaLoader.getQuotas(messageManager.getMailboxPath))
             .map(quotas => {
@@ -206,7 +206,7 @@ class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager, mailbo
                 isSubscribed = isSubscribed)})
       }
     } catch {
-      case error: Exception => SMono.raiseError(error)
+      case error: Exception => SMono.error(error)
     }
   }
 }

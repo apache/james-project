@@ -130,7 +130,7 @@ class MessageBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
       case Success(messageId) => Applicable(SMono.fromPublisher(
         messageIdManager.getMessagesReactive(List(messageId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
         .map[Blob](MessageBlob(blobId, _))
-        .switchIfEmpty(SMono.raiseError(BlobNotFoundException(blobId))))
+        .switchIfEmpty(SMono.error(BlobNotFoundException(blobId))))
     }
   }
 }
@@ -142,7 +142,7 @@ class AttachmentBlobResolver @Inject()(val attachmentManager: AttachmentManager)
         Try(attachmentManager.getAttachment(attachmentId, mailboxSession)) match {
           case Success(attachmentMetadata) => Applicable(
             SMono.fromCallable(() => AttachmentBlob(attachmentMetadata, attachmentManager.load(attachmentMetadata, mailboxSession))))
-          case Failure(_) => Applicable(SMono.raiseError(BlobNotFoundException(blobId)))
+          case Failure(_) => Applicable(SMono.error(BlobNotFoundException(blobId)))
         }
 
       case _ => NonApplicable()
@@ -180,7 +180,7 @@ class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
                 .fold(sink.error(BlobNotFoundException(blobId)))(part => sink.next(part))
           }
           .map[Blob](EmailBodyPartBlob(blobId, _))
-          .switchIfEmpty(SMono.raiseError(BlobNotFoundException(blobId))))
+          .switchIfEmpty(SMono.error(BlobNotFoundException(blobId))))
     }
   }
 }
@@ -193,7 +193,7 @@ class BlobResolvers @Inject()(val messageBlobResolver: MessageBlobResolver,
       .resolve(blobId, mailboxSession).asOption
       .orElse(messagePartBlobResolver.resolve(blobId, mailboxSession).asOption)
       .orElse(attachmentBlobResolver.resolve(blobId, mailboxSession).asOption)
-      .getOrElse(SMono.raiseError(BlobNotFoundException(blobId)))
+      .getOrElse(SMono.error(BlobNotFoundException(blobId)))
 }
 
 class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
@@ -244,7 +244,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
 
   private def get(request: HttpServerRequest, response: HttpServerResponse, mailboxSession: MailboxSession): SMono[Unit] = {
     BlobId.of(request.param(blobIdParam))
-      .fold(e => SMono.raiseError(e),
+      .fold(e => SMono.error(e),
         blobResolvers.resolve(_, mailboxSession))
       .flatMap(blob => downloadBlob(
         optionalName = queryParam(request, nameParam),
@@ -262,15 +262,15 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
         val targetAccountId: AccountId = AccountId(id)
         AccountId.from(mailboxSession.getUser).map(accountId => accountId.equals(targetAccountId))
           .fold[SMono[Unit]](
-            e => SMono.raiseError(e),
+            e => SMono.error(e),
             value => if (value) {
               get(request, response, mailboxSession)
             } else {
-              SMono.raiseError(ForbiddenException())
+              SMono.error(ForbiddenException())
             })
       }
 
-      case Left(throwable: Throwable) => SMono.raiseError(throwable)
+      case Left(throwable: Throwable) => SMono.error(throwable)
     }
   }
 

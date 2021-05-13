@@ -87,7 +87,7 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailGetRequest): SMono[InvocationWithContext] = {
     computeResponseInvocation(request, invocation.invocation, mailboxSession).onErrorResume({
       case e: IllegalArgumentException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.invocation.methodCallId))
-      case e: Throwable => SMono.raiseError(e)
+      case e: Throwable => SMono.error(e)
     }).map(invocationResult => InvocationWithContext(invocationResult, invocation.processingContext))
   }
 
@@ -101,7 +101,7 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
     validateProperties(request)
       .flatMap(properties => validateBodyProperties(request).map((properties, _)))
       .fold(
-        e => SMono.raiseError(e), {
+        e => SMono.error(e), {
           case (properties, bodyProperties) => getEmails(request, mailboxSession)
             .map(response => Invocation(
               methodName = methodName,
@@ -141,7 +141,7 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
 
   private def getEmails(request: EmailGetRequest, mailboxSession: MailboxSession): SMono[EmailGetResponse] =
     request.ids match {
-      case None => SMono.raiseError(new IllegalArgumentException("ids can not be ommited for email/get"))
+      case None => SMono.error(new IllegalArgumentException("ids can not be ommited for email/get"))
       case Some(ids) => getEmails(ids, mailboxSession, request)
         .flatMap(result => SMono[JavaState](emailchangeRepository.getLatestState(JavaAccountId.fromUsername(mailboxSession.getUser)))
           .map(state => EmailGetResponse(

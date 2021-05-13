@@ -102,7 +102,7 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
                             patch: MailboxPatchObject,
                             capabilities: Set[CapabilityIdentifier]): SMono[MailboxUpdateResult] = {
     patch.validate(mailboxIdFactory, serializer, capabilities, mailboxSession)
-      .fold(e => SMono.raiseError(e), validatedPatch =>
+      .fold(e => SMono.error(e), validatedPatch =>
         updateMailboxRights(mailboxId, validatedPatch, mailboxSession)
           .`then`(updateSubscription(mailboxId, validatedPatch, mailboxSession))
           .`then`(updateMailboxPath(mailboxId, unparsedMailboxId, validatedPatch, mailboxSession)))

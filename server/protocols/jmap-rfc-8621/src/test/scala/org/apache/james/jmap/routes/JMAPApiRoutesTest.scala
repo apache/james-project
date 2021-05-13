@@ -433,7 +433,7 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
   "RFC-8621 with random error when processing request " should "return 200, with serverFail error, others method call proceed normally" in {
     val mockCoreEchoMethod = mock(classOf[CoreEchoMethod])
 
-    doReturn(SFlux.raiseError(new RuntimeException("Unexpected Exception occur, the others method may proceed normally")))
+    doReturn(SFlux.error(new RuntimeException("Unexpected Exception occur, the others method may proceed normally")))
       .doCallRealMethod()
       .when(mockCoreEchoMethod)
       .process(any[Set[CapabilityIdentifier]], any(), any())

@@ -46,7 +46,7 @@ class MailboxQueryMethod @Inject()(systemMailboxesProvider: SystemMailboxesProvi
           errorCode = ErrorCode.InvalidArguments,
           description = e.getMessage,
           methodCallId = invocation.invocation.methodCallId))
-      case e: Throwable => SMono.raiseError(e)
+      case e: Throwable => SMono.error(e)
     }
       .map(invocationResult => InvocationWithContext(invocationResult, invocation.processingContext))
   }

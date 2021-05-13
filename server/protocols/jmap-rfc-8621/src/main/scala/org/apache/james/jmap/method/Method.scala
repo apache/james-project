@@ -61,7 +61,7 @@ trait MethodRequiringAccountId[REQUEST <: WithAccountId] extends Method {
       doProcess(capabilities, invocation, mailboxSession, request)
     }
 
-    val result: SFlux[InvocationWithContext] = SFlux.fromPublisher(either.fold(e => SFlux.raiseError[InvocationWithContext](e), r => r))
+    val result: SFlux[InvocationWithContext] = SFlux.fromPublisher(either.fold(e => SFlux.error[InvocationWithContext](e), r => r))
       .onErrorResume[InvocationWithContext] {
         case e: AccountNotFoundException => SFlux.just[InvocationWithContext] (InvocationWithContext(e.invocation, invocation.processingContext))
         case e: UnsupportedRequestParameterException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(
@@ -85,7 +85,7 @@ trait MethodRequiringAccountId[REQUEST <: WithAccountId] extends Method {
         case e: ChangeNotFoundException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.CannotCalculateChanges, e.getMessage, invocation.invocation.methodCallId), invocation.processingContext))
         case e: RequestTooLargeException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.RequestTooLarge, e.description, invocation.invocation.methodCallId), invocation.processingContext))
         case e: IdentityIdNotFoundException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.InvalidArguments, e.description, invocation.invocation.methodCallId), invocation.processingContext))
-        case e: Throwable => SFlux.raiseError[InvocationWithContext] (e)
+        case e: Throwable => SFlux.error[InvocationWithContext] (e)
       }
 
     metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value, result)

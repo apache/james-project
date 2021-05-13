@@ -131,7 +131,7 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
         .map(mailbox => filterShared(capabilities, mailbox))
         .onErrorResume {
           case _: MailboxNotFoundException => SMono.just(MailboxGetResults.notFound(mailboxId))
-          case error => SMono.raiseError(error)
+          case error => SMono.error(error)
         })
       .subscribeOn(Schedulers.elastic)
 

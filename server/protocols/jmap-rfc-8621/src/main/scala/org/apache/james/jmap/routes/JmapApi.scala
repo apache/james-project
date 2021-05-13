@@ -21,7 +21,7 @@ package org.apache.james.jmap.routes
 import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Invocation.MethodName
-import org.apache.james.jmap.core.{Capability, DefaultCapabilities, ErrorCode, Invocation, MissingCapabilityException, RequestObject, ResponseObject}
+import org.apache.james.jmap.core.{Capability, ErrorCode, Invocation, MissingCapabilityException, RequestObject, ResponseObject}
 import org.apache.james.jmap.method.{InvocationWithContext, Method}
 import org.apache.james.mailbox.MailboxSession
 import org.slf4j.{Logger, LoggerFactory}
@@ -50,7 +50,7 @@ class JMAPApi (methods: Set[Method], defaultCapabilities: Set[Capability]) {
     val capabilities: Set[CapabilityIdentifier] = requestObject.using.toSet
 
     if (unsupportedCapabilities.nonEmpty) {
-      SMono.raiseError(UnsupportedCapabilitiesException(unsupportedCapabilities))
+      SMono.error(UnsupportedCapabilitiesException(unsupportedCapabilities))
     } else {
       processSequentiallyAndUpdateContext(requestObject, mailboxSession, processingContext, capabilities)
         .map(invocations => ResponseObject(ResponseObject.SESSION_STATE, invocations.map(_.invocation)))

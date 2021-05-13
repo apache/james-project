@@ -42,7 +42,6 @@ import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.util.streams.{Limit => JavaLimit}
 import play.api.libs.json.{JsError, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
-import reactor.core.scheduler.Schedulers
 
 import scala.jdk.CollectionConverters._
 
@@ -75,7 +74,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
             arguments = Arguments(serializer.serialize(response)),
             methodCallId = invocation.methodCallId))
       }
-    validation.fold(SMono.raiseError, res => res)
+    validation.fold(SMono.error, res => res)
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, EmailQueryRequest] =
@@ -115,7 +114,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
         .collectSeq())
       .onErrorResume({
         case _: MailboxNotFoundException => SMono.just[Seq[MessageId]](Seq())
-        case e => SMono.raiseError[Seq[MessageId]](e)
+        case e => SMono.error[Seq[MessageId]](e)
       })
   }
 
@@ -129,7 +128,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
         .collectSeq())
       .onErrorResume({
         case _: MailboxNotFoundException => SMono.just[Seq[MessageId]](Seq())
-        case e => SMono.raiseError[Seq[MessageId]](e)
+        case e => SMono.error[Seq[MessageId]](e)
       })
   }
 
