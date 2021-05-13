@@ -157,6 +157,10 @@ public class CommandDispatcher<SessionT extends ProtocolSession> implements Exte
         List<CommandHandler<SessionT>> commandHandlers = getCommandHandlers(request.getCommand(), session);
         // fetch the command handlers registered to the command
 
+        if (commandHandlers == null) {
+            return session.newCommandNotFoundErrorResponse();
+        }
+
         for (CommandHandler<SessionT> commandHandler : commandHandlers) {
             final long start = System.currentTimeMillis();
             Response response = commandHandler.onCommand(session, request);

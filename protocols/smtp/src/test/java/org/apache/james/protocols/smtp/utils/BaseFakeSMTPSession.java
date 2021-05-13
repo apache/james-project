@@ -133,6 +133,11 @@ public class BaseFakeSMTPSession implements SMTPSession {
     }
 
     @Override
+    public Response newCommandNotFoundErrorResponse() {
+        throw new UnsupportedOperationException("Unimplemented Stub Method");
+    }
+
+    @Override
     public InetSocketAddress getRemoteAddress() {
         return new InetSocketAddress("localhost", 22);
     }

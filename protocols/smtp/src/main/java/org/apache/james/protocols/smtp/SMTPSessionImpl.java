@@ -32,7 +32,8 @@ public class SMTPSessionImpl extends ProtocolSessionImpl implements SMTPSession 
 
     private static final Response LINE_LENGTH_EXCEEDED = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_COMMAND_UNRECOGNIZED, "Line length exceeded. See RFC 2821 #4.5.3.1.").immutable();
     private static final Response FATAL_ERROR = new SMTPResponse(SMTPRetCode.LOCAL_ERROR, "Unable to process request").immutable();
-    
+    private static final Response UNKNOWN_COMMAND_ERROR = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_COMMAND_UNRECOGNIZED, "Unable to process request: the command is unknown").immutable();
+
     private boolean relayingAllowed;
     private boolean needsCommandInjectionDetection;
     
@@ -99,6 +100,11 @@ public class SMTPSessionImpl extends ProtocolSessionImpl implements SMTPSession 
     @Override
     public Response newFatalErrorResponse() {
         return FATAL_ERROR;
+    }
+
+    @Override
+    public Response newCommandNotFoundErrorResponse() {
+        return UNKNOWN_COMMAND_ERROR;
     }
 
     @Override
