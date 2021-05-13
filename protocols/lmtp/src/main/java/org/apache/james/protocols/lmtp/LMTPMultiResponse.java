@@ -29,13 +29,20 @@ import org.apache.james.protocols.api.Response;
  * every recipient. This special {@link Response} can be used for this
  */
 public class LMTPMultiResponse implements Response {
+    public static LMTPMultiResponse of(List<Response> responses) {
+        return new LMTPMultiResponse(responses);
+    }
 
     private final List<Response> responses = new ArrayList<>();
+
+    private LMTPMultiResponse(List<Response> responses) {
+        this.responses.addAll(responses);
+    }
 
     public LMTPMultiResponse(Response response) {
         addResponse(response);
     }
-    
+
     public void addResponse(Response response) {
         this.responses.add(response);
         
