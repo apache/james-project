@@ -26,7 +26,7 @@ import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
+import org.apache.james.mailbox.cassandra.mail.ACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraAnnotationMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
@@ -92,7 +92,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     private final BlobStore blobStore;
     private final CassandraAttachmentMessageIdDAO attachmentMessageIdDAO;
     private final CassandraAttachmentOwnerDAO ownerDAO;
-    private final CassandraACLMapper aclMapper;
+    private final ACLMapper aclMapper;
     private final CassandraUserMailboxRightsDAO userMailboxRightsDAO;
     private final CassandraSchemaVersionManager versionManager;
     private final CassandraUtils cassandraUtils;
@@ -107,7 +107,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
                                                 CassandraMailboxPathDAOImpl mailboxPathDAO, CassandraMailboxPathV2DAO mailboxPathV2DAO, CassandraMailboxPathV3DAO mailboxPathV3DAO, CassandraFirstUnseenDAO firstUnseenDAO, CassandraApplicableFlagDAO applicableFlagDAO,
                                                 CassandraAttachmentDAOV2 attachmentDAOV2, CassandraDeletedMessageDAO deletedMessageDAO,
                                                 BlobStore blobStore, CassandraAttachmentMessageIdDAO attachmentMessageIdDAO,
-                                                CassandraAttachmentOwnerDAO ownerDAO, CassandraACLMapper aclMapper,
+                                                CassandraAttachmentOwnerDAO ownerDAO, ACLMapper aclMapper,
                                                 CassandraUserMailboxRightsDAO userMailboxRightsDAO,
                                                 CassandraSchemaVersionManager versionManager,
                                                 RecomputeMailboxCountersService recomputeMailboxCountersService,

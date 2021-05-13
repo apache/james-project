@@ -54,6 +54,7 @@ import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.DeleteMessageListener;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.mail.ACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV1;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV2;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
@@ -181,6 +182,7 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(MailboxSessionMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
         bind(SubscriptionMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
 
+        bind(ACLMapper.class).to(CassandraACLMapper.class);
         bind(ModSeqProvider.class).to(CassandraModSeqProvider.class);
         bind(UidProvider.class).to(CassandraUidProvider.class);
         bind(SubscriptionManager.class).to(StoreSubscriptionManager.class);

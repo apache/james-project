@@ -70,7 +70,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     private final CassandraMailboxPathDAOImpl mailboxPathDAO;
     private final CassandraMailboxPathV2DAO mailboxPathV2DAO;
     private final CassandraMailboxPathV3DAO mailboxPathV3DAO;
-    private final CassandraACLMapper cassandraACLMapper;
+    private final ACLMapper aclMapper;
     private final CassandraUserMailboxRightsDAO userMailboxRightsDAO;
     private final CassandraSchemaVersionManager versionManager;
     private final CassandraConfiguration cassandraConfiguration;
@@ -82,7 +82,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
                                   CassandraMailboxPathV2DAO mailboxPathV2DAO,
                                   CassandraMailboxPathV3DAO mailboxPathV3DAO,
                                   CassandraUserMailboxRightsDAO userMailboxRightsDAO,
-                                  CassandraACLMapper aclMapper,
+                                  ACLMapper aclMapper,
                                   CassandraSchemaVersionManager versionManager,
                                   CassandraConfiguration cassandraConfiguration) {
         this.mailboxDAO = mailboxDAO;
@@ -90,7 +90,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
         this.mailboxPathV2DAO = mailboxPathV2DAO;
         this.mailboxPathV3DAO = mailboxPathV3DAO;
         this.userMailboxRightsDAO = userMailboxRightsDAO;
-        this.cassandraACLMapper = aclMapper;
+        this.aclMapper = aclMapper;
         this.versionManager = versionManager;
         this.cassandraConfiguration = cassandraConfiguration;
         this.secureRandom = new SecureRandom();
@@ -182,7 +182,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     private Mono<Mailbox> addAcl(Mailbox mailbox) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-        return cassandraACLMapper.getACL(mailboxId)
+        return aclMapper.getACL(mailboxId)
             .map(acl -> {
                 mailbox.setACL(acl);
                 return mailbox;
@@ -236,7 +236,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     private Mono<MailboxACL> retrieveAcl(CassandraId mailboxId) {
-        return cassandraACLMapper.getACL(mailboxId)
+        return aclMapper.getACL(mailboxId)
             .defaultIfEmpty(MailboxACL.EMPTY);
     }
 
@@ -341,13 +341,13 @@ public class CassandraMailboxMapper implements MailboxMapper {
     @Override
     public Mono<ACLDiff> updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        return cassandraACLMapper.updateACL(cassandraId, mailboxACLCommand);
+        return aclMapper.updateACL(cassandraId, mailboxACLCommand);
     }
 
     @Override
     public Mono<ACLDiff> setACL(Mailbox mailbox, MailboxACL mailboxACL) {
         CassandraId cassandraId = (CassandraId) mailbox.getMailboxId();
-        return cassandraACLMapper.setACL(cassandraId, mailboxACL);
+        return aclMapper.setACL(cassandraId, mailboxACL);
     }
 
     private Mono<Mailbox> toMailboxWithAcl(Mailbox mailbox) {

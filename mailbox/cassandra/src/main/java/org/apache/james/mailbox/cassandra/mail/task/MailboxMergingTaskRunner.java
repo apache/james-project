@@ -25,7 +25,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
-import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
+import org.apache.james.mailbox.cassandra.mail.ACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -50,16 +50,16 @@ public class MailboxMergingTaskRunner {
     private final StoreMessageIdManager messageIdManager;
     private final CassandraMessageIdDAO cassandraMessageIdDAO;
     private final CassandraMailboxDAO mailboxDAO;
-    private final CassandraACLMapper cassandraACLMapper;
+    private final ACLMapper aclMapper;
     private final MailboxSession mailboxSession;
 
     @Inject
-    public MailboxMergingTaskRunner(MailboxManager mailboxManager, StoreMessageIdManager messageIdManager, CassandraMessageIdDAO cassandraMessageIdDAO, CassandraMailboxDAO mailboxDAO, CassandraACLMapper cassandraACLMapper) {
+    public MailboxMergingTaskRunner(MailboxManager mailboxManager, StoreMessageIdManager messageIdManager, CassandraMessageIdDAO cassandraMessageIdDAO, CassandraMailboxDAO mailboxDAO, ACLMapper aclMapper) {
         this.mailboxSession = mailboxManager.createSystemSession(Username.of("task"));
         this.messageIdManager = messageIdManager;
         this.cassandraMessageIdDAO = cassandraMessageIdDAO;
         this.mailboxDAO = mailboxDAO;
-        this.cassandraACLMapper = cassandraACLMapper;
+        this.aclMapper = aclMapper;
     }
 
     public Task.Result run(CassandraId oldMailboxId, CassandraId newMailboxId, MailboxMergingTask.Context context) {
@@ -91,10 +91,10 @@ public class MailboxMergingTaskRunner {
 
     private Mono<Void> mergeRights(CassandraId oldMailboxId, CassandraId newMailboxId) {
             return Flux.concat(
-                    cassandraACLMapper.getACL(oldMailboxId),
-                    cassandraACLMapper.getACL(newMailboxId))
+                    aclMapper.getACL(oldMailboxId),
+                    aclMapper.getACL(newMailboxId))
                 .reduce(Throwing.biFunction(MailboxACL::union))
-                .flatMap(union -> cassandraACLMapper.setACL(newMailboxId, union))
+                .flatMap(union -> aclMapper.setACL(newMailboxId, union))
                 .then();
     }
 }

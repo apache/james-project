@@ -38,7 +38,7 @@ import org.apache.james.events.Group;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
+import org.apache.james.mailbox.cassandra.mail.ACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMessageIdDAO;
@@ -92,7 +92,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
     private final CassandraAttachmentDAOV2 attachmentDAO;
     private final CassandraAttachmentOwnerDAO ownerDAO;
     private final CassandraAttachmentMessageIdDAO attachmentMessageIdDAO;
-    private final CassandraACLMapper aclMapper;
+    private final ACLMapper aclMapper;
     private final CassandraUserMailboxRightsDAO rightsDAO;
     private final CassandraApplicableFlagDAO applicableFlagDAO;
     private final CassandraFirstUnseenDAO firstUnseenDAO;
@@ -105,7 +105,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
     @Inject
     public DeleteMessageListener(CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageDAO messageDAO,
                                  CassandraMessageDAOV3 messageDAOV3, CassandraAttachmentDAOV2 attachmentDAO, CassandraAttachmentOwnerDAO ownerDAO,
-                                 CassandraAttachmentMessageIdDAO attachmentMessageIdDAO, CassandraACLMapper aclMapper,
+                                 CassandraAttachmentMessageIdDAO attachmentMessageIdDAO, ACLMapper aclMapper,
                                  CassandraUserMailboxRightsDAO rightsDAO, CassandraApplicableFlagDAO applicableFlagDAO,
                                  CassandraFirstUnseenDAO firstUnseenDAO, CassandraDeletedMessageDAO deletedMessageDAO,
                                  CassandraMailboxCounterDAO counterDAO, CassandraMailboxRecentsDAO recentsDAO, BlobStore blobStore,
