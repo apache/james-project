@@ -130,6 +130,7 @@ class LmtpServerTest {
         domainList.addDomain(Domain.of("examplebis.local"));
         usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
         usersRepository.addUser(Username.of("bob@examplebis.local"), "pwd");
+        usersRepository.addUser(Username.of("cedric@examplebis.local"), "pwd");
 
         fileSystem = new FileSystemImpl(Configuration.builder()
             .workingDirectory("../")
@@ -337,6 +338,34 @@ class LmtpServerTest {
                     .block())
                     .isEqualTo(1))
                 .doesNotThrowAnyException();
+        }
+
+        @Test
+        void dataShouldHaveAReturnCodePerRecipient() throws Exception {
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("RCPT TO: <bob@examplebis.local>\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("RCPT TO: <cedric@examplebis.local>\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("DATA\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server); // needed to synchronize
+            server.write(ByteBuffer.wrap(("header:value\r\n\r\nbody").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap((".").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+             byte[] dataResponse = readBytes(server);
+            server.write(ByteBuffer.wrap(("QUIT\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(new String(dataResponse, StandardCharsets.UTF_8))
+                .contains("250 2.6.0 Message received\r\n" +
+                    "250 2.6.0 Message received");
         }
 
         @Test
