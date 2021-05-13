@@ -172,9 +172,13 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     @Override
     public void copyInMailbox(MailboxMessage mailboxMessage, Mailbox mailbox) throws MailboxException {
-        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
+        MailboxReactorUtils.block(copyInMailboxReactive(mailboxMessage, mailbox));
+    }
 
-        MailboxReactorUtils.block(saveMessageMetadata(mailboxMessage, mailboxId));
+    @Override
+    public Mono<Void> copyInMailboxReactive(MailboxMessage mailboxMessage, Mailbox mailbox) {
+        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
+        return saveMessageMetadata(mailboxMessage, mailboxId);
     }
 
     private Mono<Void> saveMessageMetadata(MailboxMessage mailboxMessage, CassandraId mailboxId) {

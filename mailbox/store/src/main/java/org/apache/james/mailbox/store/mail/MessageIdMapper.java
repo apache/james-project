@@ -35,6 +35,7 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.reactivestreams.Publisher;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.Multimap;
 
 import reactor.core.publisher.Flux;
@@ -55,6 +56,10 @@ public interface MessageIdMapper {
     void save(MailboxMessage mailboxMessage) throws MailboxNotFoundException, MailboxException;
 
     void copyInMailbox(MailboxMessage mailboxMessage, Mailbox mailbox) throws MailboxException;
+
+    default Mono<Void> copyInMailboxReactive(MailboxMessage mailboxMessage, Mailbox mailbox) {
+        return Mono.fromRunnable(Throwing.runnable(() -> copyInMailboxReactive(mailboxMessage, mailbox)).sneakyThrow());
+    }
 
     void delete(MessageId messageId);
 
