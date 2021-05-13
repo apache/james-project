@@ -59,6 +59,6 @@ public class CassandraAccessTokenRepository implements AccessTokenRepository {
         Preconditions.checkNotNull(accessToken);
 
         return cassandraAccessTokenDAO.getUsernameFromToken(accessToken)
-            .switchIfEmpty(Mono.error(new InvalidAccessToken(accessToken)));
+            .switchIfEmpty(Mono.error(() -> new InvalidAccessToken(accessToken)));
     }
 }

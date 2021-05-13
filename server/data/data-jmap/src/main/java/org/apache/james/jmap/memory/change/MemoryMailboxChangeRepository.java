@@ -101,7 +101,7 @@ public class MemoryMailboxChangeRepository implements MailboxChangeRepository {
     private Mono<MailboxChange> findByState(AccountId accountId, State state) {
         return Flux.fromIterable(mailboxChangeMap.get(accountId))
             .filter(change -> change.getState().equals(state))
-            .switchIfEmpty(Mono.error(new ChangeNotFoundException(state, String.format("State '%s' could not be found", state.getValue()))))
+            .switchIfEmpty(Mono.error(() -> new ChangeNotFoundException(state, String.format("State '%s' could not be found", state.getValue()))))
             .single();
     }
 

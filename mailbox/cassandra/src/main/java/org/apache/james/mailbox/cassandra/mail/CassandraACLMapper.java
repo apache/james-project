@@ -77,7 +77,7 @@ public class CassandraACLMapper {
             return cassandraACLDAOV1.updateACL(cassandraId, command)
                 .flatMap(aclDiff -> userMailboxRightsDAO.update(cassandraId, aclDiff)
                     .thenReturn(aclDiff))
-                .switchIfEmpty(Mono.error(new MailboxException("Unable to update ACL")));
+                .switchIfEmpty(Mono.error(() -> new MailboxException("Unable to update ACL")));
         }
 
         @Override
@@ -85,7 +85,7 @@ public class CassandraACLMapper {
             return cassandraACLDAOV1.setACL(cassandraId, mailboxACL)
                 .flatMap(aclDiff -> userMailboxRightsDAO.update(cassandraId, aclDiff)
                     .thenReturn(aclDiff))
-                .switchIfEmpty(Mono.defer(() -> Mono.error(new MailboxException("Unable to update ACL"))));
+                .switchIfEmpty(Mono.error(() -> new MailboxException("Unable to update ACL")));
         }
 
         public Mono<Void> delete(CassandraId cassandraId) {
@@ -125,7 +125,7 @@ public class CassandraACLMapper {
                 .map(ACLUpdated.class::cast)
                 .map(ACLUpdated::getAclDiff)
                 .next()
-                .switchIfEmpty(Mono.defer(() -> Mono.error(new MailboxException("Unable to update ACL"))));
+                .switchIfEmpty(Mono.error(() -> new MailboxException("Unable to update ACL")));
         }
 
         @Override
@@ -136,7 +136,7 @@ public class CassandraACLMapper {
                 .map(ACLUpdated.class::cast)
                 .map(ACLUpdated::getAclDiff)
                 .next()
-                .switchIfEmpty(Mono.defer(() -> Mono.error(new MailboxException("Unable to set ACL"))));
+                .switchIfEmpty(Mono.error(() -> new MailboxException("Unable to set ACL")));
         }
 
         @Override

@@ -56,7 +56,7 @@ public class Authenticator {
             Flux.fromIterable(authMethods)
                 .concatMap(auth -> auth.createMailboxSession(request))
                 .next()
-                .switchIfEmpty(Mono.error(noAuthSupplied()))));
+                .switchIfEmpty(Mono.error(this::noAuthSupplied))));
     }
 
     private NoAuthorizationSuppliedException noAuthSupplied() {

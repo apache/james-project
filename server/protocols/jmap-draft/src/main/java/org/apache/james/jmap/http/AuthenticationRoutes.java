@@ -213,7 +213,7 @@ public class AuthenticationRoutes implements JMAPRoutes {
                     throw new BadRequestException("Request can't be deserialized", e);
                 }
             })
-            .switchIfEmpty(Mono.error(new BadRequestException("Empty body")));
+            .switchIfEmpty(Mono.error(() -> new BadRequestException("Empty body")));
     }
 
     private Mono<Void> handleContinuationTokenRequest(ContinuationTokenRequest request, HttpServerResponse resp) {

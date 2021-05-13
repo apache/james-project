@@ -95,7 +95,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
                 }
                 return true;
             })
-            .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailbox.generateAssociatedPath())))
+            .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(mailbox.generateAssociatedPath())))
             .then();
     }
 
@@ -130,7 +130,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
         return list()
             .filter(mailbox -> mailbox.getMailboxId().equals(id))
             .next()
-            .switchIfEmpty(Mono.error(new MailboxNotFoundException(id)));
+            .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(id)));
     }
     
     @Override
