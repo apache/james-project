@@ -44,6 +44,7 @@ public class MailetContainerHandler extends DataLineJamesMessageHookHandler {
     @Override
     protected Response processExtensions(SMTPSession session, Mail mail) {
         try {
+            super.processExtensions(session, mail);
             mailProcessor.service(mail);
 
             return AbstractHookableCmdHandler.calcDefaultSMTPResponse(HookResult.builder()

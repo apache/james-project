@@ -61,7 +61,6 @@ import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
-import org.awaitility.Awaitility;
 import org.jboss.netty.util.HashedWheelTimer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -145,29 +144,32 @@ class LmtpServerTest {
     void emailsShouldWellBeReceived() throws Exception {
         SocketChannel server = SocketChannel.open();
         server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
+        server.read(ByteBuffer.allocate(1024));
 
         server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+        server.read(ByteBuffer.allocate(1024));
         server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+        server.read(ByteBuffer.allocate(1024));
         server.write(ByteBuffer.wrap(("RCPT TO: <bob@examplebis.local>\r\n").getBytes(StandardCharsets.UTF_8)));
+        server.read(ByteBuffer.allocate(1024));
         server.write(ByteBuffer.wrap(("DATA\r\n").getBytes(StandardCharsets.UTF_8)));
         server.read(ByteBuffer.allocate(1024)); // needed to synchronize
         server.write(ByteBuffer.wrap(("header:value\r\n\r\nbody").getBytes(StandardCharsets.UTF_8)));
         server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
         server.write(ByteBuffer.wrap((".").getBytes(StandardCharsets.UTF_8)));
         server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+        server.read(ByteBuffer.allocate(1024));
         server.write(ByteBuffer.wrap(("QUIT\r\n").getBytes(StandardCharsets.UTF_8)));
 
-        Awaitility.await()
-            .untilAsserted(() -> {
-                Username username = Username.of("bob@examplebis.local");
-                MailboxSession systemSession = mailboxManager.createSystemSession(username);
-                assertThatCode(() ->
-                    assertThat(Flux.from(mailboxManager.getMailbox(MailboxPath.inbox(username), systemSession)
-                        .listMessagesMetadata(MessageRange.all(), systemSession))
-                        .count()
-                        .block())
-                        .isEqualTo(1))
-                    .doesNotThrowAnyException();
-            });
+
+        Username username = Username.of("bob@examplebis.local");
+        MailboxSession systemSession = mailboxManager.createSystemSession(username);
+        assertThatCode(() ->
+            assertThat(Flux.from(mailboxManager.getMailbox(MailboxPath.inbox(username), systemSession)
+                .listMessagesMetadata(MessageRange.all(), systemSession))
+                .count()
+                .block())
+                .isEqualTo(1))
+            .doesNotThrowAnyException();
     }
 }
