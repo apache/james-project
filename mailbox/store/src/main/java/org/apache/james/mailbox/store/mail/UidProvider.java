@@ -18,12 +18,18 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
+
+import com.github.steveash.guavate.Guavate;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * Take care of provide uids for a given {@link Mailbox}. Be aware that implementations
@@ -44,4 +50,14 @@ public interface UidProvider {
     Optional<MessageUid> lastUid(Mailbox mailbox) throws MailboxException;
 
     MessageUid nextUid(MailboxId mailboxId) throws MailboxException;
+
+    default Mono<MessageUid> nextUidReactive(MailboxId mailboxId) {
+        return Mono.fromCallable(() -> nextUid(mailboxId));
+    }
+
+    default Mono<List<MessageUid>> nextUids(MailboxId mailboxId, int count) {
+        return Flux.range(0, count)
+            .flatMap(i -> nextUidReactive(mailboxId))
+            .collect(Guavate.toImmutableList());
+    }
 }

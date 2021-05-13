@@ -58,6 +58,8 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.ModSeqProvider;
+import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.task.Task;
@@ -82,8 +84,8 @@ public class CassandraMessageMapper implements MessageMapper {
     private static final Duration MIN_RETRY_BACKOFF = Duration.ofMillis(10);
     private static final Duration MAX_RETRY_BACKOFF = Duration.ofMillis(1000);
 
-    private final CassandraModSeqProvider modSeqProvider;
-    private final CassandraUidProvider uidProvider;
+    private final ModSeqProvider modSeqProvider;
+    private final UidProvider uidProvider;
     private final CassandraMessageDAO messageDAO;
     private final CassandraMessageDAOV3 messageDAOV3;
     private final CassandraMessageIdDAO messageIdDAO;
@@ -99,7 +101,7 @@ public class CassandraMessageMapper implements MessageMapper {
     private final RecomputeMailboxCountersService recomputeMailboxCountersService;
     private final SecureRandom secureRandom;
 
-    public CassandraMessageMapper(CassandraUidProvider uidProvider, CassandraModSeqProvider modSeqProvider,
+    public CassandraMessageMapper(UidProvider uidProvider, ModSeqProvider modSeqProvider,
                                   CassandraAttachmentMapper attachmentMapper,
                                   CassandraMessageDAO messageDAO, CassandraMessageDAOV3 messageDAOV3, CassandraMessageIdDAO messageIdDAO,
                                   CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMailboxCounterDAO mailboxCounterDAO,
@@ -343,10 +345,10 @@ public class CassandraMessageMapper implements MessageMapper {
 
     private Mono<MailboxMessage> addUidAndModseq(MailboxMessage message, CassandraId mailboxId) {
         Mono<MessageUid> messageUidMono = uidProvider
-            .nextUids(mailboxId)
+            .nextUidReactive(mailboxId)
             .switchIfEmpty(Mono.error(() -> new MailboxException("Can not find a UID to save " + message.getMessageId() + " in " + mailboxId)));
 
-        Mono<ModSeq> nextModSeqMono = modSeqProvider.nextModSeq(mailboxId)
+        Mono<ModSeq> nextModSeqMono = modSeqProvider.nextModSeqReactive(mailboxId)
             .switchIfEmpty(Mono.error(() -> new MailboxException("Can not find a MODSEQ to save " + message.getMessageId() + " in " + mailboxId)));
 
         return Mono.zip(messageUidMono, nextModSeqMono)
@@ -438,7 +440,7 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     private Mono<ModSeq> computeNewModSeq(CassandraId mailboxId) {
-        return modSeqProvider.nextModSeq(mailboxId)
+        return modSeqProvider.nextModSeqReactive(mailboxId)
             .switchIfEmpty(ReactorUtils.executeAndEmpty(() -> new RuntimeException("ModSeq generation failed for mailbox " + mailboxId.asUuid())));
     }
 
@@ -492,7 +494,7 @@ public class CassandraMessageMapper implements MessageMapper {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         Mono<List<MessageUid>> uids = uidProvider.nextUids(mailboxId, messages.size());
-        Mono<ModSeq> nextModSeq = modSeqProvider.nextModSeq(mailboxId);
+        Mono<ModSeq> nextModSeq = modSeqProvider.nextModSeqReactive(mailboxId);
 
         Mono<List<MailboxMessage>> messagesWithUidAndModSeq = nextModSeq.flatMap(modSeq -> uids.map(uidList -> Pair.of(uidList, modSeq)))
             .map(pair -> pair.getKey().stream()

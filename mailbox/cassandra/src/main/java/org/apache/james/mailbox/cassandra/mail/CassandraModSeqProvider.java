@@ -121,19 +121,16 @@ public class CassandraModSeqProvider implements ModSeqProvider {
             .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
     }
 
-
-
     @Override
     public ModSeq nextModSeq(Mailbox mailbox) throws MailboxException {
-        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-        return nextModSeq(mailboxId)
+        return nextModSeqReactive(mailbox.getMailboxId())
             .blockOptional()
-            .orElseThrow(() -> new MailboxException("Can not retrieve modseq for " + mailboxId));
+            .orElseThrow(() -> new MailboxException("Can not retrieve modseq for " + mailbox.getMailboxId()));
     }
 
     @Override
     public ModSeq nextModSeq(MailboxId mailboxId) throws MailboxException {
-        return nextModSeq((CassandraId) mailboxId)
+        return nextModSeqReactive(mailboxId)
             .blockOptional()
             .orElseThrow(() -> new MailboxException("Can not retrieve modseq for " + mailboxId));
     }
@@ -184,13 +181,15 @@ public class CassandraModSeqProvider implements ModSeqProvider {
         return Optional.empty();
     }
 
-    public Mono<ModSeq> nextModSeq(CassandraId mailboxId) {
+    @Override
+    public Mono<ModSeq> nextModSeqReactive(MailboxId mailboxId) {
+        CassandraId cassandraId = (CassandraId) mailboxId;
         Duration firstBackoff = Duration.ofMillis(10);
 
-        return findHighestModSeq(mailboxId)
+        return findHighestModSeq(cassandraId)
             .flatMap(maybeHighestModSeq -> maybeHighestModSeq
-                        .map(highestModSeq -> tryUpdateModSeq(mailboxId, highestModSeq))
-                        .orElseGet(() -> tryInsertModSeq(mailboxId, ModSeq.first())))
+                        .map(highestModSeq -> tryUpdateModSeq(cassandraId, highestModSeq))
+                        .orElseGet(() -> tryInsertModSeq(cassandraId, ModSeq.first())))
             .single()
             .retryWhen(Retry.backoff(maxModSeqRetries, firstBackoff).scheduler(Schedulers.elastic()));
     }
