@@ -136,7 +136,7 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
         val targetAccountId: AccountId = AccountId(id)
         AccountId.from(session.getUser).map(accountId => accountId.equals(targetAccountId))
           .fold[SMono[Void]](
-            e => SMono.raiseError(e),
+            e => SMono.error(e),
             value => if (value) {
               SMono.fromCallable(() => ReactorUtils.toInputStream(request.receive
                 // Unwrapping to byte array needed to solve data races and buffer reordering when using .asByteBuffer()
@@ -144,10 +144,10 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
                 .map(array => ByteBuffer.wrap(array))))
               .flatMap(content => handle(targetAccountId, contentType, content, session, response))
             } else {
-              SMono.raiseError(ForbiddenException())
+              SMono.error(ForbiddenException())
             })
 
-      case Left(throwable: Throwable) => SMono.raiseError(throwable)
+      case Left(throwable: Throwable) => SMono.error(throwable)
     }
   }
 

@@ -20,6 +20,9 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
+import javax.annotation.PreDestroy
+import javax.inject.Inject
+import javax.mail.internet.MimeMessage
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_MDN}
 import org.apache.james.jmap.core.Invocation
 import org.apache.james.jmap.core.Invocation._
@@ -47,9 +50,6 @@ import play.api.libs.json.{JsError, JsObject, JsSuccess, Json}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
-import javax.annotation.PreDestroy
-import javax.inject.Inject
-import javax.mail.internet.MimeMessage
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 import scala.util.Try
@@ -78,7 +78,7 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
                          request: MDNSendRequest): SFlux[InvocationWithContext] =
     identityResolver.resolveIdentityId(request.identityId, mailboxSession)
       .flatMap(maybeIdentity => maybeIdentity.map(identity => create(identity, request, mailboxSession, invocation.processingContext))
-        .getOrElse(SMono.raiseError(IdentityIdNotFoundException("The IdentityId cannot be found"))))
+        .getOrElse(SMono.error(IdentityIdNotFoundException("The IdentityId cannot be found"))))
       .flatMapMany(createdResults => {
         val explicitInvocation: InvocationWithContext = InvocationWithContext(
           invocation = Invocation(

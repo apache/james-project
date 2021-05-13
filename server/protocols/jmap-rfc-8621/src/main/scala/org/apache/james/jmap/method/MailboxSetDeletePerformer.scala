@@ -74,7 +74,7 @@ class MailboxSetDeletePerformer @Inject()(mailboxManager: MailboxManager,
 
   private def delete(mailboxSession: MailboxSession, id: UnparsedMailboxId, onDestroy: RemoveEmailsOnDestroy): SMono[MailboxDeletionResult] = {
     MailboxGet.parse(mailboxIdFactory)(id)
-      .fold(e => SMono.raiseError(e),
+      .fold(e => SMono.error(e),
         id => SMono.fromCallable(() => doDelete(mailboxSession, id, onDestroy))
           .subscribeOn(Schedulers.elastic())
           .`then`(SMono.just[MailboxDeletionResult](MailboxDeletionSuccess(id))))

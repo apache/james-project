@@ -59,7 +59,7 @@ class MailboxesProvisioner @Inject() (mailboxManager: MailboxManager,
       SMono(mailboxManager.mailboxExists(mailboxPath, session))
         .map(exist => !exist)
     } catch {
-      case exception: MailboxException => SMono.raiseError(exception)
+      case exception: MailboxException => SMono.error(exception)
     }
   }
 

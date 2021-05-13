@@ -19,7 +19,10 @@
 
 package org.apache.james.jmap.method
 
+import java.io.InputStream
+
 import eu.timepit.refined.auto._
+import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_MDN}
 import org.apache.james.jmap.core.Invocation
 import org.apache.james.jmap.core.Invocation._
@@ -36,8 +39,6 @@ import org.apache.james.mime4j.message.DefaultMessageBuilder
 import play.api.libs.json.{JsError, JsObject, JsSuccess, Json}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
-import java.io.InputStream
-import javax.inject.Inject
 import scala.jdk.OptionConverters._
 import scala.util.Try
 
@@ -113,7 +114,7 @@ class MDNParseMethod @Inject()(serializer: MDNSerializer,
     } yield {
       (mdn, message)
     }
-    maybeMdn.fold(_ => SMono.raiseError(BlobUnParsableException(blobId)), result => SMono.just(result))
+    maybeMdn.fold(_ => SMono.error(BlobUnParsableException(blobId)), result => SMono.just(result))
   }
 }
 
