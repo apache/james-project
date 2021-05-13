@@ -58,7 +58,7 @@ public interface MessageIdMapper {
     void copyInMailbox(MailboxMessage mailboxMessage, Mailbox mailbox) throws MailboxException;
 
     default Mono<Void> copyInMailboxReactive(MailboxMessage mailboxMessage, Mailbox mailbox) {
-        return Mono.fromRunnable(Throwing.runnable(() -> copyInMailboxReactive(mailboxMessage, mailbox)).sneakyThrow());
+        return Mono.fromRunnable(Throwing.runnable(() -> copyInMailbox(mailboxMessage, mailbox)).sneakyThrow());
     }
 
     void delete(MessageId messageId);
