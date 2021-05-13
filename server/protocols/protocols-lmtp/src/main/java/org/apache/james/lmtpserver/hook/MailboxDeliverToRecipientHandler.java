@@ -98,7 +98,7 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
             return HookResult.builder()
                 .hookReturnCode(HookReturnCode.ok())
                 .smtpReturnCode(SMTPRetCode.MAIL_OK)
-                .smtpDescription(DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received")
+                .smtpDescription(DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received <" + recipient.asString() + ">")
                 .build();
         } catch (MailboxException | UsersRepositoryException e) {
             LOGGER.error("Unexpected error handling DATA stream", e);
