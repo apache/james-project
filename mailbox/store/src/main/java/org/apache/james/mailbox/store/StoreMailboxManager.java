@@ -427,7 +427,7 @@ public class StoreMailboxManager implements MailboxManager {
 
         mailboxMapper.execute(() -> block(mailboxMapper.findMailboxByPath(mailboxPath)
             .flatMap(mailbox -> doDeleteMailbox(mailboxMapper, mailbox, session))
-            .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)))));
+            .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(mailboxPath)))));
     }
 
     @Override

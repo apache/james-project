@@ -67,7 +67,7 @@ public class CassandraEmailChangeRepository implements EmailChangeRepository {
         }
 
         return emailChangeRepositoryDAO.getChangesSince(accountId, state)
-            .switchIfEmpty(Flux.error(new ChangeNotFoundException(state, String.format("State '%s' could not be found", state.getValue()))))
+            .switchIfEmpty(Flux.error(() -> new ChangeNotFoundException(state, String.format("State '%s' could not be found", state.getValue()))))
             .filter(change -> !change.isDelegated())
             .filter(change -> !change.getState().equals(state))
             .collect(new EmailChanges.Builder.EmailChangeCollector(state, maxChanges.orElse(defaultLimit)));
@@ -85,7 +85,7 @@ public class CassandraEmailChangeRepository implements EmailChangeRepository {
         }
 
         return emailChangeRepositoryDAO.getChangesSince(accountId, state)
-            .switchIfEmpty(Flux.error(new ChangeNotFoundException(state, String.format("State '%s' could not be found", state.getValue()))))
+            .switchIfEmpty(Flux.error(() -> new ChangeNotFoundException(state, String.format("State '%s' could not be found", state.getValue()))))
             .filter(change -> !change.getState().equals(state))
             .collect(new EmailChanges.Builder.EmailChangeCollector(state, maxChanges.orElse(defaultLimit)));
     }
