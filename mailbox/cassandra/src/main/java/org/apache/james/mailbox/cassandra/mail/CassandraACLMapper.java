@@ -46,7 +46,7 @@ import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Mono;
 
-public class CassandraACLMapper {
+public class CassandraACLMapper implements ACLMapper {
     public interface Store {
         Mono<MailboxACL> getACL(CassandraId cassandraId);
 
@@ -168,18 +168,22 @@ public class CassandraACLMapper {
             });
     }
 
+    @Override
     public Mono<MailboxACL> getACL(CassandraId cassandraId) {
         return store().flatMap(store -> store.getACL(cassandraId));
     }
 
+    @Override
     public Mono<ACLDiff> updateACL(CassandraId cassandraId, MailboxACL.ACLCommand command) {
         return store().flatMap(store -> store.updateACL(cassandraId, command));
     }
 
+    @Override
     public Mono<ACLDiff> setACL(CassandraId cassandraId, MailboxACL mailboxACL) {
         return store().flatMap(store -> store.setACL(cassandraId, mailboxACL));
     }
 
+    @Override
     public Mono<Void> delete(CassandraId cassandraId) {
         return store().flatMap(store -> store.delete(cassandraId));
     }
