@@ -30,6 +30,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraSubscriptionTabl
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
@@ -40,15 +41,19 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 
+import reactor.core.publisher.Flux;
+
 public class CassandraSubscriptionMapper extends NonTransactionalMapper implements SubscriptionMapper {
     private final Session session;
     private final CassandraUtils cassandraUtils;
     private final PreparedStatement deleteStatement;
     private final PreparedStatement selectStatement;
     private final PreparedStatement insertStatement;
+    private final CassandraAsyncExecutor executor;
 
     public CassandraSubscriptionMapper(Session session, CassandraUtils cassandraUtils) {
         this.session = session;
+        this.executor = new CassandraAsyncExecutor(session);
         this.cassandraUtils = cassandraUtils;
 
         this.deleteStatement = session.prepare(QueryBuilder.delete()
@@ -77,6 +82,14 @@ public class CassandraSubscriptionMapper extends NonTransactionalMapper implemen
                 .setString(USER, user.asString())))
             .map((row) -> new Subscription(user, row.getString(MAILBOX)))
             .collect(Collectors.toList());
+    }
+
+    @Override
+    public Flux<Subscription> findSubscriptionsForUserReactive(Username user) {
+        return executor.executeRows(
+            selectStatement.bind()
+                .setString(USER, user.asString()))
+            .map((row) -> new Subscription(user, row.getString(MAILBOX)));
     }
 
     @Override

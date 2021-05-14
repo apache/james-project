@@ -40,7 +40,6 @@ import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
-import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 object MailboxGetResults {
@@ -147,8 +146,9 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
   }
 
   private def getAllMailboxes(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SFlux[Mailbox] = {
-    val subscriptions: SMono[Subscriptions] = SMono.fromCallable(() =>
-      Subscriptions(subscriptionManager.subscriptions(mailboxSession).asScala.toSet))
+    val subscriptions: SMono[Subscriptions] = SFlux(subscriptionManager.subscriptionsReactive(mailboxSession))
+      .collectSeq()
+      .map(seq => Subscriptions(seq.toSet))
 
     SMono.zip(array => (array(0).asInstanceOf[Seq[MailboxMetaData]],
           array(1).asInstanceOf[QuotaLoaderWithPreloadedDefault],

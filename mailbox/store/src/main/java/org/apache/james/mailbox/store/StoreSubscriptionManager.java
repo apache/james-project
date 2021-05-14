@@ -33,6 +33,7 @@ import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
 import org.apache.james.mailbox.store.user.model.Subscription;
+import org.reactivestreams.Publisher;
 
 /**
  * Manages subscriptions for Users and Mailboxes.
@@ -67,6 +68,13 @@ public class StoreSubscriptionManager implements SubscriptionManager {
             .stream()
             .map(Subscription::getMailbox)
             .collect(Collectors.toCollection(() -> new HashSet<>(INITIAL_SIZE)));
+    }
+
+    @Override
+    public Publisher<String> subscriptionsReactive(MailboxSession session) throws SubscriptionException {
+        return mapperFactory.getSubscriptionMapper(session)
+            .findSubscriptionsForUserReactive(session.getUser())
+            .map(Subscription::getMailbox);
     }
 
     @Override

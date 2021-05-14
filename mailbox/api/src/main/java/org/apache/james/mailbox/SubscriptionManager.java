@@ -22,6 +22,7 @@ package org.apache.james.mailbox;
 import java.util.Collection;
 
 import org.apache.james.mailbox.exception.SubscriptionException;
+import org.reactivestreams.Publisher;
 
 /**
  * Subscribes mailboxes to users. This is only needed to implement if the Mailbox should be usable via
@@ -52,6 +53,8 @@ public interface SubscriptionManager extends RequestAware {
      *             when subscriptions cannot be read
      */
     Collection<String> subscriptions(MailboxSession session) throws SubscriptionException;
+
+    Publisher<String> subscriptionsReactive(MailboxSession session) throws SubscriptionException;
 
     /**
      * Unsubscribes the user in the session from the given mailbox.
