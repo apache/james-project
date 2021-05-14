@@ -290,6 +290,52 @@ class LmtpServerTest {
     }
 
     @Nested
+    class NormalDSNTest {
+        private InMemoryMailboxManager mailboxManager;
+
+        @BeforeEach
+        void setUp()  throws Exception {
+            mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
+
+            lmtpServerFactory = createLMTPServer(createMockProtocolHandlerLoaderBase()
+                .put(binder -> binder.bind(MailboxManager.class).annotatedWith(Names.named("mailboxmanager")).toInstance(mailboxManager))
+                .build(), "lmtpnormaldsn.xml");
+        }
+
+        @Test
+        void dsnMessagesShouldBeWellReceived() throws Exception {
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + "> RET=HDRS ENVID=QQ314159\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("RCPT TO: <bob@examplebis.local> NOTIFY=SUCCESS,FAILURE,DELAY ORCPT=rfc822;orcpt1@localhost\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("DATA\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("header:value\r\n\r\nbody").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap((".").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("QUIT\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+
+            Username username = Username.of("bob@examplebis.local");
+            MailboxSession systemSession = mailboxManager.createSystemSession(username);
+            assertThatCode(() ->
+                assertThat(Flux.from(mailboxManager.getMailbox(MailboxPath.inbox(username), systemSession)
+                    .listMessagesMetadata(MessageRange.all(), systemSession))
+                    .count()
+                    .block())
+                    .isEqualTo(1))
+                .doesNotThrowAnyException();
+        }
+    }
+
+    @Nested
     class ThrowingTest {
         @BeforeEach
         void setUp()  throws Exception {

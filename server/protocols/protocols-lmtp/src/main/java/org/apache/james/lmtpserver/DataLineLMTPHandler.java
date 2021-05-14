@@ -48,6 +48,7 @@ public class DataLineLMTPHandler extends DataLineJamesMessageHookHandler {
     @Override
     protected Response processExtensions(SMTPSession session, Mail mail) {
         LMTPMultiResponse mResponse = null;
+        executeJamesMessageHooks(session, mail);
 
         // build a wrapper around the Mail
         final ReadOnlyMailEnvelope env = new ReadOnlyMailEnvelope(mail);

@@ -52,7 +52,7 @@ public class MailetContainerHandler extends DataLineJamesMessageHookHandler {
     protected Response processExtensions(SMTPSession session, Mail mail) {
         Collection<MailAddress> recipients = ImmutableList.copyOf(mail.getRecipients());
         try {
-            super.processExtensions(session, mail);
+            executeJamesMessageHooks(session, mail);
 
             if (recipients.size() == 0) {
                 // Return 503 see https://datatracker.ietf.org/doc/html/rfc2033#section-4.2
