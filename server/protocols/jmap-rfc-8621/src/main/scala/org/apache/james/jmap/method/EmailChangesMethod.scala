@@ -44,14 +44,7 @@ class EmailChangesMethod @Inject()(val metricFactory: MetricFactory,
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailChangesRequest): SMono[InvocationWithContext] =
-    SMono({
-      val accountId: JavaAccountId = JavaAccountId.fromUsername(mailboxSession.getUser)
-      if (capabilities.contains(JAMES_SHARES)) {
-        SMono[EmailChanges](emailChangeRepository.getSinceStateWithDelegation(accountId, JavaState.of(request.sinceState.value), request.maxChanges.toJava))
-      } else {
-        SMono[EmailChanges](emailChangeRepository.getSinceState(accountId, JavaState.of(request.sinceState.value), request.maxChanges.toJava))
-      }
-    })
+    retrieveChanges(capabilities, mailboxSession, request)
       .map(emailChanges => EmailChangesResponse(
         accountId = request.accountId,
         oldState = request.sinceState,
@@ -70,6 +63,15 @@ class EmailChangesMethod @Inject()(val metricFactory: MetricFactory,
         case e: CanNotCalculateChangesException => SMono.just(InvocationWithContext(Invocation.error(ErrorCode.CannotCalculateChanges, e.getMessage, invocation.invocation.methodCallId), invocation.processingContext))
         case e => SMono.error(e)
       }
+
+  private def retrieveChanges(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession, request: EmailChangesRequest): SMono[EmailChanges] = {
+      val accountId: JavaAccountId = JavaAccountId.fromUsername(mailboxSession.getUser)
+      if (capabilities.contains(JAMES_SHARES)) {
+        SMono[EmailChanges](emailChangeRepository.getSinceStateWithDelegation(accountId, JavaState.of(request.sinceState.value), request.maxChanges.toJava))
+      } else {
+        SMono[EmailChanges](emailChangeRepository.getSinceState(accountId, JavaState.of(request.sinceState.value), request.maxChanges.toJava))
+      }
+    }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailChangesRequest] =
     EmailGetSerializer.deserializeEmailChangesRequest(invocation.arguments.value) match {

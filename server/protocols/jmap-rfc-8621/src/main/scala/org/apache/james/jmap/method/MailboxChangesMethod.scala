@@ -50,14 +50,7 @@ class MailboxChangesMethod @Inject()(mailboxSerializer: MailboxSerializer,
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: MailboxChangesRequest): SMono[InvocationWithContext] =
-    SMono.fromPublisher({
-      val accountId: JavaAccountId = JavaAccountId.fromUsername(mailboxSession.getUser)
-      val state: JavaState = JavaState.of(request.sinceState.value)
-      if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
-        mailboxChangeRepository.getSinceStateWithDelegation(accountId, state, request.maxChanges.toJava)
-      } else {
-        mailboxChangeRepository.getSinceState(accountId, state, request.maxChanges.toJava)
-      }})
+    retrieveChanges(capabilities, mailboxSession, request)
       .map(mailboxChanges => MailboxChangesResponse(
         accountId = request.accountId,
         oldState = request.sinceState,
@@ -77,6 +70,17 @@ class MailboxChangesMethod @Inject()(mailboxSerializer: MailboxSerializer,
         case e: CanNotCalculateChangesException => SMono.just(InvocationWithContext(Invocation.error(ErrorCode.CannotCalculateChanges, e.getMessage, invocation.invocation.methodCallId), invocation.processingContext))
         case e => SMono.error(e)
       }
+
+  private def retrieveChanges(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession, request: MailboxChangesRequest): SMono[MailboxChanges] =
+    SMono.fromPublisher({
+      val accountId: JavaAccountId = JavaAccountId.fromUsername(mailboxSession.getUser)
+      val state: JavaState = JavaState.of(request.sinceState.value)
+      if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
+        mailboxChangeRepository.getSinceStateWithDelegation(accountId, state, request.maxChanges.toJava)
+      } else {
+        mailboxChangeRepository.getSinceState(accountId, state, request.maxChanges.toJava)
+      }
+    })
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, MailboxChangesRequest] =
     mailboxSerializer.deserializeMailboxChangesRequest(invocation.arguments.value) match {
