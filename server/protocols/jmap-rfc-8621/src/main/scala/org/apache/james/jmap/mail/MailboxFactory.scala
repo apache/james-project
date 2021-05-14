@@ -159,7 +159,8 @@ class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager, mailbo
               namespace = namespace,
               rights = rights,
               quotas = quotas,
-              isSubscribed = isSubscribed)})
+              isSubscribed = isSubscribed)
+          })
     }
   }
 

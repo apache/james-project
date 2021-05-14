@@ -25,6 +25,11 @@ import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
 
+import com.google.common.base.Functions;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 /**
  * Mapper for {@link Subscription}
  *
@@ -42,6 +47,11 @@ public interface SubscriptionMapper extends Mapper {
      * @return not null
      */
     List<Subscription> findSubscriptionsForUser(Username user) throws SubscriptionException;
+
+    default Flux<Subscription> findSubscriptionsForUserReactive(Username user) {
+        return Mono.fromCallable(() -> findSubscriptionsForUser(user))
+            .flatMapIterable(Functions.identity());
+    }
 
     /**
      * Deletes the given subscription.
