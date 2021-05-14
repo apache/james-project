@@ -23,4 +23,8 @@
         <property name="fileSystem" ref="filesystem"/>
     </bean>
 
+    <bean id="mailboxAdapter" class="org.apache.james.pop3server.mailbox.DefaultMailboxAdapterFactory">
+        <constructor-arg index="0" ref="mailboxmanager"/>
+    </bean>
+
 </beans>

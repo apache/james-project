@@ -42,8 +42,6 @@ import com.google.common.collect.ImmutableList;
 
 public class MailboxAdapter implements Mailbox {
     private static final FetchGroup FULL_GROUP = FetchGroup.FULL_CONTENT;
-    private static final FetchGroup BODY_GROUP = FetchGroup.BODY_CONTENT;
-    private static final FetchGroup HEADERS_GROUP = FetchGroup.HEADERS;
     private static final FetchGroup METADATA_GROUP = FetchGroup.MINIMAL;
 
     private final MessageManager manager;
@@ -55,41 +53,6 @@ public class MailboxAdapter implements Mailbox {
         this.manager = manager;
         this.session = session;
         this.mailboxManager = mailboxManager;
-    }
-
-    @Override
-    public InputStream getMessageBody(String uid) throws IOException {
-        try {
-            mailboxManager.startProcessingRequest(session);
-            Iterator<MessageResult> results = manager.getMessages(MessageUid.of(Long.parseLong(uid)).toRange(), BODY_GROUP, session);
-            if (results.hasNext()) {
-                return results.next().getBody().getInputStream();
-            } else {
-                return null;
-            }
-        } catch (MailboxException e) {
-            throw new IOException("Unable to retrieve message body for uid " + uid, e);
-        } finally {
-            mailboxManager.endProcessingRequest(session);
-        }
-    }
-
-    @Override
-    public InputStream getMessageHeaders(String uid) throws IOException {
-        try {
-            mailboxManager.startProcessingRequest(session);
-            Iterator<MessageResult> results = manager.getMessages(MessageUid.of(Long.parseLong(uid)).toRange(), HEADERS_GROUP,
-                    session);
-            if (results.hasNext()) {
-                return results.next().getHeaders().getInputStream();
-            } else {
-                return null;
-            }
-        } catch (MailboxException e) {
-            throw new IOException("Unable to retrieve message header for uid " + uid, e);
-        } finally {
-            mailboxManager.endProcessingRequest(session);
-        }
     }
 
     @Override

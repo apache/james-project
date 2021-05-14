@@ -34,21 +34,11 @@ public abstract class ImapMailbox implements Mailbox {
      */
     public abstract InputStream getMessageBody(long uid) throws IOException;
 
-    @Override
-    public InputStream getMessageBody(String uid) throws NumberFormatException, IOException {
-        return this.getMessageBody(Long.parseLong(uid));
-    }
-
     /**
      * Returns the message headers as {@link InputStream} or <code>null</code>
      * if no message can be found for the given <code>uid</code>
      */
     public abstract InputStream getMessageHeaders(long uid) throws IOException;
-
-    @Override
-    public InputStream getMessageHeaders(String uid) throws NumberFormatException, IOException {
-        return this.getMessageHeaders(Long.parseLong(uid));
-    }
 
     /**
      * Return the full message (headers + body) as {@link InputStream} or
