@@ -25,7 +25,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import javax.inject.Inject
 import org.apache.james.jmap.api.change.{EmailChangeRepository, State => JavaState}
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, Properties, UuidState}
@@ -85,7 +85,7 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailGetRequest): SMono[InvocationWithContext] = {
-    computeResponseInvocation(request, invocation.invocation, mailboxSession).onErrorResume({
+    computeResponseInvocation(capabilities, request, invocation.invocation, mailboxSession).onErrorResume({
       case e: IllegalArgumentException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.invocation.methodCallId))
       case e: Throwable => SMono.error(e)
     }).map(invocationResult => InvocationWithContext(invocationResult, invocation.processingContext))
@@ -97,12 +97,12 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
       case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
     }
 
-  private def computeResponseInvocation(request: EmailGetRequest, invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] =
+  private def computeResponseInvocation(capabilities: Set[CapabilityIdentifier], request: EmailGetRequest, invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] =
     validateProperties(request)
       .flatMap(properties => validateBodyProperties(request).map((properties, _)))
       .fold(
         e => SMono.error(e), {
-          case (properties, bodyProperties) => getEmails(request, mailboxSession)
+          case (properties, bodyProperties) => getEmails(capabilities, request, mailboxSession)
             .map(response => Invocation(
               methodName = methodName,
               arguments = Arguments(EmailGetSerializer.serialize(response, properties, bodyProperties).as[JsObject]),
@@ -139,17 +139,26 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
         }
     }
 
-  private def getEmails(request: EmailGetRequest, mailboxSession: MailboxSession): SMono[EmailGetResponse] =
+  private def getEmails(capabilities: Set[CapabilityIdentifier], request: EmailGetRequest, mailboxSession: MailboxSession): SMono[EmailGetResponse] =
     request.ids match {
       case None => SMono.error(new IllegalArgumentException("ids can not be ommited for email/get"))
       case Some(ids) => getEmails(ids, mailboxSession, request)
-        .flatMap(result => SMono[JavaState](emailchangeRepository.getLatestState(JavaAccountId.fromUsername(mailboxSession.getUser)))
+        .flatMap(result => retrieveState(capabilities, mailboxSession)
           .map(state => EmailGetResponse(
             accountId = request.accountId,
             state = UuidState.fromJava(state),
             list = result.emails.toList,
             notFound = result.notFound)))
     }
+
+  private def retrieveState(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[JavaState] = {
+    val accountId: JavaAccountId = JavaAccountId.fromUsername(mailboxSession.getUser)
+    if (capabilities.contains(JAMES_SHARES)) {
+      SMono[JavaState](emailchangeRepository.getLatestStateWithDelegation(accountId))
+    } else {
+      SMono[JavaState](emailchangeRepository.getLatestState(accountId))
+    }
+  }
 
   private def getEmails(ids: EmailIds, mailboxSession: MailboxSession, request: EmailGetRequest): SMono[EmailGetResults] = {
     val parsedIds: List[Either[(UnparsedEmailId, IllegalArgumentException),  MessageId]] = ids.value
