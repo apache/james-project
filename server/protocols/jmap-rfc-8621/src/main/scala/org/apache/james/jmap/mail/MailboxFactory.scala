@@ -117,10 +117,6 @@ class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager, mailbo
         maySubmit = MaySubmit(false))
   }
 
-  private def retrieveIsSubscribed(path: MailboxPath, session: MailboxSession): IsSubscribed = IsSubscribed(subscriptionManager
-    .subscriptions(session)
-    .contains(path.getName))
-
   def create(mailboxMetaData: MailboxMetaData,
              mailboxSession: MailboxSession,
              subscriptions: Subscriptions,
@@ -164,7 +160,7 @@ class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager, mailbo
     }
   }
 
-  def create(id: MailboxId, mailboxSession: MailboxSession, quotaLoader: QuotaLoader): SMono[Mailbox] = {
+  def create(id: MailboxId, mailboxSession: MailboxSession, quotaLoader: QuotaLoader, subscriptions: Subscriptions): SMono[Mailbox] = {
     try {
       val messageManager: MessageManager = mailboxManager.getMailbox(id, mailboxSession)
       val sanitizedCounters: MailboxCounters = messageManager.getMailboxCounters(mailboxSession).sanitize()
@@ -188,7 +184,7 @@ class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager, mailbo
                 })
                 .map(_.getId)
               val myRights: MailboxRights = getMyRights(messageManager.getMailboxPath, resolvedACL, mailboxSession)
-              val isSubscribed: IsSubscribed = retrieveIsSubscribed(messageManager.getMailboxPath, mailboxSession)
+              val isSubscribed: IsSubscribed = subscriptions.isSubscribed(messageManager.getMailboxPath.getName)
 
               Mailbox(
                 id = id,
@@ -204,7 +200,8 @@ class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager, mailbo
                 namespace = namespace,
                 rights = rights,
                 quotas = quotas,
-                isSubscribed = isSubscribed)})
+                isSubscribed = isSubscribed)
+            })
       }
     } catch {
       case error: Exception => SMono.error(error)
