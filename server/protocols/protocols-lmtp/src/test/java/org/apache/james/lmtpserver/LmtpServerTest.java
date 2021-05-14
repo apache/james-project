@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
@@ -50,6 +51,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailetcontainer.api.MailProcessor;
@@ -394,6 +396,13 @@ class LmtpServerTest {
                     .block())
                     .isEqualTo(1))
                 .doesNotThrowAnyException();
+            assertThat(
+                IOUtils.toString(mailboxManager.getMailbox(MailboxPath.inbox(username), systemSession)
+                    .getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, systemSession)
+                    .next()
+                    .getFullContent()
+                    .getInputStream(), StandardCharsets.UTF_8))
+                .endsWith("header:value\r\n\r\nbody\r\n");
         }
 
         @Test
