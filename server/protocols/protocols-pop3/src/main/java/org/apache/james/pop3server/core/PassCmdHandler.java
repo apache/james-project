@@ -33,7 +33,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.pop3server.mailbox.MailboxAdapter;
+import org.apache.james.pop3server.mailbox.MailboxAdapterFactory;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.lib.POP3BeforeSMTPHelper;
@@ -57,11 +57,13 @@ public class PassCmdHandler extends AbstractPassCmdHandler  {
     private static final Logger LOGGER = LoggerFactory.getLogger(PassCmdHandler.class);
 
     private final MailboxManager manager;
+    private final MailboxAdapterFactory mailboxAdapterFactory;
 
     @Inject
-    public PassCmdHandler(@Named("mailboxmanager") MailboxManager manager, MetricFactory metricFactory) {
+    public PassCmdHandler(@Named("mailboxmanager") MailboxManager manager, MailboxAdapterFactory mailboxAdapterFactory, MetricFactory metricFactory) {
         super(metricFactory);
         this.manager = manager;
+        this.mailboxAdapterFactory = mailboxAdapterFactory;
     }
 
     @Override
@@ -95,12 +97,11 @@ public class PassCmdHandler extends AbstractPassCmdHandler  {
                 LOGGER.info("Provisioning INBOX. {} created.", mailboxId);
             }
             MessageManager mailbox = manager.getMailbox(MailboxPath.inbox(mSession), mSession);
-            MailboxAdapter mailboxAdapter = new MailboxAdapter(manager, mailbox, mSession);
             LOGGER.info("Opening mailbox {} {} with mailbox session {}",
                 mailbox.getId().serialize(),
                 mailbox.getMailboxPath().asString(),
                 mSession.getSessionId().getValue());
-            return mailboxAdapter;
+            return mailboxAdapterFactory.create(mailbox, mSession);
         } catch (BadCredentialsException e) {
             LOGGER.info("Bad credential supplied for {} with remote address {}",
                 session.getUsername().asString(),

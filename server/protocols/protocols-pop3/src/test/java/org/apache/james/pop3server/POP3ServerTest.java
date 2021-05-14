@@ -44,6 +44,8 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.pop3server.mailbox.DefaultMailboxAdapterFactory;
+import org.apache.james.pop3server.mailbox.MailboxAdapterFactory;
 import org.apache.james.pop3server.netty.POP3Server;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.lib.POP3BeforeSMTPHelper;
@@ -59,15 +61,15 @@ import org.junit.jupiter.api.Test;
 
 import com.google.inject.name.Names;
 
-class POP3ServerTest {
+public class POP3ServerTest {
     private static final DomainList NO_DOMAIN_LIST = null;
 
     private POP3TestConfiguration pop3Configuration;
-    private final MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
+    protected final MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
     private POP3Client pop3Client = null;
     protected MockFileSystem fileSystem;
     protected MockProtocolHandlerLoader protocolHandlerChain;
-    private StoreMailboxManager mailboxManager;
+    protected StoreMailboxManager mailboxManager;
     private final byte[] content = ("Return-path: return@test.com\r\n"
             + "Content-Transfer-Encoding: plain\r\n"
             + "Subject: test\r\n\r\n"
@@ -741,6 +743,7 @@ class POP3ServerTest {
             .put(binder -> binder.bind(MailboxManager.class).annotatedWith(Names.named("mailboxmanager")).toInstance(mailboxManager))
             .put(binder -> binder.bind(FileSystem.class).toInstance(fileSystem))
             .put(binder -> binder.bind(MetricFactory.class).toInstance(new RecordingMetricFactory()))
+            .put(binder -> binder.bind(MailboxAdapterFactory.class).to(DefaultMailboxAdapterFactory.class))
             .build();
     }
 

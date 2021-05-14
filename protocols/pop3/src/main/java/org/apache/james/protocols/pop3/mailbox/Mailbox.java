@@ -26,19 +26,6 @@ import java.util.List;
  * A Mailbox which is used in POP3 to retrieve messages
  */
 public interface Mailbox {
-
-    /**
-     * Returns the message body as {@link InputStream} or <code>null</code> if
-     * no message can be found for the given <code>uid</code>
-     */
-    InputStream getMessageBody(String uid) throws IOException;
-
-    /**
-     * Returns the message headers as {@link InputStream} or <code>null</code>
-     * if no message can be found for the given <code>uid</code>
-     */
-    InputStream getMessageHeaders(String uid) throws IOException;
-
     /**
      * Return the full message (headers + body) as {@link InputStream} or
      * <code>null</code> if no message can be found for the given
