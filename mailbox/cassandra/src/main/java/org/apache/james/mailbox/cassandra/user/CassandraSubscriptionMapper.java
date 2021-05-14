@@ -19,10 +19,10 @@
 
 package org.apache.james.mailbox.cassandra.user;
 
+import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static org.apache.james.mailbox.cassandra.table.CassandraSubscriptionTable.FIELDS;
 import static org.apache.james.mailbox.cassandra.table.CassandraSubscriptionTable.MAILBOX;
 import static org.apache.james.mailbox.cassandra.table.CassandraSubscriptionTable.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraSubscriptionTable.USER;
@@ -36,48 +36,53 @@ import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
 
+import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 
 public class CassandraSubscriptionMapper extends NonTransactionalMapper implements SubscriptionMapper {
     private final Session session;
-    private CassandraUtils cassandraUtils;
+    private final CassandraUtils cassandraUtils;
+    private final PreparedStatement deleteStatement;
+    private final PreparedStatement selectStatement;
+    private final PreparedStatement insertStatement;
 
     public CassandraSubscriptionMapper(Session session, CassandraUtils cassandraUtils) {
         this.session = session;
         this.cassandraUtils = cassandraUtils;
+
+        this.deleteStatement = session.prepare(QueryBuilder.delete()
+            .from(TABLE_NAME)
+            .where(eq(USER, bindMarker(USER)))
+            .and(eq(MAILBOX, bindMarker(MAILBOX))));
+        this.selectStatement = session.prepare(select(MAILBOX)
+            .from(TABLE_NAME)
+            .where(eq(USER, bindMarker(USER))));
+        this.insertStatement = session.prepare(insertInto(TABLE_NAME)
+            .value(USER, bindMarker(USER))
+            .value(MAILBOX, bindMarker(MAILBOX)));
     }
 
     @Override
     public synchronized void delete(Subscription subscription) {
-        session.execute(QueryBuilder.delete()
-            .from(TABLE_NAME)
-            .where(eq(USER, subscription.getUser().asString()))
-            .and(eq(MAILBOX, subscription.getMailbox())));
+        session.execute(deleteStatement.bind()
+            .setString(USER, subscription.getUser().asString())
+            .setString(MAILBOX, subscription.getMailbox()));
     }
 
     @Override
     public List<Subscription> findSubscriptionsForUser(Username user) {
         return cassandraUtils.convertToStream(
-            session.execute(select(MAILBOX)
-                .from(TABLE_NAME)
-                .where(eq(USER, user.asString()))))
+            session.execute(selectStatement.bind()
+                .setString(USER, user.asString())))
             .map((row) -> new Subscription(user, row.getString(MAILBOX)))
             .collect(Collectors.toList());
     }
 
     @Override
     public synchronized void save(Subscription subscription) {
-        session.execute(insertInto(TABLE_NAME)
-            .value(USER, subscription.getUser().asString())
-            .value(MAILBOX, subscription.getMailbox()));
-    }
-
-    public List<Subscription> list() {
-        return cassandraUtils.convertToStream(
-            session.execute(select(FIELDS)
-                .from(TABLE_NAME)))
-            .map((row) -> new Subscription(Username.of(row.getString(USER)), row.getString(MAILBOX)))
-            .collect(Collectors.toList());
+        session.execute(insertStatement.bind()
+            .setString(USER, subscription.getUser().asString())
+            .setString(MAILBOX, subscription.getMailbox()));
     }
 }
