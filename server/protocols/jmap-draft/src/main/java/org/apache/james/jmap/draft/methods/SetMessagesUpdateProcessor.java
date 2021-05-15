@@ -29,7 +29,6 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
@@ -38,7 +37,6 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.Username;
-import org.apache.james.jmap.draft.exceptions.DraftMessageMailboxUpdateException;
 import org.apache.james.jmap.draft.exceptions.InvalidOutboxMoveException;
 import org.apache.james.jmap.draft.model.Keyword;
 import org.apache.james.jmap.draft.model.Keywords;
@@ -124,16 +122,13 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     public Mono<SetMessagesResponse> processReactive(SetMessagesRequest request, MailboxSession mailboxSession) {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_PREFIX + "SetMessagesUpdateProcessor",
             listMailboxIdsForRole(mailboxSession, Role.OUTBOX)
-                .flatMap(outboxIds -> Mono.fromCallable(() -> prepareResponse(request, mailboxSession, outboxIds).build())
-                    .subscribeOn(Schedulers.elastic()))
+                .flatMap(outboxIds -> prepareResponse(request, mailboxSession, outboxIds).map(SetMessagesResponse.Builder::build))
                 .onErrorResume(e ->
-                    Mono.fromCallable(() ->
-                        request.buildUpdatePatches(updatePatchConverter).entrySet().stream()
-                            .map(entry -> prepareResponseIfCantReadOutboxes(e, entry.getKey(), entry.getValue()))
-                            .reduce(SetMessagesResponse.Builder::mergeWith)
-                            .orElse(SetMessagesResponse.builder())
-                            .build())
-                        .subscribeOn(Schedulers.elastic()))));
+                    Mono.just(request.buildUpdatePatches(updatePatchConverter).entrySet().stream()
+                        .map(entry -> prepareResponseIfCantReadOutboxes(e, entry.getKey(), entry.getValue()))
+                        .reduce(SetMessagesResponse.Builder::mergeWith)
+                        .orElse(SetMessagesResponse.builder())
+                        .build()))));
     }
 
     private SetMessagesResponse.Builder prepareResponseIfCantReadOutboxes(Throwable e, MessageId id, UpdateMessagePatch patch) {
@@ -144,28 +139,31 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         }
     }
 
-    private SetMessagesResponse.Builder prepareResponse(SetMessagesRequest request, MailboxSession mailboxSession, Set<MailboxId> outboxes) {
+    private Mono<SetMessagesResponse.Builder> prepareResponse(SetMessagesRequest request, MailboxSession mailboxSession, Set<MailboxId> outboxes) {
         Map<MessageId, UpdateMessagePatch> patches = request.buildUpdatePatches(updatePatchConverter);
 
-        Multimap<MessageId, ComposedMessageIdWithMetaData> messages = Flux.from(messageIdManager.messagesMetadata(patches.keySet(), mailboxSession))
+        return Flux.from(messageIdManager.messagesMetadata(patches.keySet(), mailboxSession))
             .collect(Guavate.toImmutableListMultimap(metaData -> metaData.getComposedMessageId().getMessageId()))
-            .block();
-
-        if (isAMassiveFlagUpdate(patches, messages)) {
-            return applyRangedFlagUpdate(patches, messages, mailboxSession);
-        } else if (isAMassiveMove(patches, messages)) {
-            return applyMove(patches, messages, mailboxSession);
-        } else {
-            return patches.entrySet().stream()
-                .map(entry ->  {
-                if (entry.getValue().isValid()) {
-                    return update(outboxes, entry.getKey(), entry.getValue(), mailboxSession, messages);
+            .flatMap(messages -> {
+                if (isAMassiveFlagUpdate(patches, messages)) {
+                    return Mono.fromCallable(() -> applyRangedFlagUpdate(patches, messages, mailboxSession))
+                        .subscribeOn(Schedulers.elastic());
+                } else if (isAMassiveMove(patches, messages)) {
+                    return Mono.fromCallable(() -> applyMove(patches, messages, mailboxSession))
+                        .subscribeOn(Schedulers.elastic());
                 } else {
-                    return handleInvalidRequest(entry.getKey(), entry.getValue().getValidationErrors(), entry.getValue());
+                    return Flux.fromIterable(patches.entrySet())
+                        .flatMap(entry -> {
+                            if (entry.getValue().isValid()) {
+                                return update(outboxes, entry.getKey(), entry.getValue(), mailboxSession, messages);
+                            } else {
+                                return Mono.just(handleInvalidRequest(entry.getKey(), entry.getValue().getValidationErrors(), entry.getValue()));
+                            }
+
+                        }).reduce(SetMessagesResponse.Builder::mergeWith)
+                        .switchIfEmpty(Mono.just(SetMessagesResponse.builder()));
                 }
-            }).reduce(SetMessagesResponse.Builder::mergeWith)
-            .orElse(SetMessagesResponse.builder());
-        }
+            });
     }
 
     private boolean isAMassiveFlagUpdate(Map<MessageId, UpdateMessagePatch> patches, Multimap<MessageId, ComposedMessageIdWithMetaData> messages) {
@@ -305,8 +303,6 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                 builder.mergeWith(sendMessageWhenOutboxInTargetMailboxIds(outboxes, messageId, updateMessagePatch, mailboxSession));
             }
             return builder;
-        } catch (DraftMessageMailboxUpdateException e) {
-            return handleDraftMessageMailboxUpdateException(messageId, e);
         } catch (InvalidOutboxMoveException e) {
             ValidationResult invalidPropertyMailboxIds = ValidationResult.builder()
                 .property(MessageProperties.MessageProperty.mailboxIds.asFieldName())
@@ -466,15 +462,6 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                         .properties(ImmutableSet.of(MessageProperties.MessageProperty.id))
                         .description("message not found")
                         .build()));
-    }
-
-    private SetMessagesResponse.Builder handleDraftMessageMailboxUpdateException(MessageId messageId,
-                                                                     DraftMessageMailboxUpdateException e) {
-        return SetMessagesResponse.builder().notUpdated(ImmutableMap.of(messageId, SetError.builder()
-            .type(SetError.Type.INVALID_ARGUMENTS)
-            .properties(MessageProperties.MessageProperty.mailboxIds)
-            .description(e.getMessage())
-            .build()));
     }
 
     private SetMessagesResponse.Builder handleMessageUpdateException(MessageId messageId,
