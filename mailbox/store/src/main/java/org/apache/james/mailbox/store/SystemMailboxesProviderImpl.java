@@ -57,7 +57,7 @@ public class SystemMailboxesProviderImpl implements SystemMailboxesProvider {
         MailboxSession session = mailboxManager.createSystemSession(username);
         MailboxPath mailboxPath = MailboxPath.forUser(username, aRole.getDefaultMailbox());
 
-        return Mono.fromCallable(() -> mailboxManager.getMailbox(mailboxPath, session))
+        return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, session))
             .flux()
             .onErrorResume(MailboxNotFoundException.class, e -> searchMessageManagerByMailboxRole(aRole, username));
 
