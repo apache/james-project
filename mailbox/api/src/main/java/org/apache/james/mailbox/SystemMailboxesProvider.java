@@ -27,7 +27,7 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 
 public interface SystemMailboxesProvider {
-    Publisher<MessageManager> getMailboxByRole(Role aRole, Username username) throws MailboxException;
+    Publisher<MessageManager> getMailboxByRole(Role aRole, Username username);
 
     default MessageManager findMailbox(Role role, Username username) throws MailboxException {
         return Flux.from(getMailboxByRole(role, username))
