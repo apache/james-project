@@ -66,7 +66,7 @@ public interface MessageIdManager {
 
     DeleteResult delete(MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
 
-    Publisher<DeleteResult> delete(List<MessageId> messageId, MailboxSession mailboxSession) throws MailboxException;
+    Publisher<DeleteResult> delete(List<MessageId> messageId, MailboxSession mailboxSession);
 
     void setInMailboxes(MessageId messageId, Collection<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
 
@@ -76,7 +76,7 @@ public interface MessageIdManager {
         return getMessages(ImmutableList.of(messageId), fetchGroup, mailboxSession);
     }
 
-    default DeleteResult delete(MessageId messageId, MailboxSession mailboxSession) throws MailboxException {
+    default DeleteResult delete(MessageId messageId, MailboxSession mailboxSession) {
         return Mono.from(delete(ImmutableList.of(messageId), mailboxSession))
             .subscribeOn(Schedulers.elastic())
             .block();

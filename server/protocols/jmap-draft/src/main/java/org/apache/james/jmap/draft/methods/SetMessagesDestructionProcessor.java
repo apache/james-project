@@ -22,29 +22,27 @@ package org.apache.james.jmap.draft.methods;
 import static org.apache.james.jmap.draft.methods.Method.JMAP_PREFIX;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.jmap.draft.model.SetError;
 import org.apache.james.jmap.draft.model.SetMessagesRequest;
 import org.apache.james.jmap.draft.model.SetMessagesResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.DeleteResult;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class SetMessagesDestructionProcessor implements SetMessagesProcessor {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(SetMessagesCreationProcessor.class);
 
     private final MessageIdManager messageIdManager;
@@ -58,44 +56,38 @@ public class SetMessagesDestructionProcessor implements SetMessagesProcessor {
     }
 
     @Override
-    public SetMessagesResponse process(SetMessagesRequest request, MailboxSession mailboxSession) {
-        return metricFactory.decorateSupplierWithTimerMetric(JMAP_PREFIX + "SetMessageDestructionProcessor",
-            () -> delete(request.getDestroy(), mailboxSession)
-                .reduce(SetMessagesResponse.builder(),
-                    SetMessagesResponse.Builder::accumulator,
-                    SetMessagesResponse.Builder::combiner)
-                .build());
+    public Mono<SetMessagesResponse> processReactive(SetMessagesRequest request, MailboxSession mailboxSession) {
+        return Mono.from(metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_PREFIX + "SetMessageDestructionProcessor",
+            delete(request.getDestroy(), mailboxSession)));
     }
 
-
-    private Stream<SetMessagesResponse> delete(List<MessageId> toBeDestroyed, MailboxSession mailboxSession) {
-        try {
-            if (toBeDestroyed.isEmpty()) {
-                return Stream.empty();
-            }
-            DeleteResult deleteResult = Mono.from(messageIdManager.delete(toBeDestroyed, mailboxSession))
-                .subscribeOn(Schedulers.elastic())
-                .block();
-
-            Stream<SetMessagesResponse> destroyed = deleteResult.getDestroyed().stream()
-                .map(messageId -> SetMessagesResponse.builder().destroyed(messageId).build());
-            Stream<SetMessagesResponse> notFound = deleteResult.getNotFound().stream()
-                .map(messageId -> SetMessagesResponse.builder().notDestroyed(messageId,
-                    SetError.builder()
-                        .type(SetError.Type.NOT_FOUND)
-                        .description("The message " + messageId.serialize() + " can't be found")
-                        .build())
-                    .build());
-            return Stream.concat(destroyed, notFound);
-        } catch (MailboxException e) {
-            LOGGER.error("An error occurred when deleting a message", e);
-            return toBeDestroyed.stream()
-                .map(messageId -> SetMessagesResponse.builder().notDestroyed(messageId,
-                    SetError.builder()
-                        .type(SetError.Type.ERROR)
-                        .description("An error occurred while deleting messages " + messageId.serialize())
-                        .build())
-                    .build());
+    private Mono<SetMessagesResponse> delete(List<MessageId> toBeDestroyed, MailboxSession mailboxSession) {
+        if (toBeDestroyed.isEmpty()) {
+            return Mono.just(SetMessagesResponse.builder().build());
         }
+        return Mono.from(messageIdManager.delete(toBeDestroyed, mailboxSession))
+            .map(deleteResult -> SetMessagesResponse.builder()
+                .destroyed(ImmutableList.copyOf(deleteResult.getDestroyed()))
+                .notDestroyed(deleteResult.getNotFound().stream()
+                    .map(messageId -> Pair.of(messageId,
+                        SetError.builder()
+                            .type(SetError.Type.NOT_FOUND)
+                            .description("The message " + messageId.serialize() + " can't be found")
+                            .build()))
+                    .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)))
+                .build())
+            .onErrorResume(e -> {
+                LOGGER.error("An error occurred when deleting a message", e);
+                return Mono.just(
+                    SetMessagesResponse.builder()
+                        .notDestroyed(toBeDestroyed.stream()
+                            .map(messageId -> Pair.of(messageId,
+                                SetError.builder()
+                                    .type(SetError.Type.ERROR)
+                                    .description("An error occurred while deleting messages " + messageId.serialize())
+                                    .build()))
+                            .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)))
+                        .build());
+            });
     }
 }
