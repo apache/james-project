@@ -40,6 +40,7 @@ import com.google.common.collect.Multimap;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public interface MessageIdMapper {
 
@@ -58,7 +59,8 @@ public interface MessageIdMapper {
     void copyInMailbox(MailboxMessage mailboxMessage, Mailbox mailbox) throws MailboxException;
 
     default Mono<Void> copyInMailboxReactive(MailboxMessage mailboxMessage, Mailbox mailbox) {
-        return Mono.fromRunnable(Throwing.runnable(() -> copyInMailbox(mailboxMessage, mailbox)).sneakyThrow());
+        return Mono.<Void>fromRunnable(Throwing.runnable(() -> copyInMailbox(mailboxMessage, mailbox)).sneakyThrow())
+            .subscribeOn(Schedulers.elastic());
     }
 
     void delete(MessageId messageId);

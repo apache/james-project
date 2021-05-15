@@ -215,7 +215,7 @@ public class SetMessagesUpdateProcessorTest {
     public void processShouldReturnEmptyUpdatedWhenRequestHasEmptyUpdate() {
         SetMessagesRequest requestWithEmptyUpdate = SetMessagesRequest.builder().build();
 
-        SetMessagesResponse result = sut.process(requestWithEmptyUpdate, null);
+        SetMessagesResponse result = sut.process(requestWithEmptyUpdate, session);
 
         assertThat(result.getUpdated()).isEmpty();
         assertThat(result.getNotUpdated()).isEmpty();
@@ -253,7 +253,7 @@ public class SetMessagesUpdateProcessorTest {
                 .build();
 
         // When
-        SetMessagesResponse result = sut.process(requestWithInvalidUpdate, null);
+        SetMessagesResponse result = sut.process(requestWithInvalidUpdate, session);
 
         // Then
         assertThat(result.getNotUpdated()).describedAs("NotUpdated should not be empty").isNotEmpty();
