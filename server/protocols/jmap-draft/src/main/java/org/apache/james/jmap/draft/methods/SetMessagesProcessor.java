@@ -23,6 +23,14 @@ import org.apache.james.jmap.draft.model.SetMessagesRequest;
 import org.apache.james.jmap.draft.model.SetMessagesResponse;
 import org.apache.james.mailbox.MailboxSession;
 
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
 public interface SetMessagesProcessor {
     SetMessagesResponse process(SetMessagesRequest request, MailboxSession mailboxSession);
+
+    default Mono<SetMessagesResponse> processReactive(SetMessagesRequest request, MailboxSession mailboxSession) {
+        return Mono.fromCallable(() -> process(request, mailboxSession))
+            .subscribeOn(Schedulers.elastic());
+    }
 }

@@ -113,9 +113,9 @@ public class GetMessageListMethod implements Method {
 
         GetMessageListRequest messageListRequest = (GetMessageListRequest) request;
 
-        return metricFactory.decorateSupplierWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
-            () -> process(methodCallId, mailboxSession, messageListRequest)
-                .subscriberContext(context("GET_MESSAGE_LIST", mdc(messageListRequest))));
+        return Flux.from(metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+            process(methodCallId, mailboxSession, messageListRequest)
+                .subscriberContext(context("GET_MESSAGE_LIST", mdc(messageListRequest)))));
     }
 
     private MDCBuilder mdc(GetMessageListRequest messageListRequest) {

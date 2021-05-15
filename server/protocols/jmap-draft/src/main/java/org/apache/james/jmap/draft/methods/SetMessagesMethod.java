@@ -19,8 +19,10 @@
 
 package org.apache.james.jmap.draft.methods;
 
+import static org.apache.james.util.MDCBuilder.ACTION;
+import static org.apache.james.util.ReactorUtils.context;
+
 import java.util.Set;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -33,6 +35,9 @@ import org.apache.james.util.MDCBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class SetMessagesMethod implements Method {
 
@@ -59,34 +64,36 @@ public class SetMessagesMethod implements Method {
     }
 
     @Override
-    public Stream<JmapResponse> processToStream(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
+    public Flux<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof SetMessagesRequest);
         SetMessagesRequest setMessagesRequest = (SetMessagesRequest) request;
 
+        return Flux.from(metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+            setMessagesResponse(setMessagesRequest, mailboxSession)
+                .map(responses ->
+                    JmapResponse.builder().methodCallId(methodCallId)
+                        .response(responses)
+                        .responseName(RESPONSE_NAME)
+                        .build())))
+            .subscriberContext(context(ACTION, mdc(setMessagesRequest)));
+    }
 
+
+
+    private MDCBuilder mdc(SetMessagesRequest setMessagesRequest) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "SET_MESSAGES")
+            .addContext(ACTION, "SET_MESSAGES")
             .addContext("accountId", setMessagesRequest.getAccountId())
             .addContext("create", setMessagesRequest.getCreate())
             .addContext("destroy", setMessagesRequest.getDestroy())
-            .addContext("ifInState", setMessagesRequest.getIfInState())
-            .wrapArround(
-                () -> metricFactory.decorateSupplierWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
-                    () ->  Stream.of(
-                        JmapResponse.builder().methodCallId(methodCallId)
-                            .response(setMessagesResponse(setMessagesRequest, mailboxSession))
-                            .responseName(RESPONSE_NAME)
-                            .build())))
-            .get();
+            .addContext("ifInState", setMessagesRequest.getIfInState());
     }
 
-    private SetMessagesResponse setMessagesResponse(SetMessagesRequest request, MailboxSession mailboxSession) {
-        return messagesProcessors.stream()
-                .map(processor -> processor.process(request, mailboxSession))
-                .reduce(SetMessagesResponse.builder(),
-                        (builder, resp) -> resp.mergeInto(builder),
-                        (builder1, builder2) -> builder2.build().mergeInto(builder1)
-                )
-                .build();
+    private Mono<SetMessagesResponse> setMessagesResponse(SetMessagesRequest request, MailboxSession mailboxSession) {
+        return Flux.fromIterable(messagesProcessors)
+            .flatMap(processor -> processor.processReactive(request, mailboxSession))
+            .reduce(SetMessagesResponse.builder(),
+                (builder, resp) -> resp.mergeInto(builder))
+            .map(SetMessagesResponse.Builder::build);
     }
 }
