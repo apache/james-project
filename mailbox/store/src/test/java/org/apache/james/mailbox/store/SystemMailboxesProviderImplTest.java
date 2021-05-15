@@ -36,6 +36,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 class SystemMailboxesProviderImplTest {
 
@@ -55,9 +56,10 @@ class SystemMailboxesProviderImplTest {
     }
 
     @Test
-    void getMailboxByRoleShouldReturnEmptyWhenNoMailbox() throws Exception {
+    void getMailboxByRoleShouldReturnEmptyWhenNoMailbox() {
         when(mailboxManager.createSystemSession(MailboxFixture.ALICE)).thenReturn(mailboxSession);
-        when(mailboxManager.getMailbox(eq(MailboxFixture.INBOX_ALICE), eq(mailboxSession))).thenThrow(MailboxNotFoundException.class);
+        when(mailboxManager.getMailboxReactive(eq(MailboxFixture.INBOX_ALICE), eq(mailboxSession)))
+            .thenReturn(Mono.error(new MailboxNotFoundException("Not found")));
         when(mailboxManager.search(any(), any(), any())).thenReturn(Flux.empty());
 
         assertThat(Flux.from(systemMailboxProvider.getMailboxByRole(Role.INBOX, mailboxSession.getUser())).toStream())
@@ -65,9 +67,9 @@ class SystemMailboxesProviderImplTest {
     }
 
     @Test
-    void getMailboxByRoleShouldReturnMailboxByRole() throws Exception {
+    void getMailboxByRoleShouldReturnMailboxByRole() {
         when(mailboxManager.createSystemSession(MailboxFixture.ALICE)).thenReturn(mailboxSession);
-        when(mailboxManager.getMailbox(eq(MailboxFixture.INBOX_ALICE), eq(mailboxSession))).thenReturn(inboxMessageManager);
+        when(mailboxManager.getMailboxReactive(eq(MailboxFixture.INBOX_ALICE), eq(mailboxSession))).thenReturn(Mono.just(inboxMessageManager));
 
         assertThat(Flux.from(systemMailboxProvider.getMailboxByRole(Role.INBOX, mailboxSession.getUser())).toStream())
             .hasSize(1)
