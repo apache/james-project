@@ -27,7 +27,9 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public interface SetMessagesProcessor {
-    SetMessagesResponse process(SetMessagesRequest request, MailboxSession mailboxSession);
+    default SetMessagesResponse process(SetMessagesRequest request, MailboxSession mailboxSession) {
+        return processReactive(request, mailboxSession).block();
+    }
 
     default Mono<SetMessagesResponse> processReactive(SetMessagesRequest request, MailboxSession mailboxSession) {
         return Mono.fromCallable(() -> process(request, mailboxSession))

@@ -223,7 +223,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     @Override
-    public Mono<DeleteResult> delete(List<MessageId> messageIds, MailboxSession mailboxSession) throws MailboxException {
+    public Mono<DeleteResult> delete(List<MessageId> messageIds, MailboxSession mailboxSession) {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
         return messageIdMapper.findReactive(messageIds, MessageMapper.FetchType.Metadata)
