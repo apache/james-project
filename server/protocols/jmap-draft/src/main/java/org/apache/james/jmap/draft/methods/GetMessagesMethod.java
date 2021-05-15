@@ -83,15 +83,15 @@ public class GetMessagesMethod implements Method {
         GetMessagesRequest getMessagesRequest = (GetMessagesRequest) request;
         MessageProperties outputProperties = getMessagesRequest.getProperties().toOutputProperties();
 
-        return metricFactory.decorateSupplierWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
-            () -> Flux.from(getMessagesResponse(mailboxSession, getMessagesRequest)
+        return Flux.from(metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+            Flux.from(getMessagesResponse(mailboxSession, getMessagesRequest)
                 .map(response -> JmapResponse.builder().methodCallId(methodCallId)
                     .response(response)
                     .responseName(RESPONSE_NAME)
                     .properties(outputProperties.getOptionalMessageProperties())
                     .filterProvider(buildOptionalHeadersFilteringFilterProvider(outputProperties))
                     .build()))
-            .subscriberContext(context("GET_MESSAGES", mdc(getMessagesRequest))));
+            .subscriberContext(context("GET_MESSAGES", mdc(getMessagesRequest)))));
     }
 
     private MDCBuilder mdc(GetMessagesRequest getMessagesRequest) {

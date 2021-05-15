@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -46,6 +45,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+
+import reactor.core.publisher.Flux;
 
 public class RequestHandlerTest {
 
@@ -105,10 +106,10 @@ public class RequestHandlerTest {
         }
 
         @Override
-        public Stream<JmapResponse> processToStream(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
+        public Flux<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
             Preconditions.checkArgument(request instanceof TestJmapRequest);
             TestJmapRequest typedRequest = (TestJmapRequest) request;
-            return Stream.of(
+            return Flux.just(
                     JmapResponse.builder()
                             .response(new TestJmapResponse(typedRequest.getId(), typedRequest.getName(), "works"))
                             .responseName(Response.name("test"))
@@ -192,8 +193,8 @@ public class RequestHandlerTest {
         }
         
         @Override
-        public Stream<JmapResponse> processToStream(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
-            return null;
+        public Flux<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
+            return Flux.empty();
         }
     }
 

@@ -80,10 +80,10 @@ public class SetVacationResponseMethod implements Method {
         Preconditions.checkArgument(request instanceof SetVacationRequest);
         SetVacationRequest setVacationRequest = (SetVacationRequest) request;
 
-        return metricFactory.decorateSupplierWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
-            () -> process(methodCallId, mailboxSession, setVacationRequest)
+        return Flux.from(metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+            process(methodCallId, mailboxSession, setVacationRequest)
                 .subscriberContext(jmapAction("SET_VACATION"))
-                .subscriberContext(context("set-vacation", MDCBuilder.of("update", setVacationRequest.getUpdate()))));
+                .subscriberContext(context("set-vacation", MDCBuilder.of("update", setVacationRequest.getUpdate())))));
     }
 
     private Flux<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, SetVacationRequest setVacationRequest) {

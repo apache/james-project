@@ -19,8 +19,10 @@
 
 package org.apache.james.jmap.draft.methods;
 
+import static org.apache.james.util.MDCBuilder.ACTION;
+import static org.apache.james.util.ReactorUtils.context;
+
 import java.util.Set;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -33,6 +35,9 @@ import org.apache.james.util.MDCBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class SetMailboxesMethod implements Method {
 
@@ -59,7 +64,7 @@ public class SetMailboxesMethod implements Method {
     }
 
     @Override
-    public Stream<JmapResponse> processToStream(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
+    public Flux<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
         Preconditions.checkNotNull(request);
         Preconditions.checkNotNull(methodCallId);
         Preconditions.checkNotNull(mailboxSession);
@@ -67,29 +72,28 @@ public class SetMailboxesMethod implements Method {
 
         SetMailboxesRequest setMailboxesRequest = (SetMailboxesRequest) request;
 
+        return Flux.from(metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+            setMailboxesResponse(setMailboxesRequest, mailboxSession)
+                .map(response -> JmapResponse.builder().methodCallId(methodCallId)
+                    .response(response)
+                    .responseName(RESPONSE_NAME)
+                    .build())))
+            .subscriberContext(context(ACTION, mdc(setMailboxesRequest)));
+    }
 
+    private MDCBuilder mdc(SetMailboxesRequest setMailboxesRequest) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "SET_MAILBOXES")
             .addContext("create", setMailboxesRequest.getCreate())
             .addContext("update", setMailboxesRequest.getUpdate())
-            .addContext("destroy", setMailboxesRequest.getDestroy())
-            .wrapArround(
-                () -> metricFactory.decorateSupplierWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
-                    () -> Stream.of(
-                        JmapResponse.builder().methodCallId(methodCallId)
-                            .response(setMailboxesResponse(setMailboxesRequest, mailboxSession))
-                            .responseName(RESPONSE_NAME)
-                            .build())))
-            .get();
+            .addContext("destroy", setMailboxesRequest.getDestroy());
     }
 
-    private SetMailboxesResponse setMailboxesResponse(SetMailboxesRequest request, MailboxSession mailboxSession) {
-        return processors.stream()
-                .map(processor -> processor.process(request, mailboxSession))
-                .reduce(SetMailboxesResponse.builder(),
-                        (builder, resp) -> resp.mergeInto(builder),
-                        (builder1, builder2) -> builder2.build().mergeInto(builder1)
-                )
-                .build();
+    private Mono<SetMailboxesResponse> setMailboxesResponse(SetMailboxesRequest request, MailboxSession mailboxSession) {
+        return Flux.fromIterable(processors)
+            .flatMap(processor -> processor.processReactive(request, mailboxSession))
+            .reduce(SetMailboxesResponse.builder(),
+                (builder, resp) -> resp.mergeInto(builder))
+            .map(SetMailboxesResponse.Builder::build);
     }
 }
