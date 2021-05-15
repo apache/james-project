@@ -42,6 +42,8 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import reactor.core.publisher.Mono;
+
 public class SetMailboxesMethodTest {
 
     private static final ImmutableSet<SetMailboxesProcessor> NO_PROCESSOR = ImmutableSet.of();
@@ -106,11 +108,12 @@ public class SetMailboxesMethodTest {
 
         MailboxSession session = mock(MailboxSession.class);
         SetMailboxesProcessor creatorProcessor = mock(SetMailboxesProcessor.class);
-        when(creatorProcessor.process(creationRequest, session)).thenReturn(creationResponse);
+        when(creatorProcessor.processReactive(creationRequest, session)).thenReturn(Mono.just(creationResponse));
 
         Stream<JmapResponse> actual =
             new SetMailboxesMethod(ImmutableSet.of(creatorProcessor), TIME_METRIC_FACTORY)
-                    .processToStream(creationRequest, MethodCallId.of("methodCallId"), session);
+                    .process(creationRequest, MethodCallId.of("methodCallId"), session)
+            .toStream();
 
         assertThat(actual).contains(jmapResponse);
     }
@@ -129,11 +132,12 @@ public class SetMailboxesMethodTest {
 
         MailboxSession session = mock(MailboxSession.class);
         SetMailboxesProcessor destructorProcessor = mock(SetMailboxesProcessor.class);
-        when(destructorProcessor.process(destructionRequest, session)).thenReturn(destructionResponse);
+        when(destructorProcessor.processReactive(destructionRequest, session)).thenReturn(Mono.just(destructionResponse));
 
         Stream<JmapResponse> actual =
             new SetMailboxesMethod(ImmutableSet.of(destructorProcessor), TIME_METRIC_FACTORY)
-                    .processToStream(destructionRequest, MethodCallId.of("methodCallId"), session);
+                    .process(destructionRequest, MethodCallId.of("methodCallId"), session)
+            .toStream();
 
         assertThat(actual).contains(jmapResponse);
     }
