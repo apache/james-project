@@ -50,6 +50,10 @@ public class VersionParser {
         this.supportedVersions = supportedVersions;
     }
 
+    public Set<Version> getSupportedVersions() {
+        return supportedVersions;
+    }
+
     @VisibleForTesting
     Version parse(String version) {
         Preconditions.checkNotNull(version);
