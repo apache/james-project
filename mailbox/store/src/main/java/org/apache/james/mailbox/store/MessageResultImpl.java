@@ -80,32 +80,32 @@ public class MessageResultImpl implements MessageResult {
 
     @Override
     public MessageUid getUid() {
-        return messageMetaData().getUid();
+        return message.getUid();
     }
 
     @Override
     public MessageId getMessageId() {
-        return messageMetaData().getMessageId();
+        return message.getMessageId();
     }
     
     @Override
     public Date getInternalDate() {
-        return messageMetaData().getInternalDate();
+        return message.getInternalDate();
     }
 
     @Override
     public Flags getFlags() {
-        return messageMetaData().getFlags();
+        return message.createFlags();
     }
 
     @Override
     public ModSeq getModSeq() {
-        return messageMetaData().getModSeq();
+        return message.getModSeq();
     }
 
     @Override
     public long getSize() {
-        return messageMetaData().getSize();
+        return message.getFullContentOctets();
     }
 
     @Override
