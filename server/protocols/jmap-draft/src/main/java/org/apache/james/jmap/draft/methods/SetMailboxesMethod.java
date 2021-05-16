@@ -72,7 +72,7 @@ public class SetMailboxesMethod implements Method {
 
         SetMailboxesRequest setMailboxesRequest = (SetMailboxesRequest) request;
 
-        return Flux.from(metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+        return Flux.from(metricFactory.decoratePublisherWithTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
             setMailboxesResponse(setMailboxesRequest, mailboxSession)
                 .map(response -> JmapResponse.builder().methodCallId(methodCallId)
                     .response(response)

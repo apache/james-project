@@ -50,7 +50,7 @@ class UserProvisioning @Inject() (usersRepository: UsersRepository, metricFactor
       case exception: AlreadyExistInUsersRepositoryException => // Ignore
       case exception: UsersRepositoryException => throw new RuntimeException(exception)
     } finally {
-      timeMetric.stopAndPublish.logWhenExceedP99(DEFAULT_100_MS_THRESHOLD)
+      timeMetric.stopAndPublish
     }
   }
 

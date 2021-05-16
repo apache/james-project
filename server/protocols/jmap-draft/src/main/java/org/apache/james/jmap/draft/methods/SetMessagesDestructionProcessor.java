@@ -57,7 +57,7 @@ public class SetMessagesDestructionProcessor implements SetMessagesProcessor {
 
     @Override
     public Mono<SetMessagesResponse> processReactive(SetMessagesRequest request, MailboxSession mailboxSession) {
-        return Mono.from(metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_PREFIX + "SetMessageDestructionProcessor",
+        return Mono.from(metricFactory.decoratePublisherWithTimerMetric(JMAP_PREFIX + "SetMessageDestructionProcessor",
             delete(request.getDestroy(), mailboxSession)));
     }
 

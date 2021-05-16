@@ -120,7 +120,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
 
     @Override
     public Mono<SetMessagesResponse> processReactive(SetMessagesRequest request, MailboxSession mailboxSession) {
-        return Mono.from(metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_PREFIX + "SetMessagesUpdateProcessor",
+        return Mono.from(metricFactory.decoratePublisherWithTimerMetric(JMAP_PREFIX + "SetMessagesUpdateProcessor",
             listMailboxIdsForRole(mailboxSession, Role.OUTBOX)
                 .flatMap(outboxIds -> prepareResponse(request, mailboxSession, outboxIds).map(SetMessagesResponse.Builder::build))
                 .onErrorResume(e ->

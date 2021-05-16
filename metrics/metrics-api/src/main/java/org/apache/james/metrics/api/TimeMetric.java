@@ -27,6 +27,8 @@ public interface TimeMetric {
 
         Duration elasped();
 
+        @Deprecated
+        // Underlying implementations implies a high overhead
         ExecutionResult logWhenExceedP99(Duration thresholdInNanoSeconds);
     }
 

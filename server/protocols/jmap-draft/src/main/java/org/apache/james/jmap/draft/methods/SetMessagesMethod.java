@@ -68,7 +68,7 @@ public class SetMessagesMethod implements Method {
         Preconditions.checkArgument(request instanceof SetMessagesRequest);
         SetMessagesRequest setMessagesRequest = (SetMessagesRequest) request;
 
-        return Flux.from(metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+        return Flux.from(metricFactory.decoratePublisherWithTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
             setMessagesResponse(setMessagesRequest, mailboxSession)
                 .map(responses ->
                     JmapResponse.builder().methodCallId(methodCallId)

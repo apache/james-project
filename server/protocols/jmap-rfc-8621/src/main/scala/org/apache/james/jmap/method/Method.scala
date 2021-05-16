@@ -88,7 +88,7 @@ trait MethodRequiringAccountId[REQUEST <: WithAccountId] extends Method {
         case e: Throwable => SFlux.error[InvocationWithContext] (e)
       }
 
-    metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_RFC8621_PREFIX + methodName.value, result)
+    metricFactory.decoratePublisherWithTimerMetric(JMAP_RFC8621_PREFIX + methodName.value, result)
   }
 
   private def validateAccountId(accountId: AccountId, mailboxSession: MailboxSession, sessionSupplier: SessionSupplier, invocation: Invocation): Either[IllegalArgumentException, Session] =

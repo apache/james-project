@@ -119,8 +119,8 @@ public class SetFilterMethod implements Method {
 
         SetFilterRequest setFilterRequest = (SetFilterRequest) request;
 
-        return Flux.from(metricFactory.decorateSupplierWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
-            () -> process(methodCallId, mailboxSession, setFilterRequest)
+        return Flux.from(metricFactory.decoratePublisherWithTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
+            process(methodCallId, mailboxSession, setFilterRequest)
                 .subscriberContext(jmapAction("SET_FILTER"))
                 .subscriberContext(context("SET_FILTER", MDCBuilder.of("update", setFilterRequest.getSingleton())))));
     }

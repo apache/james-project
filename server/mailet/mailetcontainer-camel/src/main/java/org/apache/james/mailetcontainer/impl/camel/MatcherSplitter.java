@@ -19,8 +19,6 @@
 
 package org.apache.james.mailetcontainer.impl.camel;
 
-import static org.apache.james.metrics.api.TimeMetric.ExecutionResult.DEFAULT_100_MS_THRESHOLD;
-
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -176,7 +174,7 @@ public class MatcherSplitter {
 
             return mails;
         } finally {
-            timeMetric.stopAndPublish().logWhenExceedP99(DEFAULT_100_MS_THRESHOLD);
+            timeMetric.stopAndPublish();
             long complete = System.currentTimeMillis() - start;
             List<MailetProcessorListener> listeners = container.getListeners();
             for (MailetProcessorListener listener : listeners) {

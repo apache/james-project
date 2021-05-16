@@ -72,7 +72,7 @@ public class GetVacationResponseMethod implements Method {
         Preconditions.checkNotNull(mailboxSession);
         Preconditions.checkArgument(request instanceof GetVacationRequest);
 
-        return Flux.from(metricFactory.decoratePublisherWithTimerMetricLogP99(JMAP_PREFIX + METHOD_NAME.getName(),
+        return Flux.from(metricFactory.decoratePublisherWithTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
             process(mailboxSession)
                 .map(response -> JmapResponse.builder()
                     .methodCallId(methodCallId)

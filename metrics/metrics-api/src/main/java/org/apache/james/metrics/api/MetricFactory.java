@@ -40,6 +40,8 @@ public interface MetricFactory {
         }
     }
 
+    @Deprecated
+    // Underlying implementations implies a high overhead
     default <T> T decorateSupplierWithTimerMetricLogP99(String name, Supplier<T> operation) {
         TimeMetric timer = timer(name);
         try {
@@ -51,6 +53,8 @@ public interface MetricFactory {
 
     <T> Publisher<T> decoratePublisherWithTimerMetric(String name, Publisher<T> publisher);
 
+    @Deprecated
+    // Underlying implementations implies a high overhead
     <T> Publisher<T> decoratePublisherWithTimerMetricLogP99(String name, Publisher<T> publisher);
 
     default void runPublishingTimerMetric(String name, Runnable runnable) {

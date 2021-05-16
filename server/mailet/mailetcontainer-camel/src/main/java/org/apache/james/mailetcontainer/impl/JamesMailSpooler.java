@@ -19,8 +19,6 @@
 
 package org.apache.james.mailetcontainer.impl;
 
-import static org.apache.james.metrics.api.TimeMetric.ExecutionResult.DEFAULT_100_MS_THRESHOLD;
-
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -98,7 +96,7 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
             TimeMetric timeMetric = metricFactory.timer(SPOOL_PROCESSING);
             return Mono.fromCallable(processingActive::incrementAndGet)
                 .flatMap(ignore -> processMail(queueItem))
-                .doOnSuccess(any -> timeMetric.stopAndPublish().logWhenExceedP99(DEFAULT_100_MS_THRESHOLD))
+                .doOnSuccess(any -> timeMetric.stopAndPublish())
                 .doOnTerminate(processingActive::decrementAndGet);
         }
 
