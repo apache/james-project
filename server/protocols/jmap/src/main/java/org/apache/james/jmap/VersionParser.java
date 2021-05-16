@@ -45,7 +45,7 @@ public class VersionParser {
     public VersionParser(Set<Version> supportedVersions, JMAPConfiguration jmapConfiguration) {
         this.jmapConfiguration = jmapConfiguration;
         Preconditions.checkArgument(supportedVersions.contains(jmapConfiguration.getDefaultVersion()),
-                jmapConfiguration + " is not a supported JMAP version");
+                "%s is not a supported JMAP version", jmapConfiguration);
 
         this.supportedVersions = supportedVersions;
     }

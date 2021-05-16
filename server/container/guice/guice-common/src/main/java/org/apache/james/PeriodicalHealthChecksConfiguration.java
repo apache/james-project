@@ -54,7 +54,7 @@ public class PeriodicalHealthChecksConfiguration {
 
             PeriodicalHealthChecksConfiguration build() {
                 Preconditions.checkArgument(period.compareTo(MINIMAL_HEALTH_CHECK_PERIOD) >= 0,
-                    "'period' must be equal or greater than " + MINIMAL_HEALTH_CHECK_PERIOD.toMillis() + "ms");
+                    "'period' must be equal or greater than %d ms", MINIMAL_HEALTH_CHECK_PERIOD.toMillis());
 
                 return new PeriodicalHealthChecksConfiguration(period);
             }

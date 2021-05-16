@@ -103,7 +103,7 @@ public class Preview {
     Preview(String value) {
         Preconditions.checkNotNull(value);
         Preconditions.checkArgument(value.length() <= MAX_LENGTH,
-            String.format("the preview value '%s' has length longer than %d", value, MAX_LENGTH));
+            "the preview value '%s' has length longer than %s", value, MAX_LENGTH);
 
         this.value = value;
     }
