@@ -28,11 +28,13 @@ import javax.inject.Inject;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
+import org.mpierce.metrics.reservoir.hdrhistogram.HdrHistogramReservoir;
 import org.reactivestreams.Publisher;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.SlidingTimeWindowMovingAverages;
+import com.codahale.metrics.Timer;
 import com.codahale.metrics.jmx.JmxReporter;
 
 import reactor.core.publisher.Flux;
@@ -56,7 +58,8 @@ public class DropWizardMetricFactory implements MetricFactory, Startable {
 
     @Override
     public DropWizardTimeMetric timer(String name) {
-        return new DropWizardTimeMetric(name, metricRegistry.timer(name));
+        return new DropWizardTimeMetric(name, metricRegistry.timer(name,
+            () -> new Timer(new HdrHistogramReservoir())));
     }
 
     @Override
