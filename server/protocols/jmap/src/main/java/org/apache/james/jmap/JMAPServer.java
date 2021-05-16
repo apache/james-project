@@ -28,9 +28,13 @@ import java.util.Set;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.util.Port;
 import org.slf4j.LoggerFactory;
+
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.Multimap;
 
 import reactor.netty.DisposableServer;
 import reactor.netty.http.server.HttpServer;
@@ -40,16 +44,24 @@ public class JMAPServer implements Startable {
     private static final int RANDOM_PORT = 0;
 
     private final JMAPConfiguration configuration;
-    private final Set<JMAPRoutesHandler> jmapRoutesHandlers;
     private final VersionParser versionParser;
+    private final Multimap<Version, JMAPRoute> routes;
     private Optional<DisposableServer> server;
 
     @Inject
     public JMAPServer(JMAPConfiguration configuration, Set<JMAPRoutesHandler> jmapRoutesHandlers, VersionParser versionParser) {
         this.configuration = configuration;
-        this.jmapRoutesHandlers = jmapRoutesHandlers;
         this.versionParser = versionParser;
         this.server = Optional.empty();
+
+        this.routes = versionParser.getSupportedVersions()
+            .stream()
+            .flatMap(version -> jmapRoutesHandlers.stream()
+                .flatMap(handler -> handler.routes(version)
+                    .map(route -> Pair.of(version, route))))
+            .collect(Guavate.toImmutableListMultimap(
+                Pair::getKey,
+                Pair::getValue));
     }
 
     public Port getPort() {
@@ -76,8 +88,9 @@ public class JMAPServer implements Startable {
 
     private JMAPRoute.Action handleVersionRoute(HttpServerRequest request) {
         try {
-            return jmapRoutesHandlers.stream()
-                .flatMap(jmapRoutesHandler -> jmapRoutesHandler.routes(versionParser.parseRequestVersionHeader(request)))
+            Version version = versionParser.parseRequestVersionHeader(request);
+
+            return routes.get(version).stream()
                 .filter(jmapRoute -> jmapRoute.matches(request))
                 .map(JMAPRoute::getAction)
                 .findFirst()
