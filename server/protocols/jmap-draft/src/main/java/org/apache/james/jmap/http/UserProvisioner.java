@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.jmap.http;
 
-import static org.apache.james.metrics.api.TimeMetric.ExecutionResult.DEFAULT_100_MS_THRESHOLD;
-
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -69,7 +67,7 @@ public class UserProvisioner {
         } catch (UsersRepositoryException e) {
             throw new RuntimeException(e);
         } finally {
-            timeMetric.stopAndPublish().logWhenExceedP99(DEFAULT_100_MS_THRESHOLD);
+            timeMetric.stopAndPublish();
         }
     }
 

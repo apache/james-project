@@ -19,7 +19,6 @@
 
 package org.apache.james.transport.mailets.remote.delivery;
 
-import static org.apache.james.metrics.api.TimeMetric.ExecutionResult.DEFAULT_100_MS_THRESHOLD;
 import static org.apache.james.transport.mailets.remote.delivery.Bouncer.IS_DELIVERY_PERMANENT_ERROR;
 
 import java.time.Duration;
@@ -98,7 +97,7 @@ public class DeliveryRunnable implements Disposable {
         TimeMetric timeMetric = metricFactory.timer(REMOTE_DELIVERY_TRIAL);
         try {
             return processMail(queueItem)
-                .doOnSuccess(any -> timeMetric.stopAndPublish().logWhenExceedP99(DEFAULT_100_MS_THRESHOLD));
+                .doOnSuccess(any -> timeMetric.stopAndPublish());
         } catch (Throwable e) {
             return Mono.error(e);
         }

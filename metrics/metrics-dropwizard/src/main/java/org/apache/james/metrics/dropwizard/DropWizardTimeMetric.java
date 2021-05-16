@@ -20,6 +20,7 @@
 package org.apache.james.metrics.dropwizard;
 
 import java.time.Duration;
+import java.util.function.Supplier;
 
 import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
@@ -36,16 +37,16 @@ public class DropWizardTimeMetric implements TimeMetric {
     static class DropWizardExecutionResult implements ExecutionResult {
         private final String name;
         private final Duration elasped;
-        private final Duration p99;
+        private final Supplier<Duration> p99Supplier;
 
-        DropWizardExecutionResult(String name, Duration elasped, Duration p99) {
+        DropWizardExecutionResult(String name, Duration elasped, Supplier<Duration> p99Supplier) {
             Preconditions.checkNotNull(elasped);
-            Preconditions.checkNotNull(p99);
+            Preconditions.checkNotNull(p99Supplier);
             Preconditions.checkNotNull(name);
 
             this.name = name;
             this.elasped = elasped;
-            this.p99 = p99;
+            this.p99Supplier = p99Supplier;
         }
 
         @Override
@@ -56,6 +57,7 @@ public class DropWizardTimeMetric implements TimeMetric {
         @Override
         public ExecutionResult logWhenExceedP99(Duration thresholdInNanoSeconds) {
             Preconditions.checkNotNull(thresholdInNanoSeconds);
+            Duration p99 = p99Supplier.get();
             if (elasped.compareTo(p99) > 0 && elasped.compareTo(thresholdInNanoSeconds) > 0) {
                 LOGGER.warn("{} metrics took {} nano seconds to complete, exceeding its {} nano seconds p99",
                     name, elasped, p99);
@@ -91,6 +93,7 @@ public class DropWizardTimeMetric implements TimeMetric {
 
     @Override
     public ExecutionResult stopAndPublish() {
-        return new DropWizardExecutionResult(name, Duration.ofNanos(context.stop()), Duration.ofNanos(Math.round(timer.getSnapshot().get999thPercentile())));
+        return new DropWizardExecutionResult(name, Duration.ofNanos(context.stop()),
+            () -> Duration.ofNanos(Math.round(timer.getSnapshot().get999thPercentile())));
     }
 }
