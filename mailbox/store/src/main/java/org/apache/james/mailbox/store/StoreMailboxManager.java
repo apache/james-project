@@ -27,6 +27,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -97,6 +98,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -660,19 +662,33 @@ public class StoreMailboxManager implements MailboxManager {
 
     private Function<Flux<Mailbox>, Flux<MailboxMetaData>> withCounters(MailboxSession session, List<Mailbox> mailboxes) {
         MessageMapper messageMapper = mailboxSessionMapperFactory.getMessageMapper(session);
+        Map<MailboxPath, Boolean> parentMap = parentMap(mailboxes, session);
         int concurrency = 4;
         return mailboxFlux -> mailboxFlux
             .flatMap(mailbox -> retrieveCounters(messageMapper, mailbox, session)
                 .map(Throwing.<MailboxCounters, MailboxMetaData>function(
-                    counters -> toMailboxMetadata(session, mailboxes, mailbox, counters))
+                    counters -> toMailboxMetadata(session, parentMap, mailbox, counters))
                     .sneakyThrow()),
                 concurrency);
     }
 
+    private Map<MailboxPath, Boolean> parentMap(List<Mailbox> mailboxes, MailboxSession session) {
+        return mailboxes.stream().map(Mailbox::generateAssociatedPath)
+            .flatMap(path -> {
+                List<MailboxPath> hierarchyLevels = path.getHierarchyLevels(session.getPathDelimiter());
+                return Lists.reverse(hierarchyLevels).stream().skip(1);
+            })
+            .collect(Guavate.toImmutableMap(
+                Function.identity(),
+                any -> true,
+                (a, b) -> true));
+    }
+
     private Function<Flux<Mailbox>, Flux<MailboxMetaData>> withoutCounters(MailboxSession session, List<Mailbox> mailboxes) {
+        Map<MailboxPath, Boolean> parentMap = parentMap(mailboxes, session);
         return mailboxFlux -> mailboxFlux
                 .map(Throwing.<Mailbox, MailboxMetaData>function(
-                    mailbox -> toMailboxMetadata(session, mailboxes, mailbox, MailboxCounters
+                    mailbox -> toMailboxMetadata(session, parentMap, mailbox, MailboxCounters
                         .builder()
                         .mailboxId(mailbox.getMailboxId())
                         .count(0)
@@ -738,28 +754,23 @@ public class StoreMailboxManager implements MailboxManager {
             .map(Mailbox::getMailboxId);
     }
 
-    private MailboxMetaData toMailboxMetadata(MailboxSession session, List<Mailbox> mailboxes, Mailbox mailbox, MailboxCounters counters) throws UnsupportedRightException {
+    private MailboxMetaData toMailboxMetadata(MailboxSession session, Map<MailboxPath, Boolean> parentMap, Mailbox mailbox, MailboxCounters counters) throws UnsupportedRightException {
         return new MailboxMetaData(
             mailbox.generateAssociatedPath(),
             mailbox.getMailboxId(),
             getDelimiter(),
-            computeChildren(session, mailboxes, mailbox),
+            computeChildren(parentMap, mailbox),
             Selectability.NONE,
             storeRightManager.getResolvedMailboxACL(mailbox, session),
             counters);
     }
 
-    private MailboxMetaData.Children computeChildren(MailboxSession session, List<Mailbox> potentialChildren, Mailbox mailbox) {
-        if (hasChildIn(mailbox, potentialChildren, session)) {
+    private MailboxMetaData.Children computeChildren(Map<MailboxPath, Boolean> parentMap, Mailbox mailbox) {
+        if (parentMap.getOrDefault(mailbox.generateAssociatedPath(), false)) {
             return MailboxMetaData.Children.HAS_CHILDREN;
         } else {
             return MailboxMetaData.Children.HAS_NO_CHILDREN;
         }
-    }
-
-    private boolean hasChildIn(Mailbox parentMailbox, List<Mailbox> mailboxesWithPathLike, MailboxSession mailboxSession) {
-        return mailboxesWithPathLike.stream()
-            .anyMatch(mailbox -> mailbox.isChildOf(parentMailbox, mailboxSession));
     }
 
     @Override
