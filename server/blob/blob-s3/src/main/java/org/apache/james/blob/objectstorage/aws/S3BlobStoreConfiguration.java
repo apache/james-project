@@ -51,6 +51,7 @@ public class S3BlobStoreConfiguration {
 
             private Optional<BucketName> defaultBucketName;
             private Optional<String> bucketPrefix;
+            private Optional<Integer> httpConcurrency;
             private Region region;
 
             public ReadyToBuild(AwsS3AuthConfiguration specificAuthConfiguration, Region region) {
@@ -58,6 +59,7 @@ public class S3BlobStoreConfiguration {
                 this.region = region;
                 this.defaultBucketName = Optional.empty();
                 this.bucketPrefix = Optional.empty();
+                this.httpConcurrency = Optional.empty();
             }
 
             public ReadyToBuild defaultBucketName(Optional<BucketName> defaultBucketName) {
@@ -80,27 +82,37 @@ public class S3BlobStoreConfiguration {
                 return this;
             }
 
+            public ReadyToBuild httpConcurrency(Optional<Integer> httpConcurrency) {
+                this.httpConcurrency = httpConcurrency;
+                return this;
+            }
+
             public S3BlobStoreConfiguration build() {
-                return new S3BlobStoreConfiguration(bucketPrefix, defaultBucketName, region, specificAuthConfiguration);
+                return new S3BlobStoreConfiguration(bucketPrefix, defaultBucketName, region, specificAuthConfiguration, httpConcurrency.orElse(DEFAULT_HTTP_CONCURRENCY));
             }
         }
 
     }
 
+    public static int DEFAULT_HTTP_CONCURRENCY = 100;
+
     private final Region region;
     private final AwsS3AuthConfiguration specificAuthConfiguration;
     private final Optional<BucketName> namespace;
     private final Optional<String> bucketPrefix;
+    private final int httpConcurrency;
 
     @VisibleForTesting
     S3BlobStoreConfiguration(Optional<String> bucketPrefix,
                              Optional<BucketName> namespace,
                              Region region,
-                             AwsS3AuthConfiguration specificAuthConfiguration) {
+                             AwsS3AuthConfiguration specificAuthConfiguration,
+                             int httpConcurrency) {
         this.bucketPrefix = bucketPrefix;
         this.namespace = namespace;
         this.region = region;
         this.specificAuthConfiguration = specificAuthConfiguration;
+        this.httpConcurrency = httpConcurrency;
     }
 
     public Optional<BucketName> getNamespace() {
@@ -115,6 +127,10 @@ public class S3BlobStoreConfiguration {
         return bucketPrefix;
     }
 
+    public int getHttpConcurrency() {
+        return httpConcurrency;
+    }
+
     public Region getRegion() {
         return region;
     }
@@ -127,6 +143,7 @@ public class S3BlobStoreConfiguration {
             return Objects.equals(this.namespace, that.namespace)
                 && Objects.equals(this.bucketPrefix, that.bucketPrefix)
                 && Objects.equals(this.region, that.region)
+                && Objects.equals(this.httpConcurrency, that.httpConcurrency)
                 && Objects.equals(this.specificAuthConfiguration, that.specificAuthConfiguration);
         }
         return false;
@@ -134,13 +151,14 @@ public class S3BlobStoreConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(namespace, bucketPrefix, specificAuthConfiguration);
+        return Objects.hash(namespace, bucketPrefix, httpConcurrency, specificAuthConfiguration);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
             .add("namespace", namespace)
+            .add("httpConcurrency", httpConcurrency)
             .add("bucketPrefix", bucketPrefix)
             .add("region", region)
             .add("specificAuthConfiguration", specificAuthConfiguration)

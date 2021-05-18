@@ -109,6 +109,9 @@ Maximum size of stored objects expressed in bytes.
 
 | objectstorage.s3.secretKey
 | https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys[S3 access key secret]
+
+| objectstorage.s3.http.concurrency
+| Allow setting the number of concurrent HTTP requests allowed by the Netty driver.
 |===
 
 ==== Buckets Configuration
