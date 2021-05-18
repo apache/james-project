@@ -889,7 +889,7 @@ public abstract class SetMessagesMethodTest {
             .body(NOT_UPDATED + "[\"" + messageId + "\"].type", equalTo("invalidProperties"))
             .body(NOT_UPDATED + "[\"" + messageId + "\"].properties[0]", equalTo("isUnread"))
             .body(NOT_UPDATED + "[\"" + messageId + "\"].description", containsString("isUnread: Cannot deserialize value of type `java.lang.Boolean` from String \"123\": only \"true\" or \"false\" recognized"))
-            .body(NOT_UPDATED + "[\"" + messageId + "\"].description", containsString("{\"isUnread\":\"123\"}"))
+            .body(NOT_UPDATED + "[\"" + messageId + "\"].description", containsString("(through reference chain: org.apache.james.jmap.draft.model.UpdateMessagePatch$Builder[\"isUnread\"])"))
             .body(ARGUMENTS + ".updated", hasSize(0));
     }
 

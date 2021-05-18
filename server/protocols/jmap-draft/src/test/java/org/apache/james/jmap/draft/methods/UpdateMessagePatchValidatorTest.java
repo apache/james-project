@@ -20,6 +20,7 @@
 package org.apache.james.jmap.draft.methods;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -82,7 +83,7 @@ public class UpdateMessagePatchValidatorTest {
 
         ObjectMapper mapper = mock(ObjectMapper.class);
         JsonGenerator jsonGenerator = null;
-        when(mapper.readValue(anyString(), eq(UpdateMessagePatch.class)))
+        when(mapper.treeToValue(any(), eq(UpdateMessagePatch.class)))
             .thenThrow(JsonMappingException.from(jsonGenerator, "Exception when parsing"));
 
         when(objectMapperFactory.forParsing())

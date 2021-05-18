@@ -53,7 +53,7 @@ public class UpdateMessagePatchValidator implements Validator<ObjectNode> {
     @Override
     public Set<ValidationResult> validate(ObjectNode json) {
         try {
-            parser.readValue(json.toString(), UpdateMessagePatch.class);
+            parser.treeToValue(json, UpdateMessagePatch.class);
         } catch (JsonMappingException e) {
             return ImmutableSet.of(ValidationResult.builder()
                     .property(firstFieldFrom(e.getPath()).orElse(ValidationResult.UNDEFINED_PROPERTY))
