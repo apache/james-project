@@ -42,6 +42,6 @@ public class JmapRequestParserImpl implements JmapRequestParser {
     @Override
     public <T extends JmapRequest> T extractJmapRequest(InvocationRequest request, Class<T> requestClass)
             throws IOException, JsonParseException, JsonMappingException {
-        return objectMapper.readValue(request.getParameters().toString(), requestClass);
+        return objectMapper.treeToValue(request.getParameters(), requestClass);
     }
 }

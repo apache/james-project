@@ -343,7 +343,7 @@ public abstract class GetMailboxesMethodTest {
             .body(NAME, equalTo("error"))
             .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
             .body(ARGUMENTS + ".description", containsString("Cannot deserialize value of type `java.util.ArrayList<org.apache.james.mailbox.model.MailboxId>` from Boolean value (token `JsonToken.VALUE_TRUE`)"))
-            .body(ARGUMENTS + ".description", containsString("{\"ids\":true}"));
+            .body(ARGUMENTS + ".description", containsString("(through reference chain: org.apache.james.jmap.draft.model.GetMailboxesRequest$Builder[\"ids\"])"));
     }
 
     @Category(BasicFeature.class)
