@@ -20,8 +20,12 @@
 package org.apache.james.blob.cassandra;
 
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
+import static org.apache.james.blob.cassandra.CassandraBlobStoreDAO.CASSANDRA_BLOBSTORE_CL_ONE_HIT_COUNT_METRIC_NAME;
+import static org.apache.james.blob.cassandra.CassandraBlobStoreDAO.CASSANDRA_BLOBSTORE_CL_ONE_MISS_COUNT_METRIC_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
+import static org.awaitility.Durations.FIVE_SECONDS;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -38,6 +42,7 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.ObjectStoreException;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,10 +68,11 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract {
             .blobPartSize(CHUNK_SIZE)
             .optimisticConsistencyLevel(true)
             .build();
+        MetricFactory metricFactory = metricsTestExtension.getMetricFactory();
         testee = new MetricableBlobStore(
-            metricsTestExtension.getMetricFactory(),
+            metricFactory,
             BlobStoreFactory.builder()
-                .blobStoreDAO(new CassandraBlobStoreDAO(defaultBucketDAO, bucketDAO, cassandraConfiguration, BucketName.DEFAULT))
+                .blobStoreDAO(new CassandraBlobStoreDAO(defaultBucketDAO, bucketDAO, cassandraConfiguration, BucketName.DEFAULT, metricFactory))
                 .blobIdFactory(blobIdFactory)
                 .defaultBucketName()
                 .deduplication());
@@ -167,5 +173,63 @@ class CassandraBlobStoreClOneTest implements CassandraBlobStoreContract {
         byte[] bytes = Mono.from(testee().readBytes(testee().getDefaultBucketName(), blobId)).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEqualTo(longString);
+    }
+
+    @Test
+    void readShouldPublishHitRatioClOneMetric() {
+        BlobStore store = testee();
+
+        BlobId blobId = Mono.from(store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST)).block();
+        store.read(store.getDefaultBucketName(), blobId);
+
+        await().atMost(FIVE_SECONDS)
+            .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().countFor(CASSANDRA_BLOBSTORE_CL_ONE_HIT_COUNT_METRIC_NAME))
+                .isEqualTo(2));
+    }
+
+    @Test
+    void readBytesShouldPublishHitRatioClOneMetric() {
+        BlobStore store = testee();
+
+        BlobId blobId = Mono.from(store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST)).block();
+        Mono.from(store.readBytes(store.getDefaultBucketName(), blobId)).block();
+
+        await().atMost(FIVE_SECONDS)
+            .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().countFor(CASSANDRA_BLOBSTORE_CL_ONE_HIT_COUNT_METRIC_NAME))
+                .isEqualTo(2));
+    }
+
+    @Test
+    void readShouldPublishMissRatioClOneMetric() {
+        BlobStore store = testee();
+
+        BlobId blobId = Mono.from(store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST)).block();
+
+        when(defaultBucketDAO().selectRowCountClOne(blobId)).thenReturn(Mono.empty());
+        store.read(store.getDefaultBucketName(), blobId);
+
+        when(defaultBucketDAO().readPartClOne(blobId, 1)).thenReturn(Mono.empty());
+        store.read(store.getDefaultBucketName(), blobId);
+
+        await().atMost(FIVE_SECONDS)
+            .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().countFor(CASSANDRA_BLOBSTORE_CL_ONE_MISS_COUNT_METRIC_NAME))
+                .isEqualTo(2));
+    }
+
+    @Test
+    void readBytesShouldPublishMissRatioClOneMetric() {
+        BlobStore store = testee();
+
+        BlobId blobId = Mono.from(store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST)).block();
+
+        when(defaultBucketDAO().selectRowCountClOne(blobId)).thenReturn(Mono.empty());
+        Mono.from(store.readBytes(store.getDefaultBucketName(), blobId)).block();
+
+        when(defaultBucketDAO().readPartClOne(blobId, 1)).thenReturn(Mono.empty());
+        Mono.from(store.readBytes(store.getDefaultBucketName(), blobId)).block();
+
+        await().atMost(FIVE_SECONDS)
+            .untilAsserted(() ->  assertThat(metricsTestExtension.getMetricFactory().countFor(CASSANDRA_BLOBSTORE_CL_ONE_MISS_COUNT_METRIC_NAME))
+                .isEqualTo(2));
     }
 }

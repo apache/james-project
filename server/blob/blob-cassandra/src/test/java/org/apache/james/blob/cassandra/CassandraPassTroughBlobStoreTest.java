@@ -30,6 +30,7 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.DeleteBlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.server.blob.deduplication.BlobStoreFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -49,13 +50,14 @@ public class CassandraPassTroughBlobStoreTest implements DeleteBlobStoreContract
         CassandraConfiguration cassandraConfiguration = CassandraConfiguration.builder()
             .blobPartSize(CHUNK_SIZE)
             .build();
+        MetricFactory metricFactory = metricsTestExtension.getMetricFactory();
         testee = new MetricableBlobStore(
-            metricsTestExtension.getMetricFactory(),
-                BlobStoreFactory.builder()
-                    .blobStoreDAO(new CassandraBlobStoreDAO(defaultBucketDAO, bucketDAO, cassandraConfiguration, BucketName.DEFAULT))
-                    .blobIdFactory(blobIdFactory)
-                    .defaultBucketName()
-                    .passthrough());
+            metricFactory,
+            BlobStoreFactory.builder()
+                .blobStoreDAO(new CassandraBlobStoreDAO(defaultBucketDAO, bucketDAO, cassandraConfiguration, BucketName.DEFAULT, metricFactory))
+                .blobIdFactory(blobIdFactory)
+                .defaultBucketName()
+                .passthrough());
     }
 
     @Override

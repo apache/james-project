@@ -61,6 +61,7 @@ import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
 import org.apache.james.metrics.api.Gauge;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueMetricContract;
 import org.apache.james.queue.api.MailQueueMetricExtension;
@@ -136,7 +137,7 @@ class RabbitMQMailQueueTest {
                 RabbitMQMailQueueConfiguration.builder()
                     .sizeMetricsEnabled(true)
                     .build(),
-                CassandraBlobStoreFactory.forTesting(cassandra.getConf())
+                CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
                     .passthrough());
         }
 
@@ -802,7 +803,7 @@ class RabbitMQMailQueueTest {
                 RabbitMQMailQueueConfiguration.builder()
                     .sizeMetricsEnabled(false)
                     .build(),
-                CassandraBlobStoreFactory.forTesting(cassandra.getConf())
+                CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
                     .passthrough());
         }
 
@@ -825,7 +826,7 @@ class RabbitMQMailQueueTest {
                 RabbitMQMailQueueConfiguration.builder()
                     .sizeMetricsEnabled(true)
                     .build(),
-                CassandraBlobStoreFactory.forTesting(cassandra.getConf())
+                CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
                     .deduplication());
         }
 

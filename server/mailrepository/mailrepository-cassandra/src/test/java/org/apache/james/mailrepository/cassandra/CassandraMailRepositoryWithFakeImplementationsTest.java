@@ -37,6 +37,7 @@ import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.core.MailImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -66,7 +67,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
         CassandraMailRepositoryMailDaoAPI mailDAO = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
         keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
         countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
-        BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf())
+        BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
             .passthrough();
 
         cassandraMailRepository = new CassandraMailRepository(URL,

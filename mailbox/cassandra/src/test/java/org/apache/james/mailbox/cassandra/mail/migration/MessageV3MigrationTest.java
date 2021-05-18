@@ -48,6 +48,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -76,7 +77,7 @@ class MessageV3MigrationTest {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf())
+        BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
             .passthrough();
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
         daoV2 = new CassandraMessageDAO(
