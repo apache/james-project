@@ -29,6 +29,7 @@ import org.apache.james.jmap.draft.model.InvocationRequest;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 
 public class JmapRequestParserImpl implements JmapRequestParser {
 
@@ -42,6 +43,8 @@ public class JmapRequestParserImpl implements JmapRequestParser {
     @Override
     public <T extends JmapRequest> T extractJmapRequest(InvocationRequest request, Class<T> requestClass)
             throws IOException, JsonParseException, JsonMappingException {
-        return objectMapper.readValue(request.getParameters().toString(), requestClass);
+        Preconditions.checkNotNull(requestClass, "requestClass should not be null");
+
+        return objectMapper.treeToValue(request.getParameters(), requestClass);
     }
 }
