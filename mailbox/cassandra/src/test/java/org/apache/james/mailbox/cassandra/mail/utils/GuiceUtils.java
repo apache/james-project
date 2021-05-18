@@ -44,6 +44,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.mail.eventsourcing.acl.ACLModule;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.UidProvider;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 
 import com.datastax.driver.core.Session;
 import com.google.common.collect.ImmutableSet;
@@ -80,7 +81,7 @@ public class GuiceUtils {
             binder -> binder.bind(UidProvider.class).to(CassandraUidProvider.class),
             binder -> binder.bind(ACLMapper.class).to(CassandraACLMapper.class),
             binder -> binder.bind(BlobId.Factory.class).toInstance(new HashBlobId.Factory()),
-            binder -> binder.bind(BlobStore.class).toProvider(() -> CassandraBlobStoreFactory.forTesting(session).passthrough()),
+            binder -> binder.bind(BlobStore.class).toProvider(() -> CassandraBlobStoreFactory.forTesting(session, new RecordingMetricFactory()).passthrough()),
             binder -> binder.bind(Session.class).toInstance(session),
             binder -> Multibinder.newSetBinder(binder, new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {})
                 .addBinding().toInstance(ACLModule.ACL_UPDATE),

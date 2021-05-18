@@ -26,6 +26,7 @@ import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -46,11 +47,12 @@ public class CassandraBlobStoreDAOTest implements BlobStoreDAOContract {
         defaultBucketDAO = new CassandraDefaultBucketDAO(cassandra.getConf());
         testee = new CassandraBlobStoreDAO(
             defaultBucketDAO,
-                bucketDAO,
-                CassandraConfiguration.builder()
-                    .blobPartSize(CHUNK_SIZE)
-                    .build(),
-            BucketName.DEFAULT);
+            bucketDAO,
+            CassandraConfiguration.builder()
+                .blobPartSize(CHUNK_SIZE)
+                .build(),
+            BucketName.DEFAULT,
+            new RecordingMetricFactory());
     }
 
     @Override

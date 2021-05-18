@@ -83,7 +83,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        backend = CassandraBlobStoreFactory.forTesting(cassandra.getConf())
+        backend = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
             .passthrough();
         CassandraCacheConfiguration cacheConfig = new CassandraCacheConfiguration.Builder()
             .sizeThresholdInBytes(EIGHT_KILOBYTES.length + 1)
