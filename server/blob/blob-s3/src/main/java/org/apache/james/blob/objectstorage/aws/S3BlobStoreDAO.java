@@ -97,7 +97,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .credentialsProvider(StaticCredentialsProvider.create(
                 AwsBasicCredentials.create(authConfiguration.getAccessKeyId(), authConfiguration.getSecretKey())))
             .httpClientBuilder(NettyNioAsyncHttpClient.builder()
-                .maxConcurrency(100)
+                .maxConcurrency(configuration.getHttpConcurrency())
                 .maxPendingConnectionAcquires(10_000))
             .endpointOverride(authConfiguration.getEndpoint())
             .region(configuration.getRegion().asAws())

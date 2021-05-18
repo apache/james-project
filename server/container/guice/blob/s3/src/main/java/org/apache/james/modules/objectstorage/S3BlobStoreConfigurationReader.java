@@ -33,8 +33,10 @@ public class S3BlobStoreConfigurationReader {
     private static final String OBJECTSTORAGE_NAMESPACE = "objectstorage.namespace";
     private static final String OBJECTSTORAGE_BUCKET_PREFIX = "objectstorage.bucketPrefix";
     private static final String OBJECTSTORAGE_S3_REGION = "objectstorage.s3.region";
+    private static final String OBJECTSTORAGE_S3_HTTP_CONCURRENCY = "objectstorage.s3.http.concurrency";
 
     public static S3BlobStoreConfiguration from(Configuration configuration) throws ConfigurationException {
+        Optional<Integer> httpConcurrency = Optional.ofNullable(configuration.getInteger(OBJECTSTORAGE_S3_HTTP_CONCURRENCY, null));
         Optional<String> namespace = Optional.ofNullable(configuration.getString(OBJECTSTORAGE_NAMESPACE, null));
         Optional<String> bucketPrefix = Optional.ofNullable(configuration.getString(OBJECTSTORAGE_BUCKET_PREFIX, null));
         Region region = Optional.ofNullable(configuration.getString(OBJECTSTORAGE_S3_REGION, null))
@@ -46,6 +48,7 @@ public class S3BlobStoreConfigurationReader {
             .region(region)
             .defaultBucketName(namespace.map(BucketName::of))
             .bucketPrefix(bucketPrefix)
+            .httpConcurrency(httpConcurrency)
             .build();
     }
 

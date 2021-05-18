@@ -149,6 +149,9 @@ generate salt with : openssl rand -hex 16
 
                         <dt><strong>objectstorage.s3.secretKey</strong></dt>
                         <dd><a href="https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys">S3 access key secret</a></dd>
+
+                        <dt><strong>objectstorage.s3.http.concurrency</strong></dt>
+                        <dd>Allow setting the number of concurrent HTTP requests allowed by the Netty driver.</dd>
                     </dl>
                 </subsection>
             </subsection>
