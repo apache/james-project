@@ -26,18 +26,13 @@ import javax.inject.Singleton;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
-import org.apache.james.blob.objectstorage.aws.S3BlobStoreDAO;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
-import org.apache.james.utils.InitializationOperation;
-import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class S3BlobStoreModule extends AbstractModule {
-
     @Provides
     @Singleton
     private S3BlobStoreConfiguration getObjectStorageConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
@@ -47,12 +42,5 @@ public class S3BlobStoreModule extends AbstractModule {
         } catch (FileNotFoundException e) {
             throw new ConfigurationException(ConfigurationComponent.NAME + " configuration was not found");
         }
-    }
-
-    @ProvidesIntoSet
-    InitializationOperation startS3BlobStoreDAO(S3BlobStoreDAO s3BlobStoreDAO) {
-        return InitilizationOperationBuilder
-            .forClass(S3BlobStoreDAO.class)
-            .init(s3BlobStoreDAO::start);
     }
 }
