@@ -21,6 +21,7 @@ package org.apache.james.jmap.draft.utils;
 
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -56,7 +57,7 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
 
             return flatten(body, INITIAL_LIST_NESTED_LEVEL)
                 .map(this::convertNodeToText)
-                .reduce("", (s1, s2) -> s1 + s2);
+                .collect(Collectors.joining());
         } catch (Exception e) {
             LOGGER.warn("Failed extracting text from html", e);
             return html;
