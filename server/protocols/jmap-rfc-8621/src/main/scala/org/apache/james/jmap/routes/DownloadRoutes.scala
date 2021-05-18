@@ -26,7 +26,6 @@ import java.util.stream.Stream
 import com.google.common.base.CharMatcher
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
-import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED}
 import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus, QueryStringDecoder}
@@ -285,8 +284,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
         .apply(response)
         .header(CONTENT_TYPE, blobContentType.asString)
         .status(OK)
-        .send(ReactorUtils.toChunks(stream, BUFFER_SIZE)
-          .map(Unpooled.wrappedBuffer(_))
+        .sendByteArray(ReactorUtils.toChunks(stream, BUFFER_SIZE)
           .subscribeOn(Schedulers.elastic))
         .`then`,
       asJavaConsumer[InputStream]((stream: InputStream) => stream.close())))

@@ -37,7 +37,7 @@ import org.apache.james.jmap.routes.SessionRoutes.{JMAP_SESSION, LOGGER, WELL_KN
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.slf4j.LoggerFactory
 import play.api.libs.json.Json
-import reactor.core.publisher.{Mono, SynchronousSink}
+import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.HttpServerResponse
@@ -87,7 +87,7 @@ class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
   private def sendRespond(session: Session, resp: HttpServerResponse) =
     SMono.fromPublisher(resp.header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)
       .status(OK)
-      .sendString(SMono.fromCallable(() => Json.stringify(ResponseSerializer.serialize(session))))
+      .sendByteArray(SMono.fromCallable(() => Json.toBytes(ResponseSerializer.serialize(session))))
       .`then`())
 
   def errorHandling(throwable: Throwable, response: HttpServerResponse): Mono[Void] =

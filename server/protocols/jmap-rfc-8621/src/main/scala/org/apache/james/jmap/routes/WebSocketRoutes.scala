@@ -33,7 +33,7 @@ import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.JMAP_WS
 import org.apache.james.jmap.api.change.{EmailChangeRepository, MailboxChangeRepository}
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
-import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeListener, TypeName, _}
+import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeListener, _}
 import org.apache.james.jmap.core.{OutboundMessage, ProblemDetails, RequestId, WebSocketError, WebSocketPushDisable, WebSocketPushEnable, WebSocketRequest, WebSocketResponse, _}
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
@@ -112,10 +112,10 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
       .flatMap(message => handleClientMessages(context)(message))
       .doOnTerminate(context.clean)
 
-    out.sendString(
+    out.sendByteArray(
       SFlux.merge(Seq(responseFlux, sink.asFlux()))
         .map(pushSerializer.serialize)
-        .map(Json.stringify))
+        .map(Json.toBytes))
       .`then`()
   }
 

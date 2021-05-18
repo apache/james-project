@@ -163,7 +163,7 @@ public class AuthenticationRoutes implements JMAPRoutes {
         try {
             return resp.status(OK)
                 .header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)
-                .sendString(Mono.just(mapper.writeValueAsString(EndPointsResponse
+                .sendByteArray(Mono.just(mapper.writeValueAsBytes(EndPointsResponse
                     .builder()
                     .api(JMAPUrls.JMAP)
                     .eventSource(JMAPUrls.NOT_IMPLEMENTED)
@@ -218,14 +218,14 @@ public class AuthenticationRoutes implements JMAPRoutes {
 
     private Mono<Void> handleContinuationTokenRequest(ContinuationTokenRequest request, HttpServerResponse resp) {
         try {
-            Mono<String> tokenResponseMono = Mono.fromCallable(() -> ContinuationTokenResponse
+            Mono<byte[]> tokenResponseMono = Mono.fromCallable(() -> ContinuationTokenResponse
                 .builder()
                 .continuationToken(simpleTokenFactory.generateContinuationToken(request.getUsername()))
                 .methods(ContinuationTokenResponse.AuthenticationMethod.PASSWORD)
                 .build())
                 .map(token -> {
                     try {
-                        return mapper.writeValueAsString(token);
+                        return mapper.writeValueAsBytes(token);
                     } catch (JsonProcessingException e) {
                         throw new InternalErrorException("error serialising JMAP API response json");
                     }
@@ -233,7 +233,7 @@ public class AuthenticationRoutes implements JMAPRoutes {
                 .subscribeOn(Schedulers.parallel());
 
             return resp.header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)
-                .sendString(tokenResponseMono)
+                .sendByteArray(tokenResponseMono)
                 .then();
         } catch (Exception e) {
             throw new InternalErrorException("Error while responding to continuation token", e);
@@ -293,7 +293,7 @@ public class AuthenticationRoutes implements JMAPRoutes {
                 try {
                     return resp.status(CREATED)
                         .header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)
-                        .sendString(Mono.just(mapper.writeValueAsString(accessTokenResponse)))
+                        .sendByteArray(Mono.just(mapper.writeValueAsBytes(accessTokenResponse)))
                         .then();
                 } catch (JsonProcessingException e) {
                     throw new InternalErrorException("Could not serialize access token response", e);

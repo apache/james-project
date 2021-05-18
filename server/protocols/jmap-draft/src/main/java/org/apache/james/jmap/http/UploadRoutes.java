@@ -130,7 +130,7 @@ public class UploadRoutes implements JMAPRoutes {
                 try {
                     return response.header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)
                         .status(CREATED)
-                        .sendString(Mono.just(objectMapper.writeValueAsString(storedContent)))
+                        .sendByteArray(Mono.just(objectMapper.writeValueAsBytes(storedContent)))
                         .then();
                 } catch (JsonProcessingException e) {
                     throw new InternalErrorException("Error serializing upload response", e);

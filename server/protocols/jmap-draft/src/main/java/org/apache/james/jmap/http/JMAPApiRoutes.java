@@ -121,14 +121,14 @@ public class JMAPApiRoutes implements JMAPRoutes {
         return responses.collectList()
             .map(objects -> {
                 try {
-                    return objectMapper.writeValueAsString(objects);
+                    return objectMapper.writeValueAsBytes(objects);
                 } catch (JsonProcessingException e) {
                     throw new InternalErrorException("error serialising JMAP API response json");
                 }
             })
             .flatMap(json -> response.status(OK)
                 .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
-                .sendString(Mono.just(json))
+                .sendByteArray(Flux.just(json))
                 .then());
     }
 
