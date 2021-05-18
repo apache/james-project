@@ -61,8 +61,8 @@ public class DefaultMailboxesProvisioner {
     }
 
     public Mono<Void> createMailboxesIfNeeded(MailboxSession session) {
-        return metricFactory.decorateSupplierWithTimerMetric("JMAP-mailboxes-provisioning",
-            () -> createDefaultMailboxes(session));
+        return Mono.from(metricFactory.decoratePublisherWithTimerMetric("JMAP-mailboxes-provisioning",
+            createDefaultMailboxes(session)));
     }
 
     private Mono<Void> createDefaultMailboxes(MailboxSession session) {

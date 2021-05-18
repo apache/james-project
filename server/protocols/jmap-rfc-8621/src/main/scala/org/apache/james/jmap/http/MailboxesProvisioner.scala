@@ -39,8 +39,8 @@ class MailboxesProvisioner @Inject() (mailboxManager: MailboxManager,
   private val LOGGER: Logger = LoggerFactory.getLogger(classOf[MailboxesProvisioner])
 
   def createMailboxesIfNeeded(session: MailboxSession): SMono[Unit] =
-    metricFactory.decorateSupplierWithTimerMetric("JMAP-RFC-8621-mailboxes-provisioning", () =>
-      createDefaultMailboxes(session.getUser))
+    SMono(metricFactory.decoratePublisherWithTimerMetric("JMAP-RFC-8621-mailboxes-provisioning",
+      createDefaultMailboxes(session.getUser)))
 
 
   private def createDefaultMailboxes(username: Username): SMono[Unit] = {
