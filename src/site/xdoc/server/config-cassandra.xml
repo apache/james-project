@@ -180,6 +180,9 @@
             would result in the use of <code>new TokenAwarePolicy(DCAwareRoundRobinPolicy.builder().withLocalDc(value).build())</code> as a LoadBalancingPolicy.
             This value is useful in a multi-DC Cassandra setup. Be aware of limitations of multi-DC setups for James.
             Not specifying this value results in the driver's default load balancing policy to be used.</dd>
+        <dt><strong>optimistic.consistency.level.enabled</strong></dt>
+        <dd>Optional. Defaults to false. Allows specifying consistency level ONE for reads in Cassandra BlobStore.
+            Falls back to default read consistency level if the blob is missing.</dd>
       </dl>
 
 
