@@ -19,6 +19,7 @@
 
 package org.apache.james.blob.cassandra;
 
+import static com.datastax.driver.core.ConsistencyLevel.ONE;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
@@ -123,11 +124,28 @@ public class CassandraDefaultBucketDAO {
             .map(row -> row.getInt(NUMBER_OF_CHUNK));
     }
 
+    Mono<Integer> selectRowCountClOne(BlobId blobId) {
+        return cassandraAsyncExecutor.executeSingleRow(
+            select.bind()
+                .setString(ID, blobId.asString())
+                .setConsistencyLevel(ONE))
+            .map(row -> row.getInt(NUMBER_OF_CHUNK));
+    }
+
     Mono<ByteBuffer> readPart(BlobId blobId, int position) {
         return cassandraAsyncExecutor.executeSingleRow(
             selectPart.bind()
                 .setString(DefaultBucketBlobParts.ID, blobId.asString())
                 .setInt(DefaultBucketBlobParts.CHUNK_NUMBER, position))
+            .map(this::rowToData);
+    }
+
+    Mono<ByteBuffer> readPartClOne(BlobId blobId, int position) {
+        return cassandraAsyncExecutor.executeSingleRow(
+            selectPart.bind()
+                .setString(DefaultBucketBlobParts.ID, blobId.asString())
+                .setInt(DefaultBucketBlobParts.CHUNK_NUMBER, position)
+                .setConsistencyLevel(ONE))
             .map(this::rowToData);
     }
 

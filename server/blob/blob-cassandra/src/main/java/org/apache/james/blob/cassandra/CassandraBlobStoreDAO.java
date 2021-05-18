@@ -166,6 +166,23 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
     }
 
     private Mono<ByteBuffer> readPart(BucketName bucketName, BlobId blobId, Integer partIndex) {
+        if (configuration.isOptimisticConsistencyLevel()) {
+            return readPartClOne(bucketName, blobId, partIndex)
+                .switchIfEmpty(readPartClDefault(bucketName, blobId, partIndex));
+        } else {
+            return readPartClDefault(bucketName, blobId, partIndex);
+        }
+    }
+
+    private Mono<ByteBuffer> readPartClOne(BucketName bucketName, BlobId blobId, Integer partIndex) {
+        if (isDefaultBucket(bucketName)) {
+            return defaultBucketDAO.readPartClOne(blobId, partIndex);
+        } else {
+            return bucketDAO.readPartClOne(bucketName, blobId, partIndex);
+        }
+    }
+
+    private Mono<ByteBuffer> readPartClDefault(BucketName bucketName, BlobId blobId, Integer partIndex) {
         if (isDefaultBucket(bucketName)) {
             return defaultBucketDAO.readPart(blobId, partIndex);
         } else {
@@ -174,6 +191,23 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
     }
 
     private Mono<Integer> selectRowCount(BucketName bucketName, BlobId blobId) {
+        if (configuration.isOptimisticConsistencyLevel()) {
+            return selectRowCountClOne(bucketName, blobId)
+                .switchIfEmpty(selectRowCountClDefault(bucketName, blobId));
+        } else {
+            return selectRowCountClDefault(bucketName, blobId);
+        }
+    }
+
+    private Mono<Integer> selectRowCountClOne(BucketName bucketName, BlobId blobId) {
+        if (isDefaultBucket(bucketName)) {
+            return defaultBucketDAO.selectRowCountClOne(blobId);
+        } else {
+            return bucketDAO.selectRowCountClOne(bucketName, blobId);
+        }
+    }
+
+    private Mono<Integer> selectRowCountClDefault(BucketName bucketName, BlobId blobId) {
         if (isDefaultBucket(bucketName)) {
             return defaultBucketDAO.selectRowCount(blobId);
         } else {
