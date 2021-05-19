@@ -98,9 +98,23 @@ public class MDCBuilder {
         return new MDCBuilder();
     }
 
+    /**
+     * Using Object::toString causes undesired formatting issues and might lead to complex formatting logic.
+     * We migrated to explicit Strings instead.
+     *
+     * See https://issues.apache.org/jira/browse/JAMES-3587
+     *
+     * Use {@link MDCBuilder::ofValue} instead.
+     */
+    @Deprecated
     public static MDCBuilder of(String key, Object value) {
         return create()
             .addContext(key, value);
+    }
+
+    public static MDCBuilder ofValue(String key, String value) {
+        return create()
+            .addToContext(key, value);
     }
 
     private final ImmutableMap.Builder<String, String> contextMap = ImmutableMap.builder();
@@ -110,15 +124,49 @@ public class MDCBuilder {
 
     }
 
+    /**
+     * Renamed to preserve a coherent semantic.
+     *
+     * See https://issues.apache.org/jira/browse/JAMES-3587
+     *
+     * Use {@link MDCBuilder::addToContext} instead.
+     */
+    @Deprecated
     public MDCBuilder addContext(MDCBuilder nested) {
         this.nestedBuilder.add(nested);
         return this;
     }
 
+    /**
+     * Using Object::toString causes undesired formatting issues and might lead to complex formatting logic.
+     * We migrated to explicit Strings instead.
+     *
+     * See https://issues.apache.org/jira/browse/JAMES-3587
+     *
+     * Use {@link MDCBuilder::addToContext} instead.
+     */
+    @Deprecated
     public MDCBuilder addContext(String key, Object value) {
         Preconditions.checkNotNull(key);
         Optional.ofNullable(value)
             .ifPresent(nonNullValue -> contextMap.put(key, nonNullValue.toString()));
+        return this;
+    }
+
+    public MDCBuilder addToContext(MDCBuilder nested) {
+        this.nestedBuilder.add(nested);
+        return this;
+    }
+
+    public MDCBuilder addToContextIfPresent(String key, Optional<String> value) {
+        Preconditions.checkNotNull(key);
+        value.ifPresent(nonNullValue -> contextMap.put(key, nonNullValue));
+        return this;
+    }
+
+    public MDCBuilder addToContext(String key, String value) {
+        Preconditions.checkNotNull(key);
+        Optional.ofNullable(value).ifPresent(nonNullValue -> contextMap.put(key, nonNullValue));
         return this;
     }
 

@@ -57,8 +57,8 @@ public class CapaCmdHandler implements CommandHandler<POP3Session>, ExtensibleHa
     public Response onCommand(POP3Session session, Request request) {
         return metricFactory.decorateSupplierWithTimerMetric("pop3-capa", () ->
             MDCBuilder.withMdc(MDCBuilder.create()
-                    .addContext(MDCBuilder.ACTION, "CAPA")
-                    .addContext(MDCConstants.withSession(session)),
+                    .addToContext(MDCBuilder.ACTION, "CAPA")
+                    .addToContext(MDCConstants.withSession(session)),
                 () -> capa(session)));
     }
 

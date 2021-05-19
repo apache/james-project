@@ -35,12 +35,12 @@ public class MDCFilter implements Filter {
     @Override
     public void handle(Request request, Response response) throws Exception {
         Closeable mdcCloseable = MDCBuilder.create()
-            .addContext(MDCBuilder.IP, request.ip())
-            .addContext(MDCBuilder.HOST, request.host())
-            .addContext(VERB, request.requestMethod())
-            .addContext(MDCBuilder.PROTOCOL, "webadmin")
-            .addContext(MDCBuilder.ACTION, request.pathInfo())
-            .addContext(MDCBuilder.USER, request.attribute(AuthenticationFilter.LOGIN))
+            .addToContext(MDCBuilder.IP, request.ip())
+            .addToContext(MDCBuilder.HOST, request.host())
+            .addToContext(VERB, request.requestMethod())
+            .addToContext(MDCBuilder.PROTOCOL, "webadmin")
+            .addToContext(MDCBuilder.ACTION, request.pathInfo())
+            .addToContext(MDCBuilder.USER, request.attribute(AuthenticationFilter.LOGIN))
             .build();
         request.attribute(MDC_CLOSEABLE, mdcCloseable);
     }

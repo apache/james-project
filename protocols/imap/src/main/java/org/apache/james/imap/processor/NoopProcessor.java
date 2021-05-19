@@ -46,7 +46,7 @@ public class NoopProcessor extends AbstractMailboxProcessor<NoopRequest> {
     @Override
     protected Closeable addContextToMDC(NoopRequest message) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "NOOP")
+            .addToContext(MDCBuilder.ACTION, "NOOP")
             .build();
     }
 }

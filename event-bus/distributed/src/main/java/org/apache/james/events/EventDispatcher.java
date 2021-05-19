@@ -130,7 +130,7 @@ public class EventDispatcher {
     private Mono<Void> executeListener(Event event, EventListener.ReactiveEventListener listener, RegistrationKey registrationKey) {
         return listenerExecutor.execute(listener,
                     MDCBuilder.create()
-                        .addContext(EventBus.StructuredLoggingFields.REGISTRATION_KEY, registrationKey),
+                        .addToContext(EventBus.StructuredLoggingFields.REGISTRATION_KEY, registrationKey.asString()),
                     event)
             .onErrorResume(e -> {
                 structuredLogger(event, ImmutableSet.of(registrationKey))
@@ -141,10 +141,10 @@ public class EventDispatcher {
 
     private StructuredLogger structuredLogger(Event event, Set<RegistrationKey> keys) {
         return MDCStructuredLogger.forLogger(LOGGER)
-            .addField(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
-            .addField(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
-            .addField(EventBus.StructuredLoggingFields.USER, event.getUsername())
-            .addField(EventBus.StructuredLoggingFields.REGISTRATION_KEYS, keys);
+            .field(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId().getId().toString())
+            .field(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass().getCanonicalName())
+            .field(EventBus.StructuredLoggingFields.USER, event.getUsername().asString())
+            .field(EventBus.StructuredLoggingFields.REGISTRATION_KEYS, keys.toString());
     }
 
     private Mono<Void> dispatchToRemoteListeners(Event event, Set<RegistrationKey> keys) {

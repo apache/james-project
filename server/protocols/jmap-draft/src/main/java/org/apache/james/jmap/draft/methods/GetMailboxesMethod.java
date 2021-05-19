@@ -104,10 +104,10 @@ public class GetMailboxesMethod implements Method {
 
     private MDCBuilder mdc(GetMailboxesRequest mailboxesRequest) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, ACTION)
-            .addContext("accountId", mailboxesRequest.getAccountId())
-            .addContext("mailboxIds", mailboxesRequest.getIds())
-            .addContext("properties", mailboxesRequest.getProperties());
+            .addToContext(MDCBuilder.ACTION, ACTION)
+            .addToContextIfPresent("accountId", mailboxesRequest.getAccountId())
+            .addToContext("mailboxIds", mailboxesRequest.getIds().toString())
+            .addToContext("properties", mailboxesRequest.getProperties().toString());
     }
 
     private Flux<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, GetMailboxesRequest mailboxesRequest) {

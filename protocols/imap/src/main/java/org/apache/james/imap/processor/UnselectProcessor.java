@@ -66,7 +66,7 @@ public class UnselectProcessor extends AbstractMailboxProcessor<UnselectRequest>
 
     @Override
     protected Closeable addContextToMDC(UnselectRequest request) {
-        return MDCBuilder.of(MDCBuilder.ACTION, "UNSELECT")
+        return MDCBuilder.ofValue(MDCBuilder.ACTION, "UNSELECT")
             .build();
     }
 }

@@ -62,9 +62,9 @@ public class DeleCmdHandler implements CommandHandler<POP3Session> {
     public Response onCommand(POP3Session session, Request request) {
         return metricFactory.decorateSupplierWithTimerMetric("pop3-dele", () ->
             MDCBuilder.withMdc(MDCBuilder.create()
-                    .addContext(MDCBuilder.ACTION, "DELE")
-                    .addContext(MDCConstants.withSession(session))
-                    .addContext(MDCConstants.forRequest(request)),
+                    .addToContext(MDCBuilder.ACTION, "DELE")
+                    .addToContext(MDCConstants.withSession(session))
+                    .addToContext(MDCConstants.forRequest(request)),
                 () -> delete(session, request)));
     }
 

@@ -80,7 +80,7 @@ public class PassCmdHandler extends AbstractPassCmdHandler  {
     protected Mailbox auth(POP3Session session, Username username, String password) throws Exception {
         return MDCBuilder.withMdc(
             MDCBuilder.create()
-                .addContext(MDCBuilder.USER, username.asString()),
+                .addToContext(MDCBuilder.USER, username.asString()),
             Throwing.supplier(() -> auth(session, password)).sneakyThrow());
     }
 

@@ -132,7 +132,7 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
         session.stopDetectingCommandInjection();
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.ACTION, request.getCommand())
+                     .addToContext(MDCBuilder.ACTION, request.getCommand())
                      .build()) {
             String parameters = request.getArgument();
             Response response = doDATAFilter(session, parameters);

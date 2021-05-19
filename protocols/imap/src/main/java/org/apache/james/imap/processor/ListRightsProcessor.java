@@ -131,9 +131,9 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
     @Override
     protected Closeable addContextToMDC(ListRightsRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "LIST_RIGHTS")
-            .addContext("mailbox", request.getMailboxName())
-            .addContext("identifier", request.getIdentifier())
+            .addToContext(MDCBuilder.ACTION, "LIST_RIGHTS")
+            .addToContext("mailbox", request.getMailboxName())
+            .addToContext("identifier", request.getIdentifier())
             .build();
     }
 }

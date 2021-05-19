@@ -58,8 +58,8 @@ public class NoopCmdHandler implements CommandHandler<POP3Session> {
         return metricFactory.decorateSupplierWithTimerMetric("pop3-noop", () ->
             MDCBuilder.withMdc(
                 MDCBuilder.create()
-                    .addContext(MDCBuilder.ACTION, "NOOP")
-                    .addContext(MDCConstants.withSession(session)),
+                    .addToContext(MDCBuilder.ACTION, "NOOP")
+                    .addToContext(MDCConstants.withSession(session)),
                 () -> noop(session)));
     }
 

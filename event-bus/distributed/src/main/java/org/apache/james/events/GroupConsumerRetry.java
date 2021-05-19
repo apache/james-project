@@ -123,9 +123,9 @@ class GroupConsumerRetry {
 
     private StructuredLogger createStructuredLogger(Event event) {
         return MDCStructuredLogger.forLogger(LOGGER)
-            .addField(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
-            .addField(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
-            .addField(EventBus.StructuredLoggingFields.USER, event.getUsername())
-            .addField(EventBus.StructuredLoggingFields.GROUP, group.asString());
+            .field(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId().getId().toString())
+            .field(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass().getCanonicalName())
+            .field(EventBus.StructuredLoggingFields.USER, event.getUsername().asString())
+            .field(EventBus.StructuredLoggingFields.GROUP, group.asString());
     }
 }

@@ -51,8 +51,8 @@ public class ReIndexerManagement implements ReIndexerManagementMBean {
     public void reIndex(String namespace, String user, String name) throws MailboxException {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "reIndex")
+                     .addToContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addToContext(MDCBuilder.ACTION, "reIndex")
                      .build()) {
             TaskId taskId = taskManager.submit(reIndexer.reIndex(new MailboxPath(namespace, Username.of(user), name), RunningOptions.DEFAULT));
             taskManager.await(taskId, Duration.of(365, ChronoUnit.DAYS));
@@ -65,8 +65,8 @@ public class ReIndexerManagement implements ReIndexerManagementMBean {
     public void reIndex() throws MailboxException {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "reIndex")
+                     .addToContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addToContext(MDCBuilder.ACTION, "reIndex")
                      .build()) {
             TaskId taskId = taskManager.submit(reIndexer.reIndex(RunningOptions.DEFAULT));
             taskManager.await(taskId, Duration.of(365, ChronoUnit.DAYS));

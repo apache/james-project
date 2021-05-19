@@ -132,8 +132,8 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
     @Override
     protected Closeable addContextToMDC(ExpungeRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "EXPUNGE")
-            .addContext("uidSet", IdRange.toString(request.getUidSet()))
+            .addToContext(MDCBuilder.ACTION, "EXPUNGE")
+            .addToContext("uidSet", IdRange.toString(request.getUidSet()))
             .build();
     }
 }

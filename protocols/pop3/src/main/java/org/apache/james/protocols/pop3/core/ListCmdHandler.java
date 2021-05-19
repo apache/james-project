@@ -68,9 +68,9 @@ public class ListCmdHandler implements CommandHandler<POP3Session> {
     public Response onCommand(POP3Session session, Request request) {
         return metricFactory.decorateSupplierWithTimerMetric("pop3-list", () ->
             MDCBuilder.withMdc(MDCBuilder.create()
-                    .addContext(MDCBuilder.ACTION, "LIST")
-                    .addContext(MDCConstants.withSession(session))
-                    .addContext(MDCConstants.forRequest(request)),
+                    .addToContext(MDCBuilder.ACTION, "LIST")
+                    .addToContext(MDCConstants.withSession(session))
+                    .addToContext(MDCConstants.forRequest(request)),
                 () -> list(session, request)));
     }
 

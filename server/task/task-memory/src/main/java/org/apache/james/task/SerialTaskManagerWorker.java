@@ -104,9 +104,9 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
     private Task.Result runWithMdc(TaskWithId taskWithId, Listener listener) {
         return MDCBuilder.withMdc(
             MDCBuilder.create()
-                .addContext(Task.TASK_ID, taskWithId.getId())
-                .addContext(Task.TASK_TYPE, taskWithId.getTask().type())
-                .addContext(Task.TASK_DETAILS, taskWithId.getTask().details()),
+                .addToContext(Task.TASK_ID, taskWithId.getId().asString())
+                .addToContext(Task.TASK_TYPE, taskWithId.getTask().type().asString())
+                .addToContext(Task.TASK_DETAILS, taskWithId.getTask().details().toString()),
             () -> run(taskWithId, listener).block());
     }
 

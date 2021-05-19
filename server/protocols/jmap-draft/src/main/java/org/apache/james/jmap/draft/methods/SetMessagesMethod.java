@@ -82,11 +82,11 @@ public class SetMessagesMethod implements Method {
 
     private MDCBuilder mdc(SetMessagesRequest setMessagesRequest) {
         return MDCBuilder.create()
-            .addContext(ACTION, "SET_MESSAGES")
-            .addContext("accountId", setMessagesRequest.getAccountId())
-            .addContext("create", setMessagesRequest.getCreate())
-            .addContext("destroy", setMessagesRequest.getDestroy())
-            .addContext("ifInState", setMessagesRequest.getIfInState());
+            .addToContext(ACTION, "SET_MESSAGES")
+            .addToContextIfPresent("accountId", setMessagesRequest.getAccountId())
+            .addToContext("create", setMessagesRequest.getCreate().toString())
+            .addToContext("destroy", setMessagesRequest.getDestroy().toString())
+            .addToContextIfPresent("ifInState", setMessagesRequest.getIfInState());
     }
 
     private Mono<SetMessagesResponse> setMessagesResponse(SetMessagesRequest request, MailboxSession mailboxSession) {

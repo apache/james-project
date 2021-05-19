@@ -59,23 +59,23 @@ public class MailboxOperationLoggingListener implements EventListener.GroupEvent
         if (event instanceof MailboxRenamed) {
             MailboxRenamed mailboxRenamed = (MailboxRenamed) event;
             GhostMailbox.logger()
-                .addField(MAILBOX_ID, mailboxRenamed.getMailboxId())
-                .addField(MAILBOX_NAME, mailboxRenamed.getNewPath())
-                .addField(TYPE, ADDED)
+                .field(MAILBOX_ID, mailboxRenamed.getMailboxId().serialize())
+                .field(MAILBOX_NAME, mailboxRenamed.getNewPath().asString())
+                .field(TYPE, ADDED)
                 .log(logger -> logger.info("Mailbox renamed event"));
         }
         if (event instanceof MailboxDeletion) {
             MailboxDeletion mailboxDeletion = (MailboxDeletion) event;
             GhostMailbox.logger()
-                .addField(MAILBOX_ID, mailboxDeletion.getMailboxId())
-                .addField(TYPE, REMOVED)
+                .field(MAILBOX_ID, mailboxDeletion.getMailboxId().serialize())
+                .field(TYPE, REMOVED)
                 .log(logger -> logger.info("Mailbox deleted event"));
         }
         if (event instanceof MailboxAdded) {
             MailboxAdded mailboxAdded = (MailboxAdded) event;
             GhostMailbox.logger()
-                .addField(MAILBOX_ID, mailboxAdded.getMailboxId())
-                .addField(TYPE, ADDED)
+                .field(MAILBOX_ID, mailboxAdded.getMailboxId().serialize())
+                .field(TYPE, ADDED)
                 .log(logger -> logger.info("Mailbox added event"));
         }
     }

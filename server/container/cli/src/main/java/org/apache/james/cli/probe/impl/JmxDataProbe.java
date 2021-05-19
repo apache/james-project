@@ -58,9 +58,9 @@ public class JmxDataProbe implements JmxProbe {
     public void addUser(String userName, String password) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "addUser")
-                     .addContext("parameter", userName)
+                     .addToContext(MDCBuilder.PROTOCOL, JMX)
+                     .addToContext(MDCBuilder.ACTION, "addUser")
+                     .addToContext("parameter", userName)
                      .build()) {
             usersRepositoryProxy.addUser(userName, password);
         }
@@ -69,9 +69,9 @@ public class JmxDataProbe implements JmxProbe {
     public void removeUser(String username) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "removeUser")
-                     .addContext("parameter", username)
+                     .addToContext(MDCBuilder.PROTOCOL, JMX)
+                     .addToContext(MDCBuilder.ACTION, "removeUser")
+                     .addToContext("parameter", username)
                      .build()) {
             usersRepositoryProxy.deleteUser(username);
         }
@@ -80,8 +80,8 @@ public class JmxDataProbe implements JmxProbe {
     public String[] listUsers() throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "listUsers")
+                     .addToContext(MDCBuilder.PROTOCOL, JMX)
+                     .addToContext(MDCBuilder.ACTION, "listUsers")
                      .build()) {
             return usersRepositoryProxy.listAllUsers();
         }
@@ -90,9 +90,9 @@ public class JmxDataProbe implements JmxProbe {
     public void setPassword(String userName, String password) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "setPassword")
-                     .addContext("parameter", userName)
+                     .addToContext(MDCBuilder.PROTOCOL, JMX)
+                     .addToContext(MDCBuilder.ACTION, "setPassword")
+                     .addToContext("parameter", userName)
                      .build()) {
             usersRepositoryProxy.setPassword(userName, password);
         }
@@ -101,9 +101,9 @@ public class JmxDataProbe implements JmxProbe {
     public boolean containsDomain(String domain) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "containsDomain")
-                     .addContext("parameter", domain)
+                     .addToContext(MDCBuilder.PROTOCOL, JMX)
+                     .addToContext(MDCBuilder.ACTION, "containsDomain")
+                     .addToContext("parameter", domain)
                      .build()) {
             return domainListProxy.containsDomain(domain);
         }
@@ -112,9 +112,9 @@ public class JmxDataProbe implements JmxProbe {
     public void addDomain(String domain) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "addDomain")
-                     .addContext("parameter", domain)
+                     .addToContext(MDCBuilder.PROTOCOL, JMX)
+                     .addToContext(MDCBuilder.ACTION, "addDomain")
+                     .addToContext("parameter", domain)
                      .build()) {
             domainListProxy.addDomain(domain);
         }
@@ -123,9 +123,9 @@ public class JmxDataProbe implements JmxProbe {
     public void removeDomain(String domain) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "removeDomain")
-                     .addContext("parameter", domain)
+                     .addToContext(MDCBuilder.PROTOCOL, JMX)
+                     .addToContext(MDCBuilder.ACTION, "removeDomain")
+                     .addToContext("parameter", domain)
                      .build()) {
             domainListProxy.removeDomain(domain);
         }
@@ -134,8 +134,8 @@ public class JmxDataProbe implements JmxProbe {
     public List<String> listDomains() throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "listDomains")
+                     .addToContext(MDCBuilder.PROTOCOL, JMX)
+                     .addToContext(MDCBuilder.ACTION, "listDomains")
                      .build()) {
             return domainListProxy.getDomains();
         }
@@ -144,8 +144,8 @@ public class JmxDataProbe implements JmxProbe {
     public Map<String, Mappings> listMappings() throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "listMappings")
+                     .addToContext(MDCBuilder.PROTOCOL, JMX)
+                     .addToContext(MDCBuilder.ACTION, "listMappings")
                      .build()) {
             return virtualUserTableProxy.getAllMappings();
         }
@@ -154,8 +154,8 @@ public class JmxDataProbe implements JmxProbe {
     public void addAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "addAddressMapping")
+                     .addToContext(MDCBuilder.PROTOCOL, JMX)
+                     .addToContext(MDCBuilder.ACTION, "addAddressMapping")
                      .build()) {
             virtualUserTableProxy.addAddressMapping(fromUser, fromDomain, toAddress);
         }
@@ -164,8 +164,8 @@ public class JmxDataProbe implements JmxProbe {
     public void removeAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "removeAddressMapping")
+                     .addToContext(MDCBuilder.PROTOCOL, JMX)
+                     .addToContext(MDCBuilder.ACTION, "removeAddressMapping")
                      .build()) {
             virtualUserTableProxy.removeAddressMapping(fromUser, fromDomain, toAddress);
         }
@@ -174,8 +174,8 @@ public class JmxDataProbe implements JmxProbe {
     public Mappings listUserDomainMappings(String user, String domain) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "listUserDomainMappings")
+                     .addToContext(MDCBuilder.PROTOCOL, JMX)
+                     .addToContext(MDCBuilder.ACTION, "listUserDomainMappings")
                      .build()) {
             return virtualUserTableProxy.getUserDomainMappings(user, domain);
         }
@@ -184,8 +184,8 @@ public class JmxDataProbe implements JmxProbe {
     public void addRegexMapping(String user, String domain, String regex) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "addRegexMapping")
+                     .addToContext(MDCBuilder.PROTOCOL, JMX)
+                     .addToContext(MDCBuilder.ACTION, "addRegexMapping")
                      .build()) {
             virtualUserTableProxy.addRegexMapping(user, domain, regex);
         }
@@ -194,8 +194,8 @@ public class JmxDataProbe implements JmxProbe {
     public void removeRegexMapping(String user, String domain, String regex) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "removeRegexMapping")
+                     .addToContext(MDCBuilder.PROTOCOL, JMX)
+                     .addToContext(MDCBuilder.ACTION, "removeRegexMapping")
                      .build()) {
             virtualUserTableProxy.removeRegexMapping(user, domain, regex);
         }

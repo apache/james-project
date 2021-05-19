@@ -165,7 +165,7 @@ class GroupRegistration implements Registration {
         return listenerExecutor.execute(
             listener,
             MDCBuilder.create()
-                .addContext(EventBus.StructuredLoggingFields.GROUP, group),
+                .addToContext(EventBus.StructuredLoggingFields.GROUP, group.asString()),
             event);
     }
 

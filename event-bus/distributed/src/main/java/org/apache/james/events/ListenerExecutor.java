@@ -45,9 +45,9 @@ class ListenerExecutor {
 
     private MDCBuilder mdc(EventListener listener, MDCBuilder mdcBuilder, Event event) {
         return mdcBuilder
-            .addContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
-            .addContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
-            .addContext(EventBus.StructuredLoggingFields.USER, event.getUsername())
-            .addContext(EventBus.StructuredLoggingFields.LISTENER_CLASS, listener.getClass());
+            .addToContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId().getId().toString())
+            .addToContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass().getCanonicalName())
+            .addToContext(EventBus.StructuredLoggingFields.USER, event.getUsername().asString())
+            .addToContext(EventBus.StructuredLoggingFields.LISTENER_CLASS, listener.getClass().getCanonicalName());
     }
 }

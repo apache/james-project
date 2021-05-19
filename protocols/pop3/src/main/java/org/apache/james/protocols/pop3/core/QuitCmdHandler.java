@@ -75,8 +75,8 @@ public class QuitCmdHandler implements CommandHandler<POP3Session> {
         return metricFactory.decorateSupplierWithTimerMetric("pop3-quit", () ->
             MDCBuilder.withMdc(
                 MDCBuilder.create()
-                    .addContext(MDCBuilder.ACTION, "QUIT")
-                    .addContext(MDCConstants.withSession(session)),
+                    .addToContext(MDCBuilder.ACTION, "QUIT")
+                    .addToContext(MDCConstants.withSession(session)),
                 () -> quit(session)));
     }
 

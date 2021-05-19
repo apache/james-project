@@ -20,6 +20,7 @@
 package org.apache.james.protocols.smtp.core;
 
 import java.io.Closeable;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.core.MaybeSender;
@@ -34,15 +35,15 @@ public class SMTPMDCContextFactory implements ProtocolMDCContextFactory {
 
     public Closeable from(Protocol protocol, ChannelHandlerContext ctx) {
         return MDCBuilder.create()
-            .addContext(ProtocolMDCContextFactory.mdcContext(protocol, ctx))
-            .addContext(from(ctx.getAttachment()))
+            .addToContext(ProtocolMDCContextFactory.mdcContext(protocol, ctx))
+            .addToContext(from(ctx.getAttachment()))
             .build();
     }
 
     public static MDCBuilder forSession(SMTPSession smtpSession) {
         return MDCBuilder.create()
-            .addContext(ProtocolMDCContextFactory.forSession(smtpSession))
-            .addContext(forSMTPSession(smtpSession));
+            .addToContext(ProtocolMDCContextFactory.forSession(smtpSession))
+            .addToContext(forSMTPSession(smtpSession));
     }
 
     private MDCBuilder from(Object o) {
@@ -55,9 +56,10 @@ public class SMTPMDCContextFactory implements ProtocolMDCContextFactory {
 
     private static MDCBuilder forSMTPSession(SMTPSession smtpSession) {
         return MDCBuilder.create()
-            .addContext("ehlo", smtpSession.getAttachment(SMTPSession.CURRENT_HELO_NAME, ProtocolSession.State.Connection))
-            .addContext("sender", smtpSession.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction)
+            .addToContextIfPresent("ehlo", smtpSession.getAttachment(SMTPSession.CURRENT_HELO_NAME, ProtocolSession.State.Connection))
+            .addToContextIfPresent("sender", smtpSession.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction)
                 .map(MaybeSender::asString))
-            .addContext("recipients", smtpSession.getAttachment(SMTPSession.RCPT_LIST, ProtocolSession.State.Transaction));
+            .addToContextIfPresent("recipients", smtpSession.getAttachment(SMTPSession.RCPT_LIST, ProtocolSession.State.Transaction)
+                .map(Objects::toString));
     }
 }

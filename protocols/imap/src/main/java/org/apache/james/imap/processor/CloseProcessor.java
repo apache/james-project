@@ -71,7 +71,7 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
     @Override
     protected Closeable addContextToMDC(CloseRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "CLOSE")
+            .addToContext(MDCBuilder.ACTION, "CLOSE")
             .build();
     }
 }

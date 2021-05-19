@@ -63,8 +63,8 @@ public class RsetCmdHandler implements CommandHandler<POP3Session> {
         return metricFactory.decorateSupplierWithTimerMetric("pop3-rset", () ->
             MDCBuilder.withMdc(
                 MDCBuilder.create()
-                    .addContext(MDCBuilder.ACTION, "RSET")
-                    .addContext(MDCConstants.withSession(session)),
+                    .addToContext(MDCBuilder.ACTION, "RSET")
+                    .addToContext(MDCConstants.withSession(session)),
                 () -> rset(session)));
     }
 

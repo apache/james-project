@@ -37,9 +37,24 @@ public class MDCStructuredLogger implements StructuredLogger {
         this.mdcBuilder = MDCBuilder.create();
     }
 
+    /**
+     * Using Object::toString causes undesired formatting issues and might lead to complex formatting logic.
+     * We migrated to explicit Strings instead.
+     *
+     * See https://issues.apache.org/jira/browse/JAMES-3587
+     *
+     * Use {@link MDCStructuredLogger::field} instead
+     */
+    @Deprecated
     @Override
     public StructuredLogger addField(String name, Object value) {
         mdcBuilder.addContext(name, value);
+        return this;
+    }
+
+    @Override
+    public StructuredLogger field(String name, String value) {
+        mdcBuilder.addToContext(name, value);
         return this;
     }
 

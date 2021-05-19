@@ -110,7 +110,7 @@ public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceReques
     @Override
     protected Closeable addContextToMDC(NamespaceRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "NAMESPACE")
+            .addToContext(MDCBuilder.ACTION, "NAMESPACE")
             .build();
     }
 }

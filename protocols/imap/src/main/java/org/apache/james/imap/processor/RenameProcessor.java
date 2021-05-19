@@ -83,9 +83,9 @@ public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
     @Override
     protected Closeable addContextToMDC(RenameRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "RENAME")
-            .addContext("existingName", request.getExistingName())
-            .addContext("newName", request.getNewName())
+            .addToContext(MDCBuilder.ACTION, "RENAME")
+            .addToContext("existingName", request.getExistingName())
+            .addToContext("newName", request.getNewName())
             .build();
     }
 }

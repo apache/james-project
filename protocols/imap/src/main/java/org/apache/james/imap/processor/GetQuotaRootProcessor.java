@@ -111,8 +111,8 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
     @Override
     protected Closeable addContextToMDC(GetQuotaRootRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "GET_QUOTA_ROOT")
-            .addContext("mailbox", request.getMailboxName())
+            .addToContext(MDCBuilder.ACTION, "GET_QUOTA_ROOT")
+            .addToContext("mailbox", request.getMailboxName())
             .build();
     }
 }

@@ -63,8 +63,8 @@ public class SubscribeProcessor extends AbstractSubscriptionProcessor<SubscribeR
     @Override
     protected Closeable addContextToMDC(SubscribeRequest message) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "SUBSCRIBE")
-            .addContext("mailbox", message.getMailboxName())
+            .addToContext(MDCBuilder.ACTION, "SUBSCRIBE")
+            .addToContext("mailbox", message.getMailboxName())
             .build();
     }
 }

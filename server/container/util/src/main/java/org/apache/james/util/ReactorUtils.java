@@ -195,7 +195,7 @@ public class ReactorUtils {
             .filter(entry -> entry.getValue() instanceof MDCBuilder)
             .filter(entry -> ((String) entry.getKey()).startsWith(MDC_KEY_PREFIX))
             .map(entry -> (MDCBuilder) entry.getValue())
-            .reduce(MDCBuilder.create(), MDCBuilder::addContext);
+            .reduce(MDCBuilder.create(), MDCBuilder::addToContext);
     }
 
 }

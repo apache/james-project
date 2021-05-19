@@ -114,8 +114,8 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
     @Override
     protected Closeable addContextToMDC(MyRightsRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "MYRIGHTS")
-            .addContext("mailbox", request.getMailboxName())
+            .addToContext(MDCBuilder.ACTION, "MYRIGHTS")
+            .addToContext("mailbox", request.getMailboxName())
             .build();
     }
 }

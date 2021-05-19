@@ -160,10 +160,10 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
     @Override
     protected Closeable addContextToMDC(SetACLRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "SET_ACL")
-            .addContext("mailbox", request.getMailboxName())
-            .addContext("identifier", request.getIdentifier())
-            .addContext("rights", request.getRights())
+            .addToContext(MDCBuilder.ACTION, "SET_ACL")
+            .addToContext("mailbox", request.getMailboxName())
+            .addToContext("identifier", request.getIdentifier())
+            .addToContext("rights", request.getRights())
             .build();
     }
 }

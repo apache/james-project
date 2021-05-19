@@ -61,9 +61,9 @@ public class UserCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
         return metricFactory.decorateSupplierWithTimerMetric("pop3-user", () ->
             MDCBuilder.withMdc(
                 MDCBuilder.create()
-                    .addContext(MDCBuilder.ACTION, "USER")
-                    .addContext(MDCConstants.withSession(session))
-                    .addContext(MDCConstants.forRequest(request)),
+                    .addToContext(MDCBuilder.ACTION, "USER")
+                    .addToContext(MDCConstants.withSession(session))
+                    .addToContext(MDCConstants.forRequest(request)),
                 () -> user(session, request)));
     }
 

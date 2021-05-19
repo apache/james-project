@@ -30,17 +30,17 @@ import reactor.util.context.Context;
 public interface LoggingHelper {
     static Context jmapAuthContext(MailboxSession session) {
         return context("JMAP_AUTH",
-            MDCBuilder.of(MDCBuilder.USER, session.getUser().asString()));
+            MDCBuilder.ofValue(MDCBuilder.USER, session.getUser().asString()));
     }
 
     static Context jmapContext(HttpServerRequest req) {
         return context("JMAP", MDCBuilder.create()
-            .addContext(MDCBuilder.PROTOCOL, "JMAP")
-            .addContext(MDCBuilder.IP, req.hostAddress().getHostString()));
+            .addToContext(MDCBuilder.PROTOCOL, "JMAP")
+            .addToContext(MDCBuilder.IP, req.hostAddress().getHostString()));
     }
 
     static Context jmapAction(String action) {
         return context("JMAP_ACTION",
-            MDCBuilder.of(MDCBuilder.ACTION, action));
+            MDCBuilder.ofValue(MDCBuilder.ACTION, action));
     }
 }

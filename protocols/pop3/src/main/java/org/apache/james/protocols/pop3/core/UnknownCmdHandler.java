@@ -42,9 +42,9 @@ public class UnknownCmdHandler extends UnknownCommandHandler<POP3Session> {
     public Response onCommand(POP3Session session, Request request) {
         MDCBuilder.withMdc(
             MDCBuilder.create()
-                .addContext(MDCBuilder.ACTION, request.getCommand())
-                .addContext(MDCConstants.withSession(session))
-                .addContext(MDCConstants.forRequest(request)),
+                .addToContext(MDCBuilder.ACTION, request.getCommand())
+                .addToContext(MDCConstants.withSession(session))
+                .addToContext(MDCConstants.forRequest(request)),
             () -> LOGGER.info("Unknown command received"));
         return POP3Response.ERR;
     }

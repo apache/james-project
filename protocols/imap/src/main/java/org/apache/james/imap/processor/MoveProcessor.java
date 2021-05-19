@@ -73,10 +73,10 @@ public class MoveProcessor extends AbstractMessageRangeProcessor<MoveRequest> im
     @Override
     protected Closeable addContextToMDC(MoveRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "MOVE")
-            .addContext("targetMailbox", request.getMailboxName())
-            .addContext("uidEnabled", request.isUseUids())
-            .addContext("idSet", IdRange.toString(request.getIdSet()))
+            .addToContext(MDCBuilder.ACTION, "MOVE")
+            .addToContext("targetMailbox", request.getMailboxName())
+            .addToContext("uidEnabled", Boolean.toString(request.isUseUids()))
+            .addToContext("idSet", IdRange.toString(request.getIdSet()))
             .build();
     }
 

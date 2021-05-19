@@ -70,7 +70,7 @@ public class StartTLSProcessor extends AbstractChainedProcessor<StartTLSRequest>
     @Override
     protected Closeable addContextToMDC(StartTLSRequest message) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "START_TLS")
+            .addToContext(MDCBuilder.ACTION, "START_TLS")
             .build();
     }
 }

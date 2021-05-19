@@ -328,11 +328,11 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
     @Override
     protected Closeable addContextToMDC(StoreRequest message) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "STORE")
-            .addContext("ranges", IdRange.toString(message.getIdSet()))
-            .addContext("useUids", message.isUseUids())
-            .addContext("unchangedSince", message.getUnchangedSince())
-            .addContext("isSilent", message.isSilent())
+            .addToContext(MDCBuilder.ACTION, "STORE")
+            .addToContext("ranges", IdRange.toString(message.getIdSet()))
+            .addToContext("useUids", Boolean.toString(message.isUseUids()))
+            .addToContext("unchangedSince", Long.toString(message.getUnchangedSince()))
+            .addToContext("isSilent", Boolean.toString(message.isSilent()))
             .build();
     }
 }

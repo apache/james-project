@@ -122,7 +122,7 @@ public class SetFilterMethod implements Method {
         return Flux.from(metricFactory.decoratePublisherWithTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
             process(methodCallId, mailboxSession, setFilterRequest)
                 .subscriberContext(jmapAction("SET_FILTER"))
-                .subscriberContext(context("SET_FILTER", MDCBuilder.of("update", setFilterRequest.getSingleton())))));
+                .subscriberContext(context("SET_FILTER", MDCBuilder.ofValue("update", setFilterRequest.getSingleton().toString())))));
     }
 
     private Mono<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, SetFilterRequest request) {
