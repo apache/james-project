@@ -19,7 +19,7 @@
 
 package org.apache.james.blob.cassandra;
 
-import static com.datastax.driver.core.ConsistencyLevel.ONE;
+import static com.datastax.driver.core.ConsistencyLevel.LOCAL_ONE;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
@@ -151,7 +151,7 @@ public class CassandraBucketDAO {
             select.bind()
                 .setString(BUCKET, bucketName.asString())
                 .setString(ID, blobId.asString())
-                .setConsistencyLevel(ONE))
+                .setConsistencyLevel(LOCAL_ONE))
             .map(row -> row.getInt(NUMBER_OF_CHUNK));
     }
 
@@ -170,7 +170,7 @@ public class CassandraBucketDAO {
                 .setString(BucketBlobParts.BUCKET, bucketName.asString())
                 .setString(BucketBlobParts.ID, blobId.asString())
                 .setInt(BucketBlobParts.CHUNK_NUMBER, position)
-                .setConsistencyLevel(ONE))
+                .setConsistencyLevel(LOCAL_ONE))
             .map(this::rowToData);
     }
 
