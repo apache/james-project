@@ -453,7 +453,7 @@ public class GetMessagesMethodTest {
             .hasSize(1)
             .extracting(JmapResponse::getFilterProvider)
             .are(new Condition<>(Optional::isPresent, "present"));
-        SimpleFilterProvider actualFilterProvider = result.get(0).getFilterProvider().get();
+        SimpleFilterProvider actualFilterProvider = result.get(0).getFilterProvider().get().getRight();
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.setFilterProvider(actualFilterProvider.setDefaultFilter(SimpleBeanPropertyFilter.serializeAll()));

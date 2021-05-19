@@ -22,6 +22,7 @@ package org.apache.james.jmap.draft.methods;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.Property;
 
@@ -43,7 +44,7 @@ public class JmapResponse {
         private MethodCallId methodCallId;
         private Method.Response response;
         private Optional<? extends Set<? extends Property>> properties = Optional.empty();
-        private Optional<SimpleFilterProvider> filterProvider = Optional.empty();
+        private Optional<Pair<? extends Set<? extends Property>, SimpleFilterProvider>> filterProvider = Optional.empty();
 
         private Builder() {
         }
@@ -72,7 +73,7 @@ public class JmapResponse {
             return properties(Optional.ofNullable(properties));
         }
         
-        public Builder filterProvider(Optional<SimpleFilterProvider> filterProvider) {
+        public Builder filterProvider(Optional<Pair<? extends Set<? extends Property>, SimpleFilterProvider>> filterProvider) {
             this.filterProvider = filterProvider;
             return this;
         }
@@ -102,9 +103,12 @@ public class JmapResponse {
     private final MethodCallId methodCallId;
     private final Method.Response response;
     private final Optional<? extends Set<? extends Property>> properties;
-    private final Optional<SimpleFilterProvider> filterProvider;
+    private final Optional<Pair<? extends Set<? extends Property>, SimpleFilterProvider>> filterProvider;
     
-    private JmapResponse(Method.Response.Name method, MethodCallId methodCallId, Method.Response response, Optional<? extends Set<? extends Property>> properties, Optional<SimpleFilterProvider> filterProvider) {
+    private JmapResponse(Method.Response.Name method, MethodCallId methodCallId,
+                         Method.Response response,
+                         Optional<? extends Set<? extends Property>> properties,
+                         Optional<Pair<? extends Set<? extends Property>, SimpleFilterProvider>> filterProvider) {
         this.method = method;
         this.methodCallId = methodCallId;
         this.response = response;
@@ -128,7 +132,7 @@ public class JmapResponse {
         return properties;
     }
 
-    public Optional<SimpleFilterProvider> getFilterProvider() {
+    public Optional<Pair<? extends Set<? extends Property>, SimpleFilterProvider>> getFilterProvider() {
         return filterProvider;
     }
 

@@ -296,8 +296,8 @@ public abstract class SendMDNMethodTest {
                 "        \"type\":\"processed\"" +
                 "    }" +
                 "}" +
-                "}}, \"#0\"]]")
-            .post("/jmap");
+                "}}, \"#0\"]]").log().all()
+            .post("/jmap").prettyPeek();
 
         // BART should have received it
         calmlyAwait.atMost(TWO_MINUTES).until(() -> !listMessageIdsInMailbox(bartAccessToken, getInboxId(bartAccessToken)).isEmpty());
@@ -306,9 +306,9 @@ public abstract class SendMDNMethodTest {
         String firstMessage = ARGUMENTS + ".list[0]";
         given()
             .header("Authorization", bartAccessToken.asString())
-            .body("[[\"getMessages\", {\"ids\": [\"" + bartInboxMessageIds + "\"]}, \"#0\"]]")
+            .body("[[\"getMessages\", {\"ids\": [\"" + bartInboxMessageIds + "\"]}, \"#0\"]]").log().all()
         .when()
-            .post("/jmap")
+            .post("/jmap").prettyPeek()
         .then()
             .statusCode(200)
             .body(firstMessage + ".from.email", is(HOMER.asString()))
@@ -330,7 +330,7 @@ public abstract class SendMDNMethodTest {
         // USER sends a MDN back to BART
         String creationId = "creation-1";
         with()
-            .header("Authorization", homerAccessToken.asString())
+            .header("Authorization", homerAccessToken.asString()).log().all()
             .body("[[\"setMessages\", {\"sendMDN\": {" +
                 "\"" + creationId + "\":{" +
                 "    \"messageId\":\"" + messageIds.get(0) + "\"," +
@@ -344,16 +344,16 @@ public abstract class SendMDNMethodTest {
                 "    }" +
                 "}" +
                 "}}, \"#0\"]]")
-            .post("/jmap");
+            .post("/jmap").prettyPeek();
 
         // BART should have received it
         calmlyAwait.until(() -> !listMessageIdsInMailbox(bartAccessToken, getInboxId(bartAccessToken)).isEmpty());
         List<String> bobInboxMessageIds = listMessageIdsInMailbox(bartAccessToken, getInboxId(bartAccessToken));
 
-        String blobId = with()
+        String blobId = with().log().all()
             .header("Authorization", bartAccessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + bobInboxMessageIds.get(0) + "\"]}, \"#0\"]]")
-            .post("/jmap")
+            .post("/jmap").prettyPeek()
         .then()
             .extract()
             .body()

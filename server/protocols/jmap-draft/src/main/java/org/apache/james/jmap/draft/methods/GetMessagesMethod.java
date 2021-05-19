@@ -23,9 +23,11 @@ import static org.apache.james.util.ReactorUtils.context;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.jmap.draft.exceptions.JmapFieldNotSupportedException;
 import org.apache.james.jmap.draft.json.FieldNamePropertyFilter;
 import org.apache.james.jmap.draft.model.GetMessagesRequest;
@@ -33,6 +35,7 @@ import org.apache.james.jmap.draft.model.GetMessagesResponse;
 import org.apache.james.jmap.draft.model.MessageProperties;
 import org.apache.james.jmap.draft.model.MessageProperties.HeaderProperty;
 import org.apache.james.jmap.draft.model.MethodCallId;
+import org.apache.james.jmap.draft.model.Property;
 import org.apache.james.jmap.draft.model.message.view.MessageView;
 import org.apache.james.jmap.draft.model.message.view.MessageViewFactory;
 import org.apache.james.jmap.draft.model.message.view.MetaMessageViewFactory;
@@ -82,6 +85,7 @@ public class GetMessagesMethod implements Method {
 
         GetMessagesRequest getMessagesRequest = (GetMessagesRequest) request;
         MessageProperties outputProperties = getMessagesRequest.getProperties().toOutputProperties();
+        Optional<Pair<? extends Set<? extends Property>, SimpleFilterProvider>> integerSimpleFilterProviderPair = buildOptionalHeadersFilteringFilterProvider(outputProperties);
 
         return Flux.from(metricFactory.decoratePublisherWithTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
             Flux.from(getMessagesResponse(mailboxSession, getMessagesRequest)
@@ -89,7 +93,7 @@ public class GetMessagesMethod implements Method {
                     .response(response)
                     .responseName(RESPONSE_NAME)
                     .properties(outputProperties.getOptionalMessageProperties())
-                    .filterProvider(buildOptionalHeadersFilteringFilterProvider(outputProperties))
+                    .filterProvider(integerSimpleFilterProviderPair)
                     .build()))
             .subscriberContext(context("GET_MESSAGES", mdc(getMessagesRequest)))));
     }
@@ -102,11 +106,10 @@ public class GetMessagesMethod implements Method {
             .addContext("properties", getMessagesRequest.getProperties());
     }
 
-    private Optional<SimpleFilterProvider> buildOptionalHeadersFilteringFilterProvider(MessageProperties properties) {
+    private Optional<Pair<? extends Set<? extends Property>, SimpleFilterProvider>> buildOptionalHeadersFilteringFilterProvider(MessageProperties properties) {
         return properties.getOptionalHeadersProperties()
-            .map(this::buildHeadersPropertyFilter)
-            .map(propertyFilter -> new SimpleFilterProvider()
-                .addFilter(HEADERS_FILTER, propertyFilter));
+            .map(headerProperties -> Pair.of(headerProperties, new SimpleFilterProvider()
+                .addFilter(HEADERS_FILTER, buildHeadersPropertyFilter(headerProperties))));
     }
     
     private PropertyFilter buildHeadersPropertyFilter(ImmutableSet<HeaderProperty> headerProperties) {
