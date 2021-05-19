@@ -21,7 +21,6 @@ package org.apache.james.util;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -30,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -71,28 +69,6 @@ public class MDCBuilder {
     public static final String CHARSET = "charset";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MDCBuilder.class);
-
-    public static class Closeables implements Closeable {
-        private final List<Closeable> closeables;
-
-        public Closeables(List<Closeable> closeables) {
-            Preconditions.checkNotNull(closeables);
-            this.closeables = ImmutableList.copyOf(closeables);
-        }
-
-        @Override
-        public void close() throws IOException {
-            closeables.forEach(this::closeQuietly);
-        }
-
-        private void closeQuietly(Closeable closeable) {
-            try {
-                closeable.close();
-            } catch (IOException e) {
-                LOGGER.warn("Failed to close Closeable", e);
-            }
-        }
-    }
 
     public static MDCBuilder create() {
         return new MDCBuilder();
@@ -172,12 +148,12 @@ public class MDCBuilder {
 
     @VisibleForTesting
     Map<String, String> buildContextMap() {
-        return ImmutableMap.<String, String>builder()
-            .putAll(nestedBuilder.build()
-                .stream()
-                .map(MDCBuilder::buildContextMap)
-                .flatMap(map -> map.entrySet().stream())
-                .collect(Guavate.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue)))
+        ImmutableMap.Builder<String, String> result = ImmutableMap.builder();
+
+        nestedBuilder.build()
+            .forEach(mdcBuilder -> result.putAll(mdcBuilder.buildContextMap()));
+
+        return result
             .putAll(contextMap.build())
             .build();
     }
@@ -191,12 +167,11 @@ public class MDCBuilder {
     }
 
     public Closeable build() {
-        return new Closeables(
-            buildContextMap()
-                .entrySet()
-                .stream()
-                .map(entry -> MDC.putCloseable(entry.getKey(), entry.getValue()))
-                .collect(Guavate.toImmutableList()));
+        Map<String, String> contextMap = buildContextMap();
+        contextMap.forEach(MDC::put);
+
+        return () -> contextMap.keySet()
+            .forEach(MDC::remove);
     }
 
 }

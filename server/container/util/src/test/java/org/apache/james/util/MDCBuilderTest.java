@@ -22,15 +22,9 @@ package org.apache.james.util;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 
-import java.io.Closeable;
-import java.io.IOException;
-
 import org.junit.jupiter.api.Test;
 
-import com.google.common.collect.ImmutableList;
-
 class MDCBuilderTest {
-
     private static final String KEY_1 = "key1";
     private static final String KEY_2 = "key2";
     private static final String VALUE_1 = "value1";
@@ -91,51 +85,4 @@ class MDCBuilderTest {
             .containsEntry(KEY_1, VALUE_1)
             .containsEntry(KEY_2, VALUE_2);
     }
-
-    @Test
-    void closeablesConstructorShouldThrowOnNullList() {
-        assertThatNullPointerException()
-            .isThrownBy(() -> new MDCBuilder.Closeables(null));
-    }
-
-    @Test
-    void closeablesCloseShouldNotThrowWhenEmpty() throws IOException {
-        new MDCBuilder.Closeables(ImmutableList.of())
-            .close();
-    }
-
-    @Test
-    void closeablesCloseShouldCallAllUnderlyingCloseables() throws IOException {
-        ImmutableList.Builder<String> builder = ImmutableList.builder();
-
-        Closeable closeable1 = () -> builder.add(VALUE_1);
-        Closeable closeable2 = () -> builder.add(VALUE_2);
-
-        new MDCBuilder.Closeables(
-            ImmutableList.of(closeable1, closeable2))
-            .close();
-
-        assertThat(builder.build())
-            .containsExactly(VALUE_1, VALUE_2);
-    }
-
-
-    @Test
-    void closeablesCloseShouldCallAllUnderlyingCloseablesWhenError() throws IOException {
-        ImmutableList.Builder<String> builder = ImmutableList.builder();
-
-        Closeable closeable1 = () -> builder.add(VALUE_1);
-        Closeable closeable2 = () -> {
-            throw new IOException();
-        };
-        Closeable closeable3 = () -> builder.add(VALUE_2);
-
-        new MDCBuilder.Closeables(
-            ImmutableList.of(closeable1, closeable2, closeable3))
-            .close();
-
-        assertThat(builder.build())
-            .containsExactly(VALUE_1, VALUE_2);
-    }
-
 }
