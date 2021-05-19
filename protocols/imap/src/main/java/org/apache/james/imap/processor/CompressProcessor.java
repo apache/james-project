@@ -78,8 +78,8 @@ public class CompressProcessor extends AbstractChainedProcessor<CompressRequest>
     @Override
     protected Closeable addContextToMDC(CompressRequest message) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "COMPRESS")
-            .addContext("algorithm", message.getAlgorithm())
+            .addToContext(MDCBuilder.ACTION, "COMPRESS")
+            .addToContext("algorithm", message.getAlgorithm())
             .build();
     }
 }

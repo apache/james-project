@@ -46,14 +46,14 @@ public class LoggingResponseFilter implements Filter {
         RequestId requestId = request.attribute(REQUEST_ID);
 
         MDCStructuredLogger.forLogger(LOGGER)
-            .addField(REQUEST_ID, requestId.asString())
-            .addField(IP, request.ip())
-            .addField(ENDPOINT, request.url())
-            .addField(METHOD, request.requestMethod())
-            .addField(LOGIN, request.attribute(LOGIN))
-            .addField(QUERY_PARAMETERS, ImmutableSet.copyOf(request.queryParams()))
-            .addField(STATUS, response.status())
-            .addField(RESPONSE_BODY, response.body())
+            .field(REQUEST_ID, requestId.asString())
+            .field(IP, request.ip())
+            .field(ENDPOINT, request.url())
+            .field(METHOD, request.requestMethod())
+            .field(LOGIN, request.attribute(LOGIN))
+            .field(QUERY_PARAMETERS, ImmutableSet.copyOf(request.queryParams()).toString())
+            .field(STATUS, Integer.toString(response.status()))
+            .field(RESPONSE_BODY, response.body())
             .log(logger -> logger.info("WebAdmin response received"));
     }
 }

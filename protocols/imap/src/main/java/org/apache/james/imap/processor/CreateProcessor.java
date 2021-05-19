@@ -68,8 +68,8 @@ public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
     @Override
     protected Closeable addContextToMDC(CreateRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "CREATE")
-            .addContext("mailbox", request.getMailboxName())
+            .addToContext(MDCBuilder.ACTION, "CREATE")
+            .addToContext("mailbox", request.getMailboxName())
             .build();
     }
 }

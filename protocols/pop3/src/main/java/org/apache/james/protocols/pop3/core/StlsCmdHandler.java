@@ -61,8 +61,8 @@ public class StlsCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
         return metricFactory.decorateSupplierWithTimerMetric("pop3-stls", () ->
             MDCBuilder.withMdc(
                 MDCBuilder.create()
-                    .addContext(MDCBuilder.ACTION, "START_TLS")
-                    .addContext(MDCConstants.withSession(session)),
+                    .addToContext(MDCBuilder.ACTION, "START_TLS")
+                    .addToContext(MDCConstants.withSession(session)),
                 () -> stls(session)));
     }
 

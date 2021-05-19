@@ -19,6 +19,7 @@
 package org.apache.james.jmap.draft.model;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
@@ -85,7 +86,16 @@ public class MessageProperties {
         // "language", "location" ]
         return readLevels.reduce(ReadProfile::combine)
             .orElse(ReadProfile.Full);
+    }
 
+    public Stream<String> asFieldList() {
+        return Stream.concat(
+            messageProperties.stream()
+                .flatMap(Collection::stream)
+                .map(MessageProperty::asFieldName),
+            headersProperties.stream()
+                .flatMap(Collection::stream)
+                .map(HeaderProperty::asFieldName));
     }
 
     private Stream<ReadProfile> headerPropertiesReadLevel() {

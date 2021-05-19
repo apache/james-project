@@ -45,6 +45,14 @@ class MDCBuilderTest {
     }
 
     @Test
+    void addToContextShouldThrowOnNullKey() {
+        assertThatNullPointerException()
+            .isThrownBy(() ->
+                MDCBuilder.create()
+                    .addToContext(null, "any"));
+    }
+
+    @Test
     void buildContextMapShouldReturnEmptyWhenNoContext() {
         assertThat(MDCBuilder.create().buildContextMap())
             .isEmpty();
@@ -54,8 +62,8 @@ class MDCBuilderTest {
     void buildContextMapShouldReturnContext() {
         assertThat(
             MDCBuilder.create()
-                .addContext(KEY_1, VALUE_1)
-                .addContext(KEY_2, VALUE_2)
+                .addToContext(KEY_1, VALUE_1)
+                .addToContext(KEY_2, VALUE_2)
                 .buildContextMap())
             .containsOnlyKeys(KEY_1, KEY_2)
             .containsEntry(KEY_1, VALUE_1)
@@ -66,7 +74,7 @@ class MDCBuilderTest {
     void addContextShouldFilterOutNullValues() {
         assertThat(
             MDCBuilder.create()
-                .addContext(KEY_1, null)
+                .addToContext(KEY_1, null)
                 .buildContextMap())
             .isEmpty();
     }
@@ -75,9 +83,9 @@ class MDCBuilderTest {
     void addContextShouldAllowRecursiveBuild() {
         assertThat(
             MDCBuilder.create()
-                .addContext(KEY_1, VALUE_1)
-                .addContext(MDCBuilder.create()
-                    .addContext(KEY_2, VALUE_2))
+                .addToContext(KEY_1, VALUE_1)
+                .addToContext(MDCBuilder.create()
+                    .addToContext(KEY_2, VALUE_2))
                 .buildContextMap())
             .containsOnlyKeys(KEY_1, KEY_2)
             .containsEntry(KEY_1, VALUE_1)

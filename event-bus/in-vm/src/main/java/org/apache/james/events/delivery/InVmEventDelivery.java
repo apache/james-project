@@ -88,17 +88,17 @@ public class InVmEventDelivery implements EventDelivery {
 
     private MDCBuilder buildMDC(EventListener listener, Event event) {
         return MDCBuilder.create()
-            .addContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
-            .addContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
-            .addContext(EventBus.StructuredLoggingFields.USER, event.getUsername())
-            .addContext(EventBus.StructuredLoggingFields.LISTENER_CLASS, listener.getClass());
+            .addToContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId().toString())
+            .addToContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass().getCanonicalName())
+            .addToContext(EventBus.StructuredLoggingFields.USER, event.getUsername().asString())
+            .addToContext(EventBus.StructuredLoggingFields.LISTENER_CLASS, listener.getClass().getCanonicalName());
     }
 
     private StructuredLogger structuredLogger(Event event, EventListener listener) {
         return MDCStructuredLogger.forLogger(LOGGER)
-            .addField(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
-            .addField(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
-            .addField(EventBus.StructuredLoggingFields.USER, event.getUsername())
-            .addField(EventBus.StructuredLoggingFields.LISTENER_CLASS, listener.getClass());
+            .field(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId().getId().toString())
+            .field(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass().getCanonicalName())
+            .field(EventBus.StructuredLoggingFields.USER, event.getUsername().asString())
+            .field(EventBus.StructuredLoggingFields.LISTENER_CLASS, listener.getClass().getCanonicalName());
     }
 }

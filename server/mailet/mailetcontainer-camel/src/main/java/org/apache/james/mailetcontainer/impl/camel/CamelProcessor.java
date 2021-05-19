@@ -62,14 +62,14 @@ public class CamelProcessor {
         Throwable ex = null;
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, "MAILET")
-                     .addContext(MDCBuilder.ACTION, "MAILET")
-                     .addContext(MDCBuilder.HOST, mail.getRemoteHost())
-                     .addContext("state", mail.getState())
-                     .addContext("mailet", mailet.getClass().getSimpleName())
-                     .addContext("mail", mail.getName())
-                     .addContext("recipients", ImmutableList.copyOf(mail.getRecipients()))
-                     .addContext("sender", mail.getMaybeSender())
+                     .addToContext(MDCBuilder.PROTOCOL, "MAILET")
+                     .addToContext(MDCBuilder.ACTION, "MAILET")
+                     .addToContext(MDCBuilder.HOST, mail.getRemoteHost())
+                     .addToContext("state", mail.getState())
+                     .addToContext("mailet", mailet.getClass().getSimpleName())
+                     .addToContext("mail", mail.getName())
+                     .addToContext("recipients", ImmutableList.copyOf(mail.getRecipients()).toString())
+                     .addToContext("sender", mail.getMaybeSender().asString())
                      .build()) {
             MailetPipelineLogging.logBeginOfMailetProcess(mailet, mail);
             mailet.service(mail);

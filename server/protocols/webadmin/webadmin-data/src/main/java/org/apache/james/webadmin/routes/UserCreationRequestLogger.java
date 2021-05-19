@@ -46,12 +46,12 @@ public class UserCreationRequestLogger implements RequestLogger {
     @Override
     public void log(Request request, RequestId requestId) {
         MDCStructuredLogger.forLogger(LOGGER)
-                .addField(REQUEST_ID, requestId.asString())
-                .addField(IP, request.ip())
-                .addField(ENDPOINT, request.url())
-                .addField(METHOD, request.requestMethod())
-                .addField(LOGIN, request.attribute(LOGIN))
-                .addField(QUERY_PARAMETERS, ImmutableSet.copyOf(request.queryParams()))
+                .field(REQUEST_ID, requestId.asString())
+                .field(IP, request.ip())
+                .field(ENDPOINT, request.url())
+                .field(METHOD, request.requestMethod())
+                .field(LOGIN, request.attribute(LOGIN))
+                .field(QUERY_PARAMETERS, ImmutableSet.copyOf(request.queryParams()).toString())
                 .log(logger -> logger.info("WebAdmin request received: user creation request"));
     }
 }

@@ -70,9 +70,9 @@ public class RetrCmdHandler implements CommandHandler<POP3Session> {
         return metricFactory.decorateSupplierWithTimerMetric("pop3-retr", () ->
             MDCBuilder.withMdc(
                 MDCBuilder.create()
-                    .addContext(MDCBuilder.ACTION, "RETR")
-                    .addContext(MDCConstants.withSession(session))
-                    .addContext(MDCConstants.forRequest(request)),
+                    .addToContext(MDCBuilder.ACTION, "RETR")
+                    .addToContext(MDCConstants.withSession(session))
+                    .addToContext(MDCConstants.forRequest(request)),
                 () -> retr(session, request)));
     }
 

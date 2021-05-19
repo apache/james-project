@@ -64,8 +64,8 @@ public class UnsubscribeProcessor extends AbstractSubscriptionProcessor<Unsubscr
     @Override
     protected Closeable addContextToMDC(UnsubscribeRequest message) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "UNSUBSCRIBE")
-            .addContext("mailbox", message.getMailboxName())
+            .addToContext(MDCBuilder.ACTION, "UNSUBSCRIBE")
+            .addToContext("mailbox", message.getMailboxName())
             .build();
     }
 }

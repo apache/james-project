@@ -192,7 +192,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     @Override
     protected Closeable addContextToMDC(IdleRequest message) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "IDLE")
+            .addToContext(MDCBuilder.ACTION, "IDLE")
             .build();
     }
 }

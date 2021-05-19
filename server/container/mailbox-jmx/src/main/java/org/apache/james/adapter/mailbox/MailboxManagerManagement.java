@@ -73,9 +73,9 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
         MailboxSession session = null;
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "deleteMailboxes")
-                     .addContext("concernedUser", username)
+                     .addToContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addToContext(MDCBuilder.ACTION, "deleteMailboxes")
+                     .addToContext("concernedUser", username)
                      .build()) {
             session = mailboxManager.createSystemSession(Username.of(username));
             mailboxManager.startProcessingRequest(session);
@@ -101,9 +101,9 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
         MailboxSession session = null;
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "listMailboxes")
-                     .addContext("concernedUser", username)
+                     .addToContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addToContext(MDCBuilder.ACTION, "listMailboxes")
+                     .addToContext("concernedUser", username)
                      .build()) {
             session = mailboxManager.createSystemSession(Username.of(username));
             mailboxManager.startProcessingRequest(session);
@@ -130,9 +130,9 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
         MailboxPath mailboxPath = new MailboxPath(namespace, username, name);
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "createMailbox")
-                     .addContext("mailboxPath", mailboxPath.asString())
+                     .addToContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addToContext(MDCBuilder.ACTION, "createMailbox")
+                     .addToContext("mailboxPath", mailboxPath.asString())
                      .build()) {
             session = mailboxManager.createSystemSession(username);
             mailboxManager.startProcessingRequest(session);
@@ -154,9 +154,9 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
         MailboxPath mailboxPath = new MailboxPath(namespace, username, name);
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "deleteMailbox")
-                     .addContext("mailboxPath", mailboxPath.asString())
+                     .addToContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addToContext(MDCBuilder.ACTION, "deleteMailbox")
+                     .addToContext("mailboxPath", mailboxPath.asString())
                      .build()) {
             session = mailboxManager.createSystemSession(username);
             mailboxManager.startProcessingRequest(session);
@@ -178,10 +178,10 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
         MailboxPath mailboxPath = new MailboxPath(namespace, username, name);
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "importEmlFileToMailbox")
-                     .addContext("mailboxPath", mailboxPath.asString())
-                     .addContext("emlPath", emlPath)
+                     .addToContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addToContext(MDCBuilder.ACTION, "importEmlFileToMailbox")
+                     .addToContext("mailboxPath", mailboxPath.asString())
+                     .addToContext("emlPath", emlPath)
                      .build()) {
             session = mailboxManager.createSystemSession(username);
             mailboxManager.startProcessingRequest(session);

@@ -45,7 +45,7 @@ public class CheckProcessor extends AbstractMailboxProcessor<CheckRequest> {
     @Override
     protected Closeable addContextToMDC(CheckRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "CHECK")
+            .addToContext(MDCBuilder.ACTION, "CHECK")
             .build();
     }
 }

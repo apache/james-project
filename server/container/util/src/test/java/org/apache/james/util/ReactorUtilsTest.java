@@ -648,7 +648,7 @@ class ReactorUtilsTest {
                 .doOnEach(ReactorUtils.log(() -> {
                     assertThat(MDC.get(key)).isEqualTo(value);
                 }))
-                .subscriberContext(ReactorUtils.context("test", MDCBuilder.of(key, value)))
+                .subscriberContext(ReactorUtils.context("test", MDCBuilder.ofValue(key, value)))
                 .blockLast();
         }
 
@@ -662,8 +662,8 @@ class ReactorUtilsTest {
                 .doOnEach(ReactorUtils.log(() -> {
                     assertThat(MDC.get(key)).isEqualTo(value1);
                 }))
-                .subscriberContext(ReactorUtils.context("test", MDCBuilder.of(key, value1)))
-                .subscriberContext(ReactorUtils.context("test", MDCBuilder.of(key, value2)))
+                .subscriberContext(ReactorUtils.context("test", MDCBuilder.ofValue(key, value1)))
+                .subscriberContext(ReactorUtils.context("test", MDCBuilder.ofValue(key, value2)))
                 .blockLast();
         }
 
@@ -679,8 +679,8 @@ class ReactorUtilsTest {
                     assertThat(MDC.get(key1)).isEqualTo(value1);
                     assertThat(MDC.get(key2)).isEqualTo(value2);
                 }))
-                .subscriberContext(ReactorUtils.context("test1", MDCBuilder.of(key1, value1)))
-                .subscriberContext(ReactorUtils.context("test2", MDCBuilder.of(key2, value2)))
+                .subscriberContext(ReactorUtils.context("test1", MDCBuilder.ofValue(key1, value1)))
+                .subscriberContext(ReactorUtils.context("test2", MDCBuilder.ofValue(key2, value2)))
                 .blockLast();
         }
     }

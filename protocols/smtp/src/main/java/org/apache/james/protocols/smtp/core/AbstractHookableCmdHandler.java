@@ -67,7 +67,7 @@ public abstract class AbstractHookableCmdHandler<HookT extends org.apache.james.
 
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.ACTION, command)
+                     .addToContext(MDCBuilder.ACTION, command)
                      .build()) {
             Response response = doFilterChecks(session, command, parameters);
             if (response == null) {

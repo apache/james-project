@@ -97,15 +97,15 @@ public class MatcherSplitter {
 
             try (Closeable closeable =
                      MDCBuilder.create()
-                         .addContext(MDCBuilder.PROTOCOL, "MAILET")
-                         .addContext(MDCBuilder.ACTION, "MATCHER")
-                         .addContext(MDCBuilder.IP, mail.getRemoteAddr())
-                         .addContext(MDCBuilder.HOST, mail.getRemoteHost())
-                         .addContext("matcher", matcher.getMatcherInfo())
-                         .addContext("state", mail.getState())
-                         .addContext("mail", mail.getName())
-                         .addContext("recipients", ImmutableList.copyOf(mail.getRecipients()))
-                         .addContext("sender", mail.getMaybeSender())
+                         .addToContext(MDCBuilder.PROTOCOL, "MAILET")
+                         .addToContext(MDCBuilder.ACTION, "MATCHER")
+                         .addToContext(MDCBuilder.IP, mail.getRemoteAddr())
+                         .addToContext(MDCBuilder.HOST, mail.getRemoteHost())
+                         .addToContext("matcher", matcher.getMatcherInfo())
+                         .addToContext("state", mail.getState())
+                         .addToContext("mail", mail.getName())
+                         .addToContext("recipients", ImmutableList.copyOf(mail.getRecipients()).toString())
+                         .addToContext("sender", mail.getMaybeSender().asString())
                          .build()) {
                 // call the matcher
                 matchedRcpts = matcher.match(mail);

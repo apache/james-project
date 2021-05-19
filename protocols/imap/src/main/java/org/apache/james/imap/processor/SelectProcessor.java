@@ -20,6 +20,8 @@
 package org.apache.james.imap.processor;
 
 import java.io.Closeable;
+import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.james.events.EventBus;
 import org.apache.james.imap.api.message.IdRange;
@@ -41,14 +43,14 @@ public class SelectProcessor extends AbstractSelectionProcessor<SelectRequest> {
     @Override
     protected Closeable addContextToMDC(SelectRequest message) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "SELECT")
-            .addContext("mailbox", message.getMailboxName())
-            .addContext("condstore", message.getCondstore())
-            .addContext("knownModseq", message.getKnownModSeq())
-            .addContext("knownUids", UidRange.toString(message.getKnownUidSet()))
-            .addContext("knownIdRange", IdRange.toString(message.getKnownSequenceSet()))
-            .addContext("lastKnownUidValidity", message.getLastKnownUidValidity())
-            .addContext("uidSet", UidRange.toString(message.getUidSet()))
+            .addToContext(MDCBuilder.ACTION, "SELECT")
+            .addToContext("mailbox", message.getMailboxName())
+            .addToContext("condstore", Boolean.toString(message.getCondstore()))
+            .addToContextIfPresent("knownModseq", Optional.ofNullable(message.getKnownModSeq()).map(Objects::toString))
+            .addToContext("knownUids", UidRange.toString(message.getKnownUidSet()))
+            .addToContext("knownIdRange", IdRange.toString(message.getKnownSequenceSet()))
+            .addToContext("lastKnownUidValidity", message.getLastKnownUidValidity().toString())
+            .addToContext("uidSet", UidRange.toString(message.getUidSet()))
             .build();
     }
 

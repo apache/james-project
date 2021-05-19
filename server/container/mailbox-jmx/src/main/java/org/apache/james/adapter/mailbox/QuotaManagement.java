@@ -57,8 +57,8 @@ public class QuotaManagement implements QuotaManagementMBean {
     public String getQuotaRoot(String namespace, String user, String name) throws MailboxException {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "getQuotaRoot")
+                     .addToContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addToContext(MDCBuilder.ACTION, "getQuotaRoot")
                      .build()) {
             return quotaRootResolver.getQuotaRoot(new MailboxPath(namespace, Username.of(user), name)).getValue();
         } catch (IOException e) {
@@ -70,8 +70,8 @@ public class QuotaManagement implements QuotaManagementMBean {
     public SerializableQuotaLimitValue<QuotaCountLimit> getMaxMessageCount(String quotaRoot) throws MailboxException {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "getMaxMessageCount")
+                     .addToContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addToContext(MDCBuilder.ACTION, "getMaxMessageCount")
                      .build()) {
             return SerializableQuotaLimitValue.valueOf(maxQuotaManager.getMaxMessage(quotaRootResolver.fromString(quotaRoot)));
         } catch (IOException e) {
@@ -83,8 +83,8 @@ public class QuotaManagement implements QuotaManagementMBean {
     public SerializableQuotaLimitValue<QuotaSizeLimit> getMaxStorage(String quotaRoot) throws MailboxException {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "getMaxStorage")
+                     .addToContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addToContext(MDCBuilder.ACTION, "getMaxStorage")
                      .build()) {
             return SerializableQuotaLimitValue.valueOf(maxQuotaManager.getMaxStorage(quotaRootResolver.fromString(quotaRoot)));
         } catch (IOException e) {
@@ -96,8 +96,8 @@ public class QuotaManagement implements QuotaManagementMBean {
     public SerializableQuotaLimitValue<QuotaCountLimit> getGlobalMaxMessageCount() throws MailboxException {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "getGlobalMaxMessageCount")
+                     .addToContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addToContext(MDCBuilder.ACTION, "getGlobalMaxMessageCount")
                      .build()) {
             return SerializableQuotaLimitValue.valueOf(maxQuotaManager.getGlobalMaxMessage());
         } catch (IOException e) {
@@ -109,8 +109,8 @@ public class QuotaManagement implements QuotaManagementMBean {
     public SerializableQuotaLimitValue<QuotaSizeLimit> getGlobalMaxStorage() throws MailboxException {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "getGlobalMaxStorage")
+                     .addToContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addToContext(MDCBuilder.ACTION, "getGlobalMaxStorage")
                      .build()) {
             return SerializableQuotaLimitValue.valueOf(maxQuotaManager.getGlobalMaxStorage());
         } catch (IOException e) {
@@ -122,8 +122,8 @@ public class QuotaManagement implements QuotaManagementMBean {
     public void setMaxMessageCount(String quotaRoot, SerializableQuotaLimitValue<QuotaCountLimit> maxMessageCount) {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "setMaxMessageCount")
+                     .addToContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addToContext(MDCBuilder.ACTION, "setMaxMessageCount")
                      .build()) {
             maxMessageCount.toValue(QuotaCountLimit::count, QuotaCountLimit.unlimited())
                 .ifPresent(
@@ -139,8 +139,8 @@ public class QuotaManagement implements QuotaManagementMBean {
     public void setMaxStorage(String quotaRoot, SerializableQuotaLimitValue<QuotaSizeLimit> maxSize) {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "setMaxStorage")
+                     .addToContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addToContext(MDCBuilder.ACTION, "setMaxStorage")
                      .build()) {
             maxSize.toValue(QuotaSizeLimit::size, QuotaSizeLimit.unlimited())
                 .ifPresent(
@@ -156,8 +156,8 @@ public class QuotaManagement implements QuotaManagementMBean {
     public void setGlobalMaxMessageCount(SerializableQuotaLimitValue<QuotaCountLimit> maxGlobalMessageCount) {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "setGlobalMaxMessageCount")
+                     .addToContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addToContext(MDCBuilder.ACTION, "setGlobalMaxMessageCount")
                      .build()) {
             maxGlobalMessageCount
                 .toValue(QuotaCountLimit::count, QuotaCountLimit.unlimited())
@@ -171,8 +171,8 @@ public class QuotaManagement implements QuotaManagementMBean {
     public void setGlobalMaxStorage(SerializableQuotaLimitValue<QuotaSizeLimit> maxGlobalSize) {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "setGlobalMaxStorage")
+                     .addToContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addToContext(MDCBuilder.ACTION, "setGlobalMaxStorage")
                      .build()) {
             maxGlobalSize
                 .toValue(QuotaSizeLimit::size, QuotaSizeLimit.unlimited())
@@ -186,8 +186,8 @@ public class QuotaManagement implements QuotaManagementMBean {
     public SerializableQuota<QuotaCountLimit, QuotaCountUsage> getMessageCountQuota(String quotaRoot) throws MailboxException {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "getMessageCountQuota")
+                     .addToContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addToContext(MDCBuilder.ACTION, "getMessageCountQuota")
                      .build()) {
             return SerializableQuota.newInstance(quotaManager.getMessageQuota(quotaRootResolver.fromString(quotaRoot)));
         } catch (IOException e) {
@@ -199,8 +199,8 @@ public class QuotaManagement implements QuotaManagementMBean {
     public SerializableQuota<QuotaSizeLimit, QuotaSizeUsage> getStorageQuota(String quotaRoot) throws MailboxException {
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "getStorageQuota")
+                     .addToContext(MDCBuilder.PROTOCOL, "CLI")
+                     .addToContext(MDCBuilder.ACTION, "getStorageQuota")
                      .build()) {
             return SerializableQuota.newInstance(quotaManager.getStorageQuota(quotaRootResolver.fromString(quotaRoot)));
         } catch (IOException e) {

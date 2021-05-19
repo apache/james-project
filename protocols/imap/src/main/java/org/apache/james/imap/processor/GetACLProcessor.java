@@ -117,8 +117,8 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
     @Override
     protected Closeable addContextToMDC(GetACLRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "GET_ACL")
-            .addContext("mailbox", request.getMailboxName())
+            .addToContext(MDCBuilder.ACTION, "GET_ACL")
+            .addToContext("mailbox", request.getMailboxName())
             .build();
     }
 }

@@ -172,7 +172,7 @@ class KeyRegistrationHandler {
 
     private Mono<Void> executeListener(EventListener.ReactiveEventListener listener, Event event, RegistrationKey key) {
         MDCBuilder mdcBuilder = MDCBuilder.create()
-            .addContext(EventBus.StructuredLoggingFields.REGISTRATION_KEY, key);
+            .addToContext(EventBus.StructuredLoggingFields.REGISTRATION_KEY, key.asString());
 
         return listenerExecutor.execute(listener, mdcBuilder, event)
             .doOnError(e -> structuredLogger(event, key)
@@ -192,9 +192,9 @@ class KeyRegistrationHandler {
 
     private StructuredLogger structuredLogger(Event event, RegistrationKey key) {
         return MDCStructuredLogger.forLogger(LOGGER)
-            .addField(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
-            .addField(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
-            .addField(EventBus.StructuredLoggingFields.USER, event.getUsername())
-            .addField(EventBus.StructuredLoggingFields.REGISTRATION_KEY, key);
+            .field(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId().getId().toString())
+            .field(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass().getCanonicalName())
+            .field(EventBus.StructuredLoggingFields.USER, event.getUsername().asString())
+            .field(EventBus.StructuredLoggingFields.REGISTRATION_KEY, key.asString());
     }
 }

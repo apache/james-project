@@ -141,8 +141,8 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
     @Override
     protected Closeable addContextToMDC(AppendRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "APPEND")
-            .addContext("mailbox", request.getMailboxName())
+            .addToContext(MDCBuilder.ACTION, "APPEND")
+            .addToContext("mailbox", request.getMailboxName())
             .build();
     }
 }

@@ -83,9 +83,9 @@ public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotati
     @Override
     protected Closeable addContextToMDC(SetAnnotationRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "SET_ANNOTATION")
-            .addContext("mailbox", request.getMailboxName())
-            .addContext("annotations", request.getMailboxAnnotations())
+            .addToContext(MDCBuilder.ACTION, "SET_ANNOTATION")
+            .addToContext("mailbox", request.getMailboxName())
+            .addToContext("annotations", request.getMailboxAnnotations().toString())
             .build();
     }
 }

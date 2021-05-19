@@ -24,7 +24,18 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 
 public interface StructuredLogger {
+    /**
+     * Using Object::toString causes undesired formatting issues and might lead to complex formatting logic.
+     * We migrated to explicit Strings instead.
+     *
+     * See https://issues.apache.org/jira/browse/JAMES-3587
+     *
+     * Use {@link StructuredLogger::field} instead.
+     */
+    @Deprecated
     StructuredLogger addField(String name, Object value);
+
+    StructuredLogger field(String name, String value);
 
     void log(Consumer<Logger> logOperation);
 }

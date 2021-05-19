@@ -32,11 +32,11 @@ import org.jboss.netty.channel.ChannelLocal;
 public class ManageSieveMDCContext {
     public static Closeable from(ChannelHandlerContext ctx, ChannelLocal<Session> attributes) {
         return MDCBuilder.create()
-            .addContext(from(attributes.get(ctx.getChannel())))
-            .addContext(MDCBuilder.PROTOCOL, "MANAGE-SIEVE")
-            .addContext(MDCBuilder.IP, retrieveIp(ctx))
-            .addContext(MDCBuilder.HOST, retrieveHost(ctx))
-            .addContext(MDCBuilder.SESSION_ID, ctx.getChannel().getId())
+            .addToContext(from(attributes.get(ctx.getChannel())))
+            .addToContext(MDCBuilder.PROTOCOL, "MANAGE-SIEVE")
+            .addToContext(MDCBuilder.IP, retrieveIp(ctx))
+            .addToContext(MDCBuilder.HOST, retrieveHost(ctx))
+            .addToContext(MDCBuilder.SESSION_ID, Integer.toString(ctx.getChannel().getId()))
             .build();
     }
 
@@ -61,7 +61,7 @@ public class ManageSieveMDCContext {
     private static MDCBuilder from(Session session) {
         return Optional.ofNullable(session)
             .map(s -> MDCBuilder.create()
-                .addContext(MDCBuilder.USER, s.getUser()))
+                .addToContext(MDCBuilder.USER, s.getUser().asString()))
             .orElse(MDCBuilder.create());
     }
 }

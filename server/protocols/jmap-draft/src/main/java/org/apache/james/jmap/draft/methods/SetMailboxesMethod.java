@@ -83,10 +83,10 @@ public class SetMailboxesMethod implements Method {
 
     private MDCBuilder mdc(SetMailboxesRequest setMailboxesRequest) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "SET_MAILBOXES")
-            .addContext("create", setMailboxesRequest.getCreate())
-            .addContext("update", setMailboxesRequest.getUpdate())
-            .addContext("destroy", setMailboxesRequest.getDestroy());
+            .addToContext(MDCBuilder.ACTION, "SET_MAILBOXES")
+            .addToContext("create", setMailboxesRequest.getCreate().toString())
+            .addToContext("update", setMailboxesRequest.getUpdate().toString())
+            .addToContext("destroy", setMailboxesRequest.getDestroy().toString());
     }
 
     private Mono<SetMailboxesResponse> setMailboxesResponse(SetMailboxesRequest request, MailboxSession mailboxSession) {

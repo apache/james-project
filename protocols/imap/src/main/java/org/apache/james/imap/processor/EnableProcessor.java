@@ -130,8 +130,8 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
     @Override
     protected Closeable addContextToMDC(EnableRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "ENABLE")
-            .addContext("capabilities", ImmutableList.copyOf(request.getCapabilities()))
+            .addToContext(MDCBuilder.ACTION, "ENABLE")
+            .addToContext("capabilities", ImmutableList.copyOf(request.getCapabilities()).toString())
             .build();
     }
 }

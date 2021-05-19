@@ -21,7 +21,6 @@ package org.apache.james.adapter.mailbox;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -34,6 +33,7 @@ import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;
+import org.apache.james.task.TaskType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -51,8 +51,17 @@ public class ReIndexerManagementTest {
 
     @Test
     void reIndexMailboxShouldWaitsForExecution() throws Exception {
-        Task task = mock(Task.class);
-        doReturn(Task.Result.COMPLETED).when(task).run();
+        Task task = new Task() {
+            @Override
+            public Result run() {
+                return Task.Result.COMPLETED;
+            }
+
+            @Override
+            public TaskType type() {
+                return TaskType.of("FakeReindexing");
+            }
+        };
         String namespace = "namespace";
         String user = "user";
         String name = "name";
@@ -66,8 +75,17 @@ public class ReIndexerManagementTest {
 
     @Test
     void reIndexShouldWaitsForExecution() throws Exception {
-        Task task = mock(Task.class);
-        doReturn(Task.Result.COMPLETED).when(task).run();
+        Task task = new Task() {
+            @Override
+            public Result run() {
+                return Task.Result.COMPLETED;
+            }
+
+            @Override
+            public TaskType type() {
+                return TaskType.of("FakeReindexing");
+            }
+        };
         when(reIndexer.reIndex(any(RunningOptions.class))).thenReturn(task);
 
         assertThat(taskManager.list()).isEmpty();

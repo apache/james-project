@@ -158,11 +158,12 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
     @Override
     protected Closeable addContextToMDC(GetAnnotationRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "GET_ANNOTATION")
-            .addContext("mailbox", request.getMailboxName())
-            .addContext("depth", request.getDepth())
-            .addContext("maxSize", request.getMaxsize())
-            .addContext("keys", request.getKeys())
+            .addToContext(MDCBuilder.ACTION, "GET_ANNOTATION")
+            .addToContext("mailbox", request.getMailboxName())
+            .addToContext("depth", request.getDepth().getCode())
+            .addToContextIfPresent("maxSize", request.getMaxsize()
+                .map(i -> Integer.toString(i)))
+            .addToContext("keys", request.getKeys().toString())
             .build();
     }
 }

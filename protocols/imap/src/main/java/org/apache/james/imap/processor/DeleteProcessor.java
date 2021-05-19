@@ -74,8 +74,8 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
     @Override
     protected Closeable addContextToMDC(DeleteRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "DELETE")
-            .addContext("mailbox", request.getMailboxName())
+            .addToContext(MDCBuilder.ACTION, "DELETE")
+            .addToContext("mailbox", request.getMailboxName())
             .build();
     }
 }

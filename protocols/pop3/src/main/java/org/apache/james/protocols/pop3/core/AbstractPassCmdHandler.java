@@ -60,8 +60,8 @@ public abstract class AbstractPassCmdHandler extends RsetCmdHandler {
         return metricFactory.decorateSupplierWithTimerMetric("pop3-pass", () ->
             MDCBuilder.withMdc(
             MDCBuilder.create()
-                .addContext(MDCBuilder.ACTION, "AUTH")
-                .addContext(MDCConstants.withSession(session)),
+                .addToContext(MDCBuilder.ACTION, "AUTH")
+                .addToContext(MDCConstants.withSession(session)),
             () -> doAuth(session, request)));
     }
 

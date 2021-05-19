@@ -76,7 +76,7 @@ public class GetFilterMethod implements Method {
 
         return Flux.from(metricFactory.decoratePublisherWithTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
             process(methodCallId, mailboxSession, filterRequest)
-                .subscriberContext(context("GET_FILTER", MDCBuilder.of(MDCBuilder.ACTION, "GET_FILTER")))));
+                .subscriberContext(context("GET_FILTER", MDCBuilder.ofValue(MDCBuilder.ACTION, "GET_FILTER")))));
     }
 
     private Mono<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, GetFilterRequest request) {

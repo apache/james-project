@@ -26,7 +26,6 @@ import java.util.Optional;
 
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.util.MDCBuilder;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelLocal;
@@ -34,10 +33,10 @@ import org.jboss.netty.channel.ChannelLocal;
 public class IMAPMDCContext {
     public static Closeable from(ChannelHandlerContext ctx, ChannelLocal<Object> attributes) {
         return MDCBuilder.create()
-            .addContext(from(attributes.get(ctx.getChannel())))
-            .addContext(MDCBuilder.PROTOCOL, "IMAP")
-            .addContext(MDCBuilder.IP, retrieveIp(ctx))
-            .addContext(MDCBuilder.HOST, retrieveHost(ctx))
+            .addToContext(from(attributes.get(ctx.getChannel())))
+            .addToContext(MDCBuilder.PROTOCOL, "IMAP")
+            .addToContext(MDCBuilder.IP, retrieveIp(ctx))
+            .addToContext(MDCBuilder.HOST, retrieveHost(ctx))
             .build();
     }
 
@@ -64,18 +63,13 @@ public class IMAPMDCContext {
             ImapSession imapSession = (ImapSession) o;
 
             return MDCBuilder.create()
-                .addContext("sessionId", imapSession.sessionId().asString())
-                .addContext(MDCBuilder.USER, Optional.ofNullable(imapSession.getUserName())
-                    .map(Username::asString))
-                .addContext(from(Optional.ofNullable(imapSession.getSelected())));
+                .addToContext("sessionId", imapSession.sessionId().asString())
+                .addToContext(MDCBuilder.USER, Optional.ofNullable(imapSession.getUserName())
+                    .map(Username::asString)
+                    .orElse(""))
+                .addToContextIfPresent("selectedMailbox", Optional.ofNullable(imapSession.getSelected())
+                    .map(selectedMailbox -> selectedMailbox.getMailboxId().serialize()));
         }
         return MDCBuilder.create();
-    }
-
-    private static MDCBuilder from(Optional<SelectedMailbox> selectedMailbox) {
-        return selectedMailbox
-            .map(value -> MDCBuilder.create()
-                .addContext("selectedMailbox", value.getMailboxId().serialize()))
-            .orElseGet(MDCBuilder::create);
     }
 }

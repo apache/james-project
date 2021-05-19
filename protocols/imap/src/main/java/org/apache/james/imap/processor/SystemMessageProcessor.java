@@ -75,8 +75,8 @@ public class SystemMessageProcessor extends AbstractChainedProcessor<SystemMessa
     @Override
     protected Closeable addContextToMDC(SystemMessage message) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "SYSTEM_MESSAGE")
-            .addContext("message", message)
+            .addToContext(MDCBuilder.ACTION, "SYSTEM_MESSAGE")
+            .addToContext("message", message.toString())
             .build();
     }
 }

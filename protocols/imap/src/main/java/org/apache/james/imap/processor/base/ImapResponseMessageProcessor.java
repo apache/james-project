@@ -40,7 +40,7 @@ public class ImapResponseMessageProcessor extends AbstractChainedProcessor<ImapR
     @Override
     protected Closeable addContextToMDC(ImapResponseMessage message) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "RESPOND")
+            .addToContext(MDCBuilder.ACTION, "RESPOND")
             .build();
     }
 }

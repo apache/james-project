@@ -223,10 +223,10 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
     @Override
     protected Closeable addContextToMDC(FetchRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "FETCH")
-            .addContext("useUid", request.isUseUids())
-            .addContext("idSet", IdRange.toString(request.getIdSet()))
-            .addContext("fetchedData", request.getFetch())
+            .addToContext(MDCBuilder.ACTION, "FETCH")
+            .addToContext("useUid", Boolean.toString(request.isUseUids()))
+            .addToContext("idSet", IdRange.toString(request.getIdSet()))
+            .addToContext("fetchedData", request.getFetch().toString())
             .build();
     }
 }

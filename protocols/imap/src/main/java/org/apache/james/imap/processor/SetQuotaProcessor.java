@@ -65,9 +65,9 @@ public class SetQuotaProcessor extends AbstractMailboxProcessor<SetQuotaRequest>
     @Override
     protected Closeable addContextToMDC(SetQuotaRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "SET_QUOTA")
-            .addContext("quotaRoot", request.getQuotaRoot())
-            .addContext("limits", request.getResourceLimits())
+            .addToContext(MDCBuilder.ACTION, "SET_QUOTA")
+            .addToContext("quotaRoot", request.getQuotaRoot())
+            .addToContext("limits", request.getResourceLimits().toString())
             .build();
     }
 }

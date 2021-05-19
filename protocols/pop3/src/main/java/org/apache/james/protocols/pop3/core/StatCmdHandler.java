@@ -63,8 +63,8 @@ public class StatCmdHandler implements CommandHandler<POP3Session> {
         return metricFactory.decorateSupplierWithTimerMetric("pop3-stat", () ->
             MDCBuilder.withMdc(
                 MDCBuilder.create()
-                    .addContext(MDCBuilder.ACTION, "STAT")
-                    .addContext(MDCConstants.withSession(session)),
+                    .addToContext(MDCBuilder.ACTION, "STAT")
+                    .addToContext(MDCConstants.withSession(session)),
                 () -> stat(session)));
     }
 

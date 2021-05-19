@@ -66,9 +66,9 @@ public class UidlCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
         return metricFactory.decorateSupplierWithTimerMetric("pop3-uidl", () ->
             MDCBuilder.withMdc(
                 MDCBuilder.create()
-                    .addContext(MDCBuilder.ACTION, "UIDL")
-                    .addContext(MDCConstants.withSession(session))
-                    .addContext(MDCConstants.forRequest(request)),
+                    .addToContext(MDCBuilder.ACTION, "UIDL")
+                    .addToContext(MDCConstants.withSession(session))
+                    .addToContext(MDCConstants.forRequest(request)),
                 () -> uidl(session, request)));
     }
 

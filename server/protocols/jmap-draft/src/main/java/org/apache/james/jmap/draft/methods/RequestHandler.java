@@ -61,9 +61,11 @@ public class RequestHandler {
         Optional<MailboxSession> mailboxSession = Optional.ofNullable(request.getMailboxSession());
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.USER, mailboxSession.map(MailboxSession::getUser).map(Username::asString))
-                     .addContext(MDCBuilder.SESSION_ID, mailboxSession.map(MailboxSession::getSessionId))
-                     .addContext(MDCBuilder.ACTION, request.getMethodName().getName())
+                     .addToContextIfPresent(MDCBuilder.USER, mailboxSession.map(MailboxSession::getUser).map(Username::asString))
+                     .addToContextIfPresent(MDCBuilder.SESSION_ID, mailboxSession.map(MailboxSession::getSessionId)
+                        .map(MailboxSession.SessionId::getValue)
+                        .map(l -> Long.toString(l)))
+                     .addToContext(MDCBuilder.ACTION, request.getMethodName().getName())
                      .build()) {
             return Optional.ofNullable(methods.get(request.getMethodName()))
                 .map(extractAndProcess(request))

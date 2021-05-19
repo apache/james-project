@@ -142,9 +142,9 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
     @Override
     protected Closeable addContextToMDC(DeleteACLRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "DELETE_ACL")
-            .addContext("mailbox", request.getMailboxName())
-            .addContext("identifier", request.getIdentifier())
+            .addToContext(MDCBuilder.ACTION, "DELETE_ACL")
+            .addToContext("mailbox", request.getMailboxName())
+            .addToContext("identifier", request.getIdentifier())
             .build();
     }
 }

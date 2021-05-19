@@ -102,9 +102,9 @@ public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
     @Override
     protected Closeable addContextToMDC(LsubRequest request) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "LSUB")
-            .addContext("base", request.getBaseReferenceName())
-            .addContext("pattern", request.getMailboxPattern())
+            .addToContext(MDCBuilder.ACTION, "LSUB")
+            .addToContext("base", request.getBaseReferenceName())
+            .addToContext("pattern", request.getMailboxPattern())
             .build();
     }
 }

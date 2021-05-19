@@ -76,9 +76,9 @@ public class TopCmdHandler extends RetrCmdHandler implements CapaCapability {
         return metricFactory.decorateSupplierWithTimerMetric("pop3-top", () ->
             MDCBuilder.withMdc(
                 MDCBuilder.create()
-                    .addContext(MDCBuilder.ACTION, "TOP")
-                    .addContext(MDCConstants.withSession(session))
-                    .addContext(MDCConstants.forRequest(request)),
+                    .addToContext(MDCBuilder.ACTION, "TOP")
+                    .addToContext(MDCConstants.withSession(session))
+                    .addToContext(MDCConstants.forRequest(request)),
                 () -> top(session, request)));
     }
 

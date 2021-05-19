@@ -24,6 +24,7 @@ import static org.apache.james.util.ReactorUtils.context;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -40,6 +41,7 @@ import org.apache.james.jmap.draft.model.message.view.MessageView;
 import org.apache.james.jmap.draft.model.message.view.MessageViewFactory;
 import org.apache.james.jmap.draft.model.message.view.MetaMessageViewFactory;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 
@@ -100,10 +102,14 @@ public class GetMessagesMethod implements Method {
 
     private MDCBuilder mdc(GetMessagesRequest getMessagesRequest) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.ACTION, "GET_MESSAGES")
-            .addContext("accountId", getMessagesRequest.getAccountId())
-            .addContext("ids", getMessagesRequest.getIds())
-            .addContext("properties", getMessagesRequest.getProperties());
+            .addToContext(MDCBuilder.ACTION, "GET_MESSAGES")
+            .addToContextIfPresent("accountId", getMessagesRequest.getAccountId())
+            .addToContext("ids", getMessagesRequest.getIds()
+                .stream()
+                .map(MessageId::serialize)
+                .collect(Collectors.joining(", ")))
+            .addToContext("properties", getMessagesRequest.getProperties().asFieldList()
+                .collect(Collectors.joining(", ")));
     }
 
     private Optional<Pair<? extends Set<? extends Property>, SimpleFilterProvider>> buildOptionalHeadersFilteringFilterProvider(MessageProperties properties) {

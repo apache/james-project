@@ -42,10 +42,10 @@ public interface ProtocolMDCContextFactory {
 
     static MDCBuilder mdcContext(Protocol protocol, ChannelHandlerContext ctx) {
         return MDCBuilder.create()
-            .addContext(from(ctx.getAttachment()))
-            .addContext(MDCBuilder.PROTOCOL, protocol.getName())
-            .addContext(MDCBuilder.IP, retrieveIp(ctx))
-            .addContext(MDCBuilder.HOST, retrieveHost(ctx));
+            .addToContext(from(ctx.getAttachment()))
+            .addToContext(MDCBuilder.PROTOCOL, protocol.getName())
+            .addToContext(MDCBuilder.IP, retrieveIp(ctx))
+            .addToContext(MDCBuilder.HOST, retrieveHost(ctx));
     }
 
     private static String retrieveIp(ChannelHandlerContext ctx) {
@@ -76,9 +76,9 @@ public interface ProtocolMDCContextFactory {
 
     static MDCBuilder forSession(ProtocolSession protocolSession) {
         return MDCBuilder.create()
-            .addContext(MDCBuilder.SESSION_ID, protocolSession.getSessionID())
-            .addContext(MDCBuilder.CHARSET, protocolSession.getCharset().displayName())
-            .addContext(MDCBuilder.USER, Optional.ofNullable(protocolSession.getUsername()).map(Username::asString));
+            .addToContext(MDCBuilder.SESSION_ID, protocolSession.getSessionID())
+            .addToContext(MDCBuilder.CHARSET, protocolSession.getCharset().displayName())
+            .addToContextIfPresent(MDCBuilder.USER, Optional.ofNullable(protocolSession.getUsername()).map(Username::asString));
     }
 
 }
