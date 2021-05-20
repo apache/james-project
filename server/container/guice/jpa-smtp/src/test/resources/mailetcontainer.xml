@@ -49,7 +49,7 @@
             </mailet>
             <mailet match="All" class="ToRepository">
                 <repositoryPath>file://var/mail/error/</repositoryPath>
-                <onMailetException>ignore</onMailetException>
+                <onMailetException>propagate</onMailetException>
             </mailet>
         </processor>
 
