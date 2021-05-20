@@ -61,7 +61,7 @@ public class MessageMetadataViewFactory implements MessageViewFactory<MessageMet
         Helpers.assertOneMessageId(messageResults);
 
         MessageResult firstMessageResult = messageResults.iterator().next();
-        List<MailboxId> mailboxIds = Helpers.getMailboxIds(messageResults);
+        Collection<MailboxId> mailboxIds = Helpers.getMailboxIds(messageResults);
 
         return Mono.just(MessageMetadataView.messageMetadataBuilder()
             .id(firstMessageResult.getMessageId())
