@@ -58,6 +58,9 @@
             <mailet match="All" class="RemoveMimeHeader">
                 <name>bcc</name>
             </mailet>
+            <mailet match="RecipientIs=error@domain.tld" class="org.apache.james.ErrorMailet">
+                <onMailetException>propagate</onMailetException>
+            </mailet>
             <mailet match="All" class="RecipientRewriteTable">
                 <errorProcessor>rrt-error</errorProcessor>
             </mailet>
