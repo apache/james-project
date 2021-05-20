@@ -30,6 +30,7 @@ import javax.mail.MessagingException;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
@@ -53,6 +54,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -110,6 +112,7 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
 
         private void performProcessMail(MailQueueItem queueItem, Mail mail) {
             LOGGER.debug("==== Begin processing mail {} ====", mail.getName());
+            ImmutableList<MailAddress> originalRecipients = ImmutableList.copyOf(mail.getRecipients());
             try {
                 mailProcessor.service(mail);
 
@@ -118,14 +121,17 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
                 }
                 queueItem.done(true);
             } catch (Exception e) {
-                handleError(queueItem, mail, e);
+                handleError(queueItem, mail, originalRecipients, e);
             } finally {
                 LOGGER.debug("==== End processing mail {} ====", mail.getName());
             }
         }
 
-        private void handleError(MailQueueItem queueItem, Mail mail, Exception processingException) {
+        private void handleError(MailQueueItem queueItem, Mail mail, ImmutableList<MailAddress> originalRecipients, Exception processingException) {
             int failureCount = computeFailureCount(mail);
+
+            // Restore original recipients
+            queueItem.getMail().setRecipients(originalRecipients);
 
             try {
                 if (failureCount > MAXIMUM_FAILURE_COUNT) {

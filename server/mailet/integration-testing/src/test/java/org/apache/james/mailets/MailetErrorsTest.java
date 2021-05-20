@@ -24,7 +24,10 @@ import static org.apache.james.mailets.configuration.CommonProcessors.ERROR_REPO
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.FROM;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
+import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 
@@ -33,6 +36,7 @@ import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.transport.mailets.ErrorMailet;
 import org.apache.james.transport.mailets.ErrorMatcher;
@@ -41,6 +45,7 @@ import org.apache.james.transport.mailets.NoClassDefFoundErrorMatcher;
 import org.apache.james.transport.mailets.NoopMailet;
 import org.apache.james.transport.mailets.Null;
 import org.apache.james.transport.mailets.OneRuntimeErrorMailet;
+import org.apache.james.transport.mailets.OneRuntimeExceptionMailet;
 import org.apache.james.transport.mailets.OneThreadSuicideMailet;
 import org.apache.james.transport.mailets.RuntimeErrorMailet;
 import org.apache.james.transport.mailets.RuntimeExceptionMailet;
@@ -48,12 +53,17 @@ import org.apache.james.transport.mailets.RuntimeExceptionMatcher;
 import org.apache.james.transport.mailets.ToRepository;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.HasException;
+import org.apache.james.transport.matchers.RecipientIs;
+import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
-import org.junit.jupiter.api.Test;
+import org.apache.james.utils.TestIMAPClient;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
+
+import com.google.common.collect.ImmutableList;
 
 class MailetErrorsTest {
     public static final String CUSTOM_PROCESSOR = "custom";
@@ -61,6 +71,8 @@ class MailetErrorsTest {
 
     @RegisterExtension
     public SMTPMessageSender smtpMessageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
+    @RegisterExtension
+    public TestIMAPClient testIMAPClient = new TestIMAPClient();
 
     private TemporaryJamesServer jamesServer;
 
@@ -129,6 +141,45 @@ class MailetErrorsTest {
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
 
         awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
+    }
+
+    @Test
+    void retryShouldSucceedUponSplittedMail(@TempDir File temporaryFolder) throws Exception {
+        jamesServer = TemporaryJamesServer.builder()
+            .withMailetContainer(MailetContainer.builder()
+                .putProcessor(ProcessorConfiguration.transport()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(RecipientIs.class)
+                        .matcherCondition(RECIPIENT)
+                        .mailet(OneRuntimeErrorMailet.class)
+                        .addProperty("onMailetException", "propagate"))
+                    .addMailetsFrom(CommonProcessors.transport()))
+                .putProcessor(errorProcessor())
+                .putProcessor(CommonProcessors.root()))
+            .build(temporaryFolder);
+        jamesServer.start();
+        jamesServer.getProbe(DataProbeImpl.class).fluent()
+            .addDomain(DEFAULT_DOMAIN)
+            .addUser(FROM, PASSWORD)
+            .addUser(RECIPIENT, PASSWORD);
+
+        smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessage(FROM, ImmutableList.of(FROM, RECIPIENT));
+
+        Thread.sleep(5000);
+
+        assertThat(testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD)
+            .select(TestIMAPClient.INBOX)
+            .awaitMessage(awaitAtMostOneMinute)
+            .getMessageCount(TestIMAPClient.INBOX)).isEqualTo(1);
+
+        assertThat(testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(FROM, PASSWORD)
+            .select(TestIMAPClient.INBOX)
+            .awaitMessage(awaitAtMostOneMinute)
+            .getMessageCount(TestIMAPClient.INBOX)).isGreaterThanOrEqualTo(1);
     }
 
     @Test
