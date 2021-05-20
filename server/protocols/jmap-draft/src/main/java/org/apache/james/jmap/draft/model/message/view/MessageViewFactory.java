@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -85,11 +86,10 @@ public interface MessageViewFactory<T extends MessageView> {
                 .count() == 1;
         }
 
-        static List<MailboxId> getMailboxIds(Collection<MessageResult> messageResults) {
+        static Set<MailboxId> getMailboxIds(Collection<MessageResult> messageResults) {
             return messageResults.stream()
                 .map(MessageResult::getMailboxId)
-                .distinct()
-                .collect(Guavate.toImmutableList());
+                .collect(Guavate.toImmutableSet());
         }
 
         static Keywords getKeywords(Collection<MessageResult> messageResults) {

@@ -39,6 +39,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 class MessageFullViewTest {
 
@@ -173,7 +174,7 @@ class MessageFullViewTest {
         Number messageSize = Number.fromLong(123);
 
         MessageFullView expected = new MessageFullView(TestMessageId.of(1), BlobId.of("blobId"), "threadId",
-            ImmutableList.of(InMemoryId.of(456)), Optional.empty(), false, ImmutableMap.of("key", "value"),
+            ImmutableSet.of(InMemoryId.of(456)), Optional.empty(), false, ImmutableMap.of("key", "value"),
             Optional.empty(), ImmutableList.of(), ImmutableList.of(), ImmutableList.of(), ImmutableList.of(),
             "subject", currentDate, messageSize, PREVIEW_DTO, Optional.empty(), Optional.empty(),
             ImmutableList.of(), ImmutableMap.of(), Keywords.DEFAULT_VALUE);
@@ -249,7 +250,7 @@ class MessageFullViewTest {
             TestMessageId.of(1),
             BlobId.of("blobId"),
             "threadId",
-            ImmutableList.of(InMemoryId.of(456)),
+            ImmutableSet.of(InMemoryId.of(456)),
             Optional.of("inReplyToMessageId"),
             true,
             ImmutableMap.of("key", "value"),

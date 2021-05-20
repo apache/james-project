@@ -65,14 +65,14 @@ public class MessageHeaderViewFactory implements MessageViewFactory<MessageHeade
 
         return Mono.fromCallable(() -> messageResults.iterator().next())
             .flatMap(Throwing.function(firstMessageResult -> {
-                List<MailboxId> mailboxIds = Helpers.getMailboxIds(messageResults);
+                Collection<MailboxId> mailboxIds = Helpers.getMailboxIds(messageResults);
                 Message mimeMessage = Helpers.parse(firstMessageResult.getFullContent().getInputStream());
                 return instanciateHeaderView(messageResults, firstMessageResult, mailboxIds, mimeMessage);
             }));
     }
 
     private Mono<MessageHeaderView> instanciateHeaderView(Collection<MessageResult> messageResults, MessageResult firstMessageResult,
-                                                          List<MailboxId> mailboxIds, Message mimeMessage) {
+                                                          Collection<MailboxId> mailboxIds, Message mimeMessage) {
         return Mono.just(MessageHeaderView.messageHeaderBuilder()
             .id(firstMessageResult.getMessageId())
             .mailboxIds(mailboxIds)

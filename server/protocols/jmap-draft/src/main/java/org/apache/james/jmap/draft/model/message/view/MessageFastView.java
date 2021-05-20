@@ -39,6 +39,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * This message view holds all Message properties expected to be fast.
@@ -100,7 +101,7 @@ public class MessageFastView extends MessageHeaderView {
     MessageFastView(MessageId id,
                     BlobId blobId,
                     String threadId,
-                    ImmutableList<MailboxId> mailboxIds,
+                    ImmutableSet<MailboxId> mailboxIds,
                     Optional<String> inReplyToMessageId,
                     ImmutableMap<String, String> headers,
                     Optional<Emailer> from,

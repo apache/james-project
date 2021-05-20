@@ -185,7 +185,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
         Helpers.assertOneMessageId(messageResults);
 
         MessageResult firstMessageResult = messageResults.iterator().next();
-        List<MailboxId> mailboxIds = Helpers.getMailboxIds(messageResults);
+        Set<MailboxId> mailboxIds = Helpers.getMailboxIds(messageResults);
         Keywords keywords = Helpers.getKeywords(messageResults);
 
         return MetaDataWithContent.builderFromMessageResult(firstMessageResult)
@@ -304,7 +304,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
                 return this;
             }
 
-            public Builder mailboxIds(List<MailboxId> mailboxIds) {
+            public Builder mailboxIds(Set<MailboxId> mailboxIds) {
                 this.mailboxIds.addAll(mailboxIds);
                 return this;
             }

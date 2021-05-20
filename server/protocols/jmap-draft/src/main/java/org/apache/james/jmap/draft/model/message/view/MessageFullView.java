@@ -42,6 +42,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 @JsonDeserialize(builder = MessageFullView.Builder.class)
 @JsonFilter(JmapResponseWriterImpl.PROPERTIES_FILTER)
@@ -128,7 +129,7 @@ public class MessageFullView extends MessageFastView {
     MessageFullView(MessageId id,
                     BlobId blobId,
                     String threadId,
-                    ImmutableList<MailboxId> mailboxIds,
+                    ImmutableSet<MailboxId> mailboxIds,
                     Optional<String> inReplyToMessageId,
                     boolean hasAttachment,
                     ImmutableMap<String, String> headers,

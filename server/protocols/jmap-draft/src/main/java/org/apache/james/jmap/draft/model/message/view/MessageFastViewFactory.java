@@ -73,7 +73,7 @@ public class MessageFastViewFactory implements MessageViewFactory<MessageFastVie
 
             return Mono.fromCallable(() -> {
                 MessageFastViewPrecomputedProperties messageProjection = fastProjections.get(firstMessageResult.getMessageId());
-                List<MailboxId> mailboxIds = Helpers.getMailboxIds(messageResults);
+                Set<MailboxId> mailboxIds = Helpers.getMailboxIds(messageResults);
 
                 Message mimeMessage = Helpers.parse(firstMessageResult.getFullContent().getInputStream());
 
@@ -81,7 +81,7 @@ public class MessageFastViewFactory implements MessageViewFactory<MessageFastVie
             });
         }
 
-        private MessageFastView instanciateFastView(Collection<MessageResult> messageResults, MessageResult firstMessageResult, MessageFastViewPrecomputedProperties messageProjection, List<MailboxId> mailboxIds, Message mimeMessage) {
+        private MessageFastView instanciateFastView(Collection<MessageResult> messageResults, MessageResult firstMessageResult, MessageFastViewPrecomputedProperties messageProjection, Set<MailboxId> mailboxIds, Message mimeMessage) {
             return MessageFastView.builder()
                 .id(firstMessageResult.getMessageId())
                 .mailboxIds(mailboxIds)
