@@ -46,6 +46,7 @@ import org.apache.james.transport.mailets.NoopMailet;
 import org.apache.james.transport.mailets.Null;
 import org.apache.james.transport.mailets.OneRuntimeErrorMailet;
 import org.apache.james.transport.mailets.OneRuntimeExceptionMailet;
+import org.apache.james.transport.mailets.OneRuntimeExceptionMatcher;
 import org.apache.james.transport.mailets.OneThreadSuicideMailet;
 import org.apache.james.transport.mailets.RuntimeErrorMailet;
 import org.apache.james.transport.mailets.RuntimeExceptionMailet;
@@ -121,6 +122,102 @@ class MailetErrorsTest {
         smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort()).sendMessage(FROM, FROM);
 
         awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(ERROR_REPOSITORY) == 1);
+    }
+
+    @Test
+    void propagateShouldAllowReprocessing(@TempDir File temporaryFolder) throws Exception {
+        jamesServer = TemporaryJamesServer.builder()
+            .withMailetContainer(MailetContainer.builder()
+                .putProcessor(CommonProcessors.transport())
+                .putProcessor(errorProcessor())
+                .putProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(OneRuntimeExceptionMailet.class)
+                        .addProperty("onMailetException", "propagate"))
+                    .addMailet(MailetConfiguration.TO_TRANSPORT)))
+            .build(temporaryFolder);
+        jamesServer.start();
+        jamesServer.getProbe(DataProbeImpl.class).fluent()
+            .addDomain(DEFAULT_DOMAIN)
+            .addUser(FROM, PASSWORD)
+            .addUser(RECIPIENT, PASSWORD);
+
+        smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessage(FROM, RECIPIENT);
+
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD)
+            .select(TestIMAPClient.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+    }
+
+    @Test
+    void retryExceptionShouldSucceedUponSplittedMail(@TempDir File temporaryFolder) throws Exception {
+        jamesServer = TemporaryJamesServer.builder()
+            .withMailetContainer(MailetContainer.builder()
+                .putProcessor(ProcessorConfiguration.transport()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(RecipientIs.class)
+                        .matcherCondition(RECIPIENT)
+                        .mailet(OneRuntimeExceptionMailet.class)
+                        .addProperty("onMailetException", "propagate"))
+                    .addMailetsFrom(CommonProcessors.transport()))
+                .putProcessor(errorProcessor())
+                .putProcessor(CommonProcessors.root()))
+            .build(temporaryFolder);
+        jamesServer.start();
+        jamesServer.getProbe(DataProbeImpl.class).fluent()
+            .addDomain(DEFAULT_DOMAIN)
+            .addUser(FROM, PASSWORD)
+            .addUser(RECIPIENT, PASSWORD);
+
+        smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessage(FROM, ImmutableList.of(FROM, RECIPIENT));
+
+        assertThat(testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD)
+            .select(TestIMAPClient.INBOX)
+            .awaitMessage(awaitAtMostOneMinute)
+            .getMessageCount(TestIMAPClient.INBOX)).isEqualTo(1);
+
+        assertThat(testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(FROM, PASSWORD)
+            .select(TestIMAPClient.INBOX)
+            .awaitMessage(awaitAtMostOneMinute)
+            .getMessageCount(TestIMAPClient.INBOX)).isGreaterThanOrEqualTo(1);
+    }
+
+    @Test
+    void retryExceptionShouldSucceedUponSplittedMailForMatcher(@TempDir File temporaryFolder) throws Exception {
+        jamesServer = TemporaryJamesServer.builder()
+            .withMailetContainer(MailetContainer.builder()
+                .putProcessor(ProcessorConfiguration.transport()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(OneRuntimeExceptionMatcher.class)
+                        .mailet(NoopMailet.class)
+                        .addProperty("onMatchException", "propagate"))
+                    .addMailetsFrom(CommonProcessors.transport()))
+                .putProcessor(errorProcessor())
+                .putProcessor(CommonProcessors.root()))
+            .build(temporaryFolder);
+        jamesServer.start();
+        jamesServer.getProbe(DataProbeImpl.class).fluent()
+            .addDomain(DEFAULT_DOMAIN)
+            .addUser(FROM, PASSWORD)
+            .addUser(RECIPIENT, PASSWORD);
+
+        smtpMessageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessage(FROM, RECIPIENT);
+
+        assertThat(testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD)
+            .select(TestIMAPClient.INBOX)
+            .awaitMessage(awaitAtMostOneMinute)
+            .getMessageCount(TestIMAPClient.INBOX)).isEqualTo(1);
     }
 
     @Test

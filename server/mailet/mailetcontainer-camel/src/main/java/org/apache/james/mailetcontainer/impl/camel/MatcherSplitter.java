@@ -130,6 +130,8 @@ public class MatcherSplitter {
                     LOGGER.warn("Encountered error while executing matcher {}. matching all.", matcher, ex);
                     matchedRcpts = mail.getRecipients();
                     // no need to verify addresses
+                } else if (onMatchException.equalsIgnoreCase("propagate")) {
+                    throw new RuntimeException(me);
                 } else {
                     ProcessorUtil.handleException(me, mail, matcher.getMatcherConfig().getMatcherName(), onMatchException, LOGGER);
                 }
