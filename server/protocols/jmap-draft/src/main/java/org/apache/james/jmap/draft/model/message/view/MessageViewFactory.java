@@ -113,8 +113,6 @@ public interface MessageViewFactory<T extends MessageView> {
                 .stream()
                 .map(Field::getBody)
                 .map(body -> DecoderUtil.decodeEncodedWords(body, DecodeMonitor.SILENT))
-                .collect(Collectors.toList())
-                .stream()
                 .collect(Collectors.joining(JMAP_MULTIVALUED_FIELD_DELIMITER));
 
             return Multimaps.index(fields, Field::getName)
