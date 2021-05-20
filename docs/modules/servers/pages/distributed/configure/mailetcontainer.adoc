@@ -72,8 +72,14 @@ If an exception is encountered during the execution of a mailet or a matcher, th
 process the mail using the *error* processor.
 
 The *onMailetException* property allows you to override this behaviour. You can specify another
-processor than the *error* one for handling the errors of this mailet. The *ignore* special value also
-allows to continue processing and ignore the error.
+processor than the *error* one for handling the errors of this mailet.
+
+The *ignore* special value also allows to continue processing and ignore the error.
+
+The *propagate* special value causes the mailet container to rethrow the
+exception, propagating it to the execution context. In an SMTP execution context, the spooler will then requeue
+the item and automatic retries will be setted up - note that attempts will be done for each recipients. In LMTP
+(if LMTP is configured to execute the mailetContainer), the entire mail transaction is reported as failed to the caller.
 
 Moreover, the *onMatcherException* allows you to override matcher error handling. You can
 specify another processor than the *error* one for handling the errors of this mailet. The *matchall*
