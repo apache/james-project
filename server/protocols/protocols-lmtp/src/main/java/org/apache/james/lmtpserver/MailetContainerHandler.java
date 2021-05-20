@@ -20,9 +20,11 @@
 package org.apache.james.lmtpserver;
 
 import java.util.Collection;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.protocols.api.Response;
@@ -41,28 +43,75 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class MailetContainerHandler extends DataLineJamesMessageHookHandler {
+    private static class Configuration {
+        static Configuration DEFAULT = new Configuration(false);
+
+        static Configuration parse(org.apache.commons.configuration2.Configuration config) {
+            return new Configuration(config.getBoolean("splitExecution", false));
+        }
+
+        private final boolean splitExecution;
+
+        private Configuration(boolean splitExecution) {
+            this.splitExecution = splitExecution;
+        }
+
+        public boolean splitExecutionEnabled() {
+            return splitExecution;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof Configuration) {
+                Configuration other = (Configuration) o;
+                return Objects.equals(this.splitExecution, other.splitExecution);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(splitExecution);
+        }
+    }
+    
     private final MailProcessor mailProcessor;
+    private Configuration configuration;
 
     @Inject
     public MailetContainerHandler(MailProcessor mailProcessor) {
         this.mailProcessor = mailProcessor;
+        this.configuration = Configuration.DEFAULT;
+    }
+
+    @Override
+    public void init(org.apache.commons.configuration2.Configuration config) throws ConfigurationException {
+        configuration = Configuration.parse(config);
     }
 
     @Override
     protected Response processExtensions(SMTPSession session, Mail mail) {
         Collection<MailAddress> recipients = ImmutableList.copyOf(mail.getRecipients());
+        executeJamesMessageHooks(session, mail);
+
+        if (recipients.size() == 0) {
+            // Return 503 see https://datatracker.ietf.org/doc/html/rfc2033#section-4.2
+            AbstractHookableCmdHandler.calcDefaultSMTPResponse(HookResult.builder()
+                .hookReturnCode(HookReturnCode.ok())
+                .smtpReturnCode(SMTPRetCode.BAD_SEQUENCE)
+                .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.CONTENT_OTHER) + " No recipients")
+                .build());
+        }
+
+        if (configuration.splitExecutionEnabled()) {
+            return executeEachRecipientSeparately(mail, recipients);
+        } else {
+            return executeAllRecipientsAtOnce(mail, recipients);
+        }
+    }
+
+    private LMTPMultiResponse executeAllRecipientsAtOnce(Mail mail, Collection<MailAddress> recipients) {
         try {
-            executeJamesMessageHooks(session, mail);
-
-            if (recipients.size() == 0) {
-                // Return 503 see https://datatracker.ietf.org/doc/html/rfc2033#section-4.2
-                AbstractHookableCmdHandler.calcDefaultSMTPResponse(HookResult.builder()
-                    .hookReturnCode(HookReturnCode.ok())
-                    .smtpReturnCode(SMTPRetCode.MAIL_OK)
-                    .smtpDescription(DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received")
-                    .build());
-            }
-
             mailProcessor.service(mail);
 
             return LMTPMultiResponse.of(
@@ -79,6 +128,30 @@ public class MailetContainerHandler extends DataLineJamesMessageHookHandler {
                 recipients.stream()
                     .map(recipient -> new SMTPResponse(SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.UNDEFINED_STATUS) + " Temporary error deliver message <" + recipient.asString() + ">"))
                     .collect(Guavate.toImmutableList()));
+        }
+    }
+
+    private LMTPMultiResponse executeEachRecipientSeparately(Mail mail, Collection<MailAddress> recipients) {
+        return LMTPMultiResponse.of(
+            recipients.stream()
+                .map(recipient -> executeFor(mail, recipient))
+                .collect(Guavate.toImmutableList()));
+    }
+
+    private SMTPResponse executeFor(Mail mail, MailAddress recipient) {
+        try {
+            Mail newMail = mail.duplicate();
+            newMail.setRecipients(ImmutableList.of(recipient));
+
+            mailProcessor.service(newMail);
+
+            return AbstractHookableCmdHandler.calcDefaultSMTPResponse(HookResult.builder()
+                .hookReturnCode(HookReturnCode.ok())
+                .smtpReturnCode(SMTPRetCode.MAIL_OK)
+                .smtpDescription(DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received <" + recipient.asString() + ">")
+                .build());
+        } catch (Exception e) {
+            return new SMTPResponse(SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.UNDEFINED_STATUS) + " Temporary error deliver message <" + recipient.asString() + ">");
         }
     }
 }

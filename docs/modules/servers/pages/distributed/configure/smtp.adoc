@@ -181,7 +181,7 @@ to the default SMTP protocol. Here is how to achieve this:
 <lmtpservers>
     <lmtpserver enabled="true">
         <jmxName>lmtpserver</jmxName>
-        <bind>0.0.0.0:0</bind>
+        <bind>0.0.0.0:24</bind>
         <connectionBacklog>200</connectionBacklog>
         <connectiontimeout>1200</connectiontimeout>
         <connectionLimit>0</connectionLimit>
@@ -189,6 +189,30 @@ to the default SMTP protocol. Here is how to achieve this:
         <maxmessagesize>0</maxmessagesize>
         <handlerchain coreHandlersPackage="org.apache.james.lmtpserver.MailetContainerCmdHandlerLoader">
             <handler class="org.apache.james.lmtpserver.MailetContainerCmdHandlerLoader"/>
+        </handlerchain>
+    </lmtpserver>
+</lmtpservers>
+....
+
+Note that by default the mailet container is executed with all recipients at once and do not allow per recipient
+error reporting. An option <code>splitExecution</code> allow to execute the mailet container for each recipient separately and mitigate this
+limitation at the cost of performance.
+
+....
+<lmtpservers>
+    <lmtpserver enabled="true">
+        <jmxName>lmtpserver</jmxName>
+        <bind>0.0.0.0:24</bind>
+        <connectionBacklog>200</connectionBacklog>
+        <connectiontimeout>1200</connectiontimeout>
+        <connectionLimit>0</connectionLimit>
+        <connectionLimitPerIP>0</connectionLimitPerIP>
+        <maxmessagesize>0</maxmessagesize>
+        <handlerchain coreHandlersPackage="org.apache.james.lmtpserver.MailetContainerCmdHandlerLoader">
+            <handler class="org.apache.james.lmtpserver.MailetContainerCmdHandlerLoader"/>
+            <handler class="org.apache.james.lmtpserver.MailetContainerHandler">
+                <splitExecution>true</splitExecution>
+            </handler>
         </handlerchain>
     </lmtpserver>
 </lmtpservers>

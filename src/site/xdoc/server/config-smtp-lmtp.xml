@@ -229,6 +229,34 @@ Correct this.
           </code>
       </pre>
 
+      <p>Note that by default the mailet container is executed with all recipients at once and do not allow per recipient
+      error reporting. An option <code>splitExecution</code> allow to execute the mailet container for each recipient separately and mitigate this
+      limitation at the cost of performance.</p>
+
+      <pre>
+          <code>
+&lt;lmtpservers&gt;
+  &lt;lmtpserver enabled=&quot;true&quot;&gt;
+    &lt;jmxName&gt;lmtpserver&lt;/jmxName&gt;
+    &lt;bind&gt;0.0.0.0:0&lt;/bind&gt;
+    &lt;connectionBacklog&gt;200&lt;/connectionBacklog&gt;
+    &lt;connectiontimeout&gt;1200&lt;/connectiontimeout&gt;
+    &lt;connectionLimit&gt;0&lt;/connectionLimit&gt;
+    &lt;connectionLimitPerIP&gt;0&lt;/connectionLimitPerIP&gt;
+    &lt;maxmessagesize&gt;0&lt;/maxmessagesize&gt;
+    &lt;handlerchain coreHandlersPackage=&quot;org.apache.james.lmtpserver.MailetContainerCmdHandlerLoader&quot;&gt;
+      &lt;handler class=&quot;org.apache.james.lmtpserver.MailetContainerCmdHandlerLoader&quot;&gt;
+        &lt;splitExecution&gt;false&lt;/splitExecution&gt;
+      &lt;/handler&gt;
+      &lt;handler class=&quot;org.apache.james.lmtpserver.MailetContainerHandler&quot;&gt;
+        &lt;splitExecution>true&lt;/splitExecution&gt;
+      &lt;/handler&gt;
+    &lt;/handlerchain&gt;
+  &lt;/lmtpserver&gt;
+&lt;/lmtpservers&gt;
+          </code>
+      </pre>
+
   </section>
     
 </body>

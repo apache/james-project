@@ -33,8 +33,11 @@
         <!--  This sets the maximum allowed message size (in kilobytes) for this -->
         <!--  LMTP service. If unspecified, the value defaults to 0, which means no limit. -->
         <maxmessagesize>0</maxmessagesize>
-        <handlerchain>
-            <handler class="org.apache.james.lmtpserver.CoreCmdHandlerLoader"/>
+        <handlerchain coreHandlersPackage="org.apache.james.lmtpserver.MailetContainerCmdHandlerLoader">
+            <handler class="org.apache.james.lmtpserver.MailetContainerCmdHandlerLoader"/>
+            <handler class="org.apache.james.lmtpserver.MailetContainerHandler">
+                <splitExecution>true</splitExecution>
+            </handler>
         </handlerchain>
     </lmtpserver>
 
