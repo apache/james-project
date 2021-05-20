@@ -65,13 +65,13 @@ public class Keywords {
     public static class KeywordsFactory {
         @FunctionalInterface
         interface KeywordsValidator {
-            KeywordsValidator THROW_ON_IMAP_NON_EXPOSED_KEYWORDS = keywords -> Preconditions.checkArgument(
-                keywords.stream().allMatch(Keyword::isExposedImapKeyword),
+            KeywordsValidator THROW_ON_IMAP_NON_EXPOSED_KEYWORDS = keyword -> Preconditions.checkArgument(
+                keyword.isExposedImapKeyword(),
                 "Does not allow to update 'Deleted' or 'Recent' flag");
 
-            KeywordsValidator IGNORE_NON_EXPOSED_IMAP_KEYWORDS = keywords -> { };
+            KeywordsValidator IGNORE_NON_EXPOSED_IMAP_KEYWORDS = keyword -> { };
 
-            void validate(Set<Keyword> keywords);
+            void validate(Keyword keywords);
         }
 
         @FunctionalInterface
@@ -109,22 +109,23 @@ public class Keywords {
         }
 
         public Keywords fromSet(Set<Keyword> setKeywords) {
-            validator.validate(setKeywords);
+            return fromStream(setKeywords.stream());
+        }
 
-            return new Keywords(setKeywords.stream()
+        public Keywords fromStream(Stream<Keyword> keywordStream) {
+            return new Keywords(keywordStream
+                    .peek(validator::validate)
                     .filter(filter)
                     .collect(Guavate.toImmutableSet()));
         }
 
         public Keywords from(Keyword... keywords) {
-            return fromSet(Arrays.stream(keywords)
-                    .collect(Guavate.toImmutableSet()));
+            return fromStream(Arrays.stream(keywords));
         }
 
         public Keywords fromCollection(Collection<String> keywords) {
-            return fromSet(keywords.stream()
-                    .flatMap(toKeyword::asKeywordStream)
-                    .collect(Guavate.toImmutableSet()));
+            return fromStream(keywords.stream()
+                    .flatMap(toKeyword::asKeywordStream));
         }
 
         @VisibleForTesting
@@ -137,12 +138,11 @@ public class Keywords {
         }
 
         public Keywords fromFlags(Flags flags) {
-            return fromSet(Stream.concat(
+            return fromStream(Stream.concat(
                         Stream.of(flags.getUserFlags())
                             .flatMap(toKeyword::asKeywordStream),
                         Stream.of(flags.getSystemFlags())
-                            .map(Keyword::fromFlag))
-                    .collect(Guavate.toImmutableSet()));
+                            .map(Keyword::fromFlag)));
         }
     }
 
