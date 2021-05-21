@@ -36,10 +36,10 @@ import org.apache.camel.InOnly;
 import org.apache.james.core.MailAddress;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.mailetcontainer.impl.ProcessorUtil;
+import org.apache.james.mailetcontainer.impl.camel.CamelMailetProcessor.ProcessingReference;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
-import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.MDCBuilder;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
@@ -81,12 +81,13 @@ public class MatcherSplitter {
      * by using the given Matcher to see if we need more then one instance of
      * the MailMessage
      *
-     * @param mail
+     * @param processingReference
      *            Mail which is stored in the @Body of the MailMessage
      * @return mailMessageList
      */
     @Handler
-    public List<Mail> split(@Body Mail mail) throws MessagingException {
+    public List<ProcessingReference> split(@Body ProcessingReference processingReference) throws MessagingException {
+        Mail mail = processingReference.getMail();
         Collection<MailAddress> matchedRcpts = null;
         Collection<MailAddress> origRcpts = new ArrayList<>(mail.getRecipients());
         long start = System.currentTimeMillis();
@@ -94,7 +95,7 @@ public class MatcherSplitter {
         TimeMetric timeMetric = metricFactory.timer(matcher.getClass().getSimpleName());
 
         try {
-            List<Mail> mails = new ArrayList<>();
+            List<ProcessingReference> mails = new ArrayList<>();
             boolean fullMatch = false;
 
             try (Closeable closeable =
@@ -151,17 +152,11 @@ public class MatcherSplitter {
                     // all recipients matched
                     fullMatch = true;
                 } else {
-                    mail.setRecipients(rcpts);
-
-                    Mail newMail = MailImpl.duplicate(mail);
-                    newMail.setRecipients(matchedRcpts);
-
+                    ProcessingReference newWrapper = processingReference.splitForAddresses(ImmutableList.copyOf(matchedRcpts));
+                    mails.add(newWrapper);
                     // Set a header because the matcher matched. This can be
                     // used later when processing the route
-                    newMail.setAttribute(new Attribute(MATCHER_MATCHED_ATTRIBUTE, AttributeValue.of(true)));
-
-                    // add the new generated mail to the mails list
-                    mails.add(newMail);
+                    newWrapper.getMail().setAttribute(new Attribute(MATCHER_MATCHED_ATTRIBUTE, AttributeValue.of(true)));
                 }
             }
 
@@ -172,7 +167,7 @@ public class MatcherSplitter {
             }
 
             // add mailMsg to the mails list
-            mails.add(mail);
+            mails.add(processingReference);
 
             return mails;
         } finally {

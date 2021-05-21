@@ -18,7 +18,10 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.impl.camel;
 
+import static org.apache.james.mailetcontainer.impl.camel.MatcherSplitter.MATCHER_MATCHED_ATTRIBUTE;
+
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.PostConstruct;
 import javax.mail.MessagingException;
@@ -32,6 +35,7 @@ import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.RouteDefinition;
 import org.apache.camel.processor.aggregate.UseLatestAggregationStrategy;
+import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor;
@@ -51,6 +55,49 @@ import com.google.common.collect.ImmutableList;
 public class CamelMailetProcessor extends AbstractStateMailetProcessor implements CamelContextAware {
     private static final Logger LOGGER = LoggerFactory.getLogger(CamelMailetProcessor.class);
 
+    public static class ProcessingReference {
+        public static ProcessingReference newReference(Mail mail) {
+            return new ProcessingReference(mail, new AtomicLong(1));
+        }
+
+        private final Mail mail;
+        private final AtomicLong inFlight;
+
+        private ProcessingReference(Mail mail, AtomicLong inFlight) {
+            this.mail = mail;
+            this.inFlight = inFlight;
+        }
+
+        public ProcessingReference splitForAddresses(List<MailAddress> addresses2) throws MessagingException {
+            Mail newMail = mail.duplicate();
+            newMail.setState(mail.getState());
+            newMail.setRecipients(addresses2);
+            inFlight.incrementAndGet();
+            return new ProcessingReference(newMail, inFlight);
+        }
+
+        public Mail getMail() {
+            return mail;
+        }
+
+        /**
+         * Return true if this reference was the last one on this ongoing processing
+         */
+        public boolean dispose() throws MessagingException {
+            LifecycleUtil.dispose(mail.getMessage());
+            LifecycleUtil.dispose(mail);
+
+            return inFlight.decrementAndGet() == 0;
+        }
+
+        /**
+         * Return true if this reference was the last one on this ongoing processing
+         */
+        public boolean complete() {
+            return inFlight.decrementAndGet() == 0;
+        }
+    }
+
     private CamelContext context;
 
     private ProducerTemplate producerTemplate;
@@ -65,8 +112,9 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
     @Override
     public void service(Mail mail) throws MessagingException {
         try {
-            producerTemplate.sendBody(getEndpoint(), mail);
-
+            if (mail != null) {
+                producerTemplate.sendBody(getEndpoint(), ProcessingReference.newReference(mail));
+            }
         } catch (CamelExecutionException ex) {
             throw new MessagingException("Unable to process mail " + mail.getName(), ex);
         }
@@ -159,43 +207,49 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
         }
 
         private void terminateSmoothly(Exchange exchange, CamelMailetProcessor container, CamelProcessor terminatingMailetProcessor) throws Exception {
-            Mail mail = exchange.getIn().getBody(Mail.class);
+            ProcessingReference processingReference = exchange.getIn().getBody(ProcessingReference.class);
+            Mail mail = processingReference.mail;
             if (mail.getState().equals(container.getState())) {
                 terminatingMailetProcessor.process(mail);
             }
             if (mail.getState().equals(Mail.GHOST)) {
-                dispose(exchange, mail);
+                dispose(exchange, processingReference);
             }
-            complete(exchange, container);
+            complete(exchange, container, processingReference);
         }
 
         private void handleMailet(Exchange exchange, CamelMailetProcessor container, CamelProcessor mailetProccessor) throws Exception {
-            Mail mail = exchange.getIn().getBody(Mail.class);
-            boolean isMatched = mail.removeAttribute(MatcherSplitter.MATCHER_MATCHED_ATTRIBUTE).isPresent();
+            ProcessingReference processingReference = exchange.getIn().getBody(ProcessingReference.class);
+            Mail mail = processingReference.mail;
+            boolean isMatched = mail.removeAttribute(MATCHER_MATCHED_ATTRIBUTE).isPresent();
             if (isMatched) {
                 mailetProccessor.process(mail);
+            } else {
+                LOGGER.info("{} were not matched ", ImmutableList.copyOf(mail.getRecipients()));
             }
             if (mail.getState().equals(Mail.GHOST)) {
-                dispose(exchange, mail);
+                LOGGER.info("Abort processing {}", ImmutableList.copyOf(mail.getRecipients()));
+                dispose(exchange, processingReference);
                 return;
             }
             if (!mail.getState().equals(container.getState())) {
                 container.toProcessor(mail);
-                complete(exchange, container);
+                complete(exchange, container, processingReference);
             }
         }
 
-        private void complete(Exchange exchange, CamelMailetProcessor container) {
+        private void complete(Exchange exchange, CamelMailetProcessor container, ProcessingReference processingReference) {
             LOGGER.debug("End of mailetprocessor for state {} reached", container.getState());
-            exchange.setRouteStop(true);
+            if (processingReference.complete()) {
+                exchange.setRouteStop(true);
+            }
         }
 
-        private void dispose(Exchange exchange, Mail mail) throws MessagingException {
-            LifecycleUtil.dispose(mail.getMessage());
-            LifecycleUtil.dispose(mail);
-
-            // stop routing
-            exchange.setRouteStop(true);
+        private void dispose(Exchange exchange, ProcessingReference processingReference) throws MessagingException {
+            if (processingReference.dispose()) {
+                // stop routing
+                exchange.setRouteStop(true);
+            }
         }
 
     }
