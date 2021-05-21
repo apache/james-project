@@ -46,6 +46,7 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.MimeDescriptor;
 import org.apache.james.mailbox.model.MimePath;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -189,6 +190,11 @@ public class StoreMessageResultIterator implements MessageResultIterator {
         @Override
         public MessageId getMessageId() {
             return messageMetaData().getMessageId();
+        }
+
+        @Override
+        public ThreadId getThreadId() {
+            return new ThreadId(messageMetaData.getMessageId());
         }
 
         @Override
