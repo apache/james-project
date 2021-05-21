@@ -25,6 +25,7 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageMetaData;
+import org.apache.james.mailbox.model.ThreadId;
 
 /**
  * A MIME message, consisting of meta-data (including MIME headers)
@@ -32,6 +33,8 @@ import org.apache.james.mailbox.model.MessageMetaData;
  * has internal structure described by the meta-data.
  */
 public interface MailboxMessage extends Message, Comparable<MailboxMessage> {
+
+    ThreadId getThreadId();
 
     ComposedMessageIdWithMetaData getComposedMessageIdWithMetaData();
 
