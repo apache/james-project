@@ -27,7 +27,7 @@ import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
-public class CountinExecutionMailet extends GenericMailet {
+public class CountingExecutionMailet extends GenericMailet {
     private static final AtomicLong executionCount = new AtomicLong();
 
     public static void reset() {
