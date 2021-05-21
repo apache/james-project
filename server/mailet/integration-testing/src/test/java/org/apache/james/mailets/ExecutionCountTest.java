@@ -37,9 +37,7 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
-import org.apache.james.transport.mailets.CountinExecutionMailet;
-import org.apache.james.transport.mailets.Null;
-import org.apache.james.transport.matchers.All;
+import org.apache.james.transport.mailets.CountingExecutionMailet;
 import org.apache.james.transport.matchers.RecipientIs;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
@@ -62,7 +60,7 @@ public class ExecutionCountTest {
 
     @BeforeEach
     public void test() {
-        CountinExecutionMailet.reset();
+        CountingExecutionMailet.reset();
     }
 
     @AfterEach
@@ -82,7 +80,7 @@ public class ExecutionCountTest {
                         .addMailet(MailetConfiguration.builder()
                             .matcher(RecipientIs.class)
                             .matcherCondition(RECIPIENT)
-                            .mailet(CountinExecutionMailet.class)
+                            .mailet(CountingExecutionMailet.class)
                             .build())
                         .addMailet(MailetConfiguration.LOCAL_DELIVERY))
                 .putProcessor(CommonProcessors.error())
@@ -103,6 +101,6 @@ public class ExecutionCountTest {
             .login(RECIPIENT, PASSWORD)
             .select(INBOX)
             .awaitMessage(awaitAtMostOneMinute);
-        assertThat(CountinExecutionMailet.executionCount()).isEqualTo(1);
+        assertThat(CountingExecutionMailet.executionCount()).isEqualTo(1);
     }
 }
