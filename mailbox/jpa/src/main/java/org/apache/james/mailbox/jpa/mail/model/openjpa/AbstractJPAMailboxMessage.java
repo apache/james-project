@@ -55,6 +55,7 @@ import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.FlagsFactory;
@@ -491,6 +492,11 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     @Override
     public MessageId getMessageId() {
         return new DefaultMessageId();
+    }
+
+    @Override
+    public ThreadId getThreadId() {
+        return new ThreadId(getMessageId());
     }
 
     public String toString() {
