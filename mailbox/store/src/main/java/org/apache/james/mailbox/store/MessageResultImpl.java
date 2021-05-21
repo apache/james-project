@@ -42,6 +42,7 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MimeDescriptor;
 import org.apache.james.mailbox.model.MimePath;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.streaming.InputStreamContent;
 import org.apache.james.mailbox.store.streaming.InputStreamContent.Type;
@@ -87,7 +88,12 @@ public class MessageResultImpl implements MessageResult {
     public MessageId getMessageId() {
         return message.getMessageId();
     }
-    
+
+    @Override
+    public ThreadId getThreadId() {
+        return message.getThreadId();
+    }
+
     @Override
     public Date getInternalDate() {
         return message.getInternalDate();

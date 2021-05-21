@@ -62,6 +62,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 public interface MessageResult extends Comparable<MessageResult> {
     MessageId getMessageId();
 
+    ThreadId getThreadId();
+
     Date getInternalDate();
 
     Flags getFlags();
