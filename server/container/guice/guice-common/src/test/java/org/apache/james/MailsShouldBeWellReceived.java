@@ -60,7 +60,7 @@ import com.google.common.io.Resources;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-interface MailsShouldBeWellReceived {
+public interface MailsShouldBeWellReceived {
 
     String JAMES_SERVER_HOST = "127.0.0.1";
     String DOMAIN = "apache.org";
