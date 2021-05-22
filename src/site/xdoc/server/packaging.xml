@@ -211,6 +211,9 @@
                         <td><a href="install/guice-jpa-smtp.html">Here</a></td>
                     </tr>
                 </table>
+
+                <p><b>WARNING</b>: JAMES-3591 Cassandra is not made to store large binary content, its use will be suboptimal compared to
+                    alternatives (namely S3 compatible BlobStores backed by for instance S3, MinIO or Ozone)</p>
             </p>
         </section>
 
@@ -273,6 +276,9 @@
                     </tr>
                 </table>
             </p>
+
+            <p><b>WARNING</b>: JAMES-3591 Cassandra is not made to store large binary content, its use will be suboptimal compared to
+                alternatives (namely S3 compatible BlobStores backed by for instance S3, MinIO or Ozone)</p>
         </section>
 
     </body>
