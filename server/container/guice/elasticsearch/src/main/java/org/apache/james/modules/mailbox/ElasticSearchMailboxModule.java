@@ -102,7 +102,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
         bind(new TypeLiteral<RoutingKey.Factory<MailboxId>>() {}).to(MailboxIdRoutingKeyFactory.class);
 
-        Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class)
+        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class)
             .addBinding()
             .to(ElasticSearchListeningMessageSearchIndex.class);
 

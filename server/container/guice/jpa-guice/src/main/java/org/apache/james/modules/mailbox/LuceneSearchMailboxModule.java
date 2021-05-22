@@ -45,7 +45,7 @@ public class LuceneSearchMailboxModule extends AbstractModule {
         bind(MessageSearchIndex.class).to(LuceneMessageSearchIndex.class);
         bind(ListeningMessageSearchIndex.class).to(LuceneMessageSearchIndex.class);
 
-        Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class)
+        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class)
             .addBinding()
             .to(LuceneMessageSearchIndex.class);
     }

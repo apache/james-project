@@ -222,9 +222,10 @@ public class CassandraMailboxModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), MailboxManagerDefinition.class).addBinding().to(CassandraMailboxManagerDefinition.class);
 
-        Multibinder<EventListener.GroupEventListener> mailboxListeners = Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class);
-        mailboxListeners.addBinding().to(MailboxAnnotationListener.class);
-        mailboxListeners.addBinding().to(DeleteMessageListener.class);
+        Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class)
+            .addBinding().to(MailboxAnnotationListener.class);
+        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class)
+            .addBinding().to(DeleteMessageListener.class);
 
         bind(MailboxManager.class).annotatedWith(Names.named(MAILBOXMANAGER_NAME)).to(MailboxManager.class);
 
