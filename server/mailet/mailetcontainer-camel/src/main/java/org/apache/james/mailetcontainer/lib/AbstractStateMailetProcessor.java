@@ -49,7 +49,6 @@ import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.MatcherConfig;
-import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.MatcherInverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -349,44 +348,6 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
      */
     protected abstract void setupRouting(List<MatcherMailetPair> pairs) throws MessagingException;
 
-    /**
-     * Mailet which protect us to not fall into an endless loop caused by an
-     * configuration error
-     */
-    public static class TerminatingMailet extends GenericMailet {
-        /**
-         * The name of the mailet used to terminate the mailet chain. The end of
-         * the matcher/mailet chain must be a matcher that matches all mails and
-         * a mailet that sets every mail to GHOST status. This is necessary to
-         * ensure that mails are removed from the spool in an orderly fashion.
-         */
-        private static final String TERMINATING_MAILET_NAME = "Terminating%Mailet%Name";
-
-        @Override
-        public void service(Mail mail) {
-            if (!(Mail.ERROR.equals(mail.getState()))) {
-                // Don't complain if we fall off the end of the
-                // error processor. That is currently the
-                // normal situation for James, and the message
-                // will show up in the error store.
-                LOGGER.warn("Message {} reached the end of this processor, and is automatically deleted. " +
-                    "This may indicate a configuration error.", mail.getName());
-            }
-
-            // Set the mail to ghost state
-            mail.setState(Mail.GHOST);
-        }
-
-        @Override
-        public String getMailetInfo() {
-            return getMailetName();
-        }
-
-        @Override
-        public String getMailetName() {
-            return TERMINATING_MAILET_NAME;
-        }
-    }
 
     /**
      * A Listener which will get notified after

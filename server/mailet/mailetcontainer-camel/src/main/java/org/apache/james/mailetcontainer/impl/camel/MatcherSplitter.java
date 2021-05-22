@@ -155,6 +155,7 @@ public class MatcherSplitter {
 
                     Mail newMail = MailImpl.duplicate(mail);
                     newMail.setRecipients(matchedRcpts);
+                    newMail.setState(mail.getState());
 
                     // Set a header because the matcher matched. This can be
                     // used later when processing the route
