@@ -20,6 +20,7 @@
 package org.apache.james;
 
 import org.apache.james.modules.MailboxModule;
+import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.data.JPADataModule;
 import org.apache.james.modules.data.SieveJPARepositoryModules;
 import org.apache.james.modules.mailbox.DefaultEventModule;
@@ -94,7 +95,8 @@ public class JPAJamesServerMain implements JamesServerMain {
         new MemoryDeadLetterModule(),
         new SpamAssassinListenerModule());
 
-    private static final Module JPA_MODULE_AGGREGATE = Modules.combine(JPA_SERVER_MODULE, PROTOCOLS);
+    private static final Module JPA_MODULE_AGGREGATE = Modules.combine(
+        new MailetProcessingModule(), JPA_SERVER_MODULE, PROTOCOLS);
 
     public static void main(String[] args) throws Exception {
         Configuration configuration = Configuration.builder()

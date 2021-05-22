@@ -26,7 +26,6 @@ import javax.annotation.PreDestroy;
 
 import org.apache.james.modules.CommonServicesModule;
 import org.apache.james.modules.IsStartedProbeModule;
-import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.onami.lifecycle.Stager;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.utils.GuiceProbe;
@@ -58,8 +57,7 @@ public class GuiceJamesServer {
             isStartedProbe,
             Modules.combine(
                 new IsStartedProbeModule(isStartedProbe),
-                new CommonServicesModule(configuration),
-                new MailetProcessingModule()));
+                new CommonServicesModule(configuration)));
     }
 
     protected GuiceJamesServer(IsStartedProbe isStartedProbe, Module module) {

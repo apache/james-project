@@ -26,6 +26,7 @@ import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.BlobMemoryModule;
 import org.apache.james.modules.MailboxModule;
+import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.data.MemoryDataJmapModule;
 import org.apache.james.modules.data.MemoryDataModule;
 import org.apache.james.modules.eventstore.MemoryEventStoreModule;
@@ -106,6 +107,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
         new JMAPServerModule());
 
     public static final Module IN_MEMORY_SERVER_MODULE = Modules.combine(
+        new MailetProcessingModule(),
         new BlobMemoryModule(),
         new DeletedMessageVaultModule(),
         new BlobExportMechanismModule(),
