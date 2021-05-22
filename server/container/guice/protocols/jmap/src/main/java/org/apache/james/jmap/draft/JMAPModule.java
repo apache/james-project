@@ -127,7 +127,7 @@ public class JMAPModule extends AbstractModule {
         bind(MailQueueItemDecoratorFactory.class).to(PostDequeueDecoratorFactory.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class).addBinding().to(PropagateLookupRightListener.class);
-        Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class).addBinding().to(MailboxChangeListener.class);
+        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class).addBinding().to(MailboxChangeListener.class);
 
         Multibinder<Version> supportedVersions = Multibinder.newSetBinder(binder(), Version.class);
         supportedVersions.addBinding().toInstance(Version.DRAFT);
