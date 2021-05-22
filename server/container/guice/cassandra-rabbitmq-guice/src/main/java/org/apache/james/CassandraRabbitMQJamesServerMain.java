@@ -30,6 +30,7 @@ import org.apache.james.modules.CassandraConsistencyTaskSerializationModule;
 import org.apache.james.modules.DistributedTaskManagerModule;
 import org.apache.james.modules.DistributedTaskSerializationModule;
 import org.apache.james.modules.MailboxModule;
+import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.blobstore.BlobStoreCacheModulesChooser;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.blobstore.BlobStoreModulesChooser;
@@ -155,6 +156,7 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
         new SpamAssassinListenerModule());
 
     public static Module REQUIRE_TASK_MANAGER_MODULE = Modules.combine(
+        new MailetProcessingModule(),
         CASSANDRA_SERVER_CORE_MODULE,
         CASSANDRA_MAILBOX_MODULE,
         PROTOCOLS,

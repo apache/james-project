@@ -19,6 +19,7 @@
 
 package org.apache.james;
 
+import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.data.JPADataModule;
 import org.apache.james.modules.data.JPAEntityManagerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
@@ -53,6 +54,7 @@ public class JPAJamesServerMain implements JamesServerMain {
         new TaskManagerModule());
     
     private static final Module JPA_SERVER_MODULE = Modules.combine(
+        new MailetProcessingModule(),
         new JPAEntityManagerModule(),
         new JPADataModule(),
         new ActiveMQQueueModule(),

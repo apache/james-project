@@ -27,6 +27,7 @@ import org.apache.james.json.DTOModule;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.CassandraConsistencyTaskSerializationModule;
 import org.apache.james.modules.MailboxModule;
+import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.data.CassandraDLPConfigurationStoreModule;
 import org.apache.james.modules.data.CassandraDomainListModule;
 import org.apache.james.modules.data.CassandraJmapModule;
@@ -158,6 +159,7 @@ public class CassandraJamesServerMain implements JamesServerMain {
         new DKIMMailetModule());
 
     protected static Module ALL_BUT_JMX_CASSANDRA_MODULE = Modules.combine(
+        new MailetProcessingModule(),
         new CassandraBucketModule(),
         new CassandraBlobStoreModule(),
         REQUIRE_TASK_MANAGER_MODULE,
