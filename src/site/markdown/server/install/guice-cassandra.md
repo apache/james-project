@@ -8,6 +8,9 @@
  - Docker ∕ ElasticSearch 7.10.2 and Cassandra 3.11.10
  - Maven 3
 
+*WARNING*: JAMES-3591 Cassandra is not made to store large binary content, its use will be suboptimal compared to
+alternatives (namely S3 compatible BlobStores backed by for instance S3, MinIO or Ozone)
+
 ### Building the artifacts
 
 An usual compilation using maven will produce two artifacts into server/container/guice/cassandra-guice/target directory:

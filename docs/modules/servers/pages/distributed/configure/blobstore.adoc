@@ -22,6 +22,9 @@ in GIT to get some examples and hints.
 * cassandra: use cassandra based BlobStore
 * objectstorage: use Swift/AWS S3 based BlobStore
 
+WARNING: JAMES-3591 Cassandra is not made to store large binary content, its use will be suboptimal compared to
+Alternatives (namely S3 compatible BlobStores backed by for instance S3, MinIO or Ozone)
+
 *deduplication.enable*: Mandatory. Supported value: true and false.
 
 If you choose to enable deduplication, the mails with the same content will be stored only once.

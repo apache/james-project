@@ -4,6 +4,9 @@
 
 It do not target deployments with multiple James nodes as is misses inter-node communication capabilities.
 
+*WARNING*: JAMES-3591 Cassandra is not made to store large binary content, its use will be suboptimal compared to
+alternatives (namely S3 compatible BlobStores backed by for instance S3, MinIO or Ozone)
+
 == Requirements
 
  * Java 11 SDK

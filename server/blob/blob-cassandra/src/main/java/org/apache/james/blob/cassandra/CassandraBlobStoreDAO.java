@@ -41,6 +41,8 @@ import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.DataChunker;
 import org.apache.james.util.ReactorUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
@@ -50,11 +52,16 @@ import com.google.common.io.ByteSource;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+/**
+ * WARNING: JAMES-3591 Cassandra is not made to store large binary content, its use will be suboptimal compared to
+ * alternatives (namely S3 compatible BlobStores backed by for instance S3, MinIO or Ozone)
+ */
 public class CassandraBlobStoreDAO implements BlobStoreDAO {
     public static final boolean LAZY = false;
 
     public static final String CASSANDRA_BLOBSTORE_CL_ONE_MISS_COUNT_METRIC_NAME = "cassandraBlobStoreClOneMisses";
     public static final String CASSANDRA_BLOBSTORE_CL_ONE_HIT_COUNT_METRIC_NAME = "cassandraBlobStoreClOneHits";
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraBlobStoreDAO.class);
 
     private final CassandraDefaultBucketDAO defaultBucketDAO;
     private final CassandraBucketDAO bucketDAO;
@@ -80,6 +87,9 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
 
         this.metricClOneMissCount = metricFactory.generate(CASSANDRA_BLOBSTORE_CL_ONE_MISS_COUNT_METRIC_NAME);
         this.metricClOneHitCount = metricFactory.generate(CASSANDRA_BLOBSTORE_CL_ONE_HIT_COUNT_METRIC_NAME);
+
+        LOGGER.warn("WARNING: JAMES-3591 Cassandra is not made to store large binary content, its use will be suboptimal compared to " +
+            " alternatives (namely S3 compatible BlobStores backed by for instance S3, MinIO or Ozone)");
     }
 
     @Override
