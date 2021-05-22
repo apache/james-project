@@ -18,20 +18,20 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.impl.camel;
 
+import static org.apache.james.mailetcontainer.impl.camel.MatcherSplitter.MATCHER_MATCHED_ATTRIBUTE;
+
 import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.mail.MessagingException;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
-import org.apache.camel.CamelExecutionException;
-import org.apache.camel.Exchange;
-import org.apache.camel.ExchangePattern;
-import org.apache.camel.ProducerTemplate;
-import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.model.RouteDefinition;
-import org.apache.camel.processor.aggregate.UseLatestAggregationStrategy;
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor;
@@ -42,34 +42,139 @@ import org.apache.mailet.Matcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * {@link org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor} implementation which use Camel DSL for
  * the {@link Matcher} / {@link Mailet} routing
  */
 public class CamelMailetProcessor extends AbstractStateMailetProcessor implements CamelContextAware {
+    private static class ProcessingStep {
+        private static class Builder {
+            @FunctionalInterface
+            interface RequiresInFlight {
+                RequiresEncounteredMails inFlight(ImmutableList<Mail> inFlightMails);
+            }
+
+            @FunctionalInterface
+            interface RequiresEncounteredMails {
+                ProcessingStep encountered(ImmutableList<Mail> inFlightMails);
+            }
+        }
+
+        public static ProcessingStep initial(Mail mail) {
+            return new ProcessingStep(ImmutableList.of(mail), ImmutableSet.of(mail));
+        }
+
+        private ImmutableList<Mail> inFlightMails;
+        private ImmutableSet<Mail> encounteredMails;
+
+        private ProcessingStep(ImmutableList<Mail> inFlightMails, ImmutableSet<Mail> encounteredMails) {
+            this.inFlightMails = inFlightMails;
+            this.encounteredMails = encounteredMails;
+        }
+
+        public ImmutableList<Mail> getInFlightMails() {
+            return inFlightMails;
+        }
+
+        public Builder.RequiresInFlight nextStepBuilder() {
+            return inFlight -> encountered -> new ProcessingStep(inFlight,
+                ImmutableSet.<Mail>builder()
+                    .addAll(inFlight)
+                    .addAll(encounteredMails)
+                    .addAll(encountered)
+                    .build());
+        }
+
+        public void ghostInFlight(Consumer<Mail> callback) {
+            inFlightMails
+                .stream()
+                .filter(mail -> !mail.getState().equals(Mail.GHOST))
+                .forEach(mail -> {
+                    callback.accept(mail);
+                    mail.setState(Mail.GHOST);
+                });
+        }
+
+        public void disposeGhostedEncounteredMails() {
+            encounteredMails
+                .stream()
+                .filter(mail -> mail.getState().equals(Mail.GHOST))
+                .forEach(Throwing.<Mail>consumer(mail -> {
+                    LifecycleUtil.dispose(mail);
+                    LifecycleUtil.dispose(mail.getMessage());
+                }).sneakyThrow());
+        }
+
+        public boolean test() {
+            return inFlightMails.size() > 0;
+        }
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(CamelMailetProcessor.class);
 
-    private CamelContext context;
-
-    private ProducerTemplate producerTemplate;
-
     private final MetricFactory metricFactory;
+    private CamelContext context;
     private List<MatcherMailetPair> pairs;
+    private Map<MatcherSplitter, CamelProcessor> pairsToBeProcessed;
 
     public CamelMailetProcessor(MetricFactory metricFactory) {
         this.metricFactory = metricFactory;
     }
 
     @Override
-    public void service(Mail mail) throws MessagingException {
-        try {
-            producerTemplate.sendBody(getEndpoint(), mail);
+    public void service(Mail mail) {
+        ProcessingStep lastStep = pairsToBeProcessed.entrySet().stream()
+            .reduce(ProcessingStep.initial(mail), (processingStep, pair) -> {
+                if (processingStep.test()) {
+                    return executeProcessingStep(processingStep, pair);
+                }
+                return processingStep;
+            }, (a, b) -> {
+                throw new NotImplementedException("Fold left implementation. Should never be called.");
+            });
 
-        } catch (CamelExecutionException ex) {
-            throw new MessagingException("Unable to process mail " + mail.getName(), ex);
-        }
+        lastStep.ghostInFlight(nonGhostedTerminalMail -> {
+            if (!(Mail.ERROR.equals(mail.getState()))) {
+                // Don't complain if we fall off the end of the error processor. That is currently the
+                // normal situation for James, and the message will show up in the error store.
+                LOGGER.warn("Message {} reached the end of this processor, and is automatically deleted. " +
+                    "This may indicate a configuration error.", mail.getName());
+                // Set the mail to ghost state
+                mail.setState(Mail.GHOST);
+            }
+        });
+        // The matcher splits creates intermediate emails, we need
+        // to be sure to release allocated resources
+        // Non ghosted emails emails are handled by other processors
+        lastStep.disposeGhostedEncounteredMails();
+    }
+
+    private ProcessingStep executeProcessingStep(ProcessingStep step, Map.Entry<MatcherSplitter, CamelProcessor> pair) {
+        MatcherSplitter matcherSplitter = pair.getKey();
+        CamelProcessor processor = pair.getValue();
+        ImmutableList<Mail> afterMatching = step.getInFlightMails()
+            .stream()
+            .flatMap(Throwing.<Mail, Stream<Mail>>function(mail -> matcherSplitter.split(mail).stream()).sneakyThrow())
+            .collect(Guavate.toImmutableList());
+        afterMatching
+            .stream().filter(mail -> mail.removeAttribute(MATCHER_MATCHED_ATTRIBUTE).isPresent())
+            .forEach(Throwing.consumer(processor::process).sneakyThrow());
+
+        afterMatching.stream()
+            .filter(mail -> !mail.getState().equals(getState()))
+            .filter(mail -> !mail.getState().equals(Mail.GHOST))
+            .forEach(Throwing.consumer(this::toProcessor).sneakyThrow());
+
+        return step.nextStepBuilder()
+            .inFlight(afterMatching.stream()
+                .filter(mail -> mail.getState().equals(getState()))
+                .collect(Guavate.toImmutableList()))
+            .encountered(afterMatching);
     }
 
     @Override
@@ -98,11 +203,6 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
     @Override
     @PostConstruct
     public void init() throws Exception {
-        producerTemplate = context.createProducerTemplate();
-
-        if (context.getStatus().isStopped()) {
-            context.start();
-        }
         super.init();
     }
 
@@ -110,94 +210,13 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
     protected void setupRouting(List<MatcherMailetPair> pairs) throws MessagingException {
         try {
             this.pairs = pairs;
-            context.addRoutes(new MailetContainerRouteBuilder(this, metricFactory, pairs));
+            this.pairsToBeProcessed = pairs.stream()
+                .map(pair -> Pair.of(new MatcherSplitter(metricFactory, this, pair),
+                    new CamelProcessor(metricFactory, this, pair.getMailet())))
+                .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue));
         } catch (Exception e) {
             throw new MessagingException("Unable to setup routing for MailetMatcherPairs", e);
         }
-    }
-
-    /**
-     * {@link RouteBuilder} which construct the Matcher and Mailet routing use
-     * Camel DSL
-     */
-    private static class MailetContainerRouteBuilder extends RouteBuilder {
-
-        private final CamelMailetProcessor container;
-
-        private final List<MatcherMailetPair> pairs;
-        private final MetricFactory metricFactory;
-
-        private MailetContainerRouteBuilder(CamelMailetProcessor container, MetricFactory metricFactory, List<MatcherMailetPair> pairs) {
-            this.container = container;
-            this.metricFactory = metricFactory;
-            this.pairs = pairs;
-        }
-
-        @Override
-        public void configure() {
-            String state = container.getState();
-            CamelProcessor terminatingMailetProcessor = new CamelProcessor(metricFactory, container, new TerminatingMailet());
-
-            RouteDefinition processorDef = from(container.getEndpoint())
-                .routeId(state)
-                .setExchangePattern(ExchangePattern.InOnly);
-
-            for (MatcherMailetPair pair : pairs) {
-                CamelProcessor mailetProccessor = new CamelProcessor(metricFactory, container, pair.getMailet());
-                MatcherSplitter matcherSplitter = new MatcherSplitter(metricFactory, container, pair);
-
-                processorDef
-                        // do splitting of the mail based on the stored matcher
-                        .split().method(matcherSplitter)
-                            .aggregationStrategy(new UseLatestAggregationStrategy())
-                        .process(exchange -> handleMailet(exchange, container, mailetProccessor));
-            }
-
-            processorDef
-                .process(exchange -> terminateSmoothly(exchange, container, terminatingMailetProcessor));
-
-        }
-
-        private void terminateSmoothly(Exchange exchange, CamelMailetProcessor container, CamelProcessor terminatingMailetProcessor) throws Exception {
-            Mail mail = exchange.getIn().getBody(Mail.class);
-            if (mail.getState().equals(container.getState())) {
-                terminatingMailetProcessor.process(mail);
-            }
-            if (mail.getState().equals(Mail.GHOST)) {
-                dispose(exchange, mail);
-            }
-            complete(exchange, container);
-        }
-
-        private void handleMailet(Exchange exchange, CamelMailetProcessor container, CamelProcessor mailetProccessor) throws Exception {
-            Mail mail = exchange.getIn().getBody(Mail.class);
-            boolean isMatched = mail.removeAttribute(MatcherSplitter.MATCHER_MATCHED_ATTRIBUTE).isPresent();
-            if (isMatched) {
-                mailetProccessor.process(mail);
-            }
-            if (mail.getState().equals(Mail.GHOST)) {
-                dispose(exchange, mail);
-                return;
-            }
-            if (!mail.getState().equals(container.getState())) {
-                container.toProcessor(mail);
-                complete(exchange, container);
-            }
-        }
-
-        private void complete(Exchange exchange, CamelMailetProcessor container) {
-            LOGGER.debug("End of mailetprocessor for state {} reached", container.getState());
-            exchange.setRouteStop(true);
-        }
-
-        private void dispose(Exchange exchange, Mail mail) throws MessagingException {
-            LifecycleUtil.dispose(mail.getMessage());
-            LifecycleUtil.dispose(mail);
-
-            // stop routing
-            exchange.setRouteStop(true);
-        }
-
     }
 
 }
