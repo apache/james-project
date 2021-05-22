@@ -25,14 +25,15 @@ import java.util.Optional;
 import com.google.common.base.Preconditions;
 
 public class Offset {
+    private static final Offset NONE = new Offset(0);
 
     public static Offset from(Optional<Integer> offset) {
         return offset.map(Offset::from)
-            .orElse(none());
+            .orElse(NONE);
     }
 
     public static Offset none() {
-        return new Offset(0);
+        return NONE;
     }
 
     public static Offset from(int offset) {

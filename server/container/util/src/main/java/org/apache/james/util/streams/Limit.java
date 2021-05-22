@@ -28,22 +28,23 @@ import com.google.common.base.Preconditions;
 import reactor.core.publisher.Flux;
 
 public class Limit {
+    private static final Limit UNLIMITED = new Limit(Optional.empty());
 
     public static Limit from(int limit) {
         if (limit > 0) {
             return new Limit(Optional.of(limit));
         } else {
-            return unlimited();
+            return UNLIMITED;
         }
     }
 
     public static Limit from(Optional<Integer> limit) {
         return limit.map(Limit::from)
-            .orElse(unlimited());
+            .orElse(UNLIMITED);
     }
 
     public static Limit unlimited() {
-        return new Limit(Optional.empty());
+        return UNLIMITED;
     }
 
     public static Limit limit(int limit) {

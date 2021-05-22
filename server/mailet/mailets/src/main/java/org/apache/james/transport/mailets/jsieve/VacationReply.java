@@ -96,7 +96,7 @@ public class VacationReply {
 
         private String generateNotificationSubject() {
             return Optional.ofNullable(subject)
-                .orElse(context.getRecipient() + " is currently in vacation");
+                .orElseGet(() -> context.getRecipient() + " is currently in vacation");
         }
 
         private Multipart generateNotificationContent() throws MessagingException {

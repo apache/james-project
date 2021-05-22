@@ -218,8 +218,8 @@ public class MessageContentExtractor {
 
         public MessageContent merge(MessageContent fromInnerMultipart) {
             return new MessageContent(
-                    textBody.map(Optional::of).orElse(fromInnerMultipart.getTextBody()),
-                    htmlBody.map(Optional::of).orElse(fromInnerMultipart.getHtmlBody()));
+                    textBody.or(fromInnerMultipart::getTextBody),
+                    htmlBody.or(fromInnerMultipart::getHtmlBody));
         }
 
         public Optional<String> extractMainTextContent(HtmlTextExtractor htmlTextExtractor) {

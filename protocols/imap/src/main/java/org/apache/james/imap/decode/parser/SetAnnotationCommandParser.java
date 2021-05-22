@@ -69,7 +69,7 @@ public class SetAnnotationCommandParser extends AbstractImapCommandParser {
 
             return Optional.ofNullable(value)
                 .map(transforMailboxAnnotation(key))
-                .orElse(MailboxAnnotation.nil(createAnnotationKey(key)));
+                .orElseGet(() -> MailboxAnnotation.nil(createAnnotationKey(key)));
         } catch (IllegalArgumentException e) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "The key is not valid: " + e.getMessage());
         }

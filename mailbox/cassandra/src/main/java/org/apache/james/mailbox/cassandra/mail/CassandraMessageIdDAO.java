@@ -304,7 +304,7 @@ public class CassandraMessageIdDAO {
             .map(limitAsInt -> selectAllLimited.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid())
                 .setInt(LIMIT, limitAsInt))
-            .orElse(selectAll.bind()
+            .orElseGet(() -> selectAll.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid())));
     }
 
@@ -314,7 +314,7 @@ public class CassandraMessageIdDAO {
                 .setUUID(MAILBOX_ID, mailboxId.asUuid())
                 .setLong(IMAP_UID, uid.asLong())
                 .setInt(LIMIT, limitAsInt))
-            .orElse(selectUidGte.bind()
+            .orElseGet(() -> selectUidGte.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid())
                 .setLong(IMAP_UID, uid.asLong())));
     }
@@ -326,7 +326,7 @@ public class CassandraMessageIdDAO {
                 .setLong(IMAP_UID_GTE, from.asLong())
                 .setLong(IMAP_UID_LTE, to.asLong())
                 .setInt(LIMIT, limitAsInt))
-            .orElse(selectUidRange.bind()
+            .orElseGet(() -> selectUidRange.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid())
                 .setLong(IMAP_UID_GTE, from.asLong())
                 .setLong(IMAP_UID_LTE, to.asLong())));

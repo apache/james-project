@@ -112,7 +112,7 @@ public class DLPDomainConfiguration {
         return removedRulesEvent
             .map(Event::eventId)
             .map(EventId::next)
-            .orElse(history.getNextEventId());
+            .orElseGet(history::getNextEventId);
     }
 
     private Optional<Event> generateRemovedRulesEvent(ImmutableSet<DLPConfigurationItem> existingRules, ImmutableSet<DLPConfigurationItem> updateRulesSet) {

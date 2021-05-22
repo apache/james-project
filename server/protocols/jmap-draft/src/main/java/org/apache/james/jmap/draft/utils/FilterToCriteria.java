@@ -99,7 +99,7 @@ public class FilterToCriteria {
     private Criterion getFlagCriterion(Keyword keyword, boolean isSet) {
         return keyword.asSystemFlag()
             .map(flag -> SearchQuery.flagSet(flag, isSet))
-            .orElse(SearchQuery.flagSet(keyword.getFlagName(), isSet));
+            .orElseGet(() -> SearchQuery.flagSet(keyword.getFlagName(), isSet));
     }
 
     private Criterion convertOperator(FilterOperator filter) {

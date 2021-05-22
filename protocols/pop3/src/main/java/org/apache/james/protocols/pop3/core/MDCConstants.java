@@ -37,13 +37,13 @@ public interface MDCConstants {
         return Optional.ofNullable(session.getUserMailbox())
             .map(Throwing.function(Mailbox::getIdentifier).sneakyThrow())
             .map(id -> MDCBuilder.create().addContext(MAILBOX, id))
-            .orElse(MDCBuilder.create());
+            .orElseGet(MDCBuilder::create);
     }
 
     static MDCBuilder forRequest(Request request) {
         return Optional.ofNullable(request.getArgument())
             .map(argument -> MDCBuilder.create().addContext(ARGUMENT, argument))
-            .orElse(MDCBuilder.create());
+            .orElseGet(MDCBuilder::create);
     }
 
     static MDCBuilder withSession(POP3Session session) {
