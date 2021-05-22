@@ -108,7 +108,7 @@ public class FetchGroup extends Profiles<FetchGroup> {
         return partContentDescriptors.stream()
                 .filter(descriptor -> path.equals(descriptor.path()))
                 .findFirst()
-                .orElse(new PartContentDescriptor(profiles, path));
+            .orElseGet(() -> new PartContentDescriptor(profiles, path));
     }
 
     @Override

@@ -118,7 +118,7 @@ public class Keyword {
     public Flags asFlags() {
         return asSystemFlag()
             .map(Flags::new)
-            .orElse(new Flags(flagName));
+            .orElseGet(() -> new Flags(flagName));
     }
 
     @Override

@@ -76,6 +76,6 @@ public class IMAPMDCContext {
         return selectedMailbox
             .map(value -> MDCBuilder.create()
                 .addContext("selectedMailbox", value.getMailboxId().serialize()))
-            .orElse(MDCBuilder.create());
+            .orElseGet(MDCBuilder::create);
     }
 }

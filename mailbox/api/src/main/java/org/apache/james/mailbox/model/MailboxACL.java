@@ -566,7 +566,7 @@ public class MailboxACL {
             public Builder rights(Right... rights) throws UnsupportedRightException {
                 this.rights =
                     Optional.ofNullable(this.rights)
-                        .orElse(new Rfc4314Rights())
+                        .orElseGet(Rfc4314Rights::new)
                         .union(new Rfc4314Rights(rights));
                 return this;
             }
@@ -703,11 +703,10 @@ public class MailboxACL {
      */
     @SafeVarargs
     public MailboxACL(Map.Entry<EntryKey, Rfc4314Rights>... entries) {
-        this(ImmutableMap.copyOf(
-            Optional.ofNullable(entries)
+        this(Optional.ofNullable(entries)
                 .map(array -> Arrays.stream(array)
                     .collect(Guavate.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue)))
-            .orElse(ImmutableMap.of())));
+                .orElseGet(ImmutableMap::of));
     }
 
     /**

@@ -26,10 +26,10 @@ import com.google.common.base.Preconditions;
 
 public class QuotaSizeLimit implements QuotaLimitValue<QuotaSizeLimit> {
 
-    public static final QuotaSizeLimit QUOTA_SIZE = new QuotaSizeLimit(Optional.empty());
+    private static final QuotaSizeLimit UNLIMITED = new QuotaSizeLimit(Optional.empty());
 
     public static QuotaSizeLimit unlimited() {
-        return QUOTA_SIZE;
+        return UNLIMITED;
     }
 
     public static QuotaSizeLimit size(long value) {

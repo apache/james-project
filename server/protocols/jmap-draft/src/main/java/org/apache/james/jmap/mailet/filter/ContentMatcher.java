@@ -82,7 +82,7 @@ public interface ContentMatcher {
             AddressHeader addressHeaderToMatch =  HeaderExtractor.toAddressContents(new String[] {valueToMatch})
                 .map(AddressHeader::new)
                 .findAny()
-                .orElse(new AddressHeader(valueToMatch));
+                .orElseGet(() -> new AddressHeader(valueToMatch));
 
             return contents.map(ContentMatcher::asAddressHeader)
                 .anyMatch(addressHeaderToMatch::matchesIgnoreCase);
