@@ -78,10 +78,12 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.CodecRegistry;
 import com.datastax.driver.core.ConsistencyLevel;
+import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.TypeCodec;
 import com.datastax.driver.core.TypeTokens;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
@@ -98,7 +100,9 @@ public class CassandraMessageDAOV3 {
     public static final long DEFAULT_LONG_VALUE = 0L;
     private static final byte[] EMPTY_BYTE_ARRAY = {};
     private static final TypeToken<Map<String, String>> MAP_OF_STRING = TypeTokens.mapOf(String.class, String.class);
+    private static final TypeCodec<Map<String, String>> MAP_OF_STRINGS_CODEC = CodecRegistry.DEFAULT_INSTANCE.codecFor(DataType.frozenMap(DataType.text(), DataType.text()), MAP_OF_STRING);
     private static final TypeToken<List<String>> LIST_OF_STRINGS = TypeTokens.listOf(String.class);
+    private static final TypeCodec<List<String>> LIST_OF_STRINGS_CODEC = CodecRegistry.DEFAULT_INSTANCE.codecFor(DataType.frozenList(DataType.text()), LIST_OF_STRINGS);
     private static final TypeToken<List<UDTValue>> LIST_OF_UDT = TypeTokens.listOf(UDTValue.class);
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
@@ -333,9 +337,9 @@ public class CassandraMessageDAOV3 {
         property.setContentMD5(row.getString(CONTENT_MD5));
         property.setContentTransferEncoding(row.getString(CONTENT_TRANSFER_ENCODING));
         property.setContentLocation(row.getString(CONTENT_LOCATION));
-        property.setContentLanguage(row.get(CONTENT_LANGUAGE, LIST_OF_STRINGS));
-        property.setContentDispositionParameters(row.get(CONTENT_DISPOSITION_PARAMETERS, MAP_OF_STRING));
-        property.setContentTypeParameters(row.get(CONTENT_TYPE_PARAMETERS, MAP_OF_STRING));
+        property.setContentLanguage(row.get(CONTENT_LANGUAGE, LIST_OF_STRINGS_CODEC));
+        property.setContentDispositionParameters(row.get(CONTENT_DISPOSITION_PARAMETERS, MAP_OF_STRINGS_CODEC));
+        property.setContentTypeParameters(row.get(CONTENT_TYPE_PARAMETERS, MAP_OF_STRINGS_CODEC));
         property.setTextualLineCount(row.getLong(TEXTUAL_LINE_COUNT));
         return property.build();
     }

@@ -24,12 +24,16 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.cassandra.table.Flag;
 
+import com.datastax.driver.core.CodecRegistry;
+import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.Row;
+import com.datastax.driver.core.TypeCodec;
 import com.datastax.driver.core.TypeTokens;
 import com.google.common.reflect.TypeToken;
 
 public class FlagsExtractor {
     public static final TypeToken<Set<String>> STRING_SET = TypeTokens.setOf(String.class);
+    public static final TypeCodec<Set<String>> SET_OF_STRINGS_CODEC = CodecRegistry.DEFAULT_INSTANCE.codecFor(DataType.set(DataType.text()), STRING_SET);
 
     public static Flags getFlags(Row row) {
         Flags flags = new Flags();
@@ -38,14 +42,14 @@ public class FlagsExtractor {
                 flags.add(Flag.JAVAX_MAIL_FLAG.get(flag));
             }
         }
-        row.get(Flag.USER_FLAGS, STRING_SET)
+        row.get(Flag.USER_FLAGS, SET_OF_STRINGS_CODEC)
             .forEach(flags::add);
         return flags;
     }
 
     public static Flags getApplicableFlags(Row row) {
         Flags flags = new Flags();
-        row.get(Flag.USER_FLAGS, STRING_SET)
+        row.get(Flag.USER_FLAGS, SET_OF_STRINGS_CODEC)
             .forEach(flags::add);
         return flags;
     }
