@@ -50,6 +50,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.T
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -75,17 +76,20 @@ import org.apache.james.mailbox.store.mail.model.impl.Properties;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 
 import com.datastax.driver.core.BoundStatement;
+import com.datastax.driver.core.CodecRegistry;
 import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.TypeTokens;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
 import com.google.common.primitives.Bytes;
+import com.google.common.reflect.TypeToken;
 
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -93,6 +97,9 @@ import reactor.util.function.Tuple2;
 public class CassandraMessageDAOV3 {
     public static final long DEFAULT_LONG_VALUE = 0L;
     private static final byte[] EMPTY_BYTE_ARRAY = {};
+    private static final TypeToken<Map<String, String>> MAP_OF_STRING = TypeTokens.mapOf(String.class, String.class);
+    private static final TypeToken<List<String>> LIST_OF_STRINGS = TypeTokens.listOf(String.class);
+    private static final TypeToken<List<UDTValue>> LIST_OF_UDT = TypeTokens.listOf(UDTValue.class);
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final CassandraTypesProvider typesProvider;
@@ -326,15 +333,15 @@ public class CassandraMessageDAOV3 {
         property.setContentMD5(row.getString(CONTENT_MD5));
         property.setContentTransferEncoding(row.getString(CONTENT_TRANSFER_ENCODING));
         property.setContentLocation(row.getString(CONTENT_LOCATION));
-        property.setContentLanguage(row.getList(CONTENT_LANGUAGE, String.class));
-        property.setContentDispositionParameters(row.getMap(CONTENT_DISPOSITION_PARAMETERS, String.class, String.class));
-        property.setContentTypeParameters(row.getMap(CONTENT_TYPE_PARAMETERS, String.class, String.class));
+        property.setContentLanguage(row.get(CONTENT_LANGUAGE, LIST_OF_STRINGS));
+        property.setContentDispositionParameters(row.get(CONTENT_DISPOSITION_PARAMETERS, MAP_OF_STRING));
+        property.setContentTypeParameters(row.get(CONTENT_TYPE_PARAMETERS, MAP_OF_STRING));
         property.setTextualLineCount(row.getLong(TEXTUAL_LINE_COUNT));
         return property.build();
     }
 
     private Stream<MessageAttachmentRepresentation> getAttachments(Row row) {
-        List<UDTValue> udtValues = row.getList(ATTACHMENTS, UDTValue.class);
+        List<UDTValue> udtValues = row.get(ATTACHMENTS, LIST_OF_UDT);
         return attachmentByIds(udtValues);
     }
 

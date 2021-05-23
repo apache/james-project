@@ -18,13 +18,19 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra.mail;
 
+import java.util.Set;
+
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.cassandra.table.Flag;
 
 import com.datastax.driver.core.Row;
+import com.datastax.driver.core.TypeTokens;
+import com.google.common.reflect.TypeToken;
 
 public class FlagsExtractor {
+    public static final TypeToken<Set<String>> STRING_SET = TypeTokens.setOf(String.class);
+
     public static Flags getFlags(Row row) {
         Flags flags = new Flags();
         for (String flag : Flag.ALL) {
@@ -32,14 +38,14 @@ public class FlagsExtractor {
                 flags.add(Flag.JAVAX_MAIL_FLAG.get(flag));
             }
         }
-        row.getSet(Flag.USER_FLAGS, String.class)
+        row.get(Flag.USER_FLAGS, STRING_SET)
             .forEach(flags::add);
         return flags;
     }
 
     public static Flags getApplicableFlags(Row row) {
         Flags flags = new Flags();
-        row.getSet(Flag.USER_FLAGS, String.class)
+        row.get(Flag.USER_FLAGS, STRING_SET)
             .forEach(flags::add);
         return flags;
     }
