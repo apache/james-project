@@ -31,6 +31,7 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.SystemMailboxesProvider;
+import org.apache.james.mailbox.exception.MailboxRoleNotFoundException;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -134,6 +135,7 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
     private void moveFromOutboxToSentWithSeenFlag(MessageId messageId, MailboxSession mailboxSession) {
         assertMessageBelongsToOutbox(messageId, mailboxSession)
             .then(getSentMailboxId(mailboxSession)
+                .switchIfEmpty(Mono.error(new MailboxRoleNotFoundException(Role.SENT)))
                 .flatMap(sentMailboxId ->
                         Mono.from(messageIdManager.setInMailboxesReactive(messageId,
                             ImmutableList.of(sentMailboxId), mailboxSession))

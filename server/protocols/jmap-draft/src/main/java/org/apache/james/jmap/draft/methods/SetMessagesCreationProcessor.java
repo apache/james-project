@@ -35,7 +35,6 @@ import org.apache.james.jmap.draft.exceptions.AttachmentsNotFoundException;
 import org.apache.james.jmap.draft.exceptions.InvalidDraftKeywordsException;
 import org.apache.james.jmap.draft.exceptions.InvalidMailboxForCreationException;
 import org.apache.james.jmap.draft.exceptions.MailboxNotOwnedException;
-import org.apache.james.jmap.draft.exceptions.MessageHasNoMailboxException;
 import org.apache.james.jmap.draft.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.draft.methods.ValueWithId.MessageWithId;
 import org.apache.james.jmap.draft.model.CreationMessage;
@@ -50,7 +49,6 @@ import org.apache.james.jmap.draft.model.SetMessagesResponse;
 import org.apache.james.jmap.draft.model.SetMessagesResponse.Builder;
 import org.apache.james.jmap.draft.model.message.view.MessageFullView;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
-import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory.MetaDataWithContent;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -61,20 +59,20 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.server.core.Envelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.fge.lambdas.functions.FunctionChainer;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 
 public class SetMessagesCreationProcessor implements SetMessagesProcessor {
@@ -116,104 +114,92 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     }
 
     @Override
-    public SetMessagesResponse process(SetMessagesRequest request, MailboxSession mailboxSession) {
-        TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + "SetMessageCreationProcessor");
-
-        SetMessagesResponse result = request.getCreate()
-            .stream()
-            .map(create -> handleCreate(create, mailboxSession))
-            .reduce(SetMessagesResponse.builder(), Builder::mergeWith)
-            .build();
-
-        timeMetric.stopAndPublish();
-        return result;
+    public Mono<SetMessagesResponse> processReactive(SetMessagesRequest request, MailboxSession mailboxSession) {
+        return Mono.from(metricFactory.decoratePublisherWithTimerMetric(JMAP_PREFIX + "SetMessageCreationProcessor",
+            Flux.fromIterable(request.getCreate())
+                .flatMap(create -> handleCreate(create, mailboxSession))
+                .reduce(Builder::mergeWith)
+                .switchIfEmpty(Mono.just(SetMessagesResponse.builder()))
+                .map(Builder::build)));
     }
 
-    private Builder handleCreate(CreationMessageEntry create, MailboxSession mailboxSession) {
-        try {
-            List<MailboxId> mailboxIds = toMailboxIds(create);
-            assertAtLeastOneMailbox(mailboxIds);
-            assertIsUserOwnerOfMailboxes(mailboxIds, mailboxSession);
-            return performCreate(create, mailboxSession);
-        } catch (MailboxSendingNotAllowedException e) {
-            LOG.debug("{} is not allowed to send a mail using {} identity", e.getConnectedUser().asString(), e.getFromField());
+    private Mono<Builder> handleCreate(CreationMessageEntry create, MailboxSession mailboxSession) {
+        List<MailboxId> mailboxIds = toMailboxIds(create);
 
-            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
+        if (mailboxIds.isEmpty()) {
+            return Mono.just(SetMessagesResponse.builder().notCreated(create.getCreationId(),
+                SetError.builder()
+                    .type(SetError.Type.INVALID_PROPERTIES)
+                    .properties(MessageProperty.mailboxIds)
+                    .description("Message needs to be in at least one mailbox")
+                    .build()));
+        }
+
+        return assertIsUserOwnerOfMailboxes(mailboxIds, mailboxSession)
+            .then(performCreate(create, mailboxSession))
+            .onErrorResume(MailboxSendingNotAllowedException.class, e -> {
+                LOG.debug("{} is not allowed to send a mail using {} identity", e.getConnectedUser().asString(), e.getFromField());
+
+                return Mono.just(SetMessagesResponse.builder().notCreated(create.getCreationId(),
                     SetError.builder()
                         .type(SetError.Type.INVALID_PROPERTIES)
                         .properties(MessageProperty.from)
                         .description("Invalid 'from' field. One accepted value is " +
-                                e.getConnectedUser().asString())
-                        .build());
-
-        } catch (InvalidDraftKeywordsException e) {
-            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
+                            e.getConnectedUser().asString())
+                        .build()));
+            })
+            .onErrorResume(InvalidDraftKeywordsException.class, e -> Mono.just(SetMessagesResponse.builder().notCreated(create.getCreationId(),
                 SetError.builder()
                     .type(SetError.Type.INVALID_PROPERTIES)
                     .properties(MessageProperty.keywords)
                     .description(e.getMessage())
-                    .build());
-
-        } catch (AttachmentsNotFoundException e) {
-            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
-                    SetMessagesError.builder()
-                        .type(SetError.Type.INVALID_PROPERTIES)
-                        .properties(MessageProperty.attachments)
-                        .attachmentsNotFound(e.getAttachmentIds())
-                        .description("Attachment not found")
-                        .build());
-
-        } catch (InvalidMailboxForCreationException e) {
-            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
-                    SetError.builder()
-                        .type(SetError.Type.INVALID_PROPERTIES)
-                        .properties(MessageProperty.mailboxIds)
-                        .description("Message creation is only supported in mailboxes with role Draft and Outbox")
-                        .build());
-
-        } catch (MessageHasNoMailboxException e) {
-            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
-                    SetError.builder()
-                        .type(SetError.Type.INVALID_PROPERTIES)
-                        .properties(MessageProperty.mailboxIds)
-                        .description("Message needs to be in at least one mailbox")
-                        .build());
-
-        } catch (MailboxInvalidMessageCreationException e) {
-            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
-                    buildSetErrorFromValidationResult(create.getValue().validate()));
-
-        } catch (MailboxNotFoundException e) {
-            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
-                    SetError.builder()
-                        .type(SetError.Type.ERROR)
-                        .description(e.getMessage())
-                        .build());
-
-        } catch (MailboxNotOwnedException e) {
-            LOG.error("Appending message in an unknown mailbox", e);
-            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
+                    .build())))
+            .onErrorResume(AttachmentsNotFoundException.class, e -> Mono.just(SetMessagesResponse.builder().notCreated(create.getCreationId(),
+                SetMessagesError.builder()
+                    .type(SetError.Type.INVALID_PROPERTIES)
+                    .properties(MessageProperty.attachments)
+                    .attachmentsNotFound(e.getAttachmentIds())
+                    .description("Attachment not found")
+                    .build())))
+            .onErrorResume(InvalidMailboxForCreationException.class, e -> Mono.just(SetMessagesResponse.builder().notCreated(create.getCreationId(),
+                SetError.builder()
+                    .type(SetError.Type.INVALID_PROPERTIES)
+                    .properties(MessageProperty.mailboxIds)
+                    .description("Message creation is only supported in mailboxes with role Draft and Outbox")
+                    .build())))
+            .onErrorResume(MailboxInvalidMessageCreationException.class, e -> Mono.just(SetMessagesResponse.builder().notCreated(create.getCreationId(),
+                buildSetErrorFromValidationResult(create.getValue().validate()))))
+            .onErrorResume(MailboxNotFoundException.class, e -> Mono.just(SetMessagesResponse.builder().notCreated(create.getCreationId(),
+                SetError.builder()
+                    .type(SetError.Type.ERROR)
+                    .description(e.getMessage())
+                    .build())))
+            .onErrorResume(MailboxNotOwnedException.class, e -> Mono.just(SetMessagesResponse.builder().notCreated(create.getCreationId(),
                 SetError.builder()
                     .type(SetError.Type.ERROR)
                     .properties(MessageProperty.mailboxIds)
                     .description("MailboxId invalid")
-                    .build());
-
-        } catch (OverQuotaException e) {
-            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
+                    .build())))
+            .onErrorResume(OverQuotaException.class, e -> Mono.just(SetMessagesResponse.builder().notCreated(create.getCreationId(),
                 SetError.builder()
                     .type(SetError.Type.MAX_QUOTA_REACHED)
                     .description(e.getMessage())
-                    .build());
-
-        } catch (MailboxException | MessagingException | IOException e) {
-            LOG.error("Unexpected error while creating message", e);
-            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
-                    SetError.builder()
-                        .type(SetError.Type.ERROR)
-                        .description("unexpected error")
-                        .build());
-        }
+                    .build())))
+            .onErrorResume(MailboxException.class, e -> Mono.just(SetMessagesResponse.builder().notCreated(create.getCreationId(),
+                SetError.builder()
+                    .type(SetError.Type.ERROR)
+                    .description("unexpected error")
+                    .build())))
+            .onErrorResume(MessagingException.class, e -> Mono.just(SetMessagesResponse.builder().notCreated(create.getCreationId(),
+                SetError.builder()
+                    .type(SetError.Type.ERROR)
+                    .description("unexpected error")
+                    .build())))
+            .onErrorResume(IOException.class, e -> Mono.just(SetMessagesResponse.builder().notCreated(create.getCreationId(),
+                SetError.builder()
+                    .type(SetError.Type.ERROR)
+                    .description("unexpected error")
+                    .build())));
     }
 
     private ImmutableList<MailboxId> toMailboxIds(CreationMessageEntry create) {
@@ -224,95 +210,100 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
             .collect(Guavate.toImmutableList());
     }
 
-    private Builder performCreate(CreationMessageEntry entry, MailboxSession session)
-        throws MailboxException, MessagingException, AttachmentsNotFoundException, IOException {
-
-        if (isAppendToMailboxWithRole(Role.OUTBOX, entry.getValue(), session)) {
-            return sendMailViaOutbox(entry, session);
-        } else if (entry.getValue().isDraft()) {
-            assertNoOutbox(entry, session);
-            return saveDraft(entry, session);
-        } else {
-            if (isAppendToMailboxWithRole(Role.DRAFTS, entry.getValue(), session)) {
-                throw new InvalidDraftKeywordsException("A draft message should be flagged as Draft");
-            }
-            throw new InvalidMailboxForCreationException("The only implemented feature is sending via outbox and draft saving");
-        }
+    private Mono<Builder> performCreate(CreationMessageEntry entry, MailboxSession session) {
+        return isAppendToMailboxWithRole(Role.OUTBOX, entry.getValue(), session)
+            .flatMap(isAppendToMailboxWithRole -> {
+                if (isAppendToMailboxWithRole) {
+                    return sendMailViaOutbox(entry, session);
+                } else if (entry.getValue().isDraft()) {
+                    return assertNoOutbox(entry, session)
+                        .then(saveDraft(entry, session));
+                } else {
+                    return isAppendToMailboxWithRole(Role.DRAFTS, entry.getValue(), session)
+                        .handle((isAppendedToDraft, sink) -> {
+                            if (isAppendedToDraft) {
+                                sink.error(new InvalidDraftKeywordsException("A draft message should be flagged as Draft"));
+                            } else {
+                                sink.error(new InvalidMailboxForCreationException("The only implemented feature is sending via outbox and draft saving"));
+                            }
+                        });
+                }
+            });
     }
 
-    private void assertNoOutbox(CreationMessageEntry entry, MailboxSession session) throws MailboxException {
-        if (isTargettingAMailboxWithRole(Role.OUTBOX, entry.getValue(), session)) {
-            throw new InvalidMailboxForCreationException("Mailbox ids can combine Outbox with other mailbox");
-        }
+    private Mono<Void> assertNoOutbox(CreationMessageEntry entry, MailboxSession session) {
+        return isTargettingAMailboxWithRole(Role.OUTBOX, entry.getValue(), session)
+            .handle((targetsOutbox, sink) -> {
+                if (targetsOutbox) {
+                    sink.error(new InvalidMailboxForCreationException("Mailbox ids can combine Outbox with other mailbox"));
+                }
+            });
     }
 
-    private void assertAtLeastOneMailbox(List<MailboxId> mailboxIds) throws MailboxException {
-        if (mailboxIds.isEmpty()) {
-            throw new MessageHasNoMailboxException();
-        }
+    private Mono<Builder> sendMailViaOutbox(CreationMessageEntry entry, MailboxSession session) {
+        return validateArguments(entry, session)
+            .then(handleOutboxMessages(entry, session)
+                .map(created -> SetMessagesResponse.builder().created(created.getCreationId(), created.getValue())));
     }
 
-    private Builder sendMailViaOutbox(CreationMessageEntry entry, MailboxSession session)
-        throws AttachmentsNotFoundException, MailboxException, MessagingException, IOException {
-
-        validateArguments(entry, session);
-        MessageWithId created = handleOutboxMessages(entry, session);
-        return SetMessagesResponse.builder().created(created.getCreationId(), created.getValue());
+    private Mono<Builder> saveDraft(CreationMessageEntry entry, MailboxSession session) {
+        return attachmentChecker.assertAttachmentsExist(entry, session)
+            .then(handleDraftMessages(entry, session)
+                .map(created -> SetMessagesResponse.builder().created(created.getCreationId(), created.getValue())));
     }
 
-    private Builder saveDraft(CreationMessageEntry entry, MailboxSession session)
-        throws AttachmentsNotFoundException, MailboxException, MessagingException, IOException {
-
-        attachmentChecker.assertAttachmentsExist(entry, session);
-        MessageWithId created = handleDraftMessages(entry, session);
-        return SetMessagesResponse.builder().created(created.getCreationId(), created.getValue());
-    }
-
-    private void validateArguments(CreationMessageEntry entry, MailboxSession session) throws MailboxInvalidMessageCreationException, AttachmentsNotFoundException, MailboxException {
+    private Mono<Void> validateArguments(CreationMessageEntry entry, MailboxSession session) {
         CreationMessage message = entry.getValue();
         if (!message.isValid()) {
-            throw new MailboxInvalidMessageCreationException();
+            return Mono.error(new MailboxInvalidMessageCreationException());
         }
-        attachmentChecker.assertAttachmentsExist(entry, session);
+        return attachmentChecker.assertAttachmentsExist(entry, session);
     }
 
-    @VisibleForTesting void assertIsUserOwnerOfMailboxes(List<MailboxId> mailboxIds, MailboxSession session) throws MailboxNotOwnedException {
-        if (!allMailboxOwned(mailboxIds, session)) {
-            throw new MailboxNotOwnedException();
-        }
+    @VisibleForTesting Mono<Void> assertIsUserOwnerOfMailboxes(List<MailboxId> mailboxIds, MailboxSession session) {
+        return allMailboxOwned(mailboxIds, session)
+            .handle((allOwned, sink) -> {
+                if (!allOwned) {
+                    sink.error(new MailboxNotOwnedException());
+                }
+            });
     }
 
-    private boolean allMailboxOwned(List<MailboxId> mailboxIds, MailboxSession session) {
-        FunctionChainer<MailboxId, MessageManager> findMailbox = Throwing.function(mailboxId -> mailboxManager.getMailbox(mailboxId, session));
-        return mailboxIds.stream()
-            .map(findMailbox.sneakyThrow())
+    private Mono<Boolean> allMailboxOwned(List<MailboxId> mailboxIds, MailboxSession session) {
+        return Flux.fromIterable(mailboxIds)
+            .concatMap(id ->  mailboxManager.getMailboxReactive(id, session))
             .map(Throwing.function(MessageManager::getMailboxPath))
-            .allMatch(path -> path.belongsTo(session));
+            .all(path -> path.belongsTo(session));
     }
 
-    private MessageWithId handleOutboxMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException, IOException {
-        assertUserCanSendFrom(session.getUser(), entry.getValue().getFrom());
-        MetaDataWithContent newMessage = messageAppender.appendMessageInMailboxes(entry, toMailboxIds(entry), session);
-        MessageFullView jmapMessage = messageFullViewFactory.fromMetaDataWithContent(newMessage).block();
-        Envelope envelope = EnvelopeUtils.fromMessage(jmapMessage);
-        messageSender.sendMessage(newMessage, envelope, session)
-            .then(referenceUpdater.updateReferences(entry.getValue().getHeaders(), session))
-            .block();
-        return new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage);
+    private Mono<MessageWithId> handleOutboxMessages(CreationMessageEntry entry, MailboxSession session) {
+        return assertUserCanSendFrom(session.getUser(), entry.getValue().getFrom())
+            .then(Mono.fromCallable(() -> messageAppender.appendMessageInMailboxes(entry, toMailboxIds(entry), session))
+                .subscribeOn(Schedulers.elastic())
+                .flatMap(newMessage ->
+                    messageFullViewFactory.fromMetaDataWithContent(newMessage)
+                        .flatMap(Throwing.function((MessageFullView jmapMessage) -> {
+                            Envelope envelope = EnvelopeUtils.fromMessage(jmapMessage);
+                            return messageSender.sendMessage(newMessage, envelope, session)
+                                .then(referenceUpdater.updateReferences(entry.getValue().getHeaders(), session))
+                                .thenReturn(new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage));
+                        }).sneakyThrow())));
     }
 
     @VisibleForTesting
-    void assertUserCanSendFrom(Username connectedUser, Optional<DraftEmailer> from) throws MailboxSendingNotAllowedException {
+    Mono<Void> assertUserCanSendFrom(Username connectedUser, Optional<DraftEmailer> from) {
+        return Mono.fromRunnable(Throwing.runnable(() -> {
+            Optional<Username> maybeFromUser = from.flatMap(DraftEmailer::getEmail)
+                .map(Username::of);
 
-        Optional<Username> maybeFromUser = from.flatMap(DraftEmailer::getEmail)
-            .map(Username::of);
-
-        if (!canSendMailUsingIdentity(connectedUser, maybeFromUser)) {
-            String allowedSender = connectedUser.asString();
-            throw new MailboxSendingNotAllowedException(connectedUser, maybeFromUser);
-        } else {
-            LOG.debug("{} is allowed to send a mail using {} identity", connectedUser.asString(), from);
-        }
+            if (!canSendMailUsingIdentity(connectedUser, maybeFromUser)) {
+                String allowedSender = connectedUser.asString();
+                throw new MailboxSendingNotAllowedException(connectedUser, maybeFromUser);
+            } else {
+                LOG.debug("{} is allowed to send a mail using {} identity", connectedUser.asString(), from);
+            }
+        }).sneakyThrow()).subscribeOn(Schedulers.elastic())
+            .then();
     }
 
     private boolean canSendMailUsingIdentity(Username connectedUser, Optional<Username> maybeFromUser) {
@@ -321,28 +312,28 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                 .isPresent();
     }
 
-    private MessageWithId handleDraftMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException, IOException {
-        MetaDataWithContent newMessage = messageAppender.appendMessageInMailboxes(entry, toMailboxIds(entry), session);
-        MessageFullView jmapMessage = messageFullViewFactory.fromMetaDataWithContent(newMessage).block();
-        return new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage);
+    private Mono<MessageWithId> handleDraftMessages(CreationMessageEntry entry, MailboxSession session) {
+        return Mono.fromCallable(() -> messageAppender.appendMessageInMailboxes(entry, toMailboxIds(entry), session))
+            .subscribeOn(Schedulers.elastic())
+            .flatMap(messageFullViewFactory::fromMetaDataWithContent)
+            .map(jmapMessage -> new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage));
     }
 
-    private boolean isAppendToMailboxWithRole(Role role, CreationMessage entry, MailboxSession mailboxSession) throws MailboxException {
+    private Mono<Boolean> isAppendToMailboxWithRole(Role role, CreationMessage entry, MailboxSession mailboxSession) {
         return getMailboxWithRole(mailboxSession, role)
-                .map(entry::isOnlyIn)
-                .orElse(false);
+            .map(entry::isOnlyIn)
+            .switchIfEmpty(Mono.just(false));
     }
 
-    private boolean isTargettingAMailboxWithRole(Role role, CreationMessage entry, MailboxSession mailboxSession) throws MailboxException {
+    private Mono<Boolean> isTargettingAMailboxWithRole(Role role, CreationMessage entry, MailboxSession mailboxSession) {
         return getMailboxWithRole(mailboxSession, role)
-                .map(entry::isIn)
-                .orElse(false);
+            .map(entry::isIn)
+            .switchIfEmpty(Mono.just(false));
     }
 
-    private Optional<MessageManager> getMailboxWithRole(MailboxSession mailboxSession, Role role) throws MailboxException {
+    private Mono<MessageManager> getMailboxWithRole(MailboxSession mailboxSession, Role role) {
         return Flux.from(systemMailboxesProvider.getMailboxByRole(role, mailboxSession.getUser()))
-            .toStream()
-            .findFirst();
+            .next();
     }
 
     private SetError buildSetErrorFromValidationResult(List<ValidationResult> validationErrors) {

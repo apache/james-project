@@ -75,7 +75,7 @@ public class AttachmentCheckerTest {
                     Attachment.builder().size(12L).type("image/jpeg").blobId(unknownBlobId).build())
                     .build()
             ),
-            session))
+            session).block())
             .isInstanceOf(AttachmentsNotFoundException.class);
     }
 
@@ -92,7 +92,7 @@ public class AttachmentCheckerTest {
                     Attachment.builder().size(12L).type("image/jpeg").blobId(blobId).build())
                     .build()
             ),
-            session);
+            session).block();
     }
 
     @Test
@@ -113,7 +113,7 @@ public class AttachmentCheckerTest {
                     Attachment.builder().size(23L).type("image/git").blobId(unknownBlobId2).build())
                     .build()
             ),
-            session))
+            session).block())
             .isInstanceOf(AttachmentsNotFoundException.class)
             .matches(e -> ((AttachmentsNotFoundException)e).getAttachmentIds().containsAll(ImmutableSet.of(unknownBlobId1, unknownBlobId2)));
     }
@@ -136,7 +136,7 @@ public class AttachmentCheckerTest {
                     Attachment.builder().size(23L).type("image/git").blobId(blobId2).build())
                     .build()
             ),
-            session);
+            session).block();
     }
 
     @Test
@@ -157,7 +157,7 @@ public class AttachmentCheckerTest {
                     Attachment.builder().size(23L).type("image/git").blobId(unknownBlobId2).build())
                     .build()
             ),
-            session))
+            session).block())
             .isInstanceOf(AttachmentsNotFoundException.class)
             .matches(e -> ((AttachmentsNotFoundException)e).getAttachmentIds()
                 .containsAll(ImmutableSet.of(unknownBlobId2)));
