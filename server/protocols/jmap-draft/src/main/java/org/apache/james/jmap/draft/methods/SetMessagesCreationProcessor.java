@@ -119,24 +119,26 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     public SetMessagesResponse process(SetMessagesRequest request, MailboxSession mailboxSession) {
         TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + "SetMessageCreationProcessor");
 
-        Builder responseBuilder = SetMessagesResponse.builder();
-        request.getCreate()
-            .forEach(create -> handleCreate(create, responseBuilder, mailboxSession));
+        SetMessagesResponse result = request.getCreate()
+            .stream()
+            .map(create -> handleCreate(create, mailboxSession))
+            .reduce(SetMessagesResponse.builder(), Builder::mergeWith)
+            .build();
 
         timeMetric.stopAndPublish();
-        return responseBuilder.build();
+        return result;
     }
 
-    private void handleCreate(CreationMessageEntry create, Builder responseBuilder, MailboxSession mailboxSession) {
+    private Builder handleCreate(CreationMessageEntry create, MailboxSession mailboxSession) {
         try {
             List<MailboxId> mailboxIds = toMailboxIds(create);
             assertAtLeastOneMailbox(mailboxIds);
             assertIsUserOwnerOfMailboxes(mailboxIds, mailboxSession);
-            performCreate(create, responseBuilder, mailboxSession);
+            return performCreate(create, mailboxSession);
         } catch (MailboxSendingNotAllowedException e) {
             LOG.debug("{} is not allowed to send a mail using {} identity", e.getConnectedUser().asString(), e.getFromField());
 
-            responseBuilder.notCreated(create.getCreationId(),
+            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
                     SetError.builder()
                         .type(SetError.Type.INVALID_PROPERTIES)
                         .properties(MessageProperty.from)
@@ -145,7 +147,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                         .build());
 
         } catch (InvalidDraftKeywordsException e) {
-            responseBuilder.notCreated(create.getCreationId(),
+            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
                 SetError.builder()
                     .type(SetError.Type.INVALID_PROPERTIES)
                     .properties(MessageProperty.keywords)
@@ -153,7 +155,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                     .build());
 
         } catch (AttachmentsNotFoundException e) {
-            responseBuilder.notCreated(create.getCreationId(),
+            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
                     SetMessagesError.builder()
                         .type(SetError.Type.INVALID_PROPERTIES)
                         .properties(MessageProperty.attachments)
@@ -162,7 +164,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                         .build());
 
         } catch (InvalidMailboxForCreationException e) {
-            responseBuilder.notCreated(create.getCreationId(),
+            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
                     SetError.builder()
                         .type(SetError.Type.INVALID_PROPERTIES)
                         .properties(MessageProperty.mailboxIds)
@@ -170,7 +172,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                         .build());
 
         } catch (MessageHasNoMailboxException e) {
-            responseBuilder.notCreated(create.getCreationId(),
+            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
                     SetError.builder()
                         .type(SetError.Type.INVALID_PROPERTIES)
                         .properties(MessageProperty.mailboxIds)
@@ -178,11 +180,11 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                         .build());
 
         } catch (MailboxInvalidMessageCreationException e) {
-            responseBuilder.notCreated(create.getCreationId(),
+            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
                     buildSetErrorFromValidationResult(create.getValue().validate()));
 
         } catch (MailboxNotFoundException e) {
-            responseBuilder.notCreated(create.getCreationId(),
+            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
                     SetError.builder()
                         .type(SetError.Type.ERROR)
                         .description(e.getMessage())
@@ -190,7 +192,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
         } catch (MailboxNotOwnedException e) {
             LOG.error("Appending message in an unknown mailbox", e);
-            responseBuilder.notCreated(create.getCreationId(),
+            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
                 SetError.builder()
                     .type(SetError.Type.ERROR)
                     .properties(MessageProperty.mailboxIds)
@@ -198,7 +200,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                     .build());
 
         } catch (OverQuotaException e) {
-            responseBuilder.notCreated(create.getCreationId(),
+            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
                 SetError.builder()
                     .type(SetError.Type.MAX_QUOTA_REACHED)
                     .description(e.getMessage())
@@ -206,7 +208,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
         } catch (MailboxException | MessagingException | IOException e) {
             LOG.error("Unexpected error while creating message", e);
-            responseBuilder.notCreated(create.getCreationId(),
+            return SetMessagesResponse.builder().notCreated(create.getCreationId(),
                     SetError.builder()
                         .type(SetError.Type.ERROR)
                         .description("unexpected error")
@@ -222,14 +224,14 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
             .collect(Guavate.toImmutableList());
     }
 
-    private void performCreate(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session)
+    private Builder performCreate(CreationMessageEntry entry, MailboxSession session)
         throws MailboxException, MessagingException, AttachmentsNotFoundException, IOException {
 
         if (isAppendToMailboxWithRole(Role.OUTBOX, entry.getValue(), session)) {
-            sendMailViaOutbox(entry, responseBuilder, session);
+            return sendMailViaOutbox(entry, session);
         } else if (entry.getValue().isDraft()) {
             assertNoOutbox(entry, session);
-            saveDraft(entry, responseBuilder, session);
+            return saveDraft(entry, session);
         } else {
             if (isAppendToMailboxWithRole(Role.DRAFTS, entry.getValue(), session)) {
                 throw new InvalidDraftKeywordsException("A draft message should be flagged as Draft");
@@ -250,20 +252,20 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         }
     }
 
-    private void sendMailViaOutbox(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session)
+    private Builder sendMailViaOutbox(CreationMessageEntry entry, MailboxSession session)
         throws AttachmentsNotFoundException, MailboxException, MessagingException, IOException {
 
         validateArguments(entry, session);
         MessageWithId created = handleOutboxMessages(entry, session);
-        responseBuilder.created(created.getCreationId(), created.getValue());
+        return SetMessagesResponse.builder().created(created.getCreationId(), created.getValue());
     }
 
-    private void saveDraft(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session)
+    private Builder saveDraft(CreationMessageEntry entry, MailboxSession session)
         throws AttachmentsNotFoundException, MailboxException, MessagingException, IOException {
 
         attachmentChecker.assertAttachmentsExist(entry, session);
         MessageWithId created = handleDraftMessages(entry, session);
-        responseBuilder.created(created.getCreationId(), created.getValue());
+        return SetMessagesResponse.builder().created(created.getCreationId(), created.getValue());
     }
 
     private void validateArguments(CreationMessageEntry entry, MailboxSession session) throws MailboxInvalidMessageCreationException, AttachmentsNotFoundException, MailboxException {
