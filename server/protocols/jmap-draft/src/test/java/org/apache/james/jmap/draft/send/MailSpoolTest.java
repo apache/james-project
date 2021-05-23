@@ -63,7 +63,7 @@ public class MailSpoolTest {
             .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("header: value\r\n".getBytes(UTF_8)))
             .build();
 
-        mailSpool.send(mail, new MailMetadata(MESSAGE_ID, USERNAME));
+        mailSpool.send(mail, new MailMetadata(MESSAGE_ID, USERNAME)).block();
 
         MailQueueItem actual = Flux.from(myQueue.deQueue()).blockFirst();
         assertThat(actual.getMail().getName()).isEqualTo(NAME);
@@ -76,7 +76,7 @@ public class MailSpoolTest {
             .mimeMessage(MimeMessageUtil.mimeMessageFromBytes("header: value\r\n".getBytes(UTF_8)))
             .build();
 
-        mailSpool.send(mail, new MailMetadata(MESSAGE_ID, USERNAME));
+        mailSpool.send(mail, new MailMetadata(MESSAGE_ID, USERNAME)).block();
 
         MailQueueItem actual = Flux.from(myQueue.deQueue()).blockFirst();
         assertThat(actual.getMail().getAttribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE))

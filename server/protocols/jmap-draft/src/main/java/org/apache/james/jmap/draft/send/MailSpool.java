@@ -27,7 +27,6 @@ import javax.inject.Inject;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.queue.api.MailQueue;
-import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
@@ -36,6 +35,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+
+import reactor.core.publisher.Mono;
 
 public class MailSpool implements Startable, Disposable {
 
@@ -62,9 +63,9 @@ public class MailSpool implements Startable, Disposable {
         }
     }
 
-    public void send(Mail mail, MailMetadata metadata) throws MailQueueException {
+    public Mono<Void> send(Mail mail, MailMetadata metadata) {
         mail.setAttribute(new Attribute(MailMetadata.MAIL_METADATA_MESSAGE_ID_ATTRIBUTE, AttributeValue.of(metadata.getMessageId().serialize())));
         mail.setAttribute(new Attribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of(metadata.getUsername())));
-        queue.enQueue(mail);
+        return Mono.from(queue.enqueueReactive(mail));
     }
 }

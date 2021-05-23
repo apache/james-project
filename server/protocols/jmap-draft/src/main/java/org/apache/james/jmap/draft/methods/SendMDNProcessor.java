@@ -147,8 +147,8 @@ public class SendMDNProcessor implements SetMessagesProcessor {
         MetaDataWithContent metaDataWithContent = messageAppender.appendMessageInMailbox(mdnAnswer,
             getOutbox(mailboxSession), seen, mailboxSession);
 
-        messageSender.sendMessage(metaDataWithContent,
-            Envelope.fromMime4JMessage(mdnAnswer), mailboxSession);
+        messageSender.sendMessage(metaDataWithContent, Envelope.fromMime4JMessage(mdnAnswer), mailboxSession)
+            .block();
 
         return metaDataWithContent.getMessageId();
     }
