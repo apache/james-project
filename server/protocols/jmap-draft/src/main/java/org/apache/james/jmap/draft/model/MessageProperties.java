@@ -22,11 +22,13 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -190,10 +192,13 @@ public class MessageProperties {
         public ReadProfile getReadProfile() {
             return readProfile;
         }
+
+        private static final ImmutableMap<String, MessageProperty> LOOKUP_MAP = Arrays.stream(values())
+            .collect(Guavate.toImmutableMap(v -> v.property, Function.identity()));
     
         public static Stream<MessageProperty> find(String property) {
             Preconditions.checkNotNull(property);
-            return Arrays.stream(values()).filter(entry -> entry.property.equals(property));
+            return Optional.ofNullable(LOOKUP_MAP.get(property)).stream();
         }
 
         public static ImmutableSet<MessageProperty> allOutputProperties() {
