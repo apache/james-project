@@ -35,6 +35,9 @@ import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.predicates.ThrowingPredicate;
 import com.github.steveash.guavate.Guavate;
 
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
 public class AttachmentChecker {
     private final AttachmentManager attachmentManager;
 
@@ -43,12 +46,15 @@ public class AttachmentChecker {
         this.attachmentManager = attachmentManager;
     }
 
-    public void assertAttachmentsExist(ValueWithId.CreationMessageEntry entry, MailboxSession session) throws AttachmentsNotFoundException, MailboxException {
-        List<Attachment> attachments = entry.getValue().getAttachments();
-        List<BlobId> notFounds = listAttachmentsNotFound(attachments, session);
-        if (!notFounds.isEmpty()) {
-            throw new AttachmentsNotFoundException(notFounds);
-        }
+    public Mono<Void> assertAttachmentsExist(ValueWithId.CreationMessageEntry entry, MailboxSession session) {
+        return Mono.fromRunnable(Throwing.runnable(() -> {
+            List<Attachment> attachments = entry.getValue().getAttachments();
+            List<BlobId> notFounds = listAttachmentsNotFound(attachments, session);
+            if (!notFounds.isEmpty()) {
+                throw new AttachmentsNotFoundException(notFounds);
+            }
+        })).subscribeOn(Schedulers.elastic())
+            .then();
     }
 
     private List<BlobId> listAttachmentsNotFound(List<Attachment> attachments, MailboxSession session) throws MailboxException {

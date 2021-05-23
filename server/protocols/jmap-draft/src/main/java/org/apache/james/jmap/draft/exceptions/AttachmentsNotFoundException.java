@@ -25,7 +25,7 @@ import org.apache.james.jmap.draft.model.BlobId;
 
 import com.google.common.collect.ImmutableList;
 
-public class AttachmentsNotFoundException extends Exception {
+public class AttachmentsNotFoundException extends RuntimeException {
     
     private List<BlobId> attachmentIds;
 

@@ -19,6 +19,7 @@
 package org.apache.james.jmap.draft.send;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -63,6 +64,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class PostDequeueDecoratorTest {
     private static final String OUTBOX = DefaultMailboxes.OUTBOX;
@@ -271,19 +275,24 @@ public class PostDequeueDecoratorTest {
 
         ImmutableList<MessageResult> allMessages = ImmutableList.copyOf(messageManager.getMessages(MessageRange.all(), FetchGroup.MINIMAL, mailboxSession));
 
-        when(messageIdManager.getMessage(eq(messageId.getMessageId()), eq(FetchGroup.MINIMAL), any(MailboxSession.class))).thenReturn(allMessages);
+        when(messageIdManager.getMessagesReactive(any(), eq(FetchGroup.MINIMAL), any(MailboxSession.class)))
+            .thenReturn(Flux.fromIterable(allMessages));
+        when(messageIdManager.setInMailboxesReactive(eq(messageId.getMessageId()), eq(ImmutableList.of(sentMailboxId)), any(MailboxSession.class)))
+            .thenReturn(Mono.empty());
+        when(messageIdManager.setFlagsReactive(eq(new Flags(Flag.SEEN)), eq(MessageManager.FlagsUpdateMode.ADD), eq(messageId.getMessageId()), eq(ImmutableList.of(sentMailboxId)), any(MailboxSession.class)))
+            .thenReturn(Mono.empty());
 
         testee.done(true);
         testee.done(true);
 
-        verify(messageIdManager, times(1)).getMessage(eq(messageId.getMessageId()), eq(FetchGroup.MINIMAL), any(MailboxSession.class));
-        verify(messageIdManager, times(1)).setInMailboxes(eq(messageId.getMessageId()), eq(ImmutableList.of(sentMailboxId)), any(MailboxSession.class));
-        verify(messageIdManager, times(1)).setFlags(eq(new Flags(Flag.SEEN)), eq(MessageManager.FlagsUpdateMode.ADD), eq(messageId.getMessageId()), eq(ImmutableList.of(sentMailboxId)), any(MailboxSession.class));
+        verify(messageIdManager, times(1)).getMessagesReactive(any(), eq(FetchGroup.MINIMAL), any(MailboxSession.class));
+        verify(messageIdManager, times(1)).setInMailboxesReactive(eq(messageId.getMessageId()), eq(ImmutableList.of(sentMailboxId)), any(MailboxSession.class));
+        verify(messageIdManager, times(1)).setFlagsReactive(eq(new Flags(Flag.SEEN)), eq(MessageManager.FlagsUpdateMode.ADD), eq(messageId.getMessageId()), eq(ImmutableList.of(sentMailboxId)), any(MailboxSession.class));
 
         verifyNoMoreInteractions(messageIdManager);
     }
 
-    @Test(expected = MailQueue.MailQueueException.class)
+    @Test
     public void doneShouldThrowWhenMailboxException() throws Exception {
         MessageIdManager messageIdManager = mock(MessageIdManager.class);
         testee = new PostDequeueDecorator(mockedMailQueueItem, mailboxManager, new InMemoryMessageId.Factory(),
@@ -297,9 +306,11 @@ public class PostDequeueDecoratorTest {
         mail.setAttribute(messageIdAttribute(messageId.getMessageId().serialize()));
         mail.setAttribute(USERNAME_ATTRIBUTE);
 
-        when(messageIdManager.getMessage(eq(messageId.getMessageId()), eq(FetchGroup.MINIMAL), any(MailboxSession.class))).thenThrow(MailboxException.class);
+        when(messageIdManager.getMessagesReactive(any(), eq(FetchGroup.MINIMAL), any(MailboxSession.class)))
+            .thenReturn(Flux.error(new MailboxException()));
 
-        testee.done(true);
+        assertThatThrownBy(() -> testee.done(true))
+            .hasCauseInstanceOf(MailboxException.class);
     }
 
     private Attribute messageIdAttribute(String  value) {
