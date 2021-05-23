@@ -333,7 +333,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                         .asOptional()
                         .map(Username::fromMailAddress);
                     assertUserCanSendFrom(mailboxSession.getUser(), fromUser);
-                    messageSender.sendMessage(messageId, mail, mailboxSession);
+                    messageSender.sendMessage(messageId, mail, mailboxSession).block();
                     referenceUpdater.updateReferences(messageToSend.getHeaders(), mailboxSession);
                     return SetMessagesResponse.builder();
                 }).subscribeOn(Schedulers.elastic()))

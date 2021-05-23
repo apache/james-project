@@ -37,6 +37,8 @@ import org.apache.mailet.Mail;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import reactor.core.publisher.Mono;
+
 public class MessageSender {
     public static class MessageMimeMessageSource extends MimeMessageSource {
         private final String id;
@@ -70,15 +72,10 @@ public class MessageSender {
         this.mailSpool = mailSpool;
     }
 
-    public void sendMessage(MetaDataWithContent message,
-                            Envelope envelope,
-                            MailboxSession session) throws MessagingException {
-        Mail mail = buildMail(message, envelope);
-        try {
-            sendMessage(message.getMessageId(), mail, session);
-        } finally {
-            LifecycleUtil.dispose(mail);
-        }
+    public Mono<Void> sendMessage(MetaDataWithContent message, Envelope envelope, MailboxSession session) {
+        return Mono.usingWhen(Mono.fromCallable(() -> buildMail(message, envelope)),
+            mail -> sendMessage(message.getMessageId(), mail, session),
+            mail -> Mono.fromRunnable(() -> LifecycleUtil.dispose(mail)));
     }
 
     @VisibleForTesting
@@ -93,10 +90,8 @@ public class MessageSender {
         return mail;
     }
 
-    public void sendMessage(MessageId messageId,
-                            Mail mail,
-                            MailboxSession session) throws MessagingException {
+    public Mono<Void> sendMessage(MessageId messageId, Mail mail, MailboxSession session) {
         MailMetadata metadata = new MailMetadata(messageId, session.getUser().asString());
-        mailSpool.send(mail, metadata);
+        return mailSpool.send(mail, metadata);
     }
 }
