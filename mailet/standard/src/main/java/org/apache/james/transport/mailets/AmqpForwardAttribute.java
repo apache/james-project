@@ -21,16 +21,20 @@ package org.apache.james.transport.mailets;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
+import javax.annotation.PreDestroy;
+
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
+import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
@@ -44,6 +48,10 @@ import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
 
 /**
  * This mailet forwards the attributes values to a AMPQ.
@@ -70,26 +78,45 @@ public class AmqpForwardAttribute extends GenericMailet {
     public static final String ATTRIBUTE_PARAMETER_NAME = "attribute";
 
     public static final String ROUTING_KEY_DEFAULT_VALUE = "";
+    public static final int MAX_ATTEMPTS = 8;
+    public static final Duration MIN_BACKOFF = Duration.ofSeconds(1);
 
     private String exchange;
     private AttributeName attribute;
     private ConnectionFactory connectionFactory;
     @VisibleForTesting String routingKey;
+    private Channel channel;
+    private Connection connection;
 
     @Override
     public void init() throws MailetException {
-        String uri = getInitParameter(URI_PARAMETER_NAME);
+        MailetConfig mailetConfig = getMailetConfig();
+        String uri = preInit(mailetConfig);
+        // Retry as with IE docker compose RabbitMQ startup could be delayed
+        Pair<Connection, Channel> connectionAndChannel = Mono.fromCallable(() -> createConnection(uri))
+            .retryWhen(Retry.backoff(MAX_ATTEMPTS, MIN_BACKOFF)
+                .jitter(0.5)
+                .scheduler(Schedulers.elastic()))
+            .block();
+        connection = connectionAndChannel.getKey();
+        channel = connectionAndChannel.getValue();
+    }
+
+    @VisibleForTesting
+    String preInit(MailetConfig mailetConfig) throws MailetException {
+        String uri = mailetConfig.getInitParameter(URI_PARAMETER_NAME);
         if (Strings.isNullOrEmpty(uri)) {
             throw new MailetException("No value for " + URI_PARAMETER_NAME
                     + " parameter was provided.");
         }
-        exchange = getInitParameter(EXCHANGE_PARAMETER_NAME);
+        exchange = mailetConfig.getInitParameter(EXCHANGE_PARAMETER_NAME);
         if (Strings.isNullOrEmpty(exchange)) {
             throw new MailetException("No value for " + EXCHANGE_PARAMETER_NAME
                     + " parameter was provided.");
         }
-        routingKey = getInitParameter(ROUTING_KEY_PARAMETER_NAME, ROUTING_KEY_DEFAULT_VALUE);
-        String rawAttribute = getInitParameter(ATTRIBUTE_PARAMETER_NAME);
+        routingKey = Optional.ofNullable(mailetConfig.getInitParameter(ROUTING_KEY_PARAMETER_NAME))
+            .orElse(ROUTING_KEY_DEFAULT_VALUE);
+        String rawAttribute = mailetConfig.getInitParameter(ATTRIBUTE_PARAMETER_NAME);
         if (Strings.isNullOrEmpty(rawAttribute)) {
             throw new MailetException("No value for " + ATTRIBUTE_PARAMETER_NAME
                     + " parameter was provided.");
@@ -102,6 +129,25 @@ public class AmqpForwardAttribute extends GenericMailet {
             throw new MailetException("Invalid " + URI_PARAMETER_NAME
                     + " parameter was provided: " + uri, e);
         }
+        return uri;
+    }
+
+    private Pair<Connection, Channel> createConnection(String uri) throws MailetException {
+        try {
+            Connection connection = connectionFactory.newConnection();
+            channel = connection.createChannel();
+            channel.exchangeDeclarePassive(exchange);
+            return Pair.of(connection, channel);
+        } catch (Exception e) {
+            throw new MailetException("Invalid " + URI_PARAMETER_NAME
+                + " parameter was provided: " + uri, e);
+        }
+    }
+
+    @PreDestroy
+    public void cleanUp() throws Exception {
+        channel.close();
+        connection.close();
     }
 
     @VisibleForTesting void setConnectionFactory(ConnectionFactory connectionFactory) {
@@ -138,21 +184,11 @@ public class AmqpForwardAttribute extends GenericMailet {
 
     private void sendContent(Stream<byte[]> content) {
         try {
-            trySendContent(content);
+            sendContentOnChannel(channel, content);
         } catch (IOException e) {
             LOGGER.error("IOException while writing to AMQP: {}", e.getMessage(), e);
-        } catch (TimeoutException e) {
-            LOGGER.error("TimeoutException while writing to AMQP: {}", e.getMessage(), e);
         } catch (AlreadyClosedException e) {
             LOGGER.error("AlreadyClosedException while writing to AMQP: {}", e.getMessage(), e);
-        }
-    }
-
-    private void trySendContent(Stream<byte[]> content) throws IOException, TimeoutException {
-        try (Connection connection = connectionFactory.newConnection();
-             Channel channel = connection.createChannel()) {
-            channel.exchangeDeclarePassive(exchange);
-            sendContentOnChannel(channel, content);
         }
     }
 

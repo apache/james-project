@@ -44,6 +44,7 @@ import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
 import org.slf4j.Logger;
 
@@ -95,7 +96,7 @@ class AmqpForwardAttributeTest {
                 .mailetName("Test")
                 .mailetContext(mailetContext)
                 .build();
-        assertThatThrownBy(() -> mailet.init(customMailetConfig))
+        assertThatThrownBy(() -> mailet.preInit(customMailetConfig))
             .isInstanceOf(MailetException.class);
     }
 
@@ -106,7 +107,7 @@ class AmqpForwardAttributeTest {
                 .mailetContext(mailetContext)
                 .setProperty("uri", AMQP_URI)
                 .build();
-        assertThatThrownBy(() -> mailet.init(customMailetConfig))
+        assertThatThrownBy(() -> mailet.preInit(customMailetConfig))
             .isInstanceOf(MailetException.class);
     }
 
@@ -118,7 +119,7 @@ class AmqpForwardAttributeTest {
                 .setProperty("uri", AMQP_URI)
                 .setProperty("exchange", EXCHANGE_NAME)
                 .build();
-        assertThatThrownBy(() -> mailet.init(customMailetConfig))
+        assertThatThrownBy(() -> mailet.preInit(customMailetConfig))
             .isInstanceOf(MailetException.class);
     }
 
@@ -131,7 +132,7 @@ class AmqpForwardAttributeTest {
                 .setProperty("exchange", EXCHANGE_NAME)
                 .setProperty("attribute", MAIL_ATTRIBUTE.asString())
                 .build();
-        assertThatThrownBy(() -> mailet.init(customMailetConfig))
+        assertThatThrownBy(() -> mailet.preInit(customMailetConfig))
             .isInstanceOf(MailetException.class);
     }
 
@@ -149,136 +150,23 @@ class AmqpForwardAttributeTest {
                 .setProperty("exchange", EXCHANGE_NAME)
                 .setProperty("attribute", MAIL_ATTRIBUTE.asString())
                 .build();
-        mailet.init(customMailetConfig);
+        mailet.preInit(customMailetConfig);
 
         assertThat(mailet.routingKey).isEmpty();
     }
 
     @Test
     void initShouldNotThrowWithAllParameters() throws MessagingException {
-        mailet.init(mailetConfig);
-    }
-
-    @Test
-    public void serviceShouldNotUseConnectionWhenNoAttributeInMail() throws Exception {
-        mailet.init(mailetConfig);
-        Connection connection = mock(Connection.class);
-        ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
-        when(connectionFactory.newConnection()).thenReturn(connection);
-        mailet.setConnectionFactory(connectionFactory);
-        Mail mail = mock(Mail.class);
-        when(mail.getAttribute(MAIL_ATTRIBUTE)).thenReturn(Optional.empty());
-
-        mailet.service(mail);
-
-        verifyZeroInteractions(connection);
+        mailet.preInit(mailetConfig);
     }
 
     @Test
     public void serviceShouldThrowWhenAttributeContentIsNotAMapAListOrAString() throws MessagingException {
-        mailet.init(mailetConfig);
+        mailet.preInit(mailetConfig);
         Mail mail = mock(Mail.class);
         when(mail.getAttribute(MAIL_ATTRIBUTE)).thenReturn(Optional.of(new Attribute(MAIL_ATTRIBUTE, AttributeValue.of(2))));
 
         assertThatThrownBy(() -> mailet.service(mail))
             .isInstanceOf(MailetException.class);
-    }
-
-    @Test
-    public void serviceShouldNotFailWhenTimeoutException() throws Exception {
-        mailet.init(mailetConfig);
-        Mail mail = mock(Mail.class);
-        when(mail.getAttribute(MAIL_ATTRIBUTE)).thenReturn(ATTRIBUTE_CONTENT);
-        ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
-        when(connectionFactory.newConnection()).thenThrow(new TimeoutException());
-        mailet.setConnectionFactory(connectionFactory);
-
-        mailet.service(mail);
-    }
-
-    @Test
-    public void serviceShouldNotFailWhenIOException() throws Exception {
-        mailet.init(mailetConfig);
-        Mail mail = mock(Mail.class);
-        when(mail.getAttribute(MAIL_ATTRIBUTE)).thenReturn(ATTRIBUTE_CONTENT);
-        ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
-        when(connectionFactory.newConnection()).thenThrow(new IOException());
-        mailet.setConnectionFactory(connectionFactory);
-
-        mailet.service(mail);
-    }
-
-    @Test
-    public void serviceShouldNotFailWhenAlreadyClosedException() throws Exception {
-        mailet.init(mailetConfig);
-        Mail mail = mock(Mail.class);
-        when(mail.getAttribute(MAIL_ATTRIBUTE)).thenReturn(ATTRIBUTE_CONTENT);
-        ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
-        ShutdownSignalException shutdownSignalException = new ShutdownSignalException(false, false, new Close.Builder().build(), "reference");
-        when(connectionFactory.newConnection()).thenThrow(new AlreadyClosedException(shutdownSignalException));
-        mailet.setConnectionFactory(connectionFactory);
-
-        mailet.service(mail);
-    }
-
-    @Test
-    public void serviceShouldPublishAttributeContentWhenAttributeInMailAndIsAMap() throws Exception {
-        mailet.init(mailetConfig);
-        Channel channel = mock(Channel.class);
-        Connection connection = mock(Connection.class);
-        when(connection.createChannel()).thenReturn(channel);
-        ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
-        when(connectionFactory.newConnection()).thenReturn(connection);
-        mailet.setConnectionFactory(connectionFactory);
-        Mail mail = mock(Mail.class);
-        when(mail.getAttribute(MAIL_ATTRIBUTE)).thenReturn(ATTRIBUTE_CONTENT);
-        BasicProperties expectedProperties = new AMQP.BasicProperties();
-
-        mailet.service(mail);
-
-        ArgumentCaptor<BasicProperties> basicPropertiesCaptor = ArgumentCaptor.forClass(BasicProperties.class);
-        verify(channel).basicPublish(eq(EXCHANGE_NAME), eq(ROUTING_KEY), basicPropertiesCaptor.capture(), eq(ATTACHMENT_CONTENT));
-        assertThat(basicPropertiesCaptor.getValue()).isEqualToComparingFieldByField(expectedProperties);
-    }
-
-    @Test
-    public void serviceShouldPublishAttributeContentWhenAttributeInMailAndIsAList() throws Exception {
-        mailet.init(mailetConfig);
-        Channel channel = mock(Channel.class);
-        Connection connection = mock(Connection.class);
-        when(connection.createChannel()).thenReturn(channel);
-        ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
-        when(connectionFactory.newConnection()).thenReturn(connection);
-        mailet.setConnectionFactory(connectionFactory);
-        Mail mail = mock(Mail.class);
-        when(mail.getAttribute(MAIL_ATTRIBUTE)).thenReturn(Optional.of(new Attribute(MAIL_ATTRIBUTE, AttributeValue.of(ImmutableList.of(AttributeValue.ofSerializable(ATTACHMENT_CONTENT))))));
-        BasicProperties expectedProperties = new AMQP.BasicProperties();
-
-        mailet.service(mail);
-
-        ArgumentCaptor<BasicProperties> basicPropertiesCaptor = ArgumentCaptor.forClass(BasicProperties.class);
-        verify(channel).basicPublish(eq(EXCHANGE_NAME), eq(ROUTING_KEY), basicPropertiesCaptor.capture(), eq(ATTACHMENT_CONTENT));
-        assertThat(basicPropertiesCaptor.getValue()).isEqualToComparingFieldByField(expectedProperties);
-    }
-
-    @Test
-    public void serviceShouldPublishAttributeContentWhenAttributeInMailAndIsAString() throws Exception {
-        mailet.init(mailetConfig);
-        Channel channel = mock(Channel.class);
-        Connection connection = mock(Connection.class);
-        when(connection.createChannel()).thenReturn(channel);
-        ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
-        when(connectionFactory.newConnection()).thenReturn(connection);
-        mailet.setConnectionFactory(connectionFactory);
-        Mail mail = mock(Mail.class);
-        String content = "Attachment content";
-        when(mail.getAttribute(MAIL_ATTRIBUTE)).thenReturn(Optional.of(new Attribute(MAIL_ATTRIBUTE, AttributeValue.of(content))));
-        BasicProperties expectedProperties = new AMQP.BasicProperties();
-
-        mailet.service(mail);
-
-        ArgumentCaptor<BasicProperties> basicPropertiesCaptor = ArgumentCaptor.forClass(BasicProperties.class);
-        verify(channel).basicPublish(eq(EXCHANGE_NAME), eq(ROUTING_KEY), basicPropertiesCaptor.capture(), eq(content.getBytes(StandardCharsets.UTF_8)));
-        assertThat(basicPropertiesCaptor.getValue()).isEqualToComparingFieldByField(expectedProperties);
     }
 }
