@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.draft.methods;
 
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -34,7 +33,6 @@ import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Header;
 import org.apache.james.mailbox.model.Headers;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -48,6 +46,7 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.Iterables;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class ReferenceUpdater {
     public static final String X_FORWARDED_ID_HEADER = "X-Forwarded-Message-Id";
@@ -64,45 +63,49 @@ public class ReferenceUpdater {
         this.mailboxManager = mailboxManager;
     }
 
-    public void updateReferences(Headers headers, MailboxSession session) throws MailboxException {
+    public Mono<Void> updateReferences(Headers headers, MailboxSession session) throws MailboxException {
         Map<String, String> headersAsMap = Iterators.toStream(headers.headers())
             .collect(Guavate.toImmutableMap(Header::getName, Header::getValue));
-        updateReferences(headersAsMap, session);
+        return updateReferences(headersAsMap, session);
     }
 
-    public void updateReferences(Map<String, String> headers, MailboxSession session) throws MailboxException {
+    public Mono<Void> updateReferences(Map<String, String> headers, MailboxSession session) throws MailboxException {
         Optional<String> inReplyToId = Optional.ofNullable(headers.get(RFC2822Headers.IN_REPLY_TO));
         Optional<String> forwardedId = Optional.ofNullable(headers.get(X_FORWARDED_ID_HEADER));
-        inReplyToId.ifPresent(Throwing.consumer((String id) -> updateAnswered(id, session)).sneakyThrow());
-        forwardedId.ifPresent(Throwing.consumer((String id) -> updateForwarded(id, session)).sneakyThrow());
+
+        return inReplyToId.map(Throwing.function((String id) -> updateAnswered(id, session)).sneakyThrow()).orElse(Mono.empty())
+            .then(forwardedId.map((Throwing.function((String id) -> updateForwarded(id, session)).sneakyThrow())).orElse(Mono.empty()));
     }
 
-    private void updateAnswered(String messageId, MailboxSession session) throws MailboxException {
-        updateFlag(messageId, session, new Flags(Flags.Flag.ANSWERED));
+    private Mono<Void> updateAnswered(String messageId, MailboxSession session) throws MailboxException {
+        return updateFlag(messageId, session, new Flags(Flags.Flag.ANSWERED));
     }
 
-    private void updateForwarded(String messageId, MailboxSession session) throws MailboxException {
-        updateFlag(messageId, session, FORWARDED_FLAG);
+    private Mono<Void> updateForwarded(String messageId, MailboxSession session) throws MailboxException {
+        return updateFlag(messageId, session, FORWARDED_FLAG);
     }
 
-    private void updateFlag(String messageId, MailboxSession session, Flags flag) throws MailboxException {
+    private Mono<Void> updateFlag(String messageId, MailboxSession session, Flags flag) throws MailboxException {
         int limit = 2;
         MultimailboxesSearchQuery searchByRFC822MessageId = MultimailboxesSearchQuery
             .from(SearchQuery.of(SearchQuery.mimeMessageID(messageId)))
             .build();
-        List<MessageId> references = Flux.from(mailboxManager.search(searchByRFC822MessageId, session, limit))
-            .collectList().block();
-        try {
-            MessageId reference = Iterables.getOnlyElement(references);
-            List<MailboxId> mailboxIds = Flux.from(messageIdManager.messageMetadata(reference, session))
-                .map(metaData -> metaData.getComposedMessageId().getMailboxId())
-                .collect(Guavate.toImmutableList())
-                .block();
-            messageIdManager.setFlags(flag, FlagsUpdateMode.ADD, reference, mailboxIds, session);
-        } catch (NoSuchElementException e) {
-            logger.info("Unable to find a message with this Mime Message Id: " + messageId);
-        } catch (IllegalArgumentException e) {
-            logger.info("Too many messages are matching this Mime Message Id: " + messageId);
-        }
+        return Flux.from(mailboxManager.search(searchByRFC822MessageId, session, limit))
+            .collectList()
+            .flatMap(references -> {
+                MessageId reference = Iterables.getOnlyElement(references);
+                return Flux.from(messageIdManager.messageMetadata(reference, session))
+                    .map(metaData -> metaData.getComposedMessageId().getMailboxId())
+                    .collect(Guavate.toImmutableList())
+                    .flatMap(mailboxIds -> Mono.from(messageIdManager.setFlagsReactive(flag, FlagsUpdateMode.ADD, reference, mailboxIds, session)));
+            })
+            .onErrorResume(NoSuchElementException.class, e -> {
+                logger.info("Unable to find a message with this Mime Message Id: " + messageId);
+                return Mono.empty();
+            })
+            .onErrorResume(IllegalArgumentException.class, e -> {
+                logger.info("Too many messages are matching this Mime Message Id: " + messageId);
+                return Mono.empty();
+            });
     }
 }

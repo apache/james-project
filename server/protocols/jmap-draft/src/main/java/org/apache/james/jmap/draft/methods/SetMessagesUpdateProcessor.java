@@ -36,6 +36,7 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.exceptions.InvalidOutboxMoveException;
 import org.apache.james.jmap.draft.model.Keyword;
@@ -70,6 +71,7 @@ import org.apache.james.util.StreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -333,10 +335,12 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                         .asOptional()
                         .map(Username::fromMailAddress);
                     assertUserCanSendFrom(mailboxSession.getUser(), fromUser);
-                    messageSender.sendMessage(messageId, mail, mailboxSession).block();
-                    referenceUpdater.updateReferences(messageToSend.getHeaders(), mailboxSession);
-                    return SetMessagesResponse.builder();
+                    return Pair.of(messageToSend, mail);
                 }).subscribeOn(Schedulers.elastic()))
+                .flatMap(Throwing.<Pair<MessageResult, MailImpl>, Mono<SetMessagesResponse.Builder>>function(
+                    pair -> messageSender.sendMessage(messageId, pair.getRight(), mailboxSession)
+                        .then(referenceUpdater.updateReferences(pair.getKey().getHeaders(), mailboxSession))
+                        .thenReturn(SetMessagesResponse.builder())).sneakyThrow())
                 .switchIfEmpty(Mono.just(addMessageIdNotFoundToResponse(messageId)));
         }
         return Mono.just(SetMessagesResponse.builder());

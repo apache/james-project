@@ -293,8 +293,9 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         MetaDataWithContent newMessage = messageAppender.appendMessageInMailboxes(entry, toMailboxIds(entry), session);
         MessageFullView jmapMessage = messageFullViewFactory.fromMetaDataWithContent(newMessage).block();
         Envelope envelope = EnvelopeUtils.fromMessage(jmapMessage);
-        messageSender.sendMessage(newMessage, envelope, session).block();
-        referenceUpdater.updateReferences(entry.getValue().getHeaders(), session);
+        messageSender.sendMessage(newMessage, envelope, session)
+            .then(referenceUpdater.updateReferences(entry.getValue().getHeaders(), session))
+            .block();
         return new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage);
     }
 
