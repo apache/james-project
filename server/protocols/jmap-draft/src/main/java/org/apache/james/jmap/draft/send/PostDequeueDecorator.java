@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.jmap.draft.send;
 
-import java.util.List;
 import java.util.Optional;
 
 import javax.mail.Flags;
@@ -32,13 +31,10 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.SystemMailboxesProvider;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.exception.MailboxRoleNotFoundException;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageId.Factory;
-import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory.MailQueueItemDecorator;
@@ -49,6 +45,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class PostDequeueDecorator extends MailQueueItemDecorator {
     private static final Logger LOG = LoggerFactory.getLogger(PostDequeueDecorator.class);
@@ -90,8 +89,6 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
                     getMail().setAttribute(IS_DELIVERED);
                 } catch (MailShouldBeInOutboxException e) {
                     LOG.info("Message does not exist on Outbox anymore, it could have already been sent", e);
-                } catch (MailboxException e) {
-                    throw new MailQueueException(e.getMessage(), e);
                 }
             }
         }
@@ -134,32 +131,36 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
         return retrieveUsername().isPresent();
     }
 
-    private void moveFromOutboxToSentWithSeenFlag(MessageId messageId, MailboxSession mailboxSession) throws MailQueueException, MailboxException {
-        assertMessageBelongsToOutbox(messageId, mailboxSession);
-        MailboxId sentMailboxId = getSentMailboxId(mailboxSession);
-        messageIdManager.setInMailboxes(messageId, ImmutableList.of(sentMailboxId), mailboxSession);
-        messageIdManager.setFlags(new Flags(Flag.SEEN), MessageManager.FlagsUpdateMode.ADD, messageId, ImmutableList.of(sentMailboxId), mailboxSession);
+    private void moveFromOutboxToSentWithSeenFlag(MessageId messageId, MailboxSession mailboxSession) {
+        assertMessageBelongsToOutbox(messageId, mailboxSession)
+            .then(getSentMailboxId(mailboxSession)
+                .flatMap(sentMailboxId ->
+                        Mono.from(messageIdManager.setInMailboxesReactive(messageId,
+                            ImmutableList.of(sentMailboxId), mailboxSession))
+                        .then(Mono.from(messageIdManager.setFlagsReactive(new Flags(Flag.SEEN),
+                            MessageManager.FlagsUpdateMode.ADD,
+                            messageId, ImmutableList.of(sentMailboxId), mailboxSession)))))
+            .block();
     }
 
-    private void assertMessageBelongsToOutbox(MessageId messageId, MailboxSession mailboxSession) throws MailboxException, MailShouldBeInOutboxException {
-        MailboxId outboxMailboxId = getOutboxMailboxId(mailboxSession);
-        List<MessageResult> messages = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, mailboxSession);
-        for (MessageResult message: messages) {
-            if (message.getMailboxId().equals(outboxMailboxId)) {
-                return;
-            }
-        }
-        throw new MailShouldBeInOutboxException(messageId);
+    private Mono<Void> assertMessageBelongsToOutbox(MessageId messageId, MailboxSession mailboxSession) {
+        return getOutboxMailboxId(mailboxSession)
+            .flatMap(outboxMailboxId -> Flux.from(messageIdManager.getMessagesReactive(ImmutableList.of(messageId), FetchGroup.MINIMAL, mailboxSession))
+                .filter(message -> message.getMailboxId().equals(outboxMailboxId))
+                .next()
+                .switchIfEmpty(Mono.error(() -> new MailShouldBeInOutboxException(messageId))))
+            .then();
     }
 
-    private MailboxId getSentMailboxId(MailboxSession session) throws MailboxRoleNotFoundException, MailboxException {
-        return systemMailboxesProvider.findMailbox(Role.SENT, session.getUser())
-            .getId();
+    private Mono<MailboxId> getSentMailboxId(MailboxSession session) {
+        return Flux.from(systemMailboxesProvider.getMailboxByRole(Role.SENT, session.getUser()))
+            .next()
+            .map(MessageManager::getId);
     }
     
-    private MailboxId getOutboxMailboxId(MailboxSession session) throws MailboxRoleNotFoundException, MailboxException {
-        return systemMailboxesProvider.findMailbox(Role.OUTBOX, session.getUser())
-            .getId();
+    private Mono<MailboxId> getOutboxMailboxId(MailboxSession session) {
+        return Flux.from(systemMailboxesProvider.getMailboxByRole(Role.OUTBOX, session.getUser()))
+            .next()
+            .map(MessageManager::getId);
     }
-    
 }
