@@ -326,13 +326,8 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
 
     private Mono<SetMessagesResponse.Builder> sendMessageWhenOutboxInTargetMailboxIds(Set<MailboxId> outboxes, MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession) {
         if (isTargetingOutbox(outboxes, listTargetMailboxIds(updateMessagePatch))) {
-            return Mono.fromCallable(() -> {
-                Optional<MessageResult> maybeMessageToSend =
-                    messageIdManager.getMessage(messageId, FetchGroup.FULL_CONTENT, mailboxSession)
-                        .stream()
-                        .findFirst();
-                if (maybeMessageToSend.isPresent()) {
-                    MessageResult messageToSend = maybeMessageToSend.get();
+            return Mono.from(messageIdManager.getMessagesReactive(ImmutableList.of(messageId), FetchGroup.FULL_CONTENT, mailboxSession))
+                .flatMap(messageToSend -> Mono.fromCallable(() -> {
                     MailImpl mail = buildMailFromMessage(messageToSend);
                     Optional<Username> fromUser = mail.getMaybeSender()
                         .asOptional()
@@ -341,10 +336,8 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                     messageSender.sendMessage(messageId, mail, mailboxSession);
                     referenceUpdater.updateReferences(messageToSend.getHeaders(), mailboxSession);
                     return SetMessagesResponse.builder();
-                } else {
-                    return addMessageIdNotFoundToResponse(messageId);
-                }
-            }).subscribeOn(Schedulers.elastic());
+                }).subscribeOn(Schedulers.elastic()))
+                .switchIfEmpty(Mono.just(addMessageIdNotFoundToResponse(messageId)));
         }
         return Mono.just(SetMessagesResponse.builder());
     }
