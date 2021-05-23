@@ -47,8 +47,12 @@ public class AttachmentChecker {
     }
 
     public Mono<Void> assertAttachmentsExist(ValueWithId.CreationMessageEntry entry, MailboxSession session) {
+        List<Attachment> attachments = entry.getValue().getAttachments();
+
+        if (attachments.isEmpty()) {
+            return Mono.empty();
+        }
         return Mono.fromRunnable(Throwing.runnable(() -> {
-            List<Attachment> attachments = entry.getValue().getAttachments();
             List<BlobId> notFounds = listAttachmentsNotFound(attachments, session);
             if (!notFounds.isEmpty()) {
                 throw new AttachmentsNotFoundException(notFounds);
