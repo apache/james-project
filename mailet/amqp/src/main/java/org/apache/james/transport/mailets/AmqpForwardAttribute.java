@@ -82,10 +82,10 @@ public class AmqpForwardAttribute extends GenericMailet {
     private static final int HANDSHAKE_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND = 100;
     private static final int SHUTDOWN_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND = 100;
     private static final int NETWORK_RECOVERY_INTERVAL_OF_ONE_HUNDRED_MILLISECOND = 100;
-    String DEFAULT_USER = "guest";
-    String DEFAULT_PASSWORD_STRING = "guest";
-    char[] DEFAULT_PASSWORD = DEFAULT_PASSWORD_STRING.toCharArray();
-    RabbitMQConfiguration.ManagementCredentials DEFAULT_MANAGEMENT_CREDENTIAL = new RabbitMQConfiguration.ManagementCredentials(DEFAULT_USER, DEFAULT_PASSWORD);
+    private static final String DEFAULT_USER = "guest";
+    private static final String DEFAULT_PASSWORD_STRING = "guest";
+    private static final char[] DEFAULT_PASSWORD = DEFAULT_PASSWORD_STRING.toCharArray();
+    private static final RabbitMQConfiguration.ManagementCredentials DEFAULT_MANAGEMENT_CREDENTIAL = new RabbitMQConfiguration.ManagementCredentials(DEFAULT_USER, DEFAULT_PASSWORD);
 
 
     public static final String URI_PARAMETER_NAME = "uri";
