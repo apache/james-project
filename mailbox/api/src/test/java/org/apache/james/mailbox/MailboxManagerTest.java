@@ -2855,6 +2855,13 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                     .collectList().block())
                 .isEmpty();
         }
+
+        @Test
+        void shouldBeAbleToAccessThreadIdOfAMessageAndThatThreadIdShouldWrapsMessageId() throws Exception {
+            ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder().build(message), session).getId();
+            MessageResult messageResult = inboxManager.getMessages(MessageRange.one(composeId1.getUid()), FetchGroup.MINIMAL, session).next();
+            assertThat(messageResult.getThreadId().getBaseMessageId()).isInstanceOf(MessageId.class);
+        }
     }
 
     @Nested
