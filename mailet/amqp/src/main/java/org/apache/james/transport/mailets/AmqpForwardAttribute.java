@@ -19,18 +19,26 @@
 
 package org.apache.james.transport.mailets;
 
-import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
+import javax.annotation.PreDestroy;
+
+import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
+import org.apache.james.backends.rabbitmq.RabbitMQConnectionFactory;
+import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
+import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
+import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
@@ -39,11 +47,14 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import com.rabbitmq.client.AMQP;
+import com.google.common.collect.ImmutableSet;
 import com.rabbitmq.client.AlreadyClosedException;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+
+import reactor.core.publisher.Flux;
+import reactor.rabbitmq.ExchangeSpecification;
+import reactor.rabbitmq.OutboundMessage;
+import reactor.rabbitmq.Sender;
 
 /**
  * This mailet forwards the attributes values to a AMPQ.
@@ -63,6 +74,19 @@ import com.rabbitmq.client.ConnectionFactory;
  */
 public class AmqpForwardAttribute extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(AmqpForwardAttribute.class);
+    private static final ImmutableSet<SimpleConnectionPool.ReconnectionHandler> RECONNECTION_HANDLERS = ImmutableSet.of();
+    private static final int MAX_THREE_RETRIES = 3;
+    private static final int MIN_DELAY_OF_TEN_MILLISECONDS = 10;
+    private static final int CONNECTION_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND = 100;
+    private static final int CHANNEL_RPC_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND = 100;
+    private static final int HANDSHAKE_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND = 100;
+    private static final int SHUTDOWN_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND = 100;
+    private static final int NETWORK_RECOVERY_INTERVAL_OF_ONE_HUNDRED_MILLISECOND = 100;
+    private static final String DEFAULT_USER = "guest";
+    private static final String DEFAULT_PASSWORD_STRING = "guest";
+    private static final char[] DEFAULT_PASSWORD = DEFAULT_PASSWORD_STRING.toCharArray();
+    private static final RabbitMQConfiguration.ManagementCredentials DEFAULT_MANAGEMENT_CREDENTIAL = new RabbitMQConfiguration.ManagementCredentials(DEFAULT_USER, DEFAULT_PASSWORD);
+
 
     public static final String URI_PARAMETER_NAME = "uri";
     public static final String EXCHANGE_PARAMETER_NAME = "exchange";
@@ -70,26 +94,64 @@ public class AmqpForwardAttribute extends GenericMailet {
     public static final String ATTRIBUTE_PARAMETER_NAME = "attribute";
 
     public static final String ROUTING_KEY_DEFAULT_VALUE = "";
+    public static final int MAX_ATTEMPTS = 8;
+    public static final Duration MIN_BACKOFF = Duration.ofSeconds(1);
 
     private String exchange;
     private AttributeName attribute;
     private ConnectionFactory connectionFactory;
     @VisibleForTesting String routingKey;
+    private SimpleConnectionPool connectionPool;
+    private ReactorRabbitMQChannelPool reactorRabbitMQChannelPool;
+    private Sender sender;
 
     @Override
     public void init() throws MailetException {
-        String uri = getInitParameter(URI_PARAMETER_NAME);
+        MailetConfig mailetConfig = getMailetConfig();
+        String uri = preInit(mailetConfig);
+
+        try {
+            RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+                .amqpUri(new URI(uri))
+                .managementUri(new URI(uri))
+                .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+                .maxRetries(MAX_THREE_RETRIES)
+                .minDelayInMs(MIN_DELAY_OF_TEN_MILLISECONDS)
+                .connectionTimeoutInMs(CONNECTION_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND)
+                .channelRpcTimeoutInMs(CHANNEL_RPC_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND)
+                .handshakeTimeoutInMs(HANDSHAKE_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND)
+                .shutdownTimeoutInMs(SHUTDOWN_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND)
+                .networkRecoveryIntervalInMs(NETWORK_RECOVERY_INTERVAL_OF_ONE_HUNDRED_MILLISECOND)
+                .build();
+            connectionPool = new SimpleConnectionPool(new RabbitMQConnectionFactory(rabbitMQConfiguration),
+                RECONNECTION_HANDLERS, SimpleConnectionPool.Configuration.builder()
+                .retries(2)
+                .initialDelay(Duration.ofMillis(5)));
+            reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(connectionPool.getResilientConnection(),
+                ReactorRabbitMQChannelPool.Configuration.DEFAULT);
+            reactorRabbitMQChannelPool.start();
+            sender = reactorRabbitMQChannelPool.getSender();
+            sender.declareExchange(ExchangeSpecification.exchange(exchange));
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+}
+
+    @VisibleForTesting
+    String preInit(MailetConfig mailetConfig) throws MailetException {
+        String uri = mailetConfig.getInitParameter(URI_PARAMETER_NAME);
         if (Strings.isNullOrEmpty(uri)) {
             throw new MailetException("No value for " + URI_PARAMETER_NAME
                     + " parameter was provided.");
         }
-        exchange = getInitParameter(EXCHANGE_PARAMETER_NAME);
+        exchange = mailetConfig.getInitParameter(EXCHANGE_PARAMETER_NAME);
         if (Strings.isNullOrEmpty(exchange)) {
             throw new MailetException("No value for " + EXCHANGE_PARAMETER_NAME
                     + " parameter was provided.");
         }
-        routingKey = getInitParameter(ROUTING_KEY_PARAMETER_NAME, ROUTING_KEY_DEFAULT_VALUE);
-        String rawAttribute = getInitParameter(ATTRIBUTE_PARAMETER_NAME);
+        routingKey = Optional.ofNullable(mailetConfig.getInitParameter(ROUTING_KEY_PARAMETER_NAME))
+            .orElse(ROUTING_KEY_DEFAULT_VALUE);
+        String rawAttribute = mailetConfig.getInitParameter(ATTRIBUTE_PARAMETER_NAME);
         if (Strings.isNullOrEmpty(rawAttribute)) {
             throw new MailetException("No value for " + ATTRIBUTE_PARAMETER_NAME
                     + " parameter was provided.");
@@ -102,6 +164,14 @@ public class AmqpForwardAttribute extends GenericMailet {
             throw new MailetException("Invalid " + URI_PARAMETER_NAME
                     + " parameter was provided: " + uri, e);
         }
+        return uri;
+    }
+
+    @PreDestroy
+    public void cleanUp() throws Exception {
+        sender.close();
+        reactorRabbitMQChannelPool.close();
+        connectionPool.close();
     }
 
     @VisibleForTesting void setConnectionFactory(ConnectionFactory connectionFactory) {
@@ -138,31 +208,14 @@ public class AmqpForwardAttribute extends GenericMailet {
 
     private void sendContent(Stream<byte[]> content) {
         try {
-            trySendContent(content);
-        } catch (IOException e) {
-            LOGGER.error("IOException while writing to AMQP: {}", e.getMessage(), e);
-        } catch (TimeoutException e) {
-            LOGGER.error("TimeoutException while writing to AMQP: {}", e.getMessage(), e);
+            sender.send(Flux.fromStream(content)
+                .map(bytes -> new OutboundMessage(exchange, routingKey, bytes)))
+                .block();
         } catch (AlreadyClosedException e) {
             LOGGER.error("AlreadyClosedException while writing to AMQP: {}", e.getMessage(), e);
+        } catch (Exception e) {
+            LOGGER.error("IOException while writing to AMQP: {}", e.getMessage(), e);
         }
-    }
-
-    private void trySendContent(Stream<byte[]> content) throws IOException, TimeoutException {
-        try (Connection connection = connectionFactory.newConnection();
-             Channel channel = connection.createChannel()) {
-            channel.exchangeDeclarePassive(exchange);
-            sendContentOnChannel(channel, content);
-        }
-    }
-
-    private void sendContentOnChannel(Channel channel, Stream<byte[]> content) throws IOException {
-        content.forEach(
-            Throwing.consumer(message ->
-                channel.basicPublish(exchange,
-                        routingKey,
-                        new AMQP.BasicProperties(),
-                        message)));
     }
 
     @Override

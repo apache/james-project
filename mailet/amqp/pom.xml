@@ -17,7 +17,9 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -27,16 +29,19 @@
         <relativePath>../</relativePath>
     </parent>
 
-    <artifactId>apache-mailet-standard</artifactId>
+    <artifactId>apache-mailet-amqp</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Standard Mailets</name>
-    <description>Apache James Standard Mailets is a rich collection of general purpose mailets
-        with limited dependencies. These mailets can be used in any mailet container.</description>
-    <url>http://james.apache.org/mailet/standard/</url>
-    <inceptionYear>2008</inceptionYear>
+    <name>Apache James :: AMQP Mailet</name>
+    <description>Provides a mailet forwarding mail attributes over AMQP</description>
+    <inceptionYear>2021</inceptionYear>
+
 
     <dependencies>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>apache-james-backends-rabbitmq</artifactId>
+        </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-mailet-base</artifactId>
@@ -65,12 +70,12 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jdk8</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.rabbitmq</groupId>
+            <artifactId>amqp-client</artifactId>
         </dependency>
         <dependency>
             <groupId>com.sun.mail</groupId>
@@ -123,14 +128,7 @@
                 <groupId>${james.groupId}</groupId>
                 <artifactId>mailetdocs-maven-plugin</artifactId>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <reuseForks>true</reuseForks>
-                    <forkCount>1C</forkCount>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
+
 </project>

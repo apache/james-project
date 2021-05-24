@@ -315,7 +315,7 @@ public class RabbitMQConfiguration {
         private final String user;
         private final char[] password;
 
-        ManagementCredentials(String user, char[] password) {
+        public ManagementCredentials(String user, char[] password) {
             Preconditions.checkNotNull(user);
             Preconditions.checkNotNull(password);
             this.user = user;
