@@ -46,8 +46,8 @@
 
     <modules>
         <module>ai</module>
-        <module>api</module>
         <module>amqp</module>
+        <module>api</module>
         <module>base</module>
         <module>crypto</module>
         <module>icalendar</module>
