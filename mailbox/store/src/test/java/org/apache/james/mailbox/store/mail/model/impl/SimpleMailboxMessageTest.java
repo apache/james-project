@@ -334,4 +334,9 @@ class SimpleMailboxMessageTest {
             .isInstanceOf(NullPointerException.class);
     }
 
+    @Test
+    void simpleMessageShouldReturnThreadIdWhichWrapsMessageId() {
+        assertThat(message.getThreadId().getBaseMessageId()).isEqualTo(message.getMessageId());
+    }
+
 }
