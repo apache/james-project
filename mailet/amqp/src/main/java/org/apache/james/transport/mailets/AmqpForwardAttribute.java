@@ -19,7 +19,8 @@
 
 package org.apache.james.transport.mailets;
 
-import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
@@ -29,7 +30,10 @@ import java.util.stream.Stream;
 
 import javax.annotation.PreDestroy;
 
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
+import org.apache.james.backends.rabbitmq.RabbitMQConnectionFactory;
+import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
+import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
@@ -43,15 +47,14 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import com.rabbitmq.client.AMQP;
+import com.google.common.collect.ImmutableSet;
 import com.rabbitmq.client.AlreadyClosedException;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
-import reactor.util.retry.Retry;
+import reactor.core.publisher.Flux;
+import reactor.rabbitmq.ExchangeSpecification;
+import reactor.rabbitmq.OutboundMessage;
+import reactor.rabbitmq.Sender;
 
 /**
  * This mailet forwards the attributes values to a AMPQ.
@@ -71,6 +74,19 @@ import reactor.util.retry.Retry;
  */
 public class AmqpForwardAttribute extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(AmqpForwardAttribute.class);
+    private static final ImmutableSet<SimpleConnectionPool.ReconnectionHandler> RECONNECTION_HANDLERS = ImmutableSet.of();
+    private static final int MAX_THREE_RETRIES = 3;
+    private static final int MIN_DELAY_OF_TEN_MILLISECONDS = 10;
+    private static final int CONNECTION_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND = 100;
+    private static final int CHANNEL_RPC_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND = 100;
+    private static final int HANDSHAKE_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND = 100;
+    private static final int SHUTDOWN_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND = 100;
+    private static final int NETWORK_RECOVERY_INTERVAL_OF_ONE_HUNDRED_MILLISECOND = 100;
+    String DEFAULT_USER = "guest";
+    String DEFAULT_PASSWORD_STRING = "guest";
+    char[] DEFAULT_PASSWORD = DEFAULT_PASSWORD_STRING.toCharArray();
+    RabbitMQConfiguration.ManagementCredentials DEFAULT_MANAGEMENT_CREDENTIAL = new RabbitMQConfiguration.ManagementCredentials(DEFAULT_USER, DEFAULT_PASSWORD);
+
 
     public static final String URI_PARAMETER_NAME = "uri";
     public static final String EXCHANGE_PARAMETER_NAME = "exchange";
@@ -85,22 +101,41 @@ public class AmqpForwardAttribute extends GenericMailet {
     private AttributeName attribute;
     private ConnectionFactory connectionFactory;
     @VisibleForTesting String routingKey;
-    private Channel channel;
-    private Connection connection;
+    private SimpleConnectionPool connectionPool;
+    private ReactorRabbitMQChannelPool reactorRabbitMQChannelPool;
+    private Sender sender;
 
     @Override
     public void init() throws MailetException {
         MailetConfig mailetConfig = getMailetConfig();
         String uri = preInit(mailetConfig);
-        // Retry as with IE docker compose RabbitMQ startup could be delayed
-        Pair<Connection, Channel> connectionAndChannel = Mono.fromCallable(() -> createConnection(uri))
-            .retryWhen(Retry.backoff(MAX_ATTEMPTS, MIN_BACKOFF)
-                .jitter(0.5)
-                .scheduler(Schedulers.elastic()))
-            .block();
-        connection = connectionAndChannel.getKey();
-        channel = connectionAndChannel.getValue();
-    }
+
+        try {
+            RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+                .amqpUri(new URI(uri))
+                .managementUri(new URI(uri))
+                .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+                .maxRetries(MAX_THREE_RETRIES)
+                .minDelayInMs(MIN_DELAY_OF_TEN_MILLISECONDS)
+                .connectionTimeoutInMs(CONNECTION_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND)
+                .channelRpcTimeoutInMs(CHANNEL_RPC_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND)
+                .handshakeTimeoutInMs(HANDSHAKE_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND)
+                .shutdownTimeoutInMs(SHUTDOWN_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND)
+                .networkRecoveryIntervalInMs(NETWORK_RECOVERY_INTERVAL_OF_ONE_HUNDRED_MILLISECOND)
+                .build();
+            connectionPool = new SimpleConnectionPool(new RabbitMQConnectionFactory(rabbitMQConfiguration),
+                RECONNECTION_HANDLERS, SimpleConnectionPool.Configuration.builder()
+                .retries(2)
+                .initialDelay(Duration.ofMillis(5)));
+            reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(connectionPool.getResilientConnection(),
+                ReactorRabbitMQChannelPool.Configuration.DEFAULT);
+            reactorRabbitMQChannelPool.start();
+            sender = reactorRabbitMQChannelPool.getSender();
+            sender.declareExchange(ExchangeSpecification.exchange(exchange));
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+}
 
     @VisibleForTesting
     String preInit(MailetConfig mailetConfig) throws MailetException {
@@ -132,22 +167,11 @@ public class AmqpForwardAttribute extends GenericMailet {
         return uri;
     }
 
-    private Pair<Connection, Channel> createConnection(String uri) throws MailetException {
-        try {
-            Connection connection = connectionFactory.newConnection();
-            channel = connection.createChannel();
-            channel.exchangeDeclarePassive(exchange);
-            return Pair.of(connection, channel);
-        } catch (Exception e) {
-            throw new MailetException("Invalid " + URI_PARAMETER_NAME
-                + " parameter was provided: " + uri, e);
-        }
-    }
-
     @PreDestroy
     public void cleanUp() throws Exception {
-        channel.close();
-        connection.close();
+        sender.close();
+        reactorRabbitMQChannelPool.close();
+        connectionPool.close();
     }
 
     @VisibleForTesting void setConnectionFactory(ConnectionFactory connectionFactory) {
@@ -184,21 +208,14 @@ public class AmqpForwardAttribute extends GenericMailet {
 
     private void sendContent(Stream<byte[]> content) {
         try {
-            sendContentOnChannel(channel, content);
-        } catch (IOException e) {
-            LOGGER.error("IOException while writing to AMQP: {}", e.getMessage(), e);
+            sender.send(Flux.fromStream(content)
+                .map(bytes -> new OutboundMessage(exchange, routingKey, bytes)))
+                .block();
         } catch (AlreadyClosedException e) {
             LOGGER.error("AlreadyClosedException while writing to AMQP: {}", e.getMessage(), e);
+        } catch (Exception e) {
+            LOGGER.error("IOException while writing to AMQP: {}", e.getMessage(), e);
         }
-    }
-
-    private void sendContentOnChannel(Channel channel, Stream<byte[]> content) throws IOException {
-        content.forEach(
-            Throwing.consumer(message ->
-                channel.basicPublish(exchange,
-                        routingKey,
-                        new AMQP.BasicProperties(),
-                        message)));
     }
 
     @Override
