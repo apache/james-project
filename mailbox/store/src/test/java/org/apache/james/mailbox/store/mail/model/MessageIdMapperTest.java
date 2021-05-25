@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
+import static org.apache.james.mailbox.store.mail.model.ListMessageAssert.assertMessages;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -110,21 +111,21 @@ public abstract class MessageIdMapperTest {
     void findShouldReturnOneMessageWhenIdListContainsOne() throws MailboxException {
         saveMessages();
         List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), FetchType.Full);
-        assertThat(messages).containsOnly(message1);
+        assertMessages(messages).containOnly(message1);
     }
 
     @Test
     void findShouldReturnMultipleMessagesWhenIdContainsMultiple() throws MailboxException {
         saveMessages();
         List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId(), message2.getMessageId(), message3.getMessageId()), FetchType.Full);
-        assertThat(messages).containsOnly(message1, message2, message3);
+        assertMessages(messages).containOnly(message1, message2, message3);
     }
 
     @Test
     void findShouldReturnMultipleMessagesWhenIdContainsMultipleInDifferentMailboxes() throws MailboxException {
         saveMessages();
         List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId(), message4.getMessageId(), message3.getMessageId()), FetchType.Full);
-        assertThat(messages).containsOnly(message1, message4, message3);
+        assertMessages(messages).containOnly(message1, message4, message3);
     }
 
     @Test
@@ -158,7 +159,7 @@ public abstract class MessageIdMapperTest {
         message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
         sut.save(message1);
         List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), FetchType.Full);
-        assertThat(messages).containsOnly(message1);
+        assertMessages(messages).containOnly(message1);
     }
 
     @Test
@@ -207,7 +208,8 @@ public abstract class MessageIdMapperTest {
         message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
         sut.save(message1);
 
-        SimpleMailboxMessage message1InOtherMailbox = SimpleMailboxMessage.copy(benwaWorkMailbox.getMailboxId(), message1);
+        MailboxMessage message1InOtherMailbox = sut.find(ImmutableList.of(message1.getMessageId()), FetchType.Metadata).get(0)
+            .copy(benwaWorkMailbox);
         message1InOtherMailbox.setUid(mapperProvider.generateMessageUid());
         message1InOtherMailbox.setModSeq(mapperProvider.generateModSeq(benwaWorkMailbox));
         sut.copyInMailbox(message1InOtherMailbox, benwaWorkMailbox);
@@ -221,7 +223,8 @@ public abstract class MessageIdMapperTest {
         message1.setUid(mapperProvider.generateMessageUid());
         message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
         sut.save(message1);
-        SimpleMailboxMessage copiedMessage = SimpleMailboxMessage.copy(benwaWorkMailbox.getMailboxId(), message1);
+        MailboxMessage copiedMessage = sut.find(ImmutableList.of(message1.getMessageId()), FetchType.Metadata).get(0)
+            .copy(benwaWorkMailbox);
         copiedMessage.setUid(mapperProvider.generateMessageUid());
         copiedMessage.setModSeq(mapperProvider.generateModSeq(benwaWorkMailbox));
 
@@ -887,7 +890,7 @@ public abstract class MessageIdMapperTest {
     void deletesShouldOnlyRemoveConcernedMessages() throws Exception {
         saveMessages();
 
-        SimpleMailboxMessage copiedMessage = SimpleMailboxMessage.copy(benwaWorkMailbox.getMailboxId(), message1);
+        MailboxMessage copiedMessage = sut.find(ImmutableList.of(message1.getMessageId()), FetchType.Metadata).get(0);
         copiedMessage.setUid(mapperProvider.generateMessageUid());
         copiedMessage.setModSeq(mapperProvider.generateModSeq(benwaWorkMailbox));
         sut.copyInMailbox(copiedMessage, benwaWorkMailbox);
@@ -912,7 +915,7 @@ public abstract class MessageIdMapperTest {
     void deletesShouldUpdateMessageCount() throws Exception {
         saveMessages();
 
-        SimpleMailboxMessage copiedMessage = SimpleMailboxMessage.copy(benwaWorkMailbox.getMailboxId(), message1);
+        MailboxMessage copiedMessage = sut.find(ImmutableList.of(message1.getMessageId()), FetchType.Metadata).get(0);
         copiedMessage.setUid(mapperProvider.generateMessageUid());
         copiedMessage.setModSeq(mapperProvider.generateModSeq(benwaWorkMailbox));
         sut.copyInMailbox(copiedMessage, benwaWorkMailbox);
