@@ -19,10 +19,6 @@
 
 package org.apache.james.jmap.mail
 
-import java.nio.charset.StandardCharsets.US_ASCII
-import java.time.ZoneId
-import java.util.Date
-
 import cats.implicits._
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
@@ -30,7 +26,6 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
-import javax.inject.Inject
 import org.apache.james.jmap.api.model.Preview
 import org.apache.james.jmap.api.projections.{MessageFastViewPrecomputedProperties, MessageFastViewProjection}
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
@@ -55,6 +50,10 @@ import org.slf4j.{Logger, LoggerFactory}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
+import java.nio.charset.StandardCharsets.US_ASCII
+import java.time.ZoneId
+import java.util.Date
+import javax.inject.Inject
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
@@ -421,6 +420,7 @@ private class EmailMetadataViewFactory @Inject()(zoneIdProvider: ZoneIdProvider)
     val mailboxIds: MailboxIds = MailboxIds(message._2
       .map(_.getMailboxId)
       .toList)
+    val threadId: ThreadId = ThreadId(message._2.head.getThreadId.serialize())
 
     for {
       firstMessage <- message._2
@@ -434,7 +434,7 @@ private class EmailMetadataViewFactory @Inject()(zoneIdProvider: ZoneIdProvider)
         metadata = EmailMetadata(
           id = messageId,
           blobId = blobId,
-          threadId = ThreadId(messageId.serialize),
+          threadId = threadId,
           keywords = keywords,
           mailboxIds = mailboxIds,
           receivedAt = UTCDate.from(firstMessage.getInternalDate, zoneIdProvider.get()),
@@ -449,6 +449,7 @@ private class EmailHeaderViewFactory @Inject()(zoneIdProvider: ZoneIdProvider) e
     val mailboxIds: MailboxIds = MailboxIds(message._2
       .map(_.getMailboxId)
       .toList)
+    val threadId: ThreadId = ThreadId(message._2.head.getThreadId.serialize())
 
     for {
       firstMessage <- message._2
@@ -463,7 +464,7 @@ private class EmailHeaderViewFactory @Inject()(zoneIdProvider: ZoneIdProvider) e
         metadata = EmailMetadata(
           id = messageId,
           blobId = blobId,
-          threadId = ThreadId(messageId.serialize),
+          threadId = threadId,
           mailboxIds = mailboxIds,
           receivedAt = UTCDate.from(firstMessage.getInternalDate, zoneIdProvider.get()),
           size = sanitizeSize(firstMessage.getSize),
@@ -480,6 +481,7 @@ private class EmailFullViewFactory @Inject()(zoneIdProvider: ZoneIdProvider, pre
     val mailboxIds: MailboxIds = MailboxIds(message._2
       .map(_.getMailboxId)
       .toList)
+    val threadId: ThreadId = ThreadId(message._2.head.getThreadId.serialize())
 
     for {
       firstMessage <- message._2
@@ -497,7 +499,7 @@ private class EmailFullViewFactory @Inject()(zoneIdProvider: ZoneIdProvider, pre
         metadata = EmailMetadata(
           id = messageId,
           blobId = blobId,
-          threadId = ThreadId(messageId.serialize),
+          threadId = threadId,
           mailboxIds = mailboxIds,
           receivedAt = UTCDate.from(firstMessage.getInternalDate, zoneIdProvider.get()),
           keywords = keywords,
@@ -647,6 +649,7 @@ private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
     val mailboxIds: MailboxIds = MailboxIds(message._2
       .map(_.getMailboxId)
       .toList)
+    val threadId: ThreadId = ThreadId(message._2.head.getThreadId.serialize())
 
     for {
       firstMessage <- message._2
@@ -661,7 +664,7 @@ private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
         metadata = EmailMetadata(
           id = messageId,
           blobId = blobId,
-          threadId = ThreadId(messageId.serialize),
+          threadId = threadId,
           mailboxIds = mailboxIds,
           receivedAt = UTCDate.from(firstMessage.getInternalDate, zoneIdProvider.get()),
           size = sanitizeSize(firstMessage.getSize),
