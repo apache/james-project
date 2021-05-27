@@ -40,9 +40,11 @@ import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.ACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
+import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.mail.eventsourcing.acl.ACLModule;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 
@@ -79,6 +81,7 @@ public class GuiceUtils {
         return Modules.combine(
             binder -> binder.bind(MessageId.Factory.class).toInstance(messageIdFactory),
             binder -> binder.bind(UidProvider.class).to(CassandraUidProvider.class),
+            binder -> binder.bind(ModSeqProvider.class).to(CassandraModSeqProvider.class),
             binder -> binder.bind(ACLMapper.class).to(CassandraACLMapper.class),
             binder -> binder.bind(BlobId.Factory.class).toInstance(new HashBlobId.Factory()),
             binder -> binder.bind(BlobStore.class).toProvider(() -> CassandraBlobStoreFactory.forTesting(session, new RecordingMetricFactory()).passthrough()),
