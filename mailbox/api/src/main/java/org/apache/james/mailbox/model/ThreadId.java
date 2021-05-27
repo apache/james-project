@@ -35,6 +35,10 @@ public class ThreadId {
         return baseMessageId;
     }
 
+    public String serialize() {
+        return baseMessageId.serialize();
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof ThreadId) {
