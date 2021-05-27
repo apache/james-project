@@ -19,14 +19,24 @@
 
 package org.apache.james.mailbox.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class ThreadIdTest {
+    private static final TestMessageId TEST_MESSAGE_ID = TestMessageId.of(45);
+
     @Test
     void shouldMatchBeanContact() {
         EqualsVerifier.forClass(ThreadId.class)
             .verify();
     }
+
+    @Test
+    void serializeFromValidTestMessageIdShouldWork() {
+        assertThat(new ThreadId(TEST_MESSAGE_ID).serialize()).isEqualTo("45");
+    }
+
 }
