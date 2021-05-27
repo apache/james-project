@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -88,8 +89,10 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
         this.metricClOneMissCount = metricFactory.generate(CASSANDRA_BLOBSTORE_CL_ONE_MISS_COUNT_METRIC_NAME);
         this.metricClOneHitCount = metricFactory.generate(CASSANDRA_BLOBSTORE_CL_ONE_HIT_COUNT_METRIC_NAME);
 
-        LOGGER.warn("WARNING: JAMES-3591 Cassandra is not made to store large binary content, its use will be suboptimal compared to " +
-            " alternatives (namely S3 compatible BlobStores backed by for instance S3, MinIO or Ozone)");
+        if (Objects.equals(System.getenv("cassandra.blob.store.disable.startup.warning"), "false")) {
+            LOGGER.warn("WARNING: JAMES-3591 Cassandra is not made to store large binary content, its use will be suboptimal compared to " +
+                " alternatives (namely S3 compatible BlobStores backed by for instance S3, MinIO or Ozone)");
+        }
     }
 
     @Override

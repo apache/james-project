@@ -49,6 +49,10 @@
                 <dd><b>WARNING</b>: JAMES-3591 Cassandra is not made to store large binary content, its use will be suboptimal compared to
                     alternatives (namely S3 compatible BlobStores backed by for instance S3, MinIO or Ozone)
                 </dd>
+                <dd>
+                    The generated startup warning log can be deactivated via the <code>cassandra.blob.store.disable.startup.warning</code> environment
+                    variable being positioned to <code>false</code>.
+                </dd>
 
                 <dt><strong>deduplication/enable</strong></dt>
                 <dd>Mandatory. Supported value: true and false.</dd>
