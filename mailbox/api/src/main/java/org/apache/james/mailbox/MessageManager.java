@@ -53,6 +53,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
@@ -152,11 +153,13 @@ public interface MessageManager {
         private final ComposedMessageId id;
         private final Long size;
         private final Optional<List<MessageAttachmentMetadata>> messageAttachments;
+        private final ThreadId threadId;
 
-        public AppendResult(ComposedMessageId id, Long size, Optional<List<MessageAttachmentMetadata>> messageAttachments) {
+        public AppendResult(ComposedMessageId id, Long size, Optional<List<MessageAttachmentMetadata>> messageAttachments, ThreadId threadId) {
             this.id = id;
             this.size = size;
             this.messageAttachments = messageAttachments;
+            this.threadId = threadId;
         }
 
         public ComposedMessageId getId() {
@@ -172,20 +175,26 @@ public interface MessageManager {
             return messageAttachments.get();
         }
 
+        public ThreadId getThreadId() {
+            return threadId;
+        }
+
         @Override
         public final boolean equals(Object o) {
             if (o instanceof AppendResult) {
                 AppendResult that = (AppendResult) o;
 
                 return Objects.equals(this.id, that.id)
-                    && Objects.equals(this.messageAttachments, that.messageAttachments);
+                    && Objects.equals(this.messageAttachments, that.messageAttachments)
+                    && Objects.equals(this.size, that.size)
+                    && Objects.equals(this.threadId, that.threadId);
             }
             return false;
         }
 
         @Override
         public final int hashCode() {
-            return Objects.hash(id, messageAttachments);
+            return Objects.hash(id, messageAttachments, size, threadId);
         }
     }
 

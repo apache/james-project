@@ -36,7 +36,7 @@ import org.apache.james.jmap.mail.EmailHeaderName.{ADDRESSES_NAMES, DATE, MESSAG
 import org.apache.james.jmap.mail.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
 import org.apache.james.jmap.method.ZoneIdProvider
 import org.apache.james.mailbox.model.FetchGroup.{FULL_CONTENT, HEADERS, MINIMAL}
-import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MessageId, MessageResult}
+import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MessageId, MessageResult, ThreadId => JavaThreadId}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
 import org.apache.james.mime4j.codec.DecodeMonitor
 import org.apache.james.mime4j.dom.field.{AddressListField, DateTimeField, MailboxField, MailboxListField}
@@ -231,6 +231,10 @@ case class Subject(value: String) extends AnyVal
 case class MailboxIds(value: List[MailboxId]) {
   def ++(ids: MailboxIds) = MailboxIds(value ++ ids.value)
   def --(ids: MailboxIds) = MailboxIds((value.toSet -- ids.value.toSet).toList)
+}
+
+object ThreadId {
+  def fromJava(threadId: JavaThreadId): ThreadId = ThreadId(threadId.serialize)
 }
 
 case class ThreadId(value: String) extends AnyVal

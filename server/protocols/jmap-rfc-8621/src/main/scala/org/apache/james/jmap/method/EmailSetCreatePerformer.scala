@@ -28,7 +28,7 @@ import javax.mail.Flags
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Properties, SetError, UTCDate}
 import org.apache.james.jmap.json.EmailSetSerializer
-import org.apache.james.jmap.mail.{BlobId, Email, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailSetRequest}
+import org.apache.james.jmap.mail.{BlobId, Email, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailSetRequest, ThreadId}
 import org.apache.james.jmap.method.EmailSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
 import org.apache.james.jmap.routes.{BlobNotFoundException, BlobResolvers}
 import org.apache.james.mailbox.MessageManager.AppendCommand
@@ -103,7 +103,8 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
       appendResult <- SMono(mailbox.appendMessageReactive(appendCommand, mailboxSession))
     } yield {
       val blobId: Option[BlobId] = BlobId.of(appendResult.getId.getMessageId).toOption
-      CreationSuccess(clientId, EmailCreationResponse(appendResult.getId.getMessageId, blobId, blobId, Email.sanitizeSize(appendResult.getSize)))
+      val threadId: ThreadId = ThreadId.fromJava(appendResult.getThreadId)
+      CreationSuccess(clientId, EmailCreationResponse(appendResult.getId.getMessageId, blobId, threadId, Email.sanitizeSize(appendResult.getSize)))
     }
   }
 
