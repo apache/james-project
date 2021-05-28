@@ -19,26 +19,28 @@
 
 package org.apache.james.utils;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.commons.configuration2.Configuration;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 public class ExtensionConfiguration {
     public static final ExtensionConfiguration DEFAULT = new ExtensionConfiguration(ImmutableList.of());
+    private static final Splitter SPLITTER = Splitter.on(",")
+        .omitEmptyStrings()
+        .trimResults();
 
     public static ExtensionConfiguration from(Configuration configuration) {
-        List<String> list = Optional.ofNullable(configuration.getStringArray("guice.extension.module"))
-            .map(Arrays::asList)
-            .orElse(ImmutableList.of());
+        String rawString = configuration.getString("guice.extension.module", "");
 
-        return new ExtensionConfiguration(list.stream()
-            .map(ClassName::new)
-            .collect(Guavate.toImmutableList()));
+        return new ExtensionConfiguration(
+            SPLITTER.splitToList(rawString)
+                .stream()
+                .map(ClassName::new)
+                .collect(Guavate.toImmutableList()));
     }
 
     private final List<ClassName> additionalGuiceModulesForExtensions;
