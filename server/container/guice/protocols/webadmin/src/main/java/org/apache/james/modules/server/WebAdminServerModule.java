@@ -58,6 +58,8 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
@@ -79,6 +81,9 @@ public class WebAdminServerModule extends AbstractModule {
     private static final String DEFAULT_NO_PASSWORD = null;
     private static final String DEFAULT_NO_TRUST_KEYSTORE = null;
     private static final String DEFAULT_NO_TRUST_PASSWORD = null;
+    private static final Splitter SPLITTER = Splitter.on(',')
+        .trimResults()
+        .omitEmptyStrings();
 
     @Override
     protected void configure() {
@@ -117,9 +122,7 @@ public class WebAdminServerModule extends AbstractModule {
         try {
             Configuration configurationFile = propertiesProvider.getConfiguration("webadmin");
 
-            List<String> additionalRoutes = Optional.ofNullable(configurationFile.getStringArray("extensions.routes"))
-                .map(ImmutableList::copyOf)
-                .orElse(ImmutableList.of());
+            List<String> additionalRoutes = additionalRoutes(configurationFile);
 
             return WebAdminConfiguration.builder()
                 .enable(configurationFile.getBoolean("enabled", DEFAULT_DISABLED))
@@ -136,6 +139,13 @@ public class WebAdminServerModule extends AbstractModule {
             LOGGER.info("No webadmin.properties file. Disabling WebAdmin interface.");
             return DISABLED_CONFIGURATION;
         }
+    }
+
+    @VisibleForTesting
+    ImmutableList<String> additionalRoutes(Configuration configurationFile) {
+        String rawString = configurationFile.getString("extensions.routes", "");
+
+        return ImmutableList.copyOf(SPLITTER.splitToList(rawString));
     }
 
     private Optional<String> loadPublicKey(FileSystem fileSystem, Optional<String> jwtPublickeyPemUrl) {
