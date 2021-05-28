@@ -33,6 +33,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSortedMap;
@@ -67,8 +68,8 @@ class EventTest {
         MessageUid uid2 = MessageUid.of(37);
         TestMessageId messageId1 = TestMessageId.of(45);
         TestMessageId messageId2 = TestMessageId.of(46);
-        MessageMetaData metaData1 = new MessageMetaData(uid1, ModSeq.of(85), new Flags(), 36, new Date(), messageId1);
-        MessageMetaData metaData2 = new MessageMetaData(uid2, ModSeq.of(85), new Flags(), 36, new Date(), messageId2);
+        MessageMetaData metaData1 = new MessageMetaData(uid1, ModSeq.of(85), new Flags(), 36, new Date(), messageId1, ThreadId.fromBaseMessageId(messageId1));
+        MessageMetaData metaData2 = new MessageMetaData(uid2, ModSeq.of(85), new Flags(), 36, new Date(), messageId2, ThreadId.fromBaseMessageId(messageId2));
 
         Added added = new Added(MailboxSession.SessionId.of(36), BOB, MailboxPath.inbox(BOB), TestId.of(48),
             ImmutableSortedMap.of(
@@ -84,8 +85,8 @@ class EventTest {
         MessageUid uid1 = MessageUid.of(36);
         MessageUid uid2 = MessageUid.of(37);
         TestMessageId messageId = TestMessageId.of(45);
-        MessageMetaData metaData1 = new MessageMetaData(uid1, ModSeq.of(85), new Flags(), 36, new Date(), messageId);
-        MessageMetaData metaData2 = new MessageMetaData(uid2, ModSeq.of(85), new Flags(), 36, new Date(), messageId);
+        MessageMetaData metaData1 = new MessageMetaData(uid1, ModSeq.of(85), new Flags(), 36, new Date(), messageId, ThreadId.fromBaseMessageId(messageId));
+        MessageMetaData metaData2 = new MessageMetaData(uid2, ModSeq.of(85), new Flags(), 36, new Date(), messageId, ThreadId.fromBaseMessageId(messageId));
 
         Added added = new Added(MailboxSession.SessionId.of(36), BOB, MailboxPath.inbox(BOB), TestId.of(48),
             ImmutableSortedMap.of(

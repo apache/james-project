@@ -44,6 +44,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -66,9 +67,13 @@ class AddedSerializationTest {
         .add("User Custom Flag")
         .build();
     private static final SortedMap<MessageUid, MessageMetaData> ADDED = ImmutableSortedMap.of(
-        MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(INSTANT), MESSAGE_ID));
+        MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(INSTANT), MESSAGE_ID, ThreadId.fromBaseMessageId(MESSAGE_ID)));
+    private static final SortedMap<MessageUid, MessageMetaData> ADDED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID = ImmutableSortedMap.of(
+        MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(INSTANT), MESSAGE_ID, ThreadId.fromBaseMessageId(TestMessageId.of(100))));
 
     private static final Added DEFAULT_ADDED_EVENT = new Added(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, ADDED, EVENT_ID);
+    private static final Added ADDED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID_EVENT = new Added(
+        SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, ADDED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID, EVENT_ID);
     private static final String DEFAULT_ADDED_EVENT_JSON = 
         "{" +
         "  \"Added\": {" +
@@ -88,13 +93,67 @@ class AddedSerializationTest {
         "          \"userFlags\":[\"User Custom Flag\"]}," +
         "        \"size\": 45,  " +
         "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-        "        \"messageId\": \"42\"" +
+        "        \"messageId\": \"42\"," +
+        "        \"threadId\":\"42\""   +
         "      }" +
         "    }," +
         "    \"sessionId\": 42," +
         "    \"user\": \"user\"" +
         "  }" +
         "}";
+    private static final String ADDED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID_EVENT_JSON =
+        "{" +
+            "  \"Added\": {" +
+            "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
+            "    \"path\": {" +
+            "      \"namespace\": \"#private\"," +
+            "      \"user\": \"user\"," +
+            "      \"name\": \"mailboxName\"" +
+            "    }," +
+            "    \"mailboxId\": \"18\"," +
+            "    \"added\": {" +
+            "      \"123456\": {" +
+            "        \"uid\": 123456," +
+            "        \"modSeq\": 35," +
+            "        \"flags\": {" +
+            "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+            "          \"userFlags\":[\"User Custom Flag\"]}," +
+            "        \"size\": 45,  " +
+            "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
+            "        \"messageId\": \"42\"," +
+            "        \"threadId\":\"100\""   +
+            "      }" +
+            "    }," +
+            "    \"sessionId\": 42," +
+            "    \"user\": \"user\"" +
+            "  }" +
+            "}";
+    private static final String DEFAULT_BACKWARD_ADDED_EVENT_JSON =
+        "{" +
+            "  \"Added\": {" +
+            "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
+            "    \"path\": {" +
+            "      \"namespace\": \"#private\"," +
+            "      \"user\": \"user\"," +
+            "      \"name\": \"mailboxName\"" +
+            "    }," +
+            "    \"mailboxId\": \"18\"," +
+            "    \"added\": {" +
+            "      \"123456\": {" +
+            "        \"uid\": 123456," +
+            "        \"modSeq\": 35," +
+            "        \"flags\": {" +
+            "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+            "          \"userFlags\":[\"User Custom Flag\"]}," +
+            "        \"size\": 45,  " +
+            "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
+            "        \"messageId\": \"42\"" +
+            "      }" +
+            "    }," +
+            "    \"sessionId\": 42," +
+            "    \"user\": \"user\"" +
+            "  }" +
+            "}";
 
     @Test
     void addedShouldBeWellSerialized() {
@@ -103,8 +162,20 @@ class AddedSerializationTest {
     }
 
     @Test
+    void addedWithDistinctMessageIdAndThreadIdShouldBeWellSerialized() {
+        assertThatJson(EVENT_SERIALIZER.toJson(ADDED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID_EVENT))
+            .isEqualTo(ADDED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID_EVENT_JSON);
+    }
+
+    @Test
     void addedShouldBeWellDeSerialized() {
         assertThat(EVENT_SERIALIZER.fromJson(DEFAULT_ADDED_EVENT_JSON).get())
+            .isEqualTo(DEFAULT_ADDED_EVENT);
+    }
+
+    @Test
+    void previousAddedFormatShouldBeWellDeserialized() {
+        assertThat(EVENT_SERIALIZER.fromJson(DEFAULT_BACKWARD_ADDED_EVENT_JSON).get())
             .isEqualTo(DEFAULT_ADDED_EVENT);
     }
 

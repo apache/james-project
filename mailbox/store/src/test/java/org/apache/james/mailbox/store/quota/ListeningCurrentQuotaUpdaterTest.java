@@ -51,6 +51,7 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
@@ -99,8 +100,8 @@ class ListeningCurrentQuotaUpdaterTest {
         Added added = mock(Added.class);
         when(added.getMailboxId()).thenReturn(MAILBOX_ID);
         when(added.getMailboxPath()).thenReturn(MAILBOX_PATH);
-        when(added.getMetaData(MessageUid.of(36))).thenReturn(new MessageMetaData(MessageUid.of(36), ModSeq.first(),new Flags(), SIZE, new Date(), new DefaultMessageId()));
-        when(added.getMetaData(MessageUid.of(38))).thenReturn(new MessageMetaData(MessageUid.of(38), ModSeq.first(),new Flags(), SIZE, new Date(), new DefaultMessageId()));
+        when(added.getMetaData(MessageUid.of(36))).thenReturn(new MessageMetaData(MessageUid.of(36), ModSeq.first(),new Flags(), SIZE, new Date(), new DefaultMessageId(), ThreadId.fromBaseMessageId(new DefaultMessageId())));
+        when(added.getMetaData(MessageUid.of(38))).thenReturn(new MessageMetaData(MessageUid.of(38), ModSeq.first(),new Flags(), SIZE, new Date(), new DefaultMessageId(), ThreadId.fromBaseMessageId(new DefaultMessageId())));
         when(added.getUids()).thenReturn(Lists.newArrayList(MessageUid.of(36), MessageUid.of(38)));
         when(added.getUsername()).thenReturn(USERNAME_BENWA);
         when(mockedQuotaRootResolver.getQuotaRootReactive(eq(MAILBOX_ID))).thenReturn(Mono.just(QUOTA_ROOT));
@@ -115,8 +116,8 @@ class ListeningCurrentQuotaUpdaterTest {
     @Test
     void expungedEventShouldDecreaseCurrentQuotaValues() throws Exception {
         Expunged expunged = mock(Expunged.class);
-        when(expunged.getMetaData(MessageUid.of(36))).thenReturn(new MessageMetaData(MessageUid.of(36), ModSeq.first(), new Flags(), SIZE, new Date(), new DefaultMessageId()));
-        when(expunged.getMetaData(MessageUid.of(38))).thenReturn(new MessageMetaData(MessageUid.of(38), ModSeq.first(), new Flags(), SIZE, new Date(), new DefaultMessageId()));
+        when(expunged.getMetaData(MessageUid.of(36))).thenReturn(new MessageMetaData(MessageUid.of(36), ModSeq.first(), new Flags(), SIZE, new Date(), new DefaultMessageId(), ThreadId.fromBaseMessageId(new DefaultMessageId())));
+        when(expunged.getMetaData(MessageUid.of(38))).thenReturn(new MessageMetaData(MessageUid.of(38), ModSeq.first(), new Flags(), SIZE, new Date(), new DefaultMessageId(), ThreadId.fromBaseMessageId(new DefaultMessageId())));
         when(expunged.getUids()).thenReturn(Lists.newArrayList(MessageUid.of(36), MessageUid.of(38)));
         when(expunged.getMailboxId()).thenReturn(MAILBOX_ID);
         when(expunged.getUsername()).thenReturn(USERNAME_BENWA);

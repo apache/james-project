@@ -28,7 +28,7 @@ import org.apache.james.core.Username
 import org.apache.james.core.quota.{QuotaLimitValue, QuotaUsageValue}
 import org.apache.james.event.json.DTOs.SystemFlag.SystemFlag
 import org.apache.james.mailbox.acl.{ACLDiff => JavaACLDiff}
-import org.apache.james.mailbox.model.{MessageId, MailboxACL => JavaMailboxACL, MailboxPath => JavaMailboxPath, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota, UpdatedFlags => JavaUpdatedFlags}
+import org.apache.james.mailbox.model.{MessageId, ThreadId, MailboxACL => JavaMailboxACL, MailboxPath => JavaMailboxPath, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota, UpdatedFlags => JavaUpdatedFlags}
 import org.apache.james.mailbox.{FlagsBuilder, MessageUid, ModSeq}
 
 import scala.jdk.CollectionConverters._
@@ -90,11 +90,13 @@ object DTOs {
       Flags.fromJavaFlags(javaMessageMetaData.getFlags),
       javaMessageMetaData.getSize,
       javaMessageMetaData.getInternalDate.toInstant,
-      javaMessageMetaData.getMessageId)
+      javaMessageMetaData.getMessageId,
+      Option(javaMessageMetaData.getThreadId))
   }
 
-  case class MessageMetaData(uid: MessageUid, modSeq: ModSeq, flags: Flags, size: Long, internalDate: Instant, messageId: MessageId) {
-    def toJava: JavaMessageMetaData = new JavaMessageMetaData(uid, modSeq, Flags.toJavaFlags(flags), size, Date.from(internalDate), messageId)
+  case class MessageMetaData(uid: MessageUid, modSeq: ModSeq, flags: Flags, size: Long, internalDate: Instant, messageId: MessageId, threadId: Option[ThreadId]) {
+    def toJava: JavaMessageMetaData = new JavaMessageMetaData(uid, modSeq, Flags.toJavaFlags(flags), size, Date.from(internalDate), messageId, retrieveThreadId)
+    def retrieveThreadId: ThreadId = threadId.getOrElse(ThreadId.fromBaseMessageId(messageId))
   }
 
   case class UserFlag(value: String) extends AnyVal

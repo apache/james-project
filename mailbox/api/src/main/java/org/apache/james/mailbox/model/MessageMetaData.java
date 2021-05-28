@@ -34,14 +34,16 @@ public class MessageMetaData {
     private final Date internalDate;
     private final ModSeq modSeq;
     private final MessageId messageId;
+    private final ThreadId threadId;
 
-    public MessageMetaData(MessageUid uid, ModSeq modSeq, Flags flags, long size, Date internalDate, MessageId messageId) {
+    public MessageMetaData(MessageUid uid, ModSeq modSeq, Flags flags, long size, Date internalDate, MessageId messageId, ThreadId threadId) {
         this.uid = uid;
         this.flags = flags;
         this.size = size;
         this.modSeq = modSeq;
         this.internalDate = internalDate;
         this.messageId = messageId;
+        this.threadId = threadId;
     }
 
     public Flags getFlags() {
@@ -71,6 +73,10 @@ public class MessageMetaData {
 
     public MessageId getMessageId() {
         return messageId;
+    }
+
+    public ThreadId getThreadId() {
+        return threadId;
     }
 
     /**

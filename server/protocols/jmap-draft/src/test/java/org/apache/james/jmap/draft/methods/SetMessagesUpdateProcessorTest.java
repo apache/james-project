@@ -62,6 +62,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.CanSendFrom;
@@ -202,7 +203,7 @@ public class SetMessagesUpdateProcessorTest {
         when(outbox.appendMessage(any(MessageManager.AppendCommand.class), any(MailboxSession.class)))
             .thenReturn(new MessageManager.AppendResult(
                 new ComposedMessageId(OUTBOX_ID, TestMessageId.of(23), MessageUid.of(1)), TEST_MESSAGE_SIZE,
-                Optional.empty()));
+                Optional.empty(), ThreadId.fromBaseMessageId(TestMessageId.of(23))));
 
         drafts = mock(MessageManager.class);
         when(drafts.getId()).thenReturn(DRAFTS_ID);

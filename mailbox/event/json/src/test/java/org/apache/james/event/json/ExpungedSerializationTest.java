@@ -44,6 +44,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -66,10 +67,14 @@ class ExpungedSerializationTest {
         .add("User Custom Flag")
         .build();
     private static final Map<MessageUid, MessageMetaData> EXPUNGED = ImmutableMap.of(
-        MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(INSTANT), MESSAGE_ID));
+        MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(INSTANT), MESSAGE_ID, ThreadId.fromBaseMessageId(MESSAGE_ID)));
+    private static final Map<MessageUid, MessageMetaData> EXPUNGED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID = ImmutableMap.of(
+        MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(INSTANT), MESSAGE_ID, ThreadId.fromBaseMessageId(TestMessageId.of(100))));
 
     private static final Expunged DEFAULT_EXPUNGED_EVENT = new Expunged(SESSION_ID, USERNAME,
         MAILBOX_PATH, MAILBOX_ID, EXPUNGED, EVENT_ID);
+    private static final Expunged EXPUNGED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID_EVENT = new Expunged(
+        SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, EXPUNGED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID, EVENT_ID);
     private static final String DEFAULT_EXPUNGED_EVENT_JSON =
         "{" +
         "  \"Expunged\": {" +
@@ -89,13 +94,67 @@ class ExpungedSerializationTest {
         "          \"userFlags\":[\"User Custom Flag\"]}," +
         "        \"size\": 45,  " +
         "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-        "        \"messageId\": \"42\"" +
+        "        \"messageId\": \"42\"," +
+        "        \"threadId\": \"42\"" +
         "      }" +
         "    }," +
         "    \"sessionId\": 42," +
         "    \"user\": \"user\"" +
         "  }" +
         "}";
+    private static final String EXPUNGED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID_EVENT_JSON =
+        "{" +
+            "  \"Expunged\": {" +
+            "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
+            "    \"path\": {" +
+            "      \"namespace\": \"#private\"," +
+            "      \"user\": \"user\"," +
+            "      \"name\": \"mailboxName\"" +
+            "    }," +
+            "    \"mailboxId\": \"18\"," +
+            "    \"expunged\": {" +
+            "      \"123456\": {" +
+            "        \"uid\": 123456," +
+            "        \"modSeq\": 35," +
+            "        \"flags\": {" +
+            "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+            "          \"userFlags\":[\"User Custom Flag\"]}," +
+            "        \"size\": 45,  " +
+            "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
+            "        \"messageId\": \"42\"," +
+            "        \"threadId\": \"100\"" +
+            "      }" +
+            "    }," +
+            "    \"sessionId\": 42," +
+            "    \"user\": \"user\"" +
+            "  }" +
+            "}";
+    private static final String DEFAULT_BACKWARD_EXPUNGED_EVENT_JSON =
+        "{" +
+            "  \"Expunged\": {" +
+            "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
+            "    \"path\": {" +
+            "      \"namespace\": \"#private\"," +
+            "      \"user\": \"user\"," +
+            "      \"name\": \"mailboxName\"" +
+            "    }," +
+            "    \"mailboxId\": \"18\"," +
+            "    \"expunged\": {" +
+            "      \"123456\": {" +
+            "        \"uid\": 123456," +
+            "        \"modSeq\": 35," +
+            "        \"flags\": {" +
+            "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+            "          \"userFlags\":[\"User Custom Flag\"]}," +
+            "        \"size\": 45,  " +
+            "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
+            "        \"messageId\": \"42\"" +
+            "      }" +
+            "    }," +
+            "    \"sessionId\": 42," +
+            "    \"user\": \"user\"" +
+            "  }" +
+            "}";
 
     @Test
     void expungedShouldBeWellSerialized() {
@@ -104,8 +163,20 @@ class ExpungedSerializationTest {
     }
 
     @Test
+    void expungedWithDistinctMessageIdAndThreadIdShouldBeWellSerialized() {
+        assertThatJson(EVENT_SERIALIZER.toJson(EXPUNGED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID_EVENT))
+            .isEqualTo(EXPUNGED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID_EVENT_JSON);
+    }
+
+    @Test
     void expungedShouldBeWellDeSerialized() {
         assertThat(EVENT_SERIALIZER.fromJson(DEFAULT_EXPUNGED_EVENT_JSON).get())
+            .isEqualTo(DEFAULT_EXPUNGED_EVENT);
+    }
+
+    @Test
+    void previousExpungedFormatShouldBeWellDeserialized() {
+        assertThat(EVENT_SERIALIZER.fromJson(DEFAULT_BACKWARD_EXPUNGED_EVENT_JSON).get())
             .isEqualTo(DEFAULT_EXPUNGED_EVENT);
     }
 

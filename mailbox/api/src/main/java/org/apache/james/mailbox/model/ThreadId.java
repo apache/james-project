@@ -25,6 +25,10 @@ import com.google.common.base.MoreObjects;
 
 
 public class ThreadId {
+    public static ThreadId fromBaseMessageId(MessageId baseMessageId) {
+        return new ThreadId(baseMessageId);
+    }
+
     private final MessageId baseMessageId;
 
     public ThreadId(MessageId baseMessageId) {
