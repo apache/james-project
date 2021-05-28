@@ -511,7 +511,7 @@ public class StoreMessageManager implements MessageManager {
     private AppendResult computeAppendResult(Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>> data, Mailbox mailbox) {
         MessageMetaData messageMetaData = data.getLeft();
         ComposedMessageId ids = new ComposedMessageId(mailbox.getMailboxId(), messageMetaData.getMessageId(), messageMetaData.getUid());
-        return new AppendResult(ids, messageMetaData.getSize(), data.getRight());
+        return new AppendResult(ids, messageMetaData.getSize(), data.getRight(), messageMetaData.getThreadId());
     }
 
     private PropertyBuilder getPropertyBuilder(MaximalBodyDescriptor descriptor, String mediaType, String subType) {

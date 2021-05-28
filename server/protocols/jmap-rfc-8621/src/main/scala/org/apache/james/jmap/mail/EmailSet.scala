@@ -398,5 +398,5 @@ case class InvalidEmailPropertyException(property: String, cause: String) extend
 
 case class InvalidEmailUpdateException(property: String, cause: String) extends EmailUpdateValidationException
 
-case class EmailCreationResponse(id: MessageId, blobId: Option[BlobId], threadId: Option[BlobId], size: Size)
+case class EmailCreationResponse(id: MessageId, blobId: Option[BlobId], threadId: ThreadId, size: Size)
 

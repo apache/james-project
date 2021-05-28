@@ -30,7 +30,7 @@ import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, SetError, UuidState}
 import org.apache.james.jmap.json.{EmailSetSerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.{BlobId, Email, EmailCreationId, EmailCreationResponse, EmailImport, EmailImportRequest, EmailImportResponse, ValidatedEmailImport}
+import org.apache.james.jmap.mail.{BlobId, Email, EmailCreationId, EmailCreationResponse, EmailImport, EmailImportRequest, EmailImportResponse, ThreadId, ValidatedEmailImport}
 import org.apache.james.jmap.method.EmailImportMethod.{ImportFailure, ImportResult, ImportResults, ImportSuccess, ImportWithBlob}
 import org.apache.james.jmap.routes.{Blob, BlobNotFoundException, BlobResolvers, ProcessingContext, SessionSupplier}
 import org.apache.james.mailbox.MessageManager.AppendCommand
@@ -172,7 +172,8 @@ class EmailImportMethod @Inject() (val metricFactory: MetricFactory,
 
   private def asEmailCreationResponse(appendResult: MessageManager.AppendResult): EmailCreationResponse = {
     val blobId: Option[BlobId] = BlobId.of(appendResult.getId.getMessageId).toOption
-    EmailCreationResponse(appendResult.getId.getMessageId, blobId, blobId, Email.sanitizeSize(appendResult.getSize))
+    val threadId: ThreadId = ThreadId.fromJava(appendResult.getThreadId)
+    EmailCreationResponse(appendResult.getId.getMessageId, blobId, threadId, Email.sanitizeSize(appendResult.getSize))
   }
 
   private def retrieveState(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[UuidState] =
