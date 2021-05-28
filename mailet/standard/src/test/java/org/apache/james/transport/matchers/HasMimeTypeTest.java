@@ -94,6 +94,37 @@ class HasMimeTypeTest {
                     .filename("text_file.txt")
                     .disposition("attachment"),
                 MimeMessageBuilder.bodyPartBuilder()
+                    .type("image/png")
+                    .filename("file.png")
+                    .disposition("attachment"))
+            .setSubject("test");
+
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .mimeMessage(message)
+            .sender(FROM)
+            .recipient(RECIPIENT)
+            .build();
+
+        assertThat(matcher.match(mail)).isEmpty();
+    }
+
+    @Test
+    void shouldNotMatchSubParts() throws Exception {
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("HasMimeType")
+                .condition("application/zip")
+                .build());
+
+        MimeMessageBuilder message = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("simple text")
+                    .disposition("text"),
+                MimeMessageBuilder.bodyPartBuilder()
+                    .filename("text_file.txt")
+                    .disposition("attachment"),
+                MimeMessageBuilder.bodyPartBuilder()
                     .type("application/zip")
                     .filename("zip_file.zip")
                     .disposition("attachment"))
