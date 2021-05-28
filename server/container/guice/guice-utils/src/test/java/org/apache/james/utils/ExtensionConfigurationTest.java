@@ -19,6 +19,53 @@
 
 package org.apache.james.utils;
 
-public class ExtensionConfigurationTest {
+import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.commons.configuration2.FileBasedConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.junit.jupiter.api.Test;
+
+public class ExtensionConfigurationTest {
+    @Test
+    void shouldReturnEmptyWhenNoField() throws Exception {
+        FileBasedConfiguration configuration = getConfiguration("extensions-none.properties");
+
+        assertThat(ExtensionConfiguration.from(configuration).getAdditionalGuiceModulesForExtensions())
+            .isEmpty();
+    }
+
+    @Test
+    void shouldReturnEmptyWhenEmptyField() throws Exception {
+        FileBasedConfiguration configuration = getConfiguration("extensions-empty.properties");
+
+        assertThat(ExtensionConfiguration.from(configuration).getAdditionalGuiceModulesForExtensions())
+            .isEmpty();
+    }
+
+    @Test
+    void shouldReturnOneRoutes() throws Exception {
+        FileBasedConfiguration configuration = getConfiguration("extensions-one.properties");
+
+        assertThat(ExtensionConfiguration.from(configuration).getAdditionalGuiceModulesForExtensions())
+            .containsOnly(new ClassName("org.apache.custom.extensions.CustomExtension"));
+    }
+
+    @Test
+    void shouldReturnSeveralRoutes() throws Exception {
+        FileBasedConfiguration configuration = getConfiguration("extensions-two.properties");
+
+        assertThat(ExtensionConfiguration.from(configuration).getAdditionalGuiceModulesForExtensions())
+            .containsOnly(new ClassName("org.apache.custom.extensions.CustomExtension"),
+                new ClassName("org.apache.custom.extension.AnotherCustomExtension"));
+    }
+
+    private FileBasedConfiguration getConfiguration(String name) throws org.apache.commons.configuration2.ex.ConfigurationException {
+        FileBasedConfigurationBuilder<FileBasedConfiguration> builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class)
+            .configure(new Parameters()
+                .fileBased()
+                .setURL(ClassLoader.getSystemResource(name)));
+        return builder.getConfiguration();
+    }
 }
