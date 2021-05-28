@@ -42,6 +42,8 @@ import com.google.common.collect.ImmutableSet;
 /**
  * <p>This matcher checks if the content type matches.</p>
  *
+ * <p>This matcher do not walk down the mime tree and stops at the top level mime part.</p>
+ *
  * use: <pre><code><mailet match="HasMimeType=text/plain,text/html" class="..." /></code></pre>
  */
 public class HasMimeType extends GenericMatcher {
