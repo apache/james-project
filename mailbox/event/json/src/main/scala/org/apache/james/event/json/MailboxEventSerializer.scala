@@ -33,7 +33,7 @@ import org.apache.james.events.{EventSerializer, Event => JavaEvent}
 import org.apache.james.mailbox.MailboxSession.SessionId
 import org.apache.james.mailbox.events.MailboxEvents.{Added => JavaAdded, Expunged => JavaExpunged, FlagsUpdated => JavaFlagsUpdated, MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
 import org.apache.james.mailbox.events.{MessageMoveEvent => JavaMessageMoveEvent}
-import org.apache.james.mailbox.model.{MailboxId, MessageId, MessageMoves, QuotaRoot, MailboxACL => JavaMailboxACL, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota}
+import org.apache.james.mailbox.model.{MailboxId, MessageId, MessageMoves, QuotaRoot, ThreadId, MailboxACL => JavaMailboxACL, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota}
 import org.apache.james.mailbox.quota.QuotaRootDeserializer
 import org.apache.james.mailbox.{MessageUid, ModSeq}
 import play.api.libs.json._
@@ -221,6 +221,7 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   implicit val aclRightsWrites: Writes[JavaMailboxACL.Rfc4314Rights] = value => JsString(value.serialize())
   implicit val mailboxACLWrites: Writes[MailboxACL] = Json.writes[MailboxACL]
   implicit val aclDiffWrites: Writes[ACLDiff] = Json.writes[ACLDiff]
+  implicit val threadIdWrites: Writes[ThreadId] = value => JsString(value.serialize())
   implicit val messageIdWrites: Writes[MessageId] = value => JsString(value.serialize())
   implicit val messageUidWrites: Writes[MessageUid] = value => JsNumber(value.asLong())
   implicit val modSeqWrites: Writes[ModSeq] = value => JsNumber(value.asLong())
@@ -277,6 +278,10 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   }
   implicit val userReads: Reads[Username] = {
     case JsString(userAsString) => JsSuccess(Username.of(userAsString))
+    case _ => JsError()
+  }
+  implicit val threadIdReads: Reads[ThreadId] = {
+    case JsString(value) => JsSuccess(ThreadId.fromBaseMessageId(messageIdFactory.fromString(value)))
     case _ => JsError()
   }
   implicit val messageIdReads: Reads[MessageId] = {

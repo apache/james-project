@@ -33,6 +33,7 @@ import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,7 +62,7 @@ class MetadataMapAssertTest {
     @Test
     void metadataMapAssertShouldSucceedWhenContainingRightMetadata() {
         Map<MessageUid, MessageMetaData> metaDataMap = new HashMap<>();
-        metaDataMap.put(UID, new MessageMetaData(UID, MODSEQ, new Flags(), HEADER_STRING.length() + BODY_STRING.length(), DATE, MESSAGE_ID));
+        metaDataMap.put(UID, new MessageMetaData(UID, MODSEQ, new Flags(), HEADER_STRING.length() + BODY_STRING.length(), DATE, MESSAGE_ID, ThreadId.fromBaseMessageId(MESSAGE_ID)));
         
         MetadataMapAssert.assertThat(metaDataMap).containsMetadataForMessages(message1);
     }
@@ -69,7 +70,7 @@ class MetadataMapAssertTest {
     @Test
     void metadataMapAssertShouldFailWhenUidMismatch() {
         Map<MessageUid, MessageMetaData> metaDataMap = new HashMap<>();
-        metaDataMap.put(UID, new MessageMetaData(UID.next(), MODSEQ, new Flags(), HEADER_STRING.length() + BODY_STRING.length(), DATE, MESSAGE_ID));
+        metaDataMap.put(UID, new MessageMetaData(UID.next(), MODSEQ, new Flags(), HEADER_STRING.length() + BODY_STRING.length(), DATE, MESSAGE_ID, ThreadId.fromBaseMessageId(MESSAGE_ID)));
         
         assertThatThrownBy(() -> MetadataMapAssert.assertThat(metaDataMap).containsMetadataForMessages(message1))
             .isInstanceOf(AssertionError.class);
@@ -80,7 +81,7 @@ class MetadataMapAssertTest {
         Map<MessageUid, MessageMetaData> metaDataMap = new HashMap<>();
         Date date = new Date();
         date.setTime(DATE.getTime() + 100L);
-        metaDataMap.put(UID, new MessageMetaData(UID, MODSEQ, new Flags(), HEADER_STRING.length() + BODY_STRING.length(), date, MESSAGE_ID));
+        metaDataMap.put(UID, new MessageMetaData(UID, MODSEQ, new Flags(), HEADER_STRING.length() + BODY_STRING.length(), date, MESSAGE_ID, ThreadId.fromBaseMessageId(MESSAGE_ID)));
 
         assertThatThrownBy(() -> MetadataMapAssert.assertThat(metaDataMap).containsMetadataForMessages(message1))
             .isInstanceOf(AssertionError.class);
@@ -89,7 +90,7 @@ class MetadataMapAssertTest {
     @Test
     void metadataMapAssertShouldFailWhenSizeMismatch() {
         Map<MessageUid, MessageMetaData> metaDataMap = new HashMap<>();
-        metaDataMap.put(UID, new MessageMetaData(UID, MODSEQ, new Flags(), HEADER_STRING.length() + BODY_STRING.length() + 1, DATE, MESSAGE_ID));
+        metaDataMap.put(UID, new MessageMetaData(UID, MODSEQ, new Flags(), HEADER_STRING.length() + BODY_STRING.length() + 1, DATE, MESSAGE_ID, ThreadId.fromBaseMessageId(MESSAGE_ID)));
 
         assertThatThrownBy(() -> MetadataMapAssert.assertThat(metaDataMap).containsMetadataForMessages(message1))
             .isInstanceOf(AssertionError.class);

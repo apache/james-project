@@ -29,11 +29,11 @@ import java.util.stream.Stream;
 import javax.mail.Flags;
 
 import org.apache.james.core.Username;
+import org.apache.james.events.Event;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.events.Event;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -128,7 +128,7 @@ class SetCustomFlagOnBigMessagesTest {
             .getMessages(MessageRange.one(composedIdOfSmallMessage.getUid()), FetchGroup.MINIMAL, mailboxSession)
             .next();
         MessageMetaData oneMBMetaData = new MessageMetaData(addedMessage.getUid(), addedMessage.getModSeq(),
-            addedMessage.getFlags(), ONE_MB, addedMessage.getInternalDate(), addedMessage.getMessageId());
+            addedMessage.getFlags(), ONE_MB, addedMessage.getInternalDate(), addedMessage.getMessageId(), addedMessage.getThreadId());
 
         Event eventWithAFakeMessageSize = EventFactory.added()
             .eventId(RANDOM_EVENT_ID)
