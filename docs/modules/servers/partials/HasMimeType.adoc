@@ -2,7 +2,7 @@
 
 This matcher checks if the content type matches.
 
-This matcher do not walk down the mime tree and stops at the top level mime part.
+This matcher does not walk down the mime tree and stops at the top level mime part.
 
 use:
 
