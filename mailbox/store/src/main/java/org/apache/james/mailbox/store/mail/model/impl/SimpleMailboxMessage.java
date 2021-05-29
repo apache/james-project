@@ -35,6 +35,7 @@ import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.Content;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
@@ -325,4 +326,8 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             .toString();
     }
 
+    @Override
+    public MailboxMessage copy(Mailbox mailbox) throws MailboxException {
+        return SimpleMailboxMessage.copy(mailbox.getMailboxId(), this);
+    }
 }

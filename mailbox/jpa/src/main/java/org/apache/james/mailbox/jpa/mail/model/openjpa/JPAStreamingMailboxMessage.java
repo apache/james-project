@@ -34,6 +34,7 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.model.Content;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.openjpa.persistence.Persistent;
@@ -117,4 +118,8 @@ public class JPAStreamingMailboxMessage extends AbstractJPAMailboxMessage {
         return new BoundedInputStream(content.getInputStream(), headerEnd);
     }
 
+    @Override
+    public MailboxMessage copy(Mailbox mailbox) throws MailboxException {
+        return new JPAStreamingMailboxMessage(JPAMailbox.from(mailbox), getUid(), getModSeq(), this);
+    }
 }
