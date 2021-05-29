@@ -92,7 +92,20 @@ Follow the 'Useful commands' section for more information about James CLI.
 
 In order to have a standard compilation environment, we introduce Dockerfiles, using java-11.
 
-=== Java 11
+=== Maven
+
+We require maven version 3.6.0 minimum to build the project.
+
+Simply run `mvn clean install` within this directory to compile the project.
+
+Useful options includes:
+
+ - `-DskipTests` to skip the long to execute resource consuming test suite that requires a docker daemon.
+ - `-T 4` to parallelize the build on several CPUs.
+
+=== With the docker wrapper
+
+Alternatively we provide a standard compilation environement bundled in a docker image.
 
 First step, you have to build the Docker image
 
