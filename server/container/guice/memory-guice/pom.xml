@@ -318,6 +318,12 @@
                             <jvmFlag>-Dworking.directory=/root/</jvmFlag>
                         </jvmFlags>
                         <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
+                        <volumes>
+                            <volume>/logs</volume>
+                            <volume>/root/conf</volume>
+                            <volume>/root/glowroot/plugins</volume>
+                            <volume>/root/glowroot/data</volume>
+                        </volumes>
                     </container>
                     <extraDirectories>
                         <paths>
