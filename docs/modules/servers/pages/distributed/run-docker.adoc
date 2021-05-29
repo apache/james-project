@@ -34,13 +34,17 @@ Follow the 'Useful commands' section for more information about James CLI.
 
 === Requirements
 
-Built artifacts should be in ./dockerfiles/run/guice/cassandra-rabbitmq/destination folder for cassandra.
-If you haven't already:
+Compile the whole project:
 
-    $ docker build -t james/project dockerfiles/compilation/java-11
-    $ docker run -v $HOME/.m2:/root/.m2 -v $PWD:/origin \
-  -v $PWD/dockerfiles/run/guice/cassandra-rabbitmq/destination:/cassandra-rabbitmq/destination \
-  -t james/project -s HEAD
+    mvn clean install -DskipTests -T 4
+
+Then load the distributed server docker image:
+
+    docker load -i server/container/guice/cassandra-rabbitmq-guice/target/jib-image.tar
+
+Alternatively we provide convenience distribution for the latest release:
+
+    docker pull apache/james:distributed-3.6.0
 
 === Running
 
@@ -68,18 +72,15 @@ You can find more explanation on the need of Tika in this page http://james.apac
 
 We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
 
-Copy your TLS keys to `run/guice/cassandra-rabbitmq/destination/conf/keystore` or generate it using the following command. The password must be `james72laBalle` to match default configuration.
+Copy your TLS keys to the current folder or generate it using the following command. The password must be `james72laBalle` to match default configuration.
 
-    $ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/keystore
-
-Then we need to build james container :
-
-    $ docker build -t james_run dockerfiles/run/guice/cassandra-rabbitmq
+    $ keytool -genkey -alias james -keyalg RSA -keystore keystore
 
 To run this container :
 
     $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" -p "127.0.0.1:8000:8000" --link cassandra:cassandra --link rabbitmq:rabbitmq
-   --link elasticsearch:elasticsearch --link tika:tika --link s3:s3.docker.test --name james_run -t james_run
+         --link elasticsearch:elasticsearch --link tika:tika --link s3:s3.docker.test --name james_run
+         -v $PWD/keystore:/root/conf/keystore -t apache/james:distributed-latest
 
 Where :
 
@@ -88,18 +89,17 @@ Where :
 Webadmin port binding is restricted to loopback as users are not authenticated by default on webadmin server. Thus you should avoid exposing it in production.
 Note that the above example assumes `127.0.0.1` is your loopback interface for convenience but you should change it if this is not the case on your machine.
 
-If you want to pass additional options to the underlying java command, you can configure a _JVM_OPTIONS_ env variable, for example add:
+If you want to pass additional options to the underlying java command, you can configure a _JAVA_TOOL_OPTIONS_ env variable, for example add:
 
-    --env JVM_OPTIONS="-Xms256m -Xmx2048m"
+    --env "JAVA_TOOL_OPTIONS=-Xms256m -Xmx2048m"
 
 To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
 
 === Instrumentation
-You can use Glowroot to instrumentalize James. The provided guice docker files allow a simple way to do it.
-In order to activate Glowroot you need to run the container with the environment variable _GLOWROOT_ACTIVATED_ set to _true_
-and to expose the glowroot instrumentation ui port.
+You can use link:https://glowroot.org/[Glowroot] to instrumentalize James. It is packaged as part of the docker distribution to easily enable valuable performances insights.
+Disabled by default, its java agent can easily be enabled:
 
-    --env GLOWROOT_ACTIVATED=true -p "4000:4000"
+    --env "JAVA_TOOL_OPTIONS=-javaagent:/root/glowroot.jar" -p "4000:4000"
 
 By default, the Glowroot UI is accessible from every machines in the network as defined in the _destination/admin.json_.
 Which you could configure before building the image, if you want to restrict its accessibility to localhost for example.
@@ -118,5 +118,6 @@ Run tika:
 
 Add a link for the tika container in the above command line:
 
-    $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link rabbitmq:rabbitmq
-    --link elasticsearch:elasticsearch --link tika:tika --name james_run -t james_run
+    $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" -p "127.0.0.1:8000:8000" --link cassandra:cassandra --link rabbitmq:rabbitmq
+         --link elasticsearch:elasticsearch --link tika:tika --link s3:s3.docker.test --name james_run
+         --link tika:tika -v $PWD/keystore:/root/conf/keystore -t apache/james:distributed-latest
