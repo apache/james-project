@@ -43,6 +43,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.util.streams.Iterators;
+import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
@@ -50,6 +51,7 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * Maps {@link MailboxMessage} in a {@link org.apache.james.mailbox.MessageManager}. A {@link MessageMapper} has a lifecycle from the start of a request
@@ -134,7 +136,12 @@ public interface MessageMapper extends Mapper {
      * So you should only depend on the returned uid.
      */
     MessageMetaData add(Mailbox mailbox, MailboxMessage message) throws MailboxException;
-    
+
+    default Publisher<MessageMetaData> addReactive(Mailbox mailbox, MailboxMessage message) {
+        return Mono.fromCallable(() -> add(mailbox, message))
+            .subscribeOn(Schedulers.elastic());
+    }
+
     /**
      * Update flags for the given {@link MessageRange}. Only the flags may be modified after a message was saved to a mailbox.
      *

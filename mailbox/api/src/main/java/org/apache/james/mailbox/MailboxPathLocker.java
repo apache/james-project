@@ -23,6 +23,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.reactivestreams.Publisher;
 
 /**
  * The {@link MailboxPathLocker} is responsible to help to synchronize the
@@ -42,6 +43,8 @@ public interface MailboxPathLocker {
      * is hold. The contract is the same as documented in {@link ReadWriteLock}.
      */
     <T> T executeWithLock(MailboxPath path, LockAwareExecution<T> execution, LockType lockType) throws MailboxException;
+
+    <T> Publisher<T> executeReactiveWithLockReactive(MailboxPath path, Publisher<T> execution, LockType lockType);
 
     /**
      * Execute code while holding a lock

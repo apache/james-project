@@ -28,6 +28,10 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * {@link MailboxPathLocker} implementation which helps to synchronize the access the
@@ -47,7 +51,13 @@ public final class JVMMailboxPathLocker implements MailboxPathLocker {
         }
     }
 
-    private void lock(MailboxPath path, LockType lockType) {
+    @Override
+    public <T> Publisher<T> executeReactiveWithLockReactive(MailboxPath path, Publisher<T> execution, LockType lockType) {
+        return Mono.fromCallable(() -> executeWithLock(path, () -> Mono.from(execution).block(), lockType))
+            .subscribeOn(Schedulers.elastic());
+    }
+
+    private MailboxPath lock(MailboxPath path, LockType lockType) {
         ReadWriteLock lock = paths.get(path);
         if (lock == null) {
             lock = new ReentrantReadWriteLock();
@@ -56,15 +66,23 @@ public final class JVMMailboxPathLocker implements MailboxPathLocker {
                 lock = storedLock;
             }
         }
-        getLock(lock, lockType).lock();
+        final Lock lock1 = getLock(lock, lockType);
+        if (lock1.tryLock()) {
+            lock1.unlock();
+        } else {
+            new Exception("Lock already acquired").printStackTrace();
+        }
+        lock1.lock();
+        return path;
     }
 
-    private void unlock(MailboxPath path, LockType lockType) {
+    private MailboxPath unlock(MailboxPath path, LockType lockType) {
         ReadWriteLock lock = paths.get(path);
 
         if (lock != null) {
             getLock(lock, lockType).unlock();
         }
+        return path;
     }
 
     private Lock getLock(ReadWriteLock lock, LockType lockType) {

@@ -35,6 +35,9 @@ import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.reactivestreams.Publisher;
 
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
 public interface AttachmentMapper extends Mapper {
 
     InputStream loadAttachmentContent(AttachmentId attachmentId) throws AttachmentNotFoundException, IOException;
@@ -46,6 +49,11 @@ public interface AttachmentMapper extends Mapper {
     Publisher<AttachmentMetadata> storeAttachmentForOwner(ContentType contentType, InputStream attachmentContent, Username owner);
 
     List<MessageAttachmentMetadata> storeAttachmentsForMessage(Collection<ParsedAttachment> attachments, MessageId ownerMessageId) throws MailboxException;
+
+    default Mono<List<MessageAttachmentMetadata>> storeAttachmentsForMessageReactive(Collection<ParsedAttachment> attachments, MessageId ownerMessageId) {
+        return Mono.fromCallable(() -> storeAttachmentsForMessage(attachments, ownerMessageId))
+            .subscribeOn(Schedulers.elastic());
+    }
 
     Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId) throws MailboxException;
 

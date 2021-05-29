@@ -22,6 +22,7 @@ package org.apache.james.mailbox.store;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.reactivestreams.Publisher;
 
 /**
  * Some distributed mailboxes do not require any locking ( eg : Cassandra )
@@ -32,5 +33,10 @@ public class NoMailboxPathLocker implements MailboxPathLocker {
     @Override
     public <T> T executeWithLock(MailboxPath path, LockAwareExecution<T> execution, LockType lockType) throws MailboxException {
         return execution.execute();
+    }
+
+    @Override
+    public <T> Publisher<T> executeReactiveWithLockReactive(MailboxPath path, Publisher<T> execution, LockType lockType) {
+        return execution;
     }
 }
