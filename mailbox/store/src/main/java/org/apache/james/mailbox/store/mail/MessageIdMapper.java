@@ -68,7 +68,9 @@ public interface MessageIdMapper {
     void delete(MessageId messageId, Collection<MailboxId> mailboxIds);
 
     default Mono<Void> deleteReactive(MessageId messageId, Collection<MailboxId> mailboxIds) {
-        return Mono.fromRunnable(() -> delete(messageId, mailboxIds));
+        return Mono.fromRunnable(() -> delete(messageId, mailboxIds))
+            .subscribeOn(Schedulers.elastic())
+            .then();
     }
 
     default void delete(Multimap<MessageId, MailboxId> ids) {
@@ -77,7 +79,9 @@ public interface MessageIdMapper {
     }
 
     default Mono<Void> deleteReactive(Multimap<MessageId, MailboxId> ids) {
-        return Mono.fromRunnable(() -> delete(ids));
+        return Mono.fromRunnable(() -> delete(ids))
+            .subscribeOn(Schedulers.elastic())
+            .then();
     }
 
     /**
