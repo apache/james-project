@@ -35,7 +35,7 @@
                 This configuration is only applicable with Guice products.
             </p>
             <p>
-                Consult <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/blob.properties">blob.properties</a>
+                Consult <a href="https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/blob.properties">blob.properties</a>
                 in GIT to get some examples and hints.
             </p>
 

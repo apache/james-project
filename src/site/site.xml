@@ -122,7 +122,6 @@
                         <item name="Deleted Messages Vault" href="/server/config-vault.html" />
                         <item name="DNS Service" href="/server/config-dnsservice.html" />
                         <item name="Domain List" href="/server/config-domainlist.html" />
-                        <item name="Events" href="/server/config-events.html" />
                         <item name="FetchMail" href="/server/config-fetchmail.html" />
                         <item name="Guice" href="/server/config-guice.html" />
                         <item name="IMAP4" href="/server/config-imap4.html" />
