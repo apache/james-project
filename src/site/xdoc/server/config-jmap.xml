@@ -35,7 +35,7 @@
 
             <subsection name="jmap.properties">
 
-                <p>Consult <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/jmap.properties">jmap.properties</a> in GIT to get some examples and hints.</p>
+                <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/jmap.properties">jmap.properties</a> in GIT to get some examples and hints.</p>
 
                 <br/>
 

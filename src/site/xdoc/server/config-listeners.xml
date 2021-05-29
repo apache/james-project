@@ -33,7 +33,7 @@
               mailbox listeners configuration.
             </p>
 
-            <p>Consult <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/listeners.xml">listeners.xml</a>
+            <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/listeners.xml">listeners.xml</a>
                 to get some examples and hints.</p>
 
             <p>James Guice wiring allow the user to register potentially user defined additional mailbox listeners.</p>
@@ -94,7 +94,7 @@
             <p>Upon injections, the user can reference additional guice modules, that are going to be used only upon extensions instantiation.
                 In order to do that:</p>
             <p> 1. Place the jar containing the guice module that should be used to instantiate your extensions within the /extensions-jars folder</p>
-            <p> 2. Register your module fully qualified class name within <a href="https://github.com/apache/james-projectdockerfiles/run/guice/memory/destination/conf/extensions.properties">
+            <p> 2. Register your module fully qualified class name within <a href="https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/extensions.properties">
                 extensions.properties</a> under the <code>guice.extension.module</code> key.</p>
         </section>
     </body>
