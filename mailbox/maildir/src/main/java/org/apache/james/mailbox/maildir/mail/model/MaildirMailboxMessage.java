@@ -26,6 +26,7 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.maildir.MaildirFolder;
 import org.apache.james.mailbox.maildir.MaildirId;
 import org.apache.james.mailbox.maildir.MaildirMessageName;
@@ -33,9 +34,11 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 public class MaildirMailboxMessage extends DelegatingMailboxMessage {
 
+    private final MaildirMessageName messageName;
     private boolean answered;
     private boolean deleted;
     private boolean draft;
@@ -46,9 +49,10 @@ public class MaildirMailboxMessage extends DelegatingMailboxMessage {
     private MessageUid uid;
     protected boolean newMessage;
     private ModSeq modSeq;
-    
+
     public MaildirMailboxMessage(Mailbox mailbox, MessageUid messageUid, MaildirMessageName messageName) throws IOException {
         super(new MaildirMessage(messageName));
+        this.messageName = messageName;
 
         this.mailbox = mailbox;
         setUid(messageUid);
@@ -186,4 +190,8 @@ public class MaildirMailboxMessage extends DelegatingMailboxMessage {
         return theString.toString();
     }
 
+    @Override
+    public MailboxMessage copy(Mailbox mailbox) throws MailboxException {
+        throw new RuntimeException("Not implemented");
+    }
 }

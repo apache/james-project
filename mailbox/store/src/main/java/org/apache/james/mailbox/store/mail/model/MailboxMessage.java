@@ -22,7 +22,9 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.ThreadId;
@@ -116,4 +118,6 @@ public interface MailboxMessage extends Message, Comparable<MailboxMessage> {
     default int compareTo(MailboxMessage other) {
         return this.getUid().compareTo(other.getUid());
     }
+
+    MailboxMessage copy(Mailbox mailbox) throws MailboxException;
 }
