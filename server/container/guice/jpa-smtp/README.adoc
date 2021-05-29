@@ -48,6 +48,15 @@ Then run it:
 docker run apache/james:jpa-smtp-latest
 ----
 
+
+For security reasons you are required to generate your own keystore, that you can mount into the container via a volume:
+
+[source]
+----
+keytool -genkey -alias james -keyalg RSA -keystore keystore
+docker run -v $PWD/keystore:/root/conf/keystore docker run apache/james:jpa-smtp-latest
+----
+
 Use the [JAVA_TOOL_OPTIONS environment option](https://github.com/GoogleContainerTools/jib/blob/master/docs/faq.md#jvm-flags)
 to pass extra JVM flags. For instance:
 
