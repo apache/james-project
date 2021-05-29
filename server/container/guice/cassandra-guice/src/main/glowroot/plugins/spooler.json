@@ -24,7 +24,7 @@
       "captureKind": "transaction",
       "transactionType": "Mailet",
       "transactionNameTemplate": "Mailet : {{this.class.name}}",
-      "alreadyInTransactionBehavior": "capture-trace-entry",
+      "alreadyInTransactionBehavior": "capture-new-transaction",
       "traceEntryMessageTemplate": "{{this.class.name}}.{{methodName}}",
       "timerName": "mailet"
     },
@@ -37,7 +37,7 @@
       "captureKind": "transaction",
       "transactionType": "Matcher",
       "transactionNameTemplate": "Mailet processor : {{this.class.name}}",
-      "alreadyInTransactionBehavior": "capture-trace-entry",
+      "alreadyInTransactionBehavior": "capture-new-transaction",
       "traceEntryMessageTemplate": "{{this.class.name}}.{{methodName}}",
       "timerName": "matcher"
     }
