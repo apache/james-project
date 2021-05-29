@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.function.Function;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -74,6 +75,7 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResultIterator;
+import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -102,6 +104,7 @@ import org.apache.james.util.io.InputStreamConsummer;
 import org.apache.james.util.streams.Iterators;
 import org.reactivestreams.Publisher;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -301,6 +304,17 @@ public class StoreMessageManager implements MessageManager {
 
     @Override
     public AppendResult appendMessage(AppendCommand appendCommand, MailboxSession session) throws MailboxException {
+        return MailboxReactorUtils.block(appendMessage(
+            appendCommand.getMsgIn(),
+            appendCommand.getInternalDate(),
+            session,
+            appendCommand.isRecent(),
+            appendCommand.getFlags(),
+            appendCommand.getMaybeParsedMessage()));
+    }
+
+    @Override
+    public Publisher<AppendResult> appendMessageReactive(AppendCommand appendCommand, MailboxSession session) {
         return appendMessage(
             appendCommand.getMsgIn(),
             appendCommand.getInternalDate(),
@@ -308,12 +322,6 @@ public class StoreMessageManager implements MessageManager {
             appendCommand.isRecent(),
             appendCommand.getFlags(),
             appendCommand.getMaybeParsedMessage());
-    }
-
-    @Override
-    public Publisher<AppendResult> appendMessageReactive(AppendCommand appendCommand, MailboxSession session) {
-        return Mono.fromCallable(() -> appendMessage(appendCommand, session))
-            .subscribeOn(Schedulers.elastic());
     }
 
     @Override
@@ -340,7 +348,7 @@ public class StoreMessageManager implements MessageManager {
                 int bodyStartOctet = getBodyStartOctet(bIn);
                 File finalFile = file;
                 Optional<Message> unparsedMimeMessqage = Optional.empty();
-                return createAndDispatchMessage(computeInternalDate(internalDate),
+                return MailboxReactorUtils.block(createAndDispatchMessage(computeInternalDate(internalDate),
                     mailboxSession, new Content() {
                         @Override
                         public InputStream getInputStream() throws IOException {
@@ -352,7 +360,7 @@ public class StoreMessageManager implements MessageManager {
                             return finalFile.length();
                         }
                     }, propertyBuilder,
-                    getFlags(mailboxSession, isRecent, flagsToBeSet), bodyStartOctet, unparsedMimeMessqage);
+                    getFlags(mailboxSession, isRecent, flagsToBeSet), bodyStartOctet, unparsedMimeMessqage));
             }
         } catch (IOException | MimeException e) {
             throw new MailboxException("Unable to parse message", e);
@@ -368,22 +376,25 @@ public class StoreMessageManager implements MessageManager {
         }
     }
 
-    private AppendResult appendMessage(Content msgIn, Date internalDate, final MailboxSession mailboxSession, boolean isRecent, Flags flagsToBeSet, Optional<Message> maybeMessage) throws MailboxException {
-        if (!isWriteable(mailboxSession)) {
-            throw new ReadOnlyException(getMailboxPath());
-        }
+    private Mono<AppendResult> appendMessage(Content msgIn, Date internalDate, final MailboxSession mailboxSession, boolean isRecent, Flags flagsToBeSet, Optional<Message> maybeMessage) {
+        return Mono.fromCallable(() -> {
+            if (!isWriteable(mailboxSession)) {
+                throw new ReadOnlyException(getMailboxPath());
+            }
 
-        try (InputStream contentStreamStream = msgIn.getInputStream()) {
-            BodyOffsetInputStream bIn = new BodyOffsetInputStream(contentStreamStream);
-            PropertyBuilder propertyBuilder = parseProperties(bIn);
-            int bodyStartOctet = getBodyStartOctet(bIn);
+            try (InputStream contentStreamStream = msgIn.getInputStream()) {
+                BodyOffsetInputStream bIn = new BodyOffsetInputStream(contentStreamStream);
+                PropertyBuilder propertyBuilder = parseProperties(bIn);
+                int bodyStartOctet = getBodyStartOctet(bIn);
 
-            return createAndDispatchMessage(computeInternalDate(internalDate),
-                mailboxSession, msgIn, propertyBuilder,
-                getFlags(mailboxSession, isRecent, flagsToBeSet), bodyStartOctet, maybeMessage);
-        } catch (IOException | MimeException e) {
-            throw new MailboxException("Unable to parse message", e);
-        }
+                return createAndDispatchMessage(computeInternalDate(internalDate),
+                    mailboxSession, msgIn, propertyBuilder,
+                    getFlags(mailboxSession, isRecent, flagsToBeSet), bodyStartOctet, maybeMessage);
+            } catch (IOException | MimeException e) {
+                throw new MailboxException("Unable to parse message", e);
+            }
+        }).flatMap(Function.identity())
+            .subscribeOn(Schedulers.elastic());
     }
 
     private PropertyBuilder parseProperties(BodyOffsetInputStream bIn) throws IOException, MimeException {
@@ -478,28 +489,29 @@ public class StoreMessageManager implements MessageManager {
         return bodyStartOctet;
     }
 
-    private AppendResult createAndDispatchMessage(Date internalDate, MailboxSession mailboxSession, Content content, PropertyBuilder propertyBuilder, Flags flags, int bodyStartOctet, Optional<Message> maybeMessage) throws MailboxException {
-            final int size = (int) content.size();
-            new QuotaChecker(quotaManager, quotaRootResolver, mailbox).tryAddition(1, size);
-
-            return locker.executeWithLock(getMailboxPath(), () -> {
-                Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>> data = messageStorer.appendMessageToStore(mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, maybeMessage, mailboxSession);
-
-                Mailbox mailbox = getMailboxEntity();
-
-                eventBus.dispatch(EventFactory.added()
-                        .randomEventId()
-                        .mailboxSession(mailboxSession)
-                        .mailbox(mailbox)
-                        .addMetaData(data.getLeft())
-                        .build(),
+    private Mono<AppendResult> createAndDispatchMessage(Date internalDate, MailboxSession mailboxSession, Content content, PropertyBuilder propertyBuilder, Flags flags, int bodyStartOctet, Optional<Message> maybeMessage) throws MailboxException {
+        int size = (int) content.size();
+        QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailbox);
+        return Mono.from(quotaManager.getQuotasReactive(quotaRoot))
+            .map(quotas -> new QuotaChecker(quotas, quotaRoot))
+            .doOnNext(Throwing.consumer((QuotaChecker quotaChecker) -> quotaChecker.tryAddition(1, size)).sneakyThrow())
+            .then(Mono.from(locker.executeReactiveWithLockReactive(getMailboxPath(),
+                messageStorer.appendMessageToStore(mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, maybeMessage, mailboxSession)
+                    .flatMap(data -> eventBus.dispatch(EventFactory.added()
+                            .randomEventId()
+                            .mailboxSession(mailboxSession)
+                            .mailbox(mailbox)
+                            .addMetaData(data.getLeft())
+                            .build(),
                         new MailboxIdRegistrationKey(mailbox.getMailboxId()))
-                    .subscribeOn(Schedulers.elastic())
-                    .block();
-                MessageMetaData messageMetaData = data.getLeft();
-                ComposedMessageId ids = new ComposedMessageId(mailbox.getMailboxId(), messageMetaData.getMessageId(), messageMetaData.getUid());
-                return new AppendResult(ids, messageMetaData.getSize(), data.getRight());
-            }, MailboxPathLocker.LockType.Write);
+                        .thenReturn(computeAppendResult(data, mailbox))),
+                MailboxPathLocker.LockType.Write)));
+    }
+
+    private AppendResult computeAppendResult(Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>> data, Mailbox mailbox) {
+        MessageMetaData messageMetaData = data.getLeft();
+        ComposedMessageId ids = new ComposedMessageId(mailbox.getMailboxId(), messageMetaData.getMessageId(), messageMetaData.getUid());
+        return new AppendResult(ids, messageMetaData.getSize(), data.getRight());
     }
 
     private PropertyBuilder getPropertyBuilder(MaximalBodyDescriptor descriptor, String mediaType, String subType) {

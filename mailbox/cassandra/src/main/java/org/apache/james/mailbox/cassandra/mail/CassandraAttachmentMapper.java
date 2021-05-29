@@ -121,10 +121,15 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
 
     @Override
     public List<MessageAttachmentMetadata> storeAttachmentsForMessage(Collection<ParsedAttachment> parsedAttachments, MessageId ownerMessageId) throws MailboxException {
-        return Flux.fromIterable(parsedAttachments)
-            .concatMap(attachment -> storeAttachmentAsync(attachment, ownerMessageId))
-            .collectList()
+        return storeAttachmentsForMessageReactive(parsedAttachments, ownerMessageId)
             .block();
+    }
+
+    @Override
+    public Mono<List<MessageAttachmentMetadata>> storeAttachmentsForMessageReactive(Collection<ParsedAttachment> attachments, MessageId ownerMessageId) {
+        return Flux.fromIterable(attachments)
+            .concatMap(attachment -> storeAttachmentAsync(attachment, ownerMessageId))
+            .collectList();
     }
 
     @Override

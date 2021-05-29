@@ -44,7 +44,10 @@ import org.apache.james.mime4j.dom.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Mono;
 
 public interface MessageStorer {
     /**
@@ -53,7 +56,7 @@ public interface MessageStorer {
      *
      * Otherwize an empty optional will be returned on the right side of the pair.
      */
-    Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session) throws MailboxException;
+    Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session) throws MailboxException;
 
     /**
      * MessageStorer parsing, storing and returning AttachmentMetadata
@@ -62,8 +65,6 @@ public interface MessageStorer {
      */
     class WithAttachment implements MessageStorer {
         private static final Logger LOGGER = LoggerFactory.getLogger(WithAttachment.class);
-        private static final int START = 0;
-        private static final int UNLIMITED = -1;
 
         private final MailboxSessionMapperFactory mapperFactory;
         private final MessageId.Factory messageIdFactory;
@@ -82,22 +83,24 @@ public interface MessageStorer {
         }
 
         @Override
-        public Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session) throws MailboxException {
+        public Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session) throws MailboxException {
             MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
             MessageId messageId = messageIdFactory.generate();
 
-            return mapperFactory.getMessageMapper(session).execute(() -> {
-                List<MessageAttachmentMetadata> attachments = storeAttachments(messageId, content, maybeMessage, session);
-                MailboxMessage message = messageFactory.createMessage(messageId, mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, attachments);
-                MessageMetaData metadata = messageMapper.add(mailbox, message);
-                return Pair.of(metadata, Optional.of(attachments));
-            });
+            return mapperFactory.getMessageMapper(session)
+                .executeReactive(
+                    storeAttachments(messageId, content, maybeMessage, session)
+                        .flatMap(Throwing.function((List<MessageAttachmentMetadata> attachments) -> {
+                                MailboxMessage message = messageFactory.createMessage(messageId, mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, attachments);
+                                return Mono.from(messageMapper.addReactive(mailbox, message))
+                                    .map(metadata -> Pair.of(metadata, Optional.of(attachments)));
+                            }).sneakyThrow()));
         }
 
-        private List<MessageAttachmentMetadata> storeAttachments(MessageId messageId, Content messageContent, Optional<Message> maybeMessage, MailboxSession session) throws MailboxException {
+        private Mono<List<MessageAttachmentMetadata>> storeAttachments(MessageId messageId, Content messageContent, Optional<Message> maybeMessage, MailboxSession session) throws MailboxException {
             List<ParsedAttachment> attachments = extractAttachments(messageContent, maybeMessage);
             return attachmentMapperFactory.getAttachmentMapper(session)
-                .storeAttachmentsForMessage(attachments, messageId);
+                .storeAttachmentsForMessageReactive(attachments, messageId);
         }
 
         private List<ParsedAttachment> extractAttachments(Content contentIn, Optional<Message> maybeMessage) {
@@ -136,15 +139,14 @@ public interface MessageStorer {
         }
 
         @Override
-        public Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session) throws MailboxException {
+        public Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session) throws MailboxException {
             MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
             MessageId messageId = messageIdFactory.generate();
+            MailboxMessage message = messageFactory.createMessage(messageId, mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, ImmutableList.of());
 
-            return mapperFactory.getMessageMapper(session).execute(() -> {
-                MailboxMessage message = messageFactory.createMessage(messageId, mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, ImmutableList.of());
-                MessageMetaData metadata = messageMapper.add(mailbox, message);
-                return Pair.of(metadata, Optional.empty());
-            });
+            return mapperFactory.getMessageMapper(session)
+                .executeReactive(Mono.from(messageMapper.addReactive(mailbox, message)))
+                .map(metadata -> Pair.of(metadata, Optional.empty()));
         }
     }
 }
