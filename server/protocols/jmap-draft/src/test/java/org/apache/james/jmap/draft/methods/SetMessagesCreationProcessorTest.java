@@ -198,9 +198,9 @@ public class SetMessagesCreationProcessorTest {
         when(outbox.getId()).thenReturn(OUTBOX_ID);
         when(outbox.getMailboxPath()).thenReturn(MailboxPath.forUser(USER, OUTBOX));
         
-        when(outbox.appendMessage(any(MessageManager.AppendCommand.class), any(MailboxSession.class)))
-            .thenReturn(new MessageManager.AppendResult(new ComposedMessageId(OUTBOX_ID, TestMessageId.of(23), MessageUid.of(1)), TEST_MESSAGE_SIZE,
-                Optional.of(ImmutableList.of())));
+        when(outbox.appendMessageReactive(any(MessageManager.AppendCommand.class), any(MailboxSession.class)))
+            .thenReturn(Mono.just(new MessageManager.AppendResult(new ComposedMessageId(OUTBOX_ID, TestMessageId.of(23), MessageUid.of(1)), TEST_MESSAGE_SIZE,
+                Optional.of(ImmutableList.of()))));
 
         drafts = mock(MessageManager.class);
         when(drafts.getId()).thenReturn(DRAFTS_ID);
@@ -307,7 +307,7 @@ public class SetMessagesCreationProcessorTest {
         sut.process(createMessageInOutbox, session);
 
         // Then
-        verify(outbox).appendMessage(any(MessageManager.AppendCommand.class), any(MailboxSession.class));
+        verify(outbox).appendMessageReactive(any(MessageManager.AppendCommand.class), any(MailboxSession.class));
     }
 
     @Test

@@ -58,8 +58,23 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
 public class MessageAppender {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageAppender.class);
+
+    private static class NewMessage {
+        private final byte[] messageContent;
+        private final Message message;
+        private final Date date;
+
+        private NewMessage(byte[] messageContent, Message message, Date date) {
+            this.messageContent = messageContent;
+            this.message = message;
+            this.date = date;
+        }
+    }
 
     private final MailboxManager mailboxManager;
     private final MessageIdManager messageIdManager;
@@ -74,41 +89,45 @@ public class MessageAppender {
         this.mimeMessageConverter = mimeMessageConverter;
     }
 
-    public MetaDataWithContent appendMessageInMailboxes(CreationMessageEntry createdEntry,
-                                                        List<MailboxId> targetMailboxes,
-                                                        MailboxSession session) throws MailboxException {
-        Preconditions.checkArgument(!targetMailboxes.isEmpty());
-        ImmutableList<MessageAttachmentMetadata> messageAttachments = getMessageAttachments(session, createdEntry.getValue().getAttachments());
-        Message message = mimeMessageConverter.convertToMime(createdEntry, messageAttachments, session);
+    public Mono<MetaDataWithContent> appendMessageInMailboxes(CreationMessageEntry createdEntry, List<MailboxId> targetMailboxes, MailboxSession session) {
+        return Mono.fromCallable(() -> {
+                Preconditions.checkArgument(!targetMailboxes.isEmpty());
+                ImmutableList<MessageAttachmentMetadata> messageAttachments = getMessageAttachments(session, createdEntry.getValue().getAttachments());
+                Message message = mimeMessageConverter.convertToMime(createdEntry, messageAttachments, session);
 
-        byte[] messageContent = mimeMessageConverter.asBytes(message);
-        Date internalDate = Date.from(createdEntry.getValue().getDate().toInstant());
+                byte[] messageContent = mimeMessageConverter.asBytes(message);
+                Date internalDate = Date.from(createdEntry.getValue().getDate().toInstant());
 
-        MessageManager mailbox = mailboxManager.getMailbox(targetMailboxes.get(0), session);
-        AppendResult appendResult = mailbox.appendMessage(
-            MessageManager.AppendCommand.builder()
-                .withInternalDate(internalDate)
-                .withFlags(getFlags(createdEntry.getValue()))
-                .notRecent()
-                .withParsedMessage(message)
-                .build(new ByteContent(messageContent)),
-            session);
-        ComposedMessageId ids = appendResult.getId();
-        if (targetMailboxes.size() > 1) {
-            messageIdManager.setInMailboxes(ids.getMessageId(), targetMailboxes, session);
-        }
-
-        return MetaDataWithContent.builder()
-            .uid(ids.getUid())
-            .keywords(createdEntry.getValue().getKeywords())
-            .internalDate(internalDate.toInstant())
-            .sharedContent(new SharedByteArrayInputStream(messageContent))
-            .size(messageContent.length)
-            .attachments(appendResult.getMessageAttachments())
-            .mailboxId(mailbox.getId())
-            .message(message)
-            .messageId(ids.getMessageId())
-            .build();
+                return new NewMessage(messageContent, message, internalDate);
+            }).subscribeOn(Schedulers.elastic())
+            .flatMap(newMessage -> Mono.from(mailboxManager.getMailboxReactive(targetMailboxes.get(0), session))
+                .flatMap(mailbox -> Mono.from(mailbox.appendMessageReactive(
+                    MessageManager.AppendCommand.builder()
+                        .withInternalDate(newMessage.date)
+                        .withFlags(getFlags(createdEntry.getValue()))
+                        .notRecent()
+                        .withParsedMessage(newMessage.message)
+                        .build(new ByteContent(newMessage.messageContent)),
+                    session))
+                    .flatMap(appendResult -> {
+                        ComposedMessageId ids = appendResult.getId();
+                        if (targetMailboxes.size() > 1) {
+                            return Mono.from(messageIdManager.setInMailboxesReactive(ids.getMessageId(), targetMailboxes, session))
+                                .thenReturn(appendResult);
+                        }
+                        return Mono.just(appendResult);
+                    })
+                    .map(appendResult -> MetaDataWithContent.builder()
+                        .uid(appendResult.getId().getUid())
+                        .keywords(createdEntry.getValue().getKeywords())
+                        .internalDate(newMessage.date.toInstant())
+                        .sharedContent(new SharedByteArrayInputStream(newMessage.messageContent))
+                        .size(newMessage.messageContent.length)
+                        .attachments(appendResult.getMessageAttachments())
+                        .mailboxId(mailbox.getId())
+                        .message(newMessage.message)
+                        .messageId(appendResult.getId().getMessageId())
+                        .build())));
     }
 
     public MetaDataWithContent appendMessageInMailbox(org.apache.james.mime4j.dom.Message message,
