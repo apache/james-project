@@ -29,3 +29,44 @@ $ java -javaagent:james-server-jpa-guice.lib/openjpa-3.1.2.jar -Dworking.directo
 ----
 
 Note that binding ports below 1024 requires administrative rights.
+
+== Docker distribution
+
+To import the image locally:
+
+[source]
+----
+docker image load -i target/jib-image.tar
+----
+
+Then run it:
+
+[source]
+----
+docker run apache/james:jpa-latest
+----
+
+Use the [JAVA_TOOL_OPTIONS environment option](https://github.com/GoogleContainerTools/jib/blob/master/docs/faq.md#jvm-flags)
+to pass extra JVM flags. For instance:
+
+[source]
+----
+docker run -e "JAVA_TOOL_OPTIONS=-Xmx500m -Xms500m" apache/james:jpa-latest
+----
+
+[Glowroot APM](https://glowroot.org/) is packaged as part of the docker distribution to easily enable valuable performances insights.
+Disabled by default, its java agent can easily be enabled:
+
+
+[source]
+----
+docker run -e "JAVA_TOOL_OPTIONS=-javaagent:/root/glowroot.jar" apache/james:jpa-latest
+----
+
+The [CLI](https://james.apache.org/server/manage-cli.html) can easily be used:
+
+
+[source]
+----
+docker exec CONTAINER-ID james-cli ListDomains
+----
