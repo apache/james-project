@@ -91,18 +91,20 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
     } else {
       SMono.fromCallable(() => request.toMime4JMessage(blobResolvers, htmlTextExtractor, mailboxSession))
         .flatMap(either => either.fold(e => SMono.just(CreationFailure(clientId, e)),
-          message => SMono.fromCallable[CreationResult](() => append(clientId, asAppendCommand(request, message), mailboxSession, mailboxIds))))
+          message => append(clientId, asAppendCommand(request, message), mailboxSession, mailboxIds)))
         .onErrorResume(e => SMono.just[CreationResult](CreationFailure(clientId, e)))
         .subscribeOn(Schedulers.elastic())
     }
   }
 
-  private def append(clientId: EmailCreationId, appendCommand: AppendCommand, mailboxSession: MailboxSession, mailboxIds: List[MailboxId]): CreationSuccess = {
-    val appendResult = mailboxManager.getMailbox(mailboxIds.head, mailboxSession)
-      .appendMessage(appendCommand, mailboxSession)
-
-    val blobId: Option[BlobId] = BlobId.of(appendResult.getId.getMessageId).toOption
-    CreationSuccess(clientId, EmailCreationResponse(appendResult.getId.getMessageId, blobId, blobId, Email.sanitizeSize(appendResult.getSize)))
+  private def append(clientId: EmailCreationId, appendCommand: AppendCommand, mailboxSession: MailboxSession, mailboxIds: List[MailboxId]): SMono[CreationSuccess] = {
+    for {
+      mailbox <- SMono(mailboxManager.getMailboxReactive(mailboxIds.head, mailboxSession))
+      appendResult <- SMono(mailbox.appendMessageReactive(appendCommand, mailboxSession))
+    } yield {
+      val blobId: Option[BlobId] = BlobId.of(appendResult.getId.getMessageId).toOption
+      CreationSuccess(clientId, EmailCreationResponse(appendResult.getId.getMessageId, blobId, blobId, Email.sanitizeSize(appendResult.getSize)))
+    }
   }
 
   private def asAppendCommand(request: EmailCreationRequest, message: Message): AppendCommand =

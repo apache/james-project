@@ -311,6 +311,12 @@ public class StoreMessageManager implements MessageManager {
     }
 
     @Override
+    public Publisher<AppendResult> appendMessageReactive(AppendCommand appendCommand, MailboxSession session) {
+        return Mono.fromCallable(() -> appendMessage(appendCommand, session))
+            .subscribeOn(Schedulers.elastic());
+    }
+
+    @Override
     public AppendResult appendMessage(InputStream msgIn, Date internalDate, final MailboxSession mailboxSession, boolean isRecent, Flags flagsToBeSet) throws MailboxException {
         File file = null;
 

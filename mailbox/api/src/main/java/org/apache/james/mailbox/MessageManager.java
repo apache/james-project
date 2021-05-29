@@ -360,6 +360,8 @@ public interface MessageManager {
 
     AppendResult appendMessage(AppendCommand appendCommand, MailboxSession session) throws MailboxException;
 
+    Publisher<AppendResult> appendMessageReactive(AppendCommand appendCommand, MailboxSession session);
+
     /**
      * Gets messages in the given range. The messages may get fetched under
      * the-hood in batches so the caller should check if

@@ -278,16 +278,15 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     private Mono<MessageWithId> handleOutboxMessages(CreationMessageEntry entry, MailboxSession session) {
         return assertUserCanSendFrom(session.getUser(), entry.getValue().getFrom())
-            .then(Mono.fromCallable(() -> messageAppender.appendMessageInMailboxes(entry, toMailboxIds(entry), session))
-                .subscribeOn(Schedulers.elastic())
-                .flatMap(newMessage ->
-                    messageFullViewFactory.fromMetaDataWithContent(newMessage)
-                        .flatMap(Throwing.function((MessageFullView jmapMessage) -> {
-                            Envelope envelope = EnvelopeUtils.fromMessage(jmapMessage);
-                            return messageSender.sendMessage(newMessage, envelope, session)
-                                .then(referenceUpdater.updateReferences(entry.getValue().getHeaders(), session))
-                                .thenReturn(new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage));
-                        }).sneakyThrow())));
+            .then(messageAppender.appendMessageInMailboxes(entry, toMailboxIds(entry), session))
+            .flatMap(newMessage ->
+                messageFullViewFactory.fromMetaDataWithContent(newMessage)
+                    .flatMap(Throwing.function((MessageFullView jmapMessage) -> {
+                        Envelope envelope = EnvelopeUtils.fromMessage(jmapMessage);
+                        return messageSender.sendMessage(newMessage, envelope, session)
+                            .then(referenceUpdater.updateReferences(entry.getValue().getHeaders(), session))
+                            .thenReturn(new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage));
+                    }).sneakyThrow()));
     }
 
     @VisibleForTesting
@@ -313,8 +312,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     }
 
     private Mono<MessageWithId> handleDraftMessages(CreationMessageEntry entry, MailboxSession session) {
-        return Mono.fromCallable(() -> messageAppender.appendMessageInMailboxes(entry, toMailboxIds(entry), session))
-            .subscribeOn(Schedulers.elastic())
+        return messageAppender.appendMessageInMailboxes(entry, toMailboxIds(entry), session)
             .flatMap(messageFullViewFactory::fromMetaDataWithContent)
             .map(jmapMessage -> new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage));
     }
