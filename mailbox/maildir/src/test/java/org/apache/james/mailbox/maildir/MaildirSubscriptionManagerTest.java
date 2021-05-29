@@ -23,7 +23,6 @@ import java.io.File;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.SubscriptionManagerContract;
 import org.apache.james.mailbox.exception.SubscriptionException;
-import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,7 +42,7 @@ class MaildirSubscriptionManagerTest implements SubscriptionManagerContract {
 
     @BeforeEach
     void setUp() {
-        MaildirStore store = new MaildirStore(tmpFolder + "/Maildir/%domain/%user", new JVMMailboxPathLocker());
+        MaildirStore store = new MaildirStore(tmpFolder + "/Maildir/%domain/%user");
         MaildirMailboxSessionMapperFactory factory = new MaildirMailboxSessionMapperFactory(store);
 
         subscriptionManager = new StoreSubscriptionManager(factory);
