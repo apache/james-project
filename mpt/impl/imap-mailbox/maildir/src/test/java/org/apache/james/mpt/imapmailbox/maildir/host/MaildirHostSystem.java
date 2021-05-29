@@ -71,7 +71,7 @@ public class MaildirHostSystem extends JamesImapHostSystem {
     public void beforeTest() throws Exception {
         super.beforeTest();
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
-        MaildirStore store = new MaildirStore(MAILDIR_HOME + "/%user", locker);
+        MaildirStore store = new MaildirStore(MAILDIR_HOME + "/%user");
         MaildirMailboxSessionMapperFactory mailboxSessionMapperFactory = new MaildirMailboxSessionMapperFactory(store);
         StoreSubscriptionManager sm = new StoreSubscriptionManager(mailboxSessionMapperFactory);
         

@@ -49,7 +49,7 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 public class MaildirMailboxManagerProvider {
 
     public static StoreMailboxManager createMailboxManager(String configuration, File tempFile) {
-        MaildirStore store = new MaildirStore(tempFile.getPath() + configuration, new JVMMailboxPathLocker());
+        MaildirStore store = new MaildirStore(tempFile.getPath() + configuration);
         MaildirMailboxSessionMapperFactory mf = new MaildirMailboxSessionMapperFactory(store);
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();

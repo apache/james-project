@@ -64,13 +64,9 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
      * variables.
      * @param maildirLocation A String with variables
      */
-    public MaildirStore(String maildirLocation, MailboxPathLocker locker) {
-        this.maildirLocation = maildirLocation;
-        this.locker = locker;
-    }
-    
     public MaildirStore(String maildirLocation) {
-        this(maildirLocation, new JVMMailboxPathLocker());
+        this.maildirLocation = maildirLocation;
+        this.locker = new JVMMailboxPathLocker();
     }
     
     
