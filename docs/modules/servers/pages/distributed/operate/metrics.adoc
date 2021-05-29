@@ -227,7 +227,7 @@ Import the different dashboards you want.
 You then need to enable reporting through ElasticSearch. Modify your
 James ElasticSearch configuration file accordingly. To help you doing
 this, you can take a look to
-https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/elasticsearch.properties[elasticsearch.properties].
+link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/elasticsearch.properties[elasticsearch.properties].
 
 If some metrics seem abnormally slow despite in depth database
 performance tuning, feedback is appreciated as well on the bug tracker,

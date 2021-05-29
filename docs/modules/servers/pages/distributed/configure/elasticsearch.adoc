@@ -1,7 +1,7 @@
 = Distributed James Server &mdash; elasticsearch.properties
 :navtitle: elasticsearch.properties
 
-Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/cassandra.properties[example]
+Consult this link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/cassandra.properties[example]
 to get some examples and hints.
 
 If you want more explanation about ElasticSearch configuration, you should visit the dedicated https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html[documentation].

@@ -1,7 +1,7 @@
 = Distributed James Server &mdash; pop3server.xml
 :navtitle: pop3server.xml
 
-Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/pop3server.xml[example]
+Consult this link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/pop3server.xml[example]
 to get some examples and hints.
 
 The POP3 service is controlled by a configuration block in the pop3server.xml.

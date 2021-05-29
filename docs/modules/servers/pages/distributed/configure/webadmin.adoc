@@ -13,7 +13,7 @@ for example: Swagger documentation & James health checks.
 
 == Configuration
 
-Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/webadmin.properties[example]
+Consult this link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/webadmin.properties[example]
 to get some examples and hints.
 
 .webadmin.properties content

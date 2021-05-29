@@ -15,7 +15,7 @@ associated to a protocol in *mailrepositorystore.xml* for a usage in *mailetcont
 
 == Configuration
 
-Consult this link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/mailrepositorystore.xml[example]
+Consult this link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/mailrepositorystore.xml[example]
 to get some examples and hints.
 
 ....

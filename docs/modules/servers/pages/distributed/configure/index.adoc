@@ -13,49 +13,49 @@ The following configuration files are exposed:
 
 By omitting these files, the underlying protocols will be disabled.
 
-** xref:distributed/configure/imap.adoc[*imapserver.xml*] allows configuration for the IMAP protocol link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/imapserver.xml[example]
-** xref:distributed/configure/jmap.adoc[*jmap.properties*] allows to configure the JMAP protocol link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/jmap.properties[example]
-** xref:distributed/configure/jmx.adoc[*jmx.properties*] allows configuration of JMX being used by the Command Line Interface link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/jmx.properties[example]
-** xref:distributed/configure/smtp.adoc#_lmtp_configuration[*lmtpserver.xml*] allows configuring the LMTP protocol link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/lmtpserver.xml[example]
-** *managesieveserver.xml* allows configuration for ManagedSieve (unsupported) link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/managesieveserver.xml[example]
-** xref:distributed/configure/pop3.adoc[*pop3server.xml*] allows configuration for the POP3 protocol (experimental) link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/pop3server.xml[example]
-** xref:distributed/configure/smtp.adoc[*smtpserver.xml*] allows configuration for the SMTP protocol link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/smtpserver.xml[example]
+** xref:distributed/configure/imap.adoc[*imapserver.xml*] allows configuration for the IMAP protocol link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/imapserver.xml[example]
+** xref:distributed/configure/jmap.adoc[*jmap.properties*] allows to configure the JMAP protocol link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/jmap.properties[example]
+** xref:distributed/configure/jmx.adoc[*jmx.properties*] allows configuration of JMX being used by the Command Line Interface link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/jmx.properties[example]
+** xref:distributed/configure/smtp.adoc#_lmtp_configuration[*lmtpserver.xml*] allows configuring the LMTP protocol link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/lmtpserver.xml[example]
+** *managesieveserver.xml* allows configuration for ManagedSieve (unsupported) link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/managesieveserver.xml[example]
+** xref:distributed/configure/pop3.adoc[*pop3server.xml*] allows configuration for the POP3 protocol (experimental) link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/pop3server.xml[example]
+** xref:distributed/configure/smtp.adoc[*smtpserver.xml*] allows configuration for the SMTP protocol link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/smtpserver.xml[example]
 *** xref:distributed/configure/smtp-hooks.adoc[This page] list SMTP hooks that can be used out of the box with the Distributed Server.
-** xref:distributed/configure/webadmin.adoc[*webadmin.properties*] enables configuration for the WebAdmin protocol link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/webadmin.properties[example]
+** xref:distributed/configure/webadmin.adoc[*webadmin.properties*] enables configuration for the WebAdmin protocol link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/webadmin.properties[example]
 ** xref:distributed/configure/ssl.adoc[This page] details SSL & TLS configuration.
 
 == For storage dependencies
 
 Except specific documented cases, these files are required, at least to establish a connection with the storage components.
 
-** xref:distributed/configure/blobstore.adoc[*blobstore.properties*] allows to configure the BlobStore link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/blob.properties[example]
-** xref:distributed/configure/cassandra.adoc[*cassandra.properties*] allows to configure the Cassandra driver link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/cassandra.properties[example]
-** xref:distributed/configure/elasticsearch.adoc[*elasticsearch.properties*] allows to configure ElasticSearch driver link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/elasticsearch.properties[example]
-** xref:distributed/configure/rabbitmq.adoc[*rabbitmq.properties*] allows configuration for the RabbitMQ driver link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/rabbitmq.properties[example]
-** xref:distributed/configure/tika.adoc[*tika.properties*] allows configuring Tika as a backend for text extraction link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/tika.properties[example]
+** xref:distributed/configure/blobstore.adoc[*blobstore.properties*] allows to configure the BlobStore link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/blob.properties[example]
+** xref:distributed/configure/cassandra.adoc[*cassandra.properties*] allows to configure the Cassandra driver link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/cassandra.properties[example]
+** xref:distributed/configure/elasticsearch.adoc[*elasticsearch.properties*] allows to configure ElasticSearch driver link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/elasticsearch.properties[example]
+** xref:distributed/configure/rabbitmq.adoc[*rabbitmq.properties*] allows configuration for the RabbitMQ driver link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/rabbitmq.properties[example]
+** xref:distributed/configure/tika.adoc[*tika.properties*] allows configuring Tika as a backend for text extraction link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/tika.properties[example]
 
 == For core components
 
 By omitting these files, sane default values are used.
 
-** xref:distributed/configure/batchsizes.adoc[*batchsizes.properties*] allows to configure mailbox read batch sizes link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/batchsizes.properties[example]
-** xref:distributed/configure/dns.adoc[*dnsservice.xml*] allows to configure DNS resolution link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/dnsservice.xml[example]
-** xref:distributed/configure/domainlist.adoc[*domainlist.xml*] allows to configure Domain storage link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/domainlist.xml[example]
-** xref:distributed/configure/healthcheck.adoc[*healthcheck.properties*] allows to configure periodical healthchecks link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/healthcheck.properties[example]
-** xref:distributed/configure/mailetcontainer.adoc[*mailetcontainer.xml*] allows configuring mail processing link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/mailetcontainer.xml[example]
+** xref:distributed/configure/batchsizes.adoc[*batchsizes.properties*] allows to configure mailbox read batch sizes link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/batchsizes.properties[example]
+** xref:distributed/configure/dns.adoc[*dnsservice.xml*] allows to configure DNS resolution link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/dnsservice.xml[example]
+** xref:distributed/configure/domainlist.adoc[*domainlist.xml*] allows to configure Domain storage link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/domainlist.xml[example]
+** xref:distributed/configure/healthcheck.adoc[*healthcheck.properties*] allows to configure periodical healthchecks link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/healthcheck.properties[example]
+** xref:distributed/configure/mailetcontainer.adoc[*mailetcontainer.xml*] allows configuring mail processing link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/mailetcontainer.xml[example]
 *** xref:distributed/configure/mailets.adoc[This page] list matchers that can be used out of the box with the Distributed Server.
 *** xref:distributed/configure/matchers.adoc[This page] list matchers that can be used out of the box with the Distributed Server.
-** xref:distributed/configure/mailrepositorystore.adoc[*mailrepositorystore.xml*] enables registration of allowed MailRepository protcols and link them to MailRepository implementations link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/mailrepositorystore.xml[example]
-** xref:distributed/configure/recipientrewritetable.adoc[*recipientrewritetable.xml*] enables advanced configuration for the Recipient Rewrite Table component link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/recipientrewritetable.xml[example]
-** xref:distributed/configure/usersrepository.adoc[*usersrepository.xml*] allows configuration of user storage link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/usersrepository.xml[example]
+** xref:distributed/configure/mailrepositorystore.adoc[*mailrepositorystore.xml*] enables registration of allowed MailRepository protcols and link them to MailRepository implementations link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/mailrepositorystore.xml[example]
+** xref:distributed/configure/recipientrewritetable.adoc[*recipientrewritetable.xml*] enables advanced configuration for the Recipient Rewrite Table component link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/recipientrewritetable.xml[example]
+** xref:distributed/configure/usersrepository.adoc[*usersrepository.xml*] allows configuration of user storage link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/usersrepository.xml[example]
 
 == For extensions
 
 By omitting these files, no extra behaviour is added.
 
-** xref:distributed/configure/vault.adoc[*deletedMessageVault.properties*] allows to configure the DeletedMessageVault link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/deletedMessageVault.properties[example]
-** xref:distributed/configure/listeners.adoc[*listeners.xml*] enables configuration of Mailbox Listeners link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/listeners.xml[example]
-** xref:distributed/configure/extensions.adoc[*extensions.properties*] allows to extend James behaviour by loading your extensions in it link:https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/extensions.properties[example]
+** xref:distributed/configure/vault.adoc[*deletedMessageVault.properties*] allows to configure the DeletedMessageVault link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/deletedMessageVault.properties[example]
+** xref:distributed/configure/listeners.adoc[*listeners.xml*] enables configuration of Mailbox Listeners link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/listeners.xml[example]
+** xref:distributed/configure/extensions.adoc[*extensions.properties*] allows to extend James behaviour by loading your extensions in it link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/extensions.properties[example]
 ** xref:distributed/configure/spam.adoc[This page] documents Anti-Spam setup with SpamAssassin.
 ** xref:distributed/configure/remote-delivery-error-handling.adoc[This page] proposes a simple strategy for RemoteDelivery error handling.
 ** xref:distributed/configure/collecting-contacts.adoc[This page] documents contact collection
