@@ -185,12 +185,11 @@ To run this container :
 
 Where HOSTNAME is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
 
-
 == Other Useful commands
 
 The base command is different whether you choose guice flavor or spring :
 
-  * guice use : `docker exec james_run java -jar /root/james-cli.jar`
+  * guice use : `docker exec james_run java james-cli`
   * spring use : `docker exec james_run /root/james-server-app-3.0.0-beta6-SNAPSHOT/bin/james-cli.sh`
 
 See https://james.apache.org/server/manage-cli.html[Manage James via the Command Line] for more info.
