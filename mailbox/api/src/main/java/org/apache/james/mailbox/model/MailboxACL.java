@@ -859,6 +859,9 @@ public class MailboxACL {
      * one of those.
      */
     public MailboxACL union(MailboxACL other) throws UnsupportedRightException {
+        if (entries.isEmpty()) {
+            return other;
+        }
         return new MailboxACL(
             Stream.concat(
                     this.entries.entrySet().stream(),
