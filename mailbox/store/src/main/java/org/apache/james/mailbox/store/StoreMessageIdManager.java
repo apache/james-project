@@ -144,20 +144,22 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     @Override
-    public Set<MessageId> accessibleMessages(Collection<MessageId> messageIds, MailboxSession mailboxSession) throws MailboxException {
+    public Set<MessageId> accessibleMessages(Collection<MessageId> messageIds, MailboxSession mailboxSession) {
+        return accessibleMessagesReactive(messageIds, mailboxSession).block();
+    }
+
+    @Override
+    public Mono<Set<MessageId>> accessibleMessagesReactive(Collection<MessageId> messageIds, MailboxSession mailboxSession) {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
-        ImmutableList<ComposedMessageIdWithMetaData> idList = Flux.fromIterable(messageIds)
+        return Flux.fromIterable(messageIds)
             .flatMap(messageIdMapper::findMetadata, DEFAULT_CONCURRENCY)
             .collect(Guavate.toImmutableList())
-            .block();
-
-        ImmutableSet<MailboxId> allowedMailboxIds = getAllowedMailboxIds(mailboxSession, idList.stream()
-            .map(id -> id.getComposedMessageId().getMailboxId()), Right.Read);
-
-        return idList.stream()
-            .filter(id -> allowedMailboxIds.contains(id.getComposedMessageId().getMailboxId()))
-            .map(id -> id.getComposedMessageId().getMessageId())
-            .collect(Guavate.toImmutableSet());
+            .flatMap(idList -> getAllowedMailboxIds(mailboxSession, idList.stream()
+                .map(id -> id.getComposedMessageId().getMailboxId()), Right.Read)
+                .map(allowedMailboxIds -> idList.stream()
+                    .filter(id -> allowedMailboxIds.contains(id.getComposedMessageId().getMailboxId()))
+                    .map(id -> id.getComposedMessageId().getMessageId())
+                    .collect(Guavate.toImmutableSet())));
     }
 
     @Override
@@ -190,11 +192,7 @@ public class StoreMessageIdManager implements MessageIdManager {
             .flatMap(Function.identity(), DEFAULT_CONCURRENCY);
     }
 
-    private ImmutableSet<MailboxId> getAllowedMailboxIds(MailboxSession mailboxSession, Stream<MailboxId> idList, Right... rights) throws MailboxException {
-        return MailboxReactorUtils.block(getAllowedMailboxIdsReactive(mailboxSession, idList, rights));
-    }
-
-    private Mono<ImmutableSet<MailboxId>> getAllowedMailboxIdsReactive(MailboxSession mailboxSession, Stream<MailboxId> idList, Right... rights) {
+    private Mono<ImmutableSet<MailboxId>> getAllowedMailboxIds(MailboxSession mailboxSession, Stream<MailboxId> idList, Right... rights) {
         return Flux.fromStream(idList)
             .distinct()
             .filterWhen(hasRightsOnMailboxReactive(mailboxSession, rights), DEFAULT_CONCURRENCY)
@@ -229,7 +227,7 @@ public class StoreMessageIdManager implements MessageIdManager {
         return messageIdMapper.findReactive(messageIds, MessageMapper.FetchType.Metadata)
             .collectList()
             .flatMap(messageList ->
-                getAllowedMailboxIdsReactive(mailboxSession,
+                getAllowedMailboxIds(mailboxSession,
                     messageList
                         .stream()
                         .map(MailboxMessage::getMailboxId),

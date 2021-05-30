@@ -90,8 +90,9 @@ case class MailboxChangeListener @Inject() (@Named(InjectionKeys.JMAP) eventBus:
           .concat(emailChangeFactory.fromFlagsUpdated(flagsUpdated, now, sharees.asJava).asScala))
       case expunged: Expunged =>
         getSharees(mailboxId, username)
-          .flatMapIterable(sharees => mailboxChangeFactory.fromExpunged(expunged, now, sharees.asJava).asScala
-          .concat(emailChangeFactory.fromExpunged(expunged, now, sharees.map(_.getIdentifier).map(Username.of).asJava).asScala))
+          .flatMapMany(sharees => SFlux.concat(
+            SFlux.fromIterable(mailboxChangeFactory.fromExpunged(expunged, now, sharees.asJava).asScala),
+            emailChangeFactory.fromExpunged(expunged, now, sharees.map(_.getIdentifier).map(Username.of).asJava)))
     }
   }
 
