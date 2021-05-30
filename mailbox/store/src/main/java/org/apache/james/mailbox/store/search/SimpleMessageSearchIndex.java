@@ -59,6 +59,7 @@ import org.apache.james.util.streams.Iterators;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 /**
@@ -159,7 +160,9 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     }
 
     private Flux<? extends SearchResult> searchResults(MailboxSession session, Flux<Mailbox> mailboxes, SearchQuery query) throws MailboxException {
-        return mailboxes.concatMap(mailbox -> Flux.fromStream(getSearchResultStream(session, query, mailbox)))
+        return mailboxes.concatMap(mailbox -> Mono.fromCallable(() -> getSearchResultStream(session, query, mailbox))
+                .flatMapMany(Flux::fromStream)
+                .subscribeOn(Schedulers.elastic()))
             .collectSortedList(CombinedComparator.create(query.getSorts()))
             .flatMapMany(list -> Iterators.toFlux(new MessageSearches(list.iterator(), query, textExtractor, attachmentContentLoader, session).iterator()))
             .subscribeOn(Schedulers.elastic());
