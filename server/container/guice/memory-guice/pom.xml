@@ -251,7 +251,7 @@
                 <artifactId>download-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>install-jbpm</id>
+                        <id>install-glowroot</id>
                         <goals>
                             <goal>wget</goal>
                         </goals>
