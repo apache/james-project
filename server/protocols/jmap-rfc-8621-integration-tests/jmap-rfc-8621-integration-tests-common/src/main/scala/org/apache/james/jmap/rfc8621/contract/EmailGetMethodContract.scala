@@ -5520,7 +5520,7 @@ trait EmailGetMethodContract {
          |                    "id": "${messageId.serialize}",
          |                    "headers": [
          |                      {"name":"MIME-Version","value":" 1.0"},
-         |                      {"name":"Subject","value":" =?US-ASCII?Q?World_domination_=0D=0A_and_thi?=\\r\\n =?US-ASCII?Q?s_is_also_part_of_the_header?="},
+         |                      {"name":"Subject","value":" =?US-ASCII?Q?World_domination_=0D=0A_and_th?=\\r\\n =?US-ASCII?Q?is_is_also_part_of_the_header?="},
          |                      {"name":"Sender","value":" andre@domain.tld"},
          |                      {"name":"From","value":" andre@domain.tld"},
          |                      {"name":"Content-Type","value":" text/plain; charset=UTF-8"}
@@ -5580,7 +5580,7 @@ trait EmailGetMethodContract {
       .isEqualTo(
         s"""{
            |    "id": "${messageId.serialize}",
-           |    "header:Subject":" =?US-ASCII?Q?World_domination_=0D=0A_and_thi?=\\r\\n =?US-ASCII?Q?s_is_also_part_of_the_header?=",
+           |    "header:Subject":" =?US-ASCII?Q?World_domination_=0D=0A_and_th?=\\r\\n =?US-ASCII?Q?is_is_also_part_of_the_header?=",
            |    "header:From":" andre@domain.tld",
            |    "header:Sender":" andre@domain.tld"
            |}""".stripMargin)
@@ -5633,7 +5633,7 @@ trait EmailGetMethodContract {
       .isEqualTo(
       s"""{
          |    "id": "${messageId.serialize}",
-         |    "header:subJeCt":" =?US-ASCII?Q?World_domination_=0D=0A_and_thi?=\\r\\n =?US-ASCII?Q?s_is_also_part_of_the_header?="
+         |    "header:subJeCt":" =?US-ASCII?Q?World_domination_=0D=0A_and_th?=\\r\\n =?US-ASCII?Q?is_is_also_part_of_the_header?="
          |}""".stripMargin)
   }
 
@@ -6066,7 +6066,7 @@ trait EmailGetMethodContract {
       .isEqualTo(
       s"""{
          |    "id": "${messageId.serialize}",
-         |    "header:Subject:asRaw": " =?US-ASCII?Q?World_domination_=0D=0A_and_thi?=\\r\\n =?US-ASCII?Q?s_is_also_part_of_the_header?="
+         |    "header:Subject:asRaw": " =?US-ASCII?Q?World_domination_=0D=0A_and_th?=\\r\\n =?US-ASCII?Q?is_is_also_part_of_the_header?="
          |}""".stripMargin)
   }
 
@@ -6132,7 +6132,7 @@ trait EmailGetMethodContract {
            |    "header:ReplyTo:asRaw": " \\"user1\\" user1@domain.tld",
            |    "header:From:asRaw": " andre@domain.tld",
            |    "header:Cc:asRaw": " \\"user2\\" user2@domain.tld",
-           |    "header:Subject:asRaw": " =?US-ASCII?Q?World_domination_=0D=0A_and_thi?=\\r\\n =?US-ASCII?Q?s_is_also_part_of_the_header?=",
+           |    "header:Subject:asRaw": " =?US-ASCII?Q?World_domination_=0D=0A_and_th?=\\r\\n =?US-ASCII?Q?is_is_also_part_of_the_header?=",
            |    "header:InReplyTo:asRaw": null,
            |    "header:sentAt:asRaw": null,
            |    "header:To:asRaw": " \\"user1\\" user1@domain.tld",
@@ -6241,7 +6241,7 @@ trait EmailGetMethodContract {
       .isEqualTo(
         s"""{
            |    "id": "${messageId.serialize}",
-           |    "header:Subject:asRaw": " =?US-ASCII?Q?___World_domination=0D=0A_and_thi?=\\r\\n =?US-ASCII?Q?s_is_also_part_of_the_header=0D=0A?=",
+           |    "header:Subject:asRaw": " =?US-ASCII?Q?___World_domination=0D=0A_and_th?=\\r\\n =?US-ASCII?Q?is_is_also_part_of_the_header=0D=0A?=",
            |    "header:Subject:asText": "World domination and this is also part of the header"
            |}""".stripMargin)
   }
