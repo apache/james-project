@@ -28,10 +28,11 @@ import static org.apache.james.mailrepository.cassandra.MailRepositoryTable.KEYS
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTable.MAIL_KEY;
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTable.REPOSITORY_NAME;
 
+import java.util.function.Function;
+
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 
@@ -44,15 +45,13 @@ import reactor.core.publisher.Mono;
 public class CassandraMailRepositoryKeysDAO {
 
     private final CassandraAsyncExecutor executor;
-    private final CassandraUtils cassandraUtils;
     private final PreparedStatement insertKey;
     private final PreparedStatement deleteKey;
     private final PreparedStatement listKeys;
 
     @Inject
-    public CassandraMailRepositoryKeysDAO(Session session, CassandraUtils cassandraUtils) {
+    public CassandraMailRepositoryKeysDAO(Session session) {
         this.executor = new CassandraAsyncExecutor(session);
-        this.cassandraUtils = cassandraUtils;
 
         this.insertKey = prepareInsert(session);
         this.deleteKey = prepareDelete(session);
@@ -89,7 +88,7 @@ public class CassandraMailRepositoryKeysDAO {
     public Flux<MailKey> list(MailRepositoryUrl url) {
         return executor.execute(listKeys.bind()
             .setString(REPOSITORY_NAME, url.asString()))
-            .flatMapMany(cassandraUtils::convertToFlux)
+            .flatMapIterable(Function.identity())
             .map(row -> new MailKey(row.getString(MAIL_KEY)));
     }
 

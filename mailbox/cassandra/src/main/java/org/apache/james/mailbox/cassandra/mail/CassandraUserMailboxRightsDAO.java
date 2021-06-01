@@ -35,7 +35,6 @@ import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.acl.PositiveUserACLDiff;
@@ -56,16 +55,14 @@ import reactor.core.publisher.Mono;
 public class CassandraUserMailboxRightsDAO {
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
-    private final CassandraUtils cassandraUtils;
     private final PreparedStatement delete;
     private final PreparedStatement insert;
     private final PreparedStatement select;
     private final PreparedStatement selectUser;
 
     @Inject
-    public CassandraUserMailboxRightsDAO(Session session, CassandraUtils cassandraUtils) {
+    public CassandraUserMailboxRightsDAO(Session session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
-        this.cassandraUtils = cassandraUtils;
         this.delete = prepareDelete(session);
         this.insert = prepareInsert(session);
         this.select = prepareSelect(session);
@@ -137,10 +134,9 @@ public class CassandraUserMailboxRightsDAO {
     }
 
     public Flux<Pair<CassandraId, Rfc4314Rights>> listRightsForUser(Username userName) {
-        return cassandraAsyncExecutor.execute(
+        return cassandraAsyncExecutor.executeRows(
             selectUser.bind()
                 .setString(USER_NAME, userName.asString()))
-            .flatMapMany(cassandraUtils::convertToFlux)
             .map(Throwing.function(this::toPair));
     }
 

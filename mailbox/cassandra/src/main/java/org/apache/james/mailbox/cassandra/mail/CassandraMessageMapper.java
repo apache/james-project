@@ -394,7 +394,7 @@ public class CassandraMessageMapper implements MessageMapper {
 
         Flux<ComposedMessageIdWithMetaData> toBeUpdated = mailboxRecentDAO.getRecentMessageUidsInMailbox(mailboxId)
             .collectList()
-            .flatMapMany(uids -> Flux.fromIterable(MessageRange.toRanges(uids)))
+            .flatMapIterable(MessageRange::toRanges)
             .concatMap(range -> messageIdDAO.retrieveMessages(mailboxId, range, Limit.unlimited()))
             .filter(message -> message.getFlags().contains(Flag.RECENT));
         FlagsUpdateCalculator calculator = new FlagsUpdateCalculator(new Flags(Flag.RECENT), FlagsUpdateMode.REMOVE);

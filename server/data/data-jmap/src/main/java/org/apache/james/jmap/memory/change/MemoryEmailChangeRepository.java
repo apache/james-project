@@ -34,6 +34,7 @@ import org.apache.james.jmap.api.change.State;
 import org.apache.james.jmap.api.exception.ChangeNotFoundException;
 import org.apache.james.jmap.api.model.AccountId;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -107,9 +108,10 @@ public class MemoryEmailChangeRepository implements EmailChangeRepository {
 
     private Flux<EmailChange> allChangesSince(AccountId accountId, State state) {
         return findByState(accountId, state)
-            .flatMapMany(currentState -> Flux.fromIterable(emailChangeMap.get(accountId))
+            .flatMapIterable(currentState -> emailChangeMap.get(accountId).stream()
                 .filter(change -> change.getDate().isAfter(currentState.getDate()))
-                .sort(Comparator.comparing(EmailChange::getDate)));
+                .sorted(Comparator.comparing(EmailChange::getDate))
+                .collect(Guavate.toImmutableList()));
     }
 
     private Flux<EmailChange> allChanges(AccountId accountId) {

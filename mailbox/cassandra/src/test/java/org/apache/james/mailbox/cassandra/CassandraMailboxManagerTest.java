@@ -33,7 +33,6 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.blob.api.BlobStore;
@@ -805,7 +804,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             JsonEventSerializer jsonEventSerializer = JsonEventSerializer
                 .forModules(ACLModule.ACL_UPDATE)
                 .withoutNestedType();
-            CassandraUserMailboxRightsDAO usersRightDAO = new CassandraUserMailboxRightsDAO(cassandraCluster.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+            CassandraUserMailboxRightsDAO usersRightDAO = new CassandraUserMailboxRightsDAO(cassandraCluster.getConf());
             CassandraEventStore eventStore = new CassandraEventStore(new EventStoreDao(cassandraCluster.getConf(), jsonEventSerializer, CassandraConsistenciesConfiguration.DEFAULT));
             return new CassandraACLMapper(
                 new CassandraACLMapper.StoreV1(usersRightDAO, aclDAOV1),
@@ -814,7 +813,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
         }
 
         private CassandraUserMailboxRightsDAO rightsDAO(CassandraCluster cassandraCluster) {
-            return new CassandraUserMailboxRightsDAO(cassandraCluster.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+            return new CassandraUserMailboxRightsDAO(cassandraCluster.getConf());
         }
 
         private CassandraAttachmentMessageIdDAO attachmentMessageIdDAO(CassandraCluster cassandraCluster) {
