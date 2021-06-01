@@ -20,6 +20,7 @@
 package org.apache.james.backends.es.v7;
 
 import static org.apache.james.backends.es.v7.DockerElasticSearch.Fixture.ES_HTTP_PORT;
+import static org.apache.james.backends.es.v7.DockerElasticSearch.Fixture.ES_MEMORY;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -124,6 +125,7 @@ public interface DockerElasticSearch {
 
     interface Fixture {
         int ES_HTTP_PORT = 9200;
+        int ES_MEMORY = 620;
     }
 
     class NoAuth implements DockerElasticSearch {
@@ -133,6 +135,7 @@ public interface DockerElasticSearch {
                 .withTmpFs(ImmutableMap.of("/usr/share/elasticsearch/data", "rw,size=200m"))
                 .withExposedPorts(ES_HTTP_PORT)
                 .withEnv("discovery.type", "single-node")
+                .withEnv("ES_JAVA_OPTS", "-Xms" + ES_MEMORY + "m -Xmx" + ES_MEMORY + "m")
                 .withAffinityToContainer()
                 .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
         }
