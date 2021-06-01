@@ -33,7 +33,6 @@ import org.apache.james.backends.cassandra.Scenario;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
@@ -103,7 +102,7 @@ class CassandraMailboxMapperTest {
     void setUp() {
         CassandraCluster cassandra = cassandraCluster.getCassandraCluster();
         mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider(), cassandraCluster.getCassandraConsistenciesConfiguration());
-        mailboxPathV3DAO = new CassandraMailboxPathV3DAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION, cassandraCluster.getCassandraConsistenciesConfiguration());
+        mailboxPathV3DAO = new CassandraMailboxPathV3DAO(cassandra.getConf(), cassandraCluster.getCassandraConsistenciesConfiguration());
 
         versionDAO = new CassandraSchemaVersionDAO(cassandra.getConf());
         versionDAO.truncateVersion()
@@ -121,7 +120,7 @@ class CassandraMailboxMapperTest {
         JsonEventSerializer jsonEventSerializer = JsonEventSerializer
                 .forModules(ACLModule.ACL_UPDATE)
                 .withoutNestedType();
-        CassandraUserMailboxRightsDAO usersRightDAO = new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+        CassandraUserMailboxRightsDAO usersRightDAO = new CassandraUserMailboxRightsDAO(cassandra.getConf());
         CassandraEventStore eventStore = new CassandraEventStore(new EventStoreDao(cassandra.getConf(), jsonEventSerializer, CassandraConsistenciesConfiguration.DEFAULT));
         CassandraACLMapper aclMapper = new CassandraACLMapper(
                 new CassandraACLMapper.StoreV1(usersRightDAO, aclDAOV1),

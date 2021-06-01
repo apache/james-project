@@ -38,7 +38,6 @@ import javax.inject.Inject;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.utils.MailboxBaseTupleUtil;
@@ -52,7 +51,6 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -61,7 +59,6 @@ public class CassandraMailboxDAO {
 
     private final CassandraAsyncExecutor executor;
     private final MailboxBaseTupleUtil mailboxBaseTupleUtil;
-    private final CassandraUtils cassandraUtils;
     private final PreparedStatement readStatement;
     private final PreparedStatement listStatement;
     private final PreparedStatement deleteStatement;
@@ -72,8 +69,7 @@ public class CassandraMailboxDAO {
 
     @Inject
     public CassandraMailboxDAO(Session session, CassandraTypesProvider typesProvider,
-                               CassandraConsistenciesConfiguration consistenciesConfiguration,
-                               CassandraUtils cassandraUtils) {
+                               CassandraConsistenciesConfiguration consistenciesConfiguration) {
         this.executor = new CassandraAsyncExecutor(session);
         this.consistencyLevel = consistenciesConfiguration.getRegular();
         this.mailboxBaseTupleUtil = new MailboxBaseTupleUtil(typesProvider);
@@ -83,13 +79,6 @@ public class CassandraMailboxDAO {
         this.deleteStatement = prepareDelete(session);
         this.listStatement = prepareList(session);
         this.readStatement = prepareRead(session);
-        this.cassandraUtils = cassandraUtils;
-    }
-
-    @VisibleForTesting
-    public CassandraMailboxDAO(Session session, CassandraTypesProvider typesProvider,
-                               CassandraConsistenciesConfiguration consistenciesConfiguration) {
-        this(session, typesProvider, consistenciesConfiguration, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement prepareInsert(Session session) {
@@ -188,8 +177,7 @@ public class CassandraMailboxDAO {
     }
 
     public Flux<Mailbox> retrieveAllMailboxes() {
-        return executor.execute(listStatement.bind())
-            .flatMapMany(cassandraUtils::convertToFlux)
+        return executor.executeRows(listStatement.bind())
             .flatMap(this::toMailboxWithId, DEFAULT_CONCURRENCY);
     }
 

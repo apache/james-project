@@ -39,6 +39,7 @@ import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 
@@ -86,7 +87,7 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
             .source(searchSourceBuilder);
 
         return client.search(searchRequest, RequestOptions.DEFAULT)
-            .flatMapMany(searchResponse -> Flux.fromArray(searchResponse.getHits().getHits()));
+            .flatMapIterable(searchResponse -> ImmutableList.copyOf(searchResponse.getHits().getHits()));
     }
 
     private Flux<SearchHit> executeScrolledSearch(QuotaQuery query) {

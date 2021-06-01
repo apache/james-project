@@ -27,7 +27,6 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxRecentsTable;
@@ -36,33 +35,24 @@ import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraMailboxRecentsDAO {
-
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement readStatement;
     private final PreparedStatement deleteStatement;
     private final PreparedStatement deleteAllStatement;
     private final PreparedStatement addStatement;
-    private CassandraUtils cassandraUtils;
 
     @Inject
-    public CassandraMailboxRecentsDAO(Session session, CassandraUtils cassandraUtils) {
+    public CassandraMailboxRecentsDAO(Session session) {
         cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         readStatement = createReadStatement(session);
         deleteStatement = createDeleteStatement(session);
         deleteAllStatement = createDeleteAllStatement(session);
         addStatement = createAddStatement(session);
-        this.cassandraUtils = cassandraUtils;
-    }
-
-    @VisibleForTesting
-    public CassandraMailboxRecentsDAO(Session session) {
-        this(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement createReadStatement(Session session) {
@@ -95,8 +85,7 @@ public class CassandraMailboxRecentsDAO {
     }
 
     public Flux<MessageUid> getRecentMessageUidsInMailbox(CassandraId mailboxId) {
-        return cassandraAsyncExecutor.execute(bindWithMailbox(mailboxId, readStatement))
-            .flatMapMany(cassandraUtils::convertToFlux)
+        return cassandraAsyncExecutor.executeRows(bindWithMailbox(mailboxId, readStatement))
             .map(row -> row.getLong(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID))
             .map(MessageUid::of);
     }

@@ -22,6 +22,7 @@ package org.apache.james.backends.cassandra.utils;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 
@@ -67,7 +68,7 @@ public class CassandraAsyncExecutor {
 
     public Flux<Row> executeRows(Statement statement) {
         return execute(statement)
-            .flatMapMany(Flux::fromIterable);
+            .flatMapIterable(Function.identity());
     }
 
     public Mono<Optional<Row>> executeSingleRowOptional(Statement statement) {

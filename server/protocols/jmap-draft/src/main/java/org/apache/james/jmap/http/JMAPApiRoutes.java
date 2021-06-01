@@ -51,6 +51,7 @@ import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 
 import io.netty.handler.codec.http.HttpMethod;
 import reactor.core.publisher.Flux;
@@ -141,6 +142,6 @@ public class JMAPApiRoutes implements JMAPRoutes {
                     throw new BadRequestException("Error deserializing JSON", e);
                 }
             })
-            .flatMapMany(Flux::fromArray);
+            .flatMapIterable(ImmutableList::copyOf);
     }
 }

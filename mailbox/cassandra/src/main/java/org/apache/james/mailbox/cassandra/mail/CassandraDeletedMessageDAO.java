@@ -30,10 +30,11 @@ import static org.apache.james.mailbox.cassandra.table.CassandraDeletedMessageTa
 import static org.apache.james.mailbox.cassandra.table.CassandraDeletedMessageTable.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraDeletedMessageTable.UID;
 
+import java.util.function.Function;
+
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.model.MessageRange;
@@ -41,7 +42,6 @@ import org.apache.james.mailbox.model.MessageRange;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
-import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -54,15 +54,13 @@ public class CassandraDeletedMessageDAO {
     private final PreparedStatement addStatement;
     private final PreparedStatement deleteStatement;
     private final PreparedStatement deleteAllStatement;
-
     private final PreparedStatement selectAllUidStatement;
     private final PreparedStatement selectOneUidStatement;
     private final PreparedStatement selectBetweenUidStatement;
     private final PreparedStatement selectFromUidStatement;
-    private final CassandraUtils cassandraUtils;
 
     @Inject
-    public CassandraDeletedMessageDAO(Session session, CassandraUtils cassandraUtils) {
+    public CassandraDeletedMessageDAO(Session session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.addStatement = prepareAddStatement(session);
         this.deleteStatement = prepareDeleteStatement(session);
@@ -71,12 +69,6 @@ public class CassandraDeletedMessageDAO {
         this.selectOneUidStatement = prepareOneUidStatement(session);
         this.selectBetweenUidStatement = prepareBetweenUidStatement(session);
         this.selectFromUidStatement = prepareFromUidStatement(session);
-        this.cassandraUtils = cassandraUtils;
-    }
-
-    @VisibleForTesting
-    public CassandraDeletedMessageDAO(Session session) {
-        this(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     private PreparedStatement prepareAllUidStatement(Session session) {
@@ -146,7 +138,8 @@ public class CassandraDeletedMessageDAO {
 
     public Flux<MessageUid> retrieveDeletedMessage(CassandraId cassandraId, MessageRange range) {
         return retrieveResultSetOfDeletedMessage(cassandraId, range)
-            .flatMapMany(this::resultSetToFlux);
+            .flatMapIterable(Function.identity())
+            .map(row -> MessageUid.of(row.getLong(UID)));
     }
 
     private Mono<ResultSet> retrieveResultSetOfDeletedMessage(CassandraId cassandraId, MessageRange range) {
@@ -162,12 +155,6 @@ public class CassandraDeletedMessageDAO {
         }
 
         throw new UnsupportedOperationException();
-    }
-
-    private Flux<MessageUid> resultSetToFlux(ResultSet resultSet) {
-        return cassandraUtils.convertToFlux(resultSet)
-            .map(row ->
-                MessageUid.of(row.getLong(UID)));
     }
 
     private Mono<ResultSet> retrieveAllDeleted(CassandraId cassandraId) {

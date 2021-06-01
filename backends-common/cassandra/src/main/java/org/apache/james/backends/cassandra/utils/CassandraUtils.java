@@ -29,8 +29,6 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 
-import reactor.core.publisher.Flux;
-
 public class CassandraUtils {
 
     public static final CassandraUtils WITH_DEFAULT_CONFIGURATION = new CassandraUtils(CassandraConfiguration.DEFAULT_CONFIGURATION);
@@ -40,10 +38,6 @@ public class CassandraUtils {
     @Inject
     public CassandraUtils(CassandraConfiguration cassandraConfiguration) {
         this.cassandraConfiguration = cassandraConfiguration;
-    }
-
-    public Flux<Row> convertToFlux(ResultSet resultSet) {
-        return Flux.fromIterable(resultSet);
     }
 
     public Stream<Row> convertToStream(ResultSet resultSet) {

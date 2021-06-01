@@ -26,7 +26,6 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
@@ -82,7 +81,7 @@ class AclV2MigrationTest {
             .forModules(ACLModule.ACL_UPDATE)
             .withoutNestedType();
         CassandraEventStore eventStore = new CassandraEventStore(new EventStoreDao(cassandra.getConf(), jsonEventSerializer, CassandraConsistenciesConfiguration.DEFAULT));
-        CassandraUserMailboxRightsDAO usersRightDAO = new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+        CassandraUserMailboxRightsDAO usersRightDAO = new CassandraUserMailboxRightsDAO(cassandra.getConf());
         migration = new AclV2Migration(mailboxDAO,
             new CassandraACLMapper.StoreV1(usersRightDAO, daoV1),
             new CassandraACLMapper.StoreV2(usersRightDAO, daoV2, eventStore));
