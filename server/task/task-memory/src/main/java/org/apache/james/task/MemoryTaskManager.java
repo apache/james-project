@@ -92,8 +92,8 @@ public class MemoryTaskManager implements TaskManager {
 
         @Override
         public Publisher<Void> updated(TaskId taskId, TaskExecutionDetails.AdditionalInformation additionalInformation) {
-            //The memory task manager doesn't use polling to update its additionalInformation.
-            throw new IllegalStateException();
+            //The memory task manager doesn't need polling to update its additionalInformation.
+            return Mono.empty();
         }
     }
 
