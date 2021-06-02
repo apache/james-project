@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailetcontainer.impl.camel;
+package org.apache.james.mailetcontainer.impl;
 
 import static org.mockito.Mockito.mock;
 

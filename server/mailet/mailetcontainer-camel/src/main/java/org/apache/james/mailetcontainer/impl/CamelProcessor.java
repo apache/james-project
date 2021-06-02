@@ -16,14 +16,12 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailetcontainer.impl.camel;
+package org.apache.james.mailetcontainer.impl;
 
 import java.io.Closeable;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.james.mailetcontainer.impl.MailetConfigImpl;
-import org.apache.james.mailetcontainer.impl.ProcessorUtil;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;

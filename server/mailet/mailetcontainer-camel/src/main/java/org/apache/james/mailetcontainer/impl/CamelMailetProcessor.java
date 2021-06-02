@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailetcontainer.impl.camel;
+package org.apache.james.mailetcontainer.impl;
 
-import static org.apache.james.mailetcontainer.impl.camel.MatcherSplitter.MATCHER_MATCHED_ATTRIBUTE;
+import static org.apache.james.mailetcontainer.impl.MatcherSplitter.MATCHER_MATCHED_ATTRIBUTE;
 
 import java.util.List;
 import java.util.Map;
@@ -31,7 +31,6 @@ import javax.mail.MessagingException;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.lifecycle.api.LifecycleUtil;
-import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.mailet.Mail;
