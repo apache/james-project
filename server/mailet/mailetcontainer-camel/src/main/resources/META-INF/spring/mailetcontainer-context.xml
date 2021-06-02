@@ -25,7 +25,7 @@
 
     <!-- Mailet Container Beans. -->
     <bean id="mailprocessor" name="processorRoute"
-          class="org.apache.james.mailetcontainer.impl.CamelCompositeProcessor" autowire="byType"/>
+          class="org.apache.james.mailetcontainer.impl.CompositeProcessorImpl" autowire="byType"/>
 
     <!-- 
       mailcontext bean must be defined after mailProcessor 

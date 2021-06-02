@@ -55,11 +55,11 @@ public class MatcherSplitter {
     public static final AttributeName MATCHER_MATCHED_ATTRIBUTE = AttributeName.of("matched");
 
     private final MetricFactory metricFactory;
-    private final CamelMailetProcessor container;
+    private final MailetProcessorImpl container;
     private final Matcher matcher;
     private final String onMatchException;
 
-    public MatcherSplitter(MetricFactory metricFactory, CamelMailetProcessor container, MatcherMailetPair pair) {
+    public MatcherSplitter(MetricFactory metricFactory, MailetProcessorImpl container, MatcherMailetPair pair) {
         this.metricFactory = metricFactory;
         this.container = container;
         this.matcher = pair.getMatcher();

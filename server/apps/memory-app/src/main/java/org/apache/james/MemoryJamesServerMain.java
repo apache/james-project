@@ -40,7 +40,6 @@ import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.queue.memory.MemoryMailQueueModule;
-import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.modules.server.DKIMMailetModule;
 import org.apache.james.modules.server.DLPRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
@@ -50,6 +49,7 @@ import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.MailboxesExportRoutesModule;
+import org.apache.james.modules.server.MailetContainerModule;
 import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.SieveRoutesModule;
@@ -123,7 +123,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
         new ProtocolHandlerModule(),
         new SMTPServerModule(),
         new RawPostDequeueDecoratorModule(),
-        binder -> binder.bind(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
+        binder -> binder.bind(MailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
             .toInstance(BaseHierarchicalConfiguration::new));
 
 

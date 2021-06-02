@@ -28,7 +28,7 @@ public class DefaultProcessorsConfigurationProviderModule extends AbstractModule
 
     @Override
     protected void configure() {
-        bind(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
+        bind(MailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
             .toInstance(
                 () -> {
                     try {
