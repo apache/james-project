@@ -26,11 +26,11 @@ import javax.management.StandardMBean;
 
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean;
-import org.apache.james.mailetcontainer.impl.CamelProcessor;
+import org.apache.james.mailetcontainer.impl.ProcessorImpl;
 
 /**
  * Wrapper which helps to expose JMX statistics for {@link MailProcessor} and
- * {@link CamelProcessor} implementations
+ * {@link ProcessorImpl} implementations
  */
 public class MailProcessorManagement extends StandardMBean implements MailProcessorManagementMBean {
     private final String processorName;

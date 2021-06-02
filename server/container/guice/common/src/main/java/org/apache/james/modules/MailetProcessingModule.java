@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.modules;
 
-import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.modules.server.MailStoreRepositoryModule;
+import org.apache.james.modules.server.MailetContainerModule;
 
 import com.google.inject.AbstractModule;
 
@@ -28,7 +28,7 @@ public class MailetProcessingModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new MailStoreRepositoryModule());
-        install(new CamelMailetContainerModule());
+        install(new MailetContainerModule());
     }
     
 }

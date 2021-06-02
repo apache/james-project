@@ -39,7 +39,7 @@ import org.apache.mailet.MailetContext;
  * It also offer the {@link AbstractStateCompositeProcessor} implementation
  * which allow to inject {@link Mail} into the routes.
  */
-public class CamelCompositeProcessor extends AbstractStateCompositeProcessor {
+public class CompositeProcessorImpl extends AbstractStateCompositeProcessor {
 
     private final MetricFactory metricFactory;
     private final MailetContext mailetContext;
@@ -47,7 +47,7 @@ public class CamelCompositeProcessor extends AbstractStateCompositeProcessor {
     private final MailetLoader mailetLoader;
 
     @Inject
-    CamelCompositeProcessor(MetricFactory metricFactory, MailetContext mailetContext, MatcherLoader matcherLoader, MailetLoader mailetLoader) {
+    CompositeProcessorImpl(MetricFactory metricFactory, MailetContext mailetContext, MatcherLoader matcherLoader, MailetLoader mailetLoader) {
         this.metricFactory = metricFactory;
         this.mailetContext = mailetContext;
         this.matcherLoader = matcherLoader;
@@ -62,7 +62,7 @@ public class CamelCompositeProcessor extends AbstractStateCompositeProcessor {
 
     @Override
     protected MailProcessor createMailProcessor(String name, HierarchicalConfiguration<ImmutableNode> config) throws Exception {
-        CamelMailetProcessor processor = new CamelMailetProcessor(metricFactory);
+        MailetProcessorImpl processor = new MailetProcessorImpl(metricFactory);
         try {
             processor.setMailetContext(mailetContext);
             processor.setMailetLoader(mailetLoader);

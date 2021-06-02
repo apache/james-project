@@ -38,10 +38,10 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.api.MailetLoader;
 import org.apache.james.mailetcontainer.api.MatcherLoader;
-import org.apache.james.mailetcontainer.impl.CamelProcessor;
 import org.apache.james.mailetcontainer.impl.MailetConfigImpl;
 import org.apache.james.mailetcontainer.impl.MatcherConfigImpl;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
+import org.apache.james.mailetcontainer.impl.ProcessorImpl;
 import org.apache.james.mailetcontainer.impl.jmx.JMXStateMailetProcessorListener;
 import org.apache.james.mailetcontainer.impl.matchers.CompositeMatcher;
 import org.apache.mailet.Mail;
@@ -345,7 +345,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
 
     /**
      * Setup the routing for the configured {@link MatcherMailetPair}'s for this
-     * {@link CamelProcessor}
+     * {@link ProcessorImpl}
      */
     protected abstract void setupRouting(List<MatcherMailetPair> pairs) throws MessagingException;
 

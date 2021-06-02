@@ -16,34 +16,40 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.mailetcontainer.impl;
+
+import static org.mockito.Mockito.mock;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.api.mock.MockMailetLoader;
 import org.apache.james.mailetcontainer.api.mock.MockMatcherLoader;
-import org.apache.james.mailetcontainer.lib.AbstractStateCompositeProcessor;
-import org.apache.james.mailetcontainer.lib.AbstractStateCompositeProcessorTest;
+import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor;
+import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessorTest;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.mailet.base.test.FakeMailContext;
 
-public class CamelCompositeProcessorTest extends AbstractStateCompositeProcessorTest {
+public class MailetProcessorImplTest extends AbstractStateMailetProcessorTest {
 
     @Override
-    protected AbstractStateCompositeProcessor createProcessor(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
-        CamelCompositeProcessor processor = new CamelCompositeProcessor(new RecordingMetricFactory(),
-            FakeMailContext.defaultContext(),
-            new MockMatcherLoader(),
-            new MockMailetLoader());
+    protected AbstractStateMailetProcessor createProcessor(HierarchicalConfiguration<ImmutableNode> configuration) throws Exception {
+        MailetProcessorImpl processor = null;
         try {
-            processor.configure(config);
+            processor = new MailetProcessorImpl(new RecordingMetricFactory());
+            processor.setMailetContext(FakeMailContext.defaultContext());
+            processor.setMailetLoader(new MockMailetLoader());
+            processor.setMatcherLoader(new MockMatcherLoader());
+            processor.setRootMailProcessor(mock(MailProcessor.class));
+            processor.configure(configuration);
             processor.init();
             return processor;
-        } catch (Exception e) {
-            processor.dispose();
-            throw e;
+        } finally {
+            if (processor != null) {
+                processor.destroy();
+            }
         }
-
     }
 
 }

@@ -51,8 +51,8 @@ import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
-import org.apache.james.modules.server.CamelMailetContainerModule;
-import org.apache.james.modules.server.CamelMailetContainerModule.ProcessorsCheck;
+import org.apache.james.modules.server.MailetContainerModule;
+import org.apache.james.modules.server.MailetContainerModule.ProcessorsCheck;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.transport.matchers.All;
@@ -79,7 +79,7 @@ import com.google.inject.multibindings.ProvidesIntoSet;
 public class JMAPModule extends AbstractModule {
     private static final int DEFAULT_JMAP_PORT = 80;
     private static final Logger LOGGER = LoggerFactory.getLogger(JMAPModule.class);
-    public static final CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier DEFAULT_JMAP_PROCESSORS_CONFIGURATION_SUPPLIER =
+    public static final MailetContainerModule.DefaultProcessorsConfigurationSupplier DEFAULT_JMAP_PROCESSORS_CONFIGURATION_SUPPLIER =
         () -> {
             try {
                 return FileConfigurationProvider.getConfig(ClassLoader.getSystemResourceAsStream("defaultJmapMailetContainer.xml"));
@@ -114,7 +114,7 @@ public class JMAPModule extends AbstractModule {
         install(new DraftMethodsModule());
         install(new RFC8621MethodsModule());
         install(binder -> binder
-            .bind(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
+            .bind(MailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
             .toInstance(DEFAULT_JMAP_PROCESSORS_CONFIGURATION_SUPPLIER));
 
         bind(JMAPServer.class).in(Scopes.SINGLETON);

@@ -38,14 +38,14 @@ import com.google.common.collect.ImmutableList;
 /**
  * Mailet wrapper which execute a Mailet in a Processor
  */
-public class CamelProcessor {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CamelProcessor.class);
+public class ProcessorImpl {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProcessorImpl.class);
 
     private final MetricFactory metricFactory;
     private final Mailet mailet;
-    private final CamelMailetProcessor processor;
+    private final MailetProcessorImpl processor;
 
-    public CamelProcessor(MetricFactory metricFactory, CamelMailetProcessor processor, Mailet mailet) {
+    public ProcessorImpl(MetricFactory metricFactory, MailetProcessorImpl processor, Mailet mailet) {
         this.metricFactory = metricFactory;
         this.processor = processor;
         this.mailet = mailet;

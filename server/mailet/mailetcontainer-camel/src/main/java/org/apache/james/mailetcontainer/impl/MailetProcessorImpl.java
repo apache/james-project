@@ -48,7 +48,7 @@ import com.google.common.collect.ImmutableSet;
  * {@link org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor} implementation which use Camel DSL for
  * the {@link Matcher} / {@link Mailet} routing
  */
-public class CamelMailetProcessor extends AbstractStateMailetProcessor {
+public class MailetProcessorImpl extends AbstractStateMailetProcessor {
     private static class ProcessingStep {
         private static class Builder {
             @FunctionalInterface
@@ -112,13 +112,13 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor {
         }
     }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CamelMailetProcessor.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailetProcessorImpl.class);
 
     private final MetricFactory metricFactory;
     private List<MatcherMailetPair> pairs;
-    private Map<MatcherSplitter, CamelProcessor> pairsToBeProcessed;
+    private Map<MatcherSplitter, ProcessorImpl> pairsToBeProcessed;
 
-    public CamelMailetProcessor(MetricFactory metricFactory) {
+    public MailetProcessorImpl(MetricFactory metricFactory) {
         this.metricFactory = metricFactory;
     }
 
@@ -150,9 +150,9 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor {
         lastStep.disposeGhostedEncounteredMails();
     }
 
-    private ProcessingStep executeProcessingStep(ProcessingStep step, Map.Entry<MatcherSplitter, CamelProcessor> pair) {
+    private ProcessingStep executeProcessingStep(ProcessingStep step, Map.Entry<MatcherSplitter, ProcessorImpl> pair) {
         MatcherSplitter matcherSplitter = pair.getKey();
-        CamelProcessor processor = pair.getValue();
+        ProcessorImpl processor = pair.getValue();
         ImmutableList<Mail> afterMatching = step.getInFlightMails()
             .stream()
             .flatMap(Throwing.<Mail, Stream<Mail>>function(mail -> matcherSplitter.split(mail).stream()).sneakyThrow())
@@ -198,7 +198,7 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor {
             this.pairs = pairs;
             this.pairsToBeProcessed = pairs.stream()
                 .map(pair -> Pair.of(new MatcherSplitter(metricFactory, this, pair),
-                    new CamelProcessor(metricFactory, this, pair.getMailet())))
+                    new ProcessorImpl(metricFactory, this, pair.getMailet())))
                 .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue));
         } catch (Exception e) {
             throw new MessagingException("Unable to setup routing for MailetMatcherPairs", e);

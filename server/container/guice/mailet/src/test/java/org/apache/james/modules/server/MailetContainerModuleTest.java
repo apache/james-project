@@ -33,17 +33,17 @@ import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.mailetcontainer.impl.JamesMailSpooler;
-import org.apache.james.mailetcontainer.impl.CamelCompositeProcessor;
-import org.apache.james.modules.server.CamelMailetContainerModule.MailetModuleInitializationOperation;
+import org.apache.james.mailetcontainer.impl.CompositeProcessorImpl;
+import org.apache.james.modules.server.MailetContainerModule.MailetModuleInitializationOperation;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 
-class CamelMailetContainerModuleTest {
+class MailetContainerModuleTest {
 
-    public static final ImmutableSet<CamelMailetContainerModule.ProcessorsCheck> NO_TRANSPORT_CHECKS = ImmutableSet.of();
+    public static final ImmutableSet<MailetContainerModule.ProcessorsCheck> NO_TRANSPORT_CHECKS = ImmutableSet.of();
 
     @Test
     void getMailetContextConfigurationShouldReturnEmptyWhenNoContextSection() throws Exception {
@@ -51,7 +51,7 @@ class CamelMailetContainerModuleTest {
         when(configurationProvider.getConfiguration("mailetcontainer"))
             .thenReturn(new BaseHierarchicalConfiguration());
 
-        CamelMailetContainerModule testee = new CamelMailetContainerModule();
+        MailetContainerModule testee = new MailetContainerModule();
 
         assertThat(testee.getMailetContextConfiguration(configurationProvider).size())
             .isEqualTo(0);
@@ -63,7 +63,7 @@ class CamelMailetContainerModuleTest {
         when(configurationProvider.getConfiguration("mailetcontainer"))
             .thenThrow(new ConfigurationRuntimeException());
 
-        CamelMailetContainerModule testee = new CamelMailetContainerModule();
+        MailetContainerModule testee = new MailetContainerModule();
 
         assertThatThrownBy(() -> testee.getMailetContextConfiguration(configurationProvider))
             .isInstanceOf(ConfigurationRuntimeException.class);
@@ -81,7 +81,7 @@ class CamelMailetContainerModuleTest {
         ConfigurationProvider configurationProvider = mock(ConfigurationProvider.class);
         when(configurationProvider.getConfiguration("mailetcontainer")).thenReturn(configuration);
 
-        CamelMailetContainerModule testee = new CamelMailetContainerModule();
+        MailetContainerModule testee = new MailetContainerModule();
 
         HierarchicalConfiguration<ImmutableNode> mailetContextConfiguration = testee.getMailetContextConfiguration(configurationProvider);
         assertThat(mailetContextConfiguration.getString("key"))
@@ -100,7 +100,7 @@ class CamelMailetContainerModuleTest {
             .getBytes(StandardCharsets.UTF_8)));
 
         MailetModuleInitializationOperation testee = new MailetModuleInitializationOperation(configurationProvider,
-            mock(CamelCompositeProcessor.class),
+            mock(CompositeProcessorImpl.class),
             NO_TRANSPORT_CHECKS,
             () -> defaultConfiguration,
             mock(JamesMailSpooler.class),
@@ -117,9 +117,9 @@ class CamelMailetContainerModuleTest {
             .thenThrow(new ConfigurationRuntimeException());
 
         MailetModuleInitializationOperation testee = new MailetModuleInitializationOperation(configurationProvider,
-            mock(CamelCompositeProcessor.class),
+            mock(CompositeProcessorImpl.class),
             NO_TRANSPORT_CHECKS,
-            mock(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class),
+            mock(MailetContainerModule.DefaultProcessorsConfigurationSupplier.class),
             mock(JamesMailSpooler.class),
             mock(JamesMailSpooler.Configuration.class));
 
@@ -140,9 +140,9 @@ class CamelMailetContainerModuleTest {
         when(configurationProvider.getConfiguration("mailetcontainer")).thenReturn(configuration);
 
         MailetModuleInitializationOperation testee = new MailetModuleInitializationOperation(configurationProvider,
-            mock(CamelCompositeProcessor.class),
+            mock(CompositeProcessorImpl.class),
             NO_TRANSPORT_CHECKS,
-            mock(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class),
+            mock(MailetContainerModule.DefaultProcessorsConfigurationSupplier.class),
             mock(JamesMailSpooler.class),
             mock(JamesMailSpooler.Configuration.class));
 

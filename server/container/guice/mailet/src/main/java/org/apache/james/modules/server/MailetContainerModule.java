@@ -38,10 +38,10 @@ import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.api.MailetLoader;
 import org.apache.james.mailetcontainer.api.MatcherLoader;
 import org.apache.james.mailetcontainer.api.jmx.MailSpoolerMBean;
-import org.apache.james.mailetcontainer.impl.CamelCompositeProcessor;
-import org.apache.james.mailetcontainer.impl.CamelMailetProcessor;
+import org.apache.james.mailetcontainer.impl.CompositeProcessorImpl;
 import org.apache.james.mailetcontainer.impl.JamesMailSpooler;
 import org.apache.james.mailetcontainer.impl.JamesMailetContext;
+import org.apache.james.mailetcontainer.impl.MailetProcessorImpl;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
@@ -76,9 +76,9 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
-public class CamelMailetContainerModule extends AbstractModule {
+public class MailetContainerModule extends AbstractModule {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CamelMailetContainerModule.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailetContainerModule.class);
 
     public static final ProcessorsCheck.Impl BCC_Check = new ProcessorsCheck.Impl(
         "transport",
@@ -89,8 +89,8 @@ public class CamelMailetContainerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(CamelCompositeProcessor.class).in(Scopes.SINGLETON);
-        bind(MailProcessor.class).to(CamelCompositeProcessor.class);
+        bind(CompositeProcessorImpl.class).in(Scopes.SINGLETON);
+        bind(MailProcessor.class).to(CompositeProcessorImpl.class);
 
         bind(JamesMailSpooler.class).in(Scopes.SINGLETON);
         bind(MailSpoolerMBean.class).to(JamesMailSpooler.class);
@@ -151,7 +151,7 @@ public class CamelMailetContainerModule extends AbstractModule {
     @Singleton
     public static class MailetModuleInitializationOperation implements InitializationOperation {
         private final ConfigurationProvider configurationProvider;
-        private final CamelCompositeProcessor camelCompositeProcessor;
+        private final CompositeProcessorImpl compositeProcessorImpl;
         private final DefaultProcessorsConfigurationSupplier defaultProcessorsConfigurationSupplier;
         private final Set<ProcessorsCheck> processorsCheckSet;
         private final JamesMailSpooler jamesMailSpooler;
@@ -159,13 +159,13 @@ public class CamelMailetContainerModule extends AbstractModule {
 
         @Inject
         public MailetModuleInitializationOperation(ConfigurationProvider configurationProvider,
-                                                   CamelCompositeProcessor camelCompositeProcessor,
+                                                   CompositeProcessorImpl compositeProcessorImpl,
                                                    Set<ProcessorsCheck> processorsCheckSet,
                                                    DefaultProcessorsConfigurationSupplier defaultProcessorsConfigurationSupplier,
                                                    JamesMailSpooler jamesMailSpooler,
                                                    JamesMailSpooler.Configuration spoolerConfiguration) {
             this.configurationProvider = configurationProvider;
-            this.camelCompositeProcessor = camelCompositeProcessor;
+            this.compositeProcessorImpl = compositeProcessorImpl;
             this.processorsCheckSet = processorsCheckSet;
             this.defaultProcessorsConfigurationSupplier = defaultProcessorsConfigurationSupplier;
             this.jamesMailSpooler = jamesMailSpooler;
@@ -179,8 +179,8 @@ public class CamelMailetContainerModule extends AbstractModule {
         }
 
         private void configureProcessors() throws Exception {
-            camelCompositeProcessor.configure(getProcessorConfiguration());
-            camelCompositeProcessor.init();
+            compositeProcessorImpl.configure(getProcessorConfiguration());
+            compositeProcessorImpl.init();
 
             jamesMailSpooler.configure(spoolerConfiguration);
             jamesMailSpooler.init();
@@ -198,11 +198,11 @@ public class CamelMailetContainerModule extends AbstractModule {
         }
 
         private void checkProcessors() throws ConfigurationException {
-            ImmutableListMultimap<String, MatcherMailetPair> processors = Arrays.stream(camelCompositeProcessor.getProcessorStates())
+            ImmutableListMultimap<String, MatcherMailetPair> processors = Arrays.stream(compositeProcessorImpl.getProcessorStates())
                 .flatMap(state -> {
-                    MailProcessor processor = camelCompositeProcessor.getProcessor(state);
-                    if (processor instanceof CamelMailetProcessor) {
-                        CamelMailetProcessor camelProcessor = (CamelMailetProcessor) processor;
+                    MailProcessor processor = compositeProcessorImpl.getProcessor(state);
+                    if (processor instanceof MailetProcessorImpl) {
+                        MailetProcessorImpl camelProcessor = (MailetProcessorImpl) processor;
                         return camelProcessor.getPairs().stream()
                             .map(pair -> Pair.of(state, pair));
                     } else {
@@ -219,7 +219,7 @@ public class CamelMailetContainerModule extends AbstractModule {
 
         @Override
         public Class<? extends Startable> forClass() {
-            return CamelCompositeProcessor.class;
+            return CompositeProcessorImpl.class;
         }
     }
 
