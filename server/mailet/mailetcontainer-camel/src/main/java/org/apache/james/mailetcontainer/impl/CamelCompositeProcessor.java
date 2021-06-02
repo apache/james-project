@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailetcontainer.impl.camel;
+package org.apache.james.mailetcontainer.impl;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;

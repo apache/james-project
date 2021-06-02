@@ -35,14 +35,16 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailetcontainer.api.MailProcessor;
+import org.apache.james.mailetcontainer.impl.CamelCompositeProcessor;
+import org.apache.james.mailetcontainer.impl.CamelProcessor;
 import org.apache.james.mailetcontainer.impl.jmx.JMXStateCompositeProcessorListener;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Abstract base class for {@link org.apache.james.mailetcontainer.impl.camel.CamelCompositeProcessor} which service the
- * {@link Mail} with a {@link org.apache.james.mailetcontainer.impl.camel.CamelProcessor} instances
+ * Abstract base class for {@link CamelCompositeProcessor} which service the
+ * {@link Mail} with a {@link CamelProcessor} instances
  */
 public abstract class AbstractStateCompositeProcessor implements MailProcessor, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractStateCompositeProcessor.class);

@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailetcontainer.impl.camel;
+package org.apache.james.mailetcontainer.impl;
 
 import java.io.Closeable;
 import java.util.ArrayList;
@@ -29,8 +29,6 @@ import java.util.Optional;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
-import org.apache.james.mailetcontainer.impl.ProcessorUtil;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
