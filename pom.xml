@@ -591,7 +591,6 @@
         <activemq.version>5.16.1</activemq.version>
         <apache-mime4j.version>0.8.4</apache-mime4j.version>
         <apache.openjpa.version>3.1.2</apache.openjpa.version>
-        <camel.version>3.8.0</camel.version>
         <derby.version>10.14.2.0</derby.version>
         <log4j2.version>2.14.0</log4j2.version>
         <javax.inject.version>1</javax.inject.version>
@@ -2384,27 +2383,6 @@
                 <version>1.4</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.camel</groupId>
-                <artifactId>camel-core</artifactId>
-                <version>${camel.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.camel</groupId>
-                <artifactId>camel-spring</artifactId>
-                <version>${camel.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.springframework</groupId>
-                        <artifactId>spring-web</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.camel</groupId>
-                <artifactId>camel-support</artifactId>
-                <version>${camel.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-collections4</artifactId>
                 <version>4.4</version>
@@ -3158,7 +3136,6 @@
                             <exclude>.*/**/*</exclude>
                             <!-- Schemas for offline use -->
                             <exclude>**/META-INF/XSD/activemq-core-*.xsd</exclude>
-                            <exclude>**/META-INF/XSD/camel-spring-*.xsd</exclude>
                             <exclude>**/META-INF/XSD/spring-beans-*.xsd</exclude>
                         </excludes>
                     </configuration>

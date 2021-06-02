@@ -26,8 +26,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.camel.support.SimpleRegistry;
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -115,15 +113,6 @@ public class CamelMailetContainerModule extends AbstractModule {
         transportProcessorChecks.addBinding().toInstance(BCC_Check);
     }
 
-    @Singleton
-    @Provides
-    public DefaultCamelContext provideCamelContext() {
-        DefaultCamelContext camelContext = new DefaultCamelContext();
-        camelContext.disableJMX();
-        camelContext.setRegistry(new SimpleRegistry());
-        return camelContext;
-    }
-
     @Provides
     @Singleton
     public JamesMailSpooler.Configuration spoolerConfiguration(MailRepositoryStore mailRepositoryStore, ConfigurationProvider configurationProvider) {
@@ -165,34 +154,31 @@ public class CamelMailetContainerModule extends AbstractModule {
         private final CamelCompositeProcessor camelCompositeProcessor;
         private final DefaultProcessorsConfigurationSupplier defaultProcessorsConfigurationSupplier;
         private final Set<ProcessorsCheck> processorsCheckSet;
-        private final DefaultCamelContext camelContext;
         private final JamesMailSpooler jamesMailSpooler;
         private final JamesMailSpooler.Configuration spoolerConfiguration;
-
 
         @Inject
         public MailetModuleInitializationOperation(ConfigurationProvider configurationProvider,
                                                    CamelCompositeProcessor camelCompositeProcessor,
                                                    Set<ProcessorsCheck> processorsCheckSet,
                                                    DefaultProcessorsConfigurationSupplier defaultProcessorsConfigurationSupplier,
-                                                   DefaultCamelContext camelContext, JamesMailSpooler jamesMailSpooler, JamesMailSpooler.Configuration spoolerConfiguration) {
+                                                   JamesMailSpooler jamesMailSpooler,
+                                                   JamesMailSpooler.Configuration spoolerConfiguration) {
             this.configurationProvider = configurationProvider;
             this.camelCompositeProcessor = camelCompositeProcessor;
             this.processorsCheckSet = processorsCheckSet;
             this.defaultProcessorsConfigurationSupplier = defaultProcessorsConfigurationSupplier;
-            this.camelContext = camelContext;
             this.jamesMailSpooler = jamesMailSpooler;
             this.spoolerConfiguration = spoolerConfiguration;
         }
 
         @Override
         public void initModule() throws Exception {
-            configureProcessors(camelContext);
+            configureProcessors();
             checkProcessors();
         }
 
-        private void configureProcessors(DefaultCamelContext camelContext) throws Exception {
-            camelCompositeProcessor.setCamelContext(camelContext);
+        private void configureProcessors() throws Exception {
             camelCompositeProcessor.configure(getProcessorConfiguration());
             camelCompositeProcessor.init();
 

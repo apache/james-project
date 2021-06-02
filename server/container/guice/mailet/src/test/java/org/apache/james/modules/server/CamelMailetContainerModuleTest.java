@@ -27,7 +27,6 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
-import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.XMLConfiguration;
@@ -104,7 +103,6 @@ class CamelMailetContainerModuleTest {
             mock(CamelCompositeProcessor.class),
             NO_TRANSPORT_CHECKS,
             () -> defaultConfiguration,
-            mock(DefaultCamelContext.class),
             mock(JamesMailSpooler.class),
             mock(JamesMailSpooler.Configuration.class));
 
@@ -122,7 +120,6 @@ class CamelMailetContainerModuleTest {
             mock(CamelCompositeProcessor.class),
             NO_TRANSPORT_CHECKS,
             mock(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class),
-            mock(DefaultCamelContext.class),
             mock(JamesMailSpooler.class),
             mock(JamesMailSpooler.Configuration.class));
 
@@ -146,7 +143,6 @@ class CamelMailetContainerModuleTest {
             mock(CamelCompositeProcessor.class),
             NO_TRANSPORT_CHECKS,
             mock(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class),
-            mock(DefaultCamelContext.class),
             mock(JamesMailSpooler.class),
             mock(JamesMailSpooler.Configuration.class));
 

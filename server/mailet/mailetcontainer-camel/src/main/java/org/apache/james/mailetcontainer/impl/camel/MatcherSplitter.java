@@ -28,9 +28,6 @@ import java.util.Optional;
 
 import javax.mail.MessagingException;
 
-import org.apache.camel.Body;
-import org.apache.camel.Handler;
-import org.apache.camel.InOnly;
 import org.apache.james.core.MailAddress;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.mailetcontainer.impl.ProcessorUtil;
@@ -53,7 +50,6 @@ import com.google.common.collect.ImmutableList;
  * A Splitter for use with Camel to split the MailMessage into many pieces if
  * needed. This is done by use a Matcher.
  */
-@InOnly
 public class MatcherSplitter {
     private static final Logger LOGGER = LoggerFactory.getLogger(MatcherSplitter.class);
 
@@ -83,8 +79,7 @@ public class MatcherSplitter {
      *            Mail which is stored in the @Body of the MailMessage
      * @return mailMessageList
      */
-    @Handler
-    public List<Mail> split(@Body Mail mail) throws MessagingException {
+    public List<Mail> split(Mail mail) throws MessagingException {
         Collection<MailAddress> matchedRcpts = null;
         Collection<MailAddress> origRcpts = new ArrayList<>(mail.getRecipients());
         long start = System.currentTimeMillis();
