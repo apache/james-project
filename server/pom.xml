@@ -80,7 +80,7 @@
         <module>mailet/dkim</module>
         <module>mailet/integration-testing</module>
         <module>mailet/mailetcontainer-api</module>
-        <module>mailet/mailetcontainer-camel</module>
+        <module>mailet/mailetcontainer-impl</module>
         <module>mailet/mailets</module>
         <module>mailet/mock-smtp-server</module>
         <module>mailet/remote-delivery-integration-testing</module>

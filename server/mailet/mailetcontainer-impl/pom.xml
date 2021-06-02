@@ -27,10 +27,10 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-mailetcontainer-camel</artifactId>
+    <artifactId>james-server-mailetcontainer-impl</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: Mailetcontainer Camel</name>
+    <name>Apache James :: Server :: Mailetcontainer Impl</name>
 
     <dependencies>
         <dependency>

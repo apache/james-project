@@ -1596,7 +1596,7 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-mailetcontainer-camel</artifactId>
+                <artifactId>james-server-mailetcontainer-impl</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
