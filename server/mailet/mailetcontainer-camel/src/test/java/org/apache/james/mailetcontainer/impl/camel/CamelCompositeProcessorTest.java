@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.impl.camel;
 
-import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.mailetcontainer.api.mock.MockMailetLoader;
@@ -37,7 +36,6 @@ public class CamelCompositeProcessorTest extends AbstractStateCompositeProcessor
             new MockMatcherLoader(),
             new MockMailetLoader());
         try {
-            processor.setCamelContext(new DefaultCamelContext());
             processor.configure(config);
             processor.init();
             return processor;

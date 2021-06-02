@@ -28,8 +28,6 @@ import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 import javax.mail.MessagingException;
 
-import org.apache.camel.CamelContext;
-import org.apache.camel.CamelContextAware;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.lifecycle.api.LifecycleUtil;
@@ -51,7 +49,7 @@ import com.google.common.collect.ImmutableSet;
  * {@link org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor} implementation which use Camel DSL for
  * the {@link Matcher} / {@link Mailet} routing
  */
-public class CamelMailetProcessor extends AbstractStateMailetProcessor implements CamelContextAware {
+public class CamelMailetProcessor extends AbstractStateMailetProcessor {
     private static class ProcessingStep {
         private static class Builder {
             @FunctionalInterface
@@ -118,7 +116,6 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
     private static final Logger LOGGER = LoggerFactory.getLogger(CamelMailetProcessor.class);
 
     private final MetricFactory metricFactory;
-    private CamelContext context;
     private List<MatcherMailetPair> pairs;
     private Map<MatcherSplitter, CamelProcessor> pairsToBeProcessed;
 
@@ -175,16 +172,6 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
                 .filter(mail -> mail.getState().equals(getState()))
                 .collect(Guavate.toImmutableList()))
             .encountered(afterMatching);
-    }
-
-    @Override
-    public CamelContext getCamelContext() {
-        return context;
-    }
-
-    @Override
-    public void setCamelContext(CamelContext context) {
-        this.context = context;
     }
 
     public List<MatcherMailetPair> getPairs() {

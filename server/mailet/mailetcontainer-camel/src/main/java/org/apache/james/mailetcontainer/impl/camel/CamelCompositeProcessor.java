@@ -20,11 +20,8 @@
 package org.apache.james.mailetcontainer.impl.camel;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
-import org.apache.camel.CamelContext;
-import org.apache.camel.CamelContextAware;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.mailetcontainer.api.MailProcessor;
@@ -42,13 +39,12 @@ import org.apache.mailet.MailetContext;
  * It also offer the {@link AbstractStateCompositeProcessor} implementation
  * which allow to inject {@link Mail} into the routes.
  */
-public class CamelCompositeProcessor extends AbstractStateCompositeProcessor implements CamelContextAware {
+public class CamelCompositeProcessor extends AbstractStateCompositeProcessor {
 
     private final MetricFactory metricFactory;
     private final MailetContext mailetContext;
     private final MatcherLoader matcherLoader;
     private final MailetLoader mailetLoader;
-    private CamelContext camelContext;
 
     @Inject
     CamelCompositeProcessor(MetricFactory metricFactory, MailetContext mailetContext, MatcherLoader matcherLoader, MailetLoader mailetLoader) {
@@ -61,36 +57,13 @@ public class CamelCompositeProcessor extends AbstractStateCompositeProcessor imp
     @Override
     @PostConstruct
     public void init() throws Exception {
-        // Make sure the camel context get started
-        // See https://issues.apache.org/jira/browse/JAMES-1069
-        if (getCamelContext().getStatus().isStopped()) {
-            getCamelContext().start();
-        }
         super.init();
-    }
-
-    @PreDestroy
-    public void destroy() throws Exception {
-        if (getCamelContext().getStatus().isStarted()) {
-            getCamelContext().stop();
-        }
-    }
-
-    @Override
-    public CamelContext getCamelContext() {
-        return camelContext;
-    }
-
-    @Override
-    public void setCamelContext(CamelContext camelContext) {
-        this.camelContext = camelContext;
     }
 
     @Override
     protected MailProcessor createMailProcessor(String name, HierarchicalConfiguration<ImmutableNode> config) throws Exception {
         CamelMailetProcessor processor = new CamelMailetProcessor(metricFactory);
         try {
-            processor.setCamelContext(camelContext);
             processor.setMailetContext(mailetContext);
             processor.setMailetLoader(mailetLoader);
             processor.setMatcherLoader(matcherLoader);

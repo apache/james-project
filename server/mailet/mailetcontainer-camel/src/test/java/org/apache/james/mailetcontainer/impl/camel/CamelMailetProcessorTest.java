@@ -21,7 +21,6 @@ package org.apache.james.mailetcontainer.impl.camel;
 
 import static org.mockito.Mockito.mock;
 
-import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.mailetcontainer.api.MailProcessor;
@@ -39,7 +38,6 @@ public class CamelMailetProcessorTest extends AbstractStateMailetProcessorTest {
         CamelMailetProcessor processor = null;
         try {
             processor = new CamelMailetProcessor(new RecordingMetricFactory());
-            processor.setCamelContext(new DefaultCamelContext());
             processor.setMailetContext(FakeMailContext.defaultContext());
             processor.setMailetLoader(new MockMailetLoader());
             processor.setMatcherLoader(new MockMatcherLoader());
