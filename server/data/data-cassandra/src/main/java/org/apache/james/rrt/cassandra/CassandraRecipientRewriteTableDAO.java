@@ -35,7 +35,6 @@ import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.MappingsImpl;
@@ -49,16 +48,14 @@ import reactor.core.publisher.Mono;
 
 public class CassandraRecipientRewriteTableDAO {
     private final CassandraAsyncExecutor executor;
-    private final CassandraUtils cassandraUtils;
     private final PreparedStatement insertStatement;
     private final PreparedStatement deleteStatement;
     private final PreparedStatement retrieveMappingStatement;
     private final PreparedStatement retrieveAllMappingsStatement;
 
     @Inject
-    public CassandraRecipientRewriteTableDAO(Session session, CassandraUtils cassandraUtils) {
+    public CassandraRecipientRewriteTableDAO(Session session) {
         this.executor = new CassandraAsyncExecutor(session);
-        this.cassandraUtils = cassandraUtils;
         this.insertStatement = prepareInsertStatement(session);
         this.deleteStatement = prepareDelete(session);
         this.retrieveMappingStatement = prepareRetrieveMappingStatement(session);
@@ -107,12 +104,11 @@ public class CassandraRecipientRewriteTableDAO {
     }
 
     Mono<MappingsImpl> retrieveMappings(MappingSource source) {
-        return executor.execute(retrieveMappingStatement.bind()
+        return executor.executeRows(retrieveMappingStatement.bind()
             .setString(USER, source.getFixedUser())
             .setString(DOMAIN, source.getFixedDomain()))
-            .map(resultSet -> cassandraUtils.convertToStream(resultSet)
-                .map(row -> row.getString(MAPPING))
-                .collect(Guavate.toImmutableList()))
+            .map(row -> row.getString(MAPPING))
+            .collect(Guavate.toImmutableList())
             .map(MappingsImpl::fromCollection)
             .filter(Predicate.not(MappingsImpl::isEmpty));
     }

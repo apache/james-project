@@ -22,7 +22,6 @@ package org.apache.james.rrt.cassandra;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
@@ -47,7 +46,7 @@ class CassandraRecipientRewriteTableTest implements RecipientRewriteTableContrac
     @BeforeEach
     void setup(CassandraCluster cassandra) throws Exception {
         cassandraSchemaVersionDAO = new CassandraSchemaVersionDAO(cassandra.getConf());
-        recipientRewriteTableDAO = new CassandraRecipientRewriteTableDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+        recipientRewriteTableDAO = new CassandraRecipientRewriteTableDAO(cassandra.getConf());
         mappingsSourcesDAO = new CassandraMappingsSourcesDAO(cassandra.getConf());
 
         setUp();
