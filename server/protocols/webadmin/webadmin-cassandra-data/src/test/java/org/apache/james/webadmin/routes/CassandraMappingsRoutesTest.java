@@ -28,7 +28,6 @@ import static org.hamcrest.Matchers.notNullValue;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.rrt.cassandra.CassandraMappingsSourcesDAO;
@@ -72,7 +71,7 @@ class CassandraMappingsRoutesTest {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        cassandraRecipientRewriteTableDAO = new CassandraRecipientRewriteTableDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+        cassandraRecipientRewriteTableDAO = new CassandraRecipientRewriteTableDAO(cassandra.getConf());
         cassandraMappingsSourcesDAO = new CassandraMappingsSourcesDAO(cassandra.getConf());
         mappingsSourcesMigration = new MappingsSourcesMigration(cassandraRecipientRewriteTableDAO, cassandraMappingsSourcesDAO);
 
