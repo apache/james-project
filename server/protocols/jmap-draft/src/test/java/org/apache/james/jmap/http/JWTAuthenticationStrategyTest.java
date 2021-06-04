@@ -24,6 +24,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
+
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
@@ -81,8 +83,7 @@ public class JWTAuthenticationStrategyTest {
         String fakeAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + validAuthHeader;
         MailboxSession fakeMailboxSession = mock(MailboxSession.class);
 
-        when(stubTokenVerifier.verify(validAuthHeader)).thenReturn(false);
-        when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
+        when(stubTokenVerifier.verifyAndExtractLogin(validAuthHeader)).thenReturn(Optional.empty());
         when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
                 .thenReturn(fakeMailboxSession);
 
@@ -121,8 +122,7 @@ public class JWTAuthenticationStrategyTest {
         String fakeAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + validAuthHeader;
         MailboxSession fakeMailboxSession = mock(MailboxSession.class);
 
-        when(stubTokenVerifier.verify(validAuthHeader)).thenReturn(true);
-        when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
+        when(stubTokenVerifier.verifyAndExtractLogin(validAuthHeader)).thenReturn(Optional.of(username));
         when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
                 .thenReturn(fakeMailboxSession);
         when(mockedHeaders.get(AUTHORIZATION_HEADERS))
@@ -139,8 +139,7 @@ public class JWTAuthenticationStrategyTest {
         String fakeAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + validAuthHeader;
         MailboxSession fakeMailboxSession = mock(MailboxSession.class);
 
-        when(stubTokenVerifier.verify(validAuthHeader)).thenReturn(true);
-        when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
+        when(stubTokenVerifier.verifyAndExtractLogin(validAuthHeader)).thenReturn(Optional.of(username));
         when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
                 .thenReturn(fakeMailboxSession);
         when(mockedHeaders.get(AUTHORIZATION_HEADERS))

@@ -52,10 +52,9 @@ public class JwtFilter implements AuthenticationFilter {
                 .map(value -> value.substring(AUTHORIZATION_HEADER_PREFIX.length()));
 
             checkHeaderPresent(bearer);
-            checkValidSignature(bearer);
+            String login = retrieveUser(bearer);
             checkIsAdmin(bearer);
 
-            String login = jwtTokenVerifier.extractLogin(bearer.get());
             request.attribute(LOGIN, login);
         }
     }
@@ -66,10 +65,9 @@ public class JwtFilter implements AuthenticationFilter {
         }
     }
 
-    private void checkValidSignature(Optional<String> bearer) {
-        if (!jwtTokenVerifier.verify(bearer.get())) {
-            halt(HttpStatus.UNAUTHORIZED_401, "Invalid Bearer header.");
-        }
+    private String retrieveUser(Optional<String> bearer) {
+        return jwtTokenVerifier.verifyAndExtractLogin(bearer.get())
+            .orElseThrow(() -> halt(HttpStatus.UNAUTHORIZED_401, "Invalid Bearer header."));
     }
 
     private void checkIsAdmin(Optional<String> bearer) {

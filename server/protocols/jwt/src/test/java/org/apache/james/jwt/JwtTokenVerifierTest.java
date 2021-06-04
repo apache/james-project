@@ -80,7 +80,7 @@ class JwtTokenVerifierTest {
 
     @Test
     void shouldReturnTrueOnValidSignature() {
-        assertThat(sut.verify(VALID_TOKEN_WITHOUT_ADMIN)).isTrue();
+        assertThat(sut.verifyAndExtractLogin(VALID_TOKEN_WITHOUT_ADMIN)).isPresent();
     }
 
     @Test
@@ -89,7 +89,7 @@ class JwtTokenVerifierTest {
                 "tPL3EZdkeYxw_DV2KimE1U2FvuLHmfR_mimJ5US3JFU4J2Gd94O7rwpSTGN1B9h-_lsTebo4ua4xHsTtmczZ9xa8a_kWKaSkqFjNFa" +
                 "Fp6zcoD6ivCu03SlRqsQzSRHXo6TKbnqOt9D6Y2rNa3C4igSwoS0jUE4BgpXbc0";
 
-        assertThat(sut.verify(invalidToken)).isFalse();
+        assertThat(sut.verifyAndExtractLogin(invalidToken)).isEmpty();
     }
 
     @Test
@@ -100,7 +100,7 @@ class JwtTokenVerifierTest {
                 "VPY3q15vWzZH9O9IJzB2KdHRMPxl2luRjzDbh4DLp56NhZuLX_2a9UAlmbV8MQX4Z_04ybhAYrcBfxR3MgJyr0jlxSibqSbXrkXuo-" +
                 "PyybfZCIhK_qXUlO5OS6sO7AQhKZO9p0MQ";
 
-        assertThat(sut.verify(tokenWithNullSubject)).isFalse();
+        assertThat(sut.verifyAndExtractLogin(tokenWithNullSubject)).isEmpty();
     }
     
     @Test
@@ -112,22 +112,22 @@ class JwtTokenVerifierTest {
                 "sUSbogmgObA_BimNtUq_Q1p0SGtIYBXmQ";
 
 
-        assertThat(sut.verify(tokenWithEmptySubject)).isFalse();
+        assertThat(sut.verifyAndExtractLogin(tokenWithEmptySubject)).isEmpty();
     }
 
     @Test
     void verifyShouldNotAcceptNoneAlgorithm() {
-        assertThat(sut.verify(TOKEN_NONE_ALGORITHM)).isFalse();
+        assertThat(sut.verifyAndExtractLogin(TOKEN_NONE_ALGORITHM)).isEmpty();
     }
 
     @Test
     void verifyShouldNotAcceptNoneAlgorithmWithoutSignature() {
-        assertThat(sut.verify(TOKEN_NONE_ALGORITHM_NO_SIGNATURE)).isFalse();
+        assertThat(sut.verifyAndExtractLogin(TOKEN_NONE_ALGORITHM_NO_SIGNATURE)).isEmpty();
     }
 
     @Test
     void shouldReturnUserLoginFromValidToken() {
-        assertThat(sut.extractLogin(VALID_TOKEN_WITHOUT_ADMIN)).isEqualTo("1234567890");
+        assertThat(sut.verifyAndExtractLogin(VALID_TOKEN_WITHOUT_ADMIN)).contains("1234567890");
     }
 
     @Test
@@ -153,7 +153,7 @@ class JwtTokenVerifierTest {
 
     @Test
     void extractLoginShouldWorkWithAdminClaim() {
-        assertThat(sut.extractLogin(VALID_TOKEN_ADMIN_TRUE)).isEqualTo("admin@open-paas.org");
+        assertThat(sut.verifyAndExtractLogin(VALID_TOKEN_ADMIN_TRUE)).contains("admin@open-paas.org");
     }
 
     @Test
