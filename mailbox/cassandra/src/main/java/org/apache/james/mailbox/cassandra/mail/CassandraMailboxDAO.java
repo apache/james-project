@@ -56,7 +56,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraMailboxDAO {
-
     private final CassandraAsyncExecutor executor;
     private final MailboxBaseTupleUtil mailboxBaseTupleUtil;
     private final PreparedStatement readStatement;
