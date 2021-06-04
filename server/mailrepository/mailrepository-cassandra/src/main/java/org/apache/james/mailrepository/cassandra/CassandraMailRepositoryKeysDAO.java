@@ -28,8 +28,6 @@ import static org.apache.james.mailrepository.cassandra.MailRepositoryTable.KEYS
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTable.MAIL_KEY;
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTable.REPOSITORY_NAME;
 
-import java.util.function.Function;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
@@ -86,9 +84,8 @@ public class CassandraMailRepositoryKeysDAO {
     }
 
     public Flux<MailKey> list(MailRepositoryUrl url) {
-        return executor.execute(listKeys.bind()
+        return executor.executeRows(listKeys.bind()
             .setString(REPOSITORY_NAME, url.asString()))
-            .flatMapIterable(Function.identity())
             .map(row -> new MailKey(row.getString(MAIL_KEY)));
     }
 
