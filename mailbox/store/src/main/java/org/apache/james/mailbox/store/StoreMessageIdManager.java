@@ -186,7 +186,7 @@ public class StoreMessageIdManager implements MessageIdManager {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(session);
         int concurrency = 4;
         return Flux.fromIterable(ids)
-            .flatMap(id -> Flux.from(messageIdMapper.findMetadata(id)), concurrency)
+            .flatMap(messageIdMapper::findMetadata, concurrency)
             .groupBy(metaData -> metaData.getComposedMessageId().getMailboxId())
             .filterWhen(groupedFlux -> hasRightsOnMailboxReactive(session, Right.Read).apply(groupedFlux.key()), DEFAULT_CONCURRENCY)
             .flatMap(Function.identity(), DEFAULT_CONCURRENCY);
