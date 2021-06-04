@@ -83,6 +83,7 @@ public class RabbitMQModule extends AbstractModule {
         bind(CassandraMailQueueBrowser.class).in(Scopes.SINGLETON);
         bind(CassandraMailQueueMailDelete.class).in(Scopes.SINGLETON);
         bind(CassandraMailQueueMailStore.class).in(Scopes.SINGLETON);
+        bind(SimpleConnectionPool.class).in(Scopes.SINGLETON);
 
         Multibinder<CassandraModule> cassandraModuleBinder = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraModuleBinder.addBinding().toInstance(CassandraMailQueueViewModule.MODULE);
