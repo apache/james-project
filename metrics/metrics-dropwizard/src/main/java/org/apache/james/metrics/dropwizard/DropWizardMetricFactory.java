@@ -65,14 +65,14 @@ public class DropWizardMetricFactory implements MetricFactory, Startable {
     @Override
     public <T> Publisher<T> decoratePublisherWithTimerMetric(String name, Publisher<T> publisher) {
         return Flux.using(() -> timer(name),
-            any -> Flux.from(publisher),
+            any -> publisher,
             DropWizardTimeMetric::stopAndPublish);
     }
 
     @Override
     public <T> Publisher<T> decoratePublisherWithTimerMetricLogP99(String name, Publisher<T> publisher) {
         return Flux.using(() -> timer(name),
-            any -> Flux.from(publisher),
+            any -> publisher,
             timer -> timer.stopAndPublish().logWhenExceedP99(DEFAULT_100_MS_THRESHOLD));
     }
 
