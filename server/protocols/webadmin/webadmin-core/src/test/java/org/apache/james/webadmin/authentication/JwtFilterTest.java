@@ -24,6 +24,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
+
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -86,7 +88,7 @@ class JwtFilterTest {
         Request request = mock(Request.class);
         when(request.requestMethod()).thenReturn("GET");
         when(request.headers(JwtFilter.AUTHORIZATION_HEADER_NAME)).thenReturn("Bearer value");
-        when(jwtTokenVerifier.verify("value")).thenReturn(false);
+        when(jwtTokenVerifier.verifyAndExtractLogin("value")).thenReturn(Optional.empty());
 
 
         assertThatThrownBy(() -> jwtFilter.handle(request, mock(Response.class)))
@@ -100,7 +102,7 @@ class JwtFilterTest {
         Request request = mock(Request.class);
         when(request.requestMethod()).thenReturn("GET");
         when(request.headers(JwtFilter.AUTHORIZATION_HEADER_NAME)).thenReturn("Bearer value");
-        when(jwtTokenVerifier.verify("value")).thenReturn(true);
+        when(jwtTokenVerifier.verifyAndExtractLogin("value")).thenReturn(Optional.of("value"));
         when(jwtTokenVerifier.hasAttribute("admin", true, "value")).thenReturn(false);
 
         assertThatThrownBy(() -> jwtFilter.handle(request, mock(Response.class)))
@@ -114,7 +116,7 @@ class JwtFilterTest {
         Request request = mock(Request.class);
         when(request.requestMethod()).thenReturn("GET");
         when(request.headers(JwtFilter.AUTHORIZATION_HEADER_NAME)).thenReturn("Bearer value");
-        when(jwtTokenVerifier.verify("value")).thenReturn(true);
+        when(jwtTokenVerifier.verifyAndExtractLogin("value")).thenReturn(Optional.of("value"));
         when(jwtTokenVerifier.hasAttribute("admin", true, "value")).thenReturn(true);
 
         jwtFilter.handle(request, mock(Response.class));

@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.jwt;
 
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,20 +49,20 @@ public class JwtTokenVerifier {
         this.pubKeyProvider = pubKeyProvider;
     }
 
-    public boolean verify(String token) {
+    public Optional<String> verifyAndExtractLogin(String token) {
         try {
             String subject = extractLogin(token);
             if (Strings.isNullOrEmpty(subject)) {
                 throw new MalformedJwtException("'subject' field in token is mandatory");
             }
-            return true;
+            return Optional.of(subject);
         } catch (JwtException e) {
             LOGGER.info("Failed Jwt verification", e);
-            return false;
+            return Optional.empty();
         }
     }
 
-    public String extractLogin(String token) throws JwtException {
+    private String extractLogin(String token) throws JwtException {
         Jws<Claims> jws = parseToken(token);
         return jws
                 .getBody()
