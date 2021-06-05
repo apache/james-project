@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Inject;
 
@@ -88,13 +89,28 @@ public class Preview {
     }
 
     public static Preview compute(String textBody) {
+        int previewOffsetEstimate = estimatePreviewOffset(textBody, MAX_LENGTH);
+        String previewPart = textBody.substring(0, previewOffsetEstimate);
         return Preview.from(
             truncateToMaxLength(
-                StringUtils.normalizeSpace(textBody)));
+                StringUtils.normalizeSpace(previewPart)));
     }
 
     private static String truncateToMaxLength(String body) {
         return StringUtils.left(body, MAX_LENGTH);
+    }
+
+    private static int estimatePreviewOffset(String body, int charCount) {
+        AtomicInteger position = new AtomicInteger(0);
+
+        body.chars()
+            .mapToObj(i -> (char) i)
+            .peek(any -> position.incrementAndGet())
+            .filter(Character::isLetterOrDigit)
+            .limit(charCount)
+            .forEach(any -> { });
+
+        return position.get();
     }
 
     private final String value;
