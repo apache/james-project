@@ -382,8 +382,9 @@ public class StoreMessageManager implements MessageManager {
                 throw new ReadOnlyException(getMailboxPath());
             }
 
-            try (InputStream contentStreamStream = msgIn.getInputStream()) {
-                BodyOffsetInputStream bIn = new BodyOffsetInputStream(contentStreamStream);
+            try (InputStream contentStream = msgIn.getInputStream();
+                    BufferedInputStream bufferedContentStream = new BufferedInputStream(contentStream);
+                    BodyOffsetInputStream bIn = new BodyOffsetInputStream(bufferedContentStream)) {
                 PropertyBuilder propertyBuilder = parseProperties(bIn);
                 int bodyStartOctet = getBodyStartOctet(bIn);
 
