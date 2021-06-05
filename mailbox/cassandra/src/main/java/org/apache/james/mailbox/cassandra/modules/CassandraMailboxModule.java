@@ -42,7 +42,8 @@ public interface CassandraMailboxModule {
         .comment("Holds the mailboxes information.")
         .options(options -> options
             .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))
+            .compressionOptions(SchemaBuilder.lz4().withChunkLengthInKb(8)))
         .statement(statement -> statement
             .addPartitionKey(CassandraMailboxTable.ID, timeuuid())
             .addUDTColumn(CassandraMailboxTable.MAILBOX_BASE, SchemaBuilder.frozen(CassandraMailboxTable.MAILBOX_BASE))
