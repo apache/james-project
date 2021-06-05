@@ -68,6 +68,7 @@ public interface CassandraMessageModule {
         .comment("Holds mailbox and flags for each message, lookup by message ID")
         .options(options -> options
             .compactionOptions(SchemaBuilder.sizedTieredStategy())
+            .compressionOptions(SchemaBuilder.lz4().withChunkLengthInKb(8))
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(CACHED_IMAP_UID_ROWS)))
         .statement(statement -> statement

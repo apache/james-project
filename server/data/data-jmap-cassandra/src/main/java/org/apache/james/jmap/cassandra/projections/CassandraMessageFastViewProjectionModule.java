@@ -36,7 +36,8 @@ public interface CassandraMessageFastViewProjectionModule {
     CassandraModule MODULE = CassandraModule.table(TABLE_NAME)
         .comment("Storing the JMAP projections for MessageFastView, an aggregation of JMAP properties expected to be fast to fetch.")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL, SchemaBuilder.rows(DEFAULT_CACHED_ROW_PER_PARTITION)))
+            .caching(SchemaBuilder.KeyCaching.ALL, SchemaBuilder.rows(DEFAULT_CACHED_ROW_PER_PARTITION))
+            .compressionOptions(SchemaBuilder.lz4().withChunkLengthInKb(8)))
         .statement(statement -> statement
             .addPartitionKey(MESSAGE_ID, uuid())
             .addColumn(PREVIEW, text())
