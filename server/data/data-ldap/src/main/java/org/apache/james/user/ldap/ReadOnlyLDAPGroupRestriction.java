@@ -19,20 +19,20 @@
 package org.apache.james.user.ldap;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
-import javax.naming.ldap.LdapContext;
-
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+
+import com.github.steveash.guavate.Guavate;
+import com.unboundid.ldap.sdk.LDAPConnection;
+import com.unboundid.ldap.sdk.LDAPException;
+import com.unboundid.ldap.sdk.SearchResultEntry;
 
 /**
  * <p>
@@ -112,13 +112,12 @@ public class ReadOnlyLDAPGroupRestriction {
      * <code>groupDN</code> is associated to a list of <code>userDNs</code>.
      *
      * @return Returns a map of groupDNs to userDN lists.
-     * @throws NamingException Propagated from underlying LDAP communication layer.
      */
-    protected Map<String, Collection<String>> getGroupMembershipLists(LdapContext ldapContext) throws NamingException {
+    protected Map<String, Collection<String>> getGroupMembershipLists(LDAPConnection connection) throws LDAPException {
         Map<String, Collection<String>> result = new HashMap<>();
 
         for (String groupDN : groupDNs) {
-            result.put(groupDN, extractMembers(ldapContext.getAttributes(groupDN)));
+            result.put(groupDN, extractMembers(connection.getEntry(groupDN)));
         }
 
         return result;
@@ -130,20 +129,12 @@ public class ReadOnlyLDAPGroupRestriction {
      * attribute, with name equivalent to the field value
      * {@link #memberAttribute}, from the attributes collection.
      *
-     * @param groupAttributes The attributes taken from the group's LDAP context.
      * @return A collection of distinguished-names for the users belonging to
      *         the group with the specified attributes.
-     * @throws NamingException Propagated from underlying LDAP communication layer.
      */
-    private Collection<String> extractMembers(Attributes groupAttributes) throws NamingException {
-        Collection<String> result = new ArrayList<>();
-        Attribute members = groupAttributes.get(memberAttribute);
-        NamingEnumeration<?> memberDNs = members.getAll();
-
-        while (memberDNs.hasMore()) {
-            result.add(memberDNs.next().toString());
-        }
-
-        return result;
+    private Collection<String> extractMembers(SearchResultEntry entry) {
+        com.unboundid.ldap.sdk.Attribute members = entry.getAttribute(memberAttribute);
+        return Arrays.stream(members.getValues())
+            .collect(Guavate.toImmutableList());
     }
 }
