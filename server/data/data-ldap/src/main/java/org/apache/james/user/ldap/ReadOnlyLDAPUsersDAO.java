@@ -19,26 +19,18 @@
 
 package org.apache.james.user.ldap;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.Set;
 
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
-import javax.naming.Context;
-import javax.naming.NamingEnumeration;
-import javax.naming.NamingException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.SearchControls;
-import javax.naming.directory.SearchResult;
-import javax.naming.ldap.InitialLdapContext;
-import javax.naming.ldap.LdapContext;
+import javax.net.SocketFactory;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -49,39 +41,26 @@ import org.apache.james.core.Username;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
-import org.apache.james.user.ldap.api.LdapConstants;
-import org.apache.james.user.ldap.retry.DoublingRetrySchedule;
-import org.apache.james.user.ldap.retry.api.RetrySchedule;
-import org.apache.james.user.ldap.retry.naming.ldap.RetryingLdapContext;
 import org.apache.james.user.lib.UsersDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Strings;
+import com.unboundid.ldap.sdk.LDAPConnection;
+import com.unboundid.ldap.sdk.LDAPConnectionOptions;
+import com.unboundid.ldap.sdk.LDAPConnectionPool;
+import com.unboundid.ldap.sdk.LDAPException;
+import com.unboundid.ldap.sdk.SearchResult;
+import com.unboundid.ldap.sdk.SearchResultEntry;
+import com.unboundid.ldap.sdk.SearchScope;
 
 public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyLDAPUsersDAO.class);
 
-    // The name of the factory class which creates the initial context
-    // for the LDAP service provider
-    private static final String INITIAL_CONTEXT_FACTORY = "com.sun.jndi.ldap.LdapCtxFactory";
-
-    private static final String PROPERTY_NAME_CONNECTION_POOL = "com.sun.jndi.ldap.connect.pool";
-    private static final String PROPERTY_NAME_CONNECT_TIMEOUT = "com.sun.jndi.ldap.connect.timeout";
-    private static final String PROPERTY_NAME_READ_TIMEOUT = "com.sun.jndi.ldap.read.timeout";
-
-    /**
-     * The context for the LDAP server. This is the connection that is built
-     * from the configuration attributes &quot;ldapHost&quot;,
-     * &quot;principal&quot; and &quot;credentials&quot;.
-     */
-    private LdapContext ldapContext;
-    // The schedule for retry attempts
-    private RetrySchedule schedule = null;
-
     private LdapRepositoryConfiguration ldapConfiguration;
+    private String filterTemplate;
+    private LDAPConnectionPool ldapConnectionPool;
 
     @Inject
     public ReadOnlyLDAPUsersDAO() {
@@ -91,8 +70,6 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     /**
      * Extracts the parameters required by the repository instance from the
      * James server configuration data. The fields extracted include
-     * {@link LdapRepositoryConfiguration#ldapHost}, {@link LdapRepositoryConfiguration#userIdAttribute}, {@link LdapRepositoryConfiguration#userBase},
-     * {@link LdapRepositoryConfiguration#principal}, {@link LdapRepositoryConfiguration#credentials} and {@link LdapRepositoryConfiguration#restriction}.
      *
      * @param configuration
      *            An encapsulation of the James server configuration data.
@@ -104,11 +81,6 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
 
     public void configure(LdapRepositoryConfiguration configuration) {
         ldapConfiguration = configuration;
-
-        schedule = new DoublingRetrySchedule(
-            configuration.getRetryStartInterval(),
-            configuration.getRetryMaxInterval(),
-            configuration.getScale());
     }
 
     /**
@@ -120,62 +92,33 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
      *             specified LDAP host.
      */
     public void init() throws Exception {
+
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(this.getClass().getName() + ".init()" + '\n' + "LDAP host: " + ldapConfiguration.getLdapHost()
                 + '\n' + "User baseDN: " + ldapConfiguration.getUserBase() + '\n' + "userIdAttribute: "
                 + ldapConfiguration.getUserIdAttribute() + '\n' + "Group restriction: " + ldapConfiguration.getRestriction()
-                + '\n' + "UseConnectionPool: " + ldapConfiguration.useConnectionPool() + '\n' + "connectionTimeout: "
+                + '\n' + "connectionTimeout: "
                 + ldapConfiguration.getConnectionTimeout() + '\n' + "readTimeout: " + ldapConfiguration.getReadTimeout()
-                + '\n' + "retrySchedule: " + schedule + '\n' + "maxRetries: " + ldapConfiguration.getMaxRetries() + '\n');
+                + '\n' + "maxRetries: " + ldapConfiguration.getMaxRetries() + '\n');
         }
-        // Setup the initial LDAP context
-        updateLdapContext();
+        filterTemplate = "(&({0}={1})(objectClass={2})" + StringUtils.defaultString(ldapConfiguration.getFilter(), "") + ")";
+
+        LDAPConnectionOptions connectionOptions = new LDAPConnectionOptions();
+        connectionOptions.setConnectTimeoutMillis(ldapConfiguration.getConnectionTimeout());
+        connectionOptions.setResponseTimeoutMillis(ldapConfiguration.getReadTimeout());
+
+        URI uri = new URI(ldapConfiguration.getLdapHost());
+        SocketFactory socketFactory = null;
+        LDAPConnection ldapConnection = new LDAPConnection(socketFactory, connectionOptions, uri.getHost(), uri.getPort(), ldapConfiguration.getPrincipal(), ldapConfiguration.getCredentials());
+        ldapConnectionPool = new LDAPConnectionPool(ldapConnection, 4);
+        // TODO implement retries
     }
 
-    protected void updateLdapContext() throws NamingException {
-        ldapContext = computeLdapContext();
+    @PreDestroy
+    void dispose() {
+        ldapConnectionPool.close();
     }
 
-    /**
-     * Answers a new LDAP/JNDI context using the specified user credentials.
-     *
-     * @return an LDAP directory context
-     * @throws NamingException
-     *             Propagated from underlying LDAP communication API.
-     */
-    protected LdapContext computeLdapContext() throws NamingException {
-        return new RetryingLdapContext(schedule, ldapConfiguration.getMaxRetries()) {
-
-            @Override
-            public Context newDelegate() throws NamingException {
-                return new InitialLdapContext(getContextEnvironment(), null);
-            }
-        };
-    }
-
-    protected Properties getContextEnvironment() {
-        Properties props = new Properties();
-        props.put(Context.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT_FACTORY);
-        props.put(Context.PROVIDER_URL, Optional.ofNullable(ldapConfiguration.getLdapHost())
-            .orElse(""));
-        if (Strings.isNullOrEmpty(ldapConfiguration.getCredentials())) {
-            props.put(Context.SECURITY_AUTHENTICATION, LdapConstants.SECURITY_AUTHENTICATION_NONE);
-        } else {
-            props.put(Context.SECURITY_AUTHENTICATION, LdapConstants.SECURITY_AUTHENTICATION_SIMPLE);
-            props.put(Context.SECURITY_PRINCIPAL, Optional.ofNullable(ldapConfiguration.getPrincipal())
-                .orElse(""));
-            props.put(Context.SECURITY_CREDENTIALS, ldapConfiguration.getCredentials());
-        }
-        // The following properties are specific to com.sun.jndi.ldap.LdapCtxFactory
-        props.put(PROPERTY_NAME_CONNECTION_POOL, String.valueOf(ldapConfiguration.useConnectionPool()));
-        if (ldapConfiguration.getConnectionTimeout() > -1) {
-            props.put(PROPERTY_NAME_CONNECT_TIMEOUT, String.valueOf(ldapConfiguration.getConnectionTimeout()));
-        }
-        if (ldapConfiguration.getReadTimeout() > -1) {
-            props.put(PROPERTY_NAME_READ_TIMEOUT, Integer.toString(ldapConfiguration.getReadTimeout()));
-        }
-        return props;
-    }
 
     /**
      * Indicates if the user with the specified DN can be found in the group
@@ -209,29 +152,20 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         return result;
     }
 
-    /**
-     * Gets all the user entities taken from the LDAP server, as taken from the
-     * search-context given by the value of the attribute {@link LdapRepositoryConfiguration#userBase}.
-     *
-     * @return A set containing all the relevant users found in the LDAP
-     *         directory.
-     * @throws NamingException
-     *             Propagated from the LDAP communication layer.
-     */
-    private Set<String> getAllUsersFromLDAP() throws NamingException {
-        Set<String> result = new HashSet<>();
+    private Set<String> getAllUsersFromLDAP() throws LDAPException {
+        LDAPConnection connection = ldapConnectionPool.getConnection();
+        try {
+            SearchResult searchResult = connection.search(ldapConfiguration.getUserBase(),
+                SearchScope.SUB,
+                filterTemplate);
 
-        SearchControls sc = new SearchControls();
-        sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
-        sc.setReturningAttributes(new String[] { "distinguishedName" });
-        NamingEnumeration<SearchResult> sr = ldapContext.search(ldapConfiguration.getUserBase(), "(objectClass="
-                + ldapConfiguration.getUserObjectClass() + ")", sc);
-        while (sr.hasMore()) {
-            SearchResult r = sr.next();
-            result.add(r.getNameInNamespace());
+            return searchResult.getSearchEntries()
+                .stream()
+                .map(entry -> entry.getObjectClassAttribute().getName())
+                .collect(Guavate.toImmutableSet());
+        } finally {
+            ldapConnectionPool.releaseConnection(connection);
         }
-
-        return result;
     }
 
     /**
@@ -245,11 +179,10 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
      *            is to be extracted from the LDAP repository.
      * @return A collection of {@link ReadOnlyLDAPUser}s as taken from the LDAP
      *         server.
-     * @throws NamingException
+     * @throws LDAPException
      *             Propagated from the underlying LDAP communication layer.
      */
-    private Collection<ReadOnlyLDAPUser> buildUserCollection(Collection<String> userDNs)
-            throws NamingException {
+    private Collection<ReadOnlyLDAPUser> buildUserCollection(Collection<String> userDNs) throws LDAPException {
         List<ReadOnlyLDAPUser> results = new ArrayList<>();
 
         for (String userDN : userDNs) {
@@ -260,42 +193,34 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         return results;
     }
 
-    /**
-     * For a given name, this method makes ldap search in userBase with filter {@link LdapRepositoryConfiguration#userIdAttribute}=name
-     * and objectClass={@link LdapRepositoryConfiguration#userObjectClass} and builds {@link User} based on search result.
-     *
-     * @param name
-     *            The userId which should be value of the field {@link LdapRepositoryConfiguration#userIdAttribute}
-     * @return A {@link ReadOnlyLDAPUser} instance which is initialized with the
-     *         userId of this user and ldap connection information with which
-     *         the user was searched. Return null if such a user was not found.
-     * @throws NamingException
-     *             Propagated by the underlying LDAP communication layer.
-     */
-    private ReadOnlyLDAPUser searchAndBuildUser(Username name) throws NamingException {
-        SearchControls sc = new SearchControls();
-        sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
-        sc.setReturningAttributes(new String[] { ldapConfiguration.getUserIdAttribute() });
-        sc.setCountLimit(1);
+    private ReadOnlyLDAPUser searchAndBuildUser(Username name) throws LDAPException {
+        LDAPConnection connection = ldapConnectionPool.getConnection();
+        try {
+            String sanitizedFilter = FilterEncoder.format(
+                filterTemplate,
+                ldapConfiguration.getUserIdAttribute(),
+                name.asString(),
+                ldapConfiguration.getUserObjectClass());
 
-        String filterTemplate = "(&({0}={1})(objectClass={2})" +
-            StringUtils.defaultString(ldapConfiguration.getFilter(), "") +
-            ")";
+            SearchResult searchResult = connection.search(ldapConfiguration.getUserBase(),
+                SearchScope.SUB,
+                sanitizedFilter,
+                ldapConfiguration.getUserIdAttribute());
 
-        String sanitizedFilter = FilterEncoder.format(
-            filterTemplate,
-            ldapConfiguration.getUserIdAttribute(),
-            name.asString(),
-            ldapConfiguration.getUserObjectClass());
-
-        NamingEnumeration<SearchResult> sr = ldapContext.search(ldapConfiguration.getUserBase(), sanitizedFilter, sc);
-
-        if (!sr.hasMore()) {
-            return null;
+            return searchResult.getSearchEntries()
+                .stream()
+                .map(entry -> new ReadOnlyLDAPUser(
+                    Username.of(entry.getAttribute(ldapConfiguration.getUserIdAttribute()).getName()),
+                    entry.getDN(),
+                    ldapConnectionPool))
+                .findFirst()
+                .orElse(null);
+        } finally {
+            ldapConnectionPool.releaseConnection(connection);
         }
 
-        SearchResult r = sr.next();
-        Attribute userName = r.getAttributes().get(ldapConfiguration.getUserIdAttribute());
+        /*
+        TODO implement restrictions
 
         if (!ldapConfiguration.getRestriction().isActivated()
             || userInGroupsMembershipList(r.getNameInNamespace(), ldapConfiguration.getRestriction().getGroupMembershipLists(ldapContext))) {
@@ -303,31 +228,20 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         }
 
         return null;
+        */
     }
 
-    /**
-     * Given a userDN, this method retrieves the user attributes from the LDAP
-     * server, so as to extract the items that are of interest to James.
-     * Specifically it extracts the userId, which is extracted from the LDAP
-     * attribute whose name is given by the value of the field
-     * {@link LdapRepositoryConfiguration#userIdAttribute}.
-     *
-     * @param userDN
-     *            The distinguished-name of the user whose details are to be
-     *            extracted from the LDAP repository.
-     * @return A {@link ReadOnlyLDAPUser} instance which is initialized with the
-     *         userId of this user and ldap connection information with which
-     *         the userDN and attributes were obtained.
-     * @throws NamingException
-     *             Propagated by the underlying LDAP communication layer.
-     */
-    private Optional<ReadOnlyLDAPUser> buildUser(String userDN) throws NamingException {
-      Attributes userAttributes = ldapContext.getAttributes(userDN);
-      Optional<Attribute> userName = Optional.ofNullable(userAttributes.get(ldapConfiguration.getUserIdAttribute()));
-      return userName
-          .map(Throwing.<Attribute, String>function(u -> u.get().toString()).sneakyThrow())
-          .map(Username::of)
-          .map(username -> new ReadOnlyLDAPUser(username, userDN, ldapContext));
+    private Optional<ReadOnlyLDAPUser> buildUser(String userDN) throws LDAPException {
+        LDAPConnection connection = ldapConnectionPool.getConnection();
+        try {
+            SearchResultEntry userAttributes = connection.getEntry(userDN);
+            Optional<String> userName = Optional.ofNullable(userAttributes.getAttributeValue(ldapConfiguration.getUserIdAttribute()));
+            return userName
+                .map(Username::of)
+                .map(username -> new ReadOnlyLDAPUser(username, userDN, ldapConnectionPool));
+        } finally {
+            ldapConnectionPool.releaseConnection(connection);
+        }
     }
 
     @Override
@@ -342,7 +256,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
                 .map(Throwing.function(this::buildUser).sneakyThrow())
                 .flatMap(Optional::stream)
                 .count());
-        } catch (NamingException e) {
+        } catch (LDAPException e) {
             throw new UsersRepositoryException("Unable to retrieve user count from ldap", e);
         }
     }
@@ -351,7 +265,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     public Optional<User> getUserByName(Username name) throws UsersRepositoryException {
         try {
           return Optional.ofNullable(searchAndBuildUser(name));
-        } catch (NamingException e) {
+        } catch (LDAPException e) {
             throw new UsersRepositoryException("Unable to retrieve user from ldap", e);
         }
     }
@@ -362,19 +276,22 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
             return buildUserCollection(getValidUsers())
                 .stream()
                 .map(ReadOnlyLDAPUser::getUserName)
-                .collect(Guavate.toImmutableList())
                 .iterator();
-        } catch (NamingException namingException) {
+        } catch (LDAPException namingException) {
             throw new UsersRepositoryException(
                     "Unable to retrieve users list from LDAP due to unknown naming error.",
                     namingException);
         }
     }
 
-    private Collection<String> getValidUsers() throws NamingException {
-        Set<String> userDNs = getAllUsersFromLDAP();
-        Collection<String> validUserDNs;
+    private Collection<String> getValidUsers() throws LDAPException {
+        return getAllUsersFromLDAP();
 
+        /*
+        TODO Implement restrictions
+         */
+        /*
+        Collection<String> validUserDNs;
         if (ldapConfiguration.getRestriction().isActivated()) {
             Map<String, Collection<String>> groupMembershipList = ldapConfiguration.getRestriction()
                     .getGroupMembershipLists(ldapContext);
@@ -392,6 +309,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
             validUserDNs = userDNs;
         }
         return validUserDNs;
+         */
     }
 
     @Override

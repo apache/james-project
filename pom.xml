@@ -2105,7 +2105,6 @@
                 <artifactId>metrics-elasticsearch-reporter</artifactId>
                 <version>${es-reporter.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>com.rabbitmq</groupId>
                 <artifactId>amqp-client</artifactId>
@@ -2151,6 +2150,11 @@
                 <groupId>com.typesafe.play</groupId>
                 <artifactId>play-json_${scala.base}</artifactId>
                 <version>2.9.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.unboundid</groupId>
+                <artifactId>unboundid-ldapsdk</artifactId>
+                <version>6.0.0</version>
             </dependency>
             <dependency>
                 <groupId>commons-beanutils</groupId>
