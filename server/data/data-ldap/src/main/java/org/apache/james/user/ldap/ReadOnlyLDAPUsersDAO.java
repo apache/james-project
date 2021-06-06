@@ -207,28 +207,23 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
                 sanitizedFilter,
                 ldapConfiguration.getUserIdAttribute());
 
-            return searchResult.getSearchEntries()
+            SearchResultEntry result = searchResult.getSearchEntries()
                 .stream()
-                .map(entry -> new ReadOnlyLDAPUser(
-                    Username.of(entry.getAttribute(ldapConfiguration.getUserIdAttribute()).getName()),
-                    entry.getDN(),
-                    ldapConnectionPool))
                 .findFirst()
                 .orElse(null);
+            if (result == null) {
+                return null;
+            }
+
+            if (!ldapConfiguration.getRestriction().isActivated()
+                || userInGroupsMembershipList(result.getDN(), ldapConfiguration.getRestriction().getGroupMembershipLists(connection))) {
+
+                return new ReadOnlyLDAPUser(name, result.getDN(), ldapConnectionPool);
+            }
+            return null;
         } finally {
             ldapConnectionPool.releaseConnection(connection);
         }
-
-        /*
-        TODO implement restrictions
-
-        if (!ldapConfiguration.getRestriction().isActivated()
-            || userInGroupsMembershipList(r.getNameInNamespace(), ldapConfiguration.getRestriction().getGroupMembershipLists(ldapContext))) {
-            return new ReadOnlyLDAPUser(Username.of(userName.get().toString()), r.getNameInNamespace(), ldapContext);
-        }
-
-        return null;
-        */
     }
 
     private Optional<ReadOnlyLDAPUser> buildUser(String userDN) throws LDAPException {
@@ -285,31 +280,30 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     }
 
     private Collection<String> getValidUsers() throws LDAPException {
-        return getAllUsersFromLDAP();
-
-        /*
-        TODO Implement restrictions
-         */
-        /*
+        Set<String> userDNs = getAllUsersFromLDAP();
         Collection<String> validUserDNs;
         if (ldapConfiguration.getRestriction().isActivated()) {
-            Map<String, Collection<String>> groupMembershipList = ldapConfiguration.getRestriction()
-                    .getGroupMembershipLists(ldapContext);
-            validUserDNs = new ArrayList<>();
+            final LDAPConnection connection = ldapConnectionPool.getConnection();
+            try {
+                Map<String, Collection<String>> groupMembershipList = ldapConfiguration.getRestriction()
+                    .getGroupMembershipLists(connection);
+                validUserDNs = new ArrayList<>();
 
-            Iterator<String> userDNIterator = userDNs.iterator();
-            String userDN;
-            while (userDNIterator.hasNext()) {
-                userDN = userDNIterator.next();
-                if (userInGroupsMembershipList(userDN, groupMembershipList)) {
-                    validUserDNs.add(userDN);
+                Iterator<String> userDNIterator = userDNs.iterator();
+                String userDN;
+                while (userDNIterator.hasNext()) {
+                    userDN = userDNIterator.next();
+                    if (userInGroupsMembershipList(userDN, groupMembershipList)) {
+                        validUserDNs.add(userDN);
+                    }
                 }
+            } finally {
+                ldapConnectionPool.releaseConnection(connection);
             }
         } else {
             validUserDNs = userDNs;
         }
         return validUserDNs;
-         */
     }
 
     @Override
