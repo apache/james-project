@@ -30,6 +30,8 @@ import com.unboundid.ldap.sdk.BindResult;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
 
+import reactor.core.publisher.Mono;
+
 /**
  * Encapsulates the details of a user as taken from an LDAP compliant directory.
  * Instances of this class are only applicable to the
@@ -68,27 +70,29 @@ public class ReadOnlyLDAPUser implements User, Serializable {
      */
     private final LDAPConnectionPool connectionPool;
 
+    private final LdapRepositoryConfiguration configuration;
+
     /**
      * Constructs an instance for the given user-details, and which will
      * authenticate against the given host.
-     *
-     * @param connectionPool
-     *            The connectionPool for the LDAP server on which the user details are held.
-     *            This is also the host against which the user will be
-     *            authenticated, when {@link #verifyPassword(String)} is
-     *            invoked.
-     * @param userName
+     *  @param userName
      *            The user-identifier/name. This is the value with which the
      *            field  will be initialised, and which will be
      *            returned by invoking {@link #getUserName()}.
      * @param userDN
      *            The distinguished (unique-key) of the user details as stored
-     *            on the LDAP directory.
+     * @param connectionPool
+ *            The connectionPool for the LDAP server on which the user details are held.
+ *            This is also the host against which the user will be
+ *            authenticated, when {@link #verifyPassword(String)} is
+ *            invoked.
+     * @param configuration
      */
-    public ReadOnlyLDAPUser(Username userName, String userDN, LDAPConnectionPool connectionPool) {
+    public ReadOnlyLDAPUser(Username userName, String userDN, LDAPConnectionPool connectionPool, LdapRepositoryConfiguration configuration) {
         this.userName = userName;
         this.userDN = userDN;
         this.connectionPool = connectionPool;
+        this.configuration = configuration;
     }
 
     /**
@@ -130,12 +134,18 @@ public class ReadOnlyLDAPUser implements User, Serializable {
     @Override
     public boolean verifyPassword(String password) {
         try {
-            BindResult bindResult = connectionPool.bindAndRevertAuthentication(userDN, password);
-            return bindResult.getResultCode()
-                .intValue() == 0;
-        } catch (LDAPException e) {
+            return Mono.fromCallable(() -> doVerifyPassword(password))
+                .retryWhen(configuration.retrySpec())
+                .block();
+        } catch (Exception e) {
             LOGGER.error("Unexpected error upon authentication", e);
             return false;
         }
+    }
+
+    private boolean doVerifyPassword(String password) throws LDAPException {
+        BindResult bindResult = connectionPool.bindAndRevertAuthentication(userDN, password);
+        return bindResult.getResultCode()
+            .intValue() == 0;
     }
 }
