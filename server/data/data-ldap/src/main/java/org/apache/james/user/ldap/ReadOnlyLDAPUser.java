@@ -21,13 +21,14 @@ package org.apache.james.user.ldap;
 
 import java.io.Serializable;
 
-import javax.naming.Context;
-import javax.naming.NamingException;
-import javax.naming.ldap.LdapContext;
-
 import org.apache.james.core.Username;
 import org.apache.james.user.api.model.User;
-import org.apache.james.user.ldap.api.LdapConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.unboundid.ldap.sdk.BindResult;
+import com.unboundid.ldap.sdk.LDAPConnectionPool;
+import com.unboundid.ldap.sdk.LDAPException;
 
 /**
  * Encapsulates the details of a user as taken from an LDAP compliant directory.
@@ -38,14 +39,13 @@ import org.apache.james.user.ldap.api.LdapConstants;
  * means of authenticating the user against the LDAP server. Consequently
  * invocations of the contract method {@link User#setPassword(String)} always
  * returns <code>false</code>.
- * 
- * @see SimpleLDAPConnection
+ *
  * @see ReadOnlyUsersLDAPRepository
  * 
  */
 public class ReadOnlyLDAPUser implements User, Serializable {
-    // private static final long serialVersionUID = -6712066073820393235L; 
-    private static final long serialVersionUID = -5201235065842464013L;
+    private static final long serialVersionUID = -5201235065842464014L;
+    public static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyLDAPUser.class);
 
     /**
      * The user's identifier or name. This is the value that is returned by the
@@ -55,31 +55,28 @@ public class ReadOnlyLDAPUser implements User, Serializable {
      * <code>&quot;myorg.com&quot;</code>, the user's email address will be
      * <code>&quot;john.bold&#64;myorg.com&quot;</code>.
      */
-    private Username userName;
+    private final Username userName;
 
     /**
      * The distinguished name of the user-record in the LDAP directory.
      */
-    private String userDN;
+    private final String userDN;
 
     /**
      * The context for the LDAP server from which to retrieve the
      * user's details.
      */
-    private LdapContext ldapContext = null;
-
-    /**
-     * Creates a new instance of ReadOnlyLDAPUser.
-     *
-     */
-    private ReadOnlyLDAPUser() {
-        super();
-    }
+    private final LDAPConnectionPool connectionPool;
 
     /**
      * Constructs an instance for the given user-details, and which will
      * authenticate against the given host.
-     * 
+     *
+     * @param connectionPool
+     *            The connectionPool for the LDAP server on which the user details are held.
+     *            This is also the host against which the user will be
+     *            authenticated, when {@link #verifyPassword(String)} is
+     *            invoked.
      * @param userName
      *            The user-identifier/name. This is the value with which the
      *            field  will be initialised, and which will be
@@ -87,18 +84,11 @@ public class ReadOnlyLDAPUser implements User, Serializable {
      * @param userDN
      *            The distinguished (unique-key) of the user details as stored
      *            on the LDAP directory.
-     * @param ldapContext
-     *            The context for the LDAP server on which the user details are held.
-     *            This is also the host against which the user will be
-     *            authenticated, when {@link #verifyPassword(String)} is
-     *            invoked.
-     * @throws NamingException 
      */
-    public ReadOnlyLDAPUser(Username userName, String userDN, LdapContext ldapContext) {
-        this();
+    public ReadOnlyLDAPUser(Username userName, String userDN, LDAPConnectionPool connectionPool) {
         this.userName = userName;
         this.userDN = userDN;
-        this.ldapContext = ldapContext;
+        this.connectionPool = connectionPool;
     }
 
     /**
@@ -139,27 +129,13 @@ public class ReadOnlyLDAPUser implements User, Serializable {
      */
     @Override
     public boolean verifyPassword(String password) {
-        boolean result = false;
-        LdapContext ldapContext = null;
         try {
-            ldapContext = this.ldapContext.newInstance(null);
-            ldapContext.addToEnvironment(Context.SECURITY_AUTHENTICATION,
-                    LdapConstants.SECURITY_AUTHENTICATION_SIMPLE);
-            ldapContext.addToEnvironment(Context.SECURITY_PRINCIPAL, userDN);
-            ldapContext.addToEnvironment(Context.SECURITY_CREDENTIALS, password);
-            ldapContext.reconnect(null);
-            result = true;
-        } catch (NamingException exception) {
-            // no-op
-        } finally {
-            if (null != ldapContext) {
-                try {
-                    ldapContext.close();
-                } catch (NamingException ex) {
-                    // no-op
-                }
-            }
+            BindResult bindResult = connectionPool.bindAndRevertAuthentication(userDN, password);
+            return bindResult.getResultCode()
+                .intValue() == 0;
+        } catch (LDAPException e) {
+            LOGGER.error("Unexpected error upon authentication", e);
+            return false;
         }
-        return result;
     }
 }
