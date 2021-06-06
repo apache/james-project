@@ -55,6 +55,8 @@ import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
 
+import reactor.core.publisher.Mono;
+
 public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyLDAPUsersDAO.class);
 
@@ -218,7 +220,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
             if (!ldapConfiguration.getRestriction().isActivated()
                 || userInGroupsMembershipList(result.getDN(), ldapConfiguration.getRestriction().getGroupMembershipLists(connection))) {
 
-                return new ReadOnlyLDAPUser(name, result.getDN(), ldapConnectionPool);
+                return new ReadOnlyLDAPUser(name, result.getDN(), ldapConnectionPool, ldapConfiguration);
             }
             return null;
         } finally {
@@ -233,7 +235,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
             Optional<String> userName = Optional.ofNullable(userAttributes.getAttributeValue(ldapConfiguration.getUserIdAttribute()));
             return userName
                 .map(Username::of)
-                .map(username -> new ReadOnlyLDAPUser(username, userDN, ldapConnectionPool));
+                .map(username -> new ReadOnlyLDAPUser(username, userDN, ldapConnectionPool, ldapConfiguration));
         } finally {
             ldapConnectionPool.releaseConnection(connection);
         }
@@ -241,42 +243,80 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
 
     @Override
     public boolean contains(Username name) throws UsersRepositoryException {
-        return getUserByName(name).isPresent();
+        try {
+            return Mono.fromCallable(() -> doContains(name))
+                .retryWhen(ldapConfiguration.retrySpec())
+                .block();
+        } catch (Exception e) {
+            if (e.getCause() instanceof UsersRepositoryException) {
+                throw (UsersRepositoryException) e.getCause();
+            }
+            throw new UsersRepositoryException("Unable to check user existence from ldap", e);
+        }
+    }
+
+    private boolean doContains(Username name) throws LDAPException {
+        return doGetUserByName(name).isPresent();
     }
 
     @Override
     public int countUsers() throws UsersRepositoryException {
         try {
-            return Math.toIntExact(getValidUsers().stream()
-                .map(Throwing.function(this::buildUser).sneakyThrow())
-                .flatMap(Optional::stream)
-                .count());
-        } catch (LDAPException e) {
+            return Mono.fromCallable(() -> doCountUsers())
+                .retryWhen(ldapConfiguration.retrySpec())
+                .block();
+        } catch (Exception e) {
+            if (e.getCause() instanceof UsersRepositoryException) {
+                throw (UsersRepositoryException) e.getCause();
+            }
             throw new UsersRepositoryException("Unable to retrieve user count from ldap", e);
         }
+    }
+
+    private int doCountUsers() throws LDAPException {
+        return Math.toIntExact(getValidUsers().stream()
+            .map(Throwing.function(this::buildUser).sneakyThrow())
+            .flatMap(Optional::stream)
+            .count());
     }
 
     @Override
     public Optional<User> getUserByName(Username name) throws UsersRepositoryException {
         try {
-          return Optional.ofNullable(searchAndBuildUser(name));
-        } catch (LDAPException e) {
-            throw new UsersRepositoryException("Unable to retrieve user from ldap", e);
+            return Mono.fromCallable(() -> doGetUserByName(name))
+                .retryWhen(ldapConfiguration.retrySpec())
+                .block();
+        } catch (Exception e) {
+            if (e.getCause() instanceof UsersRepositoryException) {
+                throw (UsersRepositoryException) e.getCause();
+            }
+            throw new UsersRepositoryException("Unable check user existence from ldap", e);
         }
+    }
+
+    private Optional<User> doGetUserByName(Username name) throws LDAPException {
+        return Optional.ofNullable(searchAndBuildUser(name));
     }
 
     @Override
     public Iterator<Username> list() throws UsersRepositoryException {
         try {
-            return buildUserCollection(getValidUsers())
-                .stream()
-                .map(ReadOnlyLDAPUser::getUserName)
-                .iterator();
-        } catch (LDAPException namingException) {
-            throw new UsersRepositoryException(
-                    "Unable to retrieve users list from LDAP due to unknown naming error.",
-                    namingException);
+            return Mono.fromCallable(this::doList)
+                .retryWhen(ldapConfiguration.retrySpec())
+                .block();
+        } catch (Exception e) {
+            if (e.getCause() instanceof UsersRepositoryException) {
+                throw (UsersRepositoryException) e.getCause();
+            }
+            throw new UsersRepositoryException("Unable to list users from ldap", e);
         }
+    }
+
+    private Iterator<Username> doList() throws LDAPException {
+        return buildUserCollection(getValidUsers())
+            .stream()
+            .map(ReadOnlyLDAPUser::getUserName)
+            .iterator();
     }
 
     private Collection<String> getValidUsers() throws LDAPException {

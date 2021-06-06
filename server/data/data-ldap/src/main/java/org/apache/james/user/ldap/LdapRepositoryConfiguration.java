@@ -19,6 +19,7 @@
 
 package org.apache.james.user.ldap;
 
+import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -28,6 +29,10 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Username;
 
 import com.google.common.base.Preconditions;
+
+import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
+import reactor.util.retry.RetryBackoffSpec;
 
 public class LdapRepositoryConfiguration {
     public static final String SUPPORTS_VIRTUAL_HOSTING = "supportsVirtualHosting";
@@ -382,6 +387,12 @@ public class LdapRepositoryConfiguration {
 
     public Optional<Username> getAdministratorId() {
         return administratorId;
+    }
+
+    public RetryBackoffSpec retrySpec() {
+        return Retry.backoff(getMaxRetries(), Duration.ofMillis(getRetryStartInterval() * getScale()))
+            .maxBackoff(Duration.ofMillis(getRetryMaxInterval() * getScale()))
+            .scheduler(Schedulers.elastic());
     }
 
     @Override
