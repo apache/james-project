@@ -557,7 +557,7 @@
 
     <ciManagement>
         <system>Jenkins</system>
-        <url>https://builds.apache.org/</url>
+        <url>https://ci-builds.apache.org/job/james/job/ApacheJames/</url>
     </ciManagement>
 
     <distributionManagement>
