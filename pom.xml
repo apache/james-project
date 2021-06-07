@@ -44,7 +44,7 @@
         update a database, prevent spam, build a message archive, or whatever you can imagine. A matcher determines
         whether your mailet should process an email in the server. The James project hosts the Mailet API, and James
         provides an implementation of this mail application platform API.</description>
-    <url>http://james.apache.org/</url>
+    <url>https://james.apache.org/</url>
     <inceptionYear>2006</inceptionYear>
 
     <developers>
