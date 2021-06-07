@@ -139,13 +139,7 @@ import org.apache.james.user.lib.UsersRepositoryImpl;
  * </ul>
  * <li>
  * Retry after 5000 milliseconds, subsequent retry intervals are 5000
- * milliseconds. Retry forever:
- * <ul>
- * <li>maxRetries = -1
- * <li>retryStartInterval = 5000
- * <li>retryMaxInterval = 5000
- * <li>retryIntervalScale = 1
- * </ul>
+ * milliseconds.
  * </ul>
  * </p>
  *
@@ -175,22 +169,11 @@ import org.apache.james.user.lib.UsersRepositoryImpl;
  * </p>
  *
  * <p>
- * The following parameters may be used to adjust the underlying
- * <code>com.sun.jndi.ldap.LdapCtxFactory</code>. See <a href=
- * "http://docs.oracle.com/javase/1.5.0/docs/guide/jndi/jndi-ldap.html#SPIPROPS"
- * > LDAP Naming Service Provider for the Java Naming and Directory InterfaceTM
- * (JNDI) : Provider-specific Properties</a> for details.
+ * The following parameters may be used to adjust the underlying socket settings:
  * <ul>
+ * <b>connectionTimeout:</b> (optional) Sets the connection timeout on the underlying  to the specified integer value
  * <li>
- * <b>useConnectionPool:</b> (optional, default = true) Sets property
- * <code>com.sun.jndi.ldap.connect.pool</code> to the specified boolean value
- * <li>
- * <b>connectionTimeout:</b> (optional) Sets property
- * <code>com.sun.jndi.ldap.connect.timeout</code> to the specified integer value
- * <li>
- * <b>readTimeout:</b> (optional) Sets property
- * <code>com.sun.jndi.ldap.read.timeout</code> to the specified integer value.
- * Applicable to Java 6 and above.
+ * <b>readTimeout:</b> (optional) Sets property the read timeout to the specified integer value.
  * <li>
  * <b>administratorId:</b> (optional) User identifier of the administrator user.
  * The administrator user is allowed to authenticate as other users.
