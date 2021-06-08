@@ -33,6 +33,7 @@ import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.mailetcontainer.impl.JamesMailSpooler;
 import org.apache.james.mailetcontainer.impl.camel.CamelCompositeProcessor;
 import org.apache.james.modules.server.CamelMailetContainerModule.MailetModuleInitializationOperation;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
@@ -103,7 +104,9 @@ class CamelMailetContainerModuleTest {
             mock(CamelCompositeProcessor.class),
             NO_TRANSPORT_CHECKS,
             () -> defaultConfiguration,
-            mock(DefaultCamelContext.class));
+            mock(DefaultCamelContext.class),
+            mock(JamesMailSpooler.class),
+            mock(JamesMailSpooler.Configuration.class));
 
         assertThat(testee.getProcessorConfiguration())
             .isEqualTo(defaultConfiguration);
@@ -119,7 +122,9 @@ class CamelMailetContainerModuleTest {
             mock(CamelCompositeProcessor.class),
             NO_TRANSPORT_CHECKS,
             mock(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class),
-            mock(DefaultCamelContext.class));
+            mock(DefaultCamelContext.class),
+            mock(JamesMailSpooler.class),
+            mock(JamesMailSpooler.Configuration.class));
 
         assertThatThrownBy(testee::getProcessorConfiguration)
             .isInstanceOf(ConfigurationRuntimeException.class);
@@ -141,7 +146,9 @@ class CamelMailetContainerModuleTest {
             mock(CamelCompositeProcessor.class),
             NO_TRANSPORT_CHECKS,
             mock(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class),
-            mock(DefaultCamelContext.class));
+            mock(DefaultCamelContext.class),
+            mock(JamesMailSpooler.class),
+            mock(JamesMailSpooler.Configuration.class));
 
         HierarchicalConfiguration<ImmutableNode> mailetContextConfiguration = testee.getProcessorConfiguration();
         assertThat(mailetContextConfiguration.getString("key"))

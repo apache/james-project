@@ -131,16 +131,6 @@ public class CamelMailetContainerModule extends AbstractModule {
         return JamesMailSpooler.Configuration.from(mailRepositoryStore, conf);
     }
 
-    @ProvidesIntoSet
-    InitializationOperation startSpooler(JamesMailSpooler jamesMailSpooler, JamesMailSpooler.Configuration configuration) {
-        return InitilizationOperationBuilder
-            .forClass(JamesMailSpooler.class)
-            .init(() -> {
-                jamesMailSpooler.configure(configuration);
-                jamesMailSpooler.init();
-            });
-    }
-
     private HierarchicalConfiguration<ImmutableNode> getJamesSpoolerConfiguration(ConfigurationProvider configurationProvider) {
         try {
             return configurationProvider.getConfiguration("mailetcontainer")
@@ -176,18 +166,23 @@ public class CamelMailetContainerModule extends AbstractModule {
         private final DefaultProcessorsConfigurationSupplier defaultProcessorsConfigurationSupplier;
         private final Set<ProcessorsCheck> processorsCheckSet;
         private final DefaultCamelContext camelContext;
+        private final JamesMailSpooler jamesMailSpooler;
+        private final JamesMailSpooler.Configuration spoolerConfiguration;
+
 
         @Inject
         public MailetModuleInitializationOperation(ConfigurationProvider configurationProvider,
                                                    CamelCompositeProcessor camelCompositeProcessor,
                                                    Set<ProcessorsCheck> processorsCheckSet,
                                                    DefaultProcessorsConfigurationSupplier defaultProcessorsConfigurationSupplier,
-                                                   DefaultCamelContext camelContext) {
+                                                   DefaultCamelContext camelContext, JamesMailSpooler jamesMailSpooler, JamesMailSpooler.Configuration spoolerConfiguration) {
             this.configurationProvider = configurationProvider;
             this.camelCompositeProcessor = camelCompositeProcessor;
             this.processorsCheckSet = processorsCheckSet;
             this.defaultProcessorsConfigurationSupplier = defaultProcessorsConfigurationSupplier;
             this.camelContext = camelContext;
+            this.jamesMailSpooler = jamesMailSpooler;
+            this.spoolerConfiguration = spoolerConfiguration;
         }
 
         @Override
@@ -200,6 +195,9 @@ public class CamelMailetContainerModule extends AbstractModule {
             camelCompositeProcessor.setCamelContext(camelContext);
             camelCompositeProcessor.configure(getProcessorConfiguration());
             camelCompositeProcessor.init();
+
+            jamesMailSpooler.configure(spoolerConfiguration);
+            jamesMailSpooler.init();
         }
 
         @VisibleForTesting
