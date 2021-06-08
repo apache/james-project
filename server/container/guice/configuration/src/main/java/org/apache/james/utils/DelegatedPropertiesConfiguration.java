@@ -275,15 +275,20 @@ public class DelegatedPropertiesConfiguration implements Configuration {
 
     @Override
     public String[] getStringArray(String key) {
-        return splitAndStripDoubleQuotes(configuration.getString(key))
+        return configuration.getList(key)
+            .stream()
+            .map(String.class::cast)
+            .flatMap(this::splitAndStripDoubleQuotes)
             .toArray(String[]::new);
     }
 
     @Override
     public List<Object> getList(String key) {
         try {
-            String rawList = configuration.get(String.class, key);
-            return splitAndStripDoubleQuotes(rawList)
+            return configuration.getList(key)
+                .stream()
+                .map(String.class::cast)
+                .flatMap(this::splitAndStripDoubleQuotes)
                 .collect(Guavate.toImmutableList());
         } catch (ConversionException e) {
             return configuration.getList(key);
@@ -372,9 +377,11 @@ public class DelegatedPropertiesConfiguration implements Configuration {
 
     private Stream<String> splitAndStripDoubleQuotes(String value) {
         return Optional.ofNullable(value)
+            .filter(s -> !StringUtils.isAllBlank(s))
             .map(notNullValue -> Stream
                 .of(StringUtils.strip(notNullValue, "\"").split(delimiter))
-                .map(String::trim))
+                .map(String::trim)
+                .filter(s -> !StringUtils.isAllBlank(s)))
             .orElseGet(Stream::empty);
     }
 }
