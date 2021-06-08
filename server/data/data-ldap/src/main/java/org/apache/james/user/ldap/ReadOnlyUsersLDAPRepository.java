@@ -36,7 +36,8 @@ import org.apache.james.user.lib.UsersRepositoryImpl;
  * This repository implementation serves as a bridge between Apache James and
  * LDAP. It allows James to authenticate users against an LDAP compliant server
  * such as Apache DS or Microsoft AD. It also enables role/group based access
- * restriction based on LDAP groups.
+ * restriction based on LDAP groups (role/group based access are experimental
+ * and untested, contributions welcomed).
  * </p>
  * <p>
  * It is intended for organisations that already have a user-authentication and
@@ -167,6 +168,9 @@ import org.apache.james.user.lib.UsersRepositoryImpl;
  * the &quot;&lt;restriction&gt;&quot; sections.</li>
  * </ul>
  * </p>
+ * <p><b>WARNING</b>: group/role based access restrictions is currently untested and should
+ * be considered experimental. Use at your own risks. Contributions to strengthen that part
+ * of the code base are welcomed.</p>
  *
  * <p>
  * The following parameters may be used to adjust the underlying socket settings:
