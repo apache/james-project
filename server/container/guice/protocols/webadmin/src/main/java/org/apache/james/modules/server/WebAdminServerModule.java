@@ -143,9 +143,7 @@ public class WebAdminServerModule extends AbstractModule {
 
     @VisibleForTesting
     ImmutableList<String> additionalRoutes(Configuration configurationFile) {
-        String rawString = configurationFile.getString("extensions.routes", "");
-
-        return ImmutableList.copyOf(SPLITTER.splitToList(rawString));
+        return ImmutableList.copyOf(configurationFile.getStringArray("extensions.routes"));
     }
 
     private Optional<String> loadPublicKey(FileSystem fileSystem, Optional<String> jwtPublickeyPemUrl) {
