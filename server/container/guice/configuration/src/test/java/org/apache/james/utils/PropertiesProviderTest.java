@@ -85,6 +85,18 @@ class PropertiesProviderTest {
     }
 
     @Test
+    void getConfigurationShouldLoadListValuesWhenNoClassSpecified() throws Exception {
+        assertThat(testee.getConfiguration("a").getList("keyByList"))
+            .containsExactly("value1", "value2", "value3", "value4", "value5");
+    }
+
+    @Test
+    void getConfigurationShouldLoadArrayValuesWhenNoClassSpecified() throws Exception {
+        assertThat(testee.getConfiguration("a").getStringArray("keyByList"))
+            .containsExactly("value1", "value2", "value3", "value4", "value5");
+    }
+
+    @Test
     void getStringArrayShouldReturnEmptyArrayWhenKeyNotFound() throws Exception {
         assertThat(testee.getConfiguration("a").getStringArray("notExistKey"))
             .isEmpty();
@@ -93,6 +105,18 @@ class PropertiesProviderTest {
     @Test
     void getListShouldReturnEmptyListWhenKeyNotFound() throws Exception {
         assertThat(testee.getConfiguration("a").getList("notExistKey"))
+            .isEmpty();
+    }
+
+    @Test
+    void getListShouldReturnEmptyListWhenKeyHasNoValue() throws Exception {
+        assertThat(testee.getConfiguration("a").getList("thisIsEmpty"))
+            .isEmpty();
+    }
+
+    @Test
+    void getArrayStringShouldReturnEmptyListWhenKeyHasNoValue() throws Exception {
+        assertThat(testee.getConfiguration("a").getStringArray("thisIsEmpty"))
             .isEmpty();
     }
 }
