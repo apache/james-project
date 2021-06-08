@@ -21,16 +21,13 @@ package org.apache.james.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.commons.configuration2.FileBasedConfiguration;
-import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
-import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.Configuration;
 import org.junit.jupiter.api.Test;
 
 public class ExtensionConfigurationTest {
     @Test
     void shouldReturnEmptyWhenNoField() throws Exception {
-        FileBasedConfiguration configuration = getConfiguration("extensions-none.properties");
+        Configuration configuration = getConfiguration("extensions-none");
 
         assertThat(ExtensionConfiguration.from(configuration).getAdditionalGuiceModulesForExtensions())
             .isEmpty();
@@ -38,7 +35,7 @@ public class ExtensionConfigurationTest {
 
     @Test
     void shouldReturnEmptyWhenEmptyField() throws Exception {
-        FileBasedConfiguration configuration = getConfiguration("extensions-empty.properties");
+        Configuration configuration = getConfiguration("extensions-empty");
 
         assertThat(ExtensionConfiguration.from(configuration).getAdditionalGuiceModulesForExtensions())
             .isEmpty();
@@ -46,7 +43,7 @@ public class ExtensionConfigurationTest {
 
     @Test
     void shouldReturnOneRoutes() throws Exception {
-        FileBasedConfiguration configuration = getConfiguration("extensions-one.properties");
+        Configuration configuration = getConfiguration("extensions-one");
 
         assertThat(ExtensionConfiguration.from(configuration).getAdditionalGuiceModulesForExtensions())
             .containsOnly(new ClassName("org.apache.custom.extensions.CustomExtension"));
@@ -54,18 +51,14 @@ public class ExtensionConfigurationTest {
 
     @Test
     void shouldReturnSeveralRoutes() throws Exception {
-        FileBasedConfiguration configuration = getConfiguration("extensions-two.properties");
+        Configuration configuration = getConfiguration("extensions-two");
 
         assertThat(ExtensionConfiguration.from(configuration).getAdditionalGuiceModulesForExtensions())
             .containsOnly(new ClassName("org.apache.custom.extensions.CustomExtension"),
                 new ClassName("org.apache.custom.extension.AnotherCustomExtension"));
     }
 
-    private FileBasedConfiguration getConfiguration(String name) throws org.apache.commons.configuration2.ex.ConfigurationException {
-        FileBasedConfigurationBuilder<FileBasedConfiguration> builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class)
-            .configure(new Parameters()
-                .fileBased()
-                .setURL(ClassLoader.getSystemResource(name)));
-        return builder.getConfiguration();
+    private Configuration getConfiguration(String name) throws Exception {
+        return PropertiesProvider.forTesting().getConfiguration(name);
     }
 }
