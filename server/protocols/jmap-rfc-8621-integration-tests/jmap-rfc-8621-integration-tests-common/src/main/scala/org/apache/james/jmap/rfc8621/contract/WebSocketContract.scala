@@ -1150,7 +1150,7 @@ trait WebSocketContract {
       authenticatedRequest(server)
         .response(asWebSocket[Identity, String] {
           ws =>
-            Thread.sleep(510)
+            Thread.sleep(2100)
 
             ws.receive()
               .map { case t: Text =>
@@ -1180,14 +1180,14 @@ trait WebSocketContract {
       authenticatedRequest(server)
         .response(asWebSocket[Identity, List[String]] {
           ws =>
-            Thread.sleep(510)
+            Thread.sleep(2100)
 
             val m1: String = ws.receive()
               .map { case t: Text =>
                 t.payload
               }
 
-            Thread.sleep(510)
+            Thread.sleep(2100)
 
             val m2: String = ws.receive()
               .map { case t: Text =>
