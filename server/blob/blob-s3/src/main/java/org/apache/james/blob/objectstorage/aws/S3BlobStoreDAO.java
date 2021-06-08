@@ -51,6 +51,7 @@ import com.google.common.io.FileBackedOutputStream;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.RetryBackoffSpec;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -121,6 +122,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
         BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
         return getObject(resolvedBucketName, blobId)
+            .publishOn(Schedulers.elastic())
             .map(response -> ReactorUtils.toInputStream(response.flux))
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
             .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + resolvedBucketName.asString(), e))
@@ -176,6 +178,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
                     AsyncResponseTransformer.toBytes()))
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
             .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + resolvedBucketName.asString(), e))
+            .publishOn(Schedulers.parallel())
             .map(BytesWrapper::asByteArray);
     }
 
@@ -188,6 +191,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
                     builder -> builder.bucket(resolvedBucketName.asString()).key(blobId.asString()).contentLength((long) data.length),
                     AsyncRequestBody.fromBytes(data)))
             .retryWhen(createBucketOnRetry(resolvedBucketName))
+            .publishOn(Schedulers.parallel())
             .then();
     }
 
@@ -206,7 +210,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
                     .flatMap(ignore -> save(bucketName, blobId, fileBackedOutputStream.asByteSource())),
             Throwing.consumer(FileBackedOutputStream::reset),
             LAZY)
-            .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob", e));
+            .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob", e))
+            .publishOn(Schedulers.parallel());
     }
 
     @Override
@@ -226,6 +231,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .retryWhen(createBucketOnRetry(resolvedBucketName))
             .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob", e))
             .onErrorMap(SdkClientException.class, e -> new ObjectStoreIOException("Error saving blob", e))
+            .publishOn(Schedulers.parallel())
             .then();
     }
 
@@ -250,7 +256,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
         return Mono.fromFuture(() ->
                 client.deleteObject(delete -> delete.bucket(resolvedBucketName.asString()).key(blobId.asString())))
             .then()
-            .onErrorResume(NoSuchBucketException.class, e -> Mono.empty());
+            .onErrorResume(NoSuchBucketException.class, e -> Mono.empty())
+            .publishOn(Schedulers.parallel());
     }
 
     @Override
@@ -266,7 +273,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .flatMap(ignore -> Mono.fromFuture(() ->
                 client.deleteBucket(builder -> builder.bucket(bucketName.asString()))))
             .onErrorResume(t -> Mono.empty())
-            .then();
+            .then()
+            .publishOn(Schedulers.parallel());
     }
 
     private Mono<BucketName> emptyBucket(BucketName bucketName) {
@@ -292,8 +300,9 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
     @VisibleForTesting
     public Mono<Void> deleteAllBuckets() {
         return Mono.fromFuture(client::listBuckets)
-                .flatMapIterable(ListBucketsResponse::buckets)
-                     .flatMap(bucket -> deleteResolvedBucket(BucketName.of(bucket.name())), DEFAULT_CONCURRENCY)
+            .publishOn(Schedulers.parallel())
+            .flatMapIterable(ListBucketsResponse::buckets)
+                .flatMap(bucket -> deleteResolvedBucket(BucketName.of(bucket.name())), DEFAULT_CONCURRENCY)
             .then();
     }
 }
