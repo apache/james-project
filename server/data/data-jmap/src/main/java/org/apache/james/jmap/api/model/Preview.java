@@ -101,16 +101,15 @@ public class Preview {
     }
 
     private static int estimatePreviewOffset(String body, int charCount) {
-        AtomicInteger position = new AtomicInteger(0);
-
-        body.chars()
-            .mapToObj(i -> (char) i)
-            .peek(any -> position.incrementAndGet())
-            .filter(Character::isLetterOrDigit)
-            .limit(charCount)
-            .forEach(any -> { });
-
-        return position.get();
+        int position = 0;
+        int nonWhitespace = 0;
+        while (position < body.length() && nonWhitespace < charCount) {
+            if (Character.isLetterOrDigit(body.charAt(position))) {
+                nonWhitespace++;
+            }
+            position++;
+        }
+        return position;
     }
 
     private final String value;
