@@ -35,9 +35,11 @@ import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.server.core.configuration.Configuration.ConfigurationPath;
+import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -47,6 +49,17 @@ public class PropertiesProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger("org.apache.james.CONFIGURATION");
     private static final char COMMA = ',';
     private static final String COMMA_STRING = ",";
+
+    @VisibleForTesting
+    public static PropertiesProvider forTesting() {
+        org.apache.james.server.core.configuration.Configuration configuration = org.apache.james.server.core.configuration.Configuration.builder()
+            .workingDirectory("../")
+            .configurationFromClasspath()
+            .build();
+        FileSystemImpl fileSystem = new FileSystemImpl(configuration.directories());
+
+        return new PropertiesProvider(fileSystem, configuration.configurationPath());
+    }
 
     private final FileSystem fileSystem;
     private final ConfigurationPath configurationPrefix;
