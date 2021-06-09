@@ -39,6 +39,8 @@
 
     <modules>
         <module>app</module>
+        <module>apps/cassandra-app</module>
+        <module>apps/cassandra-app-ldap-tests</module>
 
         <module>blob</module>
 

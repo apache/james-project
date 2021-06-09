@@ -27,7 +27,7 @@ $ docker run -d -p 9200:9200 --name=elasticsearch --env 'discovery.type=single-n
 To run james, you have to create a directory containing required configuration files.
 
 James requires the configuration to be in a subfolder of working directory that is called
-**conf**. A [sample directory](https://github.com/apache/james-project/tree/master/server/container/guice/cassandra-guice/sample-configuration)
+**conf**. A [sample directory](https://github.com/apache/james-project/tree/master/server/apps/cassandra-app/sample-configuration)
 is provided with some default values you may need to replace, especially compulsory third party software endpoints.
 
 You will need to update its content to match your needs.
@@ -43,7 +43,7 @@ Once everything is set up, you just have to run the jar with:
 
 [source]
 ----
-$ java -Dworking.directory=. -Dlogback.configurationFile=conf/logback.xml -jar james-server-cassandra-guice.jar
+$ java -Dworking.directory=. -Dlogback.configurationFile=conf/logback.xml -jar james-server-cassandra-app.jar
 ----
 
 Note that binding ports below 1024 requires administrative rights.
