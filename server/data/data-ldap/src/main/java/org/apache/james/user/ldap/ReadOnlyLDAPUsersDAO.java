@@ -35,8 +35,6 @@ import javax.net.SocketFactory;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.directory.api.ldap.model.filter.FilterEncoder;
 import org.apache.james.core.Username;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -47,10 +45,13 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
+import com.unboundid.ldap.sdk.Entry;
+import com.unboundid.ldap.sdk.Filter;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionOptions;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
+import com.unboundid.ldap.sdk.SearchRequest;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
@@ -119,14 +120,21 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     }
 
     private Filter createFilter(String username) {
+        Filter specificUserFilter = Filter.createEqualityFilter(ldapConfiguration.getUserIdAttribute(), username);
         return Optional.ofNullable(ldapConfiguration.getFilter())
-            .map(Throwing.function(userFilter -> Filter.createANDFilter(
-                Filter.createEqualityFilter("objectClass", ldapConfiguration.getUserObjectClass()),
-                Filter.createEqualityFilter(ldapConfiguration.getUserIdAttribute(), username),
-                Filter.create(userFilter))))
-            .orElseGet(() -> Filter.createANDFilter(
-                Filter.createEqualityFilter("objectClass", ldapConfiguration.getUserObjectClass()),
-                Filter.createEqualityFilter(ldapConfiguration.getUserIdAttribute(), username)));
+            .map(Throwing.function(userFilter ->
+                Filter.createANDFilter(objectClassFilter(), specificUserFilter, Filter.create(userFilter))))
+            .orElseGet(() -> Filter.createANDFilter(objectClassFilter(), specificUserFilter));
+    }
+
+    private Filter objectClassFilter() {
+        return Filter.createEqualityFilter("objectClass", ldapConfiguration.getUserObjectClass());
+    }
+
+    private Filter createFilter() {
+        return Optional.ofNullable(ldapConfiguration.getFilter())
+            .map(Throwing.function(userFilter -> Filter.createANDFilter(objectClassFilter(), Filter.create(userFilter))))
+            .orElseGet(this::objectClassFilter);
     }
 
     /**
@@ -162,13 +170,16 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     }
 
     private Set<String> getAllUsersFromLDAP() throws LDAPException {
-        SearchResult searchResult = ldapConnectionPool.search(ldapConfiguration.getUserBase(),
+        SearchRequest searchRequest = new SearchRequest(ldapConfiguration.getUserBase(),
             SearchScope.SUB,
-            filterTemplate);
+            createFilter(),
+            SearchRequest.NO_ATTRIBUTES);
+
+        SearchResult searchResult = ldapConnectionPool.search(searchRequest);
 
         return searchResult.getSearchEntries()
             .stream()
-            .map(entry -> entry.getObjectClassAttribute().getName())
+            .map(Entry::getDN)
             .collect(Guavate.toImmutableSet());
     }
 

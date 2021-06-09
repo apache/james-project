@@ -47,7 +47,6 @@ import reactor.core.publisher.Mono;
  * 
  */
 public class ReadOnlyLDAPUser implements User, Serializable {
-    private static final long serialVersionUID = -5201235065842464014L;
     public static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyLDAPUser.class);
 
     /**
@@ -76,17 +75,17 @@ public class ReadOnlyLDAPUser implements User, Serializable {
     /**
      * Constructs an instance for the given user-details, and which will
      * authenticate against the given host.
-     *  @param userName
+     * @param userName
      *            The user-identifier/name. This is the value with which the
      *            field  will be initialised, and which will be
      *            returned by invoking {@link #getUserName()}.
      * @param userDN
      *            The distinguished (unique-key) of the user details as stored
      * @param connectionPool
- *            The connectionPool for the LDAP server on which the user details are held.
- *            This is also the host against which the user will be
- *            authenticated, when {@link #verifyPassword(String)} is
- *            invoked.
+     *            The connectionPool for the LDAP server on which the user details are held.
+     *            This is also the host against which the user will be
+     *            authenticated, when {@link #verifyPassword(String)} is
+     *            invoked.
      * @param configuration
      */
     public ReadOnlyLDAPUser(Username userName, String userDN, LDAPConnectionPool connectionPool, LdapRepositoryConfiguration configuration) {
