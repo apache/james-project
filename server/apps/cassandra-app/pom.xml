@@ -23,20 +23,32 @@
 
     <parent>
         <groupId>org.apache.james</groupId>
-        <artifactId>james-server-guice</artifactId>
+        <artifactId>james-server</artifactId>
         <version>3.7.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-cassandra-guice</artifactId>
+    <artifactId>james-server-cassandra-app</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: Cassandra - guice injection</name>
+    <name>Apache James :: Server :: Cassandra :: Application</name>
     <description>An advanced email server - Cassandra backend with guice injection</description>
 
     <properties>
         <cassandra.includes>empty</cassandra.includes>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -289,10 +301,10 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
-                            <url>https://github.com/glowroot/glowroot/releases/download/v0.13.6/glowroot-0.13.6-dist.zip</url>
+                            <url>https://github.com/glowroot/glowroot/releases/download/v0.13.4/glowroot-0.13.4-dist.zip</url>
                             <unpack>true</unpack>
                             <outputDirectory>${project.build.directory}</outputDirectory>
-                            <md5>f9026dbab1fbade067ca549913802fcc</md5>
+                            <md5>93d472281a67ab8404033a88280c23c9</md5>
                         </configuration>
                     </execution>
                 </executions>
@@ -449,7 +461,7 @@
                     <descriptorSourceDirectory>src/assemble/</descriptorSourceDirectory>
                     <tarLongFileMode>gnu</tarLongFileMode>
                     <appendAssemblyId>false</appendAssemblyId>
-                    <finalName>james-server-cassandra-guice</finalName>
+                    <finalName>james-server-cassandra-app</finalName>
                 </configuration>
                 <executions>
                     <execution>
