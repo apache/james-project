@@ -18,16 +18,16 @@
  ****************************************************************/
 package org.apache.james.user.ldap;
 
-import java.util.Optional;
-
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.util.docker.RateLimiters;
 import org.junit.rules.ExternalResource;
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
+import java.util.Optional;
+import java.util.UUID;
 
 public class LdapGenericContainer extends ExternalResource {
 
@@ -68,7 +68,7 @@ public class LdapGenericContainer extends ExternalResource {
 
         private DockerContainer createContainer() {
             return DockerContainer.fromDockerfile(
-                new ImageFromDockerfile()
+                new ImageFromDockerfile("openldap_" + UUID.randomUUID())
                     .withFileFromClasspath("populate.ldif", dockerFilePrefix.orElse("") + "ldif-files/populate.ldif")
                     .withFileFromClasspath("Dockerfile", dockerFilePrefix.orElse("") + "ldif-files/Dockerfile"))
                 .withAffinityToContainer()
@@ -97,7 +97,9 @@ public class LdapGenericContainer extends ExternalResource {
     }
 
     public void start() {
-        container.start();
+        if (!container.isRunning()) {
+            container.start();
+        }
     }
 
     public void stop() {
