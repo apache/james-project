@@ -61,7 +61,6 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyLDAPUsersDAO.class);
 
     private LdapRepositoryConfiguration ldapConfiguration;
-    private String filterTemplate;
     private LDAPConnectionPool ldapConnectionPool;
 
     @Inject
@@ -103,7 +102,6 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
                 + ldapConfiguration.getConnectionTimeout() + '\n' + "readTimeout: " + ldapConfiguration.getReadTimeout()
                 + '\n' + "maxRetries: " + ldapConfiguration.getMaxRetries() + '\n');
         }
-        filterTemplate = "(&({0}={1})(objectClass={2})" + StringUtils.defaultString(ldapConfiguration.getFilter(), "") + ")";
 
         LDAPConnectionOptions connectionOptions = new LDAPConnectionOptions();
         connectionOptions.setConnectTimeoutMillis(ldapConfiguration.getConnectionTimeout());
@@ -120,6 +118,16 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         ldapConnectionPool.close();
     }
 
+    private Filter createFilter(String username) {
+        return Optional.ofNullable(ldapConfiguration.getFilter())
+            .map(Throwing.function(userFilter -> Filter.createANDFilter(
+                Filter.createEqualityFilter("objectClass", ldapConfiguration.getUserObjectClass()),
+                Filter.createEqualityFilter(ldapConfiguration.getUserIdAttribute(), username),
+                Filter.create(userFilter))))
+            .orElseGet(() -> Filter.createANDFilter(
+                Filter.createEqualityFilter("objectClass", ldapConfiguration.getUserObjectClass()),
+                Filter.createEqualityFilter(ldapConfiguration.getUserIdAttribute(), username)));
+    }
 
     /**
      * Indicates if the user with the specified DN can be found in the group
@@ -192,15 +200,9 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     private ReadOnlyLDAPUser searchAndBuildUser(Username name) throws LDAPException {
         LDAPConnection connection = ldapConnectionPool.getConnection();
         try {
-            String sanitizedFilter = FilterEncoder.format(
-                filterTemplate,
-                ldapConfiguration.getUserIdAttribute(),
-                name.asString(),
-                ldapConfiguration.getUserObjectClass());
-
             SearchResult searchResult = connection.search(ldapConfiguration.getUserBase(),
                 SearchScope.SUB,
-                sanitizedFilter,
+                createFilter(name.asString()),
                 ldapConfiguration.getUserIdAttribute());
 
             SearchResultEntry result = searchResult.getSearchEntries()
