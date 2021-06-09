@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import com.unboundid.ldap.sdk.BindResult;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
+import com.unboundid.ldap.sdk.ResultCode;
 
 import reactor.core.publisher.Mono;
 
@@ -145,7 +146,6 @@ public class ReadOnlyLDAPUser implements User, Serializable {
 
     private boolean doVerifyPassword(String password) throws LDAPException {
         BindResult bindResult = connectionPool.bindAndRevertAuthentication(userDN, password);
-        return bindResult.getResultCode()
-            .intValue() == 0;
+        return bindResult.getResultCode() == ResultCode.SUCCESS;
     }
 }

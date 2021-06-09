@@ -113,7 +113,6 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         SocketFactory socketFactory = null;
         LDAPConnection ldapConnection = new LDAPConnection(socketFactory, connectionOptions, uri.getHost(), uri.getPort(), ldapConfiguration.getPrincipal(), ldapConfiguration.getCredentials());
         ldapConnectionPool = new LDAPConnectionPool(ldapConnection, 4);
-        // TODO implement retries
     }
 
     @PreDestroy
@@ -155,19 +154,14 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     }
 
     private Set<String> getAllUsersFromLDAP() throws LDAPException {
-        LDAPConnection connection = ldapConnectionPool.getConnection();
-        try {
-            SearchResult searchResult = connection.search(ldapConfiguration.getUserBase(),
-                SearchScope.SUB,
-                filterTemplate);
+        SearchResult searchResult = ldapConnectionPool.search(ldapConfiguration.getUserBase(),
+            SearchScope.SUB,
+            filterTemplate);
 
-            return searchResult.getSearchEntries()
-                .stream()
-                .map(entry -> entry.getObjectClassAttribute().getName())
-                .collect(Guavate.toImmutableSet());
-        } finally {
-            ldapConnectionPool.releaseConnection(connection);
-        }
+        return searchResult.getSearchEntries()
+            .stream()
+            .map(entry -> entry.getObjectClassAttribute().getName())
+            .collect(Guavate.toImmutableSet());
     }
 
     /**
@@ -229,16 +223,11 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     }
 
     private Optional<ReadOnlyLDAPUser> buildUser(String userDN) throws LDAPException {
-        LDAPConnection connection = ldapConnectionPool.getConnection();
-        try {
-            SearchResultEntry userAttributes = connection.getEntry(userDN);
-            Optional<String> userName = Optional.ofNullable(userAttributes.getAttributeValue(ldapConfiguration.getUserIdAttribute()));
-            return userName
-                .map(Username::of)
-                .map(username -> new ReadOnlyLDAPUser(username, userDN, ldapConnectionPool, ldapConfiguration));
-        } finally {
-            ldapConnectionPool.releaseConnection(connection);
-        }
+        SearchResultEntry userAttributes = ldapConnectionPool.getEntry(userDN);
+        Optional<String> userName = Optional.ofNullable(userAttributes.getAttributeValue(ldapConfiguration.getUserIdAttribute()));
+        return userName
+            .map(Username::of)
+            .map(username -> new ReadOnlyLDAPUser(username, userDN, ldapConnectionPool, ldapConfiguration));
     }
 
     @Override
