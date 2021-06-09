@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
@@ -45,6 +46,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
+import com.unboundid.ldap.sdk.Attribute;
 import com.unboundid.ldap.sdk.Entry;
 import com.unboundid.ldap.sdk.Filter;
 import com.unboundid.ldap.sdk.LDAPConnection;
@@ -169,7 +171,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         return result;
     }
 
-    private Set<String> getAllUsersFromLDAP() throws LDAPException {
+    private Set<String> getAllUsersDNFromLDAP() throws LDAPException {
         SearchRequest searchRequest = new SearchRequest(ldapConfiguration.getUserBase(),
             SearchScope.SUB,
             createFilter(),
@@ -181,6 +183,21 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
             .stream()
             .map(Entry::getDN)
             .collect(Guavate.toImmutableSet());
+    }
+
+    private Stream<Username> getAllUsernamesFromLDAP() throws LDAPException {
+        SearchRequest searchRequest = new SearchRequest(ldapConfiguration.getUserBase(),
+            SearchScope.SUB,
+            createFilter(),
+            ldapConfiguration.getUserIdAttribute());
+
+        SearchResult searchResult = ldapConnectionPool.search(searchRequest);
+
+        return searchResult.getSearchEntries()
+            .stream()
+            .flatMap(entry -> Optional.ofNullable(entry.getAttribute(ldapConfiguration.getUserIdAttribute())).stream())
+            .map(Attribute::getValue)
+            .map(Username::of);
     }
 
     /**
@@ -315,6 +332,10 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     }
 
     private Iterator<Username> doList() throws LDAPException {
+        if (!ldapConfiguration.getRestriction().isActivated()) {
+            return getAllUsernamesFromLDAP().iterator();
+        }
+
         return buildUserCollection(getValidUsers())
             .stream()
             .map(ReadOnlyLDAPUser::getUserName)
@@ -322,7 +343,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     }
 
     private Collection<String> getValidUsers() throws LDAPException {
-        Set<String> userDNs = getAllUsersFromLDAP();
+        Set<String> userDNs = getAllUsersDNFromLDAP();
         Collection<String> validUserDNs;
         if (ldapConfiguration.getRestriction().isActivated()) {
             final LDAPConnection connection = ldapConnectionPool.getConnection();
