@@ -96,6 +96,10 @@ import org.apache.james.user.lib.UsersRepositoryImpl;
  * &quot;user&quot; for Microsoft Active Directory.</li>
  **
  * <li>
+ * <b>poolSize:</b> (optional, default = 4) The maximum number of connection
+ * in the pool.</li>
+ * <li>
+ * <li>
  * <b>maxRetries:</b> (optional, default = 0) The maximum number of times to
  * retry a failed operation. -1 means retry forever.</li>
  * <li>
