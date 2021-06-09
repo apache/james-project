@@ -97,7 +97,9 @@ public class LdapGenericContainer extends ExternalResource {
     }
 
     public void start() {
-        container.start();
+        if (!container.isRunning()) {
+            container.start();
+        }
     }
 
     public void stop() {
