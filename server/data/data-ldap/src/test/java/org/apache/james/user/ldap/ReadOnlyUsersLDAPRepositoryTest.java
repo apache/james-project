@@ -47,6 +47,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
+
 class ReadOnlyUsersLDAPRepositoryTest {
 
     static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyUsersLDAPRepositoryTest.class);
@@ -95,6 +97,26 @@ class ReadOnlyUsersLDAPRepositoryTest {
         @Test
         void knownUserShouldBeAbleToLogInWhenPasswordIsCorrectWithVirtualHosting() throws Exception {
             assertThat(usersRepository.test(JAMES_USER_MAIL, PASSWORD)).isTrue();
+        }
+
+        @Test
+        void listShouldReturnExistingUsers() throws Exception {
+            assertThat(ImmutableList.copyOf(usersRepository.list())).containsOnly(JAMES_USER_MAIL);
+        }
+
+        @Test
+        void countUsersShouldReturnOne() throws Exception {
+            assertThat(usersRepository.countUsers()).isEqualTo(1);
+        }
+
+        @Test
+        void containsShouldReturnTrueWhenUserExists() throws Exception {
+            assertThat(usersRepository.contains(JAMES_USER_MAIL)).isTrue();
+        }
+
+        @Test
+        void containsShouldReturnFalseWhenUserDoesNotExists() throws Exception {
+            assertThat(usersRepository.contains(Username.of("unknown@" + DOMAIN))).isFalse();
         }
 
         @Test
@@ -169,6 +191,26 @@ class ReadOnlyUsersLDAPRepositoryTest {
         @Test
         void knownUserShouldBeAbleToLogInWhenPasswordIsCorrect() throws Exception {
             assertThat(usersRepository.test(JAMES_USER, PASSWORD)).isTrue();
+        }
+
+        @Test
+        void listShouldReturnExistingUsers() throws Exception {
+            assertThat(ImmutableList.copyOf(usersRepository.list())).containsOnly(JAMES_USER);
+        }
+
+        @Test
+        void countUsersShouldReturnOne() throws Exception {
+            assertThat(usersRepository.countUsers()).isEqualTo(1);
+        }
+
+        @Test
+        void containsShouldReturnTrueWhenUserExists() throws Exception {
+            assertThat(usersRepository.contains(JAMES_USER)).isTrue();
+        }
+
+        @Test
+        void containsShouldReturnFalseWhenUserDoesNotExists() throws Exception {
+            assertThat(usersRepository.contains(Username.of("unknown"))).isFalse();
         }
 
         @Test
@@ -284,7 +326,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
         configuration.addProperty("[@ldapHost]", ldapContainer.getLdapHost());
         configuration.addProperty("[@principal]", "cn=admin,dc=james,dc=org");
         configuration.addProperty("[@credentials]", ADMIN_PASSWORD);
-        configuration.addProperty("[@userBase]", "ou=People,dc=james,dc=org");
+        configuration.addProperty("[@userBase]", "ou=people,dc=james,dc=org");
         configuration.addProperty("[@userObjectClass]", "inetOrgPerson");
         configuration.addProperty("[@maxRetries]", "1");
         configuration.addProperty("[@retryStartInterval]", "0");
