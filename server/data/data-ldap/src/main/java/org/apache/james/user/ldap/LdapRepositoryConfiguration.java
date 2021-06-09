@@ -43,6 +43,7 @@ public class LdapRepositoryConfiguration {
     private static final ReadOnlyLDAPGroupRestriction NO_RESTRICTION = new ReadOnlyLDAPGroupRestriction(null);
     private static final String NO_FILTER = null;
     private static final Optional<String> NO_ADMINISTRATOR_ID = Optional.empty();
+    private static final int DEFAULT_POOL_SIZE = 4;
 
     public static class Builder {
         private Optional<String> ldapHost;
@@ -55,6 +56,7 @@ public class LdapRepositoryConfiguration {
         private Optional<Long> retryStartInterval;
         private Optional<Long> retryMaxInterval;
         private Optional<Integer> scale;
+        private Optional<Integer> poolSize;
 
         public Builder() {
             ldapHost = Optional.empty();
@@ -67,6 +69,7 @@ public class LdapRepositoryConfiguration {
             retryStartInterval = Optional.empty();
             retryMaxInterval = Optional.empty();
             scale = Optional.empty();
+            poolSize = Optional.empty();
         }
 
         public Builder ldapHost(String ldapHost) {
@@ -119,6 +122,11 @@ public class LdapRepositoryConfiguration {
             return this;
         }
 
+        public Builder poolSize(int poolSize) {
+            this.poolSize = Optional.of(poolSize);
+            return this;
+        }
+
         public LdapRepositoryConfiguration build() throws ConfigurationException {
             Preconditions.checkState(ldapHost.isPresent(), "'ldapHost' is mandatory");
             Preconditions.checkState(principal.isPresent(), "'principal' is mandatory");
@@ -145,6 +153,7 @@ public class LdapRepositoryConfiguration {
                 retryStartInterval.get(),
                 retryMaxInterval.get(),
                 scale.get(),
+                poolSize.orElse(DEFAULT_POOL_SIZE),
                 NO_RESTRICTION,
                 NO_FILTER,
                 NO_ADMINISTRATOR_ID);
@@ -187,6 +196,8 @@ public class LdapRepositoryConfiguration {
         String filter = configuration.getString("[@filter]");
 
         Optional<String> administratorId = Optional.ofNullable(configuration.getString("[@administratorId]"));
+        int poolSize = Optional.ofNullable(configuration.getInteger("[@poolSize]", null))
+                .orElse(DEFAULT_POOL_SIZE);
 
         return new LdapRepositoryConfiguration(
             ldapHost,
@@ -202,6 +213,7 @@ public class LdapRepositoryConfiguration {
             retryStartInterval,
             retryMaxInterval,
             scale,
+            poolSize,
             restriction,
             filter,
             administratorId);
@@ -267,6 +279,7 @@ public class LdapRepositoryConfiguration {
     private final long retryStartInterval;
     private final long retryMaxInterval;
     private final int scale;
+    private final int poolSize;
 
     /**
      * Encapsulates the information required to restrict users to LDAP groups or
@@ -288,10 +301,10 @@ public class LdapRepositoryConfiguration {
     private final Optional<Username> administratorId;
 
     private LdapRepositoryConfiguration(String ldapHost, String principal, String credentials, String userBase, String userIdAttribute,
-                                       String userObjectClass, int connectionTimeout, int readTimeout,
-                                       int maxRetries, boolean supportsVirtualHosting, long retryStartInterval, long retryMaxInterval,
-                                       int scale, ReadOnlyLDAPGroupRestriction restriction, String filter,
-                                       Optional<String> administratorId) throws ConfigurationException {
+                                        String userObjectClass, int connectionTimeout, int readTimeout,
+                                        int maxRetries, boolean supportsVirtualHosting, long retryStartInterval, long retryMaxInterval,
+                                        int scale, int poolSize, ReadOnlyLDAPGroupRestriction restriction, String filter,
+                                        Optional<String> administratorId) throws ConfigurationException {
         this.ldapHost = ldapHost;
         this.principal = principal;
         this.credentials = credentials;
@@ -305,6 +318,7 @@ public class LdapRepositoryConfiguration {
         this.retryStartInterval = retryStartInterval;
         this.retryMaxInterval = retryMaxInterval;
         this.scale = scale;
+        this.poolSize = poolSize;
         this.restriction = restriction;
         this.filter = filter;
         this.administratorId = administratorId.map(Username::of);
@@ -348,6 +362,9 @@ public class LdapRepositoryConfiguration {
         return userObjectClass;
     }
 
+    public int getPoolSize() {
+        return poolSize;
+    }
 
     public int getConnectionTimeout() {
         return connectionTimeout;
@@ -415,6 +432,7 @@ public class LdapRepositoryConfiguration {
                 && Objects.equals(this.userObjectClass, that.userObjectClass)
                 && Objects.equals(this.restriction, that.restriction)
                 && Objects.equals(this.filter, that.filter)
+                && Objects.equals(this.poolSize, that.poolSize)
                 && Objects.equals(this.administratorId, that.administratorId);
         }
         return false;
@@ -424,6 +442,6 @@ public class LdapRepositoryConfiguration {
     public final int hashCode() {
         return Objects.hash(ldapHost, principal, credentials, userBase, userIdAttribute, userObjectClass,
             connectionTimeout, readTimeout, maxRetries, supportsVirtualHosting, retryStartInterval, retryMaxInterval, scale,
-            restriction, filter, administratorId);
+            restriction, filter, administratorId, poolSize);
     }
 }
