@@ -17,6 +17,24 @@ Changes to apply between 3.5.x and 3.6.x will be reported here.
 Change list:
 
  - [Drop Cassandra schema version prior version 8](#drop-cassandra-schema-version-prior-version-8)
+ - [Adopt UnboundID as a LDAP library](#drop-cassandra-schema-version-prior-version-8)
+ 
+### Adopt UnboundID as a LDAP library
+
+Date 09/06/2021
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3594
+
+The previous LDAP implementation was based on JNDI and was causing operational concerns by opening a connection
+for each user authentication. These limitations were inherent to JNDI thus to mitigate those we decided to migrate to
+a newer LDAP library: [UnboundID](https://ldap.com/unboundid-ldap-sdk-for-java/).
+
+As part of this migration the following change took place:
+
+ - `useConnectionPool` : Removed. UnboundId implementation relies on a pool by default.
+ - `poolSize` : Added. Allow controlling the count of connection in the pool.
+ 
+The "group restriction" feature should furthermore be considered experimental, its usage is discouraged.
 
 ### Drop Cassandra schema version prior version 8
 
