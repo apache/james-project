@@ -13,10 +13,10 @@ ObjectStorage and Cassandra 3.11.10
 === Building the artifacts
 
 An usual compilation using maven will produce two artifacts into
-server/container/guice/cassandra-rabbitmq-guice/target directory:
+server/apps/distributed-app/target directory:
 
-* james-server-cassandra-rabbitmq-guice.jar
-* james-server-cassandra-rabbitmq-guice.lib
+* james-server-distributed-app.jar
+* james-server-distributed-app.lib
 
 You can for example run in the base of
 https://github.com/apache/james-project[this git repository]:
@@ -68,7 +68,7 @@ Once everything is set up, you just have to run the jar with:
 
 [source,bash]
 ----
-$ java -Dworking.directory=. -jar target/james-server-cassandra-rabbitmq-guice.jar
+$ java -Dworking.directory=. -jar target/james-server-distributed-app.jar
 ----
 
 ==== Using AWS S3 of Zenko Cloudserver

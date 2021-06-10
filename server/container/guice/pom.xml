@@ -38,7 +38,6 @@
         <module>blob/memory</module>
         <module>blob/s3</module>
         <module>cassandra</module>
-        <module>cassandra-rabbitmq-guice</module>
         <module>cassandra-rabbitmq-ldap-guice</module>
         <module>configuration</module>
         <module>data-cassandra</module>
