@@ -49,9 +49,7 @@
         <module>jmx</module>
         <module>jpa-common-guice</module>
         <module>jpa-guice</module>
-        <module>jpa-smtp</module>
         <module>jpa-smtp-common</module>
-        <module>jpa-smtp-mariadb</module>
         <module>mailbox</module>
         <module>mailbox-plugin-deleted-messages-vault-guice</module>
         <module>mailbox-plugin-spamassassin</module>
