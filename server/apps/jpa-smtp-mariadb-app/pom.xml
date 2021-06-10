@@ -23,16 +23,28 @@
 
     <parent>
         <groupId>org.apache.james</groupId>
-        <artifactId>james-server-guice</artifactId>
+        <artifactId>james-server</artifactId>
         <version>3.7.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>james-server-jpa-smtp-mariadb-guice</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: JPA + SMTP + mariaDB client - guice injection</name>
+    <name>Apache James :: Server :: JPA + mariaDB client :: SMTP only :: App</name>
     <description>An advanced email server - JPA backend for SMTP with guice injection</description>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>

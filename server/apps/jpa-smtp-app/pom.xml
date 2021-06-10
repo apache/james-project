@@ -23,20 +23,32 @@
 
     <parent>
         <groupId>org.apache.james</groupId>
-        <artifactId>james-server-guice</artifactId>
+        <artifactId>james-server</artifactId>
         <version>3.7.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-jpa-smtp-guice</artifactId>
+    <artifactId>james-server-jpa-smtp-app</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: JPA + SMTP - guice injection</name>
+    <name>Apache James :: Server :: JPA SMTP only :: App</name>
     <description>An advanced email server - JPA backend for SMTP with guice injection</description>
 
     <properties>
         <jpa.includes>empty</jpa.includes>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -280,7 +292,7 @@
                     <descriptorSourceDirectory>src/assemble/</descriptorSourceDirectory>
                     <tarLongFileMode>gnu</tarLongFileMode>
                     <appendAssemblyId>false</appendAssemblyId>
-                    <finalName>james-server-jpa-smtp-guice</finalName>
+                    <finalName>james-server-jpa-smtp-app</finalName>
                 </configuration>
                 <executions>
                     <execution>
