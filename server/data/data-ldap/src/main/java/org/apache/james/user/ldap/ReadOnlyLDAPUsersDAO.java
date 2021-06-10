@@ -66,6 +66,9 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
 
     private LdapRepositoryConfiguration ldapConfiguration;
     private LDAPConnectionPool ldapConnectionPool;
+    private Optional<Filter> userExtraFilter;
+    private Filter objectClassFilter;
+    private Filter listingFilter;
 
     @Inject
     public ReadOnlyLDAPUsersDAO() {
@@ -115,6 +118,12 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         SocketFactory socketFactory = null;
         LDAPConnection ldapConnection = new LDAPConnection(socketFactory, connectionOptions, uri.getHost(), uri.getPort(), ldapConfiguration.getPrincipal(), ldapConfiguration.getCredentials());
         ldapConnectionPool = new LDAPConnectionPool(ldapConnection, 4);
+
+        userExtraFilter = Optional.ofNullable(ldapConfiguration.getFilter())
+            .map(Throwing.function(Filter::create).sneakyThrow());
+        objectClassFilter = Filter.createEqualityFilter("objectClass", ldapConfiguration.getUserObjectClass());
+        listingFilter = userExtraFilter.map(extraFilter -> Filter.createANDFilter(objectClassFilter, extraFilter))
+            .orElse(objectClassFilter);
     }
 
     @PreDestroy
@@ -124,20 +133,9 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
 
     private Filter createFilter(String username) {
         Filter specificUserFilter = Filter.createEqualityFilter(ldapConfiguration.getUserIdAttribute(), username);
-        return Optional.ofNullable(ldapConfiguration.getFilter())
-            .map(Throwing.function(userFilter ->
-                Filter.createANDFilter(objectClassFilter(), specificUserFilter, Filter.create(userFilter))))
-            .orElseGet(() -> Filter.createANDFilter(objectClassFilter(), specificUserFilter));
-    }
-
-    private Filter objectClassFilter() {
-        return Filter.createEqualityFilter("objectClass", ldapConfiguration.getUserObjectClass());
-    }
-
-    private Filter createFilter() {
-        return Optional.ofNullable(ldapConfiguration.getFilter())
-            .map(Throwing.function(userFilter -> Filter.createANDFilter(objectClassFilter(), Filter.create(userFilter))))
-            .orElseGet(this::objectClassFilter);
+        return userExtraFilter
+            .map(extraFilter -> Filter.createANDFilter(objectClassFilter, specificUserFilter, extraFilter))
+            .orElseGet(() -> Filter.createANDFilter(objectClassFilter, specificUserFilter));
     }
 
     /**
@@ -175,7 +173,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     private Set<DN> getAllUsersDNFromLDAP() throws LDAPException {
         SearchRequest searchRequest = new SearchRequest(ldapConfiguration.getUserBase(),
             SearchScope.SUB,
-            createFilter(),
+            listingFilter,
             SearchRequest.NO_ATTRIBUTES);
 
         SearchResult searchResult = ldapConnectionPool.search(searchRequest);
@@ -189,7 +187,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     private Stream<Username> getAllUsernamesFromLDAP() throws LDAPException {
         SearchRequest searchRequest = new SearchRequest(ldapConfiguration.getUserBase(),
             SearchScope.SUB,
-            createFilter(),
+            listingFilter,
             ldapConfiguration.getUserIdAttribute());
 
         SearchResult searchResult = ldapConnectionPool.search(searchRequest);

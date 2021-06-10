@@ -48,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
+import com.unboundid.ldap.sdk.LDAPException;
 
 class ReadOnlyUsersLDAPRepositoryTest {
 
@@ -70,6 +71,26 @@ class ReadOnlyUsersLDAPRepositoryTest {
     @AfterAll
     static void afterAll() {
         ldapContainer.stop();
+    }
+
+    @Test
+    void shouldNotStartWithInvalidFilter() throws Exception {
+        PropertyListConfiguration configuration = new PropertyListConfiguration();
+        configuration.addProperty("[@ldapHost]", ldapContainer.getLdapHost());
+        configuration.addProperty("[@principal]", "cn=admin,dc=james,dc=org");
+        configuration.addProperty("[@credentials]", ADMIN_PASSWORD);
+        configuration.addProperty("[@userBase]", "ou=people,dc=james,dc=org");
+        configuration.addProperty("[@userObjectClass]", "inetOrgPerson");
+        configuration.addProperty("[@userIdAttribute]", "uid");
+        configuration.addProperty("[@administratorId]", ADMIN_LOCAL_PART);
+
+        configuration.addProperty("[@filter]", "INVALID!!!");
+
+        ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+        usersLDAPRepository.configure(configuration);
+
+        assertThatThrownBy(usersLDAPRepository::init)
+            .isInstanceOf(LDAPException.class);
     }
 
     @Nested
