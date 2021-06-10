@@ -45,7 +45,6 @@
         <module>distributed</module>
         <module>elasticsearch</module>
         <module>es-metric-reporter</module>
-        <module>guice-utils</module>
         <module>jmx</module>
         <module>jpa-common</module>
         <module>jpa-smtp-common</module>
@@ -79,6 +78,7 @@
         <module>sieve-file</module>
         <module>sieve-jpa</module>
         <module>testing</module>
+        <module>utils</module>
     </modules>
 
     <dependencyManagement>
