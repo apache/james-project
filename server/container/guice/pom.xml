@@ -38,7 +38,6 @@
         <module>blob/memory</module>
         <module>blob/s3</module>
         <module>cassandra</module>
-        <module>cassandra-rabbitmq-ldap-guice</module>
         <module>configuration</module>
         <module>data-cassandra</module>
         <module>data-ldap</module>
@@ -90,13 +89,6 @@
                 <groupId>${james.groupId}</groupId>
                 <artifactId>data-cassandra</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-cassandra-ldap-guice</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
