@@ -276,7 +276,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     @Override
     public int countUsers() throws UsersRepositoryException {
         try {
-            return Mono.fromCallable(() -> doCountUsers())
+            return Mono.fromCallable(() -> Math.toIntExact(doCountUsers()))
                 .retryWhen(ldapConfiguration.retrySpec())
                 .block();
         } catch (Exception e) {
@@ -287,11 +287,15 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         }
     }
 
-    private int doCountUsers() throws LDAPException {
-        return Math.toIntExact(getValidUsers().stream()
+    private long doCountUsers() throws LDAPException {
+        if (!ldapConfiguration.getRestriction().isActivated()) {
+            return getAllUsernamesFromLDAP().count();
+        }
+
+        return getValidUsers().stream()
             .map(Throwing.function(this::buildUser).sneakyThrow())
             .flatMap(Optional::stream)
-            .count());
+            .count();
     }
 
     @Override
