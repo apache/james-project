@@ -38,13 +38,13 @@
         <module>blob/memory</module>
         <module>blob/s3</module>
         <module>cassandra</module>
+        <module>common</module>
         <module>configuration</module>
         <module>data-cassandra</module>
         <module>data-ldap</module>
         <module>distributed</module>
         <module>elasticsearch</module>
         <module>es-metric-reporter</module>
-        <module>guice-common</module>
         <module>guice-utils</module>
         <module>jmx</module>
         <module>jpa-common</module>
