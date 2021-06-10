@@ -3,7 +3,7 @@
 
 == Incoming SMTP
 
-Consult this link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/smtpserver.xml[example]
+Consult this link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/smtpserver.xml[example]
 to get some examples and hints.
 
 The SMTP service is controlled by a configuration block in the smptserver.xml.
@@ -165,7 +165,7 @@ Eudora, Evolution).
 
 == LMTP Configuration
 
-Consult this link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/lmtpserver.xml[example]
+Consult this link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/lmtpserver.xml[example]
 to get some examples and hints.
 
 The configuration is the same of for SMTP.

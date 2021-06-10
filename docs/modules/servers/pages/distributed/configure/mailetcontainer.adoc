@@ -12,7 +12,7 @@ xref:distributed/configure/matchers.adoc[Packaged Matchers].
 
 Futhermore, you can write and use with James xref:distributed/extending/mail-processing.adoc[your own mailet and matchers].
 
-Consult this link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/mailetcontainer.xml[example]
+Consult this link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/mailetcontainer.xml[example]
 to get some examples and hints.
 
 .mailetcontainer.xml content

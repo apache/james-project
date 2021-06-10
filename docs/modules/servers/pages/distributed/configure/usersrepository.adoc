@@ -3,7 +3,7 @@
 
 User repositories are required to store James user information and authentication data.
 
-Consult this link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/usersrepository.xml[example]
+Consult this link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/usersrepository.xml[example]
 to get some examples and hints.
 
 == The user data model
@@ -43,7 +43,7 @@ acting on the behalf of any user.
 Alternatively you can authenticate your users against a LDAP server. You need to configure
 the properties for accessing your LDAP server in this file.
 
-Consult this link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/usersrepository.xml[example]
+Consult this link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/usersrepository.xml[example]
 to get some examples and hints.
 
 Example:

@@ -1,7 +1,7 @@
 = Distributed James Server &mdash; dnsservice.xml
 :navtitle: dnsservice.xml
 
-Consult this link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/dnsservice.xml[example]
+Consult this link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/dnsservice.xml[example]
 to get some examples and hints.
 
 Specifies DNS Server information for use by various components inside Apache James Server.

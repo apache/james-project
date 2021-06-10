@@ -6,7 +6,7 @@ needed as IMAP can generate some potentially large requests.
 
 Increasing these values tend to fasten individual requests, at the cost of enabling potential higher load.
 
-Consult this link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/batchsizes.properties[example]
+Consult this link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/batchsizes.properties[example]
 to get some examples and hints.
 
 .batchsizes.properties content

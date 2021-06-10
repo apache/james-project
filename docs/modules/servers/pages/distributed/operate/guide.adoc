@@ -77,7 +77,7 @@ the root cause has been addressed, the mail can be reprocessed.
 
 It is possible for the administrator of James to define the mailbox
 listeners he wants to use, by adding them in the
-https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/listeners.xml[listeners.xml]
+https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/listeners.xml[listeners.xml]
 configuration file. It’s possible also to add your own custom mailbox
 listeners. This enables to enhance capabilities of James as a Mail
 Delivery Agent. You can get more information about those
@@ -182,7 +182,7 @@ field being present)
 https://www.elastic.co/guide/en/elasticsearch/reference/7.10/indices-delete-index.html[drop
 the old index]
 * You might want as well modify the James configuration file
-https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/elasticsearch.properties[elasticsearch.properties]
+https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/elasticsearch.properties[elasticsearch.properties]
 by setting the parameter `elasticsearch.index.mailbox.name` to the name
 of your new index. This is to avoid that James re-creates index upon
 restart
@@ -577,7 +577,7 @@ steps:
 ==== Enable Deleted Messages Vault by configuring Pre Deletion Hooks
 
 You need to configure this hook in
-https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/listeners.xml[listeners.xml]
+https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/listeners.xml[listeners.xml]
 configuration file. More details about configuration & example can be
 found at http://james.apache.org/server/config-listeners.html[Pre
 Deletion Hook Configuration]
@@ -587,7 +587,7 @@ Deletion Hook Configuration]
 In order to configure the retention time for the Deleted Messages Vault,
 an administrator needs to perform fine configuration tunning as
 explained in
-https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/deletedMessageVault.properties[deletedMessageVault.properties].
+https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/deletedMessageVault.properties[deletedMessageVault.properties].
 Mails are not retained forever as you have to configure a retention
 period (by `retentionPeriod`) before using it (with one-year retention
 by default if not defined).
