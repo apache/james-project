@@ -27,7 +27,7 @@
 
   <section name="Recipient Rewrite Table Configuration">
 
-    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/recipientrewritetable.xml">recipientrewritetable.xml</a> in GIT to get some examples and hints.</p>
+    <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/apps/spring-app/src/main/resources/recipientrewritetable.xml">recipientrewritetable.xml</a> in GIT to get some examples and hints.</p>
 
     <subsection name="Mapping types">
         <ul>James allow using various mapping types for better expressing the intent of your address rewritting logic:
