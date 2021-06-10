@@ -32,7 +32,7 @@
     <packaging>jar</packaging>
 
     <name>Apache James :: Server :: JPA - guice injection</name>
-    <description>An advanced email server - JPA backend with guice injection</description>
+    <description>Some Guice injection modules for the JPA mailbox</description>
 
     <dependencies>
         <dependency>
