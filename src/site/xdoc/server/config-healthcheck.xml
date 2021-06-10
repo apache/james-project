@@ -26,7 +26,7 @@
     <body>
         <section name="PeriodicalHealthChecks Configuration">
 
-            <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/healthcheck.properties">healthcheck.properties</a> in GIT to get some examples and hints.</p>
+            <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/healthcheck.properties">healthcheck.properties</a> in GIT to get some examples and hints.</p>
 
             <p>
                 Use this configuration to define the initial delay and period for the PeriodicalHealthChecks. It is only applicable with Guice products.

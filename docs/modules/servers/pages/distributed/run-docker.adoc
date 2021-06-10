@@ -40,7 +40,7 @@ Compile the whole project:
 
 Then load the distributed server docker image:
 
-    docker load -i server/container/guice/cassandra-rabbitmq-guice/target/jib-image.tar
+    docker load -i server/apps/distributed-app/target/jib-image.tar
 
 Alternatively we provide convenience distribution for the latest release:
 

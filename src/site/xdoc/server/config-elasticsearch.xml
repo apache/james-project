@@ -29,7 +29,7 @@
 
       This configuration applies only to Guice wiring.
 
-    <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/elasticsearch.properties">elasticsearch.properties</a> to get some examples and hints.</p>
+    <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/elasticsearch.properties">elasticsearch.properties</a> to get some examples and hints.</p>
 
       Connection to a cluster :
 
@@ -160,7 +160,7 @@
 
         <p>Note that to use this feature you need Guice, built with ElasticSearch</p>
 
-        <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/tika.properties">tika.properties</a> to get some examples and hints.</p>
+        <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/tika.properties">tika.properties</a> to get some examples and hints.</p>
 
         Here are the different properties:
 

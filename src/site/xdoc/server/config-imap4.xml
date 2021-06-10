@@ -27,7 +27,7 @@
 
 <section name="IMAP4 Configuration">
 
-      <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/imapserver.xml">imapserver.xml</a> in GIT to get some examples and hints.</p>
+      <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/imapserver.xml">imapserver.xml</a> in GIT to get some examples and hints.</p>
 
     <p>The IMAP4 service is controlled by a configuration block in the imap4server.xml.
        The imap4server tag defines the boundaries of the configuration block.  It encloses 

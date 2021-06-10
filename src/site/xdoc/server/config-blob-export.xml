@@ -35,7 +35,7 @@
           This configuration helps you choose the blob exporting mechanism fit with your James setup and it is only applicable with Guice products.
       </p>
 
-      <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/blob.properties">blob.properties</a> in GIT to get some examples and hints.</p>
+      <p>Consult <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/blob.properties">blob.properties</a> in GIT to get some examples and hints.</p>
 
       <p>
           Configuration for exporting blob content
@@ -68,7 +68,7 @@
               This way helps you to share via whole network as long as they can access to LinShare server.
           </p>
           <p>
-              To get an example or details explained, visit <a href="https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/blob.properties">blob.properties</a>
+              To get an example or details explained, visit <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/blob.properties">blob.properties</a>
           </p>
           <dl>
               <dt><strong>blob.export.linshare.url</strong></dt>

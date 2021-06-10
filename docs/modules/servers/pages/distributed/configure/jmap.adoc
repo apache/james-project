@@ -5,7 +5,7 @@ https://jmap.io/[JMAP]  is intended to be a new standard for email clients to co
 stores. It therefore intends to primarily replace IMAP + SMTP submission. It is also designed to be more
 generic. It does not replace MTA-to-MTA SMTP transmission.
 
-Consult this link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/jmap.properties[example]
+Consult this link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/jmap.properties[example]
 to get some examples and hints.
 
 .jmap.properties content

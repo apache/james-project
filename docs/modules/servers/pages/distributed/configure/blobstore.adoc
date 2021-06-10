@@ -12,7 +12,7 @@ You can choose the underlying implementation of BlobStore to fit with your James
 
 It could be the implementation on top of Cassandra or file storage service S3 compatible like Openstack Swift and AWS S3.
 
-Consult link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/blob.properties[blob.properties]
+Consult link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/blob.properties[blob.properties]
 in GIT to get some examples and hints.
 
 === Implementation choice
@@ -143,7 +143,7 @@ The deleted messages are transformed into a blob and James will export that blob
 
 This configuration helps you choose the blob exporting mechanism fit with your James setup and it is only applicable with Guice products.
 
-Consult https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/blob.properties[blob.properties]
+Consult https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/blob.properties[blob.properties]
 in GIT to get some examples and hints.
 
 Configuration for exporting blob content:
@@ -175,7 +175,7 @@ LinShare server and download them.
 
 This way helps you to share via whole network as long as they can access to LinShare server.
 
-To get an example or details explained, visit https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration/blob.properties[blob.properties]
+To get an example or details explained, visit https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/blob.properties[blob.properties]
 
 *blob.export.linshare.url*: The URL to connect to LinShare
 
