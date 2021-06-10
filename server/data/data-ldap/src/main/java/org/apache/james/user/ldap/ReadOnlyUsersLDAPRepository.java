@@ -65,10 +65,6 @@ import org.apache.james.user.lib.UsersRepositoryImpl;
  *      userBase=&quot;ou=People,o=myorg.com,ou=system&quot;
  *      userIdAttribute=&quot;uid&quot;
  *      userObjectClass=&quot;inetOrgPerson&quot;
- *      maxRetries=&quot;20&quot;
- *      retryStartInterval=&quot;0&quot;
- *      retryMaxInterval=&quot;30&quot;
- *      retryIntervalScale=&quot;1000&quot;
  *      administratorId=&quot;ldapAdmin&quot;
  *  &lt;/users-store&gt;
  * </pre>
@@ -99,52 +95,6 @@ import org.apache.james.user.lib.UsersRepositoryImpl;
  * <b>poolSize:</b> (optional, default = 4) The maximum number of connection
  * in the pool.</li>
  * <li>
- * <li>
- * <b>maxRetries:</b> (optional, default = 0) The maximum number of times to
- * retry a failed operation. -1 means retry forever.</li>
- * <li>
- * <b>retryStartInterval:</b> (optional, default = 0) The interval in
- * milliseconds to wait before the first retry. If > 0, subsequent retries are
- * made at double the proceeding one up to the <b>retryMaxInterval</b> described
- * below. If = 0, the next retry is 1 and subsequent retries proceed as above.</li>
- * <li>
- * <b>retryMaxInterval:</b> (optional, default = 60) The maximum interval in
- * milliseconds to wait between retries</li>
- * <li>
- * <b>retryIntervalScale:</b> (optional, default = 1000) The amount by which to
- * multiply each retry interval. The default value of 1000 (milliseconds) is 1
- * second, so the default <b>retryMaxInterval</b> of 60 is 60 seconds, or 1
- * minute.
- * </ul>
- * </p>
- * <p>
- * <em>Example Schedules</em>
- * <ul>
- * <li>
- * Retry after 1000 milliseconds, doubling the interval for each retry up to
- * 30000 milliseconds, subsequent retry intervals are 30000 milliseconds until
- * 10 retries have been attempted, after which the <code>Exception</code>
- * causing the fault is thrown:
- * <ul>
- * <li>maxRetries = 10
- * <li>retryStartInterval = 1000
- * <li>retryMaxInterval = 30000
- * <li>retryIntervalScale = 1
- * </ul>
- * <li>
- * Retry immediately, then retry after 1 * 1000 milliseconds, doubling the
- * interval for each retry up to 30 * 1000 milliseconds, subsequent retry
- * intervals are 30 * 1000 milliseconds until 20 retries have been attempted,
- * after which the <code>Exception</code> causing the fault is thrown:
- * <ul>
- * <li>maxRetries = 20
- * <li>retryStartInterval = 0
- * <li>retryMaxInterval = 30
- * <li>retryIntervalScale = 1000
- * </ul>
- * <li>
- * Retry after 5000 milliseconds, subsequent retry intervals are 5000
- * milliseconds.
  * </ul>
  * </p>
  *

@@ -33,6 +33,8 @@ As part of this migration the following change took place:
 
  - `useConnectionPool` : Removed. UnboundId implementation relies on a pool by default.
  - `poolSize` : Added. Allow controlling the count of connection in the pool.
+ - Retries had been removed. Invalid connections errors are retries. THe following parameters were removed:
+ `maxRetries`, `retryStartInterval`, `retryMaxInterval`, `retryIntervalScale`. Those values will be ignored.
  
 The "group restriction" feature should furthermore be considered experimental, its usage is discouraged.
 

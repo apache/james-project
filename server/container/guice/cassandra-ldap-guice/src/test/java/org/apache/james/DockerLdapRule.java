@@ -49,10 +49,6 @@ public class DockerLdapRule implements GuiceModuleTestRule {
                 .userBase("ou=People,dc=james,dc=org")
                 .userIdAttribute("uid")
                 .userObjectClass("inetOrgPerson")
-                .maxRetries(4)
-                .retryStartInterval(0)
-                .retryMaxInterval(8)
-                .scale(1000)
                 .build();
         } catch (ConfigurationException e) {
             throw new RuntimeException(e);
