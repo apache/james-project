@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.unboundid.ldap.sdk.Attribute;
+import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.Entry;
 import com.unboundid.ldap.sdk.Filter;
 import com.unboundid.ldap.sdk.LDAPConnection;
@@ -156,22 +157,22 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
      *         least one group in the parameter map, and <code>False</code>
      *         otherwise.
      */
-    private boolean userInGroupsMembershipList(String userDN,
-            Map<String, Collection<String>> groupMembershipList) {
+    private boolean userInGroupsMembershipList(DN userDN,
+            Map<String, Collection<DN>> groupMembershipList) {
         boolean result = false;
 
-        Collection<Collection<String>> memberLists = groupMembershipList.values();
-        Iterator<Collection<String>> memberListsIterator = memberLists.iterator();
+        Collection<Collection<DN>> memberLists = groupMembershipList.values();
+        Iterator<Collection<DN>> memberListsIterator = memberLists.iterator();
 
         while (memberListsIterator.hasNext() && !result) {
-            Collection<String> groupMembers = memberListsIterator.next();
+            Collection<DN> groupMembers = memberListsIterator.next();
             result = groupMembers.contains(userDN);
         }
 
         return result;
     }
 
-    private Set<String> getAllUsersDNFromLDAP() throws LDAPException {
+    private Set<DN> getAllUsersDNFromLDAP() throws LDAPException {
         SearchRequest searchRequest = new SearchRequest(ldapConfiguration.getUserBase(),
             SearchScope.SUB,
             createFilter(),
@@ -181,7 +182,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
 
         return searchResult.getSearchEntries()
             .stream()
-            .map(Entry::getDN)
+            .map(Throwing.function(Entry::getParsedDN))
             .collect(Guavate.toImmutableSet());
     }
 
@@ -204,7 +205,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
      * Extract the user attributes for the given collection of userDNs, and
      * encapsulates the user list as a collection of {@link ReadOnlyLDAPUser}s.
      * This method delegates the extraction of a single user's details to the
-     * method {@link #buildUser(String)}.
+     * method {@link #buildUser(DN)}.
      *
      * @param userDNs
      *            The distinguished-names (DNs) of the users whose information
@@ -214,10 +215,10 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
      * @throws LDAPException
      *             Propagated from the underlying LDAP communication layer.
      */
-    private Collection<ReadOnlyLDAPUser> buildUserCollection(Collection<String> userDNs) throws LDAPException {
+    private Collection<ReadOnlyLDAPUser> buildUserCollection(Collection<DN> userDNs) throws LDAPException {
         List<ReadOnlyLDAPUser> results = new ArrayList<>();
 
-        for (String userDN : userDNs) {
+        for (DN userDN : userDNs) {
             Optional<ReadOnlyLDAPUser> user = buildUser(userDN);
             user.ifPresent(results::add);
         }
@@ -240,15 +241,15 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         }
 
         if (!ldapConfiguration.getRestriction().isActivated()
-            || userInGroupsMembershipList(result.getDN(), ldapConfiguration.getRestriction().getGroupMembershipLists(ldapConnectionPool))) {
+            || userInGroupsMembershipList(result.getParsedDN(), ldapConfiguration.getRestriction().getGroupMembershipLists(ldapConnectionPool))) {
 
-            return new ReadOnlyLDAPUser(name, result.getDN(), ldapConnectionPool, ldapConfiguration);
+            return new ReadOnlyLDAPUser(name, result.getParsedDN(), ldapConnectionPool, ldapConfiguration);
         }
         return null;
     }
 
-    private Optional<ReadOnlyLDAPUser> buildUser(String userDN) throws LDAPException {
-        SearchResultEntry userAttributes = ldapConnectionPool.getEntry(userDN);
+    private Optional<ReadOnlyLDAPUser> buildUser(DN userDN) throws LDAPException {
+        SearchResultEntry userAttributes = ldapConnectionPool.getEntry(userDN.toString());
         Optional<String> userName = Optional.ofNullable(userAttributes.getAttributeValue(ldapConfiguration.getUserIdAttribute()));
         return userName
             .map(Username::of)
@@ -292,7 +293,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
             return getAllUsernamesFromLDAP().count();
         }
 
-        return getValidUsers().stream()
+        return getValidUserDNs().stream()
             .map(Throwing.function(this::buildUser).sneakyThrow())
             .flatMap(Optional::stream)
             .count();
@@ -335,22 +336,22 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
             return getAllUsernamesFromLDAP().iterator();
         }
 
-        return buildUserCollection(getValidUsers())
+        return buildUserCollection(getValidUserDNs())
             .stream()
             .map(ReadOnlyLDAPUser::getUserName)
             .iterator();
     }
 
-    private Collection<String> getValidUsers() throws LDAPException {
-        Set<String> userDNs = getAllUsersDNFromLDAP();
-        Collection<String> validUserDNs;
+    private Collection<DN> getValidUserDNs() throws LDAPException {
+        Set<DN> userDNs = getAllUsersDNFromLDAP();
+        Collection<DN> validUserDNs;
         if (ldapConfiguration.getRestriction().isActivated()) {
-            Map<String, Collection<String>> groupMembershipList = ldapConfiguration.getRestriction()
+            Map<String, Collection<DN>> groupMembershipList = ldapConfiguration.getRestriction()
                 .getGroupMembershipLists(ldapConnectionPool);
             validUserDNs = new ArrayList<>();
 
-            Iterator<String> userDNIterator = userDNs.iterator();
-            String userDN;
+            Iterator<DN> userDNIterator = userDNs.iterator();
+            DN userDN;
             while (userDNIterator.hasNext()) {
                 userDN = userDNIterator.next();
                 if (userInGroupsMembershipList(userDN, groupMembershipList)) {
