@@ -27,8 +27,8 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-cli-integration</artifactId>
-    <name>Apache James :: Server :: Cli :: Integration</name>
+    <artifactId>james-server-cli-integration-tests</artifactId>
+    <name>Apache James :: Server :: Cli :: Integration tests</name>
 
     <dependencies>
         <dependency>
