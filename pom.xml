@@ -1280,8 +1280,14 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-cassandra-ldap-guice</artifactId>
+                <artifactId>james-server-cassandra-app-ldap-tests</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-cassandra-app-ldap-tests</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>

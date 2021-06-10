@@ -43,6 +43,7 @@
         <module>apps/cli</module>
         <module>apps/cli-integration-tests</module>
         <module>apps/distributed-app</module>
+        <module>apps/distributed-ldap-tests</module>
         <module>apps/spring-app</module>
         <module>apps/webadmin-cli</module>
 

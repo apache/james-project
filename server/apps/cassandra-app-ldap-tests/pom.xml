@@ -28,7 +28,7 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-cassandra-app-ldap-tessts</artifactId>
+    <artifactId>james-server-cassandra-app-ldap-tests</artifactId>
     <packaging>jar</packaging>
 
     <name>Apache James :: Server :: Cassandra App :: LDAP tests</name>
