@@ -10,10 +10,10 @@
 
 ### Building the artifacts
 
-An usual compilation using maven will produce two artifacts into server/container/guice/cassandra-rabbitmq-guice/target directory:
+An usual compilation using maven will produce two artifacts into server/apps/distributed-app/target directory:
 
- * james-server-cassandra-rabbitmq-guice.jar
- * james-server-cassandra-rabbitmq-guice.lib
+ * james-server-distributed-app.jar
+ * james-server-distributed-app.lib
 
 You can for example run in the base of [this git repository](https://github.com/apache/james-project):
 
@@ -56,7 +56,7 @@ $ docker run -d --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID
 Once everything is set up, you just have to run the jar with:
 
 ```bash
-$ java -Dworking.directory=. -jar target/james-server-cassandra-rabbitmq-guice.jar
+$ java -Dworking.directory=. -jar target/james-server-distributed-app.jar
 ```
 
 #### Using AWS S3 of Zenko Cloudserver

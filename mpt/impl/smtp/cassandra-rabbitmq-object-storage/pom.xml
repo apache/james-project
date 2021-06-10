@@ -77,11 +77,11 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-cassandra-rabbitmq-guice</artifactId>
+            <artifactId>james-server-distributed-app</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-cassandra-rabbitmq-guice</artifactId>
+            <artifactId>james-server-distributed-app</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

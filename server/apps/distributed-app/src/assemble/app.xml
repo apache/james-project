@@ -46,8 +46,8 @@ limitations under the License.
         </fileSet>
         <!-- include stuff from jar plugin -->
         <fileSet>
-            <directory>target/james-server-cassandra-rabbitmq-guice.lib</directory>
-            <outputDirectory>/james-server-cassandra-rabbitmq-guice.lib</outputDirectory>
+            <directory>target/james-server-distributed-app.lib</directory>
+            <outputDirectory>/james-server-distributed-app.lib</outputDirectory>
             <directoryMode>0755</directoryMode>
             <fileMode>0600</fileMode>
             <includes>
@@ -77,10 +77,10 @@ limitations under the License.
             <destName>README.md</destName>
         </file>
         <file>
-            <source>target/james-server-cassandra-rabbitmq-guice.jar</source>
+            <source>target/james-server-distributed-app.jar</source>
             <outputDirectory>/</outputDirectory>
             <fileMode>0755</fileMode>
-            <destName>james-server-cassandra-rabbitmq-guice.jar</destName>
+            <destName>james-server-distributed-app.jar</destName>
         </file>
     </files>
 </assembly>
