@@ -47,7 +47,7 @@
         <module>guice-common</module>
         <module>guice-utils</module>
         <module>jmx</module>
-        <module>jpa-common-guice</module>
+        <module>jpa-common</module>
         <module>jpa-smtp-common</module>
         <module>mailbox</module>
         <module>mailbox-jpa</module>
