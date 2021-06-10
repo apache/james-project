@@ -29,8 +29,9 @@ import java.util.Map;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
-import com.unboundid.ldap.sdk.LDAPConnection;
+import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.SearchResultEntry;
@@ -114,8 +115,8 @@ public class ReadOnlyLDAPGroupRestriction {
      *
      * @return Returns a map of groupDNs to userDN lists.
      */
-    protected Map<String, Collection<String>> getGroupMembershipLists(LDAPConnectionPool connection) throws LDAPException {
-        Map<String, Collection<String>> result = new HashMap<>();
+    protected Map<String, Collection<DN>> getGroupMembershipLists(LDAPConnectionPool connection) throws LDAPException {
+        Map<String, Collection<DN>> result = new HashMap<>();
 
         for (String groupDN : groupDNs) {
             result.put(groupDN, extractMembers(connection.getEntry(groupDN)));
@@ -133,9 +134,10 @@ public class ReadOnlyLDAPGroupRestriction {
      * @return A collection of distinguished-names for the users belonging to
      *         the group with the specified attributes.
      */
-    private Collection<String> extractMembers(SearchResultEntry entry) {
+    private Collection<DN> extractMembers(SearchResultEntry entry) {
         com.unboundid.ldap.sdk.Attribute members = entry.getAttribute(memberAttribute);
         return Arrays.stream(members.getValues())
+            .map(Throwing.function(DN::new))
             .collect(Guavate.toImmutableList());
     }
 }

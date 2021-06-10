@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.unboundid.ldap.sdk.BindResult;
+import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.ResultCode;
@@ -62,7 +63,7 @@ public class ReadOnlyLDAPUser implements User, Serializable {
     /**
      * The distinguished name of the user-record in the LDAP directory.
      */
-    private final String userDN;
+    private final DN userDN;
 
     /**
      * The context for the LDAP server from which to retrieve the
@@ -88,7 +89,7 @@ public class ReadOnlyLDAPUser implements User, Serializable {
      *            invoked.
      * @param configuration
      */
-    public ReadOnlyLDAPUser(Username userName, String userDN, LDAPConnectionPool connectionPool, LdapRepositoryConfiguration configuration) {
+    public ReadOnlyLDAPUser(Username userName, DN userDN, LDAPConnectionPool connectionPool, LdapRepositoryConfiguration configuration) {
         this.userName = userName;
         this.userDN = userDN;
         this.connectionPool = connectionPool;
@@ -144,7 +145,7 @@ public class ReadOnlyLDAPUser implements User, Serializable {
     }
 
     private boolean doVerifyPassword(String password) throws LDAPException {
-        BindResult bindResult = connectionPool.bindAndRevertAuthentication(userDN, password);
+        BindResult bindResult = connectionPool.bindAndRevertAuthentication(userDN.toString(), password);
         return bindResult.getResultCode() == ResultCode.SUCCESS;
     }
 }
