@@ -41,12 +41,12 @@
         <module>apps/cassandra-app</module>
         <module>apps/cassandra-app-ldap-tests</module>
         <module>apps/cli</module>
+        <module>apps/cli-integration-tests</module>
         <module>apps/distributed-app</module>
         <module>apps/spring-app</module>
 
         <module>blob</module>
 
-        <module>container/cli-integration</module>
         <module>container/core</module>
         <module>container/filesystem-api</module>
         <module>container/guice</module>
