@@ -50,7 +50,7 @@
         <module>jpa-smtp-common</module>
         <module>mailbox</module>
         <module>mailbox-jpa</module>
-        <module>mailbox-plugin-deleted-messages-vault-guice</module>
+        <module>mailbox-plugin-deleted-messages-vault</module>
         <module>mailbox-plugin-spamassassin</module>
         <module>mailet</module>
         <module>mailrepository-cassandra</module>
