@@ -31,6 +31,7 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 
 import com.github.steveash.guavate.Guavate;
 import com.unboundid.ldap.sdk.LDAPConnection;
+import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 
@@ -113,7 +114,7 @@ public class ReadOnlyLDAPGroupRestriction {
      *
      * @return Returns a map of groupDNs to userDN lists.
      */
-    protected Map<String, Collection<String>> getGroupMembershipLists(LDAPConnection connection) throws LDAPException {
+    protected Map<String, Collection<String>> getGroupMembershipLists(LDAPConnectionPool connection) throws LDAPException {
         Map<String, Collection<String>> result = new HashMap<>();
 
         for (String groupDN : groupDNs) {
