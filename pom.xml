@@ -1628,12 +1628,12 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-memory-guice</artifactId>
+                <artifactId>james-server-memory-app</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-memory-guice</artifactId>
+                <artifactId>james-server-memory-app</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>

@@ -44,7 +44,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-memory-guice</artifactId>
+            <artifactId>james-server-memory-app</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -23,16 +23,28 @@
 
     <parent>
         <groupId>org.apache.james</groupId>
-        <artifactId>james-server-guice</artifactId>
+        <artifactId>james-server</artifactId>
         <version>3.7.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-memory-guice</artifactId>
+    <artifactId>james-server-memory-app</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: Memory - guice injection</name>
+    <name>Apache James :: Server :: Memory :: App</name>
     <description>An advanced email server - Memory backend with guice injection</description>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -43,57 +55,20 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-mailbox-memory</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-mailbox-quota-mailing</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-mailbox-quota-search-scanning</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-store</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-mailet-icalendar</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>blob-export-guice</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>blob-export-guice</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>blob-memory-guice</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>event-sourcing-event-store-memory</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-cli</artifactId>
             <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-data-memory</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-common</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -138,6 +113,10 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-managedsieve</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-guice-memory</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -414,7 +393,7 @@
                     <descriptorSourceDirectory>src/assemble/</descriptorSourceDirectory>
                     <tarLongFileMode>gnu</tarLongFileMode>
                     <appendAssemblyId>false</appendAssemblyId>
-                    <finalName>james-server-memory-guice</finalName>
+                    <finalName>james-server-memory-app</finalName>
                 </configuration>
                 <executions>
                     <execution>
