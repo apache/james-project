@@ -75,15 +75,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
 
     @Test
     void shouldNotStartWithInvalidFilter() throws Exception {
-        PropertyListConfiguration configuration = new PropertyListConfiguration();
-        configuration.addProperty("[@ldapHost]", ldapContainer.getLdapHost());
-        configuration.addProperty("[@principal]", "cn=admin,dc=james,dc=org");
-        configuration.addProperty("[@credentials]", ADMIN_PASSWORD);
-        configuration.addProperty("[@userBase]", "ou=people,dc=james,dc=org");
-        configuration.addProperty("[@userObjectClass]", "inetOrgPerson");
-        configuration.addProperty("[@userIdAttribute]", "uid");
-        configuration.addProperty("[@administratorId]", ADMIN_LOCAL_PART);
-
+        HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
         configuration.addProperty("[@filter]", "INVALID!!!");
 
         ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
@@ -91,6 +83,57 @@ class ReadOnlyUsersLDAPRepositoryTest {
 
         assertThatThrownBy(usersLDAPRepository::init)
             .isInstanceOf(LDAPException.class);
+    }
+
+    @Nested
+    class FilterTests {
+        @Test
+        void filterShouldKeepMatchingEntries() throws Exception {
+            HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
+            configuration.addProperty("[@filter]", "(sn=james-user)");
+
+            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+            usersLDAPRepository.configure(configuration);
+            usersLDAPRepository.init();
+
+            assertThat(usersLDAPRepository.contains(JAMES_USER)).isTrue();
+        }
+
+        @Test
+        void filterShouldFilterOutNonMatchingEntries() throws Exception {
+            HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
+            configuration.addProperty("[@filter]", "(sn=nomatch)");
+
+            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+            usersLDAPRepository.configure(configuration);
+            usersLDAPRepository.init();
+
+            assertThat(usersLDAPRepository.contains(JAMES_USER)).isFalse();
+        }
+
+        @Test
+        void countShouldTakeFilterIntoAccount() throws Exception {
+            HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
+            configuration.addProperty("[@filter]", "(sn=nomatch)");
+
+            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+            usersLDAPRepository.configure(configuration);
+            usersLDAPRepository.init();
+
+            assertThat(usersLDAPRepository.countUsers()).isEqualTo(0);
+        }
+
+        @Test
+        void listShouldTakeFilterIntoAccount() throws Exception {
+            HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
+            configuration.addProperty("[@filter]", "(sn=nomatch)");
+
+            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+            usersLDAPRepository.configure(configuration);
+            usersLDAPRepository.init();
+
+            assertThat(ImmutableList.copyOf(usersLDAPRepository.list())).isEmpty();
+        }
     }
 
     @Nested
