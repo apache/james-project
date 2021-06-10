@@ -44,6 +44,7 @@
         <module>apps/cli-integration-tests</module>
         <module>apps/distributed-app</module>
         <module>apps/distributed-ldap-tests</module>
+        <module>apps/jpa-app</module>
         <module>apps/jpa-smtp-app</module>
         <module>apps/jpa-smtp-mariadb-app</module>
         <module>apps/spring-app</module>
