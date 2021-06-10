@@ -44,6 +44,7 @@
         <module>apps/cli-integration-tests</module>
         <module>apps/distributed-app</module>
         <module>apps/spring-app</module>
+        <module>apps/webadmin-cli</module>
 
         <module>blob</module>
 
@@ -99,7 +100,6 @@
         <module>protocols/protocols-pop3</module>
         <module>protocols/protocols-smtp</module>
         <module>protocols/webadmin</module>
-        <module>protocols/webadmin-cli</module>
         <module>protocols/webadmin-integration-test</module>
 
         <module>queue/queue-activemq</module>
