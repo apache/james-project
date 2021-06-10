@@ -73,7 +73,7 @@ if [ $? -eq 0 ]; then
 
    if [ -d "$CASSANDRA_RABBITMQ_DESTINATION" ]; then
       echo "Copying cassandra RabbitMQ JARs"
-      cp server/container/guice/cassandra-rabbitmq-guice/target/james-server-distributed-guice.zip $CASSANDRA_RABBITMQ_DESTINATION || true
+      cp server/apps/distributed-app/target/james-server-distributed-app.zip $CASSANDRA_RABBITMQ_DESTINATION || true
       cp server/container/cli/target/james-server-cli.jar $CASSANDRA_RABBITMQ_DESTINATION || true
       cp -r server/container/cli/target/james-server-cli.lib $CASSANDRA_RABBITMQ_DESTINATION || true
 
@@ -83,7 +83,7 @@ if [ $? -eq 0 ]; then
 
    if [ -d "$CASSANDRA_DESTINATION" ]; then
       echo "Copying cassandra JARs"
-      cp server/container/guice/cassandra-guice/target/james-server-cassandra-guice.zip $CASSANDRA_DESTINATION || true
+      cp server/apps/cassandra-app/target/james-server-cassandra-app.zip $CASSANDRA_DESTINATION || true
       cp server/container/cli/target/james-server-cli.jar $CASSANDRA_DESTINATION || true
       cp -r server/container/cli/target/james-server-cli.lib $CASSANDRA_DESTINATION || true
 
@@ -93,7 +93,7 @@ if [ $? -eq 0 ]; then
 
    if [ -d "$JPA_DESTINATION" ]; then
       echo "Copying JPA jars"
-      cp server/container/guice/jpa-guice/target/james-server-jpa-guice.zip $JPA_DESTINATION || true
+      cp server/apps/jpa-app/target/james-server-jpa-app.zip $JPA_DESTINATION || true
       cp server/container/cli/target/james-server-cli.jar $JPA_DESTINATION || true
       cp -r server/container/cli/target/james-server-cli.lib $JPA_DESTINATION || true
       mkdir -p ${JPA_DESTINATION}/glowroot
@@ -102,7 +102,7 @@ if [ $? -eq 0 ]; then
 
    if [ -d "$JPA_SMTP_DESTINATION" ]; then
       echo "Copying JPA-SMTP jars"
-      cp server/container/guice/jpa-smtp/target/james-server-jpa-smtp-guice.zip $JPA_SMTP_DESTINATION || true
+      cp server/container/apps/jpa-smtp-app/target/james-server-jpa-smtp-app.zip $JPA_SMTP_DESTINATION || true
       cp server/container/cli/target/james-server-cli.jar $JPA_SMTP_DESTINATION || true
       cp -r server/container/cli/target/james-server-cli.lib $JPA_SMTP_DESTINATION || true
       mkdir -p ${JPA_SMTP_DESTINATION}/glowroot
@@ -111,17 +111,17 @@ if [ $? -eq 0 ]; then
 
    if [ -d "$MEMORY_DESTINATION" ]; then
       echo "Copying memory JARs"
-      cp server/container/guice/memory-guice/target/james-server-memory-guice.zip $MEMORY_DESTINATION || true
+      cp server/apps/memory-app/target/james-server-memory-app.zip $MEMORY_DESTINATION || true
       cp server/container/cli/target/james-server-cli.jar $MEMORY_DESTINATION || true
       cp -r server/container/cli/target/james-server-cli.lib $MEMORY_DESTINATION || true
       mkdir -p ${MEMORY_DESTINATION}/glowroot
       cp -r ${GLOW_ROOT_DIR}/* ${MEMORY_DESTINATION}/glowroot || true
-      unzip $MEMORY_DESTINATION/james-server-memory-guice.zip
+      unzip $MEMORY_DESTINATION/james-server-memory-app.zip
    fi
 
    if [ -d "$SPRING_DESTINATION" ]; then
       echo "Copying SPRING jars"
-      cp server/app/target/james-server-app-*-app.zip $SPRING_DESTINATION
+      cp server/apps/spring-app/target/james-server-app-*-app.zip $SPRING_DESTINATION
       mkdir -p ${SPRING_DESTINATION}/glowroot
       cp -r ${GLOW_ROOT_DIR}/* ${SPRING_DESTINATION}/glowroot || true
    fi
