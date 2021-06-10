@@ -92,12 +92,12 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-memory-guice</artifactId>
+            <artifactId>james-server-memory-app</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-memory-guice</artifactId>
+            <artifactId>james-server-memory-app</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
