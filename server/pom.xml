@@ -38,9 +38,9 @@
     <inceptionYear>2002</inceptionYear>
 
     <modules>
-        <module>app</module>
         <module>apps/cassandra-app</module>
         <module>apps/cassandra-app-ldap-tests</module>
+        <module>apps/spring-app</module>
 
         <module>blob</module>
 
