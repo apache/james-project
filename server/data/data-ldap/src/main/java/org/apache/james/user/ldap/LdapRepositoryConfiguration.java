@@ -19,7 +19,6 @@
 
 package org.apache.james.user.ldap;
 
-import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -29,10 +28,6 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Username;
 
 import com.google.common.base.Preconditions;
-
-import reactor.core.scheduler.Schedulers;
-import reactor.util.retry.Retry;
-import reactor.util.retry.RetryBackoffSpec;
 
 public class LdapRepositoryConfiguration {
     public static final String SUPPORTS_VIRTUAL_HOSTING = "supportsVirtualHosting";
@@ -52,10 +47,6 @@ public class LdapRepositoryConfiguration {
         private Optional<String> userBase;
         private Optional<String> userIdAttribute;
         private Optional<String> userObjectClass;
-        private Optional<Integer> maxRetries;
-        private Optional<Long> retryStartInterval;
-        private Optional<Long> retryMaxInterval;
-        private Optional<Integer> scale;
         private Optional<Integer> poolSize;
 
         public Builder() {
@@ -65,10 +56,6 @@ public class LdapRepositoryConfiguration {
             userBase = Optional.empty();
             userIdAttribute = Optional.empty();
             userObjectClass = Optional.empty();
-            maxRetries = Optional.empty();
-            retryStartInterval = Optional.empty();
-            retryMaxInterval = Optional.empty();
-            scale = Optional.empty();
             poolSize = Optional.empty();
         }
 
@@ -102,26 +89,6 @@ public class LdapRepositoryConfiguration {
             return this;
         }
 
-        public Builder maxRetries(int maxRetries) {
-            this.maxRetries = Optional.of(maxRetries);
-            return this;
-        }
-
-        public Builder retryStartInterval(long retryStartInterval) {
-            this.retryStartInterval = Optional.of(retryStartInterval);
-            return this;
-        }
-
-        public Builder retryMaxInterval(long retryMaxInterval) {
-            this.retryMaxInterval = Optional.of(retryMaxInterval);
-            return this;
-        }
-
-        public Builder scale(int scale) {
-            this.scale = Optional.of(scale);
-            return this;
-        }
-
         public Builder poolSize(int poolSize) {
             this.poolSize = Optional.of(poolSize);
             return this;
@@ -134,10 +101,6 @@ public class LdapRepositoryConfiguration {
             Preconditions.checkState(userBase.isPresent(), "'userBase' is mandatory");
             Preconditions.checkState(userIdAttribute.isPresent(), "'userIdAttribute' is mandatory");
             Preconditions.checkState(userObjectClass.isPresent(), "'userObjectClass' is mandatory");
-            Preconditions.checkState(maxRetries.isPresent(), "'maxRetries' is mandatory");
-            Preconditions.checkState(retryStartInterval.isPresent(), "'retryStartInterval' is mandatory");
-            Preconditions.checkState(retryMaxInterval.isPresent(), "'retryMaxInterval' is mandatory");
-            Preconditions.checkState(scale.isPresent(), "'scale' is mandatory");
 
             return new LdapRepositoryConfiguration(
                 ldapHost.get(),
@@ -148,11 +111,7 @@ public class LdapRepositoryConfiguration {
                 userObjectClass.get(),
                 NO_CONNECTION_TIMEOUT,
                 NO_READ_TIME_OUT,
-                maxRetries.get(),
                 !ENABLE_VIRTUAL_HOSTING,
-                retryStartInterval.get(),
-                retryMaxInterval.get(),
-                scale.get(),
                 poolSize.orElse(DEFAULT_POOL_SIZE),
                 NO_RESTRICTION,
                 NO_FILTER,
@@ -174,15 +133,7 @@ public class LdapRepositoryConfiguration {
         // Default is to use connection pooling
         int connectionTimeout = configuration.getInt("[@connectionTimeout]", NO_CONNECTION_TIMEOUT);
         int readTimeout = configuration.getInt("[@readTimeout]", NO_READ_TIME_OUT);
-        // Default maximum retries is 1, which allows an alternate connection to
-        // be found in a multi-homed environment
-        int maxRetries = configuration.getInt("[@maxRetries]", 1);
         boolean supportsVirtualHosting = configuration.getBoolean(SUPPORTS_VIRTUAL_HOSTING, !ENABLE_VIRTUAL_HOSTING);
-        // Default retry start interval is 0 second
-        long retryStartInterval = configuration.getLong("[@retryStartInterval]", 0);
-        // Default maximum retry interval is 60 seconds
-        long retryMaxInterval = configuration.getLong("[@retryMaxInterval]", 60);
-        int scale = configuration.getInt("[@retryIntervalScale]", 1000); // seconds
 
         HierarchicalConfiguration<ImmutableNode> restrictionConfig = null;
         // Check if we have a restriction we can use
@@ -208,11 +159,7 @@ public class LdapRepositoryConfiguration {
             userObjectClass,
             connectionTimeout,
             readTimeout,
-            maxRetries,
             supportsVirtualHosting,
-            retryStartInterval,
-            retryMaxInterval,
-            scale,
             poolSize,
             restriction,
             filter,
@@ -272,13 +219,7 @@ public class LdapRepositoryConfiguration {
     // The LDAP read timeout in milliseconds.
     private final int readTimeout;
 
-    // Maximum number of times to retry a connection attempts. Default is no
-    // retries.
-    private final int maxRetries;
     private final boolean supportsVirtualHosting;
-    private final long retryStartInterval;
-    private final long retryMaxInterval;
-    private final int scale;
     private final int poolSize;
 
     /**
@@ -302,8 +243,7 @@ public class LdapRepositoryConfiguration {
 
     private LdapRepositoryConfiguration(String ldapHost, String principal, String credentials, String userBase, String userIdAttribute,
                                         String userObjectClass, int connectionTimeout, int readTimeout,
-                                        int maxRetries, boolean supportsVirtualHosting, long retryStartInterval, long retryMaxInterval,
-                                        int scale, int poolSize, ReadOnlyLDAPGroupRestriction restriction, String filter,
+                                        boolean supportsVirtualHosting, int poolSize, ReadOnlyLDAPGroupRestriction restriction, String filter,
                                         Optional<String> administratorId) throws ConfigurationException {
         this.ldapHost = ldapHost;
         this.principal = principal;
@@ -313,11 +253,7 @@ public class LdapRepositoryConfiguration {
         this.userObjectClass = userObjectClass;
         this.connectionTimeout = connectionTimeout;
         this.readTimeout = readTimeout;
-        this.maxRetries = maxRetries;
         this.supportsVirtualHosting = supportsVirtualHosting;
-        this.retryStartInterval = retryStartInterval;
-        this.retryMaxInterval = retryMaxInterval;
-        this.scale = scale;
         this.poolSize = poolSize;
         this.restriction = restriction;
         this.filter = filter;
@@ -374,24 +310,8 @@ public class LdapRepositoryConfiguration {
         return readTimeout;
     }
 
-    public int getMaxRetries() {
-        return maxRetries;
-    }
-
     public boolean supportsVirtualHosting() {
         return supportsVirtualHosting;
-    }
-
-    public long getRetryStartInterval() {
-        return retryStartInterval;
-    }
-
-    public long getRetryMaxInterval() {
-        return retryMaxInterval;
-    }
-
-    public int getScale() {
-        return scale;
     }
 
     public ReadOnlyLDAPGroupRestriction getRestriction() {
@@ -406,12 +326,6 @@ public class LdapRepositoryConfiguration {
         return administratorId;
     }
 
-    public RetryBackoffSpec retrySpec() {
-        return Retry.backoff(getMaxRetries(), Duration.ofMillis(getRetryStartInterval() * getScale()))
-            .maxBackoff(Duration.ofMillis(getRetryMaxInterval() * getScale()))
-            .scheduler(Schedulers.elastic());
-    }
-
     @Override
     public final boolean equals(Object o) {
         if (o instanceof LdapRepositoryConfiguration) {
@@ -419,11 +333,7 @@ public class LdapRepositoryConfiguration {
 
             return Objects.equals(this.connectionTimeout, that.connectionTimeout)
                 && Objects.equals(this.readTimeout, that.readTimeout)
-                && Objects.equals(this.maxRetries, that.maxRetries)
                 && Objects.equals(this.supportsVirtualHosting, that.supportsVirtualHosting)
-                && Objects.equals(this.retryStartInterval, that.retryStartInterval)
-                && Objects.equals(this.retryMaxInterval, that.retryMaxInterval)
-                && Objects.equals(this.scale, that.scale)
                 && Objects.equals(this.ldapHost, that.ldapHost)
                 && Objects.equals(this.principal, that.principal)
                 && Objects.equals(this.credentials, that.credentials)
@@ -441,7 +351,6 @@ public class LdapRepositoryConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hash(ldapHost, principal, credentials, userBase, userIdAttribute, userObjectClass,
-            connectionTimeout, readTimeout, maxRetries, supportsVirtualHosting, retryStartInterval, retryMaxInterval, scale,
-            restriction, filter, administratorId, poolSize);
+            connectionTimeout, readTimeout, supportsVirtualHosting, restriction, filter, administratorId, poolSize);
     }
 }

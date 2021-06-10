@@ -392,10 +392,6 @@ class ReadOnlyUsersLDAPRepositoryTest {
         configuration.addProperty("[@credentials]", ADMIN_PASSWORD);
         configuration.addProperty("[@userBase]", "ou=people,dc=james,dc=org");
         configuration.addProperty("[@userObjectClass]", "inetOrgPerson");
-        configuration.addProperty("[@maxRetries]", "1");
-        configuration.addProperty("[@retryStartInterval]", "0");
-        configuration.addProperty("[@retryMaxInterval]", "2");
-        configuration.addProperty("[@retryIntervalScale]", "100");
         configuration.addProperty("[@connectionTimeout]", "100");
         configuration.addProperty("[@readTimeout]", "100");
         return configuration;

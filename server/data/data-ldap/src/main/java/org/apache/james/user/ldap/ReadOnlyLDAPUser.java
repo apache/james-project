@@ -29,10 +29,7 @@ import org.slf4j.LoggerFactory;
 import com.unboundid.ldap.sdk.BindResult;
 import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
-import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.ResultCode;
-
-import reactor.core.publisher.Mono;
 
 /**
  * Encapsulates the details of a user as taken from an LDAP compliant directory.
@@ -71,8 +68,6 @@ public class ReadOnlyLDAPUser implements User, Serializable {
      */
     private final LDAPConnectionPool connectionPool;
 
-    private final LdapRepositoryConfiguration configuration;
-
     /**
      * Constructs an instance for the given user-details, and which will
      * authenticate against the given host.
@@ -87,13 +82,11 @@ public class ReadOnlyLDAPUser implements User, Serializable {
      *            This is also the host against which the user will be
      *            authenticated, when {@link #verifyPassword(String)} is
      *            invoked.
-     * @param configuration
      */
-    public ReadOnlyLDAPUser(Username userName, DN userDN, LDAPConnectionPool connectionPool, LdapRepositoryConfiguration configuration) {
+    public ReadOnlyLDAPUser(Username userName, DN userDN, LDAPConnectionPool connectionPool) {
         this.userName = userName;
         this.userDN = userDN;
         this.connectionPool = connectionPool;
-        this.configuration = configuration;
     }
 
     /**
@@ -135,17 +128,11 @@ public class ReadOnlyLDAPUser implements User, Serializable {
     @Override
     public boolean verifyPassword(String password) {
         try {
-            return Mono.fromCallable(() -> doVerifyPassword(password))
-                .retryWhen(configuration.retrySpec())
-                .block();
+            BindResult bindResult = connectionPool.bindAndRevertAuthentication(userDN.toString(), password);
+            return bindResult.getResultCode() == ResultCode.SUCCESS;
         } catch (Exception e) {
             LOGGER.error("Unexpected error upon authentication", e);
             return false;
         }
-    }
-
-    private boolean doVerifyPassword(String password) throws LDAPException {
-        BindResult bindResult = connectionPool.bindAndRevertAuthentication(userDN.toString(), password);
-        return bindResult.getResultCode() == ResultCode.SUCCESS;
     }
 }
