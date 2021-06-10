@@ -15,7 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
  - Upgrading to Apache Tika 1.26 is recommended
      - 1.25 and before are subject to CVE-2021-28657 CVE-2021-27906 CVE-2021-27807
      - 1.24 is subject to CVE-2020-9489
- - Upgrading to RabbitMQ 3.8.16 is recommended. According to [the changelog](https://www.rabbitmq.com/changelog.html) RabbitMQ prior this version is subject to several CVE:
+ - Upgrading to RabbitMQ 3.8.17 is recommended. According to [the changelog](https://www.rabbitmq.com/changelog.html) RabbitMQ prior this version is subject to several CVE:
      - https://tanzu.vmware.com/security/cve-2020-5419
      - https://tanzu.vmware.com/security/cve-2021-22117
      - https://tanzu.vmware.com/security/cve-2021-22116
