@@ -94,6 +94,7 @@ import org.apache.james.utils.TestIMAPClient;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -219,6 +220,25 @@ public abstract class GetMessageListMethodTest {
         .then()
             .statusCode(200)
             .body(ARGUMENTS + ".messageIds", contains(messageId));
+    }
+
+    @Ignore("JAMES-3597 Deleted messages are exposed over JMAP")
+    @Test
+    public void getMessageListShouldFilterMessagesMarkedAsDeleted() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "mailbox");
+
+        mailboxProbe.appendMessage(ALICE.asString(), ALICE_MAILBOX,
+            ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags(Flags.Flag.DELETED));
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.asString())
+            .body("[[\"getMessageList\", {\"filter\":{\"text\":\"tiramisu\"}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(ARGUMENTS + ".messageIds", empty());
     }
 
     @Category(BasicFeature.class)
