@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.unboundid.ldap.sdk.BindResult;
 import com.unboundid.ldap.sdk.DN;
+import com.unboundid.ldap.sdk.LDAPBindException;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.ResultCode;
 
@@ -131,6 +132,9 @@ public class ReadOnlyLDAPUser implements User, Serializable {
             BindResult bindResult = connectionPool.bindAndRevertAuthentication(userDN.toString(), password);
             return bindResult.getResultCode() == ResultCode.SUCCESS;
         } catch (Exception e) {
+            if (e instanceof LDAPBindException) {
+                LOGGER.info("Error binding LDAP for {}: {}", userName.asString(), e.getMessage());
+            }
             LOGGER.error("Unexpected error upon authentication", e);
             return false;
         }
