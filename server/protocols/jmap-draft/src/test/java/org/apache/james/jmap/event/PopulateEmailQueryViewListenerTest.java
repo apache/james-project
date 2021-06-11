@@ -19,12 +19,15 @@
 
 package org.apache.james.jmap.event;
 
+import static javax.mail.Flags.Flag.DELETED;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Date;
+
+import javax.mail.Flags;
 
 import org.apache.james.core.Username;
 import org.apache.james.events.Group;
@@ -41,6 +44,7 @@ import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.SessionProviderImpl;
@@ -126,6 +130,48 @@ public class PopulateEmailQueryViewListenerTest {
 
         assertThat(view.listMailboxContent(inboxId, Limit.limit(12)).collectList().block())
             .containsOnly(composedId.getMessageId());
+    }
+
+    @Test
+    void appendingADeletedMessageSHouldNotAddItToTheView() throws Exception {
+        inboxMessageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .withInternalDate(Date.from(ZonedDateTime.parse("2014-10-30T15:12:00Z").toInstant()))
+                .withFlags(new Flags(DELETED))
+                .build(emptyMessage(Date.from(ZonedDateTime.parse("2014-10-30T14:12:00Z").toInstant()))),
+            mailboxSession).getId();
+
+        assertThat(view.listMailboxContent(inboxId, Limit.limit(12)).collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    void removingDeletedFlagsShouldAddItToTheView() throws Exception {
+        ComposedMessageId composedId = inboxMessageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .withInternalDate(Date.from(ZonedDateTime.parse("2014-10-30T15:12:00Z").toInstant()))
+                .withFlags(new Flags(DELETED))
+                .build(emptyMessage(Date.from(ZonedDateTime.parse("2014-10-30T14:12:00Z").toInstant()))),
+            mailboxSession).getId();
+
+        inboxMessageManager.setFlags(new Flags(), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.all(), mailboxSession);
+
+        assertThat(view.listMailboxContent(inboxId, Limit.limit(12)).collectList().block())
+            .containsOnly(composedId.getMessageId());
+    }
+
+    @Test
+    void addingDeletedFlagsShouldRemoveItToTheView() throws Exception {
+        inboxMessageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .withInternalDate(Date.from(ZonedDateTime.parse("2014-10-30T15:12:00Z").toInstant()))
+                .build(emptyMessage(Date.from(ZonedDateTime.parse("2014-10-30T14:12:00Z").toInstant()))),
+            mailboxSession).getId();
+
+        inboxMessageManager.setFlags(new Flags(DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.all(), mailboxSession);
+
+        assertThat(view.listMailboxContent(inboxId, Limit.limit(12)).collectList().block())
+            .isEmpty();
     }
 
     @Test

@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.draft.methods;
 
+import static javax.mail.Flags.Flag.DELETED;
 import static org.apache.james.util.ReactorUtils.context;
 
 import java.time.ZonedDateTime;
@@ -221,7 +222,8 @@ public class GetMessageListMethod implements Method {
             .subscribeOn(Schedulers.parallel());
 
         return searchQuery
-            .flatMapMany(Throwing.function(query -> mailboxManager.search(query, mailboxSession, limit)))
+            .flatMapMany(Throwing.function(query ->
+                mailboxManager.search(query.addCriterion(SearchQuery.flagIsUnSet(DELETED)), mailboxSession, limit)))
             .skip(position)
             .reduce(GetMessageListResponse.builder(), GetMessageListResponse.Builder::messageId)
             .map(GetMessageListResponse.Builder::build);

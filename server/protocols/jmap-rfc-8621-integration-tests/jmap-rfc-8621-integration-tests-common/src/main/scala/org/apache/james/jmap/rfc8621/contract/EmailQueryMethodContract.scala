@@ -55,7 +55,7 @@ import org.apache.james.util.ClassLoaderUtils
 import org.apache.james.utils.DataProbeImpl
 import org.awaitility.Awaitility
 import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
-import org.junit.jupiter.api.{BeforeEach, Disabled, Test}
+import org.junit.jupiter.api.{BeforeEach, Test}
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.{Arguments, MethodSource, ValueSource}
 import org.threeten.extra.Seconds
@@ -206,9 +206,8 @@ trait EmailQueryMethodContract {
     }
   }
 
-  @Disabled("JAMES-3597 Deleted messages are exposed over JMAP")
   @Test
-  def messagesMarkedAsDeeltedShouldNotBeExposedOverJMAP(server: GuiceJamesServer): Unit = {
+  def messagesMarkedAsDeletedShouldNotBeExposedOverJMAP(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
 

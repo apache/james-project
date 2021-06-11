@@ -19,6 +19,7 @@
 
 package org.apache.james.webadmin.data.jmap;
 
+import static javax.mail.Flags.Flag.DELETED;
 import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
 
 import java.io.IOException;
@@ -134,7 +135,8 @@ public class EmailQueryViewPopulator {
             return Iterators.toFlux(usersRepository.list())
                 .map(mailboxManager::createSystemSession)
                 .doOnNext(any -> progress.incrementProcessedUserCount())
-                .flatMap(session -> listUserMailboxMessages(progress, session), USER_CONCURRENCY);
+                .flatMap(session -> listUserMailboxMessages(progress, session), USER_CONCURRENCY)
+                .filter(messageResult -> !messageResult.getFlags().contains(DELETED));
         } catch (UsersRepositoryException e) {
             return Flux.error(e);
         }

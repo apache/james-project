@@ -23,6 +23,7 @@ import java.time.ZonedDateTime
 import cats.implicits._
 import eu.timepit.refined.auto._
 import javax.inject.Inject
+import javax.mail.Flags.Flag.DELETED
 import org.apache.james.jmap.JMAPConfiguration
 import org.apache.james.jmap.api.projections.EmailQueryView
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
@@ -36,7 +37,7 @@ import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.jmap.utils.search.MailboxFilter
 import org.apache.james.jmap.utils.search.MailboxFilter.QueryFilter
 import org.apache.james.mailbox.exception.MailboxNotFoundException
-import org.apache.james.mailbox.model.{MailboxId, MessageId, MultimailboxesSearchQuery}
+import org.apache.james.mailbox.model.{MailboxId, MessageId, MultimailboxesSearchQuery, SearchQuery}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.util.streams.{Limit => JavaLimit}
@@ -151,7 +152,10 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
       limit = Some(limitToUse).filterNot(used => request.limit.map(_.value).contains(used.value)))
 
   private def executeQueryAgainstSearchIndex(mailboxSession: MailboxSession, searchQuery: MultimailboxesSearchQuery, position: Position, limitToUse: Limit): SMono[Seq[MessageId]] =
-    SFlux.fromPublisher(mailboxManager.search(searchQuery, mailboxSession, position.value + limitToUse))
+    SFlux.fromPublisher(mailboxManager.search(
+        searchQuery.addCriterion(SearchQuery.flagIsUnSet(DELETED)),
+        mailboxSession,
+        position.value + limitToUse))
       .drop(position.value)
       .collectSeq()
 
