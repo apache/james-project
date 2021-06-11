@@ -19,6 +19,9 @@
 
 package org.apache.james.jmap.event;
 
+import static javax.mail.Flags.Flag.DELETED;
+import static org.apache.james.util.ReactorUtils.publishIfPresent;
+
 import java.io.IOException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -35,17 +38,19 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.events.MailboxEvents.Expunged;
+import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroup;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.reactivestreams.Publisher;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
@@ -78,6 +83,7 @@ public class PopulateEmailQueryViewListener implements ReactiveGroupEventListene
     @Override
     public boolean isHandling(Event event) {
         return event instanceof Added
+            || event instanceof FlagsUpdated
             || event instanceof Expunged
             || event instanceof MailboxDeletion;
     }
@@ -89,6 +95,9 @@ public class PopulateEmailQueryViewListener implements ReactiveGroupEventListene
         }
         if (event instanceof Expunged) {
             return handleExpunged((Expunged) event);
+        }
+        if (event instanceof FlagsUpdated) {
+            return handleFlagsUpdated((FlagsUpdated) event);
         }
         if (event instanceof MailboxDeletion) {
             return handleMailboxDeletion((MailboxDeletion) event);
@@ -107,6 +116,31 @@ public class PopulateEmailQueryViewListener implements ReactiveGroupEventListene
             .then();
     }
 
+
+    private Publisher<Void> handleFlagsUpdated(FlagsUpdated flagsUpdated) {
+        MailboxSession session = sessionProvider.createSystemSession(flagsUpdated.getUsername());
+
+        Mono<Void> removeMessagesMarkedAsDeleted = Flux.fromIterable(flagsUpdated.getUpdatedFlags())
+            .filter(updatedFlags -> updatedFlags.isModifiedToSet(DELETED))
+            .map(UpdatedFlags::getMessageId)
+            .handle(publishIfPresent())
+            .concatMap(messageId -> view.delete(flagsUpdated.getMailboxId(), messageId))
+            .then();
+
+        Mono<Void> addMessagesNoLongerMarkedAsDeleted = Flux.fromIterable(flagsUpdated.getUpdatedFlags())
+            .filter(updatedFlags -> updatedFlags.isModifiedToUnset(DELETED))
+            .map(UpdatedFlags::getMessageId)
+            .handle(publishIfPresent())
+            .concatMap(messageId ->
+                Flux.from(messageIdManager.getMessagesReactive(ImmutableList.of(messageId), FetchGroup.HEADERS, session))
+                    .next())
+            .concatMap(message -> handleAdded(flagsUpdated.getMailboxId(), message))
+            .then();
+
+        return removeMessagesMarkedAsDeleted
+            .then(addMessagesNoLongerMarkedAsDeleted);
+    }
+
     private Mono<Void> handleAdded(Added added) {
         MailboxSession session = sessionProvider.createSystemSession(added.getUsername());
         return Flux.fromStream(added.getUids().stream()
@@ -117,14 +151,21 @@ public class PopulateEmailQueryViewListener implements ReactiveGroupEventListene
 
     private Mono<Void> handleAdded(Added added, MessageMetaData messageMetaData, MailboxSession session) {
         MessageId messageId = messageMetaData.getMessageId();
-        ZonedDateTime receivedAt = ZonedDateTime.ofInstant(messageMetaData.getInternalDate().toInstant(), ZoneOffset.UTC);
 
         return Flux.from(messageIdManager.getMessagesReactive(ImmutableList.of(messageId), FetchGroup.HEADERS, session))
             .next()
-            .map(Throwing.function(this::parseMessage))
-            .map(message -> Optional.ofNullable(message.getDate()).orElse(messageMetaData.getInternalDate()))
+            .filter(message -> !message.getFlags().contains(DELETED))
+            .flatMap(messageResult -> handleAdded(added.getMailboxId(), messageResult));
+    }
+
+    public Mono<Void> handleAdded(MailboxId mailboxId, MessageResult messageResult) {
+        ZonedDateTime receivedAt = ZonedDateTime.ofInstant(messageResult.getInternalDate().toInstant(), ZoneOffset.UTC);
+
+        return Mono.fromCallable(() -> parseMessage(messageResult))
+            .map(message -> Optional.ofNullable(message.getDate()).orElse(messageResult.getInternalDate()))
             .map(date -> ZonedDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC))
-            .flatMap(sentAt -> view.save(added.getMailboxId(), sentAt, receivedAt, messageId));
+            .flatMap(sentAt -> view.save(mailboxId, sentAt, receivedAt, messageResult.getMessageId()))
+            .then();
     }
 
     private Message parseMessage(MessageResult messageResult) throws IOException, MailboxException {

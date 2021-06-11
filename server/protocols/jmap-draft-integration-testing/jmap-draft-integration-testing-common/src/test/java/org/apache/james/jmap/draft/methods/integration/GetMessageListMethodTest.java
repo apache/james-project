@@ -94,7 +94,6 @@ import org.apache.james.utils.TestIMAPClient;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -222,7 +221,6 @@ public abstract class GetMessageListMethodTest {
             .body(ARGUMENTS + ".messageIds", contains(messageId));
     }
 
-    @Ignore("JAMES-3597 Deleted messages are exposed over JMAP")
     @Test
     public void getMessageListShouldFilterMessagesMarkedAsDeleted() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "mailbox");
@@ -2187,29 +2185,6 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListHasKeywordShouldIgnoreDeleted() throws Exception {
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "mailbox");
-
-        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(ALICE.asString(), ALICE_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(ALICE.asString(), ALICE_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags(Flags.Flag.DELETED));
-
-        await();
-
-        given()
-            .header("Authorization", aliceAccessToken.asString())
-            .body("[[\"getMessageList\", {\"filter\":{\"hasKeyword\":\"$Deleted\"}}, \"#0\"]]")
-        .when()
-            .post("/jmap")
-        .then()
-            .statusCode(200)
-            .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds",
-                containsInAnyOrder(messageFlagged.getMessageId().serialize(), messageNotFlagged.getMessageId().serialize()));
-    }
-
-    @Test
     public void getMessageListHasKeywordShouldIgnoreRecent() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "mailbox");
 
@@ -2223,29 +2198,6 @@ public abstract class GetMessageListMethodTest {
         given()
             .header("Authorization", aliceAccessToken.asString())
             .body("[[\"getMessageList\", {\"filter\":{\"hasKeyword\":\"$Recent\"}}, \"#0\"]]")
-        .when()
-            .post("/jmap")
-        .then()
-            .statusCode(200)
-            .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds",
-                containsInAnyOrder(messageFlagged.getMessageId().serialize(), messageNotFlagged.getMessageId().serialize()));
-    }
-
-    @Test
-    public void getMessageListNotKeywordShouldIgnoreDeleted() throws Exception {
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "mailbox");
-
-        ComposedMessageId messageNotFlagged = mailboxProbe.appendMessage(ALICE.asString(), ALICE_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
-        ComposedMessageId messageFlagged = mailboxProbe.appendMessage(ALICE.asString(), ALICE_MAILBOX,
-            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags(Flags.Flag.DELETED));
-
-        await();
-
-        given()
-            .header("Authorization", aliceAccessToken.asString())
-            .body("[[\"getMessageList\", {\"filter\":{\"notKeyword\":\"$Deleted\"}}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()

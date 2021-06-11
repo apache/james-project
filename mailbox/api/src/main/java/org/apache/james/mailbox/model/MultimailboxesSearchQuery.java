@@ -171,4 +171,16 @@ public class MultimailboxesSearchQuery {
     public Namespace getNamespace() {
         return namespace;
     }
+
+    public MultimailboxesSearchQuery addCriterion(SearchQuery.Criterion criterion) {
+        return new MultimailboxesSearchQuery(
+            SearchQuery.builder()
+                .andCriteria(searchQuery.getCriteria())
+                .andCriteria(criterion)
+                .sorts(searchQuery.getSorts())
+                .build(),
+            inMailboxes,
+            notInMailboxes,
+            namespace);
+    }
 }

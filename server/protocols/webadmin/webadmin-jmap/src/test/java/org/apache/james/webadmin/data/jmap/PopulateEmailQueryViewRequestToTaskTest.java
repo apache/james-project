@@ -22,9 +22,12 @@ package org.apache.james.webadmin.data.jmap;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
+import static javax.mail.Flags.Flag.DELETED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+
+import javax.mail.Flags;
 
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
@@ -265,6 +268,28 @@ class PopulateEmailQueryViewRequestToTaskTest {
 
         assertThat(view.listMailboxContent(messageId.getMailboxId(), Limit.from(12)).collectList().block())
             .containsOnly(messageId.getMessageId());
+    }
+
+    @Test
+    void populateShouldNotUpdateProjectionForDeletedMessages() throws Exception {
+        ComposedMessageId messageId = mailboxManager.getMailbox(bobInboxboxId, bobSession).appendMessage(
+            MessageManager.AppendCommand.builder()
+                .withFlags(new Flags(DELETED))
+                .build("header: value\r\n\r\nbody"),
+            bobSession).getId();
+
+        String taskId = with()
+            .queryParam("action", "populateEmailQueryView")
+            .post()
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(taskId + "/await");
+
+        assertThat(view.listMailboxContent(messageId.getMailboxId(), Limit.from(12)).collectList().block())
+            .isEmpty();
     }
 
     @Test
