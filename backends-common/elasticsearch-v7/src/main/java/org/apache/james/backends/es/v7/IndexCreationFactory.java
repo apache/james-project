@@ -32,6 +32,7 @@ import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,11 +119,13 @@ public class IndexCreationFactory {
 
         private void createIndexIfNeeded(ReactorElasticSearchClient client, IndexName indexName, XContentBuilder settings, Optional<XContentBuilder> mappingContent) throws IOException {
             try {
-                CreateIndexRequest request = new CreateIndexRequest(indexName.getValue()).source(settings);
-                mappingContent.ifPresent(request::mapping);
-                client.indices().create(
-                    request,
-                    RequestOptions.DEFAULT);
+                if (!indexExists(client, indexName)) {
+                    CreateIndexRequest request = new CreateIndexRequest(indexName.getValue()).source(settings);
+                    mappingContent.ifPresent(request::mapping);
+                    client.indices().create(
+                        request,
+                        RequestOptions.DEFAULT);
+                }
             } catch (ElasticsearchStatusException exception) {
                 if (exception.getMessage().contains(INDEX_ALREADY_EXISTS_EXCEPTION_MESSAGE)) {
                     LOGGER.info("Index [{}] already exists", indexName.getValue());
@@ -130,6 +133,10 @@ public class IndexCreationFactory {
                     throw exception;
                 }
             }
+        }
+
+        private boolean indexExists(ReactorElasticSearchClient client, IndexName indexName) throws IOException {
+            return client.indices().exists(new GetIndexRequest(indexName.getValue()), RequestOptions.DEFAULT);
         }
 
         private XContentBuilder generateSetting(int nbShards, int nbReplica, int waitForActiveShards) throws IOException {
