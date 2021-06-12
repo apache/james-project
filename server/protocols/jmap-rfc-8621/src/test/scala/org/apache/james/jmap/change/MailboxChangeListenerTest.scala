@@ -25,7 +25,7 @@ import java.util
 import javax.mail.Flags
 import org.apache.james.events.delivery.InVmEventDelivery
 import org.apache.james.events.{Event, EventBus, EventListener, Group, InVMEventBus, MemoryEventDeadLetters, Registration, RegistrationKey, RetryBackoffConfiguration}
-import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, Limit, MailboxChange, MailboxChangeRepository, State}
+import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, Limit, MailboxAndEmailChange, MailboxChange, MailboxChangeRepository, State}
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.change.MailboxChangeListenerTest.{ACCOUNT_ID, DEFAULT_NUMBER_OF_CHANGES}
 import org.apache.james.jmap.memory.change.{MemoryEmailChangeRepository, MemoryMailboxChangeRepository}
@@ -54,7 +54,7 @@ class MailboxChangeListenerTest {
   var mailboxManager: MailboxManager = _
   var mailboxChangeFactory: MailboxChange.Factory = _
   var emailChangeRepository: EmailChangeRepository = _
-  var emailChangeFactory: EmailChange.Factory = _
+  var emailChangeFactory: MailboxAndEmailChange.Factory = _
   var stateFactory: State.Factory = _
   var listener: MailboxChangeListener = _
   var clock: Clock = _
@@ -73,7 +73,7 @@ class MailboxChangeListenerTest {
     stateFactory = new State.DefaultFactory
     mailboxChangeFactory = new MailboxChange.Factory(stateFactory)
     mailboxChangeRepository = new MemoryMailboxChangeRepository(DEFAULT_NUMBER_OF_CHANGES)
-    emailChangeFactory = new EmailChange.Factory(stateFactory, resources.getMessageIdManager, resources.getMailboxManager)
+    emailChangeFactory = new MailboxAndEmailChange.Factory(stateFactory, resources.getMessageIdManager, resources.getMailboxManager)
     emailChangeRepository = new MemoryEmailChangeRepository(DEFAULT_NUMBER_OF_CHANGES)
     val eventBus = new EventBus {
       override def register(listener: EventListener.ReactiveEventListener, key: RegistrationKey): Publisher[Registration] = Mono.empty()

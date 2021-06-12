@@ -27,10 +27,10 @@ import org.apache.james.events.Event.EventId
 import org.apache.james.events.EventListener.ReactiveGroupEventListener
 import org.apache.james.events.{Event, EventBus, Group}
 import org.apache.james.jmap.InjectionKeys
-import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, JmapChange, MailboxChange, MailboxChangeRepository}
+import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, JmapChange, MailboxAndEmailChange, MailboxChange, MailboxChangeRepository}
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.change.MailboxChangeListener.LOGGER
-import org.apache.james.jmap.core.UuidState
+import org.apache.james.jmap.core.{State, UuidState}
 import org.apache.james.mailbox.MailboxManager
 import org.apache.james.mailbox.events.MailboxEvents.{Added, Expunged, FlagsUpdated, MailboxACLUpdated, MailboxAdded, MailboxDeletion, MailboxEvent, MailboxRenamed}
 import org.apache.james.mailbox.model.{MailboxACL, MailboxId}
@@ -51,7 +51,7 @@ case class MailboxChangeListener @Inject() (@Named(InjectionKeys.JMAP) eventBus:
                                             mailboxChangeRepository: MailboxChangeRepository,
                                             mailboxChangeFactory: MailboxChange.Factory,
                                             emailChangeRepository: EmailChangeRepository,
-                                            emailChangeFactory: EmailChange.Factory,
+                                            emailChangeFactory: MailboxAndEmailChange.Factory,
                                             mailboxManager: MailboxManager,
                                             clock: Clock) extends ReactiveGroupEventListener {
 
@@ -82,17 +82,14 @@ case class MailboxChangeListener @Inject() (@Named(InjectionKeys.JMAP) eventBus:
         SFlux.fromIterable(mailboxChangeFactory.fromMailboxDeletion(mailboxDeletion, now).asScala)
       case added: Added =>
         getSharees(mailboxId, username)
-          .flatMapIterable(sharees => mailboxChangeFactory.fromAdded(added, now, sharees.asJava).asScala
-            .concat(emailChangeFactory.fromAdded(added, now, sharees.asJava).asScala))
+          .flatMapIterable(sharees => emailChangeFactory.fromAdded(added, now, sharees.asJava).asScala)
       case flagsUpdated: FlagsUpdated =>
         getSharees(mailboxId, username)
-          .flatMapIterable(sharees => mailboxChangeFactory.fromFlagsUpdated(flagsUpdated, now, sharees.asJava).asScala
-          .concat(emailChangeFactory.fromFlagsUpdated(flagsUpdated, now, sharees.asJava).asScala))
+          .flatMapIterable(sharees => emailChangeFactory.fromFlagsUpdated(flagsUpdated, now, sharees.asJava).asScala)
       case expunged: Expunged =>
         getSharees(mailboxId, username)
-          .flatMapMany(sharees => SFlux.concat(
-            SFlux.fromIterable(mailboxChangeFactory.fromExpunged(expunged, now, sharees.asJava).asScala),
-            emailChangeFactory.fromExpunged(expunged, now, sharees.map(_.getIdentifier).map(Username.of).asJava)))
+          .flatMapMany(sharees =>
+            SFlux(emailChangeFactory.fromExpunged(expunged, now, sharees.map(_.getIdentifier).map(Username.of).asJava)))
     }
   }
 
@@ -100,6 +97,8 @@ case class MailboxChangeListener @Inject() (@Named(InjectionKeys.JMAP) eventBus:
     SMono(jmapChange match {
       case mailboxChange: MailboxChange => mailboxChangeRepository.save(mailboxChange)
       case emailChange: EmailChange => emailChangeRepository.save(emailChange)
+      case mailboxAndEmailChange: MailboxAndEmailChange => mailboxChangeRepository.save(mailboxAndEmailChange.getMailboxChange)
+        .`then`(emailChangeRepository.save(mailboxAndEmailChange.getEmailChange))
     }).`then`(SMono(eventBus.dispatch(toStateChangeEvent(jmapChange), AccountIdRegistrationKey(jmapChange.getAccountId))))
 
   private def getSharees(mailboxId: MailboxId, username: Username): SMono[List[AccountId]] = {
@@ -123,14 +122,24 @@ case class MailboxChangeListener @Inject() (@Named(InjectionKeys.JMAP) eventBus:
     case emailChange: EmailChange => StateChangeEvent(
       eventId = EventId.random(),
       username = Username.of(emailChange.getAccountId.getIdentifier),
-      map = (Map(EmailTypeName -> UuidState.fromJava(emailChange.getState)) ++
-        Some(UuidState.fromJava(emailChange.getState))
-          .filter(_ => !emailChange.getCreated.isEmpty)
-          .map(emailDeliveryState => Map(EmailDeliveryTypeName -> emailDeliveryState))
-          .getOrElse(Map())).toMap)
+      map = emailStateMap(emailChange))
     case mailboxChange: MailboxChange => StateChangeEvent(
       eventId = EventId.random(),
       username = Username.of(mailboxChange.getAccountId.getIdentifier),
-      map = Map(MailboxTypeName -> UuidState.fromJava(mailboxChange.getState)))
+      map = mailboxStateMap(mailboxChange))
+    case mailboxAndEmailChange: MailboxAndEmailChange => StateChangeEvent(
+      eventId = EventId.random(),
+      username = Username.of(mailboxAndEmailChange.getAccountId.getIdentifier),
+      map = emailStateMap(mailboxAndEmailChange.getEmailChange) ++ mailboxStateMap(mailboxAndEmailChange.getMailboxChange))
   }
+
+  private def mailboxStateMap(mailboxChange: MailboxChange): Map[TypeName, State] =
+    Map(MailboxTypeName -> UuidState.fromJava(mailboxChange.getState))
+
+  private def emailStateMap(emailChange: EmailChange): Map[TypeName, State] =
+    (Map(EmailTypeName -> UuidState.fromJava(emailChange.getState)) ++
+      Some(UuidState.fromJava(emailChange.getState))
+        .filter(_ => !emailChange.getCreated.isEmpty)
+        .map(emailDeliveryState => Map(EmailDeliveryTypeName -> emailDeliveryState))
+        .getOrElse(Map())).toMap
 }

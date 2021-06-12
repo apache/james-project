@@ -23,28 +23,13 @@ import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
-import javax.inject.Inject;
-
-import org.apache.james.core.Username;
 import org.apache.james.jmap.api.model.AccountId;
-import org.apache.james.mailbox.MessageIdManager;
-import org.apache.james.mailbox.SessionProvider;
-import org.apache.james.mailbox.events.MailboxEvents.Added;
-import org.apache.james.mailbox.events.MailboxEvents.Expunged;
-import org.apache.james.mailbox.events.MailboxEvents.FlagsUpdated;
 import org.apache.james.mailbox.model.MessageId;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 public class EmailChange implements JmapChange {
     public static class Builder {
@@ -127,86 +112,6 @@ public class EmailChange implements JmapChange {
 
     public static Builder.RequireAccountId builder() {
         return accountId -> state -> date -> isDelegated -> new Builder(accountId, state, date, isDelegated);
-    }
-
-    public static class Factory {
-        private final State.Factory stateFactory;
-        private final MessageIdManager messageIdManager;
-        private final SessionProvider sessionProvider;
-
-        @Inject
-        public Factory(State.Factory stateFactory, MessageIdManager messageIdManager, SessionProvider sessionProvider) {
-            this.stateFactory = stateFactory;
-            this.messageIdManager = messageIdManager;
-            this.sessionProvider = sessionProvider;
-        }
-
-        public List<JmapChange> fromAdded(Added messageAdded, ZonedDateTime now, List<AccountId> sharees) {
-            EmailChange ownerChange = EmailChange.builder()
-                .accountId(AccountId.fromUsername(messageAdded.getUsername()))
-                .state(stateFactory.generate())
-                .date(now)
-                .isDelegated(false)
-                .created(messageAdded.getMessageIds())
-                .build();
-
-            Stream<EmailChange> shareeChanges = sharees.stream()
-                .map(shareeId -> EmailChange.builder()
-                    .accountId(shareeId)
-                    .state(stateFactory.generate())
-                    .date(now)
-                    .isDelegated(true)
-                    .created(messageAdded.getMessageIds())
-                    .build());
-
-            return Stream.concat(Stream.of(ownerChange), shareeChanges)
-                .collect(Guavate.toImmutableList());
-        }
-
-        public List<JmapChange> fromFlagsUpdated(FlagsUpdated messageFlagUpdated, ZonedDateTime now, List<AccountId> sharees) {
-            EmailChange ownerChange = EmailChange.builder()
-                .accountId(AccountId.fromUsername(messageFlagUpdated.getUsername()))
-                .state(stateFactory.generate())
-                .date(now)
-                .isDelegated(false)
-                .updated(messageFlagUpdated.getMessageIds())
-                .build();
-
-            Stream<EmailChange> shareeChanges = sharees.stream()
-                .map(shareeId -> EmailChange.builder()
-                    .accountId(shareeId)
-                    .state(stateFactory.generate())
-                    .date(now)
-                    .isDelegated(true)
-                    .updated(messageFlagUpdated.getMessageIds())
-                    .build());
-
-            return Stream.concat(Stream.of(ownerChange), shareeChanges)
-                .collect(Guavate.toImmutableList());
-        }
-
-        public Flux<JmapChange> fromExpunged(Expunged expunged, ZonedDateTime now, List<Username> sharees) {
-
-            Mono<EmailChange> ownerChange = fromExpunged(expunged, now, expunged.getUsername());
-
-            Flux<EmailChange> shareeChanges = Flux.fromIterable(sharees)
-                .flatMap(shareeId -> fromExpunged(expunged, now, shareeId));
-
-            return Flux.concat(ownerChange, shareeChanges);
-        }
-
-        private Mono<EmailChange> fromExpunged(Expunged expunged, ZonedDateTime now, Username username) {
-            return Mono.from(messageIdManager.accessibleMessagesReactive(expunged.getMessageIds(),
-                sessionProvider.createSystemSession(username)))
-                .map(accessibleMessageIds -> EmailChange.builder()
-                    .accountId(AccountId.fromUsername(username))
-                    .state(stateFactory.generate())
-                    .date(now)
-                    .isDelegated(false)
-                    .updated(Sets.intersection(ImmutableSet.copyOf(expunged.getMessageIds()), accessibleMessageIds))
-                    .destroyed(Sets.difference(ImmutableSet.copyOf(expunged.getMessageIds()), accessibleMessageIds))
-                    .build());
-        }
     }
 
     private final AccountId accountId;
