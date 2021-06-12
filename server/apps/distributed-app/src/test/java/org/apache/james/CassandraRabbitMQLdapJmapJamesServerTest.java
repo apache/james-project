@@ -20,8 +20,6 @@
 package org.apache.james;
 
 import static org.apache.james.jmap.draft.JmapJamesServerContract.JAMES_SERVER_HOST;
-import static org.apache.james.user.ldap.DockerLdapSingleton.JAMES_USER;
-import static org.apache.james.user.ldap.DockerLdapSingleton.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -34,6 +32,7 @@ import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.user.ldap.DockerLdapSingleton;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -47,7 +46,7 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
             IMAPClient imapClient = new IMAPClient();
             imapClient.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort());
 
-            assertThat(imapClient.login(JAMES_USER.asString(), PASSWORD)).isTrue();
+            assertThat(imapClient.login(DockerLdapSingleton.JAMES_USER.asString(), DockerLdapSingleton.PASSWORD)).isTrue();
         }
     }
 
