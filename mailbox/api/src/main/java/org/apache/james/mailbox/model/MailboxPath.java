@@ -196,7 +196,7 @@ public class MailboxPath {
 
     boolean hasEmptyNameInHierarchy(char pathDelimiter) {
         String delimiterString = String.valueOf(pathDelimiter);
-        String nameWithoutSpaces = name.replaceAll("\\s", "");
+        String nameWithoutSpaces = StringUtils.deleteWhitespace(name);
         return StringUtils.isBlank(nameWithoutSpaces)
             || nameWithoutSpaces.contains(delimiterString + delimiterString)
             || nameWithoutSpaces.startsWith(delimiterString)
