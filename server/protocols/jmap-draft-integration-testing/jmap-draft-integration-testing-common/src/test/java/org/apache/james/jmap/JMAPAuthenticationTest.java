@@ -188,6 +188,7 @@ public abstract class JMAPAuthenticationTest {
             .post("/authentication")
         .then()
             .statusCode(200)
+            .header("Content-Length", "447")
             .contentType(ContentType.JSON);
     }
 

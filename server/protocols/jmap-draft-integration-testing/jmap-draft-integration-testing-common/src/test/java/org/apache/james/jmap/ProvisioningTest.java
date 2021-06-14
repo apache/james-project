@@ -95,6 +95,7 @@ public abstract class ProvisioningTest {
         .when()
             .post("/jmap")
         .then()
+            .header("Content-Length", "2735")
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
             .body(ARGUMENTS + ".list", hasSize(6))

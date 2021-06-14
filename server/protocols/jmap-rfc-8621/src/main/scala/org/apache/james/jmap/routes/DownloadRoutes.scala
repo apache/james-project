@@ -27,7 +27,7 @@ import com.google.common.base.CharMatcher
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import io.netty.buffer.Unpooled
-import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
+import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED}
 import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus, QueryStringDecoder}
 import javax.inject.{Inject, Named}
@@ -49,6 +49,7 @@ import org.apache.james.mime4j.codec.EncoderUtil.Usage
 import org.apache.james.mime4j.message.DefaultMessageWriter
 import org.apache.james.util.ReactorUtils
 import org.slf4j.{Logger, LoggerFactory}
+import play.api.libs.json.Json
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
@@ -318,8 +319,13 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
       .headOption
 
   private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails, statusCode: HttpResponseStatus = BAD_REQUEST): SMono[Unit] =
-    SMono.fromPublisher(httpServerResponse.status(statusCode)
-      .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
-      .sendString(SMono.fromCallable(() => ResponseSerializer.serialize(details).toString), StandardCharsets.UTF_8)
-      .`then`).`then`
+    SMono.fromCallable(() => ResponseSerializer.serialize(details))
+      .map(Json.stringify)
+      .map(_.getBytes(StandardCharsets.UTF_8))
+      .flatMap(bytes =>
+        SMono.fromPublisher(httpServerResponse.status(statusCode)
+          .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
+          .header(CONTENT_LENGTH, Integer.toString(bytes.length))
+          .sendByteArray(SMono.just(bytes))
+          .`then`).`then`)
 }

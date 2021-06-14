@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap.http;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
@@ -188,9 +189,11 @@ public class DownloadRoutes implements JMAPRoutes {
                 return resp.status(NOT_FOUND).send();
             }
             AttachmentAccessToken attachmentAccessToken = simpleTokenFactory.generateAttachmentAccessToken(mailboxSession.getUser().asString(), blobId);
+            byte[] bytes = attachmentAccessToken.serialize().getBytes(StandardCharsets.UTF_8);
             return resp.header(CONTENT_TYPE, TEXT_PLAIN_CONTENT_TYPE)
                 .status(OK)
-                .sendString(Mono.just(attachmentAccessToken.serialize()))
+                .header(CONTENT_LENGTH, Integer.toString(bytes.length))
+                .sendByteArray(Mono.just(bytes))
                 .then();
         } catch (MailboxException e) {
             throw new InternalErrorException("Error while asking attachment access token", e);

@@ -163,6 +163,7 @@ trait SessionRoutesContract {
         .get("/session")
       .`then`
         .statusCode(SC_OK)
+        .header("Content-Length", "3026")
         .contentType(JSON)
       .extract()
         .body()

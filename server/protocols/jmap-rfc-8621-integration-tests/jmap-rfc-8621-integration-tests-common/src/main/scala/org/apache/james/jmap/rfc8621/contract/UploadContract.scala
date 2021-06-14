@@ -96,6 +96,7 @@ trait UploadContract {
       .post(s"/upload/$ALICE_ACCOUNT_ID/")
     .`then`
       .statusCode(SC_FORBIDDEN)
+      .header("Content-Length", "84")
       .body("status", equalTo(403))
       .body("type", equalTo("about:blank"))
       .body("detail", equalTo("Upload to other accounts is forbidden"))
