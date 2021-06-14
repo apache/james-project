@@ -131,7 +131,9 @@ public class ExportService {
                 .filePrefix(FILE_PREFIX + username.asString() + "-")
                 .fileExtension(FileExtension.ZIP)
                 .export())
-            .sneakyThrow());
+            .sneakyThrow())
+            .subscribeOn(Schedulers.elastic())
+            .then();
     }
 
     private Mono<Void> deleteBlob(BlobId blobId) {
