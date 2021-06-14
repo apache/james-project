@@ -32,7 +32,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.Username;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
@@ -80,7 +82,8 @@ public class AuthCmdHandler
     private static final Response AUTH_READY_PASSWORD_LOGIN = new SMTPResponse(SMTPRetCode.AUTH_READY, "UGFzc3dvcmQ6").immutable(); // base64 encoded "Password:
     private static final Response AUTH_FAILED = new SMTPResponse(SMTPRetCode.AUTH_FAILED, "Authentication Failed").immutable();
     private static final Response UNKNOWN_AUTH_TYPE = new SMTPResponse(SMTPRetCode.PARAMETER_NOT_IMPLEMENTED, "Unrecognized Authentication Type").immutable();
-    
+    public static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\r\n");
+
     private abstract static class AbstractSMTPLineHandler implements LineHandler<SMTPSession> {
 
         @Override
@@ -276,7 +279,7 @@ public class AuthCmdHandler
 
     private String decodeBase64(String line) {
         if (line != null) {
-            String lineWithoutTrailingCrLf = line.replace("\r\n", "");
+            String lineWithoutTrailingCrLf = StringUtils.replace(line, "\r\n", "");
             return new String(Base64.getDecoder().decode(lineWithoutTrailingCrLf), StandardCharsets.UTF_8);
         }
         return null;
