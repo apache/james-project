@@ -174,6 +174,7 @@ public interface GroupContract {
             EventListener listener = EventBusTestFixture.newListener();
 
             eventBus().dispatch(EVENT, NO_KEYS).block();
+            Thread.sleep(100);
 
             eventBus().register(listener, GROUP_A);
 
