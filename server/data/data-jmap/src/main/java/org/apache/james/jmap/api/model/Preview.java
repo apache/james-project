@@ -88,13 +88,27 @@ public class Preview {
     }
 
     public static Preview compute(String textBody) {
+        int previewOffsetEstimate = estimatePreviewOffset(textBody, MAX_LENGTH);
+        String previewPart = textBody.substring(0, previewOffsetEstimate);
         return Preview.from(
             truncateToMaxLength(
-                StringUtils.normalizeSpace(textBody)));
+                StringUtils.normalizeSpace(previewPart)));
     }
 
     private static String truncateToMaxLength(String body) {
         return StringUtils.left(body, MAX_LENGTH);
+    }
+
+    private static int estimatePreviewOffset(String body, int charCount) {
+        int position = 0;
+        int nonWhitespace = 0;
+        while (position < body.length() && nonWhitespace < charCount) {
+            if (Character.isLetterOrDigit(body.charAt(position))) {
+                nonWhitespace++;
+            }
+            position++;
+        }
+        return position;
     }
 
     private final String value;
