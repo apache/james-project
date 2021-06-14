@@ -17,7 +17,27 @@ Changes to apply between 3.5.x and 3.6.x will be reported here.
 Change list:
 
  - [Drop Cassandra schema version prior version 8](#drop-cassandra-schema-version-prior-version-8)
- - [Adopt UnboundID as a LDAP library](#drop-cassandra-schema-version-prior-version-8)
+ - [Adopt UnboundID as a LDAP library](#adopt-unboundid-as-a-ldap-library)
+ - [Review the architecture of the RabbitMQ event bus](#review-the-architecture-of-the-rabbitmq-event-bus)
+ 
+### Review the architecture of the RabbitMQ event bus
+
+Date 14/06/2021
+
+JIRA: https://issues.apache.org/jira/projects/JAMES/issues/JAMES-3599
+
+Impacted products: Distributed James server
+
+We now group listeners execution whenever possible. This minimizes:
+                                                    
+ - The count of events to deserialize (one for all groups)
+ - The count of ACKs to perform
+
+Note that retries are still performed on a per-group basis.
+
+One need, after a rolling upgrade to unbind group queues from the primary exchange. Group queues can be identified by
+their `mailboxEvent-workQueue-` prefix, and the primary exchange is named `mailboxEvent-exchange`. These operations can
+easily be performed via the rabbitMQ management web interface.
  
 ### Adopt UnboundID as a LDAP library
 
