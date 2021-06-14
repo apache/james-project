@@ -36,9 +36,8 @@ import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.netty.http.server.HttpServerRequest
 
-import scala.util.{Failure, Success, Try}
-
 import scala.jdk.CollectionConverters._
+import scala.util.{Failure, Success, Try}
 
 object UserCredential {
   type BasicAuthenticationHeaderValue = String Refined MatchesRegex["Basic [\\d\\w=]++"]
@@ -58,7 +57,7 @@ object UserCredential {
   }
 
   private def extractUserCredentialsAsString(token: BasicAuthenticationHeaderValue): Option[UserCredential] = {
-    val encodedCredentials = token.replace(BASIC_AUTHENTICATION_PREFIX, "")
+    val encodedCredentials = token.substring(BASIC_AUTHENTICATION_PREFIX.length)
     val decodedCredentialsString = new String(Base64.getDecoder.decode(encodedCredentials))
     val refinedValue: Either[String, CredentialsAsString] = refineV(decodedCredentialsString)
 
