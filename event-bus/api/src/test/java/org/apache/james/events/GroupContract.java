@@ -65,7 +65,7 @@ public interface GroupContract {
         default void groupDeliveryShouldNotExceedRate() {
             int eventCount = 50;
             AtomicInteger nbCalls = new AtomicInteger(0);
-            AtomicInteger finishedExecutions = new AtomicInteger(0);
+            AtomicInteger inFlight = new AtomicInteger(0);
             AtomicBoolean rateExceeded = new AtomicBoolean(false);
 
             eventBus().register(new EventListener.GroupEventListener() {
@@ -81,13 +81,12 @@ public interface GroupContract {
 
                 @Override
                 public void event(Event event) throws Exception {
-                    if (nbCalls.get() - finishedExecutions.get() > EventBus.EXECUTION_RATE) {
+                    if (inFlight.incrementAndGet() > EventBus.EXECUTION_RATE) {
                         rateExceeded.set(true);
                     }
                     nbCalls.incrementAndGet();
                     Thread.sleep(Duration.ofMillis(20).toMillis());
-                    finishedExecutions.incrementAndGet();
-
+                    inFlight.decrementAndGet();
                 }
             }, GROUP_A);
 
@@ -95,7 +94,7 @@ public interface GroupContract {
                 .forEach(i -> eventBus().dispatch(EVENT, NO_KEYS).block());
 
             getSpeedProfile().shortWaitCondition().atMost(TEN_MINUTES)
-                .untilAsserted(() -> assertThat(finishedExecutions.get()).isEqualTo(eventCount));
+                .untilAsserted(() -> assertThat(nbCalls.get()).isEqualTo(eventCount));
             assertThat(rateExceeded).isFalse();
         }
 
