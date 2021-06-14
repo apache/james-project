@@ -85,6 +85,7 @@ trait BackReferenceContract {
       .post
     .`then`
       .statusCode(SC_OK)
+      .header("Content-Length", "551")
       .extract()
       .body()
       .asString()

@@ -29,7 +29,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
-import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
+import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, UNAUTHORIZED}
 import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus}
 import javax.inject.{Inject, Named}
@@ -49,6 +49,7 @@ import org.apache.james.mailbox.model.{AttachmentMetadata, ContentType}
 import org.apache.james.mailbox.{AttachmentManager, MailboxSession}
 import org.apache.james.util.ReactorUtils
 import org.slf4j.{Logger, LoggerFactory}
+import play.api.libs.json.Json
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
@@ -159,10 +160,17 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
         throw TooBigUploadException()
       }})
       .flatMap(uploadContent(accountId, contentType, _, mailboxSession))
-      .flatMap(uploadResponse => SMono.fromPublisher(response
-              .header(CONTENT_TYPE, uploadResponse.`type`.asString())
-              .status(CREATED)
-              .sendString(SMono.just(serializer.serialize(uploadResponse).toString()))))
+      .flatMap(uploadResponse => {
+        val jsonValue = serializer.serialize(uploadResponse)
+        val json = Json.stringify(jsonValue)
+        val bytes = json.getBytes(StandardCharsets.UTF_8)
+
+        SMono.fromPublisher(response
+          .header(CONTENT_TYPE, uploadResponse.`type`.asString())
+          .header(CONTENT_LENGTH, Integer.toString(bytes.length))
+          .status(CREATED)
+          .sendByteArray(SMono.just(bytes)))
+      })
   }
 
   def uploadContent(accountId: AccountId, contentType: ContentType, inputStream: InputStream, session: MailboxSession): SMono[UploadResponse] =
@@ -178,8 +186,12 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
         accountId = accountId)
 
   private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails, statusCode: HttpResponseStatus = BAD_REQUEST): SMono[Void] =
-    SMono.fromPublisher(httpServerResponse.status(statusCode)
-      .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
-      .sendString(SMono.fromCallable(() => ResponseSerializer.serialize(details).toString), StandardCharsets.UTF_8)
-      .`then`)
+    SMono.fromCallable(() => ResponseSerializer.serialize(details).toString)
+      .map(_.getBytes(StandardCharsets.UTF_8))
+      .flatMap(bytes =>
+        SMono.fromPublisher(httpServerResponse.status(details.status)
+          .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
+          .header(CONTENT_LENGTH, Integer.toString(bytes.length))
+          .sendByteArray(SMono.just(bytes))
+          .`then`))
 }

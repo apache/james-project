@@ -23,7 +23,7 @@ import java.nio.charset.StandardCharsets
 import java.util.stream
 import java.util.stream.Stream
 
-import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
+import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpResponseStatus.OK
 import javax.inject.{Inject, Named}
@@ -38,7 +38,7 @@ import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.mailbox.MailboxSession
 import org.slf4j.{Logger, LoggerFactory}
-import play.api.libs.json.{JsError, JsSuccess}
+import play.api.libs.json.{JsError, JsSuccess, Json}
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
@@ -93,13 +93,15 @@ class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
                       httpServerResponse: HttpServerResponse,
                       mailboxSession: MailboxSession): SMono[Void] =
     jmapApi.process(requestObject, mailboxSession)
-      .flatMap(responseObject => SMono.fromPublisher(httpServerResponse.status(OK)
-        .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
-        .sendString(
-          SMono.fromCallable(() =>
-            ResponseSerializer.serialize(responseObject).toString),
-          StandardCharsets.UTF_8)
-        .`then`()))
+      .map(ResponseSerializer.serialize)
+      .map(Json.stringify)
+      .map(_.getBytes(StandardCharsets.UTF_8))
+      .flatMap(bytes =>
+        SMono.fromPublisher(httpServerResponse.status(OK)
+          .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
+          .header(CONTENT_LENGTH, Integer.toString(bytes.length))
+          .sendByteArray(SMono.just(bytes))
+          .`then`()))
 
   private def handleError(throwable: Throwable, response: HttpServerResponse): SMono[Void] = throwable match {
     case e: UnauthorizedException => respondDetails(e.addHeaders(response), ProblemDetails.forThrowable(throwable))
@@ -107,11 +109,14 @@ class JMAPApiRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
   }
 
   private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails): SMono[Void] =
-    SMono.fromPublisher(httpServerResponse.status(details.status)
-      .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
-      .sendString(SMono.fromCallable(() => ResponseSerializer.serialize(details).toString),
-        StandardCharsets.UTF_8)
-      .`then`)
+    SMono.fromCallable(() => ResponseSerializer.serialize(details).toString)
+      .map(_.getBytes(StandardCharsets.UTF_8))
+      .flatMap(bytes =>
+        SMono.fromPublisher(httpServerResponse.status(details.status)
+          .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
+          .header(CONTENT_LENGTH, Integer.toString(bytes.length))
+          .sendByteArray(SMono.just(bytes))
+          .`then`))
 }
 
 case class UnsupportedCapabilitiesException(capabilities: Set[CapabilityIdentifier]) extends RuntimeException

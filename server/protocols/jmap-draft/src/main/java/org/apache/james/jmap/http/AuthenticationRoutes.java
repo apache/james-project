@@ -20,6 +20,7 @@
 package org.apache.james.jmap.http;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.ACCEPT;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpResponseStatus.CREATED;
 import static io.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
@@ -161,15 +162,18 @@ public class AuthenticationRoutes implements JMAPRoutes {
 
     private Mono<Void> returnEndPointsResponse(HttpServerResponse resp) {
         try {
+            byte[] bytes = mapper.writeValueAsBytes(EndPointsResponse
+                .builder()
+                .api(JMAPUrls.JMAP)
+                .eventSource(JMAPUrls.NOT_IMPLEMENTED)
+                .upload(JMAPUrls.UPLOAD)
+                .download(JMAPUrls.DOWNLOAD)
+                .build());
+
             return resp.status(OK)
                 .header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)
-                .sendString(Mono.just(mapper.writeValueAsString(EndPointsResponse
-                    .builder()
-                    .api(JMAPUrls.JMAP)
-                    .eventSource(JMAPUrls.NOT_IMPLEMENTED)
-                    .upload(JMAPUrls.UPLOAD)
-                    .download(JMAPUrls.DOWNLOAD)
-                    .build())))
+                .header(CONTENT_LENGTH, Integer.toString(bytes.length))
+                .sendByteArray(Mono.just(bytes))
                 .then();
         } catch (JsonProcessingException e) {
             throw new InternalErrorException("Error serializing endpoint response", e);
@@ -218,23 +222,25 @@ public class AuthenticationRoutes implements JMAPRoutes {
 
     private Mono<Void> handleContinuationTokenRequest(ContinuationTokenRequest request, HttpServerResponse resp) {
         try {
-            Mono<String> tokenResponseMono = Mono.fromCallable(() -> ContinuationTokenResponse
+            Mono<byte[]> tokenResponseMono = Mono.fromCallable(() -> ContinuationTokenResponse
                 .builder()
                 .continuationToken(simpleTokenFactory.generateContinuationToken(request.getUsername()))
                 .methods(ContinuationTokenResponse.AuthenticationMethod.PASSWORD)
                 .build())
                 .map(token -> {
                     try {
-                        return mapper.writeValueAsString(token);
+                        return mapper.writeValueAsBytes(token);
                     } catch (JsonProcessingException e) {
                         throw new InternalErrorException("error serialising JMAP API response json");
                     }
                 })
                 .subscribeOn(Schedulers.parallel());
 
-            return resp.header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)
-                .sendString(tokenResponseMono)
-                .then();
+            return tokenResponseMono
+                .flatMap(bytes -> resp.header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)
+                    .header(CONTENT_LENGTH, Integer.toString(bytes.length))
+                    .sendByteArray(Mono.just(bytes))
+                    .then());
         } catch (Exception e) {
             throw new InternalErrorException("Error while responding to continuation token", e);
         }
@@ -291,9 +297,11 @@ public class AuthenticationRoutes implements JMAPRoutes {
                 .build())
             .flatMap(accessTokenResponse -> {
                 try {
+                    byte[] bytes = mapper.writeValueAsBytes(accessTokenResponse);
                     return resp.status(CREATED)
                         .header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)
-                        .sendString(Mono.just(mapper.writeValueAsString(accessTokenResponse)))
+                        .header(CONTENT_LENGTH, Integer.toString(bytes.length))
+                        .sendByteArray(Mono.just(bytes))
                         .then();
                 } catch (JsonProcessingException e) {
                     throw new InternalErrorException("Could not serialize access token response", e);

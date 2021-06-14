@@ -22,7 +22,7 @@ package org.apache.james.jmap.routes
 import java.nio.charset.StandardCharsets
 import java.util.stream.Stream
 
-import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
+import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK, UNAUTHORIZED}
 import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus}
 import javax.inject.{Inject, Named}
@@ -37,7 +37,7 @@ import org.apache.james.jmap.routes.SessionRoutes.{JMAP_SESSION, LOGGER, WELL_KN
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.slf4j.LoggerFactory
 import play.api.libs.json.Json
-import reactor.core.publisher.{Mono, SynchronousSink}
+import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.HttpServerResponse
@@ -85,10 +85,13 @@ class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
         .noCorsHeaders)
 
   private def sendRespond(session: Session, resp: HttpServerResponse) =
-    SMono.fromPublisher(resp.header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)
-      .status(OK)
-      .sendString(SMono.fromCallable(() => Json.stringify(ResponseSerializer.serialize(session))))
-      .`then`())
+    SMono.fromCallable(() => Json.stringify(ResponseSerializer.serialize(session)))
+      .map(_.getBytes(StandardCharsets.UTF_8))
+      .flatMap(bytes => SMono(resp.header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)
+        .status(OK)
+        .header(CONTENT_LENGTH, Integer.toString(bytes.length))
+        .sendByteArray(SMono.just(bytes))
+        .`then`()))
 
   def errorHandling(throwable: Throwable, response: HttpServerResponse): Mono[Void] =
     throwable match {
@@ -106,8 +109,13 @@ class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
 
 
   private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails, statusCode: HttpResponseStatus = BAD_REQUEST): Mono[Void] =
-    httpServerResponse.status(statusCode)
-      .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
-      .sendString(SMono.fromCallable(() => ResponseSerializer.serialize(details).toString), StandardCharsets.UTF_8)
-      .`then`
+    SMono.fromCallable(() => ResponseSerializer.serialize(details).toString)
+      .map(_.getBytes(StandardCharsets.UTF_8))
+      .flatMap(bytes =>
+        SMono.fromPublisher(httpServerResponse.status(details.status)
+          .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
+          .header(CONTENT_LENGTH, Integer.toString(bytes.length))
+          .sendByteArray(SMono.just(bytes))
+          .`then`))
+      .asJava()
 }

@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap.http;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.CREATED;
@@ -128,9 +129,11 @@ public class UploadRoutes implements JMAPRoutes {
         return uploadContent(contentType, content, mailboxSession)
             .flatMap(storedContent -> {
                 try {
+                    byte[] bytes = objectMapper.writeValueAsBytes(storedContent);
                     return response.header(CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8)
                         .status(CREATED)
-                        .sendString(Mono.just(objectMapper.writeValueAsString(storedContent)))
+                        .header(CONTENT_LENGTH, Integer.toString(bytes.length))
+                        .sendByteArray(Mono.just(bytes))
                         .then();
                 } catch (JsonProcessingException e) {
                     throw new InternalErrorException("Error serializing upload response", e);
