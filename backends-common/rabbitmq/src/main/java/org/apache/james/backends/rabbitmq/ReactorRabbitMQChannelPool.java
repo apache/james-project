@@ -276,6 +276,24 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
             .then();
     }
 
+    public Mono<Void> createWorkQueue(QueueSpecification queueSpecification) {
+        Preconditions.checkArgument(queueSpecification.getName() != null, "WorkQueue pattern do not make sense for unnamed queues");
+
+        return Mono.using(this::createSender,
+            managementSender -> managementSender.declareQueue(queueSpecification),
+            Sender::close)
+            .onErrorResume(
+                e -> e instanceof ShutdownSignalException
+                    && e.getMessage().contains("reply-code=406, reply-text=PRECONDITION_FAILED - inequivalent arg 'x-dead-letter-exchange' for queue"),
+                e -> {
+                    LOGGER.warn("{} already exists without dead-letter setup. Dead lettered messages to it will be lost. " +
+                            "To solve this, re-create the queue with the x-dead-letter-exchange argument set up.",
+                        queueSpecification.getName());
+                    return Mono.empty();
+                })
+            .then();
+    }
+
     private void invalidateObject(Channel channel) {
         try {
             pool.invalidateObject(channel);

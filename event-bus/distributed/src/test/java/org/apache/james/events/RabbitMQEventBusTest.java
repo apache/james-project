@@ -138,7 +138,9 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         eventBus2.stop();
         eventBus3.stop();
         eventBusWithKeyHandlerNotStarted.stop();
-        ALL_GROUPS.stream()
+        Stream.concat(
+            ALL_GROUPS.stream(),
+            Stream.of(GroupRegistrationHandler.GROUP))
             .map(TEST_NAMING_STRATEGY::workQueue)
             .forEach(queueName -> rabbitMQExtension.getSender().delete(QueueSpecification.queue(queueName.asString())).block());
         rabbitMQExtension.getSender()
