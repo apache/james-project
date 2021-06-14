@@ -121,11 +121,7 @@ class GroupRegistration implements Registration {
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(!AUTO_DELETE)
-                .arguments(deadLetterQueue(namingStrategy.deadLetterExchange())),
-            BindingSpecification.binding()
-                .exchange(namingStrategy.exchange())
-                .queue(queueName.asString())
-                .routingKey(EMPTY_ROUTING_KEY));
+                .arguments(deadLetterQueue(namingStrategy.deadLetterExchange())));
     }
 
     private Disposable consumeWorkQueue() {
@@ -148,7 +144,9 @@ class GroupRegistration implements Registration {
                 .then(Mono.<Void>fromRunnable(acknowledgableDelivery::ack).subscribeOn(Schedulers.elastic())))
             .onErrorResume(e -> {
                 LOGGER.error("Unable to process delivery for group {}", group, e);
-                return Mono.fromRunnable(() -> acknowledgableDelivery.nack(!REQUEUE));
+                return Mono.fromRunnable(() -> acknowledgableDelivery.nack(!REQUEUE))
+                    .subscribeOn(Schedulers.elastic())
+                    .then();
             });
     }
 
