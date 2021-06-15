@@ -25,6 +25,7 @@ import java.util.Objects;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 public class BucketedSlices {
@@ -118,6 +119,13 @@ public class BucketedSlices {
         @Override
         public final int hashCode() {
             return Objects.hash(startSliceInstant);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("startSliceInstant", startSliceInstant)
+                .toString();
         }
     }
 }

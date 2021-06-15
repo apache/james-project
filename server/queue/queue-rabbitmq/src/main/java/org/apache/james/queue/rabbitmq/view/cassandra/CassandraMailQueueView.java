@@ -90,6 +90,7 @@ public class CassandraMailQueueView implements MailQueueView<CassandraMailQueueB
     @Override
     public void initialize(MailQueueName mailQueueName) {
         storeHelper.initializeBrowseStart(mailQueueName).block();
+        storeHelper.initializeContentStart(mailQueueName).block();
     }
 
     @Override

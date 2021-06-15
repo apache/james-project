@@ -72,10 +72,14 @@ import org.apache.james.queue.rabbitmq.view.RabbitMQMailQueueConfiguration;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewTestFactory;
+import org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDAO;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
+import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices;
+import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Slice;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.mailet.Mail;
+import org.assertj.core.api.SoftAssertions;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -286,6 +290,56 @@ class RabbitMQMailQueueTest {
 
             assertThat(names)
                 .containsExactly("3-4", "3-5", "5-1", "5-2", "5-3", "5-4", "5-5");
+        }
+
+        @Test
+        void enqueuedEmailsShouldEventuallyBeCleaned() {
+            ManageableMailQueue mailQueue = getManageableMailQueue();
+            int emailCount = 5;
+
+            clock.setInstant(IN_SLICE_1);
+            enqueueSomeMails(namePatternForSlice(1), emailCount);
+
+            clock.setInstant(IN_SLICE_2);
+            enqueueSomeMails(namePatternForSlice(2), emailCount);
+
+            clock.setInstant(IN_SLICE_3);
+            enqueueSomeMails(namePatternForSlice(3), emailCount);
+
+            clock.setInstant(IN_SLICE_5);
+            enqueueSomeMails(namePatternForSlice(5), emailCount);
+
+            clock.setInstant(IN_SLICE_7);
+            dequeueMails(5);
+            dequeueMails(5);
+            dequeueMails(5);
+            dequeueMails(5);
+
+            // ensure slice 1 was cleaned
+            EnqueuedMailsDAO mailsDAO = new EnqueuedMailsDAO(cassandraCluster.getCassandraCluster().getConf(), new HashBlobId.Factory());
+            MailQueueName queueName = MailQueueName.fromString(mailQueue.getName().asString());
+            Slice slice = Slice.of(currentSliceStartInstant(IN_SLICE_1));
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(mailsDAO.selectEnqueuedMails(queueName, slice, BucketedSlices.BucketId.of(0))
+                    .collectList()
+                    .block())
+                    .isEmpty();
+                softly.assertThat(mailsDAO.selectEnqueuedMails(queueName, slice, BucketedSlices.BucketId.of(1))
+                    .collectList()
+                    .block())
+                    .isEmpty();
+                softly.assertThat(mailsDAO.selectEnqueuedMails(queueName, slice, BucketedSlices.BucketId.of(2))
+                    .collectList()
+                    .block())
+                    .isEmpty();
+            });
+        }
+
+        private Instant currentSliceStartInstant(Instant instant) {
+            long sliceSize = ONE_HOUR_SLICE_WINDOW.getSeconds();
+            long sliceId = instant.getEpochSecond() / sliceSize;
+            return Instant.ofEpochSecond(sliceId * sliceSize);
         }
 
         private Function<Integer, String> namePatternForSlice(int sliceId) {
@@ -875,7 +929,8 @@ class RabbitMQMailQueueTest {
                     .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)
                     .sliceWindow(ONE_HOUR_SLICE_WINDOW)
                     .build(),
-            mimeMessageStoreFactory);
+            mimeMessageStoreFactory
+        );
 
         RabbitMQMailQueueFactory.PrivateFactory factory = new RabbitMQMailQueueFactory.PrivateFactory(
             metricTestSystem.getMetricFactory(),
