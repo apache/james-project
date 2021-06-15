@@ -20,6 +20,7 @@
 package org.apache.james.queue.rabbitmq.view.cassandra;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
@@ -44,12 +45,14 @@ public class DeletedMailsDAO {
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement selectOne;
     private final PreparedStatement insertOne;
+    private final PreparedStatement deleteOne;
 
     @Inject
     DeletedMailsDAO(Session session) {
         this.executor = new CassandraAsyncExecutor(session);
         this.selectOne = prepareSelectExist(session);
         this.insertOne = prepareInsert(session);
+        this.deleteOne = prepareDeleteOne(session);
     }
 
     private PreparedStatement prepareInsert(Session session) {
@@ -65,6 +68,13 @@ public class DeletedMailsDAO {
             .and(eq(ENQUEUE_ID, bindMarker(ENQUEUE_ID))));
     }
 
+    private PreparedStatement prepareDeleteOne(Session session) {
+        return session.prepare(delete()
+            .from(TABLE_NAME)
+            .where(eq(QUEUE_NAME, bindMarker(QUEUE_NAME)))
+            .and(eq(ENQUEUE_ID, bindMarker(ENQUEUE_ID))));
+    }
+
     Mono<Void> markAsDeleted(MailQueueName mailQueueName, EnqueueId enqueueId) {
         return executor.executeVoid(insertOne.bind()
             .setString(QUEUE_NAME, mailQueueName.asString())
@@ -74,6 +84,13 @@ public class DeletedMailsDAO {
     Mono<Boolean> isDeleted(MailQueueName mailQueueName, EnqueueId enqueueId) {
         return executor.executeReturnExists(
             selectOne.bind()
+                .setString(QUEUE_NAME, mailQueueName.asString())
+                .setUUID(ENQUEUE_ID, enqueueId.asUUID()));
+    }
+
+    Mono<Void> removeDeletedMark(MailQueueName mailQueueName, EnqueueId enqueueId) {
+        return executor.executeVoid(
+            deleteOne.bind()
                 .setString(QUEUE_NAME, mailQueueName.asString())
                 .setUUID(ENQUEUE_ID, enqueueId.asUUID()));
     }
