@@ -110,4 +110,17 @@ class DeletedMailsDAOTest {
 
         assertThat(isDeleted).isTrue();
     }
+
+    @Test
+    void isDeletedShouldReturnFalseAfterRemovingDeletedMark() {
+        testee.markAsDeleted(OUT_GOING_1, ENQUEUE_ID_1).block();
+
+        testee.removeDeletedMark(OUT_GOING_1, ENQUEUE_ID_1).block();
+
+        Boolean isDeleted = testee
+            .isDeleted(OUT_GOING_1, ENQUEUE_ID_1)
+            .block();
+
+        assertThat(isDeleted).isFalse();
+    }
 }
