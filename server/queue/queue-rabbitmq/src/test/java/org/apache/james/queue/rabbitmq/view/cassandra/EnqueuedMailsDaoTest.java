@@ -148,4 +148,43 @@ class EnqueuedMailsDaoTest {
                 });
             });
     }
+
+    @Test
+    void selectShouldNotReturnEmailsInDeletedSlice() throws Exception {
+        testee.insert(EnqueuedItemWithSlicingContext.builder()
+                .enqueuedItem(EnqueuedItem.builder()
+                    .enqueueId(ENQUEUE_ID)
+                    .mailQueueName(OUT_GOING_1)
+                    .mail(FakeMail.builder()
+                        .name(NAME)
+                        .build())
+                    .enqueuedTime(NOW)
+                    .mimeMessagePartsId(MIME_MESSAGE_PARTS_ID)
+                    .build())
+                .slicingContext(EnqueuedItemWithSlicingContext.SlicingContext.of(BucketId.of(BUCKET_ID_VALUE), NOW))
+                .build())
+            .block();
+
+        testee.insert(EnqueuedItemWithSlicingContext.builder()
+                .enqueuedItem(EnqueuedItem.builder()
+                    .enqueueId(ENQUEUE_ID)
+                    .mailQueueName(OUT_GOING_1)
+                    .mail(FakeMail.builder()
+                        .name(NAME)
+                        .build())
+                    .enqueuedTime(NOW)
+                    .mimeMessagePartsId(MIME_MESSAGE_PARTS_ID)
+                    .build())
+                .slicingContext(EnqueuedItemWithSlicingContext.SlicingContext.of(BucketId.of(BUCKET_ID_VALUE + 1), NOW))
+                .build())
+            .block();
+
+        testee.deleteBucket(OUT_GOING_1, SLICE_OF_NOW, BUCKET_ID).block();
+
+        List<EnqueuedItemWithSlicingContext> selectedEnqueuedMails = testee.selectEnqueuedMails(OUT_GOING_1, SLICE_OF_NOW, BUCKET_ID)
+            .collectList().block();
+
+        assertThat(selectedEnqueuedMails)
+            .isEmpty();
+    }
 }
