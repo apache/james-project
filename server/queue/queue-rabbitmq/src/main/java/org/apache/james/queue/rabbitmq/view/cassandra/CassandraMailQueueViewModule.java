@@ -69,6 +69,13 @@ public interface CassandraMailQueueViewModule {
         String BROWSE_START = "browseStart";
     }
 
+    interface ContentStartTable {
+        String TABLE_NAME = "contentStart";
+
+        String QUEUE_NAME = "queueName";
+        String CONTENT_START = "contentStart";
+    }
+
     interface DeletedMailTable {
         String TABLE_NAME = "deletedMailsV2";
 
@@ -119,6 +126,15 @@ public interface CassandraMailQueueViewModule {
         .statement(statement -> statement
             .addPartitionKey(BrowseStartTable.QUEUE_NAME, text())
             .addColumn(BrowseStartTable.BROWSE_START, timestamp()))
+
+        .table(ContentStartTable.TABLE_NAME)
+        .comment("this table allows to find the starting point of content from the table: "
+            + EnqueuedMailsTable.TABLE_NAME + " in order to make a browse operations through mail queues. Strictly " +
+            "before browse start, it enables aueue cleanup.")
+        .options(options -> options)
+        .statement(statement -> statement
+            .addPartitionKey(ContentStartTable.QUEUE_NAME, text())
+            .addColumn(ContentStartTable.CONTENT_START, timestamp()))
 
         .table(DeletedMailTable.TABLE_NAME)
         .comment("this table stores the dequeued mails, while browsing mail from table: "
