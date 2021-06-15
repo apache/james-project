@@ -121,7 +121,7 @@ public interface CassandraMailQueueViewModule {
 
         .table(BrowseStartTable.TABLE_NAME)
         .comment("this table allows to find the starting point of iteration from the table: "
-            + EnqueuedMailsTable.TABLE_NAME + " in order to make a browse operations through mail queues")
+            + EnqueuedMailsTable.TABLE_NAME + " in order to make a browse operation through mail queues")
         .options(options -> options)
         .statement(statement -> statement
             .addPartitionKey(BrowseStartTable.QUEUE_NAME, text())
@@ -129,8 +129,8 @@ public interface CassandraMailQueueViewModule {
 
         .table(ContentStartTable.TABLE_NAME)
         .comment("this table allows to find the starting point of content from the table: "
-            + EnqueuedMailsTable.TABLE_NAME + " in order to make a browse operations through mail queues. Strictly " +
-            "before browse start, it enables aueue cleanup.")
+            + EnqueuedMailsTable.TABLE_NAME + " in order to make a browse operation through mail queues. Strictly " +
+            "before browse start, it enables queue cleanup.")
         .options(options -> options)
         .statement(statement -> statement
             .addPartitionKey(ContentStartTable.QUEUE_NAME, text())
