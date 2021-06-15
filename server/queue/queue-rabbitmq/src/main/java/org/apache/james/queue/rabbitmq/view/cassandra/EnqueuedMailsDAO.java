@@ -21,6 +21,7 @@ package org.apache.james.queue.rabbitmq.view.cassandra;
 
 import static com.datastax.driver.core.DataType.text;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
@@ -71,10 +72,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class EnqueuedMailsDAO {
-
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement selectFrom;
     private final PreparedStatement insert;
+    private final PreparedStatement deleteBucket;
     private final BlobId.Factory blobFactory;
     private final TupleType userHeaderNameHeaderValueTriple;
 
@@ -84,12 +85,21 @@ public class EnqueuedMailsDAO {
 
         this.selectFrom = prepareSelectFrom(session);
         this.insert = prepareInsert(session);
+        this.deleteBucket = prepareDeleteBucket(session);
         this.blobFactory = blobIdFactory;
         this.userHeaderNameHeaderValueTriple = session.getCluster().getMetadata().newTupleType(text(), text(), text());
     }
 
     private PreparedStatement prepareSelectFrom(Session session) {
         return session.prepare(select()
+            .from(TABLE_NAME)
+            .where(eq(QUEUE_NAME, bindMarker(QUEUE_NAME)))
+            .and(eq(TIME_RANGE_START, bindMarker(TIME_RANGE_START)))
+            .and(eq(BUCKET_ID, bindMarker(BUCKET_ID))));
+    }
+
+    private PreparedStatement prepareDeleteBucket(Session session) {
+        return session.prepare(delete()
             .from(TABLE_NAME)
             .where(eq(QUEUE_NAME, bindMarker(QUEUE_NAME)))
             .and(eq(TIME_RANGE_START, bindMarker(TIME_RANGE_START)))
@@ -152,9 +162,7 @@ public class EnqueuedMailsDAO {
         return executor.executeVoid(statement);
     }
 
-    Flux<EnqueuedItemWithSlicingContext> selectEnqueuedMails(
-        MailQueueName queueName, Slice slice, BucketId bucketId) {
-
+    Flux<EnqueuedItemWithSlicingContext> selectEnqueuedMails(MailQueueName queueName, Slice slice, BucketId bucketId) {
         return executor.executeRows(
                 selectFrom.bind()
                     .setString(QUEUE_NAME, queueName.asString())
@@ -163,4 +171,11 @@ public class EnqueuedMailsDAO {
             .map(row -> EnqueuedMailsDaoUtil.toEnqueuedMail(row, blobFactory));
     }
 
+    Mono<Void> deleteBucket(MailQueueName queueName, Slice slice, BucketId bucketId) {
+        return executor.executeVoid(
+                deleteBucket.bind()
+                    .setString(QUEUE_NAME, queueName.asString())
+                    .setTimestamp(TIME_RANGE_START, Date.from(slice.getStartSliceInstant()))
+                    .setInt(BUCKET_ID, bucketId.getValue()));
+    }
 }
