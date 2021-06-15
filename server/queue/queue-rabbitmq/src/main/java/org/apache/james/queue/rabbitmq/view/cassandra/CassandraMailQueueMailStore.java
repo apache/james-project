@@ -37,16 +37,18 @@ public class CassandraMailQueueMailStore {
 
     private final EnqueuedMailsDAO enqueuedMailsDao;
     private final BrowseStartDAO browseStartDao;
+    private final ContentStartDAO contentStartDAO;
     private final CassandraMailQueueViewConfiguration configuration;
     private final Clock clock;
 
     @Inject
     CassandraMailQueueMailStore(EnqueuedMailsDAO enqueuedMailsDao,
                                 BrowseStartDAO browseStartDao,
-                                CassandraMailQueueViewConfiguration configuration,
+                                ContentStartDAO contentStartDAO, CassandraMailQueueViewConfiguration configuration,
                                 Clock clock) {
         this.enqueuedMailsDao = enqueuedMailsDao;
         this.browseStartDao = browseStartDao;
+        this.contentStartDAO = contentStartDAO;
         this.configuration = configuration;
         this.clock = clock;
     }
@@ -60,6 +62,12 @@ public class CassandraMailQueueMailStore {
     Mono<Void> initializeBrowseStart(MailQueueName mailQueueName) {
         return browseStartDao
             .insertInitialBrowseStart(mailQueueName, currentSliceStartInstant());
+    }
+
+    Mono<Void> initializeContentStart(MailQueueName mailQueueName) {
+        return browseStartDao.findBrowseStart(mailQueueName)
+            .flatMap(browseStart ->
+                contentStartDAO.insertInitialContentStart(mailQueueName, browseStart));
     }
 
     private EnqueuedItemWithSlicingContext addSliceContext(EnqueuedItem enqueuedItem) {

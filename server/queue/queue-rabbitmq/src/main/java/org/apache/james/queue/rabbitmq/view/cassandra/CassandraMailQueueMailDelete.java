@@ -19,14 +19,22 @@
 
 package org.apache.james.queue.rabbitmq.view.cassandra;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.time.Instant;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.IntStream;
 
 import javax.inject.Inject;
 
 import org.apache.james.queue.rabbitmq.EnqueueId;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
+import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices;
+import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Slice;
+import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlicingContext.SlicingContext;
+
+import com.github.steveash.guavate.Guavate;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -35,16 +43,20 @@ public class CassandraMailQueueMailDelete {
 
     private final DeletedMailsDAO deletedMailsDao;
     private final BrowseStartDAO browseStartDao;
+    private final ContentStartDAO contentStartDAO;
+    private final EnqueuedMailsDAO enqueuedMailsDAO;
     private final CassandraMailQueueBrowser cassandraMailQueueBrowser;
     private final CassandraMailQueueViewConfiguration configuration;
 
     @Inject
     CassandraMailQueueMailDelete(DeletedMailsDAO deletedMailsDao,
                                  BrowseStartDAO browseStartDao,
-                                 CassandraMailQueueBrowser cassandraMailQueueBrowser,
+                                 ContentStartDAO contentStartDAO, EnqueuedMailsDAO enqueuedMailsDAO, CassandraMailQueueBrowser cassandraMailQueueBrowser,
                                  CassandraMailQueueViewConfiguration configuration) {
         this.deletedMailsDao = deletedMailsDao;
         this.browseStartDao = browseStartDao;
+        this.contentStartDAO = contentStartDAO;
+        this.enqueuedMailsDAO = enqueuedMailsDAO;
         this.cassandraMailQueueBrowser = cassandraMailQueueBrowser;
         this.configuration = configuration;
     }
@@ -52,7 +64,7 @@ public class CassandraMailQueueMailDelete {
     Mono<Void> considerDeleted(EnqueueId enqueueId, MailQueueName mailQueueName) {
         return deletedMailsDao
             .markAsDeleted(mailQueueName, enqueueId)
-            .doOnNext(ignored -> maybeUpdateBrowseStart(mailQueueName));
+            .doFinally(any -> maybeUpdateBrowseStart(mailQueueName));
     }
 
     Mono<Boolean> isDeleted(EnqueueId enqueueId, MailQueueName mailQueueName) {
@@ -61,7 +73,8 @@ public class CassandraMailQueueMailDelete {
 
     void updateBrowseStart(MailQueueName mailQueueName) {
         findNewBrowseStart(mailQueueName)
-            .flatMap(newBrowseStart -> updateNewBrowseStart(mailQueueName, newBrowseStart))
+            .flatMap(newBrowseStart -> updateNewBrowseStart(mailQueueName, newBrowseStart)
+                .then(clearContentBeforeBrowse(mailQueueName, newBrowseStart)))
             .subscribeOn(Schedulers.elastic())
             .subscribe();
     }
@@ -80,6 +93,26 @@ public class CassandraMailQueueMailDelete {
 
     private Mono<Void> updateNewBrowseStart(MailQueueName mailQueueName, Instant newBrowseStartInstant) {
         return browseStartDao.updateBrowseStart(mailQueueName, newBrowseStartInstant);
+    }
+
+    private Mono<Void> clearContentBeforeBrowse(MailQueueName mailQueueName, Instant newBrowseStartInstant) {
+        return contentStartDAO.findContentStart(mailQueueName)
+            .flatMapIterable(contentStart ->
+                Slice.of(contentStart).allSlicesTill(newBrowseStartInstant, configuration.getSliceWindow())
+                    .filter(slice -> slice.getStartSliceInstant().isBefore(newBrowseStartInstant))
+                    .flatMap(slice -> IntStream.range(0, configuration.getBucketCount()).boxed()
+                        .map(bucket -> SlicingContext.of(BucketedSlices.BucketId.of(bucket), slice.getStartSliceInstant())))
+                    .collect(Guavate.toImmutableList()))
+            .concatMap(slice -> deleteEmailsFromBrowseProjection(mailQueueName, slice))
+            .concatMap(slice -> enqueuedMailsDAO.deleteBucket(mailQueueName, Slice.of(slice.getTimeRangeStart()), slice.getBucketId()))
+            .then(contentStartDAO.updateContentStart(mailQueueName, newBrowseStartInstant));
+    }
+
+    private Mono<SlicingContext> deleteEmailsFromBrowseProjection(MailQueueName mailQueueName, SlicingContext slicingContext) {
+        return enqueuedMailsDAO.selectEnqueuedMails(mailQueueName, Slice.of(slicingContext.getTimeRangeStart()), slicingContext.getBucketId())
+            .flatMap(item -> deletedMailsDao.removeDeletedMark(mailQueueName, item.getEnqueuedItem().getEnqueueId()), DEFAULT_CONCURRENCY)
+            .then()
+            .thenReturn(slicingContext);
     }
 
     private boolean shouldUpdateBrowseStart() {

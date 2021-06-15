@@ -99,10 +99,11 @@ class RabbitMQMailQueueConfigurationChangeTest {
     private UpdatableTickingClock clock;
     private RabbitMQMailQueueManagement mqManagementApi;
     private MimeMessageStore.Factory mimeMessageStoreFactory;
+    private BlobStore blobStore;
 
     @BeforeEach
     void setup(CassandraCluster cassandra) throws Exception {
-        BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
+        blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
             .passthrough();
         mimeMessageStoreFactory = MimeMessageStore.factory(blobStore);
         clock = new UpdatableTickingClock(IN_SLICE_1);
@@ -118,7 +119,8 @@ class RabbitMQMailQueueConfigurationChangeTest {
         CassandraMailQueueView.Factory mailQueueViewFactory = CassandraMailQueueViewTestFactory.factory(clock,
             cassandra.getConf(),
             mailQueueViewConfiguration,
-            mimeMessageStoreFactory);
+            mimeMessageStoreFactory
+        );
 
         RabbitMQMailQueueConfiguration mailQueueSizeConfiguration = RabbitMQMailQueueConfiguration.builder()
             .sizeMetricsEnabled(true)

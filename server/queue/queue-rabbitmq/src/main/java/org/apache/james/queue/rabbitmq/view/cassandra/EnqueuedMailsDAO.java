@@ -67,6 +67,7 @@ import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.TupleType;
+import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -79,8 +80,9 @@ public class EnqueuedMailsDAO {
     private final BlobId.Factory blobFactory;
     private final TupleType userHeaderNameHeaderValueTriple;
 
+    @VisibleForTesting
     @Inject
-    EnqueuedMailsDAO(Session session, BlobId.Factory blobIdFactory) {
+    public EnqueuedMailsDAO(Session session, BlobId.Factory blobIdFactory) {
         this.executor = new CassandraAsyncExecutor(session);
 
         this.selectFrom = prepareSelectFrom(session);
@@ -162,7 +164,8 @@ public class EnqueuedMailsDAO {
         return executor.executeVoid(statement);
     }
 
-    Flux<EnqueuedItemWithSlicingContext> selectEnqueuedMails(MailQueueName queueName, Slice slice, BucketId bucketId) {
+    @VisibleForTesting
+    public Flux<EnqueuedItemWithSlicingContext> selectEnqueuedMails(MailQueueName queueName, Slice slice, BucketId bucketId) {
         return executor.executeRows(
                 selectFrom.bind()
                     .setString(QUEUE_NAME, queueName.asString())
