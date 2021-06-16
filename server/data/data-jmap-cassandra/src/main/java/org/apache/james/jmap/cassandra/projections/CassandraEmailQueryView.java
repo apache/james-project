@@ -28,6 +28,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.DATE_LOOKUP_TABLE;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.MAILBOX_ID;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.MESSAGE_ID;
+import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.MESSAGE_ID_LOWERCASE;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.RECEIVED_AT;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.SENT_AT;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraEmailQueryViewTable.TABLE_NAME_RECEIVED_AT;
@@ -198,7 +199,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
             .setUUID(MAILBOX_ID, cassandraId.asUuid())
             .setInt(LIMIT_MARKER, limit.getLimit().get())
             .setTimestamp(SENT_AT, sinceDate))
-            .map(row -> messageIdFactory.of(row.getUUID(MESSAGE_ID)));
+            .map(row -> messageIdFactory.of(row.getUUID(MESSAGE_ID_LOWERCASE)));
     }
 
     @Override

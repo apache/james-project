@@ -19,10 +19,14 @@
 
 package org.apache.james.jmap.cassandra.projections.table;
 
+import java.util.Locale;
+
 public interface CassandraMessageFastViewProjectionTable {
     String TABLE_NAME = "message_fast_view_projection";
 
     String MESSAGE_ID = "messageId";
+    String MESSAGE_ID_LOWERCASE = MESSAGE_ID.toLowerCase(Locale.US);
     String PREVIEW = "preview";
     String HAS_ATTACHMENT = "hasAttachment";
+    String HAS_ATTACHMENT_LOWERCASE = HAS_ATTACHMENT.toLowerCase(Locale.US);
 }

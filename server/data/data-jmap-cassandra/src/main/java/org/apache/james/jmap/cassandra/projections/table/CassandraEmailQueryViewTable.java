@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.cassandra.projections.table;
 
+import java.util.Locale;
+
 public interface CassandraEmailQueryViewTable {
     String TABLE_NAME_SENT_AT = "email_query_view_sent_at";
     String TABLE_NAME_RECEIVED_AT = "email_query_view_received_at";
@@ -26,6 +28,7 @@ public interface CassandraEmailQueryViewTable {
 
     String MAILBOX_ID = "mailboxId";
     String MESSAGE_ID = "messageId";
+    String MESSAGE_ID_LOWERCASE = MESSAGE_ID.toLowerCase(Locale.US);
     String RECEIVED_AT = "receivedAt";
     String SENT_AT = "sentAt";
 }

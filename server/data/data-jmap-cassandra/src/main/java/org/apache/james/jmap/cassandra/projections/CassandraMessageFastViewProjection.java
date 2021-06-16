@@ -25,7 +25,9 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.truncate;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.HAS_ATTACHMENT;
+import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.HAS_ATTACHMENT_LOWERCASE;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.MESSAGE_ID;
+import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.MESSAGE_ID_LOWERCASE;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.PREVIEW;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.TABLE_NAME;
 
@@ -79,7 +81,7 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
 
         this.retrieveStatement = session.prepare(select()
             .from(TABLE_NAME)
-            .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
+            .where(eq(MESSAGE_ID_LOWERCASE, bindMarker(MESSAGE_ID_LOWERCASE))));
 
         this.truncateStatement = session.prepare(truncate(TABLE_NAME));
 
@@ -103,7 +105,7 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
         checkMessage(messageId);
 
         return cassandraAsyncExecutor.executeSingleRow(retrieveStatement.bind()
-                .setUUID(MESSAGE_ID, ((CassandraMessageId) messageId).get())
+                .setUUID(MESSAGE_ID_LOWERCASE, ((CassandraMessageId) messageId).get())
                 .setConsistencyLevel(ConsistencyLevel.ONE))
             .map(this::fromRow)
             .doOnNext(preview -> metricRetrieveHitCount.increment())
@@ -136,7 +138,7 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
     private MessageFastViewPrecomputedProperties fromRow(Row row) {
         return MessageFastViewPrecomputedProperties.builder()
             .preview(Preview.from(row.getString(PREVIEW)))
-            .hasAttachment(row.getBool(HAS_ATTACHMENT))
+            .hasAttachment(row.getBool(HAS_ATTACHMENT_LOWERCASE))
             .build();
     }
 }

@@ -30,9 +30,12 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.A
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.BODY_CONTENT;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.BODY_OCTECTS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.BODY_START_OCTET;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.BODY_START_OCTET_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.FULL_CONTENT_OCTETS;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.FULL_CONTENT_OCTETS_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.HEADER_CONTENT;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.INTERNAL_DATE;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.INTERNAL_DATE_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.CONTENT_DESCRIPTION;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.CONTENT_DISPOSITION_PARAMETERS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.CONTENT_DISPOSITION_TYPE;
@@ -46,6 +49,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.P
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.SUB_TYPE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.TEXTUAL_LINE_COUNT;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.TEXTUAL_LINE_COUNT_LOWERCASE;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -310,9 +314,9 @@ public class CassandraMessageDAOV3 {
         return buildContentRetriever(fetchType, headerId, bodyId, bodyStartOctet).map(content ->
             new MessageRepresentation(
                 cassandraMessageId,
-                row.getTimestamp(INTERNAL_DATE),
-                row.getLong(FULL_CONTENT_OCTETS),
-                row.getInt(BODY_START_OCTET),
+                row.getTimestamp(INTERNAL_DATE_LOWERCASE),
+                row.getLong(FULL_CONTENT_OCTETS_LOWERCASE),
+                row.getInt(BODY_START_OCTET_LOWERCASE),
                 new ByteContent(content),
                 getProperties(row),
                 getAttachments(row).collect(Guavate.toImmutableList()),
@@ -333,7 +337,7 @@ public class CassandraMessageDAOV3 {
         property.setContentLanguage(row.get(CONTENT_LANGUAGE, LIST_OF_STRINGS_CODEC));
         property.setContentDispositionParameters(row.get(CONTENT_DISPOSITION_PARAMETERS, MAP_OF_STRINGS_CODEC));
         property.setContentTypeParameters(row.get(CONTENT_TYPE_PARAMETERS, MAP_OF_STRINGS_CODEC));
-        property.setTextualLineCount(row.getLong(TEXTUAL_LINE_COUNT));
+        property.setTextualLineCount(row.getLong(TEXTUAL_LINE_COUNT_LOWERCASE));
         return property.build();
     }
 

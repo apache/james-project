@@ -31,7 +31,9 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable.F
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.IMAP_UID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MAILBOX_ID;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MAILBOX_ID_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.Flag.ANSWERED;
 import static org.apache.james.mailbox.cassandra.table.Flag.DELETED;
 import static org.apache.james.mailbox.cassandra.table.Flag.DRAFT;
@@ -41,6 +43,7 @@ import static org.apache.james.mailbox.cassandra.table.Flag.SEEN;
 import static org.apache.james.mailbox.cassandra.table.Flag.USER;
 import static org.apache.james.mailbox.cassandra.table.Flag.USER_FLAGS;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.MOD_SEQ;
+import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.MOD_SEQ_LOWERCASE;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.util.Optional;
@@ -344,11 +347,11 @@ public class CassandraMessageIdDAO {
         }
         return Optional.of(ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(
-                        CassandraId.of(row.getUUID(MAILBOX_ID)),
-                        messageIdFactory.of(row.getUUID(MESSAGE_ID)),
+                        CassandraId.of(row.getUUID(MAILBOX_ID_LOWERCASE)),
+                        messageIdFactory.of(row.getUUID(MESSAGE_ID_LOWERCASE)),
                         MessageUid.of(row.getLong(IMAP_UID))))
                 .flags(FlagsExtractor.getFlags(row))
-                .modSeq(ModSeq.of(row.getLong(MOD_SEQ)))
+                .modSeq(ModSeq.of(row.getLong(MOD_SEQ_LOWERCASE)))
                 .build());
     }
 }

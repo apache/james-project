@@ -19,16 +19,24 @@
 
 package org.apache.james.mailbox.cassandra.table;
 
+import java.util.Locale;
+
 public interface CassandraMessageV3Table {
 
     String TABLE_NAME = "messageV3";
     String INTERNAL_DATE = "internalDate";
+    String INTERNAL_DATE_LOWERCASE = INTERNAL_DATE.toLowerCase(Locale.US);
     String BODY_START_OCTET = "bodyStartOctet";
+    String BODY_START_OCTET_LOWERCASE = BODY_START_OCTET.toLowerCase(Locale.US);
     String FULL_CONTENT_OCTETS = "fullContentOctets";
+    String FULL_CONTENT_OCTETS_LOWERCASE = FULL_CONTENT_OCTETS.toLowerCase(Locale.US);
     String BODY_OCTECTS = "bodyOctets";
     String TEXTUAL_LINE_COUNT = "textualLineCount";
+    String TEXTUAL_LINE_COUNT_LOWERCASE = TEXTUAL_LINE_COUNT.toLowerCase(Locale.US);
     String BODY_CONTENT = "bodyContent";
+    String BODY_CONTENT_LOWERCASE = BODY_START_OCTET.toLowerCase(Locale.US);
     String HEADER_CONTENT = "headerContent";
+    String HEADER_CONTENT_LOWERCASE = HEADER_CONTENT.toLowerCase(Locale.US);
     String ATTACHMENTS = "attachments";
 
     interface Properties {

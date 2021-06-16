@@ -27,7 +27,9 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.IMAP_UID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MAILBOX_ID;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MAILBOX_ID_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.Flag.ANSWERED;
 import static org.apache.james.mailbox.cassandra.table.Flag.DELETED;
 import static org.apache.james.mailbox.cassandra.table.Flag.DRAFT;
@@ -38,6 +40,7 @@ import static org.apache.james.mailbox.cassandra.table.Flag.USER;
 import static org.apache.james.mailbox.cassandra.table.Flag.USER_FLAGS;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.FIELDS;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.MOD_SEQ;
+import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.MOD_SEQ_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.TABLE_NAME;
 
 import java.util.Optional;
@@ -155,7 +158,7 @@ public class CassandraMessageIdToImapUidDAO {
     private PreparedStatement prepareSelectAll(Session session) {
         return session.prepare(select(FIELDS)
                 .from(TABLE_NAME)
-                .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
+                .where(eq(MESSAGE_ID_LOWERCASE, bindMarker(MESSAGE_ID_LOWERCASE))));
     }
 
     private PreparedStatement prepareList(Session session) {
@@ -165,8 +168,8 @@ public class CassandraMessageIdToImapUidDAO {
     private PreparedStatement prepareSelect(Session session) {
         return session.prepare(select(FIELDS)
                 .from(TABLE_NAME)
-                .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID)))
-                .and(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+                .where(eq(MESSAGE_ID_LOWERCASE, bindMarker(MESSAGE_ID_LOWERCASE)))
+                .and(eq(MAILBOX_ID_LOWERCASE, bindMarker(MAILBOX_ID_LOWERCASE))));
     }
 
     public Mono<Void> delete(CassandraMessageId messageId, CassandraId mailboxId) {
@@ -240,19 +243,19 @@ public class CassandraMessageIdToImapUidDAO {
     private ComposedMessageIdWithMetaData toComposedMessageIdWithMetadata(Row row) {
         return ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(
-                    CassandraId.of(row.getUUID(MAILBOX_ID)),
-                    messageIdFactory.of(row.getUUID(MESSAGE_ID)),
+                    CassandraId.of(row.getUUID(MAILBOX_ID_LOWERCASE)),
+                    messageIdFactory.of(row.getUUID(MESSAGE_ID_LOWERCASE)),
                     MessageUid.of(row.getLong(IMAP_UID))))
                 .flags(FlagsExtractor.getFlags(row))
-                .modSeq(ModSeq.of(row.getLong(MOD_SEQ)))
+                .modSeq(ModSeq.of(row.getLong(MOD_SEQ_LOWERCASE)))
                 .build();
     }
 
     private Statement selectStatement(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
         return mailboxId
             .map(cassandraId -> select.bind()
-                .setUUID(MESSAGE_ID, messageId.get())
-                .setUUID(MAILBOX_ID, cassandraId.asUuid()))
-            .orElseGet(() -> selectAll.bind().setUUID(MESSAGE_ID, messageId.get()));
+                .setUUID(MESSAGE_ID_LOWERCASE, messageId.get())
+                .setUUID(MAILBOX_ID_LOWERCASE, cassandraId.asUuid()))
+            .orElseGet(() -> selectAll.bind().setUUID(MESSAGE_ID_LOWERCASE, messageId.get()));
     }
 }
