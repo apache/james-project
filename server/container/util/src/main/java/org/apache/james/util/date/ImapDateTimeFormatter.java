@@ -35,31 +35,32 @@ import com.google.common.collect.ImmutableMap;
 public class ImapDateTimeFormatter {
 
     private static final int INITIAL_YEAR = 1970;
+    public static final DateTimeFormatter RFC_5322_FORMATTER = new DateTimeFormatterBuilder()
+        .parseCaseInsensitive()
+        .parseLenient()
+        .optionalStart()
+            .appendText(DAY_OF_WEEK, dayOfWeek())
+            .appendLiteral(", ")
+        .optionalEnd()
+        .appendValue(DAY_OF_MONTH, 1, 2, SignStyle.NOT_NEGATIVE)
+        .appendLiteral(' ')
+        .appendText(MONTH_OF_YEAR, monthOfYear())
+        .appendLiteral(' ')
+        .appendValueReduced(YEAR, 2, 4, INITIAL_YEAR)
+        .appendLiteral(' ')
+        .appendValue(HOUR_OF_DAY, 2)
+        .appendLiteral(':')
+        .appendValue(MINUTE_OF_HOUR, 2)
+        .optionalStart()
+            .appendLiteral(':')
+            .appendValue(SECOND_OF_MINUTE, 2)
+        .optionalEnd()
+        .appendLiteral(' ')
+        .appendOffset("+HHMM", "GMT")
+        .toFormatter();
 
     public static DateTimeFormatter rfc5322() {
-        return new DateTimeFormatterBuilder()
-                .parseCaseInsensitive()
-                .parseLenient()
-                .optionalStart()
-                    .appendText(DAY_OF_WEEK, dayOfWeek())
-                    .appendLiteral(", ")
-                .optionalEnd()
-                .appendValue(DAY_OF_MONTH, 1, 2, SignStyle.NOT_NEGATIVE)
-                .appendLiteral(' ')
-                .appendText(MONTH_OF_YEAR, monthOfYear())
-                .appendLiteral(' ')
-                .appendValueReduced(YEAR, 2, 4, INITIAL_YEAR)
-                .appendLiteral(' ')
-                .appendValue(HOUR_OF_DAY, 2)
-                .appendLiteral(':')
-                .appendValue(MINUTE_OF_HOUR, 2)
-                .optionalStart()
-                    .appendLiteral(':')
-                    .appendValue(SECOND_OF_MINUTE, 2)
-                .optionalEnd()
-                .appendLiteral(' ')
-                .appendOffset("+HHMM", "GMT")
-                .toFormatter();
+        return RFC_5322_FORMATTER;
     }
 
     private static ImmutableMap<Long, String> monthOfYear() {
