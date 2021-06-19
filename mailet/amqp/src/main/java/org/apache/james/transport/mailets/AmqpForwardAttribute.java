@@ -45,8 +45,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.ConnectionFactory;
@@ -85,7 +90,7 @@ public class AmqpForwardAttribute extends GenericMailet {
     private static final String DEFAULT_USER = "guest";
     private static final String DEFAULT_PASSWORD_STRING = "guest";
     private static final char[] DEFAULT_PASSWORD = DEFAULT_PASSWORD_STRING.toCharArray();
-    private static final RabbitMQConfiguration.ManagementCredentials DEFAULT_MANAGEMENT_CREDENTIAL = new RabbitMQConfiguration.ManagementCredentials(DEFAULT_USER, DEFAULT_PASSWORD);
+    static final RabbitMQConfiguration.ManagementCredentials DEFAULT_MANAGEMENT_CREDENTIAL = new RabbitMQConfiguration.ManagementCredentials(DEFAULT_USER, DEFAULT_PASSWORD);
 
 
     public static final String URI_PARAMETER_NAME = "uri";
@@ -94,8 +99,6 @@ public class AmqpForwardAttribute extends GenericMailet {
     public static final String ATTRIBUTE_PARAMETER_NAME = "attribute";
 
     public static final String ROUTING_KEY_DEFAULT_VALUE = "";
-    public static final int MAX_ATTEMPTS = 8;
-    public static final Duration MIN_BACKOFF = Duration.ofSeconds(1);
 
     private String exchange;
     private AttributeName attribute;
@@ -111,10 +114,11 @@ public class AmqpForwardAttribute extends GenericMailet {
         String uri = preInit(mailetConfig);
 
         try {
+            URI amqpUri = new URI(uri);
             RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-                .amqpUri(new URI(uri))
-                .managementUri(new URI(uri))
-                .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+                .amqpUri(amqpUri)
+                .managementUri(amqpUri)
+                .managementCredentials(retrieveCredentials(amqpUri))
                 .maxRetries(MAX_THREE_RETRIES)
                 .minDelayInMs(MIN_DELAY_OF_TEN_MILLISECONDS)
                 .connectionTimeoutInMs(CONNECTION_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND)
@@ -135,7 +139,30 @@ public class AmqpForwardAttribute extends GenericMailet {
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
-}
+    }
+
+    @VisibleForTesting
+    RabbitMQConfiguration.ManagementCredentials retrieveCredentials(URI amqpUri) {
+        return Optional.ofNullable(amqpUri.getUserInfo())
+            .map(this::parseUserInfo)
+            .orElse(DEFAULT_MANAGEMENT_CREDENTIAL);
+    }
+
+    private RabbitMQConfiguration.ManagementCredentials parseUserInfo(String userInfo) {
+        Preconditions.checkArgument(userInfo.contains(":"), "User info needs a password part");
+
+        List<String> parts = Splitter.on(':')
+            .splitToList(userInfo);
+        ImmutableList<String> passwordParts = parts.stream()
+            .skip(1)
+            .collect(Guavate.toImmutableList());
+
+        return new RabbitMQConfiguration.ManagementCredentials(
+            parts.get(0),
+            Joiner.on(':')
+                .join(passwordParts)
+                .toCharArray());
+    }
 
     @VisibleForTesting
     String preInit(MailetConfig mailetConfig) throws MailetException {
