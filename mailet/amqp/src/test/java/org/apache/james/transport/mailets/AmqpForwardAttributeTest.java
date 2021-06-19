@@ -19,16 +19,19 @@
 
 package org.apache.james.transport.mailets;
 
+import static org.apache.james.transport.mailets.AmqpForwardAttribute.DEFAULT_MANAGEMENT_CREDENTIAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.backends.rabbitmq.RabbitMQConfiguration.ManagementCredentials;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
@@ -38,6 +41,7 @@ import org.apache.mailet.MailetException;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -152,5 +156,38 @@ class AmqpForwardAttributeTest {
 
         assertThatThrownBy(() -> mailet.service(mail))
             .isInstanceOf(MailetException.class);
+    }
+
+    @Nested
+    class CreadentialTests {
+        @Test
+        void shouldReturnDefaultCredentialsWhenNoUserInfo() throws Exception {
+            assertThat(mailet.retrieveCredentials(new URI(AMQP_URI)))
+                .isEqualTo(DEFAULT_MANAGEMENT_CREDENTIAL);
+        }
+
+        @Test
+        void shouldThrowWhenNoPassword() throws Exception {
+            assertThatThrownBy(() -> mailet.retrieveCredentials(new URI("amqp://user@host")))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        void shouldReturnUriCredentials() throws Exception {
+            assertThat(mailet.retrieveCredentials(new URI("amqp://user:pass@host")))
+                .isEqualTo(new ManagementCredentials("user", "pass".toCharArray()));
+        }
+
+        @Test
+        void passwordCanContainSemiColon() throws Exception {
+            assertThat(mailet.retrieveCredentials(new URI("amqp://user:pass:part2@host")))
+                .isEqualTo(new ManagementCredentials("user", "pass:part2".toCharArray()));
+        }
+
+        @Test
+        void shouldDecodeUserInfo() throws Exception {
+            assertThat(mailet.retrieveCredentials(new URI("amqp://Arnab_Kundu%E2%82%AC:pass@host")))
+                .isEqualTo(new ManagementCredentials("Arnab_Kundu€", "pass".toCharArray()));
+        }
     }
 }
