@@ -22,7 +22,6 @@ package org.apache.james.transport.mailets;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
-import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
@@ -30,9 +29,6 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.mime4j.dom.address.Address;
-import org.apache.james.mime4j.dom.address.AddressList;
-import org.apache.james.mime4j.dom.address.Group;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.util.MimeUtil;
@@ -168,12 +164,11 @@ public class UseHeaderRecipients extends GenericMailet {
         return result.build();
     }
 
-    private Collection<MailAddress> readMailAddresses(String headerPart) throws AddressException {
-        AddressList addressList = LenientAddressParser.DEFAULT
-            .parseAddressList(MimeUtil.unfold(headerPart));
-
-        return addressList.stream()
-            .flatMap(address -> convertAddressToMailboxCollection(address))
+    private Collection<MailAddress> readMailAddresses(String headerPart) {
+        return LenientAddressParser.DEFAULT
+            .parseAddressList(MimeUtil.unfold(headerPart))
+            .flatten()
+            .stream()
             .map(this::toMailAddress)
             .collect(Guavate.toImmutableList());
     }
@@ -184,15 +179,6 @@ public class UseHeaderRecipients extends GenericMailet {
         } catch (AddressException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private Stream<Mailbox> convertAddressToMailboxCollection(Address address) {
-        if (address instanceof Mailbox) {
-            return ImmutableList.of((Mailbox) address).stream();
-        } else if (address instanceof Group) {
-            return ImmutableList.copyOf(((Group) address).getMailboxes()).stream();
-        }
-        return Stream.of();
     }
 
     private String sanitizeHeaderString(String header) throws MessagingException {

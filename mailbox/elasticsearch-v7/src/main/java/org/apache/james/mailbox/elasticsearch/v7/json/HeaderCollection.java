@@ -25,12 +25,8 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import org.apache.james.mailbox.store.search.comparator.SentDateComparator;
-import org.apache.james.mime4j.dom.address.Address;
-import org.apache.james.mime4j.dom.address.Group;
-import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.util.MimeUtil;
@@ -152,19 +148,10 @@ public class HeaderCollection {
             ImmutableSet.Builder<EMailer> addressSet = getAddressSet(headerName);
             LenientAddressParser.DEFAULT
                 .parseAddressList(rawHeaderValue)
+                .flatten()
                 .stream()
-                .flatMap(this::convertAddressToMailboxStream)
                 .map((mailbox) -> new EMailer(Optional.ofNullable(mailbox.getName()), mailbox.getAddress()))
                 .forEach(addressSet::add);
-        }
-
-        private Stream<Mailbox> convertAddressToMailboxStream(Address address) {
-            if (address instanceof Mailbox) {
-                return Stream.of((Mailbox) address);
-            } else if (address instanceof Group) {
-                return ((Group) address).getMailboxes().stream();
-            }
-            return Stream.empty();
         }
 
         private ImmutableSet.Builder<EMailer> getAddressSet(String headerName) {
