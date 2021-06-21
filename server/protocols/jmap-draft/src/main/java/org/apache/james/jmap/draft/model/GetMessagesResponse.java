@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap.draft.model;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -31,7 +32,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 @JsonDeserialize(builder = GetMessagesResponse.Builder.class)
 public class GetMessagesResponse implements Method.Response {
@@ -42,26 +44,26 @@ public class GetMessagesResponse implements Method.Response {
     
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
-        private ImmutableList<MessageView> messages;
-        private List<MessageId> expectedMessageIds;
+        private ImmutableSet<MessageView> messages;
+        private Set<MessageId> expectedMessageIds;
 
         private Builder() {
-            this.messages = ImmutableList.of();
+            this.messages = ImmutableSet.of();
         }
 
         @JsonIgnore
         public Builder message(MessageView message) {
-            this.messages = ImmutableList.of(message);
+            this.messages = ImmutableSet.of(message);
             return this;
         }
 
-        public Builder messages(List<? extends MessageView> messages) {
-            this.messages = ImmutableList.copyOf(messages);
+        public Builder messages(Collection<? extends MessageView> messages) {
+            this.messages = ImmutableSet.copyOf(messages);
             return this;
         }
 
         public Builder expectedMessageIds(List<MessageId> expectedMessageIds) {
-            this.expectedMessageIds = ImmutableList.copyOf(expectedMessageIds);
+            this.expectedMessageIds = ImmutableSet.copyOf(expectedMessageIds);
             return this;
         }
         
@@ -71,31 +73,32 @@ public class GetMessagesResponse implements Method.Response {
         }
         
 
-        private List<MessageId> messagesNotFound() {
-            Set<MessageId> foundMessageIds = messages.stream().map(MessageView::getId).collect(Collectors.toSet());
-            return ImmutableList.copyOf(expectedMessageIds.stream()
-                .filter(id -> !foundMessageIds.contains(id))
-                .collect(Collectors.toList()));
+        private Set<MessageId> messagesNotFound() {
+            if (expectedMessageIds.size() == messages.size()) {
+                return ImmutableSet.of();
+            }
+            return Sets.difference(expectedMessageIds,
+                messages.stream().map(MessageView::getId).collect(Collectors.toSet()));
         }
     }
     
     
     
-    private final List<MessageView> messages;
-    private final List<MessageId> messagesNotFound;
+    private final Set<MessageView> messages;
+    private final Set<MessageId> messagesNotFound;
 
-    private GetMessagesResponse(List<MessageView> messages, List<MessageId> messagesNotFound) {
+    private GetMessagesResponse(Set<MessageView> messages, Set<MessageId> messagesNotFound) {
         this.messages = messages;
         this.messagesNotFound = messagesNotFound;
     }
 
     @JsonSerialize
-    public List<MessageView> list() {
+    public Set<MessageView> list() {
         return messages;
     }
     
     @JsonSerialize
-    public List<MessageId> notFound() {
+    public Set<MessageId> notFound() {
         return messagesNotFound;
     }
 
