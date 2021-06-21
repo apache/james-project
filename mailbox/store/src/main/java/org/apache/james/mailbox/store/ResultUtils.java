@@ -44,10 +44,14 @@ import org.apache.james.mime4j.stream.RawField;
 import org.apache.james.mime4j.util.ByteSequence;
 import org.apache.james.mime4j.util.ContentUtil;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 
 public class ResultUtils {
+    private static final EnumSet<FetchGroup.Profile> SUPPORTED_GROUPS = EnumSet.of(
+        FetchGroup.Profile.HEADERS,
+        FetchGroup.Profile.BODY_CONTENT,
+        FetchGroup.Profile.FULL_CONTENT,
+        FetchGroup.Profile.MIME_DESCRIPTOR);
 
     public static List<Header> createHeaders(MailboxMessage document) throws IOException {
         List<Header> results = new ArrayList<>();
@@ -113,18 +117,9 @@ public class ResultUtils {
 
     @VisibleForTesting
     static boolean haveValidContent(FetchGroup fetchGroup) {
-        EnumSet<FetchGroup.Profile> supportedGroups = EnumSet.of(
-            FetchGroup.Profile.HEADERS,
-            FetchGroup.Profile.BODY_CONTENT,
-            FetchGroup.Profile.FULL_CONTENT,
-            FetchGroup.Profile.MIME_DESCRIPTOR);
-
-        Collection<FetchGroup.Profile> unsupportedProfiles = fetchGroup.profiles()
+        return fetchGroup.profiles()
             .stream()
-            .filter(value -> !supportedGroups.contains(value))
-            .collect(Guavate.toImmutableSet());
-
-        return unsupportedProfiles.isEmpty();
+            .allMatch(SUPPORTED_GROUPS::contains);
     }
 
     private static void addPartContent(FetchGroup fetchGroup, MailboxMessage message, MessageResultImpl messageResult)
