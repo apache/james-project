@@ -34,7 +34,6 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
-import org.apache.james.mime4j.dom.address.Group;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.transport.mailets.model.ICALAttributeDTO;
@@ -202,8 +201,8 @@ public class ICALToJsonAttribute extends GenericMailet {
     private Optional<MailAddress> retrieveReplyTo(String headerValue) {
         return LenientAddressParser.DEFAULT
             .parseAddressList(headerValue)
+            .flatten()
             .stream()
-            .flatMap(this::convertAddressToMailboxStream)
             .flatMap(this::convertMailboxToMailAddress)
             .findFirst();
 
@@ -215,15 +214,6 @@ public class ICALToJsonAttribute extends GenericMailet {
         } catch (AddressException e) {
             return Stream.empty();
         }
-    }
-
-    private Stream<Mailbox> convertAddressToMailboxStream(org.apache.james.mime4j.dom.address.Address address) {
-        if (address instanceof Mailbox) {
-            return Stream.of((Mailbox) address);
-        } else if (address instanceof Group) {
-            return ((Group) address).getMailboxes().stream();
-        }
-        return Stream.empty();
     }
 
     private Stream<Pair<String, byte[]>> toJson(Map.Entry<String, Calendar> entry,
