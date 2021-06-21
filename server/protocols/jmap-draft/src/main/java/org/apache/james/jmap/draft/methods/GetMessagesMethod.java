@@ -21,7 +21,6 @@ package org.apache.james.jmap.draft.methods;
 
 import static org.apache.james.util.ReactorUtils.context;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -47,6 +46,7 @@ import org.apache.james.util.MDCBuilder;
 
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -127,8 +127,8 @@ public class GetMessagesMethod implements Method {
 
         MessageProperties.ReadProfile readProfile = getMessagesRequest.getProperties().computeReadLevel();
         MessageViewFactory<? extends MessageView> factory = messageViewFactory.getFactory(readProfile);
-        Mono<? extends List<? extends MessageView>> messageViewsMono = factory.fromMessageIds(getMessagesRequest.getIds(), mailboxSession)
-            .collectList();
+        Mono<? extends Set<? extends MessageView>> messageViewsMono = factory.fromMessageIds(getMessagesRequest.getIds(), mailboxSession)
+            .collect(Guavate.toImmutableSet());
 
         return messageViewsMono.map(messageViews ->
             GetMessagesResponse.builder()
