@@ -186,7 +186,7 @@ class MessageFullViewFactoryTest {
         MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
         assertThat(testee)
             .extracting(MessageFullView::getPreview, MessageFullView::getSize, MessageFullView::getSubject, MessageFullView::getHeaders, MessageFullView::getDate)
-            .containsExactly(PreviewDTO.of(""), Number.ZERO, "", ImmutableMap.of("MIME-Version", "1.0"), INTERNAL_DATE);
+            .containsExactly(PreviewDTO.of(""), Number.ZERO, "", ImmutableMap.of(), INTERNAL_DATE);
     }
 
     @Test
@@ -246,7 +246,6 @@ class MessageFullViewFactoryTest {
                 .put("In-Reply-To", "<SNT124-W2664003139C1E520CF4F6787D30@phx.gbl>")
                 .put("Other-header", "other header value")
                 .put("Date", "Tue, 14 Jul 2015 12:30:42 +0000")
-                .put("MIME-Version", "1.0")
                 .build();
 
         MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
@@ -302,7 +301,6 @@ class MessageFullViewFactoryTest {
             .put("Subject", "test subject")
             .put("From", "user <user@domain>")
             .put("To", "user1 <user1@domain>, user2 <user2@domain>")
-            .put("MIME-Version", "1.0")
             .build();
         MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
         MessageFullView expected = MessageFullView.builder()
@@ -353,7 +351,6 @@ class MessageFullViewFactoryTest {
             .put("Subject", "test subject")
             .put("Multi-header", "first value\nsecond value")
             .put("To", "user1 <user1@domain>")
-            .put("MIME-Version", "1.0")
             .build();
         MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
         MessageFullView expected = MessageFullView.builder()
@@ -657,7 +654,7 @@ class MessageFullViewFactoryTest {
         MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail).block();
         assertThat(testee)
             .extracting(MessageFullView::getPreview, MessageFullView::getSize, MessageFullView::getSubject, MessageFullView::getHeaders, MessageFullView::getDate)
-            .containsExactly(PreviewDTO.of(""), Number.fromLong(1010L), "", ImmutableMap.of("MIME-Version", "1.0"), INTERNAL_DATE);
+            .containsExactly(PreviewDTO.of(""), Number.fromLong(1010L), "", ImmutableMap.of(), INTERNAL_DATE);
     }
 
     @Test

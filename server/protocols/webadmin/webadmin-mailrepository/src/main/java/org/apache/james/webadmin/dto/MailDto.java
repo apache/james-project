@@ -34,6 +34,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.james.server.core.MimeMessageInputStream;
@@ -113,11 +114,9 @@ public class MailDto {
     }
 
     private static Message convertMessage(MimeMessage message) throws IOException, MessagingException {
-        return Message.Builder
-            .of()
-            .use(MimeConfig.PERMISSIVE)
-            .parse(new MimeMessageInputStream(message))
-            .build();
+        DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
+        defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
+        return defaultMessageBuilder.parseMessage(new MimeMessageInputStream(message));
     }
 
     private static Optional<HeadersDto> fetchHeaders(Set<AdditionalField> additionalFields, Mail mail) throws InaccessibleFieldException {

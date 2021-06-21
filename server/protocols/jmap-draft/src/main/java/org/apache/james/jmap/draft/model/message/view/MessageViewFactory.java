@@ -43,6 +43,7 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.util.ReactorUtils;
@@ -152,11 +153,9 @@ public interface MessageViewFactory<T extends MessageView> {
         }
 
         static Message parse(InputStream messageContent) throws IOException {
-            return Message.Builder
-                .of()
-                .use(MimeConfig.PERMISSIVE)
-                .parse(messageContent)
-                .build();
+            DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
+            defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
+            return defaultMessageBuilder.parseMessage(messageContent);
         }
     }
 }
