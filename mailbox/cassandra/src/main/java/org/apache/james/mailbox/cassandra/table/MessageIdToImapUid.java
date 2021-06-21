@@ -32,6 +32,8 @@ public interface MessageIdToImapUid {
     String MOD_SEQ = "modSeq";
     String MOD_SEQ_LOWERCASE = MOD_SEQ.toLowerCase(Locale.US);
 
-    String[] FIELDS = { MESSAGE_ID, MAILBOX_ID, IMAP_UID, MOD_SEQ,
+    String THREAD_ID = "threadId";
+
+    String[] FIELDS = { MESSAGE_ID, MAILBOX_ID, IMAP_UID, THREAD_ID, MOD_SEQ,
             Flag.ANSWERED, Flag.DELETED, Flag.DRAFT, Flag.FLAGGED, Flag.RECENT, Flag.SEEN, Flag.USER, Flag.USER_FLAGS };
 }
