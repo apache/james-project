@@ -60,11 +60,11 @@ public class Preview {
             return fromInputStream(new ByteArrayInputStream(messageAsString.getBytes(StandardCharsets.UTF_8)));
         }
 
-        private Preview fromInputStream(InputStream inputStream) throws IOException {
+        public Preview fromInputStream(InputStream inputStream) throws IOException {
             return fromMime4JMessage(parse(inputStream));
         }
 
-        private Preview fromMime4JMessage(Message mimeMessage) throws IOException {
+        public Preview fromMime4JMessage(Message mimeMessage) throws IOException {
             MessageContentExtractor.MessageContent messageContent = messageContentExtractor.extract(mimeMessage);
             return messageContent.extractMainTextContent(htmlTextExtractor)
                 .map(Preview::compute)
