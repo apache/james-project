@@ -31,6 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.util.mime.MessageContentExtractor;
@@ -72,10 +73,9 @@ public class Preview {
         }
 
         private Message parse(InputStream inputStream) throws IOException {
-            return Message.Builder.of()
-                .use(MimeConfig.PERMISSIVE)
-                .parse(inputStream)
-                .build();
+            DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
+            defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
+            return defaultMessageBuilder.parseMessage(inputStream);
         }
     }
 
