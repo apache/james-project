@@ -80,6 +80,9 @@ public interface MessageViewFactory<T extends MessageView> {
         }
 
         private static boolean hasOnlyOneMessageId(Collection<MessageResult> messageResults) {
+            if (messageResults.size() == 1) {
+                return true;
+            }
             return messageResults
                 .stream()
                 .map(MessageResult::getMessageId)
