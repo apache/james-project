@@ -206,7 +206,6 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
 
             setFlags(flags);
             this.mailboxId = mailboxId;
-            this.userFlags = flags.getUserFlags();
     }
 
     public SimpleMailboxMessage(MessageId messageId, Date internalDate, long size, int bodyStartOctet,
