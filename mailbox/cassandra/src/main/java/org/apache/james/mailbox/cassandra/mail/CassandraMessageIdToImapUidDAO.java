@@ -42,6 +42,7 @@ import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.FIELDS
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.MOD_SEQ;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.MOD_SEQ_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.TABLE_NAME;
+import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.THREAD_ID;
 
 import java.util.Optional;
 
@@ -116,6 +117,7 @@ public class CassandraMessageIdToImapUidDAO {
             .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
             .value(MAILBOX_ID, bindMarker(MAILBOX_ID))
             .value(IMAP_UID, bindMarker(IMAP_UID))
+            .value(THREAD_ID, bindMarker(THREAD_ID))
             .value(MOD_SEQ, bindMarker(MOD_SEQ))
             .value(ANSWERED, bindMarker(ANSWERED))
             .value(DELETED, bindMarker(DELETED))
@@ -181,10 +183,12 @@ public class CassandraMessageIdToImapUidDAO {
     public Mono<Void> insert(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
         ComposedMessageId composedMessageId = composedMessageIdWithMetaData.getComposedMessageId();
         Flags flags = composedMessageIdWithMetaData.getFlags();
+        ThreadId threadId = composedMessageIdWithMetaData.getThreadId();
         return cassandraAsyncExecutor.executeVoid(insert.bind()
                 .setUUID(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
                 .setUUID(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
                 .setLong(IMAP_UID, composedMessageId.getUid().asLong())
+                .setUUID(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get())
                 .setLong(MOD_SEQ, composedMessageIdWithMetaData.getModSeq().asLong())
                 .setBool(ANSWERED, flags.contains(Flag.ANSWERED))
                 .setBool(DELETED, flags.contains(Flag.DELETED))

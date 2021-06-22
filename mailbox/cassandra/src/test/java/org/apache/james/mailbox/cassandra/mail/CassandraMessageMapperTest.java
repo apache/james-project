@@ -103,7 +103,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
             messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
 
             assertThat(statementRecorder.listExecutedStatements(Selector.preparedStatementStartingWith(
-                "SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen," +
+                "SELECT messageId,mailboxId,uid,threadId,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen," +
                     "flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId AND ")))
                 .hasSize(1);
         }
@@ -292,7 +292,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("INSERT INTO imapUidTable (messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags)"));
+                    .whenQueryStartsWith("INSERT INTO imapUidTable (messageId,mailboxId,uid,threadId,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags)"));
 
             try {
                 messageMapper.add(benwaInboxMailbox, message1);
@@ -315,7 +315,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("INSERT INTO messageIdTable (mailboxId,uid,modSeq,messageId,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags)"));
+                    .whenQueryStartsWith("INSERT INTO messageIdTable (mailboxId,uid,threadId,modSeq,messageId,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags)"));
 
             try {
                 messageMapper.add(benwaInboxMailbox, message1);
@@ -343,7 +343,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .times(5)
-                    .whenQueryStartsWith("INSERT INTO messageIdTable (mailboxId,uid,modSeq,messageId,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags)"));
+                    .whenQueryStartsWith("INSERT INTO messageIdTable (mailboxId,uid,threadId,modSeq,messageId,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags)"));
 
             messageMapper.add(benwaInboxMailbox, message1);
 
