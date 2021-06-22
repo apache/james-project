@@ -122,7 +122,7 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
             .block();
 
         assertThat(statementRecorder.listExecutedStatements(
-            StatementRecorder.Selector.preparedStatementStartingWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted," +
+            StatementRecorder.Selector.preparedStatementStartingWith("SELECT messageId,mailboxId,uid,threadId,modSeq,flagAnswered,flagDeleted," +
                 "flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM imapUidTable")))
             .hasSize(1);
     }
@@ -206,7 +206,7 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("INSERT INTO imapUidTable (messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags)"));
+                    .whenQueryStartsWith("INSERT INTO imapUidTable (messageId,mailboxId,uid,threadId,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags)"));
 
             try {
                 message1.setUid(mapperProvider.generateMessageUid());

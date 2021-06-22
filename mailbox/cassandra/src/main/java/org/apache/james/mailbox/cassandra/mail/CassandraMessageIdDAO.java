@@ -29,6 +29,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable.FIELDS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable.TABLE_NAME;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable.THREAD_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.IMAP_UID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MAILBOX_ID_LOWERCASE;
@@ -123,6 +124,7 @@ public class CassandraMessageIdDAO {
         return session.prepare(insertInto(TABLE_NAME)
                 .value(MAILBOX_ID, bindMarker(MAILBOX_ID))
                 .value(IMAP_UID, bindMarker(IMAP_UID))
+                .value(THREAD_ID, bindMarker(THREAD_ID))
                 .value(MOD_SEQ, bindMarker(MOD_SEQ))
                 .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
                 .value(ANSWERED, bindMarker(ANSWERED))
@@ -222,10 +224,12 @@ public class CassandraMessageIdDAO {
     public Mono<Void> insert(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
         ComposedMessageId composedMessageId = composedMessageIdWithMetaData.getComposedMessageId();
         Flags flags = composedMessageIdWithMetaData.getFlags();
+        ThreadId threadId = composedMessageIdWithMetaData.getThreadId();
         return cassandraAsyncExecutor.executeVoid(insert.bind()
                 .setUUID(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
                 .setLong(IMAP_UID, composedMessageId.getUid().asLong())
                 .setUUID(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
+                .setUUID(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get())
                 .setLong(MOD_SEQ, composedMessageIdWithMetaData.getModSeq().asLong())
                 .setBool(ANSWERED, flags.contains(Flag.ANSWERED))
                 .setBool(DELETED, flags.contains(Flag.DELETED))
