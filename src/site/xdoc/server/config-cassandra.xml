@@ -319,6 +319,12 @@
 
     </subsection>
 
+    <subsection name="Adding threadId column to message metadata tables">
+
+      <p>Add threadId column to messageIdTable and imapUidTable in order to get a message's threadId.</p>
+
+    </subsection>
+
   </section>
 
 </body>

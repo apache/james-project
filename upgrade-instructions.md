@@ -19,7 +19,24 @@ Change list:
  - [Drop Cassandra schema version prior version 8](#drop-cassandra-schema-version-prior-version-8)
  - [Adopt UnboundID as a LDAP library](#adopt-unboundid-as-a-ldap-library)
  - [Review the architecture of the RabbitMQ event bus](#review-the-architecture-of-the-rabbitmq-event-bus)
+ - [Adding threadId column to message metadata tables](#adding-threadid-column-to-message-metadata-tables)
  
+### Adding threadId column to message metadata tables
+
+Date 23/06/2021
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3516
+
+Concerned product: Distributed James
+
+Add threadId column to messageIdTable and imapUidTable in order to get a message's threadId.
+
+In order to add this threadId column we advise you to run the following commands:
+```
+ALTER TABLE james_keyspace.messageIdTable ADD threadId timeuuid;
+ALTER TABLE james_keyspace.imapUidTable ADD threadId timeuuid;
+```
+
 ### Review the architecture of the RabbitMQ event bus
 
 Date 14/06/2021
