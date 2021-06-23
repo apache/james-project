@@ -2,7 +2,7 @@
 #
 # VERSION	1.0
 
-FROM linagora/james-jpa-guice:james-project-3.4.0
+FROM apache/james:jpa-3.6.0
 
 # Install git
 RUN apt-get update
