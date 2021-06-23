@@ -44,6 +44,7 @@ import com.rabbitmq.client.AMQP;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.OutboundMessage;
 import reactor.rabbitmq.Sender;
 
@@ -110,7 +111,16 @@ class Enqueuer {
             EMPTY_ROUTING_KEY,
             basicProperties,
             getMailReferenceBytes(mailReference));
-        return sender.send(Mono.just(data));
+        return sender.sendWithPublishConfirms(Mono.just(data))
+            .subscribeOn(Schedulers.elastic()) // channel.confirmSelect is synchronous
+            .next()
+            .handle((result, sink) -> {
+                if (!result.isAck()) {
+                    sink.error(new MailQueue.MailQueueException("Publish was not acked"));
+                } else {
+                    sink.complete();
+                }
+            });
     }
 
     private EnqueuedItem toEnqueuedItems(MailReference mailReference) {
