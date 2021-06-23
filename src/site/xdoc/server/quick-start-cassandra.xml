@@ -83,7 +83,7 @@ Copy your TLS keys to ./conf/keystore or generate it using :
 
 You will have to put the keystore password in the right xml files (imapserver.xml, pop3server.xml, smtpserver.xml)
 
-You are welcome to use the default configuration which can be found in the <i>$PWD/dockerfiles/run/guice/cassandra/destination/conf</i> folder.
+You are welcome to use the default configuration which can be found in the <i>$PWD/server/apps/cassandra-app/sample-configuration</i> folder.
 
 Step 5: Start
 #############
@@ -205,7 +205,7 @@ Step 1: Download
 
   * Get the James docker-compose file
 
-<i>$ wget https://raw.githubusercontent.com/apache/james-project/master/dockerfiles/run/docker-compose.yml</i>
+<i>$ wget https://raw.githubusercontent.com/apache/james-project/master/server/apps/distributed-app/docker-compose.yml</i>
 
 Step 2: Start
 #############

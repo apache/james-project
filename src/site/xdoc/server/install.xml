@@ -89,7 +89,7 @@
           <a href="install/jpa-guice.html">JPA-Guice</a> and <a href="install/jpa-smtp-guice.html">JPA-SMTP-Guice</a>.
       </p>
 
-      <p>A <a href="https://github.com/apache/james-project/blob/james-project-3.6.0/dockerfiles/run/docker-compose.yml">
+      <p>A <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/docker-compose.yml">
           docker-compose</a> is available for Guice + Cassandra + ElasticSearch + RabbitMQ</p>
   </section>
 

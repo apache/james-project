@@ -37,7 +37,7 @@ To run james, you have to create a directory containing required configuration f
 
 James requires the configuration to be in a subfolder of working directory that is called **conf**. You can get a sample
 directory for configuration from
-[dockerfiles/run/guice/cassandra/destination/conf](https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/cassandra/destination/conf). You might need to adapt it to your needs.
+[server/apps/cassandra-app/sample-configuration](https://github.com/apache/james-project/tree/master/server/apps/cassandra-app/sample-configuration). You might need to adapt it to your needs.
 
 You also need to generate a keystore in your conf folder with the following command:
 
