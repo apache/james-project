@@ -110,56 +110,15 @@ This feature is available for three configurations :
  * link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-guice/README.adoc[Guice + Cassandra + ElasticSearch]
  * link:https://github.com/apache/james-project/blob/master/server/container/guice/jpa-guice/README.adoc[Guice + JPA + Lucene]
  * link:https://github.com/apache/james-project/blob/master/server/container/guice/memory-guice/README.adoc[Guice + Memory (testing)]
- * link:#run-james-with-spring-%2Djpa[Spring + JPA]
 
-=== Run James with Spring + JPA
-
-==== Requirements
-
-Built artifacts should be in ./dockerfiles/run/spring/destination folder for Spring.
-If you haven't already:
-
-    $ docker build -t james/project dockerfiles/compilation/java-11
-    $ docker run -v $HOME/.m2:/root/.m2 -v $PWD:/origin \
-  -v $PWD/dockerfiles/run/spring/destination:/spring/destination \
-  -t james/project -s HEAD
-
-
-==== Howto ?
-
-We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
-
-Copy your TSL keys to destination/run/spring/conf/keystore or generate it using the following command. The password must be james72laBalle to match default configuration.
-
-    $ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/run/spring/destination/conf/keystore
-
-Then we need to build james container :
-
-    $ docker build -t james_run dockerfiles/run/spring/
-
-The provisioned james images bases on pre-build james server which is "linagora/james-project-spring-jpa". If we need to build james container with the default initial data (initial domain: james.local and initial users: user01, user02, user03):
-
-    $ docker build -t james_run dockerfiles/run/spring/provisioned/
-
-To run this container :
-
-    $ docker run --hostname HOSTNAME -p "25:25" -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --name james_run -t james_run
-
-Where HOSTNAME is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
-
-== Other Useful commands
-
-The base command is different whether you choose guice flavor or spring :
-
-  * guice use : `docker exec james_run java james-cli`
-  * spring use : `docker exec james_run /root/james-server-app-3.0.0-beta6-SNAPSHOT/bin/james-cli.sh`
+== Using the CLI
 
 See https://james.apache.org/server/manage-cli.html[Manage James via the Command Line] for more info.
 
 === How to add a domain ?
 
     # Add DOMAIN to 127.0.0.1 in your host /etc/hosts
-    $ <your-command-here> -h 127.0.0.1 -p 9999 adddomain DOMAIN
+    $ docker exec james_run java james-cli -h 127.0.0.1 -p 9999 adddomain DOMAIN
 
 DOMAIN: is the domain you want to add.
 
@@ -170,7 +129,7 @@ domain will be created upon James start:
 
 === How to add a user ?
 
-    $ <your-command-here> -h 127.0.0.1 -p 9999 adduser USER_MAIL_ADDRESS PASSWORD
+    $ docker exec james_run java james-cli -h 127.0.0.1 -p 9999 adduser USER_MAIL_ADDRESS PASSWORD
 
 Where :
 
