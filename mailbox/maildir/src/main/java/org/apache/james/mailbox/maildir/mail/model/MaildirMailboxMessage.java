@@ -78,6 +78,7 @@ public class MaildirMailboxMessage extends DelegatingMailboxMessage {
             .modSeq(modSeq)
             .flags(createFlags())
             .composedMessageId(new ComposedMessageId(mailbox.getMailboxId(), getMessageId(), uid))
+            .threadId(getThreadId())
             .build();
     }
 

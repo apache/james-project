@@ -43,8 +43,10 @@ import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.MOD_SE
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.MOD_SEQ_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.THREAD_ID;
+import static org.apache.james.mailbox.cassandra.table.MessageIdToImapUid.THREAD_ID_LOWERCASE;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
@@ -61,6 +63,8 @@ import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId.Factory;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
@@ -245,14 +249,24 @@ public class CassandraMessageIdToImapUidDAO {
     }
 
     private ComposedMessageIdWithMetaData toComposedMessageIdWithMetadata(Row row) {
+        MessageId messageId = messageIdFactory.of(row.getUUID(MESSAGE_ID_LOWERCASE));
         return ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(
                     CassandraId.of(row.getUUID(MAILBOX_ID_LOWERCASE)),
-                    messageIdFactory.of(row.getUUID(MESSAGE_ID_LOWERCASE)),
+                    messageId,
                     MessageUid.of(row.getLong(IMAP_UID))))
                 .flags(FlagsExtractor.getFlags(row))
                 .modSeq(ModSeq.of(row.getLong(MOD_SEQ_LOWERCASE)))
+                .threadId(getThreadIdFromRow(row, messageId))
                 .build();
+    }
+
+    private ThreadId getThreadIdFromRow(Row row, MessageId messageId) {
+        UUID threadIdUUID = row.getUUID(THREAD_ID_LOWERCASE);
+        if (threadIdUUID == null) {
+            return ThreadId.fromBaseMessageId(messageId);
+        }
+        return ThreadId.fromBaseMessageId(messageIdFactory.of(threadIdUUID));
     }
 
     private Statement selectStatement(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {

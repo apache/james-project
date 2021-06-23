@@ -223,6 +223,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             .modSeq(modSeq)
             .flags(createFlags())
             .composedMessageId(new ComposedMessageId(mailboxId, getMessageId(), uid))
+            .threadId(getThreadId())
             .build();
     }
 

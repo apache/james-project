@@ -202,6 +202,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .composedMessageId(composedMessageId)
             .flags(mailboxMessage.createFlags())
             .modSeq(mailboxMessage.getModSeq())
+            .threadId(mailboxMessage.getThreadId())
             .build();
     }
 
@@ -313,7 +314,8 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
                 .map(modSeq -> new ComposedMessageIdWithMetaData(
                     oldComposedId.getComposedMessageId(),
                     newFlags,
-                    modSeq))
+                    modSeq,
+                    oldComposedId.getThreadId()))
             .flatMap(newComposedId -> updateFlags(oldComposedId, newComposedId));
         }
     }

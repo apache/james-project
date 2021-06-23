@@ -81,7 +81,8 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
                     message.getMessageId(),
                     message.getUid()),
                 message.createFlags(),
-                message.getModSeq()));
+                message.getModSeq(),
+                message.getThreadId()));
     }
 
     @Override

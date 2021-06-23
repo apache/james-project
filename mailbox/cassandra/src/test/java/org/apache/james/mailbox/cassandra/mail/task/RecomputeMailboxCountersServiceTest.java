@@ -50,6 +50,7 @@ import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.task.Task.Result;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,8 +68,8 @@ class RecomputeMailboxCountersServiceTest {
     private static final CassandraMessageId.Factory MESSAGE_ID_FACTORY = new CassandraMessageId.Factory();
     private static final CassandraMessageId MESSAGE_ID_1 = MESSAGE_ID_FACTORY.fromString("40ff9e30-6022-11ea-9a94-d300cbf968c0");
     private static CassandraId CASSANDRA_ID_1 = CassandraId.of(UUID.fromString("16d681e0-6023-11ea-a7f2-0f94ad804b0d"));
-    private static final ComposedMessageIdWithMetaData METADATA_UNSEEN = new ComposedMessageIdWithMetaData(new ComposedMessageId(CASSANDRA_ID_1, MESSAGE_ID_1, MessageUid.of(45)), new Flags(), ModSeq.of(45));
-    private static final ComposedMessageIdWithMetaData METADATA_SEEN = new ComposedMessageIdWithMetaData(new ComposedMessageId(CASSANDRA_ID_1, MESSAGE_ID_1, MessageUid.of(45)), new Flags(Flags.Flag.SEEN), ModSeq.of(45));
+    private static final ComposedMessageIdWithMetaData METADATA_UNSEEN = new ComposedMessageIdWithMetaData(new ComposedMessageId(CASSANDRA_ID_1, MESSAGE_ID_1, MessageUid.of(45)), new Flags(), ModSeq.of(45), ThreadId.fromBaseMessageId(MESSAGE_ID_1));
+    private static final ComposedMessageIdWithMetaData METADATA_SEEN = new ComposedMessageIdWithMetaData(new ComposedMessageId(CASSANDRA_ID_1, MESSAGE_ID_1, MessageUid.of(45)), new Flags(Flags.Flag.SEEN), ModSeq.of(45), ThreadId.fromBaseMessageId(MESSAGE_ID_1));
     private static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, UID_VALIDITY_1, CASSANDRA_ID_1);
 
     @RegisterExtension
