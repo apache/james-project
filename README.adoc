@@ -69,7 +69,7 @@ All those three components will be started with a single command.
 
 You can retrieve the docker-compose file :
 
-    $ wget https://raw.githubusercontent.com/apache/james-project/master/dockerfiles/run/docker-compose.yml
+    $ wget https://raw.githubusercontent.com/apache/james-project/master/server/apps/distributed-app/docker-compose.yml
 
 Then, you just have to start the services:
 
