@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra.table;
 
+import java.util.Locale;
+
 import javax.mail.Flags;
 
 import com.google.common.collect.ImmutableMap;
@@ -32,26 +34,25 @@ public interface Flag {
     String FLAGGED = "flagFlagged";
     String USER = "flagUser";
     String USER_FLAGS = "userFlags";
-    String[] ALL = { ANSWERED, DELETED, DRAFT, RECENT, SEEN, FLAGGED, USER };
-    String[] ALL_APPLICABLE_FLAG = { ANSWERED, DELETED, DRAFT, SEEN, FLAGGED };
+    String USER_FLAGS_LOWERCASE = USER_FLAGS.toLowerCase(Locale.US);
+
+    String[] ALL_LOWERCASE = {
+        ANSWERED.toLowerCase(Locale.US),
+        DELETED.toLowerCase(Locale.US),
+        DRAFT.toLowerCase(Locale.US),
+        RECENT.toLowerCase(Locale.US),
+        SEEN.toLowerCase(Locale.US),
+        FLAGGED.toLowerCase(Locale.US),
+        USER.toLowerCase(Locale.US)
+    };
 
     ImmutableMap<String, Flags.Flag> JAVAX_MAIL_FLAG = ImmutableMap.<String, Flags.Flag>builder()
-        .put(ANSWERED, Flags.Flag.ANSWERED)
-        .put(DELETED, Flags.Flag.DELETED)
-        .put(DRAFT, Flags.Flag.DRAFT)
-        .put(RECENT, Flags.Flag.RECENT)
-        .put(SEEN, Flags.Flag.SEEN)
-        .put(FLAGGED, Flags.Flag.FLAGGED)
-        .put(USER, Flags.Flag.USER)
-        .build();
-
-    ImmutableMap<Flags.Flag, String> FLAG_TO_STRING_MAP = ImmutableMap.<Flags.Flag, String>builder()
-        .put(Flags.Flag.ANSWERED, ANSWERED)
-        .put(Flags.Flag.DELETED, DELETED)
-        .put(Flags.Flag.DRAFT, DRAFT)
-        .put(Flags.Flag.RECENT, RECENT)
-        .put(Flags.Flag.SEEN, SEEN)
-        .put(Flags.Flag.FLAGGED, FLAGGED)
-        .put(Flags.Flag.USER, USER)
+        .put(ANSWERED.toLowerCase(Locale.US), Flags.Flag.ANSWERED)
+        .put(DELETED.toLowerCase(Locale.US), Flags.Flag.DELETED)
+        .put(DRAFT.toLowerCase(Locale.US), Flags.Flag.DRAFT)
+        .put(RECENT.toLowerCase(Locale.US), Flags.Flag.RECENT)
+        .put(SEEN.toLowerCase(Locale.US), Flags.Flag.SEEN)
+        .put(FLAGGED.toLowerCase(Locale.US), Flags.Flag.FLAGGED)
+        .put(USER.toLowerCase(Locale.US), Flags.Flag.USER)
         .build();
 }

@@ -341,7 +341,7 @@ public class SolveMessageInconsistenciesServiceTest {
                 cassandra.getConf()
                     .registerScenario(fail()
                         .times(1)
-                        .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM imapUidTable WHERE messageId=:messageId AND mailboxId=:mailboxId"));
+                        .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM messageIdTable WHERE mailboxId=:mailboxId AND uid=:uid;"));
 
                 testee.fixMessageInconsistencies(context, RunningOptions.DEFAULT).block();
 
@@ -536,7 +536,7 @@ public class SolveMessageInconsistenciesServiceTest {
                 cassandra.getConf()
                     .registerScenario(fail()
                         .times(1)
-                        .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM imapUidTable WHERE messageId=:messageId AND mailboxId=:mailboxId"));
+                        .whenQueryStartsWith("SELECT messageId,mailboxId,uid,modSeq,flagAnswered,flagDeleted,flagDraft,flagFlagged,flagRecent,flagSeen,flagUser,userFlags FROM imapUidTable WHERE messageid=:messageid AND mailboxid=:mailboxid"));
 
                 testee.fixMessageInconsistencies(context, RunningOptions.DEFAULT).block();
 

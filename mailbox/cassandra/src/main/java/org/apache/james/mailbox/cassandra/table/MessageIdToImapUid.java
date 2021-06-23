@@ -23,11 +23,14 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.IMAP_
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
 
+import java.util.Locale;
+
 public interface MessageIdToImapUid {
 
     String TABLE_NAME = "imapUidTable";
 
     String MOD_SEQ = "modSeq";
+    String MOD_SEQ_LOWERCASE = MOD_SEQ.toLowerCase(Locale.US);
 
     String[] FIELDS = { MESSAGE_ID, MAILBOX_ID, IMAP_UID, MOD_SEQ,
             Flag.ANSWERED, Flag.DELETED, Flag.DRAFT, Flag.FLAGGED, Flag.RECENT, Flag.SEEN, Flag.USER, Flag.USER_FLAGS };

@@ -37,12 +37,12 @@ public class FlagsExtractor {
 
     public static Flags getFlags(Row row) {
         Flags flags = new Flags();
-        for (String flag : Flag.ALL) {
+        for (String flag : Flag.ALL_LOWERCASE) {
             if (row.getBool(flag)) {
                 flags.add(Flag.JAVAX_MAIL_FLAG.get(flag));
             }
         }
-        row.get(Flag.USER_FLAGS, SET_OF_STRINGS_CODEC)
+        row.get(Flag.USER_FLAGS_LOWERCASE, SET_OF_STRINGS_CODEC)
             .forEach(flags::add);
         return flags;
     }
