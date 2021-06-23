@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.MDCStructuredLogger;
@@ -69,12 +70,13 @@ class KeyRegistrationHandler {
     private final RegistrationBinder registrationBinder;
     private final ListenerExecutor listenerExecutor;
     private final RetryBackoffConfiguration retryBackoff;
+    private final RabbitMQConfiguration configuration;
     private Optional<Disposable> receiverSubscriber;
 
     KeyRegistrationHandler(NamingStrategy namingStrategy, EventBusId eventBusId, EventSerializer eventSerializer,
                            Sender sender, ReceiverProvider receiverProvider,
                            RoutingKeyConverter routingKeyConverter, LocalListenerRegistry localListenerRegistry,
-                           ListenerExecutor listenerExecutor, RetryBackoffConfiguration retryBackoff) {
+                           ListenerExecutor listenerExecutor, RetryBackoffConfiguration retryBackoff, RabbitMQConfiguration configuration) {
         this.namingStrategy = namingStrategy;
         this.eventBusId = eventBusId;
         this.eventSerializer = eventSerializer;
@@ -84,6 +86,7 @@ class KeyRegistrationHandler {
         this.receiver = receiverProvider.createReceiver();
         this.listenerExecutor = listenerExecutor;
         this.retryBackoff = retryBackoff;
+        this.configuration = configuration;
         this.registrationQueue = namingStrategy.queueName(eventBusId);
         this.registrationBinder = new RegistrationBinder(namingStrategy, sender, registrationQueue);
         this.receiverSubscriber = Optional.empty();
@@ -111,7 +114,7 @@ class KeyRegistrationHandler {
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(AUTO_DELETE)
-                .arguments(QUEUE_ARGUMENTS))
+                .arguments(configuration.workQueueArgumentsBuilder().build()))
             .timeout(TOPOLOGY_CHANGES_TIMEOUT)
             .map(AMQP.Queue.DeclareOk::getQueue)
             .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()))

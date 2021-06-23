@@ -22,10 +22,10 @@ package org.apache.james.events;
 import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
-import static org.apache.james.events.KeyRegistrationHandler.QUEUE_ARGUMENTS;
 
 import javax.inject.Inject;
 
+import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -41,18 +41,21 @@ public class KeyReconnectionHandler implements SimpleConnectionPool.Reconnection
 
     private final NamingStrategy namingStrategy;
     private final EventBusId eventBusId;
+    private final RabbitMQConfiguration configuration;
 
     @Inject
-    public KeyReconnectionHandler(NamingStrategy namingStrategy, EventBusId eventBusId) {
+    public KeyReconnectionHandler(NamingStrategy namingStrategy, EventBusId eventBusId, RabbitMQConfiguration configuration) {
         this.namingStrategy = namingStrategy;
         this.eventBusId = eventBusId;
+        this.configuration = configuration;
     }
 
     @Override
     public Publisher<Void> handleReconnection(Connection connection) {
         return Mono.fromRunnable(() -> {
             try (Channel channel = connection.createChannel()) {
-                channel.queueDeclare(namingStrategy.queueName(eventBusId).asString(), DURABLE, !EXCLUSIVE, AUTO_DELETE, QUEUE_ARGUMENTS);
+                channel.queueDeclare(namingStrategy.queueName(eventBusId).asString(), DURABLE, !EXCLUSIVE, AUTO_DELETE,
+                    configuration.workQueueArgumentsBuilder().build());
             } catch (Exception e) {
                 LOGGER.error("Error recovering connection", e);
             }

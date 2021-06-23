@@ -65,8 +65,8 @@ public class JMAPEventBusModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
-    SimpleConnectionPool.ReconnectionHandler provideReconnectionHandler(@Named(InjectionKeys.JMAP) EventBusId eventBusId) {
-        return new KeyReconnectionHandler(JMAP_NAMING_STRATEGY, eventBusId);
+    SimpleConnectionPool.ReconnectionHandler provideReconnectionHandler(@Named(InjectionKeys.JMAP) EventBusId eventBusId, RabbitMQConfiguration configuration) {
+        return new KeyReconnectionHandler(JMAP_NAMING_STRATEGY, eventBusId, configuration);
     }
 
     @Provides
