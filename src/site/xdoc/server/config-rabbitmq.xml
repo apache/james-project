@@ -118,6 +118,11 @@
 
           <dt><strong>quorum.queues.replication.factor</strong></dt>
           <dd> Strictly positive integer. The replication factor to use when creating quorum queues.</dd>
+
+          <dt><strong>hosts</strong></dt>
+          <dd>Optional, default to the host specified as part of the URI.
+              Allow creating cluster aware connections.
+              A coma separated list of hosts, example: hosts=ip1:5672,ip2:5672</dd>
       </dl>
   </section>
 

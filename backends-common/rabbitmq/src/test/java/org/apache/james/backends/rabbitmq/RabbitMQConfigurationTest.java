@@ -32,8 +32,10 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.james.util.Host;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -141,6 +143,7 @@ class RabbitMQConfigurationTest {
                 .amqpUri(URI.create(amqpUri))
                 .managementUri(URI.create(managementUri))
                 .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+                .hosts(ImmutableList.of(Host.from("rabbitmqhost", 5672)))
                 .build());
     }
 
