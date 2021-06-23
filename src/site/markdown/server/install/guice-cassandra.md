@@ -58,14 +58,3 @@ Once everything is set up, you just have to run the jar with:
 $ java -Dworking.directory=. -jar target/james-server-cassandra-guice.jar
 ```
 
-## Guice-cassandra-ldap
-
-You can follow the same guide to build and run guice-cassandra-ldap artifact, except that:
- - The **jar** and **libs** needs to be retrieve from server/container/guice/cassandra-ldap-guice/target after compilation
- - The sample configuration can be found in [dockerfiles/run/guice/cassandra-ldap/destination/conf](https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/cassandra-ldap/destination/conf)
- - You need a running LDAP server to connect to.
- - You can then launch James via this command:
-
-```bash
-$ java -Dworking.directory=. -jar target/james-server-cassandra-ldap-guice.jar
-```
