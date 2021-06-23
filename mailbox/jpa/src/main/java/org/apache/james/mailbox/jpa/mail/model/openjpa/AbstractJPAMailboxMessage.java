@@ -331,6 +331,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
             .modSeq(getModSeq())
             .flags(createFlags())
             .composedMessageId(new ComposedMessageId(mailbox.getMailboxId(), getMessageId(), MessageUid.of(uid)))
+            .threadId(getThreadId())
             .build();
     }
 

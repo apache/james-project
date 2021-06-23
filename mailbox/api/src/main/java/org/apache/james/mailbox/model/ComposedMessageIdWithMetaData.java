@@ -38,6 +38,7 @@ public class ComposedMessageIdWithMetaData {
         private ComposedMessageId composedMessageId;
         private Flags flags;
         private ModSeq modSeq;
+        private ThreadId threadId;
 
         private Builder() {
         }
@@ -57,22 +58,30 @@ public class ComposedMessageIdWithMetaData {
             return this;
         }
 
+        public Builder threadId(ThreadId threadId) {
+            this.threadId = threadId;
+            return this;
+        }
+
         public ComposedMessageIdWithMetaData build() {
             Preconditions.checkNotNull(composedMessageId, "'composedMessageId' is mandatory");
             Preconditions.checkNotNull(flags, "'flags' is mandatory");
             Preconditions.checkNotNull(modSeq, "'modSeq' is mandatory");
-            return new ComposedMessageIdWithMetaData(composedMessageId, flags, modSeq);
+            Preconditions.checkNotNull(threadId, "'threadId' is mandatory");
+            return new ComposedMessageIdWithMetaData(composedMessageId, flags, modSeq, threadId);
         }
     }
 
     private final ComposedMessageId composedMessageId;
     private final Flags flags;
     private final ModSeq modSeq;
+    private final ThreadId threadId;
 
-    public ComposedMessageIdWithMetaData(ComposedMessageId composedMessageId, Flags flags, ModSeq modSeq) {
+    public ComposedMessageIdWithMetaData(ComposedMessageId composedMessageId, Flags flags, ModSeq modSeq, ThreadId threadId) {
         this.composedMessageId = composedMessageId;
         this.flags = flags;
         this.modSeq = modSeq;
+        this.threadId = threadId;
     }
 
     public ComposedMessageId getComposedMessageId() {
@@ -87,6 +96,10 @@ public class ComposedMessageIdWithMetaData {
         return modSeq;
     }
 
+    public ThreadId getThreadId() {
+        return threadId;
+    }
+
     public boolean isMatching(MessageId messageId) {
         return getComposedMessageId().getMessageId().equals(messageId);
     }
@@ -97,14 +110,15 @@ public class ComposedMessageIdWithMetaData {
             ComposedMessageIdWithMetaData other = (ComposedMessageIdWithMetaData) o;
             return Objects.equal(composedMessageId, other.composedMessageId)
                 && Objects.equal(flags, other.flags)
-                && Objects.equal(modSeq, other.modSeq);
+                && Objects.equal(modSeq, other.modSeq)
+                && Objects.equal(threadId, other.threadId);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hashCode(composedMessageId, flags, modSeq);
+        return Objects.hashCode(composedMessageId, flags, modSeq, threadId);
     }
 
     @Override
@@ -113,6 +127,7 @@ public class ComposedMessageIdWithMetaData {
             .add("composedMessageId", composedMessageId)
             .add("flags", flags)
             .add("modSeq", modSeq)
+            .add("threadId", threadId)
             .toString();
     }
 }

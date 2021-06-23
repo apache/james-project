@@ -534,6 +534,7 @@ public class CassandraMessageMapper implements MessageMapper {
                 .composedMessageId(new ComposedMessageId(mailboxId, message.getMessageId(), message.getUid()))
                 .flags(message.createFlags())
                 .modSeq(message.getModSeq())
+                .threadId(message.getThreadId())
                 .build();
         return composedMessageIdWithMetaData;
     }
@@ -587,6 +588,7 @@ public class CassandraMessageMapper implements MessageMapper {
                 .composedMessageId(oldMetadata.getComposedMessageId())
                 .modSeq(newModSeq)
                 .flags(newFlags)
+                .threadId(oldMetadata.getThreadId())
                 .build();
         return imapUidDAO.updateMetadata(newMetadata, oldMetadata.getModSeq())
             .flatMap(success -> {

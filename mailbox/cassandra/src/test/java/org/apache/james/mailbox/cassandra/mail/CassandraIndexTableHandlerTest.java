@@ -45,6 +45,7 @@ import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MessageBuilder;
@@ -198,7 +199,8 @@ class CassandraIndexTableHandlerTest {
         testee.updateIndexOnDelete(new ComposedMessageIdWithMetaData(
                 new ComposedMessageId(MAILBOX_ID, CASSANDRA_MESSAGE_ID, MESSAGE_UID),
                 new Flags(Flags.Flag.RECENT),
-                MODSEQ),
+                MODSEQ,
+                ThreadId.fromBaseMessageId(CASSANDRA_MESSAGE_ID)),
             MAILBOX_ID).block();
 
         Long actual = mailboxCounterDAO.countMessagesInMailbox(mailbox).block();
@@ -215,7 +217,8 @@ class CassandraIndexTableHandlerTest {
         testee.updateIndexOnDelete(new ComposedMessageIdWithMetaData(
                 new ComposedMessageId(MAILBOX_ID, CASSANDRA_MESSAGE_ID, MESSAGE_UID),
                 new Flags(),
-                MODSEQ),
+                MODSEQ,
+                ThreadId.fromBaseMessageId(CASSANDRA_MESSAGE_ID)),
             MAILBOX_ID).block();
 
         Long actual = mailboxCounterDAO.countUnseenMessagesInMailbox(mailbox).block();
@@ -232,7 +235,8 @@ class CassandraIndexTableHandlerTest {
         testee.updateIndexOnDelete(new ComposedMessageIdWithMetaData(
                 new ComposedMessageId(MAILBOX_ID, CASSANDRA_MESSAGE_ID, MESSAGE_UID),
                 new Flags(Flags.Flag.SEEN),
-                MODSEQ),
+                MODSEQ,
+                ThreadId.fromBaseMessageId(CASSANDRA_MESSAGE_ID)),
             MAILBOX_ID).block();
 
         Long actual = mailboxCounterDAO.countUnseenMessagesInMailbox(mailbox).block();
@@ -249,7 +253,8 @@ class CassandraIndexTableHandlerTest {
         testee.updateIndexOnDelete(new ComposedMessageIdWithMetaData(
                 new ComposedMessageId(MAILBOX_ID, CASSANDRA_MESSAGE_ID, MESSAGE_UID),
                 new Flags(Flags.Flag.RECENT),
-                MODSEQ),
+                MODSEQ,
+                ThreadId.fromBaseMessageId(CASSANDRA_MESSAGE_ID)),
             MAILBOX_ID).block();
 
         assertThat(mailboxRecentsDAO.getRecentMessageUidsInMailbox(MAILBOX_ID)
@@ -269,7 +274,8 @@ class CassandraIndexTableHandlerTest {
         testee.updateIndexOnDelete(new ComposedMessageIdWithMetaData(
                 new ComposedMessageId(MAILBOX_ID, CASSANDRA_MESSAGE_ID, MESSAGE_UID),
                 new Flags(),
-                MODSEQ),
+                MODSEQ,
+                ThreadId.fromBaseMessageId(CASSANDRA_MESSAGE_ID)),
             MAILBOX_ID).block();
 
         assertThat(mailboxRecentsDAO.getRecentMessageUidsInMailbox(MAILBOX_ID)
@@ -287,7 +293,8 @@ class CassandraIndexTableHandlerTest {
         testee.updateIndexOnDelete(new ComposedMessageIdWithMetaData(
                 new ComposedMessageId(MAILBOX_ID, CASSANDRA_MESSAGE_ID, MESSAGE_UID),
                 new Flags(Flags.Flag.DELETED),
-                MODSEQ),
+                MODSEQ,
+                ThreadId.fromBaseMessageId(CASSANDRA_MESSAGE_ID)),
             MAILBOX_ID).block();
 
         assertThat(
@@ -656,7 +663,8 @@ class CassandraIndexTableHandlerTest {
         testee.updateIndexOnDelete(new ComposedMessageIdWithMetaData(
             new ComposedMessageId(MAILBOX_ID, CASSANDRA_MESSAGE_ID, MESSAGE_UID),
             new Flags(),
-            MODSEQ), MAILBOX_ID).block();
+            MODSEQ,
+            ThreadId.fromBaseMessageId(CASSANDRA_MESSAGE_ID)), MAILBOX_ID).block();
 
         Boolean actual = firstUnseenDAO.retrieveFirstUnread(MAILBOX_ID).hasElement().block();
         assertThat(actual).isFalse();

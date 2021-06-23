@@ -36,15 +36,16 @@ class ComposedMessageIdWithMetaDataTest {
     private static final TestMessageId TEST_MESSAGE_ID = new TestMessageId("2");
     private static final MessageUid MESSAGE_UID = MessageUid.of(3);
     private static final ComposedMessageId COMPOSED_MESSAGE_ID = new ComposedMessageId(TEST_ID, TEST_MESSAGE_ID, MESSAGE_UID);
+    private static final ThreadId THREAD_ID = ThreadId.fromBaseMessageId(TEST_MESSAGE_ID);
 
     @Test
-    void buildShoudThrownWhenComposedMessageIdIsNull() {
+    void buildShouldThrownWhenComposedMessageIdIsNull() {
         assertThatThrownBy(() -> ComposedMessageIdWithMetaData.builder().build())
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    void buildShoudThrownWhenFlagsIsNull() {
+    void buildShouldThrownWhenFlagsIsNull() {
         assertThatThrownBy(() -> ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(COMPOSED_MESSAGE_ID)
                 .build())
@@ -52,7 +53,7 @@ class ComposedMessageIdWithMetaDataTest {
     }
 
     @Test
-    void buildShoudThrownWhenModSeqIsNull() {
+    void buildShouldThrownWhenModSeqIsNull() {
         assertThatThrownBy(() -> ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(COMPOSED_MESSAGE_ID)
                 .flags(new Flags())
@@ -61,7 +62,17 @@ class ComposedMessageIdWithMetaDataTest {
     }
 
     @Test
-    void buildShoudWork() {
+    void buildShouldThrownWhenThreadIdIsNull() {
+        assertThatThrownBy(() -> ComposedMessageIdWithMetaData.builder()
+                .composedMessageId(COMPOSED_MESSAGE_ID)
+                .flags(new Flags())
+                .modSeq(ModSeq.of(1))
+                .build())
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void buildShouldWork() {
         Flags flags = new Flags(Flag.RECENT);
         ModSeq modSeq = ModSeq.of(1);
 
@@ -69,11 +80,13 @@ class ComposedMessageIdWithMetaDataTest {
             .composedMessageId(COMPOSED_MESSAGE_ID)
             .flags(flags)
             .modSeq(modSeq)
+            .threadId(THREAD_ID)
             .build();
 
         assertThat(composedMessageIdWithMetaData.getComposedMessageId()).isEqualTo(COMPOSED_MESSAGE_ID);
         assertThat(composedMessageIdWithMetaData.getFlags()).isEqualTo(flags);
         assertThat(composedMessageIdWithMetaData.getModSeq()).isEqualTo(modSeq);
+        assertThat(composedMessageIdWithMetaData.getThreadId()).isEqualTo(THREAD_ID);
     }
 
     @Test
@@ -82,6 +95,7 @@ class ComposedMessageIdWithMetaDataTest {
                 .composedMessageId(new ComposedMessageId(TEST_ID, TEST_MESSAGE_ID, MESSAGE_UID))
                 .flags(new Flags(Flag.RECENT))
                 .modSeq(ModSeq.of(1))
+                .threadId(THREAD_ID)
                 .build();
 
         assertThat(composedMessageIdWithMetaData.isMatching(TEST_MESSAGE_ID)).isTrue();
@@ -93,6 +107,7 @@ class ComposedMessageIdWithMetaDataTest {
                 .composedMessageId(COMPOSED_MESSAGE_ID)
                 .flags(new Flags(Flag.RECENT))
                 .modSeq(ModSeq.of(1))
+                .threadId(THREAD_ID)
                 .build();
 
         assertThat(composedMessageIdWithMetaData.isMatching(new TestMessageId("3"))).isFalse();

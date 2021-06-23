@@ -45,6 +45,7 @@ import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesS
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.task.Task;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,24 +71,28 @@ public class SolveMessageInconsistenciesServiceTest {
         .composedMessageId(new ComposedMessageId(MAILBOX_ID, MESSAGE_ID_1, MESSAGE_UID_1))
         .modSeq(MOD_SEQ_1)
         .flags(new Flags())
+        .threadId(ThreadId.fromBaseMessageId(MESSAGE_ID_1))
         .build();
 
     private static final ComposedMessageIdWithMetaData MESSAGE_1_WITH_SEEN_FLAG = ComposedMessageIdWithMetaData.builder()
         .composedMessageId(new ComposedMessageId(MAILBOX_ID, MESSAGE_ID_1, MESSAGE_UID_1))
         .modSeq(MOD_SEQ_1)
         .flags(new Flags(Flags.Flag.SEEN))
+        .threadId(ThreadId.fromBaseMessageId(MESSAGE_ID_1))
         .build();
 
     private static final ComposedMessageIdWithMetaData MESSAGE_1_WITH_MOD_SEQ_2 = ComposedMessageIdWithMetaData.builder()
         .composedMessageId(new ComposedMessageId(MAILBOX_ID, MESSAGE_ID_1, MESSAGE_UID_1))
         .modSeq(MOD_SEQ_2)
         .flags(new Flags(Flags.Flag.SEEN))
+        .threadId(ThreadId.fromBaseMessageId(MESSAGE_ID_1))
         .build();
 
     private static final ComposedMessageIdWithMetaData MESSAGE_2 = ComposedMessageIdWithMetaData.builder()
         .composedMessageId(new ComposedMessageId(MAILBOX_ID, MESSAGE_ID_2, MESSAGE_UID_2))
         .modSeq(MOD_SEQ_2)
         .flags(new Flags())
+        .threadId(ThreadId.fromBaseMessageId(MESSAGE_ID_2))
         .build();
 
     @RegisterExtension

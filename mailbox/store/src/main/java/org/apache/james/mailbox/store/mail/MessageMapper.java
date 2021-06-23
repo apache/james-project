@@ -80,7 +80,8 @@ public interface MessageMapper extends Mapper {
                     message.getMessageId(),
                     message.getUid()),
                 message.createFlags(),
-                message.getModSeq()));
+                message.getModSeq(),
+                message.getThreadId()));
     }
 
     default Flux<MailboxMessage> findInMailboxReactive(Mailbox mailbox, MessageRange set, FetchType type, int limit) {
