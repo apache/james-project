@@ -25,7 +25,7 @@ import static org.apache.james.backends.rabbitmq.Constants.DIRECT_EXCHANGE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
-import static org.apache.james.backends.rabbitmq.Constants.NO_ARGUMENTS;
+import static org.apache.james.backends.rabbitmq.QueueArguments.NO_ARGUMENTS;
 import static org.apache.james.events.RabbitMQEventBus.EVENT_BUS_ID;
 
 import java.nio.charset.StandardCharsets;

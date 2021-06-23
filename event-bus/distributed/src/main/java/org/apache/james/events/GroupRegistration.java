@@ -23,13 +23,13 @@ import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backends.rabbitmq.Constants.REQUEUE;
-import static org.apache.james.backends.rabbitmq.Constants.deadLetterQueue;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.util.MDCBuilder;
@@ -81,16 +81,18 @@ class GroupRegistration implements Registration {
     private final Group group;
     private final RetryBackoffConfiguration retryBackoff;
     private final ListenerExecutor listenerExecutor;
+    private final RabbitMQConfiguration configuration;
     private Optional<Disposable> receiverSubscriber;
 
     GroupRegistration(NamingStrategy namingStrategy, ReactorRabbitMQChannelPool channelPool, Sender sender, ReceiverProvider receiverProvider, EventSerializer eventSerializer,
                       EventListener.ReactiveEventListener listener, Group group, RetryBackoffConfiguration retryBackoff,
                       EventDeadLetters eventDeadLetters,
-                      Runnable unregisterGroup, ListenerExecutor listenerExecutor) {
+                      Runnable unregisterGroup, ListenerExecutor listenerExecutor, RabbitMQConfiguration configuration) {
         this.namingStrategy = namingStrategy;
         this.channelPool = channelPool;
         this.eventSerializer = eventSerializer;
         this.listener = listener;
+        this.configuration = configuration;
         this.queueName = namingStrategy.workQueue(group);
         this.sender = sender;
         this.receiver = receiverProvider.createReceiver();
@@ -119,7 +121,9 @@ class GroupRegistration implements Registration {
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(!AUTO_DELETE)
-                .arguments(deadLetterQueue(namingStrategy.deadLetterExchange())));
+                .arguments(configuration.workQueueArgumentsBuilder()
+                    .deadLetter(namingStrategy.deadLetterExchange())
+                    .build()));
     }
 
     private Disposable consumeWorkQueue() {

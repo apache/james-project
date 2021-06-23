@@ -52,7 +52,7 @@ class RabbitMQEventBusDeadLetterQueueUpgradeTest {
     private RabbitMQEventBus eventBus;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         MemoryEventDeadLetters memoryEventDeadLetters = new MemoryEventDeadLetters();
 
         EventSerializer eventSerializer = new TestEventSerializer();
@@ -61,7 +61,7 @@ class RabbitMQEventBusDeadLetterQueueUpgradeTest {
         eventBus = new RabbitMQEventBus(NAMING_STRATEGY, rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(),
             eventSerializer, RETRY_BACKOFF_CONFIGURATION, routingKeyConverter,
             memoryEventDeadLetters, new RecordingMetricFactory(), rabbitMQExtension.getRabbitChannelPool(),
-            EventBusId.random());
+            EventBusId.random(), rabbitMQExtension.getRabbitMQ().getConfiguration());
 
         eventBus.start();
     }

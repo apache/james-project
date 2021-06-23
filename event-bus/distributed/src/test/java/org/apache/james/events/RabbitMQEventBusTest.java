@@ -24,7 +24,7 @@ import static org.apache.james.backends.rabbitmq.Constants.DIRECT_EXCHANGE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
-import static org.apache.james.backends.rabbitmq.Constants.NO_ARGUMENTS;
+import static org.apache.james.backends.rabbitmq.QueueArguments.NO_ARGUMENTS;
 import static org.apache.james.events.EventBusConcurrentTestContract.newCountingListener;
 import static org.apache.james.events.EventBusTestFixture.ALL_GROUPS;
 import static org.apache.james.events.EventBusTestFixture.EVENT;
@@ -115,7 +115,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     }
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         memoryEventDeadLetters = new MemoryEventDeadLetters();
 
         eventSerializer = new TestEventSerializer();
@@ -151,15 +151,15 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             .block();
     }
 
-    private RabbitMQEventBus newEventBus() {
+    private RabbitMQEventBus newEventBus() throws Exception {
         return newEventBus(TEST_NAMING_STRATEGY, rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider());
     }
 
-    private RabbitMQEventBus newEventBus(NamingStrategy namingStrategy, Sender sender, ReceiverProvider receiverProvider) {
+    private RabbitMQEventBus newEventBus(NamingStrategy namingStrategy, Sender sender, ReceiverProvider receiverProvider) throws Exception {
         return new RabbitMQEventBus(namingStrategy, sender, receiverProvider, eventSerializer,
             EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, routingKeyConverter,
             memoryEventDeadLetters, new RecordingMetricFactory(),
-            rabbitMQExtension.getRabbitChannelPool(), EventBusId.random());
+            rabbitMQExtension.getRabbitChannelPool(), EventBusId.random(), rabbitMQExtension.getRabbitMQ().getConfiguration());
     }
 
     @Override
@@ -456,7 +456,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 private RabbitMQEventBus rabbitMQEventBusWithNetWorkIssue;
 
                 @BeforeEach
-                void beforeEach() {
+                void beforeEach() throws Exception {
                     rabbitMQEventBusWithNetWorkIssue = newEventBus(TEST_NAMING_STRATEGY, rabbitMQNetWorkIssueExtension.getSender(), rabbitMQNetWorkIssueExtension.getReceiverProvider());
                 }
 
@@ -820,7 +820,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         private RabbitMQEventBus otherEventBus;
 
         @BeforeEach
-        void beforeEach() {
+        void beforeEach() throws Exception {
             otherEventBus = newEventBus(new NamingStrategy("other"), rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider());
             otherEventBus.start();
         }

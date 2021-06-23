@@ -81,7 +81,7 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
             new RawMailQueueItemDecoratorFactory(),
             configuration);
         mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
-        mailQueueFactory = new RabbitMQMailQueueFactory(rabbitMQExtension.getSender(), mqManagementApi, privateFactory);
+        mailQueueFactory = new RabbitMQMailQueueFactory(rabbitMQExtension.getSender(), mqManagementApi, privateFactory, rabbitMQExtension.getRabbitMQ().getConfiguration());
     }
 
     @AfterEach

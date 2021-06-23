@@ -21,6 +21,7 @@ package org.apache.james.modules.event;
 
 import javax.inject.Named;
 
+import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
@@ -72,15 +73,16 @@ public class JMAPEventBusModule extends AbstractModule {
     @Singleton
     @Named(InjectionKeys.JMAP)
     RabbitMQEventBus provideJmapEventBus(Sender sender, ReceiverProvider receiverProvider,
-                                 JmapEventSerializer eventSerializer,
-                                 RetryBackoffConfiguration retryBackoffConfiguration,
-                                 EventDeadLetters eventDeadLetters,
-                                 MetricFactory metricFactory, ReactorRabbitMQChannelPool channelPool,
-                                 @Named(InjectionKeys.JMAP) EventBusId eventBusId) {
+                                         JmapEventSerializer eventSerializer,
+                                         RetryBackoffConfiguration retryBackoffConfiguration,
+                                         EventDeadLetters eventDeadLetters,
+                                         MetricFactory metricFactory, ReactorRabbitMQChannelPool channelPool,
+                                         @Named(InjectionKeys.JMAP) EventBusId eventBusId,
+                                         RabbitMQConfiguration configuration) {
         return new RabbitMQEventBus(
             JMAP_NAMING_STRATEGY,
             sender, receiverProvider, eventSerializer, retryBackoffConfiguration, new RoutingKeyConverter(ImmutableSet.of(new Factory())),
-            eventDeadLetters, metricFactory, channelPool, eventBusId);
+            eventDeadLetters, metricFactory, channelPool, eventBusId, configuration);
     }
 
     @Provides

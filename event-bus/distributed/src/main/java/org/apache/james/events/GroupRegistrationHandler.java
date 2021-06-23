@@ -24,7 +24,6 @@ import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backends.rabbitmq.Constants.REQUEUE;
-import static org.apache.james.backends.rabbitmq.Constants.deadLetterQueue;
 import static org.apache.james.events.GroupRegistration.DEFAULT_RETRY_COUNT;
 
 import java.nio.charset.StandardCharsets;
@@ -34,6 +33,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.slf4j.Logger;
@@ -74,12 +74,13 @@ class GroupRegistrationHandler {
     private final EventDeadLetters eventDeadLetters;
     private final ListenerExecutor listenerExecutor;
     private final EventBusId eventBusId;
+    private final RabbitMQConfiguration configuration;
     private Optional<Receiver> receiver;
     private Optional<Disposable> consumer;
 
     GroupRegistrationHandler(NamingStrategy namingStrategy, EventSerializer eventSerializer, ReactorRabbitMQChannelPool channelPool, Sender sender, ReceiverProvider receiverProvider,
                              RetryBackoffConfiguration retryBackoff,
-                             EventDeadLetters eventDeadLetters, ListenerExecutor listenerExecutor, EventBusId eventBusId) {
+                             EventDeadLetters eventDeadLetters, ListenerExecutor listenerExecutor, EventBusId eventBusId, RabbitMQConfiguration configuration) {
         this.namingStrategy = namingStrategy;
         this.eventSerializer = eventSerializer;
         this.channelPool = channelPool;
@@ -89,6 +90,7 @@ class GroupRegistrationHandler {
         this.eventDeadLetters = eventDeadLetters;
         this.listenerExecutor = listenerExecutor;
         this.eventBusId = eventBusId;
+        this.configuration = configuration;
         this.groupRegistrations = new ConcurrentHashMap<>();
         this.queueName = namingStrategy.workQueue(GROUP);
         this.consumer = Optional.empty();
@@ -106,7 +108,9 @@ class GroupRegistrationHandler {
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(!AUTO_DELETE)
-                .arguments(deadLetterQueue(namingStrategy.deadLetterExchange())),
+                .arguments(configuration.workQueueArgumentsBuilder()
+                    .deadLetter(namingStrategy.deadLetterExchange())
+                    .build()),
             BindingSpecification.binding()
                 .exchange(namingStrategy.exchange())
                 .queue(queueName.asString())
@@ -182,6 +186,6 @@ class GroupRegistrationHandler {
             retryBackoff,
             eventDeadLetters,
             () -> groupRegistrations.remove(group),
-            listenerExecutor);
+            listenerExecutor, configuration);
     }
 }

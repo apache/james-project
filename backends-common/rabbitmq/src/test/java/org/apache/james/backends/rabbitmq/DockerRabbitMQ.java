@@ -254,7 +254,11 @@ public class DockerRabbitMQ {
     }
 
     public RabbitMQConnectionFactory createRabbitConnectionFactory() throws URISyntaxException {
-        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+        return new RabbitMQConnectionFactory(getConfiguration());
+    }
+
+    public RabbitMQConfiguration getConfiguration() throws URISyntaxException {
+        return RabbitMQConfiguration.builder()
             .amqpUri(amqpUri())
             .managementUri(managementUri())
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
@@ -266,7 +270,5 @@ public class DockerRabbitMQ {
             .shutdownTimeoutInMs(SHUTDOWN_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND)
             .networkRecoveryIntervalInMs(NETWORK_RECOVERY_INTERVAL_OF_ONE_HUNDRED_MILLISECOND)
             .build();
-
-        return new RabbitMQConnectionFactory(rabbitMQConfiguration);
     }
 }
