@@ -213,11 +213,11 @@ to offer their community with a set of maintained docker images, for convenience
 
 Docker images includes:
 
-- apache/james:memory-3.x.x built from https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/memory
-- apache/james:jpa-3.x.x built from https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/jpa
-- apache/james:demo-3.x.x built from https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/provisioned
-- apache/james:cassandra-3.x.x build from https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/cassandra
-- apache/james:distributed-3.x.x built from https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/cassandra-rabbitmq
+- apache/james:memory-3.x.x built from https://github.com/apache/james-project/tree/master/server/apps/memory-app
+- apache/james:jpa-3.x.x built from https://github.com/apache/james-project/tree/master/server/apps/jpa-app
+- apache/james:demo-3.x.x built from https://github.com/apache/james-project/tree/master/server/apps/provisioned-app
+- apache/james:cassandra-3.x.x build from https://github.com/apache/james-project/tree/master/server/apps/cassandra-app
+- apache/james:distributed-3.x.x built from https://github.com/apache/james-project/tree/master/dockerfiles/server/apps/distributed-app
 
 As a committer contact the INFRA and hand them your docker-hub account to get the permission.
 
