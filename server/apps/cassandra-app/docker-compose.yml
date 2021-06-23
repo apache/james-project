@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+
+  james:
+    depends_on:
+      - elasticsearch
+      - cassandra
+      - tika
+    entrypoint: bash -c "java -Dworking.directory=/root/ -Dlogback.configurationFile=/root/conf/logback.xml -jar james-server.jar"
+    image: apache/james:cassandra-3.6.0
+    container_name: james
+    hostname: james.local
+    ports:
+      - "80:80"
+      - "25:25"
+      - "110:110"
+      - "143:143"
+      - "465:465"
+      - "587:587"
+      - "993:993"
+      - "8000:8000"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+    environment:
+      - discovery.type=single-node
+
+  cassandra:
+    image: cassandra:3.11.10
+    ports:
+      - "9042:9042"
+
+  tika:
+    image: apache/tika:1.26
+
