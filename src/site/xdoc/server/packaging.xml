@@ -75,7 +75,7 @@
                     </tr>
                     <tr>
                         <td>Docker image</td>
-                        <td><a href="https://github.com/apache/james-project/tree/master/dockerfiles/run/spring">Available</a></td>
+                        <td>Not available. Contributions welcomed for JIB support.</td>
                         <td>apache/james:cassandra-3.6.0</td>
                         <td>apache/james:distributed-3.6.0</td>
                         <td>apache/james:jpa-3.6.0</td>
