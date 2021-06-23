@@ -38,7 +38,7 @@ In order to achieve this goal, this product leverages the following technologies
  - **ElasticSearch** for search
  - **RabbitMQ** for messaging
 
-A [docker-compose](https://github.com/apache/james-project/blob/master/dockerfiles/run/docker-compose.yml) file is 
+A [docker-compose](https://github.com/apache/james-project/blob/master/server/apps/distributed-app/docker-compose.yml) file is 
 available to allow you to quickly deploy locally this product.
 
 ## Basic Monitoring
@@ -185,7 +185,7 @@ allowing to do different kind of extra operations on the system, like:
  - ...
 
 It is possible for the administrator of James to define the mailbox listeners he wants to use, by adding them in the
-[listeners.xml](https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/listeners.xml) configuration file.
+[listeners.xml](https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/listeners.xml) configuration file.
 It's possible also to add your own custom mailbox listeners. This enables to enhance capabilities of James as a Mail Delivery Agent.
 You can get more information about those [here](config-listeners.html).
 
@@ -261,7 +261,7 @@ from the old index to the new one (this actively relies on `_source` field being
  - Now that the migration to the new index is done, you can 
 [drop the old index](https://www.elastic.co/guide/en/elasticsearch/reference/6.3/indices-delete-index.html)
  - You might want as well modify the James configuration file 
-[elasticsearch.properties](https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/elasticsearch.properties)
+[elasticsearch.properties](https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/elasticsearch.properties)
 by setting the parameter `elasticsearch.index.mailbox.name` to the name of your new index. This is to avoid that James 
 re-creates index upon restart
 
@@ -594,11 +594,11 @@ To setup James with Deleted Messages Vault, you need to follow those steps:
 
 #### Enable Deleted Messages Vault by configuring Pre Deletion Hooks
 
-You need to configure this hook in [listeners.xml](https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/listeners.xml) configuration file. More details about configuration & example can be found at [Pre Deletion Hook Configuration](http://james.apache.org/server/config-listeners.html)
+You need to configure this hook in [listeners.xml](https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/listeners.xml) configuration file. More details about configuration & example can be found at [Pre Deletion Hook Configuration](http://james.apache.org/server/config-listeners.html)
 
 #### Configuring the retention time for the Deleted Messages Vault
 
-In order to configure the retention time for the Deleted Messages Vault, an administrator needs to perform fine configuration tunning as explained in [deletedMessageVault.properties](https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/deletedMessageVault.properties). Mails are not retained forever as you have to configure a retention period (by `retentionPeriod`) before using it (with one-year retention by default if not defined).
+In order to configure the retention time for the Deleted Messages Vault, an administrator needs to perform fine configuration tunning as explained in [deletedMessageVault.properties](https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/deletedMessageVault.properties). Mails are not retained forever as you have to configure a retention period (by `retentionPeriod`) before using it (with one-year retention by default if not defined).
 
 ### Restore deleted messages after deletion
 

@@ -28,7 +28,7 @@ mvn clean install
 To run james, you have to create a directory containing required configuration files.
 
 James requires the configuration to be in a subfolder of working directory that is called **conf**. You can get a sample
-directory for configuration from [dockerfiles/run/guice/jpa/destination/conf](https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/jpa/destination/conf). You might need to adapt it to your needs.
+directory for configuration from [server/apps/jpa-app/sample-configuration](https://github.com/apache/james-project/tree/master/server/apps/jpa-app/sample-configuration). You might need to adapt it to your needs.
 
 
 ## Running
