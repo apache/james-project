@@ -32,8 +32,8 @@ class RabbitMQConnectionFactoryTest {
     @Test
     void creatingAFactoryShouldWorkWhenConfigurationIsValid() {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(URI.create("amqp://james:james@rabbitmq_host:5672"))
-            .managementUri(URI.create("http://james:james@rabbitmq_host:15672/api/"))
+            .amqpUri(URI.create("amqp://james:james@rabbitmqhost:5672"))
+            .managementUri(URI.create("http://james:james@rabbitmqhost:15672/api/"))
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
@@ -49,8 +49,8 @@ class RabbitMQConnectionFactoryTest {
                 .build();
 
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-                .amqpUri(URI.create("amqp://james:james@rabbitmq_host:5672"))
-                .managementUri(URI.create("http://james:james@rabbitmq_host:15672/api/"))
+                .amqpUri(URI.create("amqp://james:james@rabbitmqhost:5672"))
+                .managementUri(URI.create("http://james:james@rabbitmqhost:15672/api/"))
                 .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
                 .useSsl(true)
                 .sslConfiguration(sslConfiguration)
@@ -62,8 +62,8 @@ class RabbitMQConnectionFactoryTest {
     @Test
     void creatingAFactoryShouldThrowWhenConfigurationIsInvalid() {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(URI.create("badprotocol://james:james@rabbitmq_host:5672"))
-            .managementUri(URI.create("http://james:james@rabbitmq_host:15672/api/"))
+            .amqpUri(URI.create("badprotocol://james:james@rabbitmqhost:5672"))
+            .managementUri(URI.create("http://james:james@rabbitmqhost:15672/api/"))
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
@@ -74,8 +74,8 @@ class RabbitMQConnectionFactoryTest {
     @Test
     void createShouldFailWhenConnectionCantBeDone() {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-                .amqpUri(URI.create("amqp://james:james@rabbitmq_host:5672"))
-                .managementUri(URI.create("http://james:james@rabbitmq_host:15672/api/"))
+                .amqpUri(URI.create("amqp://james:james@rabbitmqhost:5672"))
+                .managementUri(URI.create("http://james:james@rabbitmqhost:15672/api/"))
                 .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
                 .maxRetries(1)
                 .minDelayInMs(1)
@@ -95,8 +95,8 @@ class RabbitMQConnectionFactoryTest {
                 .build();
 
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-                .amqpUri(URI.create("amqp://james:james@rabbitmq_host:5672"))
-                .managementUri(URI.create("http://james:james@rabbitmq_host:15672/api/"))
+                .amqpUri(URI.create("amqp://james:james@rabbitmqhost:5672"))
+                .managementUri(URI.create("http://james:james@rabbitmqhost:15672/api/"))
                 .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
                 .maxRetries(1)
                 .minDelayInMs(1)
@@ -117,8 +117,8 @@ class RabbitMQConnectionFactoryTest {
                 .build();
 
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-                .amqpUri(URI.create("amqp://james:james@rabbitmq_host:5672"))
-                .managementUri(URI.create("http://james:james@rabbitmq_host:15672/api/"))
+                .amqpUri(URI.create("amqp://james:james@rabbitmqhost:5672"))
+                .managementUri(URI.create("http://james:james@rabbitmqhost:15672/api/"))
                 .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
                 .maxRetries(1)
                 .minDelayInMs(1)
@@ -140,8 +140,8 @@ class RabbitMQConnectionFactoryTest {
                 .build();
 
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-                .amqpUri(URI.create("amqp://james:james@rabbitmq_host:5672"))
-                .managementUri(URI.create("http://james:james@rabbitmq_host:15672/api/"))
+                .amqpUri(URI.create("amqp://james:james@rabbitmqhost:5672"))
+                .managementUri(URI.create("http://james:james@rabbitmqhost:15672/api/"))
                 .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
                 .maxRetries(1)
                 .minDelayInMs(1)
@@ -163,8 +163,8 @@ class RabbitMQConnectionFactoryTest {
                 .build();
 
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-                .amqpUri(URI.create("amqp://james:james@rabbitmq_host:5672"))
-                .managementUri(URI.create("http://james:james@rabbitmq_host:15672/api/"))
+                .amqpUri(URI.create("amqp://james:james@rabbitmqhost:5672"))
+                .managementUri(URI.create("http://james:james@rabbitmqhost:15672/api/"))
                 .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
                 .maxRetries(1)
                 .minDelayInMs(1)
