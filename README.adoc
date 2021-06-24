@@ -106,10 +106,10 @@ Useful options includes:
 
 This feature is available for three configurations :
 
- * link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-rabbitmq-guice/README.adoc[Guice + Cassandra + RabbitMQ + S3 + ElasticSearch (distributed)]
- * link:https://github.com/apache/james-project/blob/master/server/container/guice/cassandra-guice/README.adoc[Guice + Cassandra + ElasticSearch]
- * link:https://github.com/apache/james-project/blob/master/server/container/guice/jpa-guice/README.adoc[Guice + JPA + Lucene]
- * link:https://github.com/apache/james-project/blob/master/server/container/guice/memory-guice/README.adoc[Guice + Memory (testing)]
+ * link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/README.adoc[Guice + Cassandra + RabbitMQ + S3 + ElasticSearch (distributed)]
+ * link:https://github.com/apache/james-project/blob/master/server/apps/cassandra-app/README.adoc[Guice + Cassandra + ElasticSearch]
+ * link:https://github.com/apache/james-project/blob/master/server/apps/jpa-app/README.adoc[Guice + JPA + Lucene]
+ * link:https://github.com/apache/james-project/blob/master/server/apps/memory-app/README.md[Guice + Memory (testing)]
 
 == Using the CLI
 
