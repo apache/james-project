@@ -47,7 +47,6 @@
         <module>es-metric-reporter</module>
         <module>jmx</module>
         <module>jpa-common</module>
-        <module>jpa-smtp-common</module>
         <module>mailbox</module>
         <module>mailbox-jpa</module>
         <module>mailbox-plugin-deleted-messages-vault</module>
@@ -249,11 +248,6 @@
                 <artifactId>james-server-jpa-common-guice</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-jpa-smtp-common-guice</artifactId>
-                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
