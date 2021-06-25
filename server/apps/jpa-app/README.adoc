@@ -78,3 +78,27 @@ The [CLI](https://james.apache.org/server/manage-cli.html) can easily be used:
 ----
 docker exec CONTAINER-ID james-cli ListDomains
 ----
+
+=== Using alternative JDBC drivers
+
+In `james-database.properties`, one can specify any JDBC driver on the class path.
+
+With docker, such drivers can be added to the classpath by placing the driver JAR in a volume
+and mounting it within `/root/libs` directory.
+
+We do ship a [docker-compose](https://github.com/apache/james-project/blob/master/server/apps/jpa-smtp-app/docker-compose.yml)
+file demonstrating James JPA app usage with MariaDB. In order to run it:
+
+....
+# 1. Download the driver:
+wget https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/2.7.2/mariadb-java-client-2.7.2.jar
+
+# 2. Generate the keystore with the default password `james72laBalle`:
+keytool -genkey -alias james -keyalg RSA -keystore keystore
+
+# 3. Start MariaDB
+docker-compose up -d mariadb
+
+# 4. Start James
+docker-compose up james
+....
