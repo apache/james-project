@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.mariadb;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,6 +27,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JPAJamesServerMain;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.server.core.configuration.Configuration;
 import org.junit.After;
@@ -36,7 +38,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.testcontainers.containers.MariaDBContainer;
 
-public class JPAJamesServerTest {
+public class JPAMariaDBJamesServerTest {
 
     private GuiceJamesServer server;
     private SocketChannel socketChannel;
@@ -66,7 +68,7 @@ public class JPAJamesServerTest {
             .build();
 
         return JPAJamesServerMain.createServer(configuration)
-                .overrideWith(new TestJPAConfigurationModule(mariaDBUrl));
+                .overrideWith(new TestJPAMariaDBConfigurationModule(mariaDBUrl));
     }
 
     @After
