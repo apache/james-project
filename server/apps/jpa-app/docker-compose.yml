@@ -1,0 +1,28 @@
+version: '3'
+
+# In order to start James JPA app on top of mariaDB:
+# 1. Download the driver: `wget https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/2.7.2/mariadb-java-client-2.7.2.jar`
+# 2. Generate the keystore with the default password `james72laBalle`: `keytool -genkey -alias james -keyalg RSA -keystore keystore`
+# 3. Start MariaDB: `docker-compose up -d mariadb`
+# 4. Start James: `docker-compose up james`
+
+services:
+
+  james:
+    depends_on:
+      - mariadb
+    image: apache/james:jpa-latest
+    container_name: james
+    hostname: james.local
+    volumes:
+      - $PWD/mariadb-java-client-2.7.2.jar:/root/libs/mariadb-java-client-2.7.2.jar
+      - $PWD/sample-configuration/james-database-mariadb.properties:/root/conf/james-database.properties
+      - $PWD/keystore:/root/conf/keystore
+
+  mariadb:
+    image: mariadb:10.6
+    environment:
+      - MARIADB_ROOT_PASSWORD=test
+      - MARIADB_DATABASE=test
+      - MARIADB_USER=test
+      - MARIADB_PASSWORD=test
