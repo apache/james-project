@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.mariadb;
 
 import javax.inject.Singleton;
 
@@ -26,14 +26,14 @@ import org.apache.james.modules.data.JPAConfiguration;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 
-public class TestJPAConfigurationModule extends AbstractModule {
+public class TestJPAMariaDBConfigurationModule extends AbstractModule {
 
     private static final String MARIA_USERNAME = "test";
     private static final String MARIA_PASSWORD = "test";
     private static final String JDBC_EMBEDDED_DRIVER = org.mariadb.jdbc.Driver.class.getName();
     private final String mariaDBUrl;
 
-    public TestJPAConfigurationModule(String mariaDBUrl) {
+    public TestJPAMariaDBConfigurationModule(String mariaDBUrl) {
         this.mariaDBUrl = mariaDBUrl;
     }
 
