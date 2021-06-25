@@ -506,6 +506,8 @@
                                     <classpathPrefix>${project.artifactId}.lib/</classpathPrefix>
                                     <mainClass>org.apache.james.CassandraRabbitMQJamesServerMain</mainClass>
                                     <useUniqueVersions>false</useUniqueVersions>
+                                </manifest>
+                                <manifestEntries>
                                     <Specification-Title>Apache James Distributed server Application</Specification-Title>
                                     <Specification-Version>${project.version}</Specification-Version>
                                     <Specification-Vendor>The Apache Software Foundation</Specification-Vendor>
@@ -513,8 +515,8 @@
                                     <Implementation-Version>${project.version}</Implementation-Version>
                                     <Implementation-Vendor>The Apache Software Foundation</Implementation-Vendor>
                                     <Implementation-Vendor-Id>org.apache</Implementation-Vendor-Id>
-                                    <url>${project.url}</url>
-                                </manifest>
+                                    <url>https://james.apache.org/server</url>
+                                </manifestEntries>
                             </archive>
                         </configuration>
                     </execution>
