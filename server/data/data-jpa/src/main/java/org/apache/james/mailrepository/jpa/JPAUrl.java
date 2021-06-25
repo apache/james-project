@@ -39,7 +39,7 @@ public class JPAUrl {
     }
 
     @Id
-    @Column(name = "MAIL_REPO_NAME", nullable = false, length = 1024)
+    @Column(name = "MAIL_REPO_NAME", nullable = false)
     private String value;
 
     /**
