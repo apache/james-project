@@ -93,8 +93,8 @@ package object json {
         mailAddress => JsSuccess(mailAddress))
     case _ => JsError("mail address needs to be represented with a JsString")
   }
-  private[json] implicit val utcDateWrites: Writes[UTCDate] =
-    utcDate => JsString(utcDate.asUTC.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")))
+  private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")
+  private[json] implicit val utcDateWrites: Writes[UTCDate] = utcDate => JsString(utcDate.asUTC.format(dateTimeFormatter))
   private[json] implicit val hasMoreChangesWrites: Writes[HasMoreChanges] = Json.valueWrites[HasMoreChanges]
   private[json] implicit val limitReads: Reads[Limit] = {
     case JsNumber(underlying) if underlying > 0 => JsSuccess(Limit.of(underlying.intValue))
