@@ -129,6 +129,16 @@
                                     <mainClass>org.apache.james.JPAJamesServerMain</mainClass>
                                     <useUniqueVersions>false</useUniqueVersions>
                                 </manifest>
+                                <manifestEntries>
+                                    <Specification-Title>Apache James JPA-SMTP mariaDB server Application</Specification-Title>
+                                    <Specification-Version>${project.version}</Specification-Version>
+                                    <Specification-Vendor>The Apache Software Foundation</Specification-Vendor>
+                                    <Implementation-Title>Apache James JPA-SMTP mariaDB server Application</Implementation-Title>
+                                    <Implementation-Version>${project.version}</Implementation-Version>
+                                    <Implementation-Vendor>The Apache Software Foundation</Implementation-Vendor>
+                                    <Implementation-Vendor-Id>org.apache</Implementation-Vendor-Id>
+                                    <url>https://james.apache.org/server</url>
+                                </manifestEntries>
                             </archive>
                         </configuration>
                     </execution>
