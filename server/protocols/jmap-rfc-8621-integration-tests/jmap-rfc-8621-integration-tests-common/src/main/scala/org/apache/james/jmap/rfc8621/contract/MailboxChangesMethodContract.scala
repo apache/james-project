@@ -1986,8 +1986,7 @@ trait MailboxChangesMethodContract {
          |  "methodCalls": [[
          |    "Mailbox/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["$mailboxId"]
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
          |    },
          |    "c1"]]
          |}""".stripMargin
