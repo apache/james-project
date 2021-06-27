@@ -28,7 +28,7 @@ import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, Properties, UuidState}
 import org.apache.james.jmap.http.MailboxesProvisioner
 import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.{Mailbox, MailboxFactory, MailboxGet, MailboxGetRequest, MailboxGetResponse, NotFound, PersonalNamespace, Subscriptions, UnparsedMailboxId}
+import org.apache.james.jmap.mail.{Ids, Mailbox, MailboxFactory, MailboxGet, MailboxGetRequest, MailboxGetResponse, NotFound, PersonalNamespace, Subscriptions, UnparsedMailboxId}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.jmap.utils.quotas.{QuotaLoaderWithPreloadedDefault, QuotaLoaderWithPreloadedDefaultFactory}
 import org.apache.james.mailbox.exception.MailboxNotFoundException
@@ -115,13 +115,19 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
         mailboxGetRequest.ids match {
           case None => getAllMailboxes(capabilities, mailboxSession)
             .map(MailboxGetResults.found)
+          case Some(Ids.EMPTY) => SFlux.empty
           case Some(ids) =>
-            retrieveSubscriptions(mailboxSession)
-              .flatMapMany(subscriptions => SFlux.fromIterable(ids.value)
-                .flatMap(id => Try(mailboxIdFactory.fromString(id.id))
-                  .fold(e => SMono.just(MailboxGetResults.notFound(id)),
-                    mailboxId => getMailboxResultById(capabilities, mailboxId, subscriptions, mailboxSession)),
-                  maxConcurrency = 5))
+            SMono.zip(array => (array(0).asInstanceOf[QuotaLoaderWithPreloadedDefault],
+              array(1).asInstanceOf[Subscriptions]),
+              quotaFactory.loadFor(mailboxSession),
+              retrieveSubscriptions(mailboxSession))
+              .flatMapMany {
+                case (quotaLoader, subscriptions) => SFlux.fromIterable(ids.value)
+                  .flatMap(id => Try(mailboxIdFactory.fromString(id.id))
+                    .fold(e => SMono.just(MailboxGetResults.notFound(id)),
+                      mailboxId => getMailboxResultById(capabilities, mailboxId, subscriptions, quotaLoader, mailboxSession)),
+                    maxConcurrency = 5)
+              }
         })
 
   private def retrieveSubscriptions(mailboxSession: MailboxSession): SMono[Subscriptions] =
@@ -132,14 +138,14 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
   private def getMailboxResultById(capabilities: Set[CapabilityIdentifier],
                                    mailboxId: MailboxId,
                                    subscriptions: Subscriptions,
+                                   quotaLoader: QuotaLoaderWithPreloadedDefault,
                                    mailboxSession: MailboxSession): SMono[MailboxGetResults] =
-    quotaFactory.loadFor(mailboxSession)
-      .flatMap(quotaLoader => mailboxFactory.create(mailboxId, mailboxSession, quotaLoader, subscriptions)
-        .map(mailbox => filterShared(capabilities, mailbox))
-        .onErrorResume {
-          case _: MailboxNotFoundException => SMono.just(MailboxGetResults.notFound(mailboxId))
-          case error => SMono.error(error)
-        })
+    mailboxFactory.create(mailboxId, mailboxSession, quotaLoader, subscriptions)
+      .map(mailbox => filterShared(capabilities, mailbox))
+      .onErrorResume {
+        case _: MailboxNotFoundException => SMono.just(MailboxGetResults.notFound(mailboxId))
+        case error => SMono.error(error)
+      }
       .subscribeOn(Schedulers.elastic)
 
   private def filterShared(capabilities: Set[CapabilityIdentifier], mailbox: Mailbox): MailboxGetResults = {
