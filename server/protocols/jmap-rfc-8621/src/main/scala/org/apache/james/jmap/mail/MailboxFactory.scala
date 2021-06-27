@@ -75,7 +75,7 @@ case class Subscriptions(subscribedNames: Set[String]) {
   def isSubscribed(metaData: MailboxMetaData): IsSubscribed = isSubscribed(metaData.getPath.getName)
 }
 
-class MailboxFactory @Inject() (subscriptionManager: SubscriptionManager, mailboxManager: MailboxManager) {
+class MailboxFactory @Inject() (mailboxManager: MailboxManager) {
 
   private def getRole(mailboxPath: MailboxPath, mailboxSession: MailboxSession): Option[Role] = Role.from(mailboxPath.getName)
     .filter(_ => mailboxPath.belongsTo(mailboxSession)).toScala
