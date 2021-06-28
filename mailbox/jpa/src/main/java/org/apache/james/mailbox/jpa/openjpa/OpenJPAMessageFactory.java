@@ -34,6 +34,7 @@ import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.MessageFactory;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 
@@ -51,7 +52,7 @@ public class OpenJPAMessageFactory implements MessageFactory<AbstractJPAMailboxM
     }
 
     @Override
-    public AbstractJPAMailboxMessage createMessage(MessageId messageId, Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments) throws MailboxException {
+    public AbstractJPAMailboxMessage createMessage(MessageId messageId, ThreadId threadId, Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments) throws MailboxException {
         switch (feature) {
             case Streaming:
                 return new JPAStreamingMailboxMessage(JPAMailbox.from(mailbox), internalDate, size, flags, content,
