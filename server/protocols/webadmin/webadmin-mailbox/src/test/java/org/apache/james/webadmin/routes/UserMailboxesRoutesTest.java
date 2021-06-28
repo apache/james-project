@@ -90,6 +90,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -1547,6 +1548,7 @@ class UserMailboxesRoutesTest {
 
                 SimpleMailboxMessage message = SimpleMailboxMessage.builder()
                     .messageId(InMemoryMessageId.of(42L))
+                    .threadId(ThreadId.fromBaseMessageId(InMemoryMessageId.of(42L)))
                     .uid(uid)
                     .content(new ByteContent(content))
                     .size(content.length)

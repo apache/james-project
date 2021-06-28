@@ -71,6 +71,7 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -631,6 +632,7 @@ class MailboxesRoutesTest {
 
                 SimpleMailboxMessage message = SimpleMailboxMessage.builder()
                     .messageId(InMemoryMessageId.of(42L))
+                    .threadId(ThreadId.fromBaseMessageId(InMemoryMessageId.of(42L)))
                     .uid(uid)
                     .content(new ByteContent(content))
                     .size(content.length)
@@ -1050,6 +1052,7 @@ class MailboxesRoutesTest {
 
                 SimpleMailboxMessage message = SimpleMailboxMessage.builder()
                     .messageId(InMemoryMessageId.of(42L))
+                    .threadId(ThreadId.fromBaseMessageId(InMemoryMessageId.of(42L)))
                     .uid(uid)
                     .content(new ByteContent(content))
                     .size(content.length)

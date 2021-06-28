@@ -48,6 +48,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -64,6 +65,7 @@ class SpamAssassinListenerTest {
     static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(USER);
     static final UidValidity UID_VALIDITY = UidValidity.of(43);
     static final TestMessageId MESSAGE_ID = TestMessageId.of(45);
+    static final ThreadId THREAD_ID = ThreadId.fromBaseMessageId(MESSAGE_ID);
 
     SpamAssassin spamAssassin;
     SpamAssassinListener listener;
@@ -271,7 +273,7 @@ class SpamAssassinListenerTest {
         int size = 45;
         int bodyStartOctet = 25;
         byte[] content = "Subject: test\r\n\r\nBody\r\n".getBytes(StandardCharsets.UTF_8);
-        SimpleMailboxMessage message = new SimpleMailboxMessage(MESSAGE_ID, new Date(),
+        SimpleMailboxMessage message = new SimpleMailboxMessage(MESSAGE_ID, THREAD_ID, new Date(),
             size, bodyStartOctet, new ByteContent(content), new Flags(), new PropertyBuilder().build(),
             mailbox.getMailboxId());
         MessageMetaData messageMetaData = mapperFactory.createMessageMapper(null).add(mailbox, message);

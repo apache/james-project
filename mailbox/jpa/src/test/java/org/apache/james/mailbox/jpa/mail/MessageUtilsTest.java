@@ -34,6 +34,7 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
@@ -48,6 +49,7 @@ import org.mockito.MockitoAnnotations;
 class MessageUtilsTest {
     static final MessageUid MESSAGE_UID = MessageUid.of(1);
     static final MessageId MESSAGE_ID = new DefaultMessageId();
+    static final ThreadId THREAD_ID = ThreadId.fromBaseMessageId(MESSAGE_ID);
     static final int BODY_START = 16;
     static final String CONTENT = "anycontent";
     
@@ -62,7 +64,7 @@ class MessageUtilsTest {
     void setUp() {
         MockitoAnnotations.initMocks(this);
         messageUtils = new MessageUtils(uidProvider, modSeqProvider);
-        message = new SimpleMailboxMessage(MESSAGE_ID, new Date(), CONTENT.length(), BODY_START,
+        message = new SimpleMailboxMessage(MESSAGE_ID, THREAD_ID, new Date(), CONTENT.length(), BODY_START,
             new ByteContent(CONTENT.getBytes()), new Flags(), new PropertyBuilder().build(), mailbox.getMailboxId());
     }
     

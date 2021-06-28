@@ -45,6 +45,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
 import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
@@ -97,7 +98,7 @@ class MessageV3MigrationTest {
     }
 
     @Test
-    void migrationTaskShouldMoveDataToMostRecentDao() throws Exception{
+    void migrationTaskShouldMoveDataToMostRecentDao() throws Exception {
         SimpleMailboxMessage message1 = createMessage(messageIdFactory.generate());
         SimpleMailboxMessage message2 = createMessage(messageIdFactory.generate());
         SimpleMailboxMessage message3 = createMessage(messageIdFactory.generate());
@@ -125,7 +126,7 @@ class MessageV3MigrationTest {
     }
 
     @Test
-    void migrationTaskShouldPreserveMessageContent() throws Exception{
+    void migrationTaskShouldPreserveMessageContent() throws Exception {
         SimpleMailboxMessage message1 = createMessage(messageIdFactory.generate());
         daoV2.save(message1).block();
         MessageRepresentation original = daoV2.retrieveMessage((CassandraMessageId) message1.getMessageId(), MessageMapper.FetchType.Metadata).block();
@@ -142,6 +143,7 @@ class MessageV3MigrationTest {
     private SimpleMailboxMessage createMessage(MessageId messageId) {
         return SimpleMailboxMessage.builder()
             .messageId(messageId)
+            .threadId(ThreadId.fromBaseMessageId(messageId))
             .mailboxId(MAILBOX_ID)
             .uid(messageUid)
             .internalDate(new Date())

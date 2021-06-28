@@ -57,6 +57,7 @@ public class MessageRepresentation {
     public SimpleMailboxMessage toMailboxMessage(ComposedMessageIdWithMetaData metadata, List<MessageAttachmentMetadata> attachments) {
         return SimpleMailboxMessage.builder()
             .messageId(messageId)
+            .threadId(metadata.getThreadId())
             .mailboxId(metadata.getComposedMessageId().getMailboxId())
             .uid(metadata.getComposedMessageId().getUid())
             .modseq(metadata.getModSeq())

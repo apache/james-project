@@ -40,6 +40,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
@@ -124,6 +125,7 @@ public interface MailboxMessageFixture {
 
     SimpleMailboxMessage MESSAGE_1 = SimpleMailboxMessage.builder()
         .messageId(MESSAGE_ID_1)
+        .threadId(ThreadId.fromBaseMessageId(MESSAGE_ID_1))
         .uid(MESSAGE_UID_1)
         .content(CONTENT_STREAM_1)
         .size(SIZE_1)
@@ -136,6 +138,7 @@ public interface MailboxMessageFixture {
 
     SimpleMailboxMessage MESSAGE_1_OTHER_USER = SimpleMailboxMessage.builder()
         .messageId(MESSAGE_ID_OTHER_USER_1)
+        .threadId(ThreadId.fromBaseMessageId(MESSAGE_ID_OTHER_USER_1))
         .uid(MESSAGE_UID_OTHER_USER_1)
         .content(CONTENT_STREAM_1)
         .size(SIZE_1)
@@ -148,6 +151,7 @@ public interface MailboxMessageFixture {
 
     SimpleMailboxMessage MESSAGE_2 = SimpleMailboxMessage.builder()
         .messageId(MESSAGE_ID_2)
+        .threadId(ThreadId.fromBaseMessageId(MESSAGE_ID_2))
         .uid(MESSAGE_UID_2)
         .content(CONTENT_STREAM_2)
         .size(SIZE_2)

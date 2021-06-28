@@ -81,12 +81,14 @@ class CassandraMessageDAOV3Test {
 
     private SimpleMailboxMessage message;
     private CassandraMessageId messageId;
+    private ThreadId threadId;
     private ComposedMessageIdWithMetaData messageIdWithMetadata;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
         messageId = messageIdFactory.generate();
+        threadId = ThreadId.fromBaseMessageId(messageId);
         BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
             .passthrough();
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
@@ -101,13 +103,13 @@ class CassandraMessageDAOV3Test {
                 .composedMessageId(new ComposedMessageId(MAILBOX_ID, messageId, messageUid))
                 .flags(new Flags())
                 .modSeq(ModSeq.of(1))
-                .threadId(ThreadId.fromBaseMessageId(messageId))
+                .threadId(threadId)
                 .build();
     }
 
     @Test
     void saveShouldSaveNullValueForTextualLineCountAsZero() throws Exception {
-        message = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
+        message = createMessage(messageId, threadId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
 
         testee.save(message).block();
 
@@ -123,7 +125,7 @@ class CassandraMessageDAOV3Test {
         long textualLineCount = 10L;
         PropertyBuilder propertyBuilder = new PropertyBuilder();
         propertyBuilder.setTextualLineCount(textualLineCount);
-        message = createMessage(messageId, CONTENT, BODY_START, propertyBuilder, NO_ATTACHMENT);
+        message = createMessage(messageId, threadId, CONTENT, BODY_START, propertyBuilder, NO_ATTACHMENT);
 
         testee.save(message).block();
 
@@ -135,7 +137,7 @@ class CassandraMessageDAOV3Test {
 
     @Test
     void saveShouldStoreMessageWithFullContent() throws Exception {
-        message = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
+        message = createMessage(messageId, threadId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
 
         testee.save(message).block();
 
@@ -148,7 +150,7 @@ class CassandraMessageDAOV3Test {
 
     @Test
     void saveShouldStoreMessageWithBodyContent() throws Exception {
-        message = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
+        message = createMessage(messageId, threadId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
 
         testee.save(message).block();
 
@@ -164,7 +166,7 @@ class CassandraMessageDAOV3Test {
 
     @Test
     void saveShouldStoreMessageWithHeaderContent() throws Exception {
-        message = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
+        message = createMessage(messageId, threadId,  CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
 
         testee.save(message).block();
 
@@ -175,9 +177,10 @@ class CassandraMessageDAOV3Test {
             .isEqualTo(CONTENT.substring(0, BODY_START));
     }
 
-    private SimpleMailboxMessage createMessage(MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder, Collection<MessageAttachmentMetadata> attachments) {
+    private SimpleMailboxMessage createMessage(MessageId messageId, ThreadId threadId, String content, int bodyStart, PropertyBuilder propertyBuilder, Collection<MessageAttachmentMetadata> attachments) {
         return SimpleMailboxMessage.builder()
             .messageId(messageId)
+            .threadId(threadId)
             .mailboxId(MAILBOX_ID)
             .uid(messageUid)
             .internalDate(new Date())
