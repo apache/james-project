@@ -237,12 +237,17 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     public BiConsumer<SignalType, Channel> getChannelCloseHandler() {
         return (signalType, channel) -> {
             borrowedChannels.remove(channel);
-            if (!channel.isOpen() || signalType != SignalType.ON_COMPLETE) {
+            if (!channel.isOpen() || !executeWithoutError(signalType)) {
                 invalidateObject(channel);
                 return;
             }
             pool.returnObject(channel);
         };
+    }
+
+    private boolean executeWithoutError(SignalType signalType) {
+        return signalType == SignalType.ON_COMPLETE
+            || signalType == SignalType.CANCEL;
     }
 
     private Sender createSender() {
