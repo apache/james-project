@@ -24,6 +24,7 @@ import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.queue.api.MailQueue.ENQUEUED_METRIC_NAME_PREFIX;
 
 import java.time.Clock;
+import java.time.Duration;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -120,7 +121,10 @@ class Enqueuer {
                 } else {
                     sink.complete();
                 }
-            });
+            })
+            // AutoRecoveringConnection blocks this forever
+            .timeout(Duration.ofSeconds(10), Mono.error(() -> new MailQueue.MailQueueException("Timeout enqueueing " + mailReference.getMail().getName())))
+            .then();
     }
 
     private EnqueuedItem toEnqueuedItems(MailReference mailReference) {

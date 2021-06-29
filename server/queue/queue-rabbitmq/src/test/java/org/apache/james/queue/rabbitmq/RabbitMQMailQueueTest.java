@@ -390,20 +390,20 @@ class RabbitMQMailQueueTest {
                     .build());
             } catch (Exception e) {
                 // Expected
+            } finally {
+                rabbitMQExtension.getRabbitMQ().unpause();
+                Thread.sleep(100);
             }
-
-            rabbitMQExtension.getRabbitMQ().unpause();
-            Thread.sleep(100);
 
             getMailQueue().enQueue(defaultMail()
                 .name(name3)
                 .build());
 
-            List<MailQueue.MailQueueItem> items = dequeueFlux.take(2).collectList().block(Duration.ofSeconds(10));
+            List<MailQueue.MailQueueItem> items = dequeueFlux.take(3).collectList().block(Duration.ofSeconds(10));
 
             assertThat(items)
                 .extracting(item -> item.getMail().getName())
-                .containsExactly(name1, name3);
+                .contains(name1, name3);
         }
 
         @Test
