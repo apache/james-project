@@ -62,6 +62,8 @@ import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
+import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithmImpl;
+import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
@@ -313,6 +315,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             QuotaComponents quotaComponents = new QuotaComponents(maxQuotaManager, quotaManager, quotaRootResolver);
 
             InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
+            ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm = new NaiveThreadIdGuessingAlgorithmImpl();
 
             MailboxManagerPreInstanciationStage preInstanciationStage = new MailboxManagerPreInstanciationStage(mailboxSessionMapperFactory, sessionProvider);
             PreDeletionHooks hooks = createHooks(preInstanciationStage);
@@ -334,7 +337,8 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
                 storeRightManager,
                 quotaComponents,
                 index,
-                hooks);
+                hooks,
+                threadIdGuessingAlgorithm);
 
             eventBus.register(listeningCurrentQuotaUpdater);
             eventBus.register(new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider));

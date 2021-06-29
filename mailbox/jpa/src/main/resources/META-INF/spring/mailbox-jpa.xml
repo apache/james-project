@@ -31,7 +31,6 @@
 
     <bean id="jpa-mailboxIdFactory" class="org.apache.james.mailbox.jpa.JPAId.Factory" />
 
-
     <bean id="jpa-mailboxmanager" class="org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager">
         <constructor-arg index="0" ref="jpa-sessionMapperFactory"/>
         <constructor-arg index="1" ref="sessionProvider"/>
@@ -42,8 +41,11 @@
         <constructor-arg index="6" ref="storeRightManager" />
         <constructor-arg index="7" ref="quotaComponents" />
         <constructor-arg index="8" ref="indexer" />
+        <constructor-arg index="9" ref="threadIdGuessingAlgorithm" />
     </bean>
-    
+
+    <bean id="threadIdGuessingAlgorithm" class="org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithmImpl" />
+
     <bean id ="jpa-subscriptionManager" class="org.apache.james.mailbox.store.StoreSubscriptionManager">
         <constructor-arg index="0" ref="jpa-sessionMapperFactory"/>
     </bean>

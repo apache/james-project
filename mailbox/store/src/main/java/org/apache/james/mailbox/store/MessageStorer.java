@@ -38,10 +38,12 @@ import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.message.HeaderImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +59,7 @@ public interface MessageStorer {
      *
      * Otherwize an empty optional will be returned on the right side of the pair.
      */
-    Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session) throws MailboxException;
+    Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session, HeaderImpl headers) throws MailboxException;
 
     /**
      * MessageStorer parsing, storing and returning AttachmentMetadata
@@ -72,22 +74,25 @@ public interface MessageStorer {
         private final MessageFactory messageFactory;
         private final AttachmentMapperFactory attachmentMapperFactory;
         private final MessageParser messageParser;
+        private final ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm;
 
         public WithAttachment(MailboxSessionMapperFactory mapperFactory, MessageId.Factory messageIdFactory,
                               MessageFactory messageFactory, AttachmentMapperFactory attachmentMapperFactory,
-                              MessageParser messageParser) {
+                              MessageParser messageParser, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
             this.mapperFactory = mapperFactory;
             this.messageIdFactory = messageIdFactory;
             this.messageFactory = messageFactory;
             this.attachmentMapperFactory = attachmentMapperFactory;
             this.messageParser = messageParser;
+            this.threadIdGuessingAlgorithm = threadIdGuessingAlgorithm;
         }
 
         @Override
-        public Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session) throws MailboxException {
+        public Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session, HeaderImpl headers) throws MailboxException {
             MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
             MessageId messageId = messageIdFactory.generate();
-            ThreadId threadId = ThreadId.fromBaseMessageId(messageId);
+            // TODO get mime message header fields
+            ThreadId threadId = threadIdGuessingAlgorithm.guessThreadId(session.getUser(), messageId, null, null, null, null);
 
             return mapperFactory.getMessageMapper(session)
                 .executeReactive(
@@ -133,18 +138,21 @@ public interface MessageStorer {
         private final MailboxSessionMapperFactory mapperFactory;
         private final MessageId.Factory messageIdFactory;
         private final MessageFactory messageFactory;
+        private final ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm;
 
-        public WithoutAttachment(MailboxSessionMapperFactory mapperFactory, MessageId.Factory messageIdFactory, MessageFactory messageFactory) {
+        public WithoutAttachment(MailboxSessionMapperFactory mapperFactory, MessageId.Factory messageIdFactory, MessageFactory messageFactory, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
             this.mapperFactory = mapperFactory;
             this.messageIdFactory = messageIdFactory;
             this.messageFactory = messageFactory;
+            this.threadIdGuessingAlgorithm = threadIdGuessingAlgorithm;
         }
 
         @Override
-        public Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session) throws MailboxException {
+        public Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session, HeaderImpl headers) throws MailboxException {
             MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
             MessageId messageId = messageIdFactory.generate();
-            ThreadId threadId = ThreadId.fromBaseMessageId(messageId);
+            // TODO get mime message header fields
+            ThreadId threadId = threadIdGuessingAlgorithm.guessThreadId(session.getUser(), messageId, null, null, null, null);
             MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, ImmutableList.of());
 
             return mapperFactory.getMessageMapper(session)

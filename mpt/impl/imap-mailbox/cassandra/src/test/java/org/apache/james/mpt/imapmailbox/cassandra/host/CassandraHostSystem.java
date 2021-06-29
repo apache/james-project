@@ -53,6 +53,8 @@ import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
+import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithmImpl;
+import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
@@ -95,6 +97,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         cassandra = CassandraCluster.create(MailboxAggregateModule.MODULE_WITH_QUOTA, cassandraHost);
         com.datastax.driver.core.Session session = cassandra.getConf();
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
+        ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm = new NaiveThreadIdGuessingAlgorithmImpl();
         CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
             cassandra, messageIdFactory);
 
@@ -123,7 +126,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         mailboxManager = new CassandraMailboxManager(mapperFactory, sessionProvider,
             new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
             eventBus, annotationManager, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT,
-            PreDeletionHooks.NO_PRE_DELETION_HOOK);
+            PreDeletionHooks.NO_PRE_DELETION_HOOK, threadIdGuessingAlgorithm);
 
         eventBus.register(quotaUpdater);
 

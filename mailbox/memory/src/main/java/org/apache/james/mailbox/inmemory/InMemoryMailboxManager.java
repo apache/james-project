@@ -36,6 +36,7 @@ import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
+import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -58,10 +59,11 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
                                   StoreRightManager storeRightManager,
                                   QuotaComponents quotaComponents,
                                   MessageSearchIndex searchIndex,
-                                  PreDeletionHooks preDeletionHooks) {
+                                  PreDeletionHooks preDeletionHooks,
+                                  ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
         super(mailboxSessionMapperFactory, sessionProvider, locker, messageParser, messageIdFactory,
             annotationManager, eventBus, storeRightManager, quotaComponents, searchIndex, MailboxManagerConfiguration.DEFAULT,
-            preDeletionHooks);
+            preDeletionHooks, threadIdGuessingAlgorithm);
     }
 
     @Override
@@ -87,6 +89,7 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
             getMessageIdFactory(),
             configuration.getBatchSizes(),
             getStoreRightManager(),
-            getPreDeletionHooks());
+            getPreDeletionHooks(),
+            getThreadIdGuessingAlgorithm());
     }
 }

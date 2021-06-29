@@ -34,6 +34,7 @@ import org.apache.james.mailbox.store.MessageStorer;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
+import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
@@ -47,10 +48,11 @@ public class CassandraMessageManager extends StoreMessageManager {
                             QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory,
                             BatchSizes batchSizes,
                             StoreRightManager storeRightManager,
-                            PreDeletionHooks preDeletionHooks) {
+                            PreDeletionHooks preDeletionHooks,
+                            ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
         super(CassandraMailboxManager.MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox,
             quotaManager, quotaRootResolver, batchSizes, storeRightManager,
-            preDeletionHooks, new MessageStorer.WithAttachment(mapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), mapperFactory, messageParser));
+            preDeletionHooks, new MessageStorer.WithAttachment(mapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), mapperFactory, messageParser, threadIdGuessingAlgorithm));
     }
 
     /**

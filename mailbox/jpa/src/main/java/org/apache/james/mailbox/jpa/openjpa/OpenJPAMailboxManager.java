@@ -36,6 +36,7 @@ import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
+import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -59,11 +60,12 @@ public class OpenJPAMailboxManager extends StoreMailboxManager {
                                  StoreMailboxAnnotationManager annotationManager,
                                  StoreRightManager storeRightManager,
                                  QuotaComponents quotaComponents,
-                                 MessageSearchIndex index) {
+                                 MessageSearchIndex index,
+                                 ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
         super(mapperFactory, sessionProvider, new JVMMailboxPathLocker(),
             messageParser, messageIdFactory, annotationManager,
             eventBus, storeRightManager, quotaComponents,
-            index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK);
+            index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK, threadIdGuessingAlgorithm);
     }
 
     @Override
@@ -77,7 +79,8 @@ public class OpenJPAMailboxManager extends StoreMailboxManager {
             getQuotaComponents().getQuotaRootResolver(),
             getMessageIdFactory(),
             configuration.getBatchSizes(),
-            getStoreRightManager());
+            getStoreRightManager(),
+            getThreadIdGuessingAlgorithm());
     }
 
     @Override

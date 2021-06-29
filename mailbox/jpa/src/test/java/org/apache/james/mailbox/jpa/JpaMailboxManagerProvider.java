@@ -39,6 +39,7 @@ import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
+import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithmImpl;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
@@ -73,6 +74,6 @@ public class JpaMailboxManagerProvider {
         return new OpenJPAMailboxManager(mf, sessionProvider,
             messageParser, new DefaultMessageId.Factory(),
             eventBus, annotationManager,
-            storeRightManager, quotaComponents, index);
+            storeRightManager, quotaComponents, index, new NaiveThreadIdGuessingAlgorithmImpl());
     }
 }
