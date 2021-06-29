@@ -160,11 +160,18 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager) {
     }
   }
 
-  def create(id: MailboxId, mailboxSession: MailboxSession, quotaLoader: QuotaLoader, subscriptions: Subscriptions): SMono[Mailbox] = {
-    try {
-      val messageManager: MessageManager = mailboxManager.getMailbox(id, mailboxSession)
-      val sanitizedCounters: MailboxCounters = messageManager.getMailboxCounters(mailboxSession).sanitize()
+  def create(id: MailboxId, mailboxSession: MailboxSession, quotaLoader: QuotaLoader, subscriptions: Subscriptions): SMono[Mailbox] =
+    for {
+      messageManager <- SMono(mailboxManager.getMailboxReactive(id, mailboxSession))
+      counters <- SMono(messageManager.getMailboxCountersReactive(mailboxSession))
+      sanitizedCounters = counters.sanitize()
+      mailbox <- instanciateMailbox(id, mailboxSession, quotaLoader, messageManager, sanitizedCounters, subscriptions)
+    } yield {
+      mailbox
+    }
 
+  private def instanciateMailbox(id: MailboxId, mailboxSession: MailboxSession, quotaLoader: QuotaLoader, messageManager: MessageManager, sanitizedCounters: MailboxCounters, subscriptions: Subscriptions): SMono[Mailbox] = {
+    try {
       MailboxValidation.validate(messageManager.getMailboxPath, mailboxSession.getPathDelimiter, sanitizedCounters.getUnseen, sanitizedCounters.getUnseen, sanitizedCounters.getCount, sanitizedCounters.getCount) match {
         case Left(error) => SMono.error(error)
         case scala.Right(mailboxValidation) =>

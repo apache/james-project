@@ -85,6 +85,8 @@ public interface MessageManager {
      */
     MailboxCounters getMailboxCounters(MailboxSession mailboxSession) throws MailboxException;
 
+    Publisher<MailboxCounters> getMailboxCountersReactive(MailboxSession mailboxSession);
+
     /**
      * Return if the Mailbox is writable
      * @deprecated use
