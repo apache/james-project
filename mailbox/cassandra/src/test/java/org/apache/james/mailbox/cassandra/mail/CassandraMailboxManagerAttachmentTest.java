@@ -49,6 +49,8 @@ import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
+import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithmImpl;
+import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -73,6 +75,7 @@ class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManagerAttach
 
     private void initSystemUnderTest() throws Exception {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
+        ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm = new NaiveThreadIdGuessingAlgorithmImpl();
 
         mailboxSessionMapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
             cassandraCluster.getCassandraCluster(),
@@ -90,13 +93,13 @@ class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManagerAttach
 
         mailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, sessionProvider, new NoMailboxPathLocker(), new MessageParser(),
             messageIdFactory, eventBus, annotationManager, storeRightManager, quotaComponents,
-            index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK);
+            index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK, threadIdGuessingAlgorithm);
         MessageParser failingMessageParser = mock(MessageParser.class);
         when(failingMessageParser.retrieveAttachments(any(InputStream.class)))
             .thenThrow(new RuntimeException("Message parser set to fail"));
         parseFailingMailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, sessionProvider,
             new NoMailboxPathLocker(), failingMessageParser, messageIdFactory,
-            eventBus, annotationManager, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK);
+            eventBus, annotationManager, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK, threadIdGuessingAlgorithm);
     }
 
     @Override

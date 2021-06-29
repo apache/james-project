@@ -45,6 +45,7 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.commons.io.input.TeeInputStream;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventListener;
@@ -354,7 +355,9 @@ public class StoreMessageManager implements MessageManager {
                 BufferedOutputStream bufferedOut = new BufferedOutputStream(out);
                 BufferedInputStream tmpMsgIn = new BufferedInputStream(new TeeInputStream(msgIn, bufferedOut));
                 BodyOffsetInputStream bIn = new BodyOffsetInputStream(tmpMsgIn)) {
-                PropertyBuilder propertyBuilder = parseProperties(bIn);
+                Pair<PropertyBuilder, HeaderImpl> pair = parseProperties(bIn);
+                PropertyBuilder propertyBuilder = pair.getLeft();
+                HeaderImpl headers = pair.getRight();
 
                 InputStreamConsummer.consume(tmpMsgIn);
                 bufferedOut.flush();
@@ -373,7 +376,7 @@ public class StoreMessageManager implements MessageManager {
                             return finalFile.length();
                         }
                     }, propertyBuilder,
-                    getFlags(mailboxSession, isRecent, flagsToBeSet), bodyStartOctet, unparsedMimeMessqage));
+                    getFlags(mailboxSession, isRecent, flagsToBeSet), bodyStartOctet, unparsedMimeMessqage, headers));
             }
         } catch (IOException | MimeException e) {
             throw new MailboxException("Unable to parse message", e);
@@ -398,12 +401,14 @@ public class StoreMessageManager implements MessageManager {
             try (InputStream contentStream = msgIn.getInputStream();
                     BufferedInputStream bufferedContentStream = new BufferedInputStream(contentStream);
                     BodyOffsetInputStream bIn = new BodyOffsetInputStream(bufferedContentStream)) {
-                PropertyBuilder propertyBuilder = parseProperties(bIn);
+                Pair<PropertyBuilder, HeaderImpl> pair = parseProperties(bIn);
+                PropertyBuilder propertyBuilder = pair.getLeft();
+                HeaderImpl headers = pair.getRight();
                 int bodyStartOctet = getBodyStartOctet(bIn);
 
                 return createAndDispatchMessage(computeInternalDate(internalDate),
                     mailboxSession, msgIn, propertyBuilder,
-                    getFlags(mailboxSession, isRecent, flagsToBeSet), bodyStartOctet, maybeMessage);
+                    getFlags(mailboxSession, isRecent, flagsToBeSet), bodyStartOctet, maybeMessage, headers);
             } catch (IOException | MimeException e) {
                 throw new MailboxException("Unable to parse message", e);
             }
@@ -411,17 +416,18 @@ public class StoreMessageManager implements MessageManager {
             .subscribeOn(Schedulers.elastic());
     }
 
-    private PropertyBuilder parseProperties(BodyOffsetInputStream bIn) throws IOException, MimeException {
+    private Pair<PropertyBuilder, HeaderImpl> parseProperties(BodyOffsetInputStream bIn) throws IOException, MimeException {
         // Disable line length... This should be handled by the smtp server
         // component and not the parser itself
         // https://issues.apache.org/jira/browse/IMAP-122
-        final MimeTokenStream parser = getParser(bIn);
-        readHeader(parser);
+        MimeTokenStream parser = getParser(bIn);
+        final HeaderImpl headers = readHeader(parser);
+
         final MaximalBodyDescriptor descriptor = (MaximalBodyDescriptor) parser.getBodyDescriptor();
         final MediaType mediaType = getMediaType(descriptor);
         final PropertyBuilder propertyBuilder = getPropertyBuilder(descriptor, mediaType.mediaType, mediaType.subType);
         setTextualLinesCount(parser, mediaType.mediaType, propertyBuilder);
-        return propertyBuilder;
+        return new ImmutablePair<>(propertyBuilder, headers);
     }
 
     private Date computeInternalDate(Date internalDate) {
@@ -503,14 +509,14 @@ public class StoreMessageManager implements MessageManager {
         return bodyStartOctet;
     }
 
-    private Mono<AppendResult> createAndDispatchMessage(Date internalDate, MailboxSession mailboxSession, Content content, PropertyBuilder propertyBuilder, Flags flags, int bodyStartOctet, Optional<Message> maybeMessage) throws MailboxException {
+    private Mono<AppendResult> createAndDispatchMessage(Date internalDate, MailboxSession mailboxSession, Content content, PropertyBuilder propertyBuilder, Flags flags, int bodyStartOctet, Optional<Message> maybeMessage, HeaderImpl headers) throws MailboxException {
         int size = (int) content.size();
         QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailbox);
         return Mono.from(quotaManager.getQuotasReactive(quotaRoot))
             .map(quotas -> new QuotaChecker(quotas, quotaRoot))
             .doOnNext(Throwing.consumer((QuotaChecker quotaChecker) -> quotaChecker.tryAddition(1, size)).sneakyThrow())
             .then(Mono.from(locker.executeReactiveWithLockReactive(getMailboxPath(),
-                messageStorer.appendMessageToStore(mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, maybeMessage, mailboxSession)
+                messageStorer.appendMessageToStore(mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, maybeMessage, mailboxSession, headers)
                     .flatMap(data -> eventBus.dispatch(EventFactory.added()
                             .randomEventId()
                             .mailboxSession(mailboxSession)

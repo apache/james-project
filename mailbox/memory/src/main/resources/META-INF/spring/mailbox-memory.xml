@@ -43,6 +43,7 @@
         <constructor-arg index="8" ref="quotaComponents" />
         <constructor-arg index="9" ref="indexer" />
         <constructor-arg index="10" ref="preDeletionHooks" />
+        <constructor-arg index="11" ref="threadIdGuessingAlgorithm" />
     </bean>
 
     <bean id ="memory-subscriptionManager" class="org.apache.james.mailbox.store.StoreSubscriptionManager">
@@ -50,6 +51,7 @@
     </bean>
 
     <bean id="memory-sessionMapperFactory" class="org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory" />
+    <bean id="threadIdGuessingAlgorithm" class="org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithmImpl"/>
 
     <alias name="jvm-locker" alias="memory-locker"/>
 

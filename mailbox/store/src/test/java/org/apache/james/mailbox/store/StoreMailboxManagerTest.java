@@ -53,6 +53,7 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.PrefixedRegex;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
+import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -92,6 +93,7 @@ class StoreMailboxManagerTest {
         when(mockedMapperFactory.getMailboxMapper(mockedMailboxSession))
             .thenReturn(mockedMailboxMapper);
         Factory messageIdFactory = mock(MessageId.Factory.class);
+        ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm = mock(ThreadIdGuessingAlgorithm.class);
         FakeAuthenticator authenticator = new FakeAuthenticator();
         authenticator.addUser(CURRENT_USER, CURRENT_USER_PASSWORD);
         authenticator.addUser(ADMIN, ADMIN_PASSWORD);
@@ -110,7 +112,7 @@ class StoreMailboxManagerTest {
         storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, sessionProvider,
                 new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
                 annotationManager, eventBus, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT,
-                PreDeletionHooks.NO_PRE_DELETION_HOOK);
+                PreDeletionHooks.NO_PRE_DELETION_HOOK, threadIdGuessingAlgorithm);
     }
 
     @Test

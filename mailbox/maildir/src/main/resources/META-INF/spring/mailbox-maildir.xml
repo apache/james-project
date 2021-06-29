@@ -47,10 +47,12 @@
         <constructor-arg index="9" ref="indexer" />
         <constructor-arg index="10" ref="no-mailbox-configuration" />
         <constructor-arg index="11" ref="preDeletionHooks" />
+        <constructor-arg index="12" ref="threadIdGuessingAlgorithm" />
     </bean>
 
     <bean id ="no-mailbox-configuration" class="org.apache.james.mailbox.store.MailboxManagerConfiguration.NoMailboxConfiguration"/>
-    
+    <bean id ="threadIdGuessingAlgorithm" class="org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithmImpl"/>
+
     <bean id ="maildir-subscriptionManager" class="org.apache.james.mailbox.store.StoreSubscriptionManager">
         <constructor-arg index="0" ref="maildir-sessionMapperFactory"/>
     </bean>
