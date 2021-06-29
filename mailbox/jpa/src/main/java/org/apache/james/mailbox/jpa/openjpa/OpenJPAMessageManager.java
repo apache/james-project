@@ -35,6 +35,7 @@ import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
+import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
 /**
@@ -47,10 +48,10 @@ public class OpenJPAMessageManager extends StoreMessageManager {
                                  MailboxPathLocker locker, Mailbox mailbox,
                                  QuotaManager quotaManager, QuotaRootResolver quotaRootResolver,
                                  MessageId.Factory messageIdFactory, BatchSizes batchSizes,
-                                 StoreRightManager storeRightManager) {
+                                 StoreRightManager storeRightManager, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
         super(StoreMailboxManager.DEFAULT_NO_MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox,
             quotaManager, quotaRootResolver, batchSizes, storeRightManager, PreDeletionHooks.NO_PRE_DELETION_HOOK,
-            new MessageStorer.WithoutAttachment(mapperFactory, messageIdFactory, new OpenJPAMessageFactory(OpenJPAMessageFactory.AdvancedFeature.None)));
+            new MessageStorer.WithoutAttachment(mapperFactory, messageIdFactory, new OpenJPAMessageFactory(OpenJPAMessageFactory.AdvancedFeature.None), threadIdGuessingAlgorithm));
     }
 
     /**

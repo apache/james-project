@@ -82,6 +82,7 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -135,6 +136,7 @@ public class StoreMailboxManager implements MailboxManager {
     private final MessageSearchIndex index;
     private final PreDeletionHooks preDeletionHooks;
     protected final MailboxManagerConfiguration configuration;
+    private final ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm;
 
     @Inject
     public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, SessionProvider sessionProvider,
@@ -142,7 +144,7 @@ public class StoreMailboxManager implements MailboxManager {
                                MessageId.Factory messageIdFactory, MailboxAnnotationManager annotationManager,
                                EventBus eventBus, StoreRightManager storeRightManager,
                                QuotaComponents quotaComponents, MessageSearchIndex searchIndex, MailboxManagerConfiguration configuration,
-                               PreDeletionHooks preDeletionHooks) {
+                               PreDeletionHooks preDeletionHooks, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
         Preconditions.checkNotNull(eventBus);
         Preconditions.checkNotNull(mailboxSessionMapperFactory);
 
@@ -160,6 +162,7 @@ public class StoreMailboxManager implements MailboxManager {
         this.index = searchIndex;
         this.configuration = configuration;
         this.preDeletionHooks = preDeletionHooks;
+        this.threadIdGuessingAlgorithm = threadIdGuessingAlgorithm;
     }
 
     public QuotaComponents getQuotaComponents() {
@@ -228,6 +231,10 @@ public class StoreMailboxManager implements MailboxManager {
         return preDeletionHooks;
     }
 
+    public ThreadIdGuessingAlgorithm getThreadIdGuessingAlgorithm() {
+        return threadIdGuessingAlgorithm;
+    }
+
     @Override
     public MailboxSession createSystemSession(Username userName) {
         return sessionProvider.createSystemSession(userName);
@@ -263,7 +270,7 @@ public class StoreMailboxManager implements MailboxManager {
         return new StoreMessageManager(DEFAULT_NO_MESSAGE_CAPABILITIES, getMapperFactory(), getMessageSearchIndex(), getEventBus(),
             getLocker(), mailbox, quotaManager,
             getQuotaComponents().getQuotaRootResolver(), configuration.getBatchSizes(),
-            getStoreRightManager(), preDeletionHooks, new MessageStorer.WithoutAttachment(mailboxSessionMapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory()));
+            getStoreRightManager(), preDeletionHooks, new MessageStorer.WithoutAttachment(mailboxSessionMapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), threadIdGuessingAlgorithm));
     }
 
     @Override

@@ -53,6 +53,7 @@ import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
+import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithmImpl;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
@@ -118,7 +119,7 @@ public class JPAHostSystem extends JamesImapHostSystem {
         MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor(), attachmentContentLoader);
 
         mailboxManager = new OpenJPAMailboxManager(mapperFactory, sessionProvider, messageParser, new DefaultMessageId.Factory(),
-            eventBus, annotationManager, storeRightManager, quotaComponents, index);
+            eventBus, annotationManager, storeRightManager, quotaComponents, index, new NaiveThreadIdGuessingAlgorithmImpl());
 
         eventBus.register(quotaUpdater);
         eventBus.register(new MailboxAnnotationListener(mapperFactory, sessionProvider));

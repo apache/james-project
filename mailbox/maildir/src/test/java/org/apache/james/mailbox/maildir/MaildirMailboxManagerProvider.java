@@ -39,6 +39,7 @@ import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
+import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithmImpl;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
@@ -69,7 +70,7 @@ public class MaildirMailboxManagerProvider {
 
         StoreMailboxManager manager = new StoreMailboxManager(mf, sessionProvider, new JVMMailboxPathLocker(),
             messageParser, new DefaultMessageId.Factory(), annotationManager, eventBus, storeRightManager,
-            quotaComponents, index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK);
+            quotaComponents, index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK, new NaiveThreadIdGuessingAlgorithmImpl());
 
         return manager;
     }
