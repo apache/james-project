@@ -50,7 +50,6 @@ import com.google.common.base.Splitter;
 import com.google.common.primitives.Booleans;
 
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class MailboxFactory {
     private static class MailboxTuple {
@@ -59,9 +58,9 @@ public class MailboxFactory {
         }
 
         public static Mono<MailboxTuple> from(MessageManager messageManager, MailboxSession session) {
-            return Mono.fromCallable(() ->
-                new MailboxTuple(messageManager.getMailboxPath(), messageManager.getMailboxCounters(session).sanitize(), messageManager.getResolvedAcl(session)))
-                .subscribeOn(Schedulers.elastic());
+            return Mono.from(messageManager.getMailboxCountersReactive(session))
+                .map(MailboxCounters::sanitize)
+                .map(Throwing.function(counters -> new MailboxTuple(messageManager.getMailboxPath(), counters, messageManager.getResolvedAcl(session))));
         }
 
         private final MailboxPath mailboxPath;

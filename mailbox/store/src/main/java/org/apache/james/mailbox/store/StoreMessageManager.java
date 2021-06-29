@@ -227,6 +227,19 @@ public class StoreMessageManager implements MessageManager {
             .build();
     }
 
+
+    @Override
+    public Publisher<MailboxCounters> getMailboxCountersReactive(MailboxSession mailboxSession) {
+        if (storeRightManager.hasRight(mailbox, MailboxACL.Right.Read, mailboxSession)) {
+            return mapperFactory.createMessageMapper(mailboxSession).getMailboxCountersReactive(mailbox);
+        }
+        return Mono.just(MailboxCounters.builder()
+            .mailboxId(mailbox.getMailboxId())
+            .count(0)
+            .unseen(0)
+            .build());
+    }
+
     /**
      * Returns the flags which are shared for the current mailbox, i.e. the
      * flags set up so that changes to those flags are visible to another user.
