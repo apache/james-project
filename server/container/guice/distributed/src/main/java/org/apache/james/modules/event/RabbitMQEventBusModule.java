@@ -23,6 +23,7 @@ import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.event.json.MailboxEventSerializer;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusId;
+import org.apache.james.events.EventBusReconnectionHandler;
 import org.apache.james.events.EventSerializer;
 import org.apache.james.events.KeyReconnectionHandler;
 import org.apache.james.events.NamingStrategy;
@@ -57,6 +58,7 @@ public class RabbitMQEventBusModule extends AbstractModule {
 
         Multibinder<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlerMultibinder = Multibinder.newSetBinder(binder(), SimpleConnectionPool.ReconnectionHandler.class);
         reconnectionHandlerMultibinder.addBinding().to(KeyReconnectionHandler.class);
+        reconnectionHandlerMultibinder.addBinding().to(EventBusReconnectionHandler.class);
     }
 
     @ProvidesIntoSet
