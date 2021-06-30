@@ -40,8 +40,11 @@ import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.MimeMessageId;
+import org.apache.james.mailbox.store.mail.model.Subject;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
+import org.apache.james.mailbox.store.mail.utils.MimeMessageHeadersUtil;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.message.HeaderImpl;
 import org.slf4j.Logger;
@@ -91,8 +94,11 @@ public interface MessageStorer {
         public Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session, HeaderImpl headers) throws MailboxException {
             MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
             MessageId messageId = messageIdFactory.generate();
-            // TODO get mime message header fields
-            ThreadId threadId = threadIdGuessingAlgorithm.guessThreadId(session.getUser(), messageId, null, null, null, null);
+            Optional<MimeMessageId> mimeMessageId = MimeMessageHeadersUtil.parseMimeMessageId(headers);
+            Optional<MimeMessageId> inReplyTo = MimeMessageHeadersUtil.parseInReplyTo(headers);
+            Optional<List<MimeMessageId>> references = MimeMessageHeadersUtil.parseReferences(headers);
+            Optional<Subject> subject = MimeMessageHeadersUtil.parseSubject(headers);
+            ThreadId threadId = threadIdGuessingAlgorithm.guessThreadId(session.getUser(), messageId, mimeMessageId, inReplyTo, references, subject);
 
             return mapperFactory.getMessageMapper(session)
                 .executeReactive(
@@ -151,8 +157,12 @@ public interface MessageStorer {
         public Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session, HeaderImpl headers) throws MailboxException {
             MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
             MessageId messageId = messageIdFactory.generate();
-            // TODO get mime message header fields
-            ThreadId threadId = threadIdGuessingAlgorithm.guessThreadId(session.getUser(), messageId, null, null, null, null);
+            Optional<MimeMessageId> mimeMessageId = MimeMessageHeadersUtil.parseMimeMessageId(headers);
+            Optional<MimeMessageId> inReplyTo = MimeMessageHeadersUtil.parseInReplyTo(headers);
+            Optional<List<MimeMessageId>> references = MimeMessageHeadersUtil.parseReferences(headers);
+            Optional<Subject> subject = MimeMessageHeadersUtil.parseSubject(headers);
+            ThreadId threadId = threadIdGuessingAlgorithm.guessThreadId(session.getUser(), messageId, mimeMessageId, inReplyTo, references, subject);
+
             MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, ImmutableList.of());
 
             return mapperFactory.getMessageMapper(session)
