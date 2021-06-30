@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store.mail;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
@@ -28,5 +29,5 @@ import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
 
 public interface ThreadIdGuessingAlgorithm {
-    ThreadId guessThreadId(Username username, MessageId messageId, MimeMessageId thisMimeMessageId, MimeMessageId inReplyTo, List<MimeMessageId> references, Subject subject);
+    ThreadId guessThreadId(Username username, MessageId messageId, Optional<MimeMessageId> thisMimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject);
 }
