@@ -19,17 +19,26 @@
 
 package org.apache.james.jmap.core
 
+import com.google.common.base.CharMatcher
 import eu.timepit.refined
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.boolean.And
-import eu.timepit.refined.collection.Size
-import eu.timepit.refined.numeric.Interval
-import eu.timepit.refined.string.MatchesRegex
+import eu.timepit.refined.api.{Refined, Validate}
 
 object Id {
-  type IdConstraint = And[
-    Size[Interval.Closed[1, 255]],
-    MatchesRegex["^[#a-zA-Z0-9-_]*$"]]
+
+  private val charMatcher: CharMatcher = CharMatcher.inRange('a', 'z')
+    .or(CharMatcher.inRange('0', '9'))
+    .or(CharMatcher.inRange('A', 'Z'))
+    .or(CharMatcher.is('_'))
+    .or(CharMatcher.is('-'))
+    .or(CharMatcher.is('#'))
+
+  case class IdConstraint()
+
+  implicit val validateId: Validate.Plain[String, IdConstraint] =
+    Validate.fromPredicate(s => s.length > 0 && s.length < 256 && charMatcher.matchesAllOf(s),
+      s => s"'$s' contains some invalid characters. Should be [#a-zA-Z0-9-_] and no longer than 255 chars",
+      IdConstraint())
+
   type Id = String Refined IdConstraint
 
   def validate(string: String): Either[IllegalArgumentException, Id] =
