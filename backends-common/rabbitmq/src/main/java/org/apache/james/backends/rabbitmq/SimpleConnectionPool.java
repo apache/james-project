@@ -31,6 +31,8 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
@@ -42,6 +44,8 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
 
 public class SimpleConnectionPool implements AutoCloseable {
+    public static final Logger LOGGER = LoggerFactory.getLogger(SimpleConnectionPool.class);
+
     public static class Configuration {
         @FunctionalInterface
         public interface RequiresRetries {
@@ -123,6 +127,7 @@ public class SimpleConnectionPool implements AutoCloseable {
         boolean updated = connectionReference.compareAndSet(previous, current);
         if (updated) {
             if (previous != null && previous != current) {
+                LOGGER.warn("Replacing current RabbitMQ connection...");
                 return Flux.fromIterable(reconnectionHandlers)
                     .concatMap(handler -> handler.handleReconnection(current))
                     .then()
