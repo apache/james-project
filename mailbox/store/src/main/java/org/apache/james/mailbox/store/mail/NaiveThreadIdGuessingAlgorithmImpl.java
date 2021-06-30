@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store.mail;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
@@ -29,7 +30,7 @@ import org.apache.james.mailbox.store.mail.model.Subject;
 
 public class NaiveThreadIdGuessingAlgorithmImpl implements ThreadIdGuessingAlgorithm {
     @Override
-    public ThreadId guessThreadId(Username username, MessageId messageId, MimeMessageId thisMimeMessageId, MimeMessageId inReplyTo, List<MimeMessageId> references, Subject subject) {
+    public ThreadId guessThreadId(Username username, MessageId messageId, Optional<MimeMessageId> thisMimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject) {
         return ThreadId.fromBaseMessageId(messageId);
     }
 }
