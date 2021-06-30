@@ -252,6 +252,7 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
 
     private Configuration configuration;
     private Optional<Runner> runner;
+    private MailQueue queue;
 
     @Inject
     public JamesMailSpooler(MetricFactory metricFactory, MailProcessor mailProcessor, MailRepositoryStore mailRepositoryStore, MailQueueFactory<?> queueFactory) {
@@ -259,6 +260,12 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
         this.mailProcessor = mailProcessor;
         this.mailRepositoryStore = mailRepositoryStore;
         this.queueFactory = queueFactory;
+    }
+
+    public void restart() {
+        Optional<Runner> previous = runner;
+        runner = Optional.of(new Runner(metricFactory, mailProcessor, errorRepository(), queue, configuration));
+        previous.ifPresent(Runner::dispose);
     }
 
     @Override
@@ -278,7 +285,7 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
         if (configuration.isEnabled()) {
             LOGGER.info("init...");
             LOGGER.info("Concurrency level is {}", configuration.getConcurrencyLevel());
-            MailQueue queue = queueFactory.createQueue(MailQueueFactory.SPOOL, MailQueueFactory.prefetchCount(configuration.getConcurrencyLevel()));
+            queue = queueFactory.createQueue(MailQueueFactory.SPOOL, MailQueueFactory.prefetchCount(configuration.getConcurrencyLevel()));
             runner = Optional.of(new Runner(metricFactory,
                 mailProcessor, errorRepository(), queue, configuration));
             LOGGER.info("Spooler started");
