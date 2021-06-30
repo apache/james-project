@@ -46,6 +46,7 @@ import com.rabbitmq.client.Delivery;
 
 import reactor.core.Disposable;
 import reactor.core.publisher.DirectProcessor;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.UnicastProcessor;
 import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.BindingSpecification;
@@ -69,7 +70,6 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
     private DirectProcessor<Event> listener;
     private Disposable sendQueueHandle;
     private Disposable listenQueueHandle;
-    private Receiver listenerReceiver;
 
     @Inject
     RabbitMQTerminationSubscriber(TerminationQueueName queueName, Sender sender, ReceiverProvider receiverProvider, JsonEventSerializer serializer) {
@@ -89,10 +89,21 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
             .subscribeOn(Schedulers.elastic())
             .subscribe();
 
-        listenerReceiver = receiverProvider.createReceiver();
         listener = DirectProcessor.create();
-        listenQueueHandle = listenerReceiver
-            .consumeAutoAck(queueName.asString())
+        listenQueueHandle = consumeTerminationQueue();
+    }
+
+    public void restart() {
+        Disposable previousHandler = listenQueueHandle;
+        listenQueueHandle = consumeTerminationQueue();
+        previousHandler.dispose();
+    }
+
+    private Disposable consumeTerminationQueue() {
+        return Flux.using(
+                receiverProvider::createReceiver,
+                receiver -> receiver.consumeAutoAck(queueName.asString()),
+                Receiver::close)
             .subscribeOn(Schedulers.elastic())
             .map(this::toEvent)
             .handle(publishIfPresent())
@@ -113,8 +124,7 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
 
     @Override
     public Publisher<Event> listenEvents() {
-        return listener
-            .share();
+        return listener.share();
     }
 
     private Optional<Event> toEvent(Delivery delivery) {
@@ -133,6 +143,5 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
     public void close() {
         Optional.ofNullable(sendQueueHandle).ifPresent(Disposable::dispose);
         Optional.ofNullable(listenQueueHandle).ifPresent(Disposable::dispose);
-        Optional.ofNullable(listenerReceiver).ifPresent(Receiver::close);
     }
 }
