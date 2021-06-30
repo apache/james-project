@@ -65,7 +65,7 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
 
     @Override
     public void close() {
-        dequeuer.close();
+
     }
 
     @Override

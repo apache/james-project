@@ -21,7 +21,6 @@ package org.apache.james.queue.rabbitmq;
 
 import static org.apache.james.queue.api.MailQueue.DEQUEUED_METRIC_NAME_PREFIX;
 
-import java.io.Closeable;
 import java.util.function.Consumer;
 
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
@@ -46,7 +45,7 @@ import reactor.rabbitmq.AcknowledgableDelivery;
 import reactor.rabbitmq.ConsumeOptions;
 import reactor.rabbitmq.Receiver;
 
-class Dequeuer implements Closeable {
+class Dequeuer {
     private static final Logger LOGGER = LoggerFactory.getLogger(Dequeuer.class);
     private static final boolean REQUEUE = true;
 
@@ -82,8 +81,9 @@ class Dequeuer implements Closeable {
     private final Metric dequeueMetric;
     private final MailReferenceSerializer mailReferenceSerializer;
     private final MailQueueView<CassandraMailQueueBrowser.CassandraMailQueueItemView> mailQueueView;
-    private final Receiver receiver;
-    private final Flux<AcknowledgableDelivery> flux;
+    private final MailQueueFactory.PrefetchCount prefetchCount;
+    private final ReceiverProvider receiverProvider;
+    private final MailQueueName name;
 
     Dequeuer(MailQueueName name, ReceiverProvider receiverProvider, MailLoader mailLoader,
              MailReferenceSerializer serializer, MetricFactory metricFactory,
@@ -92,19 +92,17 @@ class Dequeuer implements Closeable {
         this.mailReferenceSerializer = serializer;
         this.mailQueueView = mailQueueView;
         this.dequeueMetric = metricFactory.generate(DEQUEUED_METRIC_NAME_PREFIX + name.asString());
-        this.receiver = receiverProvider.createReceiver();
-        this.flux = this.receiver
-            .consumeManualAck(name.toWorkQueueName().asString(), new ConsumeOptions().qos(prefetchCount.asInt()))
-            .filter(getResponse -> getResponse.getBody() != null);
-    }
-
-    @Override
-    public void close() {
-        receiver.close();
+        this.receiverProvider = receiverProvider;
+        this.prefetchCount = prefetchCount;
+        this.name = name;
     }
 
     Flux<? extends MailQueue.MailQueueItem> deQueue() {
-        return flux.flatMapSequential(this::loadItem)
+        return Flux.using(receiverProvider::createReceiver,
+                receiver -> receiver.consumeManualAck(this.name.toWorkQueueName().asString(), new ConsumeOptions().qos(this.prefetchCount.asInt())),
+                Receiver::close)
+            .filter(getResponse -> getResponse.getBody() != null)
+            .flatMapSequential(this::loadItem)
             .concatMap(this::filterIfDeleted);
     }
 
