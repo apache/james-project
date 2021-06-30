@@ -21,7 +21,7 @@ package org.apache.james.jmap.method
 import org.apache.james.jmap.api.exception.ChangeNotFoundException
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Invocation.MethodName
-import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, Session}
+import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation}
 import org.apache.james.jmap.mail.{IdentityIdNotFoundException, RequestTooLargeException, UnsupportedFilterException, UnsupportedNestingException, UnsupportedRequestParameterException, UnsupportedSortException}
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.mailbox.MailboxSession
@@ -91,14 +91,12 @@ trait MethodRequiringAccountId[REQUEST <: WithAccountId] extends Method {
     metricFactory.decoratePublisherWithTimerMetric(JMAP_RFC8621_PREFIX + methodName.value, result)
   }
 
-  private def validateAccountId(accountId: AccountId, mailboxSession: MailboxSession, sessionSupplier: SessionSupplier, invocation: Invocation): Either[IllegalArgumentException, Session] =
-    sessionSupplier.generate(mailboxSession.getUser)
-      .flatMap(session =>
-        if (session.accounts.map(_.accountId).contains(accountId)) {
-          Right(session)
-        } else {
-          Left(AccountNotFoundException(Invocation.error(ErrorCode.AccountNotFound, invocation.methodCallId)))
-        })
+  private def validateAccountId(accountId: AccountId, mailboxSession: MailboxSession, sessionSupplier: SessionSupplier, invocation: Invocation): Either[IllegalArgumentException, MailboxSession] =
+    if (sessionSupplier.validate(mailboxSession.getUser, accountId)) {
+      Right(mailboxSession)
+    } else {
+      Left(AccountNotFoundException(Invocation.error(ErrorCode.AccountNotFound, invocation.methodCallId)))
+    }
 
   def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: REQUEST): Publisher[InvocationWithContext]
 
