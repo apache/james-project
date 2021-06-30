@@ -19,6 +19,7 @@
 package org.apache.james.modules.queue.rabbitmq;
 
 import java.io.FileNotFoundException;
+import java.util.Set;
 
 import javax.inject.Named;
 import javax.inject.Provider;
@@ -55,6 +56,8 @@ import org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDAO;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfigurationModule;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.EventsourcingConfigurationManagement;
+import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +67,7 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.ReceiverOptions;
@@ -127,6 +131,13 @@ public class RabbitMQModule extends AbstractModule {
     @Singleton
     public MailQueueFactory<? extends MailQueue> provideMailQueueFactoryGenerics(MailQueueFactory<RabbitMQMailQueue> queueFactory) {
         return queueFactory;
+    }
+
+    @ProvidesIntoSet
+    InitializationOperation configureUsersRepository(SimpleConnectionPool pool, Set<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlers) {
+        return InitilizationOperationBuilder
+            .forClass(SimpleConnectionPool.class)
+            .init(() -> pool.init(reconnectionHandlers));
     }
 
     @Provides

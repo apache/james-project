@@ -52,7 +52,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.ConnectionFactory;
 
@@ -79,7 +78,6 @@ import reactor.rabbitmq.Sender;
  */
 public class AmqpForwardAttribute extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(AmqpForwardAttribute.class);
-    private static final ImmutableSet<SimpleConnectionPool.ReconnectionHandler> RECONNECTION_HANDLERS = ImmutableSet.of();
     private static final int MAX_THREE_RETRIES = 3;
     private static final int MIN_DELAY_OF_TEN_MILLISECONDS = 10;
     private static final int CONNECTION_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND = 100;
@@ -127,8 +125,7 @@ public class AmqpForwardAttribute extends GenericMailet {
                 .shutdownTimeoutInMs(SHUTDOWN_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND)
                 .networkRecoveryIntervalInMs(NETWORK_RECOVERY_INTERVAL_OF_ONE_HUNDRED_MILLISECOND)
                 .build();
-            connectionPool = new SimpleConnectionPool(new RabbitMQConnectionFactory(rabbitMQConfiguration),
-                RECONNECTION_HANDLERS, SimpleConnectionPool.Configuration.builder()
+            connectionPool = new SimpleConnectionPool(new RabbitMQConnectionFactory(rabbitMQConfiguration), SimpleConnectionPool.Configuration.builder()
                 .retries(2)
                 .initialDelay(Duration.ofMillis(5)));
             reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(connectionPool.getResilientConnection(),

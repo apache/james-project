@@ -23,6 +23,7 @@ import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -30,6 +31,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
+import org.apache.james.lifecycle.api.Startable;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +45,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
 
-public class SimpleConnectionPool implements AutoCloseable {
+public class SimpleConnectionPool implements AutoCloseable, Startable {
     public static final Logger LOGGER = LoggerFactory.getLogger(SimpleConnectionPool.class);
 
     public static class Configuration {
@@ -94,16 +96,20 @@ public class SimpleConnectionPool implements AutoCloseable {
 
     private final AtomicReference<Connection> connectionReference;
     private final RabbitMQConnectionFactory connectionFactory;
-    private final Set<ReconnectionHandler> reconnectionHandlers;
     private final Configuration configuration;
+    private Set<ReconnectionHandler> reconnectionHandlers;
 
     @Inject
     @VisibleForTesting
-    public SimpleConnectionPool(RabbitMQConnectionFactory factory, Set<ReconnectionHandler> reconnectionHandlers, Configuration configuration) {
+    public SimpleConnectionPool(RabbitMQConnectionFactory factory, Configuration configuration) {
         this.connectionFactory = factory;
-        this.reconnectionHandlers = reconnectionHandlers;
+        this.reconnectionHandlers = new HashSet<>();
         this.configuration = configuration;
         this.connectionReference = new AtomicReference<>();
+    }
+
+    public void init(Set<ReconnectionHandler> reconnectionHandlers) {
+        this.reconnectionHandlers = reconnectionHandlers;
     }
 
     @PreDestroy
