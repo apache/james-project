@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
@@ -39,9 +40,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Preconditions;
 
 import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.AcknowledgableDelivery;
@@ -72,9 +73,7 @@ class GroupRegistrationHandler {
     private final RetryBackoffConfiguration retryBackoff;
     private final EventDeadLetters eventDeadLetters;
     private final ListenerExecutor listenerExecutor;
-    private final EventBusId eventBusId;
     private final RabbitMQConfiguration configuration;
-    private Optional<Receiver> receiver;
     private Optional<Disposable> consumer;
 
     GroupRegistrationHandler(NamingStrategy namingStrategy, EventSerializer eventSerializer, ReactorRabbitMQChannelPool channelPool, Sender sender, ReceiverProvider receiverProvider,
@@ -88,12 +87,10 @@ class GroupRegistrationHandler {
         this.retryBackoff = retryBackoff;
         this.eventDeadLetters = eventDeadLetters;
         this.listenerExecutor = listenerExecutor;
-        this.eventBusId = eventBusId;
         this.configuration = configuration;
         this.groupRegistrations = new ConcurrentHashMap<>();
         this.queueName = namingStrategy.workQueue(GROUP);
         this.consumer = Optional.empty();
-        this.receiver = Optional.empty();
     }
 
     GroupRegistration retrieveGroupRegistration(Group group) {
@@ -117,13 +114,14 @@ class GroupRegistrationHandler {
             .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.elastic()))
             .block();
 
-        this.receiver = Optional.of(receiverProvider.createReceiver());
         this.consumer = Optional.of(consumeWorkQueue());
     }
 
     private Disposable consumeWorkQueue() {
-        Preconditions.checkState(receiver.isPresent());
-        return receiver.get().consumeManualAck(queueName.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE))
+        return Flux.using(
+                receiverProvider::createReceiver,
+            receiver -> receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE)),
+            Receiver::close)
             .publishOn(Schedulers.parallel())
             .filter(delivery -> Objects.nonNull(delivery.getBody()))
             .flatMap(this::deliver, EventBus.EXECUTION_RATE)
@@ -158,7 +156,17 @@ class GroupRegistrationHandler {
     void stop() {
         groupRegistrations.values().forEach(GroupRegistration::unregister);
         consumer.ifPresent(Disposable::dispose);
-        receiver.ifPresent(Receiver::close);
+    }
+
+    void restart() {
+        Optional<Disposable> previousConsumer = consumer;
+        consumer = Optional.of(consumeWorkQueue());
+        previousConsumer
+            .filter(Predicate.not(Disposable::isDisposed))
+            .ifPresent(Disposable::dispose);
+
+        groupRegistrations.values()
+            .forEach(GroupRegistration::restart);
     }
 
     Registration register(EventListener.ReactiveEventListener listener, Group group) {

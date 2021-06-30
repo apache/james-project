@@ -95,6 +95,11 @@ public class RabbitMQEventBus implements EventBus, Startable {
         }
     }
 
+    public void restart() {
+        keyRegistrationHandler.restart();
+        groupRegistrationHandler.restart();
+    }
+
     @VisibleForTesting
     void startWithoutStartingKeyRegistrationHandler() {
         if (!isRunning && !isStopping) {

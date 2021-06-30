@@ -43,6 +43,7 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Delivery;
 
 import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.ConsumeOptions;
@@ -58,48 +59,58 @@ class KeyRegistrationHandler {
 
     private static final Duration TOPOLOGY_CHANGES_TIMEOUT = Duration.ofMinutes(1);
 
-    private final NamingStrategy namingStrategy;
     private final EventBusId eventBusId;
     private final LocalListenerRegistry localListenerRegistry;
     private final EventSerializer eventSerializer;
     private final Sender sender;
     private final RoutingKeyConverter routingKeyConverter;
-    private final Receiver receiver;
     private final RegistrationQueueName registrationQueue;
     private final RegistrationBinder registrationBinder;
     private final ListenerExecutor listenerExecutor;
     private final RetryBackoffConfiguration retryBackoff;
     private final RabbitMQConfiguration configuration;
+    private final ReceiverProvider receiverProvider;
     private Optional<Disposable> receiverSubscriber;
+    private Disposable newSubscription;
 
     KeyRegistrationHandler(NamingStrategy namingStrategy, EventBusId eventBusId, EventSerializer eventSerializer,
                            Sender sender, ReceiverProvider receiverProvider,
                            RoutingKeyConverter routingKeyConverter, LocalListenerRegistry localListenerRegistry,
                            ListenerExecutor listenerExecutor, RetryBackoffConfiguration retryBackoff, RabbitMQConfiguration configuration) {
-        this.namingStrategy = namingStrategy;
         this.eventBusId = eventBusId;
         this.eventSerializer = eventSerializer;
         this.sender = sender;
         this.routingKeyConverter = routingKeyConverter;
         this.localListenerRegistry = localListenerRegistry;
-        this.receiver = receiverProvider.createReceiver();
+        this.receiverProvider = receiverProvider;
         this.listenerExecutor = listenerExecutor;
         this.retryBackoff = retryBackoff;
         this.configuration = configuration;
         this.registrationQueue = namingStrategy.queueName(eventBusId);
         this.registrationBinder = new RegistrationBinder(namingStrategy, sender, registrationQueue);
         this.receiverSubscriber = Optional.empty();
-
     }
 
     void start() {
         declareQueue();
 
-        receiverSubscriber = Optional.of(receiver.consumeAutoAck(registrationQueue.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE))
+        newSubscription = Flux.using(
+            receiverProvider::createReceiver,
+            receiver -> receiver.consumeAutoAck(registrationQueue.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE)),
+            Receiver::close)
             .subscribeOn(Schedulers.parallel())
             .flatMap(this::handleDelivery, EventBus.EXECUTION_RATE)
             .subscribeOn(Schedulers.elastic())
-            .subscribe());
+            .subscribe();
+        receiverSubscriber = Optional.of(newSubscription);
+    }
+
+    void restart() {
+        Optional<Disposable> previousReceiverSubscriber = receiverSubscriber;
+        receiverSubscriber = Optional.of(newSubscription);
+        previousReceiverSubscriber
+            .filter(Predicate.not(Disposable::isDisposed))
+            .ifPresent(Disposable::dispose);
     }
 
     @VisibleForTesting
@@ -127,7 +138,6 @@ class KeyRegistrationHandler {
             .block();
         receiverSubscriber.filter(Predicate.not(Disposable::isDisposed))
                 .ifPresent(Disposable::dispose);
-        receiver.close();
     }
 
     Mono<Registration> register(EventListener.ReactiveEventListener listener, RegistrationKey key) {

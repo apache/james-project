@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.AcknowledgableDelivery;
@@ -48,6 +49,7 @@ import reactor.rabbitmq.Sender;
 import reactor.util.retry.Retry;
 
 class GroupRegistration implements Registration {
+
     static class WorkQueueName {
         private final String prefix;
         private final Group group;
@@ -71,9 +73,7 @@ class GroupRegistration implements Registration {
     private final ReactorRabbitMQChannelPool channelPool;
     private final EventListener.ReactiveEventListener listener;
     private final WorkQueueName queueName;
-    private final Receiver receiver;
     private final Runnable unregisterGroup;
-    private final Sender sender;
     private final EventSerializer eventSerializer;
     private final GroupConsumerRetry retryHandler;
     private final WaitDelayGenerator delayGenerator;
@@ -82,6 +82,7 @@ class GroupRegistration implements Registration {
     private final ListenerExecutor listenerExecutor;
     private final RabbitMQConfiguration configuration;
     private Optional<Disposable> receiverSubscriber;
+    private final ReceiverProvider receiverProvider;
 
     GroupRegistration(NamingStrategy namingStrategy, ReactorRabbitMQChannelPool channelPool, Sender sender, ReceiverProvider receiverProvider, EventSerializer eventSerializer,
                       EventListener.ReactiveEventListener listener, Group group, RetryBackoffConfiguration retryBackoff,
@@ -93,8 +94,7 @@ class GroupRegistration implements Registration {
         this.listener = listener;
         this.configuration = configuration;
         this.queueName = namingStrategy.workQueue(group);
-        this.sender = sender;
-        this.receiver = receiverProvider.createReceiver();
+        this.receiverProvider = receiverProvider;
         this.retryBackoff = retryBackoff;
         this.listenerExecutor = listenerExecutor;
         this.receiverSubscriber = Optional.empty();
@@ -114,6 +114,14 @@ class GroupRegistration implements Registration {
         return this;
     }
 
+    void restart() {
+        Optional<Disposable> previousSubscriber = this.receiverSubscriber;
+        receiverSubscriber = Optional.of(consumeWorkQueue());
+        previousSubscriber
+            .filter(Predicate.not(Disposable::isDisposed))
+            .ifPresent(Disposable::dispose);
+    }
+
     private Mono<Void> createGroupWorkQueue() {
         return channelPool.createWorkQueue(
             QueueSpecification.queue(queueName.asString())
@@ -126,7 +134,10 @@ class GroupRegistration implements Registration {
     }
 
     private Disposable consumeWorkQueue() {
-        return receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE))
+        return Flux.using(
+                receiverProvider::createReceiver,
+                receiver -> receiver.consumeManualAck(queueName.asString(), new ConsumeOptions().qos(EventBus.EXECUTION_RATE)),
+                Receiver::close)
             .publishOn(Schedulers.parallel())
             .filter(delivery -> Objects.nonNull(delivery.getBody()))
             .flatMap(this::deliver, EventBus.EXECUTION_RATE)
@@ -184,7 +195,6 @@ class GroupRegistration implements Registration {
     public void unregister() {
         receiverSubscriber.filter(Predicate.not(Disposable::isDisposed))
             .ifPresent(Disposable::dispose);
-        receiver.close();
         unregisterGroup.run();
     }
 }
