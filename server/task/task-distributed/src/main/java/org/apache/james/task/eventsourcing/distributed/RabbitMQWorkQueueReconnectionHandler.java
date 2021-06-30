@@ -27,6 +27,7 @@ import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import javax.inject.Inject;
 
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
+import org.apache.james.task.eventsourcing.EventSourcingTaskManager;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,20 +41,25 @@ import reactor.core.publisher.Mono;
 public class RabbitMQWorkQueueReconnectionHandler implements SimpleConnectionPool.ReconnectionHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQWorkQueueReconnectionHandler.class);
     private final CancelRequestQueueName cancelRequestQueueName;
+    private final EventSourcingTaskManager taskManager;
 
     @Inject
-    public RabbitMQWorkQueueReconnectionHandler(CancelRequestQueueName cancelRequestQueueName) {
+    public RabbitMQWorkQueueReconnectionHandler(CancelRequestQueueName cancelRequestQueueName, EventSourcingTaskManager taskManager) {
         this.cancelRequestQueueName = cancelRequestQueueName;
+        this.taskManager = taskManager;
     }
 
     @Override
     public Publisher<Void> handleReconnection(Connection connection) {
-        return Mono.fromRunnable(() -> {
-            try (Channel channel = connection.createChannel()) {
-                channel.queueDeclare(cancelRequestQueueName.asString(), !DURABLE, !EXCLUSIVE, AUTO_DELETE, ImmutableMap.of());
-            } catch (Exception e) {
-                LOGGER.error("Error recovering connection", e);
-            }
-        });
+        return Mono.fromRunnable(() -> createCancelQueue(connection))
+            .then(Mono.fromRunnable(taskManager::restart));
+    }
+
+    private void createCancelQueue(Connection connection) {
+        try (Channel channel = connection.createChannel()) {
+            channel.queueDeclare(cancelRequestQueueName.asString(), !DURABLE, !EXCLUSIVE, AUTO_DELETE, ImmutableMap.of());
+        } catch (Exception e) {
+            LOGGER.error("Error recovering connection", e);
+        }
     }
 }

@@ -41,20 +41,25 @@ public class TerminationReconnectionHandler implements SimpleConnectionPool.Reco
     private static final Logger LOGGER = LoggerFactory.getLogger(TerminationReconnectionHandler.class);
 
     private final TerminationQueueName queueName;
+    private final RabbitMQTerminationSubscriber terminationSubscriber;
 
     @Inject
-    public TerminationReconnectionHandler(TerminationQueueName queueName) {
+    public TerminationReconnectionHandler(TerminationQueueName queueName, RabbitMQTerminationSubscriber terminationSubscriber) {
         this.queueName = queueName;
+        this.terminationSubscriber = terminationSubscriber;
     }
 
     @Override
     public Publisher<Void> handleReconnection(Connection connection) {
-        return Mono.fromRunnable(() -> {
-            try (Channel channel = connection.createChannel()) {
-                channel.queueDeclare(queueName.asString(), !DURABLE, !EXCLUSIVE, AUTO_DELETE, ImmutableMap.of());
-            } catch (Exception e) {
-                LOGGER.error("Error recovering connection", e);
-            }
-        });
+        return Mono.fromRunnable(() -> createTerminationQueue(connection))
+            .then(Mono.fromRunnable(terminationSubscriber::restart));
+    }
+
+    private void createTerminationQueue(Connection connection) {
+        try (Channel channel = connection.createChannel()) {
+            channel.queueDeclare(queueName.asString(), !DURABLE, !EXCLUSIVE, AUTO_DELETE, ImmutableMap.of());
+        } catch (Exception e) {
+            LOGGER.error("Error recovering connection", e);
+        }
     }
 }

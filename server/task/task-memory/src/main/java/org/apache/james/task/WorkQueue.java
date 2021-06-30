@@ -28,6 +28,10 @@ public interface WorkQueue extends Closeable, Startable {
 
     }
 
+    default void restart() {
+
+    }
+
     void submit(TaskWithId taskWithId);
 
     void cancel(TaskId taskId);

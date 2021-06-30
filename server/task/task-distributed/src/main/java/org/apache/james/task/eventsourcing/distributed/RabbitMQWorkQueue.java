@@ -47,6 +47,7 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Delivery;
 
 import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.UnicastProcessor;
 import reactor.core.scheduler.Schedulers;
@@ -80,12 +81,10 @@ public class RabbitMQWorkQueue implements WorkQueue {
     private final Sender sender;
     private final ReceiverProvider receiverProvider;
     private final CancelRequestQueueName cancelRequestQueueName;
-    private Receiver receiver;
     private UnicastProcessor<TaskId> sendCancelRequestsQueue;
     private Disposable sendCancelRequestsQueueHandle;
     private Disposable receiverHandle;
     private Disposable cancelRequestListenerHandle;
-    private Receiver cancelRequestListener;
 
     public RabbitMQWorkQueue(TaskManagerWorker worker, Sender sender,
                              ReceiverProvider receiverProvider, JsonTaskSerializer taskSerializer,
@@ -130,9 +129,22 @@ public class RabbitMQWorkQueue implements WorkQueue {
             .block();
     }
 
+    @Override
+    public void restart() {
+        Disposable previousWorkQueueHandler = receiverHandle;
+        consumeWorkqueue();
+        previousWorkQueueHandler.dispose();
+
+        Disposable previousCancelHandler = this.cancelRequestListenerHandle;
+        registerCancelRequestsListener(cancelRequestQueueName.asString());
+        previousCancelHandler.dispose();
+    }
+
     private void consumeWorkqueue() {
-        receiver = receiverProvider.createReceiver();
-        receiverHandle = receiver.consumeManualAck(QUEUE_NAME, new ConsumeOptions())
+        receiverHandle = Flux.using(
+                receiverProvider::createReceiver,
+                receiver -> receiver.consumeManualAck(QUEUE_NAME, new ConsumeOptions()),
+                Receiver::close)
             .subscribeOn(Schedulers.elastic())
             .concatMap(this::executeTask)
             .subscribe();
@@ -187,9 +199,10 @@ public class RabbitMQWorkQueue implements WorkQueue {
     }
 
     private void registerCancelRequestsListener(String queueName) {
-        cancelRequestListener = receiverProvider.createReceiver();
-        cancelRequestListenerHandle = cancelRequestListener
-            .consumeAutoAck(queueName)
+        cancelRequestListenerHandle = Flux.using(
+                receiverProvider::createReceiver,
+                receiver -> receiver.consumeAutoAck(queueName),
+                Receiver::close)
             .subscribeOn(Schedulers.elastic())
             .map(this::readCancelRequestMessage)
             .doOnNext(worker::cancelTask)
@@ -233,9 +246,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
     @Override
     public void close() {
         Optional.ofNullable(receiverHandle).ifPresent(Disposable::dispose);
-        Optional.ofNullable(receiver).ifPresent(Receiver::close);
         Optional.ofNullable(sendCancelRequestsQueueHandle).ifPresent(Disposable::dispose);
         Optional.ofNullable(cancelRequestListenerHandle).ifPresent(Disposable::dispose);
-        Optional.ofNullable(cancelRequestListener).ifPresent(Receiver::close);
     }
 }
