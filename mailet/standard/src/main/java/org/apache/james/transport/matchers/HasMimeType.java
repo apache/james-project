@@ -27,7 +27,9 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.mime4j.field.Fields;
+import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.field.ContentTypeFieldLenientImpl;
+import org.apache.james.mime4j.stream.RawField;
 import org.apache.james.util.StreamUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
@@ -69,7 +71,10 @@ public class HasMimeType extends GenericMatcher {
 
     private Stream<String> getMimeType(String rawValue) {
         try {
-            return Stream.of(Fields.contentType(rawValue).getMimeType());
+            return Stream.of(ContentTypeFieldLenientImpl.PARSER
+                .parse(new RawField(CONTENT_TYPE, rawValue),
+                    DecodeMonitor.SILENT)
+                .getMimeType());
         } catch (Exception e) {
             LOGGER.warn("Error while parsing message's mimeType {}", rawValue, e);
             return Stream.empty();
