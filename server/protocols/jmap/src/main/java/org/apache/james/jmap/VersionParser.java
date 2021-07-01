@@ -22,6 +22,9 @@ package org.apache.james.jmap;
 import static io.netty.handler.codec.http.HttpHeaderNames.ACCEPT;
 
 import java.util.Arrays;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -30,15 +33,17 @@ import javax.inject.Inject;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicHeaderValueParser;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 
 import reactor.netty.http.server.HttpServerRequest;
 
 public class VersionParser {
     private static final String JMAP_VERSION_HEADER = "jmapVersion";
 
-    private final Set<Version> supportedVersions;
+    private final Map<String, Version> supportedVersions;
     private final JMAPConfiguration jmapConfiguration;
 
     @Inject
@@ -47,25 +52,24 @@ public class VersionParser {
         Preconditions.checkArgument(supportedVersions.contains(jmapConfiguration.getDefaultVersion()),
                 "%s is not a supported JMAP version", jmapConfiguration);
 
-        this.supportedVersions = supportedVersions;
+        this.supportedVersions = supportedVersions.stream()
+            .collect(Guavate.toImmutableMap(version -> version.asString().toLowerCase(Locale.US)));
     }
 
     public Set<Version> getSupportedVersions() {
-        return supportedVersions;
+        return ImmutableSet.copyOf(supportedVersions.values());
     }
 
     @VisibleForTesting
     Version parse(String version) {
         Preconditions.checkNotNull(version);
 
-        return supportedVersions.stream()
-            .filter(jmapVersion -> jmapVersion.asString().equalsIgnoreCase(version))
-            .findFirst()
+        return Optional.ofNullable(supportedVersions.get(version.toLowerCase(Locale.US)))
             .orElseThrow(() -> new IllegalArgumentException(version + " is not a supported version"));
     }
 
     Version parseRequestVersionHeader(HttpServerRequest request) {
-        return asVersion(request)
+        return acceptParameters(request)
             .filter(nameValuePair -> nameValuePair.getName().equals(JMAP_VERSION_HEADER))
             .map(NameValuePair::getValue)
             .map(this::parse)
@@ -73,14 +77,14 @@ public class VersionParser {
             .orElse(jmapConfiguration.getDefaultVersion());
     }
 
-    private Stream<NameValuePair> asVersion(HttpServerRequest request) {
-        return request.requestHeaders()
-            .getAll(ACCEPT)
-            .stream()
-            .flatMap(this::extractValueParameters);
+    private Stream<NameValuePair> acceptParameters(HttpServerRequest request) {
+        return extractValueParameters(request.requestHeaders()
+            .get(ACCEPT));
     }
 
     private Stream<NameValuePair> extractValueParameters(String value) {
-        return Arrays.stream(BasicHeaderValueParser.parseParameters(value, BasicHeaderValueParser.INSTANCE));
+        return Optional.ofNullable(value)
+            .map(nonNull -> Arrays.stream(BasicHeaderValueParser.parseParameters(value, BasicHeaderValueParser.INSTANCE)))
+            .orElse(Stream.empty());
     }
 }
