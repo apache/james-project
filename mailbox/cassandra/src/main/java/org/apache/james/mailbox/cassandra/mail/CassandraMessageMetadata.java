@@ -329,6 +329,7 @@ public class CassandraMessageMetadata {
             SimpleMailboxMessage.builder()
                 .mailboxId(composedMessageId.getComposedMessageId().getMailboxId())
                 .messageId(composedMessageId.getComposedMessageId().getMessageId())
+                .threadId(composedMessageId.getThreadId())
                 .uid(composedMessageId.getComposedMessageId().getUid())
                 .modseq(composedMessageId.getModSeq())
                 .flags(composedMessageId.getFlags())
