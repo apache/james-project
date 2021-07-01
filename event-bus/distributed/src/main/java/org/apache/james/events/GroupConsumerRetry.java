@@ -25,8 +25,6 @@ import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.events.GroupRegistration.RETRY_COUNT;
 
-import java.nio.charset.StandardCharsets;
-
 import org.apache.james.util.MDCStructuredLogger;
 import org.apache.james.util.StructuredLogger;
 import org.slf4j.Logger;
@@ -102,7 +100,7 @@ class GroupConsumerRetry {
     }
 
     private Mono<Void> sendRetryMessage(Event event, int currentRetryCount) {
-        byte[] eventAsBytes = eventSerializer.toJson(event).getBytes(StandardCharsets.UTF_8);
+        byte[] eventAsBytes = eventSerializer.toJsonBytes(event);
 
         Mono<OutboundMessage> retryMessage = Mono.just(new OutboundMessage(
             retryExchangeName.asString(),

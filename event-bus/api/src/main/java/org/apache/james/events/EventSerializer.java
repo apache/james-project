@@ -19,8 +19,18 @@
 
 package org.apache.james.events;
 
+import java.nio.charset.StandardCharsets;
+
 public interface EventSerializer {
     String toJson(Event event);
 
+    default byte[] toJsonBytes(Event event) {
+        return toJson(event).getBytes(StandardCharsets.UTF_8);
+    }
+
     Event asEvent(String serialized);
+
+    default Event fromBytes(byte[] serialized) {
+        return asEvent(new String(serialized, StandardCharsets.UTF_8));
+    }
 }

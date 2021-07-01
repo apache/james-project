@@ -349,11 +349,13 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
     implicit val eventOFormat: OFormat[Event] = derived.oformat()
 
     def toJson(event: Event): String = Json.toJson(event).toString()
+    def toJsonBytes(event: Event): Array[Byte] = Json.toBytes(Json.toJson(event))
     def fromJson(json: String): JsResult[Event] = Json.fromJson[Event](Json.parse(json))
   }
 
   private val eventSerializerPrivateWrapper = new EventSerializerPrivateWrapper()
   def toJson(event: JavaEvent): String = eventSerializerPrivateWrapper.toJson(ScalaConverter.toScala(event))
+  def toJsonBytes(event: JavaEvent): Array[Byte] = eventSerializerPrivateWrapper.toJsonBytes(ScalaConverter.toScala(event))
   def fromJson(json: String): JsResult[JavaEvent] = eventSerializerPrivateWrapper.fromJson(json)
     .map(event => event.toJava)
 }
@@ -362,6 +364,8 @@ class MailboxEventSerializer @Inject()(mailboxIdFactory: MailboxId.Factory, mess
   private val jsonSerialize = new JsonSerialize(mailboxIdFactory, messageIdFactory, quotaRootDeserializer)
 
   override def toJson(event: JavaEvent): String = jsonSerialize.toJson(event)
+
+  override def toJsonBytes(event: JavaEvent): Array[Byte] = jsonSerialize.toJsonBytes(event)
 
   def fromJson(json: String): JsResult[JavaEvent] = jsonSerialize.fromJson(json)
 

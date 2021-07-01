@@ -24,7 +24,6 @@ import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.events.RabbitMQEventBus.EVENT_BUS_ID;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -187,7 +186,7 @@ class KeyRegistrationHandler {
     }
 
     private Event toEvent(Delivery delivery) {
-        return eventSerializer.asEvent(new String(delivery.getBody(), StandardCharsets.UTF_8));
+        return eventSerializer.fromBytes(delivery.getBody());
     }
 
     private StructuredLogger structuredLogger(Event event, RegistrationKey key) {

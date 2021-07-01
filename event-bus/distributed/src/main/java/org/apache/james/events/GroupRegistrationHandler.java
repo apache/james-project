@@ -27,7 +27,6 @@ import static org.apache.james.backends.rabbitmq.Constants.REQUEUE;
 import static org.apache.james.backends.rabbitmq.Constants.deadLetterQueue;
 import static org.apache.james.events.GroupRegistration.DEFAULT_RETRY_COUNT;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -148,7 +147,7 @@ class GroupRegistrationHandler {
     }
 
     private Mono<Event> deserializeEvent(byte[] eventAsBytes) {
-        return Mono.fromCallable(() -> eventSerializer.asEvent(new String(eventAsBytes, StandardCharsets.UTF_8)))
+        return Mono.fromCallable(() -> eventSerializer.fromBytes(eventAsBytes))
             .subscribeOn(Schedulers.parallel());
     }
 

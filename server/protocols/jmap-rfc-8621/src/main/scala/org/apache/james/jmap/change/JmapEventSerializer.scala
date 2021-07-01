@@ -86,4 +86,10 @@ case class JmapEventSerializer @Inject()(stateChangeEventDTOFactory: StateChange
   }
 
   override def asEvent(serialized: String): Event = genericSerializer.deserialize(serialized)
+
+  override def toJsonBytes(event: Event): Array[Byte] =  event match {
+    case stateChangeEvent: StateChangeEvent => genericSerializer.serializeToBytes(stateChangeEvent)
+  }
+
+  override def fromBytes(serialized: Array[Byte]): Event = genericSerializer.deserializeFromBytes(serialized)
 }

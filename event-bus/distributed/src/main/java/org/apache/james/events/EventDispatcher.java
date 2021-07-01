@@ -28,7 +28,6 @@ import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backends.rabbitmq.Constants.NO_ARGUMENTS;
 import static org.apache.james.events.RabbitMQEventBus.EVENT_BUS_ID;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
@@ -187,6 +186,6 @@ public class EventDispatcher {
     }
 
     private byte[] serializeEvent(Event event) {
-        return eventSerializer.toJson(event).getBytes(StandardCharsets.UTF_8);
+        return eventSerializer.toJsonBytes(event);
     }
 }

@@ -125,6 +125,17 @@ public class JsonGenericSerializer<T, U extends DTO> {
         return objectMapper.writeValueAsString(dto);
     }
 
+    public byte[] serializeToBytes(T domainObject) throws JsonProcessingException {
+        U dto = dtoConverter.toDTO(domainObject)
+            .orElseThrow(() -> new UnknownTypeException("unknown type " + domainObject.getClass()));
+        return objectMapper.writeValueAsBytes(dto);
+    }
+
+    public T deserializeFromBytes(byte[] value) throws IOException {
+        U dto = jsonToDTO(value);
+        return dtoConverter.toDomainObject(dto)
+            .orElseThrow(() -> new UnknownTypeException("unknown type " + dto.getType()));
+    }
 
     public T deserialize(String value) throws IOException {
         U dto = jsonToDTO(value);
@@ -148,7 +159,27 @@ public class JsonGenericSerializer<T, U extends DTO> {
         }
     }
 
+    private U jsonToDTO(byte[] value) throws IOException {
+        try {
+            JsonNode jsonTree = detectDuplicateProperty(value);
+            return parseAsPolymorphicDTO(jsonTree);
+        } catch (InvalidTypeIdException e) {
+            String typeId = e.getTypeId();
+            if (typeId == null) {
+                throw new InvalidTypeException("Unable to deserialize the json document", e);
+            } else {
+                throw new UnknownTypeException("unknown type " + typeId);
+            }
+        } catch (MismatchedInputException e) {
+            throw new InvalidTypeException("Unable to deserialize the json document", e);
+        }
+    }
+
     private JsonNode detectDuplicateProperty(String value) throws IOException {
+        return objectMapper.readTree(value);
+    }
+
+    private JsonNode detectDuplicateProperty(byte[] value) throws IOException {
         return objectMapper.readTree(value);
     }
 
