@@ -1087,6 +1087,42 @@ public abstract class SetMessagesMethodTest {
 
     @Category(BasicFeature.class)
     @Test
+    public void setMessagesShouldNotCreateOverSizedMessages() {
+        String messageCreationId = "creationId1337";
+        String fromAddress = USERNAME.asString();
+        String longText = "0123456789\\r\\n".repeat(1024 * 1024);
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"" + longText + "\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.asString())
+            .body(requestBody)
+        .when()
+            .post("/jmap").prettyPeek()
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notCreated", aMapWithSize(1))
+            .body(ARGUMENTS + ".notCreated." + messageCreationId + ".type", equalTo("invalidArguments"))
+            .body(ARGUMENTS + ".notCreated." + messageCreationId + ".description", equalTo("Attempt to create a message of 12583263 bytes while the maximum allowed is 10485760"));
+    }
+
+    @Category(BasicFeature.class)
+    @Test
     public void sendingAMailShouldLeadToAppropriateMailboxCountersOnOutbox() {
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME.asString();

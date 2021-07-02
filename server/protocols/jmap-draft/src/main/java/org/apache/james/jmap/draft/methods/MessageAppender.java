@@ -28,6 +28,8 @@ import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.jmap.JMAPConfiguration;
+import org.apache.james.jmap.draft.exceptions.SizeExceededException;
 import org.apache.james.jmap.draft.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.CreationMessage;
@@ -80,13 +82,15 @@ public class MessageAppender {
     private final MessageIdManager messageIdManager;
     private final AttachmentManager attachmentManager;
     private final MIMEMessageConverter mimeMessageConverter;
+    private JMAPConfiguration configuration;
 
     @Inject
-    public MessageAppender(MailboxManager mailboxManager, MessageIdManager messageIdManager, AttachmentManager attachmentManager, MIMEMessageConverter mimeMessageConverter) {
+    public MessageAppender(MailboxManager mailboxManager, MessageIdManager messageIdManager, AttachmentManager attachmentManager, MIMEMessageConverter mimeMessageConverter, JMAPConfiguration configuration) {
         this.mailboxManager = mailboxManager;
         this.messageIdManager = messageIdManager;
         this.attachmentManager = attachmentManager;
         this.mimeMessageConverter = mimeMessageConverter;
+        this.configuration = configuration;
     }
 
     public Mono<MetaDataWithContent> appendMessageInMailboxes(CreationMessageEntry createdEntry, List<MailboxId> targetMailboxes, MailboxSession session) {
@@ -96,6 +100,11 @@ public class MessageAppender {
                 Message message = mimeMessageConverter.convertToMime(createdEntry, messageAttachments, session);
 
                 byte[] messageContent = mimeMessageConverter.asBytes(message);
+
+                if (maximumSizeExceeded(messageContent)) {
+                    throw new SizeExceededException(messageContent.length, configuration.getMaximumSendSize().get());
+                }
+
                 Date internalDate = Date.from(createdEntry.getValue().getDate().toInstant());
 
                 return new NewMessage(messageContent, message, internalDate);
@@ -128,6 +137,10 @@ public class MessageAppender {
                         .message(newMessage.message)
                         .messageId(appendResult.getId().getMessageId())
                         .build())));
+    }
+
+    private Boolean maximumSizeExceeded(byte[] messageContent) {
+        return configuration.getMaximumSendSize().map(limit -> messageContent.length > limit).orElse(false);
     }
 
     public MetaDataWithContent appendMessageInMailbox(org.apache.james.mime4j.dom.Message message,
