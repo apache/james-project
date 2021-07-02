@@ -35,6 +35,13 @@
             <dl>
                 <dt><strong>healthcheck.period</strong></dt>
                 <dd>Define the period between two periodical health checks (default: 60)</dd>
+
+                <dt><strong>reception.check.user</strong></dt>
+                <dd>User to be using for running the "mail reception" health check. The user must exist.
+                    If not specified, the mail reception check is a noop.</dd>
+
+                <dt><strong>reception.check.timeout</strong></dt>
+                <dd>Period after which mail reception is considered faulty. Defaults to one minute.</dd>
             </dl>
         </section>
     </body>
