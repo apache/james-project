@@ -25,6 +25,7 @@ import java.util.Date
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import javax.mail.Flags
+import org.apache.james.jmap.JMAPConfiguration
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Properties, SetError, UTCDate}
 import org.apache.james.jmap.json.EmailSetSerializer
@@ -39,6 +40,8 @@ import org.apache.james.mime4j.dom.Message
 import org.apache.james.util.html.HtmlTextExtractor
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
+
+import scala.jdk.OptionConverters._
 
 object EmailSetCreatePerformer {
   case class CreationResults(results: Seq[CreationResult]) {
@@ -69,11 +72,13 @@ object EmailSetCreatePerformer {
     }
   }
 }
+case class SizeExceededException(actualSize: Long, maximumSize: Long) extends IllegalArgumentException(s"Attempt to create a message of $actualSize bytes while the maximum allowed is $maximumSize")
 
 class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
                                         blobResolvers: BlobResolvers,
                                         htmlTextExtractor: HtmlTextExtractor,
-                                        mailboxManager: MailboxManager) {
+                                        mailboxManager: MailboxManager,
+                                        configuration: JMAPConfiguration) {
 
   def create(request: EmailSetRequest, mailboxSession: MailboxSession): SMono[CreationResults] =
     SFlux.fromIterable(request.create.getOrElse(Map()))
@@ -91,7 +96,10 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
     } else {
       SMono.fromCallable(() => request.toMime4JMessage(blobResolvers, htmlTextExtractor, mailboxSession))
         .flatMap(either => either.fold(e => SMono.just(CreationFailure(clientId, e)),
-          message => append(clientId, asAppendCommand(request, message), mailboxSession, mailboxIds)))
+          message =>
+            asAppendCommand(request, message)
+              .fold(e => SMono.error(e),
+              appendCommand => append(clientId, appendCommand, mailboxSession, mailboxIds))))
         .onErrorResume(e => SMono.just[CreationResult](CreationFailure(clientId, e)))
         .subscribeOn(Schedulers.elastic())
     }
@@ -108,10 +116,16 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
     }
   }
 
-  private def asAppendCommand(request: EmailCreationRequest, message: Message): AppendCommand =
-    AppendCommand.builder()
-      .recent()
-      .withFlags(request.keywords.map(_.asFlags).getOrElse(new Flags()))
-      .withInternalDate(Date.from(request.receivedAt.getOrElse(UTCDate(ZonedDateTime.now())).asUTC.toInstant))
-      .build(message)
+  private def asAppendCommand(request: EmailCreationRequest, message: Message): Either[IllegalArgumentException, AppendCommand]  =
+    Right(
+      AppendCommand.builder()
+        .recent()
+        .withFlags(request.keywords.map(_.asFlags).getOrElse(new Flags()))
+        .withInternalDate(Date.from(request.receivedAt.getOrElse(UTCDate(ZonedDateTime.now())).asUTC.toInstant))
+        .build(message))
+      .flatMap(appendCommand =>
+        configuration.getMaximumSendSize.toScala
+          .filter(limit => appendCommand.getMsgIn.size() > limit)
+          .map(limit => Left(SizeExceededException(appendCommand.getMsgIn.size(), limit)))
+          .getOrElse(Right(appendCommand)))
 }
