@@ -54,6 +54,8 @@ import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.SearchGuessingAlgorithm;
+import org.apache.james.mailbox.store.search.SearchGuessingAlgorithmImpl;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,7 +77,6 @@ class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManagerAttach
 
     private void initSystemUnderTest() throws Exception {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
-        ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm = new NaiveThreadIdGuessingAlgorithmImpl();
 
         mailboxSessionMapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
             cassandraCluster.getCassandraCluster(),
@@ -90,6 +91,8 @@ class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManagerAttach
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mailboxSessionMapperFactory);
         AttachmentContentLoader attachmentContentLoader = null;
         MessageSearchIndex index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor(), attachmentContentLoader);
+        SearchGuessingAlgorithm searchGuessingAlgorithm = new SearchGuessingAlgorithmImpl(index, mailboxSessionMapperFactory, storeRightManager);
+        ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm = new NaiveThreadIdGuessingAlgorithmImpl(searchGuessingAlgorithm);
 
         mailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, sessionProvider, new NoMailboxPathLocker(), new MessageParser(),
             messageIdFactory, eventBus, annotationManager, storeRightManager, quotaComponents,

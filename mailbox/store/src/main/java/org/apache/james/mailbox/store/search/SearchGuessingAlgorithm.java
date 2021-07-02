@@ -17,19 +17,19 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.mailbox.store.mail;
+package org.apache.james.mailbox.store.search;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.ThreadId;
-import org.apache.james.mailbox.store.mail.model.MimeMessageId;
-import org.apache.james.mailbox.store.mail.model.Subject;
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
-public interface ThreadIdGuessingAlgorithm {
-    ThreadId guessThreadId(Username username, MessageId messageId, Optional<MimeMessageId> thisMimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject, MailboxSession session) throws MailboxException;
+import reactor.core.publisher.Flux;
+
+public interface SearchGuessingAlgorithm {
+    Flux<MailboxMessage> searchMailboxMessages(MultimailboxesSearchQuery expression, MailboxSession session, long limit, MessageMapper.FetchType fetchType) throws MailboxException;
+
+    Flux<MessageId> searchMessageIds(MultimailboxesSearchQuery expression, MailboxSession session, long limit) throws MailboxException;
 }

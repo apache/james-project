@@ -72,6 +72,8 @@ import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithmImpl;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.SearchGuessingAlgorithm;
+import org.apache.james.mailbox.store.search.SearchGuessingAlgorithmImpl;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
 import org.apache.james.utils.MailboxManagerDefinition;
@@ -102,6 +104,7 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(MailboxId.Factory.class).to(InMemoryId.Factory.class);
         bind(MessageId.Factory.class).to(InMemoryMessageId.Factory.class);
         bind(ThreadIdGuessingAlgorithm.class).to(NaiveThreadIdGuessingAlgorithmImpl.class);
+        bind(SearchGuessingAlgorithm.class).to(SearchGuessingAlgorithmImpl.class);
         bind(State.Factory.class).to(State.DefaultFactory.class);
 
         bind(BlobManager.class).to(StoreBlobManager.class);

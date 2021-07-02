@@ -110,6 +110,8 @@ import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithmImpl;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.UidProvider;
+import org.apache.james.mailbox.store.search.SearchGuessingAlgorithm;
+import org.apache.james.mailbox.store.search.SearchGuessingAlgorithmImpl;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
 import org.apache.james.utils.MailboxManagerDefinition;
 import org.apache.mailbox.tools.indexer.MessageIdReIndexerImpl;
@@ -163,6 +165,7 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(CassandraMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
         bind(CassandraMessageId.Factory.class).in(Scopes.SINGLETON);
         bind(NaiveThreadIdGuessingAlgorithmImpl.class).in(Scopes.SINGLETON);
+        bind(SearchGuessingAlgorithmImpl.class).in(Scopes.SINGLETON);
         bind(CassandraModSeqProvider.class).in(Scopes.SINGLETON);
         bind(CassandraUidProvider.class).in(Scopes.SINGLETON);
         bind(NoMailboxPathLocker.class).in(Scopes.SINGLETON);
@@ -197,6 +200,7 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(State.Factory.class).to(CassandraStateFactory.class);
         bind(MessageId.Factory.class).to(CassandraMessageId.Factory.class);
         bind(ThreadIdGuessingAlgorithm.class).to(NaiveThreadIdGuessingAlgorithmImpl.class);
+        bind(SearchGuessingAlgorithm.class).to(SearchGuessingAlgorithmImpl.class);
         bind(MessageIdManager.class).to(StoreMessageIdManager.class);
         bind(AttachmentManager.class).to(StoreAttachmentManager.class);
         bind(RightManager.class).to(StoreRightManager.class);

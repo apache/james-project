@@ -61,6 +61,8 @@ import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.SearchGuessingAlgorithm;
+import org.apache.james.mailbox.store.search.SearchGuessingAlgorithmImpl;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
@@ -97,7 +99,6 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         cassandra = CassandraCluster.create(MailboxAggregateModule.MODULE_WITH_QUOTA, cassandraHost);
         com.datastax.driver.core.Session session = cassandra.getConf();
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
-        ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm = new NaiveThreadIdGuessingAlgorithmImpl();
         CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
             cassandra, messageIdFactory);
 
@@ -122,6 +123,8 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         StoreAttachmentManager attachmentManager = new StoreAttachmentManager(mapperFactory, messageIdManager);
 
         MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor(), attachmentManager);
+        SearchGuessingAlgorithm searchGuessingAlgorithm = new SearchGuessingAlgorithmImpl(index, mapperFactory, storeRightManager);
+        ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm = new NaiveThreadIdGuessingAlgorithmImpl(searchGuessingAlgorithm);
 
         mailboxManager = new CassandraMailboxManager(mapperFactory, sessionProvider,
             new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,

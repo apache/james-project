@@ -72,6 +72,8 @@ import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.SearchGuessingAlgorithm;
+import org.apache.james.mailbox.store.search.SearchGuessingAlgorithmImpl;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 
@@ -315,7 +317,6 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             QuotaComponents quotaComponents = new QuotaComponents(maxQuotaManager, quotaManager, quotaRootResolver);
 
             InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
-            ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm = new NaiveThreadIdGuessingAlgorithmImpl();
 
             MailboxManagerPreInstanciationStage preInstanciationStage = new MailboxManagerPreInstanciationStage(mailboxSessionMapperFactory, sessionProvider);
             PreDeletionHooks hooks = createHooks(preInstanciationStage);
@@ -325,6 +326,8 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             StoreAttachmentManager attachmentManager = new StoreAttachmentManager(mailboxSessionMapperFactory, messageIdManager);
             MailboxManagerSearchIndexStage searchIndexStage = new MailboxManagerSearchIndexStage(mailboxSessionMapperFactory, sessionProvider, attachmentManager);
             MessageSearchIndex index = searchIndexFactory.get().apply(searchIndexStage);
+            SearchGuessingAlgorithm searchGuessingAlgorithm = new SearchGuessingAlgorithmImpl(index, mailboxSessionMapperFactory, storeRightManager);
+            ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm = new NaiveThreadIdGuessingAlgorithmImpl(searchGuessingAlgorithm);
 
             InMemoryMailboxManager manager = new InMemoryMailboxManager(
                 mailboxSessionMapperFactory,

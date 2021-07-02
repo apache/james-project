@@ -55,6 +55,7 @@ import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.SearchGuessingAlgorithmImpl;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 
@@ -79,7 +80,7 @@ public class CassandraTestSystemFixture {
         CassandraMailboxManager cassandraMailboxManager = new CassandraMailboxManager(mapperFactory, sessionProvider,
             new NoMailboxPathLocker(), new MessageParser(), new CassandraMessageId.Factory(),
             eventBus, annotationManager, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK,
-            new NaiveThreadIdGuessingAlgorithmImpl());
+            new NaiveThreadIdGuessingAlgorithmImpl(new SearchGuessingAlgorithmImpl(index, mapperFactory, storeRightManager)));
 
         eventBus.register(new MailboxAnnotationListener(mapperFactory, sessionProvider));
         eventBus.register(mapperFactory.deleteMessageListener());

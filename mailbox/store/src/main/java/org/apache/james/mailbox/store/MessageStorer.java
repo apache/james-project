@@ -98,7 +98,7 @@ public interface MessageStorer {
             Optional<MimeMessageId> inReplyTo = MimeMessageHeadersUtil.parseInReplyTo(headers);
             Optional<List<MimeMessageId>> references = MimeMessageHeadersUtil.parseReferences(headers);
             Optional<Subject> subject = MimeMessageHeadersUtil.parseSubject(headers);
-            ThreadId threadId = threadIdGuessingAlgorithm.guessThreadId(session.getUser(), messageId, mimeMessageId, inReplyTo, references, subject);
+            ThreadId threadId = threadIdGuessingAlgorithm.guessThreadId(session.getUser(), messageId, mimeMessageId, inReplyTo, references, subject, session);
 
             return mapperFactory.getMessageMapper(session)
                 .executeReactive(
@@ -161,7 +161,7 @@ public interface MessageStorer {
             Optional<MimeMessageId> inReplyTo = MimeMessageHeadersUtil.parseInReplyTo(headers);
             Optional<List<MimeMessageId>> references = MimeMessageHeadersUtil.parseReferences(headers);
             Optional<Subject> subject = MimeMessageHeadersUtil.parseSubject(headers);
-            ThreadId threadId = threadIdGuessingAlgorithm.guessThreadId(session.getUser(), messageId, mimeMessageId, inReplyTo, references, subject);
+            ThreadId threadId = threadIdGuessingAlgorithm.guessThreadId(session.getUser(), messageId, mimeMessageId, inReplyTo, references, subject, session);
 
             MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, ImmutableList.of());
 

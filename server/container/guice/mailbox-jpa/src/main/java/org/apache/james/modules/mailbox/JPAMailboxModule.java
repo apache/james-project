@@ -59,6 +59,8 @@ import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithmImpl;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
+import org.apache.james.mailbox.store.search.SearchGuessingAlgorithm;
+import org.apache.james.mailbox.store.search.SearchGuessingAlgorithmImpl;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
 import org.apache.james.modules.data.JPAEntityManagerModule;
 import org.apache.james.utils.MailboxManagerDefinition;
@@ -91,6 +93,7 @@ public class JPAMailboxModule extends AbstractModule {
         bind(UnionMailboxACLResolver.class).in(Scopes.SINGLETON);
         bind(DefaultMessageId.Factory.class).in(Scopes.SINGLETON);
         bind(NaiveThreadIdGuessingAlgorithmImpl.class).in(Scopes.SINGLETON);
+        bind(SearchGuessingAlgorithmImpl.class).in(Scopes.SINGLETON);
         bind(ReIndexerImpl.class).in(Scopes.SINGLETON);
         bind(SessionProviderImpl.class).in(Scopes.SINGLETON);
 
@@ -100,6 +103,7 @@ public class JPAMailboxModule extends AbstractModule {
         bind(MailboxSessionMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
         bind(MessageId.Factory.class).to(DefaultMessageId.Factory.class);
         bind(ThreadIdGuessingAlgorithm.class).to(NaiveThreadIdGuessingAlgorithmImpl.class);
+        bind(SearchGuessingAlgorithm.class).to(SearchGuessingAlgorithmImpl.class);
 
         bind(ModSeqProvider.class).to(JPAModSeqProvider.class);
         bind(UidProvider.class).to(JPAUidProvider.class);

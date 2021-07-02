@@ -56,6 +56,8 @@ import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.SearchGuessingAlgorithm;
+import org.apache.james.mailbox.store.search.SearchGuessingAlgorithmImpl;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 
@@ -82,7 +84,6 @@ public class CassandraMailboxManagerProvider {
                                                                 CassandraConfiguration cassandraConfiguration,
                                                                 MailboxManagerConfiguration mailboxManagerConfiguration) {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
-        ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm = new NaiveThreadIdGuessingAlgorithmImpl();
 
         CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
             cassandra,
@@ -90,15 +91,14 @@ public class CassandraMailboxManagerProvider {
             cassandraConfiguration);
 
         return provideMailboxManager(cassandra.getConf(), preDeletionHooks, mapperFactory,
-            mailboxManagerConfiguration, messageIdFactory, threadIdGuessingAlgorithm);
+            mailboxManagerConfiguration, messageIdFactory);
     }
 
     private static CassandraMailboxManager provideMailboxManager(Session session,
                                                                  PreDeletionHooks preDeletionHooks,
                                                                  CassandraMailboxSessionMapperFactory mapperFactory,
                                                                  MailboxManagerConfiguration mailboxManagerConfiguration,
-                                                                 MessageId.Factory messageIdFactory,
-                                                                 ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
+                                                                 MessageId.Factory messageIdFactory) {
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
@@ -122,6 +122,8 @@ public class CassandraMailboxManagerProvider {
 
         AttachmentContentLoader attachmentContentLoader = null;
         MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor(), attachmentContentLoader);
+        SearchGuessingAlgorithm searchGuessingAlgorithm = new SearchGuessingAlgorithmImpl(index, mapperFactory, storeRightManager);
+        ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm = new NaiveThreadIdGuessingAlgorithmImpl(searchGuessingAlgorithm);
 
         CassandraMailboxManager manager = new CassandraMailboxManager(mapperFactory, sessionProvider, new NoMailboxPathLocker(),
             messageParser, messageIdFactory, eventBus, annotationManager, storeRightManager,
