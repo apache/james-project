@@ -1466,12 +1466,21 @@ trait EmailSetMethodContract {
       .asString
 
     assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].notCreated.aaaaaa.description")
       .inPath("methodResponses[0][1].notCreated.aaaaaa")
       .isEqualTo(
         s"""{
-           |    "type": "invalidArguments",
-           |    "description": "Attempt to create a message of 25166341 bytes while the maximum allowed is 10485760"
+           |    "type": "invalidArguments"
            |}""".stripMargin)
+
+    // Message size is date-time and matchine (Message-Id) dependant
+    val description = assertThatJson(response)
+      .withIgnorePlaceholder("@")
+      .inPath("methodResponses[0][1].notCreated.aaaaaa.description")
+      .asString()
+    description.endsWith(" bytes while the maximum allowed is 10485760")
+    description.startsWith("Attempt to create a message of ")
+
   }
 
   @Test
