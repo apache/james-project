@@ -24,6 +24,7 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.store.SystemMailboxesProviderImpl;
+import org.apache.james.modules.mailbox.MailReceptionHealthCheckModule;
 import org.apache.james.modules.mailbox.PreDeletionHookModule;
 import org.apache.james.utils.GuiceProbe;
 
@@ -36,6 +37,7 @@ public class MailboxModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new PreDeletionHookModule());
+        install(new MailReceptionHealthCheckModule());
 
         Multibinder<GuiceProbe> probeMultiBinder = Multibinder.newSetBinder(binder(), GuiceProbe.class);
         probeMultiBinder.addBinding().to(MailboxProbeImpl.class);
