@@ -42,6 +42,7 @@ import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.extractor.JsoupTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -64,6 +65,7 @@ class MessageToElasticSearchJsonTest {
     static final int BODY_START_OCTET = 100;
     static final TestId MAILBOX_ID = TestId.of(18L);
     static final MessageId MESSAGE_ID = TestMessageId.of(184L);
+    static final ThreadId THREAD_ID = ThreadId.fromBaseMessageId(MESSAGE_ID);
     static final ModSeq MOD_SEQ = ModSeq.of(42L);
     static final MessageUid UID = MessageUid.of(25);
     static final Username USERNAME = Username.of("username");
@@ -97,6 +99,7 @@ class MessageToElasticSearchJsonTest {
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"), IndexAttachments.YES);
         MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID,
+                THREAD_ID,
                 date,
                 SIZE,
                 BODY_START_OCTET,
@@ -117,6 +120,7 @@ class MessageToElasticSearchJsonTest {
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"), IndexAttachments.YES);
         MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID,
+                THREAD_ID,
                 date,
                 SIZE,
                 BODY_START_OCTET,
@@ -139,6 +143,7 @@ class MessageToElasticSearchJsonTest {
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"), IndexAttachments.YES);
         MailboxMessage htmlMail = new SimpleMailboxMessage(MESSAGE_ID,
+                THREAD_ID,
                 date,
                 SIZE,
                 BODY_START_OCTET,
@@ -159,6 +164,7 @@ class MessageToElasticSearchJsonTest {
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"), IndexAttachments.YES);
         MailboxMessage pgpSignedMail = new SimpleMailboxMessage(MESSAGE_ID,
+                THREAD_ID,
                 date,
                 SIZE,
                 BODY_START_OCTET,
@@ -179,6 +185,7 @@ class MessageToElasticSearchJsonTest {
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"), IndexAttachments.YES);
         MailboxMessage mail = new SimpleMailboxMessage(MESSAGE_ID,
+                THREAD_ID,
                 date,
                 SIZE,
                 BODY_START_OCTET,
@@ -199,7 +206,8 @@ class MessageToElasticSearchJsonTest {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"), IndexAttachments.YES);
-        MailboxMessage recursiveMail = new SimpleMailboxMessage(MESSAGE_ID, 
+        MailboxMessage recursiveMail = new SimpleMailboxMessage(MESSAGE_ID,
+                THREAD_ID,
                 date,
                 SIZE,
                 BODY_START_OCTET,
@@ -220,6 +228,7 @@ class MessageToElasticSearchJsonTest {
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"), IndexAttachments.YES);
         MailboxMessage mailWithNoInternalDate = new SimpleMailboxMessage(MESSAGE_ID,
+                THREAD_ID,
                 null,
                 SIZE,
                 BODY_START_OCTET,
@@ -239,6 +248,7 @@ class MessageToElasticSearchJsonTest {
     void emailWithAttachmentsShouldConvertAttachmentsWhenIndexAttachmentsIsTrue() throws IOException {
         // Given
         MailboxMessage mailWithNoInternalDate = new SimpleMailboxMessage(MESSAGE_ID,
+                THREAD_ID,
                 null,
                 SIZE,
                 BODY_START_OCTET,
@@ -267,6 +277,7 @@ class MessageToElasticSearchJsonTest {
     void emailWithAttachmentsShouldNotConvertAttachmentsWhenIndexAttachmentsIsFalse() throws IOException {
         // Given
         MailboxMessage mailWithNoInternalDate = new SimpleMailboxMessage(MESSAGE_ID,
+                THREAD_ID,
                 null,
                 SIZE,
                 BODY_START_OCTET,
@@ -296,7 +307,7 @@ class MessageToElasticSearchJsonTest {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"), IndexAttachments.YES);
-        MailboxMessage mailWithNoMailboxId = new SimpleMailboxMessage(MESSAGE_ID, date,
+        MailboxMessage mailWithNoMailboxId = new SimpleMailboxMessage(MESSAGE_ID, THREAD_ID, date,
             SIZE,
             BODY_START_OCTET,
             new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"))),
@@ -348,7 +359,7 @@ class MessageToElasticSearchJsonTest {
             textExtractor,
             ZoneId.of("Europe/Paris"),
             IndexAttachments.YES);
-        MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID, date,
+        MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID, THREAD_ID, date,
             SIZE,
             BODY_START_OCTET,
             new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/nonTextual.eml"))),
@@ -368,6 +379,7 @@ class MessageToElasticSearchJsonTest {
     void convertToJsonWithoutAttachmentShouldConvertEmailBoby() throws IOException {
         // Given
         MailboxMessage message = new SimpleMailboxMessage(MESSAGE_ID,
+            THREAD_ID,
             null,
             SIZE,
             BODY_START_OCTET,
@@ -396,6 +408,7 @@ class MessageToElasticSearchJsonTest {
     void convertToJsonShouldExtractHtmlText() throws IOException {
         // Given
         MailboxMessage message = new SimpleMailboxMessage(MESSAGE_ID,
+            THREAD_ID,
             date,
             SIZE,
             BODY_START_OCTET,

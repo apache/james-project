@@ -41,6 +41,7 @@ import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,6 +57,7 @@ class SimpleMailboxMessageTest {
     static final TestId TEST_ID = TestId.of(1L);
     static final int BODY_START_OCTET = 0;
     static final MessageId MESSAGE_ID = new TestMessageId.Factory().generate();
+    static final ThreadId THREAD_ID = ThreadId.fromBaseMessageId(MESSAGE_ID);
     static final int SIZE = 1000;
 
     SimpleMailboxMessage message;
@@ -109,7 +111,9 @@ class SimpleMailboxMessageTest {
         propertyBuilder.setTextualLineCount(textualLineCount);
         propertyBuilder.setMediaType(text);
         propertyBuilder.setSubType(plain);
-        SimpleMailboxMessage original = new SimpleMailboxMessage(new TestMessageId.Factory().generate(), new Date(),
+        MessageId messageId = new TestMessageId.Factory().generate();
+        ThreadId threadId = ThreadId.fromBaseMessageId(messageId);
+        SimpleMailboxMessage original = new SimpleMailboxMessage(messageId, threadId, new Date(),
             MESSAGE_CONTENT.length(),
             BODY_START_OCTET,
             CONTENT_STREAM,
@@ -132,7 +136,7 @@ class SimpleMailboxMessageTest {
     }
 
     private static SimpleMailboxMessage buildMessage(String content) {
-        return new SimpleMailboxMessage(new DefaultMessageId(), Calendar.getInstance().getTime(),
+        return new SimpleMailboxMessage(new DefaultMessageId(), ThreadId.fromBaseMessageId(new DefaultMessageId()), Calendar.getInstance().getTime(),
             content.length(), BODY_START_OCTET, new ByteContent(
                     content.getBytes(MESSAGE_CHARSET)), new Flags(),
             new PropertyBuilder().build(), TEST_ID);
@@ -157,6 +161,7 @@ class SimpleMailboxMessageTest {
         Date internalDate = new Date();
         SimpleMailboxMessage.builder()
             .messageId(MESSAGE_ID)
+            .threadId(THREAD_ID)
             .mailboxId(TEST_ID)
             .internalDate(internalDate)
             .bodyStartOctet(BODY_START_OCTET)
@@ -187,6 +192,7 @@ class SimpleMailboxMessageTest {
             .build();
         SimpleMailboxMessage message = SimpleMailboxMessage.builder()
             .messageId(MESSAGE_ID)
+            .threadId(THREAD_ID)
             .mailboxId(TEST_ID)
             .modseq(modseq)
             .uid(uid)
@@ -219,6 +225,7 @@ class SimpleMailboxMessageTest {
     void buildShouldThrowOnMissingMessageId() {
         Date internalDate = new Date();
         assertThatThrownBy(() -> SimpleMailboxMessage.builder()
+                .threadId(THREAD_ID)
                 .mailboxId(TEST_ID)
                 .internalDate(internalDate)
                 .bodyStartOctet(BODY_START_OCTET)
@@ -231,10 +238,27 @@ class SimpleMailboxMessageTest {
     }
 
     @Test
+    void buildShouldThrowOnMissingThreadId() {
+        Date internalDate = new Date();
+        assertThatThrownBy(() -> SimpleMailboxMessage.builder()
+            .messageId(MESSAGE_ID)
+            .mailboxId(TEST_ID)
+            .internalDate(internalDate)
+            .bodyStartOctet(BODY_START_OCTET)
+            .size(SIZE)
+            .content(CONTENT_STREAM)
+            .flags(new Flags())
+            .properties(new PropertyBuilder())
+            .build())
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
     void buildShouldThrowOnMissingMailboxId() {
         Date internalDate = new Date();
         assertThatThrownBy(() -> SimpleMailboxMessage.builder()
                 .messageId(MESSAGE_ID)
+                .threadId(THREAD_ID)
                 .internalDate(internalDate)
                 .bodyStartOctet(BODY_START_OCTET)
                 .size(SIZE)
@@ -249,6 +273,7 @@ class SimpleMailboxMessageTest {
     void buildShouldThrowOnMissingInternalDate() {
         assertThatThrownBy(() -> SimpleMailboxMessage.builder()
                 .messageId(MESSAGE_ID)
+                .threadId(THREAD_ID)
                 .mailboxId(TEST_ID)
                 .bodyStartOctet(BODY_START_OCTET)
                 .size(SIZE)
@@ -264,6 +289,7 @@ class SimpleMailboxMessageTest {
         Date internalDate = new Date();
         assertThatThrownBy(() -> SimpleMailboxMessage.builder()
                 .messageId(MESSAGE_ID)
+                .threadId(THREAD_ID)
                 .mailboxId(TEST_ID)
                 .internalDate(internalDate)
                 .size(SIZE)
@@ -279,6 +305,7 @@ class SimpleMailboxMessageTest {
         Date internalDate = new Date();
         assertThatThrownBy(() -> SimpleMailboxMessage.builder()
                 .messageId(MESSAGE_ID)
+                .threadId(THREAD_ID)
                 .mailboxId(TEST_ID)
                 .internalDate(internalDate)
                 .bodyStartOctet(BODY_START_OCTET)
@@ -294,6 +321,7 @@ class SimpleMailboxMessageTest {
         Date internalDate = new Date();
         assertThatThrownBy(() -> SimpleMailboxMessage.builder()
                 .messageId(MESSAGE_ID)
+                .threadId(THREAD_ID)
                 .mailboxId(TEST_ID)
                 .internalDate(internalDate)
                 .bodyStartOctet(BODY_START_OCTET)
@@ -309,6 +337,7 @@ class SimpleMailboxMessageTest {
         Date internalDate = new Date();
         assertThatThrownBy(() -> SimpleMailboxMessage.builder()
                 .messageId(MESSAGE_ID)
+                .threadId(THREAD_ID)
                 .mailboxId(TEST_ID)
                 .internalDate(internalDate)
                 .bodyStartOctet(BODY_START_OCTET)
@@ -324,6 +353,7 @@ class SimpleMailboxMessageTest {
         Date internalDate = new Date();
         assertThatThrownBy(() -> SimpleMailboxMessage.builder()
                 .messageId(MESSAGE_ID)
+                .threadId(THREAD_ID)
                 .mailboxId(TEST_ID)
                 .internalDate(internalDate)
                 .bodyStartOctet(BODY_START_OCTET)
@@ -336,7 +366,7 @@ class SimpleMailboxMessageTest {
 
     @Test
     void simpleMessageShouldReturnThreadIdWhichWrapsMessageId() {
-        assertThat(message.getThreadId().getBaseMessageId()).isEqualTo(message.getMessageId());
+        assertThat(message.getThreadId().getBaseMessageId()).isInstanceOf(MessageId.class);
     }
 
 }

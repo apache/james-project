@@ -29,21 +29,22 @@ import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
 public interface MessageFactory<T extends MailboxMessage> {
-    T createMessage(MessageId messageId, Mailbox mailbox, Date internalDate, int size, int bodyStartOctet,
+    T createMessage(MessageId messageId, ThreadId threadId, Mailbox mailbox, Date internalDate, int size, int bodyStartOctet,
                     Content content, Flags flags, PropertyBuilder propertyBuilder,
                     List<MessageAttachmentMetadata> attachments) throws MailboxException;
 
     class StoreMessageFactory implements MessageFactory<SimpleMailboxMessage> {
         @Override
-        public SimpleMailboxMessage createMessage(MessageId messageId, Mailbox mailbox, Date internalDate, int size,
+        public SimpleMailboxMessage createMessage(MessageId messageId, ThreadId threadId, Mailbox mailbox, Date internalDate, int size,
                                                   int bodyStartOctet, Content content, Flags flags,
                                                   PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments) {
-            return new SimpleMailboxMessage(messageId, internalDate, size, bodyStartOctet, content, flags, propertyBuilder.build(),
+            return new SimpleMailboxMessage(messageId, threadId, internalDate, size, bodyStartOctet, content, flags, propertyBuilder.build(),
                 mailbox.getMailboxId(), attachments);
         }
     }

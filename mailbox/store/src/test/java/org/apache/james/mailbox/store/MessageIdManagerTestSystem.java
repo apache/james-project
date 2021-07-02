@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -82,8 +83,9 @@ public class MessageIdManagerTestSystem {
     public MessageId persist(MailboxId mailboxId, MessageUid uid, Flags flags, MailboxSession mailboxSession) {
         try {
             MessageId messageId = messageIdFactory.generate();
+            ThreadId threadId = ThreadId.fromBaseMessageId(messageId);
             Mailbox mailbox = mapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId).block();
-            MailboxMessage message = createMessage(mailboxId, flags, messageId, uid);
+            MailboxMessage message = createMessage(mailboxId, flags, messageId, threadId, uid);
             mapperFactory.getMessageMapper(mailboxSession).add(mailbox, message);
             mailboxManager.getEventBus().dispatch(EventFactory.added()
                 .randomEventId()
@@ -112,8 +114,8 @@ public class MessageIdManagerTestSystem {
         }
     }
 
-    private static MailboxMessage createMessage(MailboxId mailboxId, Flags flags, MessageId messageId, MessageUid uid) {
-        MailboxMessage mailboxMessage = new SimpleMailboxMessage(messageId, new Date(), MESSAGE_CONTENT.length, 1256,
+    private static MailboxMessage createMessage(MailboxId mailboxId, Flags flags, MessageId messageId, ThreadId threadId, MessageUid uid) {
+        MailboxMessage mailboxMessage = new SimpleMailboxMessage(messageId, threadId, new Date(), MESSAGE_CONTENT.length, 1256,
             new ByteContent(MESSAGE_CONTENT), flags, new PropertyBuilder().build(), mailboxId);
         mailboxMessage.setModSeq(MOD_SEQ);
         mailboxMessage.setUid(uid);

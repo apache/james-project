@@ -34,6 +34,7 @@ import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -80,7 +81,8 @@ public class MessageBuilder {
 
     public MailboxMessage build(MessageId messageId) throws Exception {
         byte[] headerContent = getHeaderContent();
-        SimpleMailboxMessage mailboxMessage = new SimpleMailboxMessage(messageId, internalDate, size, headerContent.length,
+        ThreadId threadId = ThreadId.fromBaseMessageId(messageId);
+        SimpleMailboxMessage mailboxMessage = new SimpleMailboxMessage(messageId, threadId, internalDate, size, headerContent.length,
             new ByteContent(Bytes.concat(headerContent, body)), flags, new PropertyBuilder().build(), mailboxId, NO_ATTACHMENTS);
         mailboxMessage.setUid(uid);
         return mailboxMessage;

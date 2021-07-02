@@ -35,6 +35,7 @@ import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.ParsedAttachment;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -86,12 +87,13 @@ public interface MessageStorer {
         public Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session) throws MailboxException {
             MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
             MessageId messageId = messageIdFactory.generate();
+            ThreadId threadId = ThreadId.fromBaseMessageId(messageId);
 
             return mapperFactory.getMessageMapper(session)
                 .executeReactive(
                     storeAttachments(messageId, content, maybeMessage, session)
                         .flatMap(Throwing.function((List<MessageAttachmentMetadata> attachments) -> {
-                                MailboxMessage message = messageFactory.createMessage(messageId, mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, attachments);
+                                MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, attachments);
                                 return Mono.from(messageMapper.addReactive(mailbox, message))
                                     .map(metadata -> Pair.of(metadata, Optional.of(attachments)));
                             }).sneakyThrow()));
@@ -142,7 +144,8 @@ public interface MessageStorer {
         public Mono<Pair<MessageMetaData, Optional<List<MessageAttachmentMetadata>>>> appendMessageToStore(Mailbox mailbox, Date internalDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, Optional<Message> maybeMessage, MailboxSession session) throws MailboxException {
             MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
             MessageId messageId = messageIdFactory.generate();
-            MailboxMessage message = messageFactory.createMessage(messageId, mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, ImmutableList.of());
+            ThreadId threadId = ThreadId.fromBaseMessageId(messageId);
+            MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, ImmutableList.of());
 
             return mapperFactory.getMessageMapper(session)
                 .executeReactive(Mono.from(messageMapper.addReactive(mailbox, message)))

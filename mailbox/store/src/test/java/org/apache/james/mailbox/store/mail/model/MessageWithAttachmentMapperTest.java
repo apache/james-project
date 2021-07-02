@@ -40,6 +40,7 @@ import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.ParsedAttachment;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
@@ -101,15 +102,19 @@ public abstract class MessageWithAttachmentMapperTest {
             .inline(false);
 
         MessageId messageId1 = mapperProvider.generateMessageId();
+        ThreadId threadId1 = ThreadId.fromBaseMessageId(messageId1);
         MessageId messageId2 = mapperProvider.generateMessageId();
+        ThreadId threadId2 = ThreadId.fromBaseMessageId(messageId2);
+        MessageId messageId3 = mapperProvider.generateMessageId();
+        ThreadId threadId3 = ThreadId.fromBaseMessageId(messageId3);
         List<MessageAttachmentMetadata> message1Attachments = attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(attachment1), messageId1);
         List<MessageAttachmentMetadata> message2Attachments = attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(attachment2, attachment3), messageId2);
 
-        messageWith1Attachment = createMessage(attachmentsMailbox, messageId1, "Subject: Test7 \n\nBody7\n.\n", BODY_START, new PropertyBuilder(),
+        messageWith1Attachment = createMessage(attachmentsMailbox, messageId1, threadId1, "Subject: Test7 \n\nBody7\n.\n", BODY_START, new PropertyBuilder(),
                 message1Attachments);
-        messageWith2Attachments = createMessage(attachmentsMailbox, messageId2, "Subject: Test8 \n\nBody8\n.\n", BODY_START, new PropertyBuilder(),
+        messageWith2Attachments = createMessage(attachmentsMailbox, messageId2, threadId2, "Subject: Test8 \n\nBody8\n.\n", BODY_START, new PropertyBuilder(),
                 message2Attachments);
-        messageWithoutAttachment = createMessage(attachmentsMailbox, mapperProvider.generateMessageId(), "Subject: Test1 \n\nBody1\n.\n", BODY_START, new PropertyBuilder());
+        messageWithoutAttachment = createMessage(attachmentsMailbox, messageId3, threadId3, "Subject: Test1 \n\nBody1\n.\n", BODY_START, new PropertyBuilder());
     }
 
     @Test
@@ -193,11 +198,11 @@ public abstract class MessageWithAttachmentMapperTest {
         messageWith2Attachments.setModSeq(messageMapper.getHighestModSeq(attachmentsMailbox));
     }
 
-    private SimpleMailboxMessage createMessage(Mailbox mailbox, MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments) {
-        return new SimpleMailboxMessage(messageId, new Date(), content.length(), bodyStart, new ByteContent(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId(), attachments);
+    private SimpleMailboxMessage createMessage(Mailbox mailbox, MessageId messageId, ThreadId threadId, String content, int bodyStart, PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments) {
+        return new SimpleMailboxMessage(messageId, threadId, new Date(), content.length(), bodyStart, new ByteContent(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId(), attachments);
     }
 
-    private SimpleMailboxMessage createMessage(Mailbox mailbox, MessageId messageId, String content, int bodyStart, PropertyBuilder propertyBuilder) {
-        return new SimpleMailboxMessage(messageId, new Date(), content.length(), bodyStart, new ByteContent(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId());
+    private SimpleMailboxMessage createMessage(Mailbox mailbox, MessageId messageId, ThreadId threadId, String content, int bodyStart, PropertyBuilder propertyBuilder) {
+        return new SimpleMailboxMessage(messageId, threadId, new Date(), content.length(), bodyStart, new ByteContent(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId());
     }
 }

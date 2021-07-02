@@ -41,6 +41,7 @@ import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
@@ -84,7 +85,7 @@ class StoreMailboxMessageResultIteratorTest {
         }
 
         private SimpleMailboxMessage createMessage(MessageUid uid) {
-            SimpleMailboxMessage message = new SimpleMailboxMessage(new DefaultMessageId(), null, 0, 0, new ByteContent(
+            SimpleMailboxMessage message = new SimpleMailboxMessage(new DefaultMessageId(), ThreadId.fromBaseMessageId(new DefaultMessageId()), null, 0, 0, new ByteContent(
                     "".getBytes()), new Flags(), new PropertyBuilder().build(), TestId.of(1L));
             message.setUid(uid);
             return message;

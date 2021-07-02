@@ -43,6 +43,7 @@ class MetadataMapAssertTest {
 
     static final MessageUid UID = MessageUid.of(18);
     static final MessageId MESSAGE_ID = new DefaultMessageId();
+    static final ThreadId THREAD_ID = ThreadId.fromBaseMessageId(MESSAGE_ID);
     static final ModSeq MODSEQ = ModSeq.of(24L);
     static final Date DATE = new Date();
     static final String HEADER_STRING = "name: headerName\n\n";
@@ -53,7 +54,7 @@ class MetadataMapAssertTest {
 
     @BeforeEach
     void setUp() {
-        message1 = new SimpleMailboxMessage(MESSAGE_ID, DATE, HEADER_STRING.length() + BODY_STRING.length(),
+        message1 = new SimpleMailboxMessage(MESSAGE_ID, THREAD_ID, DATE, HEADER_STRING.length() + BODY_STRING.length(),
             HEADER_STRING.length(), new ByteContent((HEADER_STRING + BODY_STRING).getBytes()), new Flags(), new PropertyBuilder().build(), MAILBOX_ID);
         message1.setUid(UID);
         message1.setModSeq(MODSEQ);

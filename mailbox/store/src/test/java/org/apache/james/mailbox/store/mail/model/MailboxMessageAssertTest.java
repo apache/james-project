@@ -30,6 +30,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
@@ -40,6 +41,7 @@ class MailboxMessageAssertTest {
     static final TestId MAILBOX_ID = TestId.of(42L);
     static final MessageUid UID = MessageUid.of(24);
     static final MessageId MESSAGE_ID = new DefaultMessageId();
+    static final ThreadId THREAD_ID = ThreadId.fromBaseMessageId(MESSAGE_ID);
 
     @Test
     void messageAssertShouldSucceedWithTwoEqualsMessages() throws IOException {
@@ -47,11 +49,11 @@ class MailboxMessageAssertTest {
         String bodyString = "body\n.\n";
         Date date = new Date();
 
-        SimpleMailboxMessage message1 = new SimpleMailboxMessage(MESSAGE_ID, date, headerString.length() + bodyString.length(),
+        SimpleMailboxMessage message1 = new SimpleMailboxMessage(MESSAGE_ID, THREAD_ID, date, headerString.length() + bodyString.length(),
             headerString.length(), new ByteContent((headerString + bodyString).getBytes()), new Flags(), new PropertyBuilder().build(), MAILBOX_ID);
         message1.setUid(UID);
 
-        SimpleMailboxMessage message2 = new SimpleMailboxMessage(MESSAGE_ID, date, headerString.length() + bodyString.length(),
+        SimpleMailboxMessage message2 = new SimpleMailboxMessage(MESSAGE_ID, THREAD_ID, date, headerString.length() + bodyString.length(),
             headerString.length(), new ByteContent((headerString + bodyString).getBytes()), new Flags(), new PropertyBuilder().build(), MAILBOX_ID);
         message2.setUid(UID);
 
@@ -64,12 +66,12 @@ class MailboxMessageAssertTest {
         String bodyString = "body\n.\n";
         Date date = new Date();
 
-        SimpleMailboxMessage message1 = new SimpleMailboxMessage(MESSAGE_ID, date, headerString.length() + bodyString.length(),
+        SimpleMailboxMessage message1 = new SimpleMailboxMessage(MESSAGE_ID, THREAD_ID, date, headerString.length() + bodyString.length(),
             headerString.length(), new ByteContent((headerString + bodyString).getBytes()), new Flags(), new PropertyBuilder().build(), MAILBOX_ID);
         message1.setUid(UID);
 
         bodyString = "work\n.\n";
-        SimpleMailboxMessage message2 = new SimpleMailboxMessage(MESSAGE_ID, date, headerString.length() + bodyString.length(),
+        SimpleMailboxMessage message2 = new SimpleMailboxMessage(MESSAGE_ID, THREAD_ID, date, headerString.length() + bodyString.length(),
             headerString.length(), new ByteContent((headerString + bodyString).getBytes()), new Flags(), new PropertyBuilder().build(), MAILBOX_ID);
         message2.setUid(UID);
 
@@ -82,12 +84,12 @@ class MailboxMessageAssertTest {
         String bodyString = "body\n.\n";
         Date date = new Date();
 
-        SimpleMailboxMessage message1 = new SimpleMailboxMessage(MESSAGE_ID, date, headerString.length() + bodyString.length(),
+        SimpleMailboxMessage message1 = new SimpleMailboxMessage(MESSAGE_ID, THREAD_ID, date, headerString.length() + bodyString.length(),
             headerString.length(), new ByteContent((headerString + bodyString).getBytes()), new Flags(), new PropertyBuilder().build(), MAILBOX_ID);
         message1.setUid(UID);
 
         bodyString = "work\n.\n";
-        SimpleMailboxMessage message2 = new SimpleMailboxMessage(MESSAGE_ID, date, headerString.length() + bodyString.length(),
+        SimpleMailboxMessage message2 = new SimpleMailboxMessage(MESSAGE_ID, THREAD_ID, date, headerString.length() + bodyString.length(),
             headerString.length(), new ByteContent((headerString + bodyString).getBytes()), new Flags(), new PropertyBuilder().build(), MAILBOX_ID);
         message2.setUid(UID);
 

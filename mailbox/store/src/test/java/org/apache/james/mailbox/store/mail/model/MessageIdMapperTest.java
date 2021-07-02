@@ -42,6 +42,7 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
@@ -1001,7 +1002,10 @@ public abstract class MessageIdMapperTest {
     }
 
     private SimpleMailboxMessage createMessage(Mailbox mailbox, String content, int bodyStart, PropertyBuilder propertyBuilder) {
-        return new SimpleMailboxMessage(mapperProvider.generateMessageId(), 
+        MessageId messageId = mapperProvider.generateMessageId();
+        ThreadId threadId = ThreadId.fromBaseMessageId(messageId);
+        return new SimpleMailboxMessage(messageId,
+                threadId,
                 new Date(), 
                 content.length(), 
                 bodyStart, 
