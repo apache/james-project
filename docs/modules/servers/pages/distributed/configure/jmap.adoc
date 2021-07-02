@@ -37,6 +37,10 @@ This should not be the same keystore than the ones used by TLS based protocols.
 | Optional. URL for JMAP WebSocket route.
 | Default value: ws://localhost
 
+| email.send.max.size
+| Optional. Configuration max size for message created in both JMAP Draft amd RFC-8621.
+| Default value: None. Supported units are B (bytes) K (KB) M (MB) G (GB).
+
 | upload.max.size
 | Optional. Configuration max size Upload in new JMAP-RFC-8621.
 | Default value: 30M. Supported units are B (bytes) K (KB) M (MB) G (GB).
