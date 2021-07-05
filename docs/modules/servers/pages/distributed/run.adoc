@@ -6,7 +6,7 @@
 === Requirements
 
 * Java 11 SDK
-* Docker ∕ ElasticSearch 7.10.2, RabbitMQ Management 3.8.17, S3 compatible
+* Docker ∕ ElasticSearch 7.10.2, RabbitMQ Management 3.8.18, S3 compatible
 ObjectStorage and Cassandra 3.11.10
 * Maven 3
 

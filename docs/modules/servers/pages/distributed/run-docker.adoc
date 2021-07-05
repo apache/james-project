@@ -54,7 +54,7 @@ You need a running *cassandra* in docker. To achieve this run:
 
 You need a running *rabbitmq* in docker. To achieve this run:
 
-    $ docker run -d --name=rabbitmq rabbitmq:3.8.17-management
+    $ docker run -d --name=rabbitmq rabbitmq:3.8.18-management
 
 You need a running *Zenko Cloudserver* objectstorage in docker. To achieve this run:
 
