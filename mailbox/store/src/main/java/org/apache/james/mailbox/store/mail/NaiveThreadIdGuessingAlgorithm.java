@@ -22,7 +22,7 @@ package org.apache.james.mailbox.store.mail;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.james.core.Username;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
@@ -32,7 +32,7 @@ import reactor.core.publisher.Mono;
 
 public class NaiveThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorithm {
     @Override
-    public ThreadId guessThreadId(Username username, MessageId messageId, Optional<MimeMessageId> thisMimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject) {
-        return ThreadId.fromBaseMessageId(messageId);
+    public Mono<ThreadId> guessThreadIdReactive(MessageId messageId, Optional<MimeMessageId> thisMimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject, MailboxSession session) {
+        return Mono.just(ThreadId.fromBaseMessageId(messageId));
     }
 }
