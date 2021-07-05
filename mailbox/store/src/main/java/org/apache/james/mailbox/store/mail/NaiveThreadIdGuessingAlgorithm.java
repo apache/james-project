@@ -28,7 +28,9 @@ import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
 
-public class NaiveThreadIdGuessingAlgorithmImpl implements ThreadIdGuessingAlgorithm {
+import reactor.core.publisher.Mono;
+
+public class NaiveThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorithm {
     @Override
     public ThreadId guessThreadId(Username username, MessageId messageId, Optional<MimeMessageId> thisMimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject) {
         return ThreadId.fromBaseMessageId(messageId);

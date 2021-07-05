@@ -44,7 +44,7 @@
         <constructor-arg index="9" ref="threadIdGuessingAlgorithm" />
     </bean>
 
-    <bean id="threadIdGuessingAlgorithm" class="org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithmImpl" />
+    <bean id="threadIdGuessingAlgorithm" class="org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithm" />
 
     <bean id ="jpa-subscriptionManager" class="org.apache.james.mailbox.store.StoreSubscriptionManager">
         <constructor-arg index="0" ref="jpa-sessionMapperFactory"/>
