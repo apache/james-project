@@ -51,7 +51,7 @@
     </bean>
 
     <bean id="memory-sessionMapperFactory" class="org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory" />
-    <bean id="threadIdGuessingAlgorithm" class="org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithmImpl"/>
+    <bean id="threadIdGuessingAlgorithm" class="org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithm"/>
 
     <alias name="jvm-locker" alias="memory-locker"/>
 
