@@ -19,7 +19,6 @@
 
 package org.apache.james.core;
 
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
@@ -28,8 +27,6 @@ import javax.mail.internet.AddressException;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 
 public class Username {
     public static final int MAXIMUM_MAIL_ADDRESS_LENGTH = 255;
@@ -40,14 +37,16 @@ public class Username {
         Preconditions.checkArgument(username.length() <= MAXIMUM_MAIL_ADDRESS_LENGTH,
             "username length should not be longer than %s characters", MAXIMUM_MAIL_ADDRESS_LENGTH);
 
-        List<String> parts = ImmutableList.copyOf(Splitter.on('@').split(username));
-        switch (parts.size()) {
-            case 1:
-                return fromLocalPartWithoutDomain(username);
-            case 2:
-                return fromLocalPartWithDomain(parts.get(0), parts.get(1));
+        int atPosition = username.indexOf('@');
+        if (atPosition < 0) {
+            return fromLocalPartWithoutDomain(username);
         }
-        throw new IllegalArgumentException("The username should not contain multiple domain delimiter. Value: " + username);
+        String userPart = username.substring(0, atPosition);
+        String domainPart = username.substring(atPosition + 1);
+        if (domainPart.indexOf('@') >= 0) {
+            throw new IllegalArgumentException("The username should not contain multiple domain delimiter. Value: " + username);
+        }
+        return fromLocalPartWithDomain(userPart, domainPart);
     }
 
     public static Username fromLocalPartWithDomain(String localPart, String domain) {
