@@ -36,6 +36,8 @@ import org.apache.james.mailbox.model.Header;
 import org.apache.james.mailbox.model.MimeDescriptor;
 import org.apache.james.mailbox.store.streaming.CountingInputStream;
 import org.apache.james.mime4j.MimeException;
+import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.field.LenientFieldParser;
 import org.apache.james.mime4j.message.DefaultBodyDescriptorBuilder;
 import org.apache.james.mime4j.message.MaximalBodyDescriptor;
 import org.apache.james.mime4j.stream.EntityState;
@@ -49,7 +51,8 @@ public class MimeDescriptorImpl implements MimeDescriptor {
         // Disable line length limit
         // See https://issues.apache.org/jira/browse/IMAP-132
         //
-        final MimeTokenStream parser = new MimeTokenStream(MimeConfig.PERMISSIVE, new DefaultBodyDescriptorBuilder());
+        final MimeTokenStream parser = new MimeTokenStream(MimeConfig.PERMISSIVE,
+            new DefaultBodyDescriptorBuilder(null, new LenientFieldParser(), DecodeMonitor.SILENT));
         
         parser.parse(stream);
         

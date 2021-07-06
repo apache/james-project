@@ -30,6 +30,8 @@ import org.apache.james.mailbox.model.ContentType.MediaType;
 import org.apache.james.mailbox.model.ContentType.SubType;
 import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mime4j.MimeException;
+import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.field.LenientFieldParser;
 import org.apache.james.mime4j.message.DefaultBodyDescriptorBuilder;
 import org.apache.james.mime4j.message.MaximalBodyDescriptor;
 import org.apache.james.mime4j.stream.EntityState;
@@ -57,7 +59,7 @@ public class MimePartParser {
         this.currentlyBuildMimePart = new RootMimePartContainerBuilder();
         this.stream = new MimeTokenStream(
             MimeConfig.PERMISSIVE,
-            new DefaultBodyDescriptorBuilder());
+            new DefaultBodyDescriptorBuilder(null, new LenientFieldParser(), DecodeMonitor.SILENT));
     }
 
     public MimePart parse() throws IOException, MimeException {
