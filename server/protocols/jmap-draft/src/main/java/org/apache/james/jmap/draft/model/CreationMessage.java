@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -35,6 +36,7 @@ import org.apache.james.jmap.draft.methods.ValidationResult;
 import org.apache.james.jmap.draft.model.MessageProperties.MessageProperty;
 import org.apache.james.jmap.draft.model.message.view.SubMessage;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.util.StreamUtils;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -353,10 +355,9 @@ public class CreationMessage {
     }
 
     private void assertAtLeastOneValidRecipient(ImmutableList.Builder<ValidationResult> errors) {
-        ImmutableList<DraftEmailer> recipients = ImmutableList.<DraftEmailer>builder().addAll(to).addAll(cc).addAll(bcc).build();
-        boolean hasAtLeastOneAddressToSendTo = recipients.stream().anyMatch(DraftEmailer::hasValidEmail);
-        boolean recipientsHaveValidAddresses = recipients.stream().allMatch(e1 -> e1.getEmail() != null);
-        if (!(recipientsHaveValidAddresses && hasAtLeastOneAddressToSendTo)) {
+        Stream<DraftEmailer> recipients = StreamUtils.flatten(to.stream(), cc.stream(), bcc.stream());
+        boolean hasAtLeastOneAddressToSendTo = recipients.anyMatch(DraftEmailer::hasValidEmail);
+        if (!hasAtLeastOneAddressToSendTo) {
             errors.add(ValidationResult.builder().message("no recipient address set").property(RECIPIENT_PROPERTY_NAMES).build());
         }
     }
