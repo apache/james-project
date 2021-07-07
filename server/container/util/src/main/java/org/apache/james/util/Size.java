@@ -55,6 +55,10 @@ public class Size {
     }
 
     public static Size parse(String providedLongWithUnitString) throws Exception {
+        return parse(providedLongWithUnitString, Unit.NoUnit);
+    }
+
+    public static Size parse(String providedLongWithUnitString, Unit defaultUnit) throws Exception {
         if (providedLongWithUnitString.equalsIgnoreCase(UNKNOWN)) {
             return new Size(Unit.NoUnit, UNKNOWN_VALUE);
         }
@@ -62,8 +66,8 @@ public class Size {
             return new Size(Unit.NoUnit, UNLIMITED_VALUE);
         }
         char lastChar = providedLongWithUnitString.charAt(providedLongWithUnitString.length() - 1);
-        Unit unit = getUnit(lastChar);
-        String argWithoutUnit = removeLastCharIfNeeded(providedLongWithUnitString, unit);
+        Unit unit = getUnit(lastChar, defaultUnit);
+        String argWithoutUnit = removeLastCharIfNeeded(providedLongWithUnitString, lastChar);
         return new Size(unit, Long.parseLong(argWithoutUnit));
     }
 
@@ -93,15 +97,25 @@ public class Size {
         }
     }
 
-    private static String removeLastCharIfNeeded(String providedLongWithUnitString, Unit unit) {
-        if (unit != Unit.NoUnit) {
-            return providedLongWithUnitString.substring(0, providedLongWithUnitString.length() - 1);
-        } else {
-            return providedLongWithUnitString;
+    private static String removeLastCharIfNeeded(String providedLongWithUnitString, char lastChar) {
+        switch (lastChar) {
+            case '1' :
+            case '2' :
+            case '3' :
+            case '4' :
+            case '5' :
+            case '6' :
+            case '7' :
+            case '8' :
+            case '9' :
+            case '0' :
+                return providedLongWithUnitString;
+            default:
+                return providedLongWithUnitString.substring(0, providedLongWithUnitString.length() - 1);
         }
     }
 
-    private static Unit getUnit(char lastChar) throws Exception {
+    private static Unit getUnit(char lastChar, Unit defaultUnit) throws Exception {
         switch (lastChar) {
             case 'K' :
             case 'k' :
@@ -125,7 +139,7 @@ public class Size {
             case '8' :
             case '9' :
             case '0' :
-                return Unit.NoUnit;
+                return defaultUnit;
             default:
                 throw new Exception("No unit corresponding to char : " + lastChar);
         }

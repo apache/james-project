@@ -32,6 +32,11 @@ class SizeTest {
     }
 
     @Test
+    void testNoUnitWithDefaultUnit() throws Exception {
+        assertThat(Size.parse("10", Size.Unit.K).asBytes()).isEqualTo(10240);
+    }
+
+    @Test
     void testUnitB() throws Exception {
         assertThat(Size.parse("1024B").asBytes()).isEqualTo(1024);
     }
@@ -44,6 +49,11 @@ class SizeTest {
     @Test
     void testUnitM() throws Exception {
         assertThat(Size.parse("5M").asBytes()).isEqualTo(5 * 1024 * 1024);
+    }
+
+    @Test
+    void testUnitMWithDefaultUnit() throws Exception {
+        assertThat(Size.parse("5M", Size.Unit.K).asBytes()).isEqualTo(5 * 1024 * 1024);
     }
 
     @Test
