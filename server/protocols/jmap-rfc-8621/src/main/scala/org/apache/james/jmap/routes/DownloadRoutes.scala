@@ -68,7 +68,7 @@ object DownloadRoutes {
 sealed trait BlobResolutionResult {
   def asOption: Option[SMono[Blob]]
 }
-case class NonApplicable() extends BlobResolutionResult {
+case object NonApplicable extends BlobResolutionResult {
   override def asOption: Option[SMono[Blob]] = None
 }
 case class Applicable(blob: SMono[Blob]) extends BlobResolutionResult {
@@ -127,7 +127,7 @@ class MessageBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
                                     val messageIdManager: MessageIdManager) extends BlobResolver {
   override def resolve(blobId: BlobId, mailboxSession: MailboxSession): BlobResolutionResult = {
     Try(messageIdFactory.fromString(blobId.value.value)) match {
-      case Failure(_) => NonApplicable()
+      case Failure(_) => NonApplicable
       case Success(messageId) => Applicable(SMono.fromPublisher(
         messageIdManager.getMessagesReactive(List(messageId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
         .map[Blob](MessageBlob(blobId, _))
@@ -143,10 +143,9 @@ class AttachmentBlobResolver @Inject()(val attachmentManager: AttachmentManager)
         Try(attachmentManager.getAttachment(attachmentId, mailboxSession)) match {
           case Success(attachmentMetadata) => Applicable(
             SMono.fromCallable(() => AttachmentBlob(attachmentMetadata, attachmentManager.load(attachmentMetadata, mailboxSession))))
-          case Failure(_) => Applicable(SMono.error(BlobNotFoundException(blobId)))
+          case Failure(_) => NonApplicable
         }
-
-      case _ => NonApplicable()
+      case _ => NonApplicable
     }
 }
 
@@ -166,7 +165,7 @@ class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
 
   override def resolve(blobId: BlobId, mailboxSession: MailboxSession): BlobResolutionResult = {
     asMessageAndPartId(blobId) match {
-      case Failure(_) => NonApplicable()
+      case Failure(_) => NonApplicable
       case Success((messageId, partId)) =>
         Applicable(SMono.fromPublisher(
           messageIdManager.getMessagesReactive(List(messageId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
@@ -186,14 +185,16 @@ class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
   }
 }
 
-class BlobResolvers @Inject()(val messageBlobResolver: MessageBlobResolver,
-                              val messagePartBlobResolver: MessagePartBlobResolver,
-                              val attachmentBlobResolver: AttachmentBlobResolver) {
+class BlobResolvers(blobResolvers: Set[BlobResolver]) {
+
+  @Inject
+  def this(blobResolvers: java.util.Set[BlobResolver]) {
+    this(blobResolvers.asScala.toSet)
+  }
+
   def resolve(blobId: BlobId, mailboxSession: MailboxSession): SMono[Blob] =
-    messageBlobResolver
-      .resolve(blobId, mailboxSession).asOption
-      .orElse(messagePartBlobResolver.resolve(blobId, mailboxSession).asOption)
-      .orElse(attachmentBlobResolver.resolve(blobId, mailboxSession).asOption)
+    blobResolvers.flatMap(resolver => resolver.resolve(blobId, mailboxSession).asOption)
+      .headOption
       .getOrElse(SMono.error(BlobNotFoundException(blobId)))
 }
 
