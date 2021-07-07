@@ -8,6 +8,6 @@
     <idleTimeInterval>120</idleTimeInterval>
     <idleTimeIntervalUnit>SECONDS</idleTimeIntervalUnit>
     <enableIdle>true</enableIdle>
-    <inMemorySizeLimit>65536</inMemorySizeLimit> <!-- 64 KB -->
-    <literalSizeLimit>131072</literalSizeLimit>  <!-- 128 KB -->
+    <inMemorySizeLimit>64K</inMemorySizeLimit>
+    <literalSizeLimit>128K</literalSizeLimit>
 </imapserver>
