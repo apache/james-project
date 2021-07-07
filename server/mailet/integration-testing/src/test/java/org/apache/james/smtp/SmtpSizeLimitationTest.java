@@ -71,7 +71,7 @@ class SmtpSizeLimitationTest {
     void messageShouldNotBeAcceptedWhenOverSized(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .doNotVerifyIdentity()
-            .withMaxMessageSizeInKb(10));
+            .withMaxMessageSize("10"));
 
         assertThatThrownBy(() ->
             messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
@@ -97,10 +97,21 @@ class SmtpSizeLimitationTest {
     void messageShouldBeAcceptedWhenNotOverSized(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .doNotVerifyIdentity()
-            .withMaxMessageSizeInKb(10));
+            .withMaxMessageSize("10"));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(USER, PASSWORD)
             .sendMessageWithHeaders(USER, USER,"Short message");
+    }
+
+    @Test
+    void unitShouldBeAccepted(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .doNotVerifyIdentity()
+            .withMaxMessageSize("10M"));
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(USER, PASSWORD)
+            .sendMessageWithHeaders(USER, USER, Strings.repeat("Long message\r\n", 1024));
     }
 }

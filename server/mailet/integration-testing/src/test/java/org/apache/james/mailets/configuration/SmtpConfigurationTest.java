@@ -48,7 +48,7 @@ public class SmtpConfigurationTest {
     @Test
     public void maxMessageSizeCanBeCustomized() throws IOException {
         assertThat(SmtpConfiguration.builder()
-                .withMaxMessageSizeInKb(36)
+                .withMaxMessageSize("36")
                 .build()
                 .serializeAsXml(),
             hasXPath("/smtpservers/smtpserver/maxmessagesize/text()",
