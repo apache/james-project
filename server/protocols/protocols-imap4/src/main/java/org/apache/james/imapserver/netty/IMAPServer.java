@@ -20,6 +20,7 @@ package org.apache.james.imapserver.netty;
 
 import static org.jboss.netty.channel.Channels.pipeline;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLEngine;
@@ -38,6 +39,7 @@ import org.apache.james.protocols.netty.ChannelGroupHandler;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.ConnectionLimitUpstreamHandler;
 import org.apache.james.protocols.netty.ConnectionPerIpLimitUpstreamHandler;
+import org.apache.james.util.Size;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
@@ -78,7 +80,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     private int literalSizeLimit;
 
     public static final int DEFAULT_MAX_LINE_LENGTH = 65536; // Use a big default
-    public static final int DEFAULT_IN_MEMORY_SIZE_LIMIT = 10485760; // Use 10MB as default
+    public static final Size DEFAULT_IN_MEMORY_SIZE_LIMIT = Size.of(10L, Size.Unit.M); // Use 10MB as default
     public static final int DEFAULT_TIMEOUT = 30 * 60; // default timeout is 30 minutes
     public static final int DEFAULT_LITERAL_SIZE_LIMIT = 0;
 
@@ -97,8 +99,15 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         hello = softwaretype + getHelloName() + " is ready.";
         compress = configuration.getBoolean("compress", false);
         maxLineLength = configuration.getInt("maxLineLength", DEFAULT_MAX_LINE_LENGTH);
-        inMemorySizeLimit = configuration.getInt("inMemorySizeLimit", DEFAULT_IN_MEMORY_SIZE_LIMIT);
-        literalSizeLimit = configuration.getInt("literalSizeLimit", DEFAULT_LITERAL_SIZE_LIMIT);
+        inMemorySizeLimit = Math.toIntExact(Optional.ofNullable(configuration.getString("inMemorySizeLimit", null))
+            .map(Size::parse)
+            .orElse(DEFAULT_IN_MEMORY_SIZE_LIMIT)
+            .asBytes());
+        literalSizeLimit = Optional.ofNullable(configuration.getString("literalSizeLimit", null))
+            .map(Size::parse)
+            .map(Size::asBytes)
+            .map(Math::toIntExact)
+            .orElse(DEFAULT_LITERAL_SIZE_LIMIT);
 
         plainAuthDisallowed = configuration.getBoolean("plainAuthDisallowed", false);
         timeout = configuration.getInt("timeout", DEFAULT_TIMEOUT);
