@@ -54,11 +54,11 @@ public class Size {
         this.value = value;
     }
 
-    public static Size parse(String providedLongWithUnitString) throws Exception {
+    public static Size parse(String providedLongWithUnitString) {
         return parse(providedLongWithUnitString, Unit.NoUnit);
     }
 
-    public static Size parse(String providedLongWithUnitString, Unit defaultUnit) throws Exception {
+    public static Size parse(String providedLongWithUnitString, Unit defaultUnit) {
         if (providedLongWithUnitString.equalsIgnoreCase(UNKNOWN)) {
             return new Size(Unit.NoUnit, UNKNOWN_VALUE);
         }
@@ -115,7 +115,7 @@ public class Size {
         }
     }
 
-    private static Unit getUnit(char lastChar, Unit defaultUnit) throws Exception {
+    private static Unit getUnit(char lastChar, Unit defaultUnit) {
         switch (lastChar) {
             case 'K' :
             case 'k' :
@@ -141,7 +141,7 @@ public class Size {
             case '0' :
                 return defaultUnit;
             default:
-                throw new Exception("No unit corresponding to char : " + lastChar);
+                throw new IllegalArgumentException("No unit corresponding to char : " + lastChar);
         }
     }
 
