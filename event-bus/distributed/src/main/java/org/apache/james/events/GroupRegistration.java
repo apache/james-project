@@ -24,7 +24,6 @@ import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backends.rabbitmq.Constants.REQUEUE;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -157,7 +156,7 @@ class GroupRegistration implements Registration {
     }
 
     private Mono<Event> deserializeEvent(byte[] eventAsBytes) {
-        return Mono.fromCallable(() -> eventSerializer.asEvent(new String(eventAsBytes, StandardCharsets.UTF_8)))
+        return Mono.fromCallable(() -> eventSerializer.fromBytes(eventAsBytes))
             .subscribeOn(Schedulers.parallel());
     }
 
