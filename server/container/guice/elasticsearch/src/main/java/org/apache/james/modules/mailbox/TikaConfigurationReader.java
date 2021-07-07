@@ -31,7 +31,6 @@ import org.apache.james.util.DurationParser;
 import org.apache.james.util.Size;
 import org.apache.james.util.StreamUtils;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableSet;
 
 public class TikaConfigurationReader {
@@ -67,7 +66,7 @@ public class TikaConfigurationReader {
 
         Optional<Long> cacheWeight = Optional.ofNullable(
             configuration.getString(TIKA_CACHE_WEIGHT_MAX, null))
-            .map(Throwing.function(Size::parse))
+            .map(Size::parse)
             .map(Size::asBytes);
 
         Set<MimeType> contentTypeBlacklist = StreamUtils
