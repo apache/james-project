@@ -7,9 +7,137 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ### Added
  - JAMES-3524 Support symmetric encryption support on top of BlobStore
+ - JAMES-3516 Work started toward supporting threads. (see upgrade instructions)
+ - JAMES-2157 Introduce a HasMimeTypeAnySubPart matcher
+ - JAMES-3588 Allow LMTP to be configured to execute the mailetcontainer (per recipient or grouped executions available)
+ - JAMES-3491 JMAP: Configurable websocket url for JMAP configuration
+ - JAMES-3574 LMTP: regular stack also should execute Message hooks
+ - JAMES-3574 Test suite for LMTP protocol
+ - JAMES-3581 JMAP: Allow writing custom State changes
+ - JAMES-2330: Give ability to override AbstractConfigurableAsyncServer.buildSSLContext
+ - JAMES-3573 Allow specifying DC in Cassandra configuration
+ - JAMES-3520 JMAP - Implement MDN - RFC-9007 (#385)
+ - JAMES-3532 JMAP: Implement Email/import
+ - MAILBOX-405 CreateMissingParentsTask implementation
+ - JAMES-3316 Allow to write custom extensions in JMAP session
  
 ### Removed
  - JAMES-3578 Drop Cassandra schema version prior version 8 (see upgrade instructions)
+ - JAMES-3596 Drop spring app WAR plugin
+ - JAMES-3621 Drop benchmarks and debian/rpm packaging (was unmaintained and broken)
+ 
+### Changed
+ - JAMES-3621 Re-organise server application
+   - Use JIB for docker images
+   - Guice application should have a ZIP distribution
+   - Collocate applications in server/apps folder
+   - Example of JPA driver customization
+   - Drop no longer needed projects
+   - Add some manifest entries when using maven-jar-plugin (#510)
+   - Fix related website links
+   - Docker: expose volumes used for persistence with volumes
+ - JAMES-3261 Update glowroot to 0.13.6
+ - JAMES-3591 Warn against CassandraBlobStore usage (can be bypassed via an environment variable)
+ - Upgrade to MIME4J latest 0.8.4 release (#459)
+ - Cassandra implementation should depend on interfaces and ModSeqProvider
+ - JAMES-3587 Deprecate MDCBuild::addContext (relies on potentially expensive implicit toString calls)
+ - JAMES-3567 Distributed server should not rely on ActiveMQ
+ 
+### Performance
+ - JAMES-3466 Provision default mailboxes only when listing all mailboxes
+ - JAMES-3576 Further denormalize message table (see related upgrade instructions)
+ - ResultUtils::haveValidContent is doing needless work
+ - Optimise GetMessagesMethod::messagesNotFound
+ - SimpleMailboxMessage: userFlags assignment was done twi
+ - Prefer DefaultMessageBuilder for Mime message parsing
+ - Pre-convert Cassandra rows to lower case (#501)
+ - JAMES-3603 AmqpForwardAttribute should reuse RabbitMQ connections
+ - ImapDateTimeFormatter can be static
+ - JAMES-3491 Do not send two JMAP events upon new messages
+ - JAMES-3599 Deliver events to all groups at once to reduce deserialization and messaging overhead
+ - Remove regular expression usages where possible
+ - Avoid doing JWT parsing twice
+ - JAMES-3028 Do not execute downstream requests on AWS driver pool (#485)
+ - JAMES-2989 JMAP Preview should not normalize spaces of the entire body (#479)
+ - Use buffer output stream upon MessageManager::append
+ - Reduce Cassandra chunk length for some read intensive tables
+ - JAMES-3594 Migrate to UnboundId as a LDAP implementation. This allows performance gains. See related upgrade instructions.
+ - General review of our reactive flows:
+   - End to end reactive calls for both JMAP draft and JMAP RFC-8621
+   - Migrate where possible from Mono.fatMap to flatMapIterable
+   - MailboxChangeListener should be fully reactive
+   - Bond Reactive listeners as Reactive
+   - JAMES-2393 Allow writing reactive eventSourcing subscribers
+   - GroupRegistration was doing (blocking) acks on the parallel pool
+   - RabbitMQ receivers can be blocking
+ - JAMES-2683 RabbitMQ: Use a single connection per James node
+ - MailboxACL.union shortcuts
+ - Cassandra: Use static TypeToken for complex CQL types
+ - JMAP Draft JSON: Cache and reuse Object mappers for writing JMAP responses (#440)
+ - Keywords::fromFlags should avoid intermediate collections
+ - JsoupHtmlTextExtractor should use Collectors.joiner
+ - JMAP draft was parsing, formatting then re-parsing JSON
+ - JAMES-3028 Allow setting up S3 HTTP concurrency at the Netty level
+ - JAMES-3028 S3Client should not be pooled
+ - JAMES-3586 Cassandra BlobStore: Use LOCAL_ONE for optimistic consistency downgrades
+ - JAMES-3107 Deprecate log p99 due to its performance impact
+ - JAMES-3107 Switch to HDR histograms
+ - Mailboxes metadata: Avoid O(n2) algorithm to compute hasChildren
+ - JMAPServer should generate JMAP routes once
+ - MessageViewFactory::toHeaderMap was unfolding headers twice
+ - MessageResultImpl should use underlying MailboxMessage
+ - FlagsFactory::createFlags needlessly call the builder
+ - JAMES-3171 Mailbox/get + ids: Avoid reading subscriptions for all mailboxes
+ - CassandraSubscriptionMapper should prepare its statements
+ - CassandraMailboxSessionMapperFactory should not instantiate one mapper per request
+ - Reactor: favor error suppliers (this avoids needlessly filling stacktraces)
+ - JAMES-1965 JMAP Draft MessageFullViewFactory: Avoid performing HTML text extraction if not needed
+ - JAMES-3407 Applicative read-repair: draw a random number only if needed
+ - DefaultMailboxesProvisioner: Avoid re-opening a session
+ - JMAP: Avoid MIME re-parsing when sending messages
+ - JAMES-3078 Continuation Token signing was done on the Netty event loop thread
+ - JAMES-3467 Avoid loading all domains for auto-detection when auto-detection is off
+ - JAMES-3435 Cassandra: Allow to avoid LWT for messages operations via message.write.strong.consistency.unsafe
+
+### Fixed
+ - JAMES-3589 Fix mailet processing logic upon partial matches by dropping Apache Camel mailetcontainer implementation
+ - JAMES-3491 WebSocket should unregister resources on cancels
+ - JAMES-3261 JPA-SMTP app: add missing loagback declarations
+ - JAMES-3601 [ADR] Distributed Mail Queue Cleanup is now fully implemented
+ - JAMES-3600 All JMAP calls should position Content-Length
+ - JAMES-3597 JMAP: Exclude deleted messages from JMAP Email/query
+ - JAMES-3594 Decrease verbosity of bad credential auth failures
+ - JAMES-3595 Spooler processing starts before mailetContainer initialisation
+ - JAMES-3492 ElasticSearch: Do not create indices if it already exists
+ - JAMES-2886 Fix collection handling for PropertiesProvider
+ - JAMES-2813 Long running tasks on the MemoryTaskManager generates stackTraces
+ - JAMES-3592 Maildir tests (Unit and MPT) are not representative of Spring product
+ - JAMES-3107 Fix some zeroed metrics
+ - JAMES-3579 reject verifyIdentity param to true when authRequired is false in SMTP server configuration
+ - JAMES-3491 JMAP webSocket can be used to mix responses and state changes
+ - JAMES-3467 Domain cache should be refreshed periodically under read load
+ - JAMES-3571 MimeMessageWrapper getSize was incorrect for empty messages
+ - JAMES-3567 S3: explicitly specify version for netty-codec-http
+ - JAMES-3569 preserves all email propertis on recipient rewrite
+ - JAMES-3557 */changes: Fail explicitly when too much entries on a single change
+ - JAMES-3558 JMAP Email/changes: moves should be considered as updates
+ - JAMES-3525 Verify identity should also apply for unauthenticated users
+ - JAMES-3458 JMAP Identity/get should support ids field
+ - JAMES-3556 JMAP eventUrl s/closeAfter/closeafter/ (#379)
+ - JAMES-3432 Upload routes was unstable (#374)
+ - JAMES-3554 JMAP: remove pushState field from Server Sent Events
+ - JAMES-3481 s/maxChanged/maxChanges
+ - JAMES-3553 Disable read_repair_chance & read_repair_chance on table creation
+ - JAMES-2884 Email/query s/comparator/sort/
+ - JAMES-3256 Dis-ambiguate MailDispatcher error logs
+ - JAMES-3522 JMAP routes should position WWW-Authenticate
+
+### Documentation
+ - JAMES-3405 Document Prometheus metric config (#373)
+ - JAMES-3565 Documentation: fix packaging support matrix
+ - JAMES-3255 Demo image now includes the james-cli utility
+ - JAMES-3255 Use apache/james images
+ - Better document THE release process (#337)
  
 ### Third party software
  - Upgrading to Apache Tika 1.26 is recommended
