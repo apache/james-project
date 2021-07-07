@@ -76,8 +76,8 @@ class SmtpSizeLimitationTest {
         assertThatThrownBy(() ->
             messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
                 .authenticate(USER, PASSWORD)
-                .sendMessageWithHeaders(USER, USER, Strings.repeat("Long message", 1024)))
-            .isEqualTo(new SMTPSendingException(SmtpSendingStep.Data, "500 Line length exceeded. See RFC 2821 #4.5.3.1.\n"));
+                .sendMessageWithHeaders(USER, USER, Strings.repeat("Long message\r\n", 1024)))
+            .isEqualTo(new SMTPSendingException(SmtpSendingStep.Data, "552 Quota exceeded\n"));
     }
 
     @Test
