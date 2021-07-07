@@ -81,6 +81,19 @@ class SmtpSizeLimitationTest {
     }
 
     @Test
+    void messageShouldNotBeAcceptedWhenExceedLineLength(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .doNotVerifyIdentity()
+            .withMaxMessageSize("10M"));
+
+        assertThatThrownBy(() ->
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .authenticate(USER, PASSWORD)
+                .sendMessageWithHeaders(USER, USER, Strings.repeat("A long line-", 1024)))
+            .isEqualTo(new SMTPSendingException(SmtpSendingStep.Data, "500 Line length exceeded. See RFC 2821 #4.5.3.1.\n"));
+    }
+
+    @Test
     void messageShouldBeAcceptedWhenNotOverSized(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .doNotVerifyIdentity()
