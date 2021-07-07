@@ -31,6 +31,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 
 import javax.inject.Inject;
 import javax.net.ssl.SSLContext;
@@ -39,6 +40,8 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.TrustStrategy;
 
+import com.github.steveash.guavate.Guavate;
+import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
@@ -172,9 +175,16 @@ public class RabbitMQConnectionFactory {
     }
 
     Mono<Connection> connectionMono() {
-        return Mono.fromCallable(connectionFactory::newConnection)
+        return Mono.fromCallable(this::createConnection)
             .retryWhen(Retry.backoff(configuration.getMaxRetries(),
                 Duration.ofMillis(configuration.getMinDelayInMs()))
                 .scheduler(Schedulers.elastic()));
+    }
+
+    private Connection createConnection() throws IOException, TimeoutException {
+        return connectionFactory.newConnection(configuration.rabbitMQHosts()
+            .stream()
+            .map(host -> new Address(host.getHostName(), host.getPort()))
+            .collect(Guavate.toImmutableList()));
     }
 }

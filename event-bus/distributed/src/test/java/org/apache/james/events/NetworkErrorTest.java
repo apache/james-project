@@ -44,7 +44,7 @@ class NetworkErrorTest {
     private RabbitMQEventBus eventBus;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         MemoryEventDeadLetters memoryEventDeadLetters = new MemoryEventDeadLetters();
 
 
@@ -54,7 +54,7 @@ class NetworkErrorTest {
         eventBus = new RabbitMQEventBus(new NamingStrategy("test"), rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(),
             eventSerializer, RETRY_BACKOFF_CONFIGURATION, routingKeyConverter,
             memoryEventDeadLetters, new RecordingMetricFactory(), rabbitMQExtension.getRabbitChannelPool(),
-            EventBusId.random());
+            EventBusId.random(), rabbitMQExtension.getRabbitMQ().getConfiguration());
 
         eventBus.start();
     }

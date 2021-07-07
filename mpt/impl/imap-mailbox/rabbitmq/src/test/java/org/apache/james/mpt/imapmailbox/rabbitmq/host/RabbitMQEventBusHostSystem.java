@@ -113,7 +113,7 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
             defaultImapProcessorFactory);
     }
 
-    private RabbitMQEventBus createEventBus() {
+    private RabbitMQEventBus createEventBus() throws Exception {
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         InMemoryId.Factory mailboxIdFactory = new InMemoryId.Factory();
         MailboxEventSerializer eventSerializer = new MailboxEventSerializer(mailboxIdFactory, messageIdFactory, new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
@@ -121,7 +121,7 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
         return new RabbitMQEventBus(new NamingStrategy("mailboxEvent-"), reactorRabbitMQChannelPool.getSender(), reactorRabbitMQChannelPool::createReceiver,
             eventSerializer, RetryBackoffConfiguration.DEFAULT, routingKeyConverter, new MemoryEventDeadLetters(),
             new RecordingMetricFactory(),
-            reactorRabbitMQChannelPool, EventBusId.random());
+            reactorRabbitMQChannelPool, EventBusId.random(), dockerRabbitMQ.getConfiguration());
     }
 
     @Override

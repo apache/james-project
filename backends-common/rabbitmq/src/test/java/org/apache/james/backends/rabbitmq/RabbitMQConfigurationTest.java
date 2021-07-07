@@ -32,8 +32,10 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.james.util.Host;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -86,7 +88,7 @@ class RabbitMQConfigurationTest {
     @Test
     void fromShouldThrowWhenManagementURIIsNotInTheConfiguration() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("uri", "amqp://james:james@rabbitmq_host:5672");
+        configuration.addProperty("uri", "amqp://james:james@rabbitmqhost:5672");
 
         assertThatThrownBy(() -> RabbitMQConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class)
@@ -96,7 +98,7 @@ class RabbitMQConfigurationTest {
     @Test
     void fromShouldThrowWhenManagementURIIsNull() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("uri", "amqp://james:james@rabbitmq_host:5672");
+        configuration.addProperty("uri", "amqp://james:james@rabbitmqhost:5672");
         configuration.addProperty("management.uri", null);
 
         assertThatThrownBy(() -> RabbitMQConfiguration.from(configuration))
@@ -107,7 +109,7 @@ class RabbitMQConfigurationTest {
     @Test
     void fromShouldThrowWhenManagementURIIsEmpty() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("uri", "amqp://james:james@rabbitmq_host:5672");
+        configuration.addProperty("uri", "amqp://james:james@rabbitmqhost:5672");
         configuration.addProperty("management.uri", "");
 
         assertThatThrownBy(() -> RabbitMQConfiguration.from(configuration))
@@ -118,7 +120,7 @@ class RabbitMQConfigurationTest {
     @Test
     void fromShouldThrowWhenManagementURIIsInvalid() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("uri", "amqp://james:james@rabbitmq_host:5672");
+        configuration.addProperty("uri", "amqp://james:james@rabbitmqhost:5672");
         configuration.addProperty("management.uri", ":invalid");
 
         assertThatThrownBy(() -> RabbitMQConfiguration.from(configuration))
@@ -129,9 +131,9 @@ class RabbitMQConfigurationTest {
     @Test
     void fromShouldReturnTheConfigurationWhenRequiredParametersAreGiven() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        String amqpUri = "amqp://james:james@rabbitmq_host:5672";
+        String amqpUri = "amqp://james:james@rabbitmqhost:5672";
         configuration.addProperty("uri", amqpUri);
-        String managementUri = "http://james:james@rabbitmq_host:15672/api/";
+        String managementUri = "http://james:james@rabbitmqhost:15672/api/";
         configuration.addProperty("management.uri", managementUri);
         configuration.addProperty("management.user", DEFAULT_USER);
         configuration.addProperty("management.password", DEFAULT_PASSWORD_STRING);
@@ -141,15 +143,16 @@ class RabbitMQConfigurationTest {
                 .amqpUri(URI.create(amqpUri))
                 .managementUri(URI.create(managementUri))
                 .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+                .hosts(ImmutableList.of(Host.from("rabbitmqhost", 5672)))
                 .build());
     }
 
     @Test
     void fromShouldThrowWhenManagementCredentialsAreNotGiven() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        String amqpUri = "amqp://james:james@rabbitmq_host:5672";
+        String amqpUri = "amqp://james:james@rabbitmqhost:5672";
         configuration.addProperty("uri", amqpUri);
-        String managementUri = "http://james:james@rabbitmq_host:15672/api/";
+        String managementUri = "http://james:james@rabbitmqhost:15672/api/";
         configuration.addProperty("management.uri", managementUri);
 
         assertThatThrownBy(() -> RabbitMQConfiguration.from(configuration))
@@ -160,9 +163,9 @@ class RabbitMQConfigurationTest {
     @Test
     void fromShouldReturnCustomValueWhenManagementCredentialsAreGiven() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        String amqpUri = "amqp://james:james@rabbitmq_host:5672";
+        String amqpUri = "amqp://james:james@rabbitmqhost:5672";
         configuration.addProperty("uri", amqpUri);
-        String managementUri = "http://james:james@rabbitmq_host:15672/api/";
+        String managementUri = "http://james:james@rabbitmqhost:15672/api/";
         configuration.addProperty("management.uri", managementUri);
         String user = "james";
         configuration.addProperty("management.user", user);
@@ -179,8 +182,8 @@ class RabbitMQConfigurationTest {
     @Test
     void maxRetriesShouldEqualsDefaultValueWhenNotGiven() throws URISyntaxException {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
-            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .amqpUri(new URI("amqp://james:james@rabbitmqhost:5672"))
+            .managementUri(new URI("http://james:james@rabbitmqhost:15672/api/"))
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
@@ -193,8 +196,8 @@ class RabbitMQConfigurationTest {
         int maxRetries = 1;
 
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
-            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .amqpUri(new URI("amqp://james:james@rabbitmqhost:5672"))
+            .managementUri(new URI("http://james:james@rabbitmqhost:15672/api/"))
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .maxRetries(maxRetries)
             .build();
@@ -206,8 +209,8 @@ class RabbitMQConfigurationTest {
     @Test
     void minDelayShouldEqualsDefaultValueWhenNotGiven() throws URISyntaxException {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
-            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .amqpUri(new URI("amqp://james:james@rabbitmqhost:5672"))
+            .managementUri(new URI("http://james:james@rabbitmqhost:15672/api/"))
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
@@ -220,8 +223,8 @@ class RabbitMQConfigurationTest {
         int minDelay = 1;
 
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
-            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .amqpUri(new URI("amqp://james:james@rabbitmqhost:5672"))
+            .managementUri(new URI("http://james:james@rabbitmqhost:15672/api/"))
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .minDelayInMs(minDelay)
             .build();
@@ -233,8 +236,8 @@ class RabbitMQConfigurationTest {
     @Test
     void connectionTimeoutShouldEqualsDefaultValueWhenNotGiven() throws URISyntaxException {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
-            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .amqpUri(new URI("amqp://james:james@rabbitmqhost:5672"))
+            .managementUri(new URI("http://james:james@rabbitmqhost:15672/api/"))
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
@@ -247,8 +250,8 @@ class RabbitMQConfigurationTest {
         int connectionTimeout = 1;
 
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
-            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .amqpUri(new URI("amqp://james:james@rabbitmqhost:5672"))
+            .managementUri(new URI("http://james:james@rabbitmqhost:15672/api/"))
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .connectionTimeoutInMs(connectionTimeout)
             .build();
@@ -260,8 +263,8 @@ class RabbitMQConfigurationTest {
     @Test
     void channelRpcTimeoutShouldEqualsDefaultValueWhenNotGiven() throws URISyntaxException {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
-            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .amqpUri(new URI("amqp://james:james@rabbitmqhost:5672"))
+            .managementUri(new URI("http://james:james@rabbitmqhost:15672/api/"))
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
@@ -274,8 +277,8 @@ class RabbitMQConfigurationTest {
         int channelRpcTimeout = 1;
 
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
-            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .amqpUri(new URI("amqp://james:james@rabbitmqhost:5672"))
+            .managementUri(new URI("http://james:james@rabbitmqhost:15672/api/"))
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .channelRpcTimeoutInMs(channelRpcTimeout)
             .build();
@@ -287,8 +290,8 @@ class RabbitMQConfigurationTest {
     @Test
     void handshakeTimeoutShouldEqualsDefaultValueWhenNotGiven() throws URISyntaxException {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
-            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .amqpUri(new URI("amqp://james:james@rabbitmqhost:5672"))
+            .managementUri(new URI("http://james:james@rabbitmqhost:15672/api/"))
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
@@ -301,8 +304,8 @@ class RabbitMQConfigurationTest {
         int handshakeTimeout = 1;
 
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
-            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .amqpUri(new URI("amqp://james:james@rabbitmqhost:5672"))
+            .managementUri(new URI("http://james:james@rabbitmqhost:15672/api/"))
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .handshakeTimeoutInMs(handshakeTimeout)
             .build();
@@ -314,8 +317,8 @@ class RabbitMQConfigurationTest {
     @Test
     void shutdownTimeoutShouldEqualsDefaultValueWhenNotGiven() throws URISyntaxException {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
-            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .amqpUri(new URI("amqp://james:james@rabbitmqhost:5672"))
+            .managementUri(new URI("http://james:james@rabbitmqhost:15672/api/"))
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
@@ -328,8 +331,8 @@ class RabbitMQConfigurationTest {
         int shutdownTimeout = 1;
 
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
-            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .amqpUri(new URI("amqp://james:james@rabbitmqhost:5672"))
+            .managementUri(new URI("http://james:james@rabbitmqhost:15672/api/"))
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .shutdownTimeoutInMs(shutdownTimeout)
             .build();
@@ -341,8 +344,8 @@ class RabbitMQConfigurationTest {
     @Test
     void sslConfigurationShouldHaveDefaultWhenNotSpecifiedOtherwise() throws URISyntaxException {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-                .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
-                .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+                .amqpUri(new URI("amqp://james:james@rabbitmqhost:5672"))
+                .managementUri(new URI("http://james:james@rabbitmqhost:15672/api/"))
                 .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
                 .build();
 
@@ -362,8 +365,8 @@ class RabbitMQConfigurationTest {
     @Test
     void sslConfigurationShouldHaveCustomValuesIfUseInConfiguration() throws URISyntaxException {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-                .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
-                .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+                .amqpUri(new URI("amqp://james:james@rabbitmqhost:5672"))
+                .managementUri(new URI("http://james:james@rabbitmqhost:15672/api/"))
                 .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
                 .sslConfiguration(
                         RabbitMQConfiguration.SSLConfiguration.builder()

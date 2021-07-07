@@ -943,7 +943,7 @@ class RabbitMQMailQueueTest {
             new RawMailQueueItemDecoratorFactory(),
             configuration);
         mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
-        mailQueueFactory = new RabbitMQMailQueueFactory(rabbitMQExtension.getSender(), mqManagementApi, factory);
+        mailQueueFactory = new RabbitMQMailQueueFactory(rabbitMQExtension.getSender(), mqManagementApi, factory, rabbitMQExtension.getRabbitMQ().getConfiguration());
         mailQueue = mailQueueFactory.createQueue(SPOOL);
     }
 }

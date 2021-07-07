@@ -110,6 +110,19 @@
           <dt><strong>ssl.keystore.password</strong></dt>
           <dd>Configure the keystore password. If configured then "ssl.keystore" must also be configured,
               Optional string, defaults to empty string</dd>
+
+          <dt><strong>quorum.queues.enable</strong></dt>
+          <dd>Boolean. Whether to activate Quorum queue usage for use cases that benefits from it (work queue).
+              Quorum queues enables high availability.
+              False (default value) results in the usage of classic queues.</dd>
+
+          <dt><strong>quorum.queues.replication.factor</strong></dt>
+          <dd> Strictly positive integer. The replication factor to use when creating quorum queues.</dd>
+
+          <dt><strong>hosts</strong></dt>
+          <dd>Optional, default to the host specified as part of the URI.
+              Allow creating cluster aware connections.
+              A coma separated list of hosts, example: hosts=ip1:5672,ip2:5672</dd>
       </dl>
   </section>
 

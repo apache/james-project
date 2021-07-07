@@ -43,10 +43,4 @@ public interface Constants {
     String DIRECT_EXCHANGE = "direct";
 
     AMQP.BasicProperties NO_PROPERTIES = new AMQP.BasicProperties();
-
-    ImmutableMap<String, Object> NO_ARGUMENTS = ImmutableMap.of();
-
-    static ImmutableMap<String, Object> deadLetterQueue(String deadLetterQueueName) {
-        return ImmutableMap.of("x-dead-letter-exchange", deadLetterQueueName);
-    }
 }

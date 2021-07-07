@@ -115,7 +115,7 @@ class RabbitMQMailQueueConfigurationChangeTest {
         mqManagementApi.deleteAllQueues();
     }
 
-    private RabbitMQMailQueue getRabbitMQMailQueue(CassandraCluster cassandra, CassandraMailQueueViewConfiguration mailQueueViewConfiguration) {
+    private RabbitMQMailQueue getRabbitMQMailQueue(CassandraCluster cassandra, CassandraMailQueueViewConfiguration mailQueueViewConfiguration) throws Exception {
         CassandraMailQueueView.Factory mailQueueViewFactory = CassandraMailQueueViewTestFactory.factory(clock,
             cassandra.getConf(),
             mailQueueViewConfiguration,
@@ -137,7 +137,7 @@ class RabbitMQMailQueueConfigurationChangeTest {
             clock,
             new RawMailQueueItemDecoratorFactory(),
             mailQueueSizeConfiguration);
-        RabbitMQMailQueueFactory mailQueueFactory = new RabbitMQMailQueueFactory(rabbitMQExtension.getSender(), mqManagementApi, privateFactory);
+        RabbitMQMailQueueFactory mailQueueFactory = new RabbitMQMailQueueFactory(rabbitMQExtension.getSender(), mqManagementApi, privateFactory, rabbitMQExtension.getRabbitMQ().getConfiguration());
         assertThat(performStartUpCheck(cassandra.getConf(), mailQueueViewConfiguration)).isEqualTo(StartUpCheck.ResultType.GOOD);
         return mailQueueFactory.createQueue(SPOOL);
     }
@@ -154,7 +154,7 @@ class RabbitMQMailQueueConfigurationChangeTest {
     }
 
     @Test
-    void increasingBucketCountShouldAllowBrowsingAllQueueElements(CassandraCluster cassandra) {
+    void increasingBucketCountShouldAllowBrowsingAllQueueElements(CassandraCluster cassandra) throws Exception {
         RabbitMQMailQueue mailQueue = getRabbitMQMailQueue(cassandra, DEFAULT_CONFIGURATION);
 
         enqueueSomeMails(mailQueue, namePatternForSlice(1), 10);
@@ -194,7 +194,7 @@ class RabbitMQMailQueueConfigurationChangeTest {
     }
 
     @Test
-    void divideSliceWindowShouldAllowBrowsingAllQueueElements(CassandraCluster cassandra) {
+    void divideSliceWindowShouldAllowBrowsingAllQueueElements(CassandraCluster cassandra) throws Exception {
         RabbitMQMailQueue mailQueue = getRabbitMQMailQueue(cassandra, DEFAULT_CONFIGURATION);
 
         clock.setInstant(IN_SLICE_1);
