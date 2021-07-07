@@ -19,20 +19,30 @@
 
 package org.apache.james.mailbox.store.search;
 
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.inmemory.InMemoryCombinationManagerTestSystem;
+import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
+import org.apache.james.mailbox.inmemory.mail.InMemoryMapperProvider;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
 import org.apache.james.mailbox.store.ThreadIdGuessingAlgorithmContract;
+import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.SearchThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
+import org.apache.james.mailbox.store.mail.model.MapperProvider;
 
 public class SearchThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorithmContract {
+    InMemoryMailboxManager mailboxManager;
 
     @Override
     protected CombinationManagerTestSystem createTestingData() {
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
+
+        mailboxManager = resources.getMailboxManager();
+        eventBus = resources.getEventBus();
+        messageIdFactory = resources.getMessageIdFactory();
 
         return new InMemoryCombinationManagerTestSystem(
             resources.getMailboxManager(),
@@ -45,7 +55,22 @@ public class SearchThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorit
     }
 
     @Override
+    protected MessageMapper createMessageMapper(MailboxSession mailboxSession) {
+        return mailboxManager.getMapperFactory().createMessageMapper(mailboxSession);
+    }
+
+    @Override
+    protected MapperProvider provideMapper() {
+        return new InMemoryMapperProvider();
+    }
+
+    @Override
     protected MessageId initNewBasedMessageId() {
         return InMemoryMessageId.of(100);
+    }
+
+    @Override
+    protected MessageId initOtherBasedMessageId() {
+        return InMemoryMessageId.of(1000);
     }
 }
