@@ -23,11 +23,11 @@ import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.core.{ClientId, CreatedIds, Invocation, ResponseObject, ServerId}
+import org.apache.james.jmap.core.{ClientId, CreatedIds, Id, Invocation, ResponseObject, ServerId}
 import play.api.libs.json.Json
 
 object Fixture {
-  val id: Id = "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8"
+  val id: Id = Id.validate("aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8").toOption.get
   val createdIds: CreatedIds = CreatedIds(Map(ClientId(id) -> ServerId(id)))
   val coreIdentifier: CapabilityIdentifier = "urn:ietf:params:jmap:core"
   val mailIdentifier: CapabilityIdentifier = "urn:ietf:params:jmap:mail"

@@ -110,7 +110,6 @@ trait EmailQueryMethodContract {
          |    "c1"]]
          |}""".stripMargin
 
-    awaitAtMostTenSeconds.untilAsserted { () =>
       val response = `given`
         .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
         .body(request)
@@ -134,7 +133,6 @@ trait EmailQueryMethodContract {
            |            "c1"
            |        ]]
            |}""".stripMargin)
-    }
   }
 
   private def buildTestMessage = {

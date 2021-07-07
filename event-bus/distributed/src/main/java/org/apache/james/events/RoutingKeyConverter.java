@@ -21,21 +21,18 @@ package org.apache.james.events;
 
 import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 import javax.inject.Inject;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 public class RoutingKeyConverter {
-    private static final String SEPARATOR = ":";
+    private static final char SEPARATOR = ':';
 
     static class RoutingKey {
 
@@ -64,26 +61,23 @@ public class RoutingKeyConverter {
         return new RoutingKeyConverter(ImmutableSet.copyOf(factories));
     }
 
-    private final Set<RegistrationKey.Factory> factories;
+    private final Map<String, RegistrationKey.Factory> factories;
 
     @Inject
     public RoutingKeyConverter(Set<RegistrationKey.Factory> factories) {
-        this.factories = factories;
+        this.factories = factories.stream()
+            .collect(Guavate.toImmutableMap(factory -> factory.forClass().getName()));
     }
 
     RegistrationKey toRegistrationKey(String routingKey) {
-        return toRegistrationKey(Splitter.on(SEPARATOR).splitToList(routingKey));
-    }
+        int separatorIndex = routingKey.indexOf(SEPARATOR);
+        if (separatorIndex < 0) {
+            throw new IllegalArgumentException("Routing key needs to match the 'classFQDN:value' pattern");
+        }
+        String registrationClass = routingKey.substring(0, separatorIndex);
+        String value = routingKey.substring(separatorIndex + 1);
 
-    private RegistrationKey toRegistrationKey(List<String> parts) {
-        Preconditions.checkArgument(parts.size() >= 2, "Routing key needs to match the 'classFQDN:value' pattern");
-
-        String registrationClass = parts.get(0);
-        String value = Joiner.on(SEPARATOR).join(Iterables.skip(parts, 1));
-
-        return factories.stream()
-            .filter(factory -> factory.forClass().getName().equals(registrationClass))
-            .findAny()
+        return Optional.ofNullable(factories.get(registrationClass))
             .orElseThrow(() -> new IllegalArgumentException("No factory for " + registrationClass))
             .fromString(value);
     }

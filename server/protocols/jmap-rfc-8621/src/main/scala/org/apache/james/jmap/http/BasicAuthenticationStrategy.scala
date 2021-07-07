@@ -21,10 +21,10 @@ package org.apache.james.jmap.http
 
 import java.util.Base64
 
-import eu.timepit.refined.api.Refined
+import com.google.common.base.CharMatcher
+import eu.timepit.refined.api.{Refined, Validate}
 import eu.timepit.refined.auto._
 import eu.timepit.refined.refineV
-import eu.timepit.refined.string.MatchesRegex
 import javax.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.jmap.exceptions.UnauthorizedException
@@ -40,8 +40,30 @@ import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
 object UserCredential {
-  type BasicAuthenticationHeaderValue = String Refined MatchesRegex["Basic [\\d\\w=]++"]
-  type CredentialsAsString = String Refined MatchesRegex[".*:.*"]
+  type BasicAuthenticationHeaderValue = String Refined BasicAuthenticationHeaderValueConstraint
+
+  type CredentialsAsString = String Refined CredentialsAsStringConstraint
+
+  case class CredentialsAsStringConstraint()
+  case class BasicAuthenticationHeaderValueConstraint()
+
+  private val charMatcher: CharMatcher = CharMatcher.inRange('a', 'z')
+    .or(CharMatcher.inRange('0', '9'))
+    .or(CharMatcher.inRange('A', 'Z'))
+    .or(CharMatcher.is('_'))
+    .or(CharMatcher.is('='))
+    .or(CharMatcher.is('-'))
+    .or(CharMatcher.is('#'))
+
+  implicit val validateCredentialsAsString: Validate.Plain[String, CredentialsAsStringConstraint] =
+    Validate.fromPredicate(s => s.contains(':'),
+      _ => "Credential string must contains ':'",
+      CredentialsAsStringConstraint())
+
+  implicit val validateBasicAuthenticationHeaderValueConstraint: Validate.Plain[String, BasicAuthenticationHeaderValueConstraint] =
+    Validate.fromPredicate(s => s.startsWith("Basic ") && charMatcher.matchesAllOf(s.substring(6)),
+      _ => "Must start with 'Basic' prefix then be only letter or digits",
+      BasicAuthenticationHeaderValueConstraint())
 
   private val logger = LoggerFactory.getLogger(classOf[UserCredential])
   private val BASIC_AUTHENTICATION_PREFIX: String = "Basic "

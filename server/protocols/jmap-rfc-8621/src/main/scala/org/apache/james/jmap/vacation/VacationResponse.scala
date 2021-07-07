@@ -22,7 +22,7 @@ package org.apache.james.jmap.vacation
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.api.vacation.Vacation
 import org.apache.james.jmap.core.Id.Id
-import org.apache.james.jmap.core.{Properties, UTCDate}
+import org.apache.james.jmap.core.{Id, Properties, UTCDate}
 import org.apache.james.jmap.mail.Subject
 
 import scala.compat.java8.OptionConverters._
@@ -36,8 +36,8 @@ case class TextBody(value: String) extends AnyVal
 case class HtmlBody(value: String) extends AnyVal
 
 object VacationResponse {
-  val VACATION_RESPONSE_ID: Id = "singleton"
-  val UNPARSED_SINGLETON: UnparsedVacationResponseId = UnparsedVacationResponseId("singleton")
+  val VACATION_RESPONSE_ID: Id = Id.validate("singleton").toOption.get
+  val UNPARSED_SINGLETON: UnparsedVacationResponseId = UnparsedVacationResponseId(VACATION_RESPONSE_ID)
 
   def asRfc8621(vacation: Vacation) = VacationResponse(
     id = VacationResponseId(),

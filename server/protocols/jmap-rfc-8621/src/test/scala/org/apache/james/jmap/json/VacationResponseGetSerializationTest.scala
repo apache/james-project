@@ -22,7 +22,7 @@ package org.apache.james.jmap.json
 import eu.timepit.refined.auto._
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
-import org.apache.james.jmap.core.{AccountId, Properties, UuidState}
+import org.apache.james.jmap.core.{AccountId, Id, Properties, UuidState}
 import org.apache.james.jmap.json.Fixture.id
 import org.apache.james.jmap.json.VacationResponseGetSerializationTest.{ACCOUNT_ID, PROPERTIES, SINGLETON_ID}
 import org.apache.james.jmap.json.VacationResponseSerializationTest.VACATION_RESPONSE
@@ -135,7 +135,7 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
     "succeed when multiple ids" in {
       val expectedRequestObject = VacationResponseGetRequest(
         accountId = ACCOUNT_ID,
-        ids = Some(VacationResponseIds(List(SINGLETON_ID, UnparsedVacationResponseId("randomId")))),
+        ids = Some(VacationResponseIds(List(SINGLETON_ID, UnparsedVacationResponseId(Id.validate("randomId").toOption.get)))),
         properties = Some(PROPERTIES))
 
       VacationSerializer.deserializeVacationResponseGetRequest(
@@ -155,7 +155,9 @@ class VacationResponseGetSerializationTest extends AnyWordSpec with Matchers {
         accountId = ACCOUNT_ID,
         state = UuidState.INSTANCE,
         list = List(VACATION_RESPONSE),
-        notFound = VacationResponseNotFound(Set(UnparsedVacationResponseId("randomId1"), UnparsedVacationResponseId("randomId2"))))
+        notFound = VacationResponseNotFound(Set(
+          UnparsedVacationResponseId(Id.validate("randomId1").toOption.get),
+          UnparsedVacationResponseId(Id.validate("randomId2").toOption.get))))
 
       val expectedJson: String =
         s"""

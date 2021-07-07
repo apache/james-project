@@ -32,6 +32,11 @@ class SessionSupplier(val configuration: JmapRfc8621Configuration, defaultCapabi
     this(configuration, defaultCapabilities.asScala.toSet)
   }
 
+  def validate(username: Username, accountId: AccountId): Boolean = AccountId.from(username)
+    .map(accountId.equals(_))
+    .toOption
+    .getOrElse(false)
+
   def generate(username: Username): Either[IllegalArgumentException, Session] =
     accounts(username)
       .map(account => Session(
