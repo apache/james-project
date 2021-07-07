@@ -50,10 +50,10 @@ public class SmtpConfiguration implements SerializableAsXml {
     }
 
     public static class Builder {
-        private static final int DEFAULT_DISABLED = 0;
+        private static final String DEFAULT_DISABLED = "0";
 
         private Optional<Boolean> authRequired;
-        private Optional<Integer> maxMessageSizeInKb;
+        private Optional<String> maxMessageSize;
         private Optional<Boolean> verifyIndentity;
         private Optional<Boolean> bracketEnforcement;
         private Optional<String> authorizedAddresses;
@@ -63,7 +63,7 @@ public class SmtpConfiguration implements SerializableAsXml {
             authorizedAddresses = Optional.empty();
             authRequired = Optional.empty();
             verifyIndentity = Optional.empty();
-            maxMessageSizeInKb = Optional.empty();
+            maxMessageSize = Optional.empty();
             bracketEnforcement = Optional.empty();
             addittionalHooks = ImmutableList.builder();
         }
@@ -74,9 +74,8 @@ public class SmtpConfiguration implements SerializableAsXml {
             return this;
         }
 
-        public Builder withMaxMessageSizeInKb(int sizeInKb) {
-            Preconditions.checkArgument(sizeInKb > 0);
-            this.maxMessageSizeInKb = Optional.of(sizeInKb);
+        public Builder withMaxMessageSize(String size) {
+            this.maxMessageSize = Optional.of(size);
             return this;
         }
 
@@ -115,7 +114,7 @@ public class SmtpConfiguration implements SerializableAsXml {
                 authRequired.orElse(!AUTH_REQUIRED),
                 bracketEnforcement.orElse(true),
                 verifyIndentity.orElse(false),
-                maxMessageSizeInKb.orElse(DEFAULT_DISABLED),
+                maxMessageSize.orElse(DEFAULT_DISABLED),
                 addittionalHooks.build());
         }
     }
@@ -128,16 +127,16 @@ public class SmtpConfiguration implements SerializableAsXml {
     private final boolean authRequired;
     private final boolean bracketEnforcement;
     private final boolean verifyIndentity;
-    private final int maxMessageSizeInKb;
+    private final String maxMessageSize;
     private final ImmutableList<HookConfigurationEntry> addittionalHooks;
 
     private SmtpConfiguration(Optional<String> authorizedAddresses, boolean authRequired, boolean bracketEnforcement,
-                              boolean verifyIndentity, int maxMessageSizeInKb, ImmutableList<HookConfigurationEntry> addittionalHooks) {
+                              boolean verifyIndentity, String maxMessageSize, ImmutableList<HookConfigurationEntry> addittionalHooks) {
         this.authorizedAddresses = authorizedAddresses;
         this.authRequired = authRequired;
         this.bracketEnforcement = bracketEnforcement;
         this.verifyIndentity = verifyIndentity;
-        this.maxMessageSizeInKb = maxMessageSizeInKb;
+        this.maxMessageSize = maxMessageSize;
         this.addittionalHooks = addittionalHooks;
     }
 
@@ -148,7 +147,7 @@ public class SmtpConfiguration implements SerializableAsXml {
         authorizedAddresses.ifPresent(value -> scopes.put("authorizedAddresses", value));
         scopes.put("authRequired", authRequired);
         scopes.put("verifyIdentity", verifyIndentity);
-        scopes.put("maxmessagesize", maxMessageSizeInKb);
+        scopes.put("maxmessagesize", maxMessageSize);
         scopes.put("bracketEnforcement", bracketEnforcement);
         scopes.put("hooks", addittionalHooks);
 

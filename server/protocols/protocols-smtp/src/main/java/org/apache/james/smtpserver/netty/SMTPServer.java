@@ -39,6 +39,7 @@ import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.smtpserver.CoreCmdHandlerLoader;
 import org.apache.james.smtpserver.ExtendedSMTPSession;
 import org.apache.james.smtpserver.jmx.JMXHandlersLoader;
+import org.apache.james.util.Size;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -169,7 +170,8 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
             // get the message size limit from the conf file and multiply
             // by 1024, to put it in bytes
-            maxMessageSize = configuration.getLong("maxmessagesize", maxMessageSize) * 1024;
+            maxMessageSize = Size.parse(configuration.getString("maxmessagesize", "0"), Size.Unit.K)
+                .asBytes();
             if (maxMessageSize > 0) {
                 LOGGER.info("The maximum allowed message size is {} bytes.", maxMessageSize);
             } else {
