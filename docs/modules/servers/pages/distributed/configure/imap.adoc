@@ -36,7 +36,12 @@ port 993 is the well-known/IANA registered port for IMAPS  ie over SSL/TLS
 This should be set with caution as a to high value can make the server a target for DOS (Denial of Service)!
 
 | inMemorySizeLimit
-| 10MB size limit before we will start to stream to a temporary file
+| Optional. Size limit before we will start to stream to a temporary file.
+Defaults to 10MB. Must be a positive integer, optionally with a unit: B, K, M, G.
+
+| literalSizeLimit
+| Optional. Maximum size of a literal (IMAP APPEND).
+Defaults to 0 (unlimited). Must be a positive integer, optionally with a unit: B, K, M, G.
 
 | plainAuthDisallowed
 | Whether or not to enable Authentication PLAIN if the connection is not encrypted via SSL or STARTTLS
