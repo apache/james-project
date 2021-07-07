@@ -98,7 +98,7 @@ If unspecified, default value is true.
 | This is an optional tag with a non-negative integer body.  It specifies the maximum
 size, in kbytes, of any message that will be transmitted by this SMTP server.  It is a service-wide, as opposed to
 a per user, limit.  If the value is zero then there is no limit.  If the tag isn't specified, the service will
-default to an unlimited message size.
+default to an unlimited message size. Must be a positive integer, optionally with a unit: B, K, M, G.
 
 | heloEhloEnforcement
 | This sets whether to enforce the use of HELO/EHLO salutation before a
