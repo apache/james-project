@@ -67,6 +67,18 @@ public class SearchThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorith
             .switchIfEmpty(Mono.just(ThreadId.fromBaseMessageId(messageId)));
     }
 
+    @Override
+    public Flux<MessageId> getMessageIdsInThread(ThreadId threadId, MailboxSession session) throws MailboxException {
+        MultimailboxesSearchQuery expression = MultimailboxesSearchQuery.from(SearchQuery.matchAll()).build();
+
+        return Flux.from(mailboxManager.search(expression, session, Long.MAX_VALUE))
+            .collectList()
+            .flatMapMany(messageIds -> messageIdManager.getMessagesReactive(messageIds, FetchGroup.MINIMAL, session))
+            .filter(messageResult -> messageResult.getThreadId().equals(threadId))
+            .map(messageResult -> messageResult.getMessageId());
+
+    }
+
     private MultimailboxesSearchQuery buildSearchQuery(Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject) {
         Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(mimeMessageId, inReplyTo, references);
 
