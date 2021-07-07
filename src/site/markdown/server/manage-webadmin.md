@@ -100,6 +100,9 @@ Supported health checks include:
  - **EventDeadLettersHealthCheck**: Included in all Guice products.
  - **Guice application lifecycle**: included in all Guice products.
  - **JPA Backend**: JPA storage. Included in JPA Guice based products.
+ - **MailReceptionCheck** We rely on a configured user, send an email to him and
+ assert that the email is well received, and can be read within the given configured
+ period. Unhealthy means that the email could not be received before reacing the timeout.
  - **MessageFastViewProjection**: included in memory and Cassandra based Guice products. 
  Health check of the component storing JMAP properties which are fast to retrieve. 
  Those properties are computed in advance from messages and persisted in order to archive a better performance. 

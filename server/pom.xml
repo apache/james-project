@@ -51,6 +51,7 @@
         <module>blob</module>
 
         <module>container/core</module>
+        <module>container/feature-checks</module>
         <module>container/filesystem-api</module>
         <module>container/guice</module>
         <module>container/lifecycle-api</module>
