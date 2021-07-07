@@ -48,6 +48,7 @@ import com.rabbitmq.client.AMQP;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoProcessor;
+import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ExchangeSpecification;
 import reactor.rabbitmq.OutboundMessage;
@@ -156,7 +157,7 @@ public class EventDispatcher {
     }
 
     private Mono<Void> remoteGroupsDispatch(byte[] serializedEvent, Event event) {
-        return remoteDispatch(serializedEvent, Collections.singletonList(RoutingKey.empty()))
+        return remoteDispatchWithAcks(serializedEvent, Collections.singletonList(RoutingKey.empty()))
             .doOnError(ex -> LOGGER.error(
                 "cannot dispatch event of type '{}' belonging '{}' with id '{}' to remote groups, store it into dead letter",
                 event.getClass().getSimpleName(),
@@ -179,6 +180,17 @@ public class EventDispatcher {
             return Mono.empty();
         }
         return sender.send(toMessages(serializedEvent, routingKeys));
+    }
+
+    private Mono<Void> remoteDispatchWithAcks(byte[] serializedEvent, Collection<RoutingKey> routingKeys) {
+        if (routingKeys.isEmpty()) {
+            return Mono.empty();
+        }
+        return sender.sendWithPublishConfirms(toMessages(serializedEvent, routingKeys))
+            .subscribeOn(Schedulers.elastic()) // channel.confirmSelect is synchronous
+            .filter(outboundMessageResult -> !outboundMessageResult.isAck())
+            .next()
+            .handle((result, sink) -> sink.error(new Exception("Publish was not acked")));
     }
 
     private Flux<OutboundMessage> toMessages(byte[] serializedEvent, Collection<RoutingKey> routingKeys) {
