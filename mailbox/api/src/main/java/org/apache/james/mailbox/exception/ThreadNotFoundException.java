@@ -17,23 +17,16 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.mailbox.store.mail;
+package org.apache.james.mailbox.exception;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
-import org.apache.james.mailbox.store.mail.model.MimeMessageId;
-import org.apache.james.mailbox.store.mail.model.Subject;
 
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+public class ThreadNotFoundException extends MailboxException {
+    public ThreadNotFoundException(String message) {
+        super(message);
+    }
 
-public interface ThreadIdGuessingAlgorithm {
-    Mono<ThreadId> guessThreadIdReactive(MessageId messageId, Optional<MimeMessageId> thisMimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject, MailboxSession session) throws MailboxException;
-
-    Flux<MessageId> getMessageIdsInThread(ThreadId threadId, MailboxSession session) throws MailboxException;
+    public ThreadNotFoundException(ThreadId threadId) {
+        super("Thread " + threadId.getBaseMessageId().serialize() + " can not be found");
+    }
 }

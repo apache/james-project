@@ -28,11 +28,17 @@ import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class NaiveThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorithm {
     @Override
     public Mono<ThreadId> guessThreadIdReactive(MessageId messageId, Optional<MimeMessageId> thisMimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject, MailboxSession session) {
         return Mono.just(ThreadId.fromBaseMessageId(messageId));
+    }
+
+    @Override
+    public Flux<MessageId> getMessageIdsInThread(ThreadId threadId, MailboxSession session) {
+        return Flux.just(threadId.getBaseMessageId());
     }
 }

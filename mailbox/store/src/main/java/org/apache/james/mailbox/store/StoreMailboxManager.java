@@ -74,6 +74,7 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.PrefixedWildcard;
@@ -787,6 +788,11 @@ public class StoreMailboxManager implements MailboxManager {
             .filter(id -> !expression.getNotInMailboxes().contains(id))
             .collect(Guavate.toImmutableSet())
             .flatMapMany(Throwing.function(ids -> index.search(session, ids, expression.getSearchQuery(), limit)));
+    }
+
+    @Override
+    public Flux<MessageId> getThread(ThreadId threadId, MailboxSession session) throws MailboxException {
+        return threadIdGuessingAlgorithm.getMessageIdsInThread(threadId, session);
     }
 
     private Flux<MailboxId> getInMailboxIds(MultimailboxesSearchQuery expression, MailboxSession session) throws MailboxException {
