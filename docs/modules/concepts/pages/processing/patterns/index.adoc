@@ -1,0 +1,8 @@
+= Email Processing Patterns
+:navtitle: Patterns
+
+== Overview
+
+ * xref:/processing/patterns/relay.adoc[Relay]
+
+
