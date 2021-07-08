@@ -317,6 +317,9 @@ public class SearchUtil {
      * @return sub
      */
     private static String removeSubjectBlob(String subject) {
+        if (subject.isEmpty()) {
+            return subject;
+        }
         String subj = subject;
         while (subj.charAt(0) == OPEN_SQUARE_BRACKED) {
             int length = subj.length();
@@ -352,7 +355,7 @@ public class SearchUtil {
      */
     private static String removeSubjLeaders(String subject) {
         int subString = 0;
-        while (subject.charAt(subString) == WS) {
+        while (subString < subject.length() && subject.charAt(subString) == WS) {
             subString++;
         }
         if (subString > 0) {
@@ -388,7 +391,7 @@ public class SearchUtil {
                 return subject;
             }
 
-            while (subj.charAt(subString) == WS) {
+            while (subString < subj.length() && subj.charAt(subString) == WS) {
                 subString++;
             }
             return subj.substring(subString);
@@ -409,7 +412,7 @@ public class SearchUtil {
 
         int originalSize = decodedSubject.length();
         int curPos = originalSize - 1;
-        while (true) {
+        while (curPos > 0) {
             char c = decodedSubject.charAt(curPos--);
             if (c == WS) {
                 subStringEnd--;

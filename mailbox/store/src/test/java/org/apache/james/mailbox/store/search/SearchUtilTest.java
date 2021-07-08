@@ -45,8 +45,25 @@ class SearchUtilTest {
         String subject = "This is my subject ";
         assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("This is my subject");
     }
-    
-    
+
+    @Test
+    void getBaseSubjectShouldNotFailWhenEmpty() {
+        String subject = "";
+        assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("");
+    }
+
+    @Test
+    void getBaseSubjectShouldNotFailWhenOnlySpaces() {
+        String subject = "    ";
+        assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("");
+    }
+
+    @Test
+    void getBaseSubjectShouldNotFailWhenOnlyReAndSpaces() {
+        String subject = "  Re:  ";
+        assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("");
+    }
+
     @Test
     void testRemoveTrailingFwd() {
         String subject = "This is my subject (fwd)";
