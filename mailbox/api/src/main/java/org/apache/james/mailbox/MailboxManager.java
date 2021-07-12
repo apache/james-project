@@ -333,7 +333,7 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      *          the context for this call, not null
      * @return  a list of MessageId of messages belong to that Thread
      */
-    Flux<MessageId> getThread(ThreadId threadId, MailboxSession session) throws MailboxException;
+    Publisher<MessageId> getThread(ThreadId threadId, MailboxSession session) throws MailboxException;
 
     /**
      * Does the given mailbox exist?
