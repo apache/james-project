@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
+
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
@@ -27,9 +29,26 @@ import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.mailbox.MessageManager
+import org.apache.james.mailbox.model.MailboxPath
+import org.apache.james.mime4j.dom.Message
+import org.apache.james.mime4j.stream.RawField
+import org.apache.james.modules.MailboxProbeImpl
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
+
+object ThreadGetContract {
+  private def createTestMessage: Message = Message.Builder
+    .of
+    .setSubject("test")
+    .setSender(ANDRE.asString())
+    .setFrom(ANDRE.asString())
+    .setSubject("World domination \r\n" +
+      " and this is also part of the header")
+    .setBody("testmail", StandardCharsets.UTF_8)
+    .build
+}
 
 trait ThreadGetContract {
   @BeforeEach
@@ -46,7 +65,7 @@ trait ThreadGetContract {
   }
 
   @Test
-  def threadsShouldReturnSuppliedIds(): Unit = {
+  def givenNonMessageThenGetThreadsShouldReturnNotFound(): Unit = {
     val request =
       s"""{
          |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
@@ -55,47 +74,6 @@ trait ThreadGetContract {
          |    {
          |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
          |      "ids": ["123456"]
-         |    },
-         |    "c1"]]
-         |}""".stripMargin
-
-    val response =  `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
-      .when
-      .post
-      .`then`
-      .statusCode(SC_OK)
-      .contentType(JSON)
-      .extract
-      .body
-      .asString
-
-    assertThatJson(response)
-      .inPath("methodResponses[0][1]")
-      .isEqualTo(
-        s"""{
-          |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-          |  "state": "${SESSION_STATE.value}",
-          |  "list": [
-          |      {
-          |          "id": "123456",
-          |          "emailIds": ["123456"]
-          |      }
-          |  ]
-          |}""".stripMargin)
-  }
-
-  @Test
-  def threadsShouldReturnSuppliedIdsWhenSeveralThreads(): Unit = {
-    val request =
-      s"""{
-         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-         |  "methodCalls": [[
-         |    "Thread/get",
-         |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "ids": ["123456", "789"]
          |    },
          |    "c1"]]
          |}""".stripMargin
@@ -113,22 +91,26 @@ trait ThreadGetContract {
       .asString
 
     assertThatJson(response)
-      .inPath("methodResponses[0][1]")
       .isEqualTo(
         s"""{
-          |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-          |  "state": "${SESSION_STATE.value}",
-          |  "list": [
-          |      {
-          |          "id": "123456",
-          |          "emailIds": ["123456"]
-          |      },
-          |      {
-          |          "id": "789",
-          |          "emailIds": ["789"]
-          |      }
-          |  ]
-          |}""".stripMargin)
+           |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |	"methodResponses": [
+           |		[
+           |			"Thread/get",
+           |			{
+           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |				"list": [
+           |
+           |				],
+           |				"notFound": [
+           |					"123456"
+           |				]
+           |			},
+           |			"c1"
+           |		]
+           |	]
+           |}""".stripMargin)
   }
 
   @Test
@@ -171,5 +153,81 @@ trait ThreadGetContract {
           |        ]
           |    ]
           |}""".stripMargin)
+  }
+
+  @Test
+  def givenMailsBelongToAThreadThenGetThatThreadShouldReturnExactThreadObject(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    // given 2 mail with same thread
+    val message1: MessageManager.AppendResult = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessageAndGetAppendResult(BOB.asString(), bobPath,
+        MessageManager.AppendCommand.from(Message.Builder.of.setSubject("Test")
+        .setMessageId("Message-ID")
+          .setField(new RawField("In-Reply-To", "someInReplyTo"))
+          .addField(new RawField("References", "references1"))
+          .addField(new RawField("References", "references2"))
+          .setBody("testmail", StandardCharsets.UTF_8)))
+
+    val message2: MessageManager.AppendResult = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessageAndGetAppendResult(BOB.asString(), bobPath,
+        MessageManager.AppendCommand.from(Message.Builder.of.setSubject("Re: Test")
+          .setMessageId("Another-Message-ID")
+          .setField(new RawField("In-Reply-To", "someInReplyTo"))
+          .addField(new RawField("References", "references1"))
+          .addField(new RawField("References", "references2"))
+          .setBody("testmail", StandardCharsets.UTF_8)))
+
+    val threadId = message1.getThreadId.serialize()
+    val message1Id = message1.getId.getMessageId.serialize()
+    val message2Id = message2.getId.getMessageId.serialize()
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Thread/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["$threadId"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response =  `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |	"methodResponses": [
+           |		[
+           |			"Thread/get",
+           |			{
+           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |				"state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |				"list": [{
+           |					"id": "$threadId",
+           |					"emailIds": ["$message1Id", "$message2Id"]
+           |				}],
+           |				"notFound": [
+           |
+           |				]
+           |			},
+           |			"c1"
+           |		]
+           |	]
+           |}""".stripMargin)
   }
 }
