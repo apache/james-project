@@ -168,6 +168,10 @@ public class SetMessagesRequest implements JmapRequest {
         return Maps.transformValues(update, func -> func.apply(converter));
     }
 
+    public boolean hasUpdates() {
+        return !update.isEmpty();
+    }
+
     public List<MessageId> getDestroy() {
         return destroy;
     }

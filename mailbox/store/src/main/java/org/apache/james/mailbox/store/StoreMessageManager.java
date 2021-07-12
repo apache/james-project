@@ -91,7 +91,9 @@ import org.apache.james.mailbox.store.quota.QuotaChecker;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.streaming.CountingInputStream;
 import org.apache.james.mime4j.MimeException;
+import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.field.LenientFieldParser;
 import org.apache.james.mime4j.message.DefaultBodyDescriptorBuilder;
 import org.apache.james.mime4j.message.HeaderImpl;
 import org.apache.james.mime4j.message.MaximalBodyDescriptor;
@@ -436,7 +438,8 @@ public class StoreMessageManager implements MessageManager {
     }
 
     private MimeTokenStream getParser(BodyOffsetInputStream bIn) {
-        final MimeTokenStream parser = new MimeTokenStream(MimeConfig.PERMISSIVE, new DefaultBodyDescriptorBuilder());
+        final MimeTokenStream parser = new MimeTokenStream(MimeConfig.PERMISSIVE,
+            new DefaultBodyDescriptorBuilder(null, new LenientFieldParser(), DecodeMonitor.SILENT));
 
         parser.setRecursionMode(RecursionMode.M_NO_RECURSE);
         parser.parse(bIn);

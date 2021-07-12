@@ -55,6 +55,7 @@ import org.apache.james.mime4j.dom.field.FieldName;
 import org.apache.james.mime4j.dom.field.UnstructuredField;
 import org.apache.james.mime4j.field.ContentIdFieldImpl;
 import org.apache.james.mime4j.field.Fields;
+import org.apache.james.mime4j.field.LenientFieldParser;
 import org.apache.james.mime4j.field.UnstructuredFieldImpl;
 import org.apache.james.mime4j.message.BasicBodyFactory;
 import org.apache.james.mime4j.message.BodyPart;
@@ -132,7 +133,8 @@ public class MIMEMessageConverter {
             throw new IllegalArgumentException("creationMessageEntry is either null or has null message");
         }
 
-        Message.Builder messageBuilder = Message.Builder.of();
+        Message.Builder messageBuilder = Message.Builder.of()
+            .use(new LenientFieldParser());
         if (isMultipart(creationMessageEntry.getValue(), messageAttachments)) {
             messageBuilder.setBody(createMultipart(creationMessageEntry.getValue(), messageAttachments, session));
         } else {

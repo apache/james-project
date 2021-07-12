@@ -154,6 +154,12 @@ class UsernameTest {
     }
 
     @Test
+    void fromUsernameShouldThrowWhenMultipleDomainDelimiterTogether() {
+        assertThatThrownBy(() -> Username.of("aa@@aa"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void fromUsernameShouldThrowWhenEndsWithDomainDelimiter() {
         assertThatThrownBy(() -> Username.of("aa@"))
             .isInstanceOf(IllegalArgumentException.class);

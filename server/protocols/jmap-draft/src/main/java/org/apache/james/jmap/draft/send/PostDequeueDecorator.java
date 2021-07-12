@@ -135,7 +135,7 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
     private void moveFromOutboxToSentWithSeenFlag(MessageId messageId, MailboxSession mailboxSession) {
         assertMessageBelongsToOutbox(messageId, mailboxSession)
             .then(getSentMailboxId(mailboxSession)
-                .switchIfEmpty(Mono.error(new MailboxRoleNotFoundException(Role.SENT)))
+                .switchIfEmpty(Mono.error(() -> new MailboxRoleNotFoundException(Role.SENT)))
                 .flatMap(sentMailboxId ->
                         Mono.from(messageIdManager.setInMailboxesReactive(messageId,
                             ImmutableList.of(sentMailboxId), mailboxSession))
