@@ -51,7 +51,7 @@
     </bean>
 
     <bean id ="no-mailbox-configuration" class="org.apache.james.mailbox.store.MailboxManagerConfiguration.NoMailboxConfiguration"/>
-    <bean id ="threadIdGuessingAlgorithm" class="org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithmImpl"/>
+    <bean id ="threadIdGuessingAlgorithm" class="org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithm"/>
 
     <bean id ="maildir-subscriptionManager" class="org.apache.james.mailbox.store.StoreSubscriptionManager">
         <constructor-arg index="0" ref="maildir-sessionMapperFactory"/>
