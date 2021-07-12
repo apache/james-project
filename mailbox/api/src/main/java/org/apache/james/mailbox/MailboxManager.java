@@ -34,6 +34,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.reactivestreams.Publisher;
 
@@ -323,6 +324,16 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      *            the context for this call, not null
      */
     Publisher<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, long limit) throws MailboxException;
+
+    /**
+     *
+     * @param threadId
+     *          target Thread
+     * @param session
+     *          the context for this call, not null
+     * @return  a list of MessageId of messages belong to that Thread
+     */
+    Publisher<MessageId> getThread(ThreadId threadId, MailboxSession session) throws MailboxException;
 
     /**
      * Does the given mailbox exist?

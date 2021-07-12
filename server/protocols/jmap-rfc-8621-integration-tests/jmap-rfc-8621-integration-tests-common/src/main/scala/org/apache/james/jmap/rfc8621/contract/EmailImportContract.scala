@@ -387,7 +387,7 @@ trait EmailImportContract {
          |                    "C43": {
          |                        "id": "$messageId2",
          |                        "blobId": "$messageId2",
-         |                        "threadId": "$messageId2",
+         |                        "threadId": "$messageId1",
          |                        "size": 2727
          |                    }
          |                }

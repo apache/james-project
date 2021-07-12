@@ -54,6 +54,7 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 public interface MessageStorer {
     /**
@@ -98,12 +99,15 @@ public interface MessageStorer {
             Optional<MimeMessageId> inReplyTo = MimeMessageHeadersUtil.parseInReplyTo(headers);
             Optional<List<MimeMessageId>> references = MimeMessageHeadersUtil.parseReferences(headers);
             Optional<Subject> subject = MimeMessageHeadersUtil.parseSubject(headers);
-            ThreadId threadId = threadIdGuessingAlgorithm.guessThreadId(session.getUser(), messageId, mimeMessageId, inReplyTo, references, subject);
 
             return mapperFactory.getMessageMapper(session)
                 .executeReactive(
                     storeAttachments(messageId, content, maybeMessage, session)
-                        .flatMap(Throwing.function((List<MessageAttachmentMetadata> attachments) -> {
+                        .zipWith(threadIdGuessingAlgorithm.guessThreadIdReactive(messageId, mimeMessageId, inReplyTo, references, subject, session))
+                        .flatMap(Throwing.function((Tuple2<List<MessageAttachmentMetadata>, ThreadId> pair) -> {
+                                List<MessageAttachmentMetadata> attachments = pair.getT1();
+                                ThreadId threadId = pair.getT2();
+
                                 MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, attachments);
                                 return Mono.from(messageMapper.addReactive(mailbox, message))
                                     .map(metadata -> Pair.of(metadata, Optional.of(attachments)));
@@ -161,13 +165,14 @@ public interface MessageStorer {
             Optional<MimeMessageId> inReplyTo = MimeMessageHeadersUtil.parseInReplyTo(headers);
             Optional<List<MimeMessageId>> references = MimeMessageHeadersUtil.parseReferences(headers);
             Optional<Subject> subject = MimeMessageHeadersUtil.parseSubject(headers);
-            ThreadId threadId = threadIdGuessingAlgorithm.guessThreadId(session.getUser(), messageId, mimeMessageId, inReplyTo, references, subject);
-
-            MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, ImmutableList.of());
 
             return mapperFactory.getMessageMapper(session)
-                .executeReactive(Mono.from(messageMapper.addReactive(mailbox, message)))
-                .map(metadata -> Pair.of(metadata, Optional.empty()));
+                .executeReactive(threadIdGuessingAlgorithm.guessThreadIdReactive(messageId, mimeMessageId, inReplyTo, references, subject, session)
+                    .flatMap(Throwing.function((ThreadId threadId) -> {
+                        MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, size, bodyStartOctet, content, flags, propertyBuilder, ImmutableList.of());
+                        return Mono.from(messageMapper.addReactive(mailbox, message))
+                            .map(metadata -> Pair.of(metadata, Optional.empty()));
+                    })));
         }
     }
 }
