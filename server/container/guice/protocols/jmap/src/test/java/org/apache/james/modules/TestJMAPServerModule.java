@@ -117,6 +117,7 @@ public class TestJMAPServerModule extends AbstractModule {
             .enable()
             .randomPort()
             .enableEmailQueryView()
+            .maximumSendSize(Optional.of(10L * 1024L * 1024L)) // 10 MB
             .build();
     }
 

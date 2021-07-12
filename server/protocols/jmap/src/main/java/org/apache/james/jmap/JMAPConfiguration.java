@@ -36,6 +36,7 @@ public class JMAPConfiguration {
         private Optional<Boolean> emailQueryViewEnabled = Optional.empty();
         private Optional<Port> port = Optional.empty();
         private Optional<Version> defaultVersion = Optional.empty();
+        private Optional<Long> maximumSendSize = Optional.empty();
 
         private Builder() {
 
@@ -90,10 +91,15 @@ public class JMAPConfiguration {
             return this;
         }
 
+        public Builder maximumSendSize(Optional<Long> maximumSendSize) {
+            this.maximumSendSize = maximumSendSize;
+            return this;
+        }
+
         public JMAPConfiguration build() {
             Preconditions.checkState(enabled.isPresent(), "You should specify if JMAP server should be started");
             return new JMAPConfiguration(enabled.get(), port, emailQueryViewEnabled.orElse(false),
-                    defaultVersion.orElse(Version.DRAFT));
+                    defaultVersion.orElse(Version.DRAFT), maximumSendSize);
         }
     }
 
@@ -103,13 +109,15 @@ public class JMAPConfiguration {
     private final Optional<Port> port;
     private final boolean emailQueryViewEnabled;
     private final Version defaultVersion;
+    private final Optional<Long> maximumSendSize;
 
     @VisibleForTesting
-    JMAPConfiguration(boolean enabled, Optional<Port> port, boolean emailQueryViewEnabled, Version defaultVersion) {
+    JMAPConfiguration(boolean enabled, Optional<Port> port, boolean emailQueryViewEnabled, Version defaultVersion, Optional<Long> maximumSendSize) {
         this.enabled = enabled;
         this.port = port;
         this.emailQueryViewEnabled = emailQueryViewEnabled;
         this.defaultVersion = defaultVersion;
+        this.maximumSendSize = maximumSendSize;
     }
 
     public boolean isEnabled() {
@@ -126,5 +134,9 @@ public class JMAPConfiguration {
 
     public Version getDefaultVersion() {
         return defaultVersion;
+    }
+
+    public Optional<Long> getMaximumSendSize() {
+        return maximumSendSize;
     }
 }

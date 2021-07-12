@@ -35,6 +35,7 @@ import org.apache.james.jmap.draft.exceptions.AttachmentsNotFoundException;
 import org.apache.james.jmap.draft.exceptions.InvalidDraftKeywordsException;
 import org.apache.james.jmap.draft.exceptions.InvalidMailboxForCreationException;
 import org.apache.james.jmap.draft.exceptions.MailboxNotOwnedException;
+import org.apache.james.jmap.draft.exceptions.SizeExceededException;
 import org.apache.james.jmap.draft.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.draft.methods.ValueWithId.MessageWithId;
 import org.apache.james.jmap.draft.model.CreationMessage;
@@ -152,6 +153,11 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                 SetError.builder()
                     .type(SetError.Type.INVALID_PROPERTIES)
                     .properties(MessageProperty.keywords)
+                    .description(e.getMessage())
+                    .build())))
+            .onErrorResume(SizeExceededException.class, e -> Mono.just(SetMessagesResponse.builder().notCreated(create.getCreationId(),
+                SetError.builder()
+                    .type(SetError.Type.INVALID_ARGUMENTS)
                     .description(e.getMessage())
                     .build())))
             .onErrorResume(AttachmentsNotFoundException.class, e -> Mono.just(SetMessagesResponse.builder().notCreated(create.getCreationId(),

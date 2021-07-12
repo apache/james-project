@@ -1418,6 +1418,72 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def tooBigEmailsShouldBeRejected(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa": {
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "subject": "World domination",
+         |          "htmlBody": [
+         |            {
+         |              "partId": "a49d",
+         |              "type": "text/html"
+         |            }
+         |          ],
+         |          "bodyValues": {
+         |            "a49d": {
+         |              "value": "${"0123456789\\r\\n".repeat(1024 * 1024)}",
+         |              "isTruncated": false,
+         |              "isEncodingProblem": false
+         |            }
+         |          }
+         |        }
+         |      }
+         |    }, "c1"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].notCreated.aaaaaa.description")
+      .inPath("methodResponses[0][1].notCreated.aaaaaa")
+      .isEqualTo(
+        s"""{
+           |    "type": "invalidArguments"
+           |}""".stripMargin)
+
+    // Message size is date-time and matchine (Message-Id) dependant
+    val description = assertThatJson(response)
+      .withIgnorePlaceholder("@")
+      .inPath("methodResponses[0][1].notCreated.aaaaaa.description")
+      .asString()
+    description.endsWith(" bytes while the maximum allowed is 10485760")
+    description.startsWith("Attempt to create a message of ")
+
+  }
+
+  @Test
   def createShouldSucceedWhenPartPropertiesOmitted(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(BOB)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)

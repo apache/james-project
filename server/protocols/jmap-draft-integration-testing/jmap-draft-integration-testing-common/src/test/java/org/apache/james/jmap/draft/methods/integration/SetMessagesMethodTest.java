@@ -57,6 +57,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.collection.IsMapWithSize.aMapWithSize;
 import static org.hamcrest.collection.IsMapWithSize.anEmptyMap;
 
@@ -152,7 +153,7 @@ public abstract class SetMessagesMethodTest {
     private static final String PASSWORD = "password";
     protected static final MailboxPath USER_MAILBOX = MailboxPath.forUser(USERNAME, "mailbox");
     private static final String NOT_UPDATED = ARGUMENTS + ".notUpdated";
-    private static final int BIG_MESSAGE_SIZE = 20 * 1024 * 1024;
+    private static final int BIG_MESSAGE_SIZE = 9 * 1024 * 1024;
     public static final String OCTET_CONTENT_TYPE = "application/octet-stream";
     public static final String OCTET_CONTENT_TYPE_UTF8 = "application/octet-stream; charset=UTF-8";
 
@@ -1083,6 +1084,46 @@ public abstract class SetMessagesMethodTest {
                 hasEntry(equalTo("isAnswered"), equalTo(false))
             )))
             ;
+    }
+
+    @Category(BasicFeature.class)
+    @Test
+    public void setMessagesShouldNotCreateOverSizedMessages() {
+        String messageCreationId = "creationId1337";
+        String fromAddress = USERNAME.asString();
+        String longText = "0123456789\\r\\n".repeat(1024 * 1024);
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"" + longText + "\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.asString())
+            .body(requestBody)
+        .when()
+            .post("/jmap").prettyPeek()
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notCreated", aMapWithSize(1))
+            .body(ARGUMENTS + ".notCreated." + messageCreationId + ".type", equalTo("invalidArguments"))
+            // Message size is date-time and matchine (Message-Id) dependant
+            .body(ARGUMENTS + ".notCreated." + messageCreationId + ".description",
+                startsWith("Attempt to create a message of "))
+            .body(ARGUMENTS + ".notCreated." + messageCreationId + ".description",
+                endsWith("bytes while the maximum allowed is 10485760"));
     }
 
     @Category(BasicFeature.class)

@@ -58,6 +58,7 @@ import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.util.Port;
+import org.apache.james.util.Size;
 import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.utils.PropertiesProvider;
 import org.apache.mailet.Mail;
@@ -179,6 +180,9 @@ public class JMAPModule extends AbstractModule {
                 .enableEmailQueryView(Optional.ofNullable(configuration.getBoolean("view.email.query.enabled", null)))
                 .defaultVersion(Optional.ofNullable(configuration.getString("jmap.version.default", null))
                     .map(Version::of))
+                .maximumSendSize(Optional.ofNullable(configuration.getString("email.send.max.size", null))
+                    .map(Throwing.function(Size::parse))
+                    .map(Size::asBytes))
                 .build();
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find JMAP configuration file. JMAP server will not be enabled.");
