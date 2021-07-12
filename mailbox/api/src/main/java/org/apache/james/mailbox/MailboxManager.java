@@ -326,12 +326,13 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
     Publisher<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, long limit) throws MailboxException;
 
     /**
+     * Returns the list of MessageId of messages belonging to that Thread
      *
      * @param threadId
      *          target Thread
      * @param session
      *          the context for this call, not null
-     * @return  a list of MessageId of messages belong to that Thread
+     * @return  the list of MessageId of messages belonging to that Thread
      */
     Publisher<MessageId> getThread(ThreadId threadId, MailboxSession session) throws MailboxException;
 

@@ -34,7 +34,7 @@ import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 
 public class SearchThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorithmContract {
-    InMemoryMailboxManager mailboxManager;
+    private InMemoryMailboxManager mailboxManager;
 
     @Override
     protected CombinationManagerTestSystem createTestingData() {

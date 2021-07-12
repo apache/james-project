@@ -22,10 +22,6 @@ package org.apache.james.mailbox.exception;
 import org.apache.james.mailbox.model.ThreadId;
 
 public class ThreadNotFoundException extends MailboxException {
-    public ThreadNotFoundException(String message) {
-        super(message);
-    }
-
     public ThreadNotFoundException(ThreadId threadId) {
         super("Thread " + threadId.getBaseMessageId().serialize() + " can not be found");
     }

@@ -23,15 +23,23 @@ import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.UnsignedInt.UnsignedInt
 import org.apache.james.jmap.core.{AccountId, UuidState}
 import org.apache.james.jmap.method.WithAccountId
+import org.apache.james.mailbox.model.MessageId
 
-case class Thread(id: Id, emailIds: List[Id])
+case class Thread(id: Id, emailIds: List[MessageId])
 
 case class ThreadGetRequest(accountId: AccountId,
-                            ids: List[Id]) extends WithAccountId
+                            ids: List[UnparsedThreadId]) extends WithAccountId
 
 case class ThreadGetResponse(accountId: AccountId,
                              state: UuidState,
-                             list: List[Thread])
+                             list: List[Thread],
+                             notFound: ThreadNotFound)
+
+case class ThreadNotFound(value: Set[UnparsedThreadId]) {
+  def merge(other: ThreadNotFound): ThreadNotFound = ThreadNotFound(this.value ++ other.value)
+}
+
+case class UnparsedThreadId(id: Id)
 
 case class ThreadChangesRequest(accountId: AccountId,
                                 sinceState: UuidState,

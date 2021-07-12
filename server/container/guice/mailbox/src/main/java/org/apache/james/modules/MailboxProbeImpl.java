@@ -173,6 +173,13 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         return messageManager.appendMessage(appendCommand, mailboxSession).getId();
     }
 
+    public MessageManager.AppendResult appendMessageAndGetAppendResult(String username, MailboxPath mailboxPath, MessageManager.AppendCommand appendCommand)
+        throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(Username.of(username));
+        MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
+        return messageManager.appendMessage(appendCommand, mailboxSession);
+    }
+
     @Override
     public Collection<String> listSubscriptions(String user) throws Exception {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(Username.of(user));

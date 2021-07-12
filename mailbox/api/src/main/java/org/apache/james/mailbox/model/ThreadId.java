@@ -21,10 +21,26 @@ package org.apache.james.mailbox.model;
 
 import java.util.Objects;
 
+import javax.inject.Inject;
+
 import com.google.common.base.MoreObjects;
 
 
 public class ThreadId {
+    public static class Factory {
+        private final MessageId.Factory messageIdFactory;
+
+        @Inject
+        public Factory(MessageId.Factory messageIdFactory) {
+            this.messageIdFactory = messageIdFactory;
+        }
+
+        public ThreadId fromString(String serialized) {
+            MessageId messageId = messageIdFactory.fromString(serialized);
+            return fromBaseMessageId(messageId);
+        }
+    }
+
     public static ThreadId fromBaseMessageId(MessageId baseMessageId) {
         return new ThreadId(baseMessageId);
     }
