@@ -22,31 +22,59 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
-import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{Invocation, UuidState}
+import org.apache.james.jmap.core.{AccountId, Invocation, UuidState}
 import org.apache.james.jmap.json.{ResponseSerializer, ThreadSerializer}
-import org.apache.james.jmap.mail.{Thread, ThreadGetRequest, ThreadGetResponse}
+import org.apache.james.jmap.mail.{Thread, ThreadGetRequest, ThreadGetResponse, ThreadNotFound, UnparsedThreadId}
 import org.apache.james.jmap.routes.SessionSupplier
-import org.apache.james.mailbox.MailboxSession
+import org.apache.james.mailbox.model.{ThreadId => JavaThreadId}
+import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.{JsError, JsSuccess}
-import reactor.core.scala.publisher.SMono
+import reactor.core.scala.publisher.{SFlux, SMono}
+
+import scala.util.Try
+
+object ThreadGetResult {
+  def empty: ThreadGetResult = ThreadGetResult(Set.empty, ThreadNotFound(Set.empty))
+
+  def merge(result1: ThreadGetResult, result2: ThreadGetResult): ThreadGetResult = result1.merge(result2)
+
+  def found(thread: Thread): ThreadGetResult =
+    ThreadGetResult(Set(thread), ThreadNotFound(Set.empty))
+
+  def notFound(unparsedThreadId: UnparsedThreadId): ThreadGetResult =
+    ThreadGetResult(Set.empty, ThreadNotFound(Set(unparsedThreadId)))
+}
+
+case class ThreadGetResult(threads: Set[Thread], notFound: ThreadNotFound) {
+  def merge(other: ThreadGetResult): ThreadGetResult =
+    ThreadGetResult(this.threads ++ other.threads, this.notFound.merge(other.notFound))
+
+  def asResponse(accountId: AccountId): ThreadGetResponse =
+    ThreadGetResponse(
+      accountId = accountId,
+      state = UuidState.INSTANCE,
+      list = threads.toList,
+      notFound = notFound)
+}
 
 class ThreadGetMethod @Inject()(val metricFactory: MetricFactory,
-                                          val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[ThreadGetRequest] {
+                                val sessionSupplier: SessionSupplier,
+                                val threadIdFactory: JavaThreadId.Factory,
+                                val mailboxManager: MailboxManager) extends MethodRequiringAccountId[ThreadGetRequest] {
   override val methodName: MethodName = MethodName("Thread/get")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: ThreadGetRequest): SMono[InvocationWithContext] = {
-    val response = ThreadGetResponse(accountId = request.accountId,
-      state = UuidState.INSTANCE,
-      list = retrieveThreads(request.ids))
-    SMono.just(InvocationWithContext(invocation = Invocation(
-      methodName = methodName,
-      arguments = Arguments(ThreadSerializer.serialize(response)),
-      methodCallId = invocation.invocation.methodCallId),
-      processingContext = invocation.processingContext))
+    getThreadResponse(request, mailboxSession)
+      .reduce(ThreadGetResult.empty)(ThreadGetResult.merge)
+      .map(threadGetResult => threadGetResult.asResponse(request.accountId))
+      .map(threadGetResponse => Invocation(
+        methodName = methodName,
+        arguments = Arguments(ThreadSerializer.serialize(threadGetResponse)),
+        methodCallId = invocation.invocation.methodCallId))
+      .map(InvocationWithContext(_, invocation.processingContext))
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, ThreadGetRequest] =
@@ -55,7 +83,18 @@ class ThreadGetMethod @Inject()(val metricFactory: MetricFactory,
       case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
     }
 
-  // Naive implementation
-  private def retrieveThreads(ids: List[Id]): List[Thread] =
-    ids.map(id => Thread(id = id, emailIds = List(id)))
+  private def getThreadResponse(threadGetRequest: ThreadGetRequest,
+                                mailboxSession: MailboxSession): SFlux[ThreadGetResult] = {
+    SFlux.fromIterable(threadGetRequest.ids)
+      .flatMap(unparsedThreadId => {
+        Try(threadIdFactory.fromString(unparsedThreadId.id.toString()))
+          .fold(e => SFlux.just(ThreadGetResult.notFound(unparsedThreadId)),
+            threadId => SFlux.fromPublisher(mailboxManager.getThread(threadId, mailboxSession))
+              .collectSeq()
+              .map(seq => Thread(id = unparsedThreadId.id, emailIds = seq.toList))
+              .map(ThreadGetResult.found)
+              .onErrorResume((_ => SMono.just(ThreadGetResult.notFound(unparsedThreadId)))))
+      })
+  }
+
 }
