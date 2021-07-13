@@ -91,7 +91,7 @@ public class MessageFastViewFactory implements MessageViewFactory<MessageFastVie
                 .size(firstMessageResult.getSize())
                 .inReplyToMessageId(Helpers.getHeaderValue(mimeMessage, "in-reply-to"))
                 .subject(Strings.nullToEmpty(mimeMessage.getSubject()).trim())
-                .headers(Helpers.toHeaderMap(mimeMessage.getHeader().getFields()))
+                .headers(Helpers.toHeaderMap(mimeMessage.getHeader()))
                 .from(Emailer.firstFromMailboxList(mimeMessage.getFrom()))
                 .to(Emailer.fromAddressList(mimeMessage.getTo()))
                 .cc(Emailer.fromAddressList(mimeMessage.getCc()))

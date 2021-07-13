@@ -65,6 +65,6 @@ class SentDateComparatorTest {
     @Test
     void toISODateShouldParseRFC5322InvalidHeader() {
         assertThat(SentDateComparator.toISODate("Fri,  5 Jun 2020 10:41:00 +0000 (UTC)"))
-            .contains(ZonedDateTime.parse("2020-06-05T10:41Z[UTC]"));
+            .contains(ZonedDateTime.parse("2020-06-05T10:41Z"));
     }
 }
