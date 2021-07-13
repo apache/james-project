@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mime4j.field.DateTimeFieldLenientImpl;
 import org.apache.james.mime4j.stream.RawField;
@@ -78,9 +79,9 @@ public class SentDateComparator extends AbstractHeaderComparator {
         // This method is here to convert the first date into something parsable by RFC_1123_DATE_TIME DateTimeFormatter
         Matcher sanitizerMatcher = DATE_SANITIZING_PATTERN.matcher(value);
         if (sanitizerMatcher.find()) {
-            return value.substring(0, sanitizerMatcher.start());
+            return StringUtils.normalizeSpace(value.substring(0, sanitizerMatcher.start()));
         }
-        return value;
+        return StringUtils.normalizeSpace(value);
     }
 
     @Override
