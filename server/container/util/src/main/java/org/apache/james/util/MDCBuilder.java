@@ -174,4 +174,9 @@ public class MDCBuilder {
             .forEach(MDC::remove);
     }
 
+    public MDCBuilder duplicate() {
+        return MDCBuilder.create()
+            .addToContext(this);
+    }
+
 }
