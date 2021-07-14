@@ -1101,7 +1101,7 @@ trait EmailSetMethodContract {
   @Test
   def createShouldRejectEmptyMailboxIds(server: GuiceJamesServer): Unit = {
     val andrePath = MailboxPath.inbox(ANDRE)
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
 
     val request =
       s"""{
@@ -1142,7 +1142,7 @@ trait EmailSetMethodContract {
   @Test
   def createShouldRejectInvalidMailboxIds(server: GuiceJamesServer): Unit = {
     val andrePath = MailboxPath.inbox(ANDRE)
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
 
     val request =
       s"""{
@@ -1185,7 +1185,7 @@ trait EmailSetMethodContract {
   @Test
   def createShouldRejectNoMailboxIds(server: GuiceJamesServer): Unit = {
     val andrePath = MailboxPath.inbox(ANDRE)
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
 
     val request =
       s"""{
@@ -2923,7 +2923,7 @@ trait EmailSetMethodContract {
     val messageId = responseAsJson
       .\("id")
       .get.asInstanceOf[JsString].value
-    val size = responseAsJson
+    responseAsJson
       .\("size")
       .get.asInstanceOf[JsNumber].value
 
@@ -3255,7 +3255,7 @@ trait EmailSetMethodContract {
     val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
     val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
 
-    val uploadResponse: String = `given`
+    `given`
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .contentType("text/plain")
@@ -5522,7 +5522,7 @@ trait EmailSetMethodContract {
   @Test
   def invalidPatchPropertyShouldFail(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
 
     val messageId: MessageId = mailboxProbe
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB),
@@ -5571,7 +5571,7 @@ trait EmailSetMethodContract {
   @Test
   def invalidMailboxPartialUpdatePropertyShouldFail(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId1: MailboxId = mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
+    mailboxProbe.createMailbox(MailboxPath.inbox(BOB))
 
     val messageId: MessageId = mailboxProbe
       .appendMessage(BOB.asString, MailboxPath.inbox(BOB),

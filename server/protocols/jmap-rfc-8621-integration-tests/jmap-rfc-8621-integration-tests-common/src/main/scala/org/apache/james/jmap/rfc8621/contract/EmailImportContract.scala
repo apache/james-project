@@ -672,7 +672,7 @@ trait EmailImportContract {
   @Test
   def importShouldFailWhenBlobNotOwned(server: GuiceJamesServer): Unit = {
     val andrePath = MailboxPath.inbox(ANDRE)
-    val andreId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
     val bobPath = MailboxPath.inbox(BOB)
     val bobId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val receivedAt = ZonedDateTime.now().minusDays(1)
@@ -743,7 +743,7 @@ trait EmailImportContract {
   @Test
   def importShouldSucceedWhenBlobDelegated(server: GuiceJamesServer): Unit = {
     val andrePath = MailboxPath.inbox(ANDRE)
-    val andreId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(andrePath)
     val bobPath = MailboxPath.inbox(BOB)
     val bobId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
     val receivedAt = ZonedDateTime.now().minusDays(1)

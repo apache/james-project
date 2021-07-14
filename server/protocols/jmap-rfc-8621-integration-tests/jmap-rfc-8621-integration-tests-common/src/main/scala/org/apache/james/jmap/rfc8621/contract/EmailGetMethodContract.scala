@@ -3198,7 +3198,7 @@ trait EmailGetMethodContract {
   @Test
   def receivedAtPropertyShouldBeReturned(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.inbox(BOB)
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
     val message: Message = Message.Builder
       .of
       .setSubject("test")
