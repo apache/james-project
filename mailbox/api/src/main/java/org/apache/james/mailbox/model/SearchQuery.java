@@ -730,6 +730,10 @@ public class SearchQuery implements Serializable {
         return new MimeMessageIDCriterion(messageId);
     }
 
+    public static Criterion threadId(ThreadId threadId) {
+        return new ThreadIdCriterion(threadId);
+    }
+
     public static class Builder {
         private final ImmutableList.Builder<Criterion> criterias;
         private final ImmutableSet.Builder<MessageUid> recentMessageUids;
@@ -1121,6 +1125,43 @@ public class SearchQuery implements Serializable {
         public String toString() {
             return MoreObjects.toStringHelper(this)
                 .add("messageID", messageID)
+                .toString();
+        }
+    }
+
+    /**
+     * Filters on the threadId of the messages.
+     */
+    public static class ThreadIdCriterion extends Criterion {
+        private final ThreadId threadId;
+
+        public ThreadIdCriterion(ThreadId threadId) {
+            this.threadId = threadId;
+        }
+
+        public ThreadId getThreadId() {
+            return threadId;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof ThreadIdCriterion) {
+                ThreadIdCriterion that = (ThreadIdCriterion) o;
+
+                return Objects.equal(this.threadId, that.threadId);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hashCode(threadId);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("threadId", threadId)
                 .toString();
         }
     }
