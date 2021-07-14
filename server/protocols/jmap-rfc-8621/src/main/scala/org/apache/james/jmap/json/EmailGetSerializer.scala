@@ -29,7 +29,6 @@ import org.apache.james.mailbox.model.{Cid, MailboxId, MessageId}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-import scala.language.implicitConversions
 
 object EmailBodyPartToSerialize {
   def from(part: EmailBodyPart): EmailBodyPartToSerialize = EmailBodyPartToSerialize(

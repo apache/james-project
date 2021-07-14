@@ -25,7 +25,6 @@ import javax.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
-import org.apache.james.metrics.api.TimeMetric.ExecutionResult.DEFAULT_100_MS_THRESHOLD
 import org.apache.james.user.api.{AlreadyExistInUsersRepositoryException, UsersRepository, UsersRepositoryException}
 import reactor.core.scala.publisher.SMono
 

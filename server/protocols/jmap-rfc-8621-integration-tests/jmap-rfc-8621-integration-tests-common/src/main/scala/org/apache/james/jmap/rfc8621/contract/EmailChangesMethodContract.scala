@@ -210,15 +210,15 @@ trait EmailChangesMethodContract {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
     val messageId1: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
-    val state1: State = waitForNextState(server, AccountId.fromUsername(BOB), State.INITIAL)
+    waitForNextState(server, AccountId.fromUsername(BOB), State.INITIAL)
     val messageId2: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
-    val state2: State = waitForNextState(server, AccountId.fromUsername(BOB), State.INITIAL)
+    waitForNextState(server, AccountId.fromUsername(BOB), State.INITIAL)
     val messageId3: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
-    val state3: State = waitForNextState(server, AccountId.fromUsername(BOB), State.INITIAL)
+    waitForNextState(server, AccountId.fromUsername(BOB), State.INITIAL)
     val messageId4: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
-    val state4: State = waitForNextState(server, AccountId.fromUsername(BOB), State.INITIAL)
+    waitForNextState(server, AccountId.fromUsername(BOB), State.INITIAL)
     val messageId5: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
-    val state5: State = waitForNextState(server, AccountId.fromUsername(BOB), State.INITIAL)
+    waitForNextState(server, AccountId.fromUsername(BOB), State.INITIAL)
     val messageId6: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
     val state6: State = waitForNextState(server, AccountId.fromUsername(BOB), State.INITIAL)
 
@@ -312,7 +312,7 @@ trait EmailChangesMethodContract {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
     val path: MailboxPath = MailboxPath.forUser(BOB, "mailbox1")
 
-    val mailboxId1 = mailboxProbe.createMailbox(path)
+    mailboxProbe.createMailbox(path)
     val mailboxId2 = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox2"))
 
     val message: Message = Message.Builder
