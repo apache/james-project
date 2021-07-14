@@ -84,6 +84,7 @@ public class CriterionConverter {
 
         registerCriterionConverter(SearchQuery.AttachmentCriterion.class, this::convertAttachmentCriterion);
         registerCriterionConverter(SearchQuery.MimeMessageIDCriterion.class, this::convertMimeMessageIDCriterion);
+        registerCriterionConverter(SearchQuery.ThreadIdCriterion.class, this::convertThreadIdCriterion);
     }
     
     @SuppressWarnings("unchecked")
@@ -133,6 +134,10 @@ public class CriterionConverter {
 
     private QueryBuilder convertMimeMessageIDCriterion(SearchQuery.MimeMessageIDCriterion criterion) {
         return termQuery(JsonMessageConstants.MIME_MESSAGE_ID, criterion.getMessageID());
+    }
+
+    private QueryBuilder convertThreadIdCriterion(SearchQuery.ThreadIdCriterion criterion) {
+        return termQuery(JsonMessageConstants.THREAD_ID, criterion.getThreadId().serialize());
     }
 
     private QueryBuilder convertCustomFlagCriterion(SearchQuery.CustomFlagCriterion criterion) {

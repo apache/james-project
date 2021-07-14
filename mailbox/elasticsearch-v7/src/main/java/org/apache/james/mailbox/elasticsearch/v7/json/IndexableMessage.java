@@ -102,6 +102,7 @@ public class IndexableMessage {
 
         private IndexableMessage instantiateIndexedMessage() throws IOException, MimeException {
             String messageId = SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(message);
+            String threadId = SearchUtil.getSerializedThreadIdIfSupportedByUnderlyingStorageOrNull(message);
             MimePart parsingResult = new MimePartParser(message, textExtractor).parse();
 
             Optional<String> bodyText = parsingResult.locateFirstTextBody();
@@ -166,6 +167,7 @@ public class IndexableMessage {
                     mailboxId,
                     mediaType,
                     messageId,
+                    threadId,
                     modSeq,
                     sentDate,
                     size,
@@ -209,6 +211,7 @@ public class IndexableMessage {
     private final String mailboxId;
     private final String mediaType;
     private final String messageId;
+    private final String threadId;
     private final long modSeq;
     private final String sentDate;
     private final long size;
@@ -236,6 +239,7 @@ public class IndexableMessage {
                              boolean isUnRead,
                              String mailboxId,
                              String mediaType, String messageId,
+                             String threadId,
                              ModSeq modSeq,
                              String sentDate,
                              long size,
@@ -263,6 +267,7 @@ public class IndexableMessage {
         this.mailboxId = mailboxId;
         this.mediaType = mediaType;
         this.messageId = messageId;
+        this.threadId = threadId;
         this.modSeq = modSeq.asLong();
         this.sentDate = sentDate;
         this.size = size;
@@ -332,6 +337,11 @@ public class IndexableMessage {
     @JsonProperty(JsonMessageConstants.MESSAGE_ID)
     public String getMessageId() {
         return messageId;
+    }
+
+    @JsonProperty(JsonMessageConstants.THREAD_ID)
+    public String getThreadId() {
+        return threadId;
     }
 
     @JsonProperty(JsonMessageConstants.MODSEQ)

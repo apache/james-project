@@ -55,6 +55,7 @@
   "mailboxId":"18",
   "mediaType":"plain",
   "messageId":"184",
+  "threadId": "184",
   "modSeq":42,
   "sentDate":"2015-06-18T12:43:26+0200",
   "size":25,
