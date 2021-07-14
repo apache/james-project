@@ -20,6 +20,7 @@
   "mailboxId":"18",
   "mediaType":"plain",
   "messageId":"184",
+  "threadId": "184",
   "modSeq":42,
   "sentDate":"2016-07-05T11:47:46+0200",
   "size":25,

@@ -41,6 +41,7 @@ import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.tika.TikaConfiguration;
@@ -203,6 +204,7 @@ class IndexableMessageTest {
         assertThat(indexableMessage.getAttachments()).isNotEmpty();
     }
 
+    @SuppressWarnings("checkstyle:LocalVariableName")
     @Test
     void otherAttachmentsShouldBeenIndexedWhenOneOfThemCannotBeParsed() throws Exception {
         //Given
@@ -276,6 +278,39 @@ class IndexableMessageTest {
     }
 
     @Test
+    void shouldHandleCorrectlyThreadIdHavingSerializeMethodThatReturnNull() throws Exception {
+        ThreadId invalidThreadIdThatReturnNull = mock(ThreadId.class);
+        when(invalidThreadIdThatReturnNull.serialize())
+            .thenReturn(null);
+
+        // When
+        MailboxMessage mailboxMessage = mock(MailboxMessage.class);
+        TestId mailboxId = TestId.of(1);
+        when(mailboxMessage.getMailboxId())
+            .thenReturn(mailboxId);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
+        when(mailboxMessage.getThreadId())
+            .thenReturn(invalidThreadIdThatReturnNull);
+        when(mailboxMessage.getFullContent())
+            .thenReturn(ClassLoader.getSystemResourceAsStream("eml/bodyMakeTikaToFail.eml"));
+        when(mailboxMessage.createFlags())
+            .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
+
+        IndexableMessage indexableMessage = IndexableMessage.builder()
+            .message(mailboxMessage)
+            .extractor(textExtractor)
+            .zoneId(ZoneId.of("Europe/Paris"))
+            .indexAttachments(IndexAttachments.YES)
+            .build();
+
+        // Then
+        assertThat(indexableMessage.getThreadId()).isNull();
+    }
+
+    @Test
     void shouldHandleCorrectlyNullMessageId() throws Exception {
        
         // When
@@ -303,5 +338,70 @@ class IndexableMessageTest {
 
         // Then
         assertThat(indexableMessage.getMessageId()).isNull();
+    }
+
+    @Test
+    void shouldHandleCorrectlyNullThreadId() throws Exception {
+
+        // When
+        MailboxMessage mailboxMessage = mock(MailboxMessage.class);
+        TestId mailboxId = TestId.of(1);
+        when(mailboxMessage.getMailboxId())
+            .thenReturn(mailboxId);
+        when(mailboxMessage.getMessageId())
+            .thenReturn(null);
+        when(mailboxMessage.getThreadId())
+            .thenReturn(null);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
+        when(mailboxMessage.getFullContent())
+            .thenReturn(ClassLoader.getSystemResourceAsStream("eml/bodyMakeTikaToFail.eml"));
+        when(mailboxMessage.createFlags())
+            .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
+
+        IndexableMessage indexableMessage = IndexableMessage.builder()
+            .message(mailboxMessage)
+            .extractor(textExtractor)
+            .zoneId(ZoneId.of("Europe/Paris"))
+            .indexAttachments(IndexAttachments.YES)
+            .build();
+
+        // Then
+        assertThat(indexableMessage.getThreadId()).isNull();
+    }
+
+    @Test
+    void shouldSerializeThreadIdCorrectly() throws Exception {
+        //Given
+        MailboxMessage mailboxMessage = mock(MailboxMessage.class);
+        TestId mailboxId = TestId.of(1);
+        when(mailboxMessage.getMailboxId())
+            .thenReturn(mailboxId);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
+        when(mailboxMessage.getMessageId())
+            .thenReturn(InMemoryMessageId.of(42));
+        when(mailboxMessage.getThreadId())
+            .thenReturn(ThreadId.fromBaseMessageId(InMemoryMessageId.of(42)));
+        when(mailboxMessage.getFullContent())
+            .thenReturn(ClassLoader.getSystemResourceAsStream("eml/emailWith3Attachments.eml"));
+        when(mailboxMessage.createFlags())
+            .thenReturn(new Flags());
+        when(mailboxMessage.getUid())
+            .thenReturn(MESSAGE_UID);
+
+
+        // When
+        IndexableMessage indexableMessage = IndexableMessage.builder()
+            .message(mailboxMessage)
+            .extractor(new DefaultTextExtractor())
+            .zoneId(ZoneId.of("Europe/Paris"))
+            .indexAttachments(IndexAttachments.NO)
+            .build();
+
+        // Then
+        assertThat(indexableMessage.getThreadId()).isEqualTo("42");
     }
 }

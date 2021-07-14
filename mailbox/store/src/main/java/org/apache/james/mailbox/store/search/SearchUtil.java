@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.DecoderUtil;
@@ -173,6 +174,14 @@ public class SearchUtil {
         MessageId messageId = mailboxMessage.getMessageId();
         if (messageId != null && messageId.isSerializable()) {
             return messageId.serialize();
+        }
+        return null;
+    }
+
+    public static String getSerializedThreadIdIfSupportedByUnderlyingStorageOrNull(MailboxMessage mailboxMessage) {
+        ThreadId threadId = mailboxMessage.getThreadId();
+        if (threadId != null && threadId.isSerializable()) {
+            return threadId.serialize();
         }
         return null;
     }
