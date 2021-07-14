@@ -19,7 +19,6 @@
 
 package org.apache.james.protocols.smtp.core;
 
-import java.io.Closeable;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -33,17 +32,17 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 
 public class SMTPMDCContextFactory implements ProtocolMDCContextFactory {
 
-    public Closeable from(Protocol protocol, ChannelHandlerContext ctx) {
-        return MDCBuilder.create()
-            .addToContext(ProtocolMDCContextFactory.mdcContext(protocol, ctx))
-            .addToContext(from(ctx.getAttachment()))
-            .build();
+    public MDCBuilder onBound(Protocol protocol, ChannelHandlerContext ctx) {
+        return ProtocolMDCContextFactory.mdcContext(protocol, ctx);
+    }
+
+    @Override
+    public MDCBuilder withContext(ProtocolSession protocolSession) {
+        return from(protocolSession);
     }
 
     public static MDCBuilder forSession(SMTPSession smtpSession) {
-        return MDCBuilder.create()
-            .addToContext(ProtocolMDCContextFactory.forSession(smtpSession))
-            .addToContext(forSMTPSession(smtpSession));
+        return forSMTPSession(smtpSession);
     }
 
     private MDCBuilder from(Object o) {
@@ -56,6 +55,7 @@ public class SMTPMDCContextFactory implements ProtocolMDCContextFactory {
 
     private static MDCBuilder forSMTPSession(SMTPSession smtpSession) {
         return MDCBuilder.create()
+            .addToContext(ProtocolMDCContextFactory.from(smtpSession))
             .addToContextIfPresent("ehlo", smtpSession.getAttachment(SMTPSession.CURRENT_HELO_NAME, ProtocolSession.State.Connection))
             .addToContextIfPresent("sender", smtpSession.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction)
                 .map(MaybeSender::asString))

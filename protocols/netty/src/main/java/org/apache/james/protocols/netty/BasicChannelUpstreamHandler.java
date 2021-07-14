@@ -18,10 +18,13 @@
  ****************************************************************/
 package org.apache.james.protocols.netty;
 
+import static org.apache.james.protocols.api.ProtocolSession.State.Connection;
+
 import java.io.Closeable;
 import java.nio.channels.ClosedChannelException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.net.ssl.SSLEngine;
 
@@ -36,6 +39,7 @@ import org.apache.james.protocols.api.handler.DisconnectHandler;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
 import org.apache.james.protocols.api.handler.ProtocolHandlerResultHandler;
+import org.apache.james.util.MDCBuilder;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandler.Sharable;
@@ -55,6 +59,7 @@ import org.slf4j.LoggerFactory;
 @Sharable
 public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(BasicChannelUpstreamHandler.class);
+    private static final ProtocolSession.AttachmentKey<MDCBuilder> MDC_KEY = ProtocolSession.AttachmentKey.of("bound_MDC", MDCBuilder.class);
 
     private final ProtocolMDCContextFactory mdcContextFactory;
     protected final Protocol protocol;
@@ -75,13 +80,24 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
 
     @Override
     public void channelBound(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        try (Closeable closeable = mdcContextFactory.from(protocol, ctx)) {
-            ctx.setAttachment(createSession(ctx));
+        MDCBuilder boundMDC = mdcContextFactory.onBound(protocol, ctx);
+        try (Closeable closeable = boundMDC.build()) {
+            ProtocolSession session = createSession(ctx);
+            session.setAttachment(MDC_KEY, boundMDC, Connection);
+            ctx.setAttachment(session);
             super.channelBound(ctx, e);
         }
     }
 
+    private MDCBuilder mdc(ChannelHandlerContext ctx) {
+        ProtocolSession session = (ProtocolSession) ctx.getAttachment();
 
+        return Optional.ofNullable(session)
+            .flatMap(s -> s.getAttachment(MDC_KEY, Connection))
+            .map(mdc -> mdcContextFactory.withContext(session)
+                .addToContext(mdc))
+            .orElseGet(MDCBuilder::create);
+    }
 
     /**
      * Call the {@link ConnectHandler} instances which are stored in the {@link ProtocolHandlerChain}
@@ -89,7 +105,7 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        try (Closeable closeable = mdcContextFactory.from(protocol, ctx)) {
+        try (Closeable closeable = mdc(ctx).build()) {
             List<ConnectHandler> connectHandlers = chain.getHandlers(ConnectHandler.class);
             List<ProtocolHandlerResultHandler> resultHandlers = chain.getHandlers(ProtocolHandlerResultHandler.class);
             ProtocolSession session = (ProtocolSession) ctx.getAttachment();
@@ -119,7 +135,7 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        try (Closeable closeable = mdcContextFactory.from(protocol, ctx)) {
+        try (Closeable closeable = mdc(ctx).build()) {
             List<DisconnectHandler> connectHandlers = chain.getHandlers(DisconnectHandler.class);
             ProtocolSession session = (ProtocolSession) ctx.getAttachment();
             if (connectHandlers != null) {
@@ -138,7 +154,7 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-        try (Closeable closeable = mdcContextFactory.from(protocol, ctx)) {
+        try (Closeable closeable = mdc(ctx).build()) {
             ProtocolSession pSession = (ProtocolSession) ctx.getAttachment();
             LinkedList<LineHandler> lineHandlers = chain.getHandlers(LineHandler.class);
             LinkedList<ProtocolHandlerResultHandler> resultHandlers = chain.getHandlers(ProtocolHandlerResultHandler.class);
@@ -169,7 +185,7 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
 
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        try (Closeable closeable = mdcContextFactory.from(protocol, ctx)) {
+        try (Closeable closeable = mdc(ctx).build()) {
             ProtocolSession session = (ProtocolSession) ctx.getAttachment();
             LOGGER.info("Connection closed for {}", session.getRemoteAddress().getAddress().getHostAddress());
             cleanup(ctx);
@@ -206,7 +222,7 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-        try (Closeable closeable = mdcContextFactory.from(protocol, ctx)) {
+        try (Closeable closeable = mdc(ctx).build()) {
             Channel channel = ctx.getChannel();
             ProtocolSession session = (ProtocolSession) ctx.getAttachment();
             if (e.getCause() instanceof TooLongFrameException && session != null) {

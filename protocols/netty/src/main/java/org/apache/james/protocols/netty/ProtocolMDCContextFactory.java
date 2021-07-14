@@ -19,7 +19,6 @@
 
 package org.apache.james.protocols.netty;
 
-import java.io.Closeable;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Optional;
@@ -33,16 +32,22 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 public interface ProtocolMDCContextFactory {
     class Standard implements ProtocolMDCContextFactory {
         @Override
-        public Closeable from(Protocol protocol, ChannelHandlerContext ctx) {
-            return mdcContext(protocol, ctx).build();
+        public MDCBuilder onBound(Protocol protocol, ChannelHandlerContext ctx) {
+            return mdcContext(protocol, ctx);
+        }
+
+        @Override
+        public MDCBuilder withContext(ProtocolSession protocolSession) {
+            return from(protocolSession);
         }
     }
 
-    Closeable from(Protocol protocol, ChannelHandlerContext ctx);
+    MDCBuilder onBound(Protocol protocol, ChannelHandlerContext ctx);
+
+    MDCBuilder withContext(ProtocolSession protocolSession);
 
     static MDCBuilder mdcContext(Protocol protocol, ChannelHandlerContext ctx) {
         return MDCBuilder.create()
-            .addToContext(from(ctx.getAttachment()))
             .addToContext(MDCBuilder.PROTOCOL, protocol.getName())
             .addToContext(MDCBuilder.IP, retrieveIp(ctx))
             .addToContext(MDCBuilder.HOST, retrieveHost(ctx));
@@ -66,7 +71,7 @@ public interface ProtocolMDCContextFactory {
         return remoteAddress.toString();
     }
 
-    private static MDCBuilder from(Object o) {
+    static MDCBuilder from(Object o) {
         return Optional.ofNullable(o)
             .filter(object -> object instanceof ProtocolSession)
             .map(object -> (ProtocolSession) object)
