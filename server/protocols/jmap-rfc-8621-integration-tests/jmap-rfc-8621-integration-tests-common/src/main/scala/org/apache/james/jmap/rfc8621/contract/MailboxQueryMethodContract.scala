@@ -184,7 +184,7 @@ trait MailboxQueryMethodContract {
   @Test
   def queryByRoleShouldNotReturnDelegatedMailboxes(server: GuiceJamesServer): Unit = {
     val andreInbox = MailboxPath.inbox(ANDRE)
-    val andreInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+    server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreInbox)
     val bobInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.inbox(BOB))
@@ -245,7 +245,7 @@ trait MailboxQueryMethodContract {
   @Test
   def queryByRoleShouldNotReturnDelegatedMailboxesWhenCaseVariation(server: GuiceJamesServer): Unit = {
     val andreInbox = MailboxPath.inbox(ANDRE)
-    val andreInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+    server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(andreInbox)
     val bobInboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(BOB, "InBoX"))

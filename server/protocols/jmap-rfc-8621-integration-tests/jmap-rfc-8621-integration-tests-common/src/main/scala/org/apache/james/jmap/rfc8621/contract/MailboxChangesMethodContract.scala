@@ -1054,7 +1054,7 @@ trait MailboxChangesMethodContract {
     val provisioningState: State = provisionSystemMailboxes(server)
 
     val path1 = MailboxPath.forUser(BOB, "mailbox1")
-    val mailboxId1: String = mailboxProbe
+    mailboxProbe
       .createMailbox(path1)
       .serialize
 
@@ -1226,7 +1226,7 @@ trait MailboxChangesMethodContract {
       .createMailbox(MailboxPath.forUser(BOB, "mailbox5"))
       .serialize
 
-    val mailboxId6: String = mailboxProbe
+    mailboxProbe
       .createMailbox(MailboxPath.forUser(BOB, "mailbox6"))
       .serialize
 
@@ -1634,7 +1634,7 @@ trait MailboxChangesMethodContract {
       .setSubject("test")
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
-    val messageId1: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
+    mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
     val messageId2: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
     val messageId3: MessageId = mailboxProbe.appendMessage(BOB.asString(), path, AppendCommand.from(message)).getMessageId
 
@@ -1977,7 +1977,7 @@ trait MailboxChangesMethodContract {
   }
 
   private def provisionSystemMailboxes(server: GuiceJamesServer): State = {
-    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
     val jmapGuiceProbe: JmapGuiceProbe = server.getProbe(classOf[JmapGuiceProbe])
 
     val request =

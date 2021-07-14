@@ -7644,7 +7644,7 @@ trait MailboxSetMethodContract {
   @Test
   def updateShouldHandleNotFoundClientId(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
-    val mailboxId: MailboxId = mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox"))
+    mailboxProbe.createMailbox(MailboxPath.forUser(BOB, "mailbox"))
 
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)

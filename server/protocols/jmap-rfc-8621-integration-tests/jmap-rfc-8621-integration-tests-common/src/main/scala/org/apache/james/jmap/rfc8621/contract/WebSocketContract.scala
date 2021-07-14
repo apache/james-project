@@ -1069,7 +1069,7 @@ trait WebSocketContract {
   def pushEnableRequestWithPushStateShouldReturnServerState(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(BOB)
     val accountId: AccountId = AccountId.fromUsername(BOB)
-    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
 
     Thread.sleep(100)
 

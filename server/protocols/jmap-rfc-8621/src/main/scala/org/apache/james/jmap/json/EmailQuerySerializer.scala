@@ -25,7 +25,6 @@ import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, Anchor, A
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json._
 
-import scala.language.implicitConversions
 import scala.util.Try
 
 class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
