@@ -2825,6 +2825,14 @@
                     <version>2.7.1</version>
                 </plugin>
                 <plugin>
+                    <groupId>io.github.evis</groupId>
+                    <artifactId>scalafix-maven-plugin</artifactId>
+                    <version>0.1.4_0.9.23</version>
+                    <configuration>
+                        <config>${basedir}/.scalafix.conf</config>
+                    </configuration>
+                </plugin>
+                <plugin>
                     <groupId>org.scalatest</groupId>
                     <artifactId>scalatest-maven-plugin</artifactId>
                     <version>2.0.0</version>
@@ -2853,7 +2861,15 @@
                             <arg>-unchecked</arg>
                             <arg>-deprecation</arg>
                             <arg>-explaintypes</arg>
+                            <arg>-Ywarn-unused</arg>
                         </args>
+                        <compilerPlugins>
+                            <compilerPlugin>
+                                <groupId>org.scalameta</groupId>
+                                <artifactId>semanticdb-scalac_${scala.version}</artifactId>
+                                <version>4.4.23</version>
+                            </compilerPlugin>
+                        </compilerPlugins>
                     </configuration>
                     <executions>
                         <execution>

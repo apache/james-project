@@ -189,6 +189,13 @@
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest-maven-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>io.github.evis</groupId>
+                <artifactId>scalafix-maven-plugin</artifactId>
+                <configuration>
+                    <config>${project.parent.parent.basedir}/.scalafix.conf</config>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

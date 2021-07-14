@@ -90,6 +90,13 @@
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>io.github.evis</groupId>
+                <artifactId>scalafix-maven-plugin</artifactId>
+                <configuration>
+                    <config>${project.parent.basedir}/.scalafix.conf</config>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
