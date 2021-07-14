@@ -19,7 +19,6 @@
 
 package org.apache.james.imapserver.netty;
 
-import java.io.Closeable;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Optional;
@@ -28,16 +27,14 @@ import org.apache.james.core.Username;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.util.MDCBuilder;
 import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelLocal;
 
 public class IMAPMDCContext {
-    public static Closeable from(ChannelHandlerContext ctx, ChannelLocal<Object> attributes) {
+
+    public static MDCBuilder boundMDC(ChannelHandlerContext ctx) {
         return MDCBuilder.create()
-            .addToContext(from(attributes.get(ctx.getChannel())))
             .addToContext(MDCBuilder.PROTOCOL, "IMAP")
             .addToContext(MDCBuilder.IP, retrieveIp(ctx))
-            .addToContext(MDCBuilder.HOST, retrieveHost(ctx))
-            .build();
+            .addToContext(MDCBuilder.HOST, retrieveHost(ctx));
     }
 
     private static String retrieveIp(ChannelHandlerContext ctx) {
@@ -58,18 +55,13 @@ public class IMAPMDCContext {
         return remoteAddress.toString();
     }
 
-    private static MDCBuilder from(Object o) {
-        if (o instanceof ImapSession) {
-            ImapSession imapSession = (ImapSession) o;
-
-            return MDCBuilder.create()
-                .addToContext("sessionId", imapSession.sessionId().asString())
-                .addToContext(MDCBuilder.USER, Optional.ofNullable(imapSession.getUserName())
-                    .map(Username::asString)
-                    .orElse(""))
-                .addToContextIfPresent("selectedMailbox", Optional.ofNullable(imapSession.getSelected())
-                    .map(selectedMailbox -> selectedMailbox.getMailboxId().serialize()));
-        }
-        return MDCBuilder.create();
+    public static MDCBuilder from(ImapSession imapSession) {
+        return MDCBuilder.create()
+            .addToContext("sessionId", imapSession.sessionId().asString())
+            .addToContext(MDCBuilder.USER, Optional.ofNullable(imapSession.getUserName())
+                .map(Username::asString)
+                .orElse(""))
+            .addToContextIfPresent("selectedMailbox", Optional.ofNullable(imapSession.getSelected())
+                .map(selectedMailbox -> selectedMailbox.getMailboxId().serialize()));
     }
 }
