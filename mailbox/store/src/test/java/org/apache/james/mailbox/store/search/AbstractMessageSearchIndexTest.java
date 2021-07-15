@@ -37,17 +37,21 @@ import java.util.concurrent.TimeUnit;
 import javax.mail.Flags;
 
 import org.apache.james.core.Username;
+import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
@@ -55,8 +59,14 @@ import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 import org.apache.james.mailbox.model.SearchQuery.Sort;
 import org.apache.james.mailbox.model.SearchQuery.Sort.Order;
 import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
+import org.apache.james.mailbox.store.event.EventFactory;
+import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.message.BodyPartBuilder;
@@ -85,15 +95,20 @@ public abstract class AbstractMessageSearchIndexTest {
     protected static final String INBOX = "INBOX";
     protected static final Username OTHERUSER = Username.of("otheruser");
     protected static final Username USERNAME = Username.of("benwa");
+    protected static final Username QUAN = USERNAME.of("quan");
 
     protected MessageSearchIndex messageSearchIndex;
     protected StoreMailboxManager storeMailboxManager;
     protected MessageIdManager messageIdManager;
+    protected EventBus eventBus;
+    protected MessageId.Factory messageIdFactory;
     private Mailbox mailbox;
     private Mailbox mailbox2;
     private Mailbox otherMailbox;
+    private Mailbox quanMailbox;
     private MailboxSession session;
     private MailboxSession otherSession;
+    private MailboxSession quanSession;
 
     private ComposedMessageId m1;
     private ComposedMessageId m2;
@@ -111,7 +126,12 @@ public abstract class AbstractMessageSearchIndexTest {
     private StoreMessageManager myFolderMessageManager;
     private MailboxPath inboxPath;
     private MailboxPath otherInboxPath;
+    private MailboxPath quanInboxPath;
     private StoreMessageManager inboxMessageManager;
+    private StoreMessageManager quanInboxMessageManager;
+    private MessageMapper messageMapper;
+    private MessageId newBasedMessageId;
+    private MessageId otherBasedMessageId;
 
     @BeforeEach
     protected void setUp() throws Exception {
@@ -119,15 +139,19 @@ public abstract class AbstractMessageSearchIndexTest {
 
         session = storeMailboxManager.createSystemSession(USERNAME);
         otherSession = storeMailboxManager.createSystemSession(OTHERUSER);
+        quanSession = storeMailboxManager.createSystemSession(QUAN);
 
         inboxPath = MailboxPath.inbox(USERNAME);
         otherInboxPath = MailboxPath.inbox(OTHERUSER);
+        quanInboxPath = MailboxPath.inbox(QUAN);
 
         storeMailboxManager.createMailbox(inboxPath, session);
         storeMailboxManager.createMailbox(otherInboxPath, otherSession);
+        storeMailboxManager.createMailbox(quanInboxPath, quanSession);
 
         inboxMessageManager = (StoreMessageManager) storeMailboxManager.getMailbox(inboxPath, session);
         StoreMessageManager otherInboxMessageManager = (StoreMessageManager) storeMailboxManager.getMailbox(otherInboxPath, otherSession);
+        quanInboxMessageManager = (StoreMessageManager) storeMailboxManager.getMailbox(quanInboxPath, quanSession);
 
         MailboxPath myFolderPath = MailboxPath.forUser(USERNAME, "MyFolder");
         storeMailboxManager.createMailbox(myFolderPath, session);
@@ -135,6 +159,11 @@ public abstract class AbstractMessageSearchIndexTest {
         mailbox = inboxMessageManager.getMailboxEntity();
         mailbox2 = myFolderMessageManager.getMailboxEntity();
         otherMailbox = otherInboxMessageManager.getMailboxEntity();
+        quanMailbox = quanInboxMessageManager.getMailboxEntity();
+
+        messageMapper = storeMailboxManager.getMapperFactory().getMessageMapper(quanSession);
+        newBasedMessageId = initNewBasedMessageId();
+        otherBasedMessageId = initOtherBasedMessageId();
 
         m1 = inboxMessageManager.appendMessage(
             ClassLoader.getSystemResourceAsStream("eml/spamMail.eml"),
@@ -240,6 +269,10 @@ public abstract class AbstractMessageSearchIndexTest {
     protected abstract void awaitMessageCount(List<MailboxId> mailboxIds, SearchQuery query, long messageCount);
     
     protected abstract void initializeMailboxManager() throws Exception;
+
+    protected abstract MessageId initNewBasedMessageId();
+
+    protected abstract MessageId initOtherBasedMessageId();
 
     @Test
     void searchingMessageInMultipleMailboxShouldNotReturnTwiceTheSameMessage() throws MailboxException {
@@ -1512,4 +1545,101 @@ public abstract class AbstractMessageSearchIndexTest {
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
             .containsOnly(mWithFileName.getUid());
     }
+
+    @Test
+    void givenThreeMailsInAThreadThenGetThreadShouldReturnAListWithThreeMessageIdsInThatThread() throws MailboxException {
+        MailboxMessage message1 = createMessage(quanMailbox, ThreadId.fromBaseMessageId(newBasedMessageId));
+        MailboxMessage message2 = createMessage(quanMailbox, ThreadId.fromBaseMessageId(newBasedMessageId));
+        MailboxMessage message3 = createMessage(quanMailbox, ThreadId.fromBaseMessageId(newBasedMessageId));
+
+        appendMessageThenDispatchAddedEvent(quanMailbox, message1);
+        appendMessageThenDispatchAddedEvent(quanMailbox, message2);
+        appendMessageThenDispatchAddedEvent(quanMailbox, message3);
+
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 16);
+
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.threadId(ThreadId.fromBaseMessageId(newBasedMessageId)));
+        List<MessageId> actual = messageSearchIndex.search(quanSession, ImmutableList.of(quanMailbox.getMailboxId()), searchQuery, LIMIT)
+            .collectList().block();
+
+        assertThat(actual).isEqualTo(ImmutableList.of(message1.getMessageId(), message2.getMessageId(), message3.getMessageId()));
+    }
+
+    @Test
+    void givenAMailInAThreadThenGetThreadShouldReturnAListWithOnlyOneMessageIdInThatThread() throws MailboxException {
+        MailboxMessage message1 = createMessage(quanMailbox, ThreadId.fromBaseMessageId(newBasedMessageId));
+
+        appendMessageThenDispatchAddedEvent(quanMailbox, message1);
+
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
+
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.threadId(ThreadId.fromBaseMessageId(newBasedMessageId)));
+        List<MessageId> actual = messageSearchIndex.search(quanSession, ImmutableList.of(quanMailbox.getMailboxId()), searchQuery, LIMIT)
+            .collectList().block();
+
+        assertThat(actual).containsOnly(message1.getMessageId());
+    }
+
+    @Test
+    void givenTwoDistinctThreadsThenGetThreadShouldNotReturnUnrelatedMails() throws MailboxException {
+        // given message1 and message2 in thread1, message3 in thread2
+        ThreadId threadId1 = ThreadId.fromBaseMessageId(newBasedMessageId);
+        ThreadId threadId2 = ThreadId.fromBaseMessageId(otherBasedMessageId);
+        MailboxMessage message1 = createMessage(quanMailbox, threadId1);
+        MailboxMessage message2 = createMessage(quanMailbox, threadId1);
+        MailboxMessage message3 = createMessage(quanMailbox, threadId2);
+
+        appendMessageThenDispatchAddedEvent(quanMailbox, message1);
+        appendMessageThenDispatchAddedEvent(quanMailbox, message2);
+        appendMessageThenDispatchAddedEvent(quanMailbox, message3);
+
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 16);
+
+        // then get thread2 should not return unrelated message1 and message2
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.threadId(threadId2));
+        List<MessageId> actual = messageSearchIndex.search(quanSession, ImmutableList.of(quanMailbox.getMailboxId()), searchQuery, LIMIT)
+            .collectList().block();
+
+        assertThat(actual).doesNotContain(message1.getMessageId(), message2.getMessageId());
+    }
+
+    @Test
+    void givenNonThreadThenGetThreadShouldReturnEmptyListMessageId() throws MailboxException {
+        // given non messages in thread1
+        ThreadId threadId1 = ThreadId.fromBaseMessageId(newBasedMessageId);
+
+        // then get thread1 should return empty list messageId
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.threadId(threadId1));
+        List<MessageId> actual = messageSearchIndex.search(quanSession, ImmutableList.of(quanMailbox.getMailboxId()), searchQuery, LIMIT)
+            .collectList().block();
+
+        assertThat(actual).isEmpty();
+    }
+
+    private void appendMessageThenDispatchAddedEvent(Mailbox mailbox, MailboxMessage mailboxMessage) throws MailboxException {
+        MessageMetaData messageMetaData = messageMapper.add(mailbox, mailboxMessage);
+        eventBus.dispatch(EventFactory.added()
+                .randomEventId()
+                .mailboxSession(quanSession)
+                .mailbox(quanMailbox)
+                .addMetaData(messageMetaData)
+                .build(),
+            new MailboxIdRegistrationKey(quanMailbox.getMailboxId())).block();
+    }
+
+    private SimpleMailboxMessage createMessage(Mailbox mailbox, ThreadId threadId) {
+        MessageId messageId = messageIdFactory.generate();
+        String content = "Some content";
+        int bodyStart = 16;
+        return new SimpleMailboxMessage(messageId,
+            threadId,
+            new Date(),
+            content.length(),
+            bodyStart,
+            new ByteContent(content.getBytes()),
+            new Flags(),
+            new PropertyBuilder().build(),
+            mailbox.getMailboxId());
+    }
+
 }

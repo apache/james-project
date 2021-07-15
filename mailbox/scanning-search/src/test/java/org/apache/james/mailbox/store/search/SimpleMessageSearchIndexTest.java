@@ -21,8 +21,10 @@ package org.apache.james.mailbox.store.search;
 
 import java.util.List;
 
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.junit.jupiter.api.Disabled;
 
@@ -52,6 +54,18 @@ class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
         storeMailboxManager = resources.getMailboxManager();
         messageIdManager = resources.getMessageIdManager();
         messageSearchIndex = resources.getSearchIndex();
+        eventBus = resources.getEventBus();
+        messageIdFactory = new InMemoryMessageId.Factory();
+    }
+
+    @Override
+    protected MessageId initNewBasedMessageId() {
+        return InMemoryMessageId.of(100);
+    }
+
+    @Override
+    protected MessageId initOtherBasedMessageId() {
+        return InMemoryMessageId.of(1000);
     }
 
     @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
