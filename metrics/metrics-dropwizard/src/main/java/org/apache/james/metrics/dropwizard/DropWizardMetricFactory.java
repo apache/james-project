@@ -38,6 +38,7 @@ import com.codahale.metrics.Timer;
 import com.codahale.metrics.jmx.JmxReporter;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class DropWizardMetricFactory implements MetricFactory, Startable {
 
@@ -64,6 +65,11 @@ public class DropWizardMetricFactory implements MetricFactory, Startable {
 
     @Override
     public <T> Publisher<T> decoratePublisherWithTimerMetric(String name, Publisher<T> publisher) {
+        if (publisher instanceof Mono) {
+            return Mono.using(() -> timer(name),
+                any -> Mono.from(publisher),
+                DropWizardTimeMetric::stopAndPublish);
+        }
         return Flux.using(() -> timer(name),
             any -> publisher,
             DropWizardTimeMetric::stopAndPublish);
