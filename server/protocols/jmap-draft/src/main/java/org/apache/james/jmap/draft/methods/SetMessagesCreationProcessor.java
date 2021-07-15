@@ -116,6 +116,9 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     @Override
     public Mono<SetMessagesResponse> processReactive(SetMessagesRequest request, MailboxSession mailboxSession) {
+        if (request.getCreate().isEmpty()) {
+            return Mono.just(SetMessagesResponse.builder().build());
+        }
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric(JMAP_PREFIX + "SetMessageCreationProcessor",
             Flux.fromIterable(request.getCreate())
                 .flatMap(create -> handleCreate(create, mailboxSession))
