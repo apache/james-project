@@ -202,6 +202,11 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private static final String MODSEQ_FIELD = "modSeq";
 
     /**
+     * {@link Field} which will contain the threadId of the message
+     */
+    private static final String THREAD_ID_FIELD = "threadId";
+
+    /**
      * {@link Field} which will contain the TO-Address of the message
      */
     private static final String TO_FIELD = "to";
@@ -543,6 +548,10 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         String serializedMessageId = SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(membership);
         if (serializedMessageId != null) {
             doc.add(new Field(MESSAGE_ID_FIELD, serializedMessageId, Store.YES, Index.NOT_ANALYZED));
+        }
+        String serializedThreadId = SearchUtil.getSerializedThreadIdIfSupportedByUnderlyingStorageOrNull(membership);
+        if (serializedThreadId != null) {
+            doc.add(new Field(THREAD_ID_FIELD, serializedThreadId, Store.YES, Index.NOT_ANALYZED));
         }
 
         // create an unqiue key for the document which can be used later on updates to find the document
@@ -1162,6 +1171,9 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         } else if (criterion instanceof SearchQuery.MimeMessageIDCriterion) {
             SearchQuery.MimeMessageIDCriterion mimeMessageIDCriterion = (SearchQuery.MimeMessageIDCriterion) criterion;
             return createHeaderQuery(mimeMessageIDCriterion.asHeaderCriterion());
+        } else if (criterion instanceof SearchQuery.ThreadIdCriterion) {
+            SearchQuery.ThreadIdCriterion threadIdCriterion = (SearchQuery.ThreadIdCriterion) criterion;
+            return createTermQuery(THREAD_ID_FIELD, threadIdCriterion.getThreadId().serialize());
         }
         throw new UnsupportedSearchException();
     }
