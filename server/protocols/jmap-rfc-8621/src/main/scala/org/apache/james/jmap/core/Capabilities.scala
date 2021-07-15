@@ -35,7 +35,7 @@ object DefaultCapabilities {
       MaxObjectsInSet(500L),
       collationAlgorithms = List("i;unicode-casemap")))
 
-  def webSocketCapability(url: URI) = WebSocketCapability(
+  def webSocketCapability(url: URI): WebSocketCapability = WebSocketCapability(
     properties = WebSocketCapabilityProperties(SupportsPush(true), url))
 
   val MAIL_CAPABILITY = MailCapability(
@@ -46,11 +46,11 @@ object DefaultCapabilities {
       MaxSizeAttachmentsPerEmail(20_000_000L),
       emailQuerySortOptions = List("receivedAt", "sentAt", "size", "from", "to", "subject"),
       MayCreateTopLevelMailbox(true)))
-  val QUOTA_CAPABILITY = QuotaCapability()
-  val SHARES_CAPABILITY = SharesCapability()
-  val MDN_CAPABILITY = MDNCapability()
-  val VACATION_RESPONSE_CAPABILITY = VacationResponseCapability()
-  val SUBMISSION_CAPABILITY = SubmissionCapability()
+  val QUOTA_CAPABILITY: QuotaCapability = QuotaCapability()
+  val SHARES_CAPABILITY: SharesCapability = SharesCapability()
+  val MDN_CAPABILITY: MDNCapability = MDNCapability()
+  val VACATION_RESPONSE_CAPABILITY: VacationResponseCapability = VacationResponseCapability()
+  val SUBMISSION_CAPABILITY: SubmissionCapability = SubmissionCapability()
 
   def supported(configuration: JmapRfc8621Configuration): Capabilities = Capabilities.of(
     coreCapability(configuration.maxUploadSize),

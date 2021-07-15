@@ -221,8 +221,8 @@ case class MailboxSetResponse(accountId: AccountId,
 object MailboxSetError {
   val mailboxHasEmailValue: SetErrorType = "mailboxHasEmail"
   val mailboxHasChildValue: SetErrorType = "mailboxHasChild"
-  def mailboxHasEmail(description: SetErrorDescription) = SetError(mailboxHasEmailValue, description, None)
-  def mailboxHasChild(description: SetErrorDescription) = SetError(mailboxHasChildValue, description, None)
+  def mailboxHasEmail(description: SetErrorDescription): SetError = SetError(mailboxHasEmailValue, description, None)
+  def mailboxHasChild(description: SetErrorDescription): SetError = SetError(mailboxHasChildValue, description, None)
 }
 
 object MailboxCreationResponse {

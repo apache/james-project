@@ -59,7 +59,7 @@ case object NotInMailboxFilter extends MailboxFilter {
 }
 
 object MailboxFilter {
-  def buildQuery(request: EmailQueryRequest, searchQuery: SearchQuery, capabilities: Set[CapabilityIdentifier], session: MailboxSession) = {
+  def buildQuery(request: EmailQueryRequest, searchQuery: SearchQuery, capabilities: Set[CapabilityIdentifier], session: MailboxSession): MultimailboxesSearchQuery = {
     val multiMailboxQueryBuilder = MultimailboxesSearchQuery.from(searchQuery)
         .inNamespace(queryNamespace(capabilities, session))
 

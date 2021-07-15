@@ -132,8 +132,8 @@ object EmailHeaderName {
   val MESSAGE_ID: EmailHeaderName = EmailHeaderName("Message-Id")
   val IN_REPLY_TO: EmailHeaderName = EmailHeaderName("In-Reply-To")
 
-  val MESSAGE_ID_NAMES = Set(REFERENCES, MESSAGE_ID, IN_REPLY_TO)
-  val ADDRESSES_NAMES = Set(SENDER, FROM, TO, CC, BCC, REPLY_TO)
+  val MESSAGE_ID_NAMES: Set[EmailHeaderName] = Set(REFERENCES, MESSAGE_ID, IN_REPLY_TO)
+  val ADDRESSES_NAMES: Set[EmailHeaderName] = Set(SENDER, FROM, TO, CC, BCC, REPLY_TO)
 }
 
 case class EmailHeaderName(value: String) extends AnyVal

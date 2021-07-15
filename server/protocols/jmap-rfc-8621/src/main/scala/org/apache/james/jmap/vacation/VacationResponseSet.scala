@@ -106,8 +106,8 @@ case class VacationResponseSetResponse(accountId: AccountId,
                                        notDestroyed: Option[Map[String, VacationResponseSetError]])
 
 object VacationResponseSetError {
-  def invalidArgument(description: Option[SetErrorDescription]) = VacationResponseSetError(invalidArgumentValue, description)
-  def serverFail(description: Option[SetErrorDescription]) = VacationResponseSetError(serverFailValue, description)
+  def invalidArgument(description: Option[SetErrorDescription]): VacationResponseSetError = VacationResponseSetError(invalidArgumentValue, description)
+  def serverFail(description: Option[SetErrorDescription]): VacationResponseSetError = VacationResponseSetError(serverFailValue, description)
 }
 
 case class VacationResponseUpdateResponse(value: JsObject)

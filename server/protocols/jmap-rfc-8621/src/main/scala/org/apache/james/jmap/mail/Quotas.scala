@@ -26,7 +26,7 @@ import org.apache.james.mailbox.model.{QuotaRoot => ModelQuotaRoot}
 import scala.compat.java8.OptionConverters._
 
 object QuotaRoot{
-  def toJmap(quotaRoot: ModelQuotaRoot) = QuotaRoot(quotaRoot.getValue, quotaRoot.getDomain.asScala)
+  def toJmap(quotaRoot: ModelQuotaRoot): QuotaRoot = QuotaRoot(quotaRoot.getValue, quotaRoot.getDomain.asScala)
 }
 
 case class QuotaRoot(value: String, domain: Option[Domain]) {
@@ -44,7 +44,7 @@ object Quotas {
 }
 
 object QuotaId {
-  def fromQuotaRoot(quotaRoot: QuotaRoot) = QuotaId(quotaRoot)
+  def fromQuotaRoot(quotaRoot: QuotaRoot): QuotaId = QuotaId(quotaRoot)
 }
 
 case class QuotaId(quotaRoot: QuotaRoot) extends AnyVal {

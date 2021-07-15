@@ -27,7 +27,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.jdk.CollectionConverters._
 
 object Rfc4314Rights {
-  def fromJava(rights: JavaRfc4314Rights) = Rfc4314Rights(rights.list().asScala.toSeq)
+  def fromJava(rights: JavaRfc4314Rights): Rfc4314Rights = Rfc4314Rights(rights.list().asScala.toSeq)
 
   def fromRights(seq: Seq[Right]): Rfc4314Rights = Rfc4314Rights(seq.map(_.right))
 }
@@ -39,7 +39,7 @@ case class Rfc4314Rights(rights: Seq[JavaRight]) {
 }
 
 object MailboxACL {
-  def fromJava(acl: JavaMailboxACL) = MailboxACL(acl.getEntries
+  def fromJava(acl: JavaMailboxACL): MailboxACL = MailboxACL(acl.getEntries
     .asScala
     .view
     .mapValues(Rfc4314Rights.fromJava)
@@ -59,14 +59,14 @@ case class MailboxACL(entries: Map[EntryKey, Rfc4314Rights]) {
 object Right {
   val UNSUPPORTED: Option[Boolean] = None
 
-  val Administer = Right(JavaRight.Administer)
-  val Expunge = Right(JavaRight.PerformExpunge)
-  val Insert = Right(JavaRight.Insert)
-  val Lookup = Right(JavaRight.Lookup)
-  val Read = Right(JavaRight.Read)
-  val Seen = Right(JavaRight.WriteSeenFlag)
-  val DeleteMessages = Right(JavaRight.DeleteMessages)
-  val Write = Right(JavaRight.Write)
+  val Administer: Right = Right(JavaRight.Administer)
+  val Expunge: Right = Right(JavaRight.PerformExpunge)
+  val Insert: Right = Right(JavaRight.Insert)
+  val Lookup: Right = Right(JavaRight.Lookup)
+  val Read: Right = Right(JavaRight.Read)
+  val Seen: Right = Right(JavaRight.WriteSeenFlag)
+  val DeleteMessages: Right = Right(JavaRight.DeleteMessages)
+  val Write: Right = Right(JavaRight.Write)
 
   private val allRights = Seq(Administer, Expunge, Insert, Lookup, Read, Seen, DeleteMessages, Write)
 
@@ -84,7 +84,7 @@ final case class Right(right: JavaRight) {
 object Rights {
   private val LOGGER: Logger = LoggerFactory.getLogger(classOf[Rights])
 
-  val EMPTY = Rights(Map())
+  val EMPTY: Rights = Rights(Map())
 
   def of(username: Username, right: Right): Rights = of(username, Seq(right))
 
@@ -123,7 +123,7 @@ case object NotApplicable extends RightsApplicability
 case object Unsupported extends RightsApplicability
 
 case class Rights(rights: Map[Username, Seq[Right]]) {
-  def removeEntriesFor(username: Username) = copy(rights = rights - username)
+  def removeEntriesFor(username: Username): Rights = copy(rights = rights - username)
 
   def toMailboxAcl: MailboxACL = {
     val map: Map[EntryKey, Rfc4314Rights] = rights.view

@@ -48,7 +48,7 @@ object MailboxGet {
 case class UnparsedMailboxId(id: Id)
 
 object Ids {
-  val EMPTY = Ids(List())
+  val EMPTY: Ids = Ids(List())
 }
 
 case class Ids(value: List[UnparsedMailboxId])

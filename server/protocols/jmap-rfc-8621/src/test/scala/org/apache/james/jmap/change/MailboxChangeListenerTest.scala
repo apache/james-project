@@ -44,7 +44,7 @@ import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 
 object MailboxChangeListenerTest {
-  val ACCOUNT_ID = AccountId.fromUsername(BOB)
+  val ACCOUNT_ID: AccountId = AccountId.fromUsername(BOB)
   val DEFAULT_NUMBER_OF_CHANGES: Limit = Limit.of(5)
 }
 

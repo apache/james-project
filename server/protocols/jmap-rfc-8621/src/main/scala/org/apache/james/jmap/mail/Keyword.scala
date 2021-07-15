@@ -34,13 +34,13 @@ object Keyword {
       " or {'(' ')' '{' ']' '%' '*' '\"' '\\'} "
 
   private val FLAG_NAME_PATTERN = new UnicodeSet("[[a-z][A-Z][0-9]$_-]").freeze
-  val DRAFT = Keyword.of("$draft").get
-  val SEEN = Keyword.of("$seen").get
-  val FLAGGED = Keyword.of("$flagged").get
-  val ANSWERED = Keyword.of("$answered").get
-  val DELETED = Keyword.of("$deleted").get
-  val RECENT = Keyword.of("$recent").get
-  val FORWARDED = Keyword.of("$forwarded").get
+  val DRAFT: Keyword = Keyword.of("$draft").get
+  val SEEN: Keyword = Keyword.of("$seen").get
+  val FLAGGED: Keyword = Keyword.of("$flagged").get
+  val ANSWERED: Keyword = Keyword.of("$answered").get
+  val DELETED: Keyword = Keyword.of("$deleted").get
+  val RECENT: Keyword = Keyword.of("$recent").get
+  val FORWARDED: Keyword = Keyword.of("$forwarded").get
   val FLAG_VALUE: Boolean = true
   private val NON_EXPOSED_IMAP_KEYWORDS = List(Keyword.RECENT, Keyword.DELETED)
   private val IMAP_SYSTEM_FLAGS: Map[Flags.Flag, Keyword] =

@@ -270,7 +270,7 @@ object EmailHeaders {
       sentAt = extractDate(mime4JMessage, "Date").map(date => UTCDate.from(date, zoneId)))
   }
 
-  def extractSpecificHeaders(properties: Option[Properties])(zoneId: ZoneId, mime4JMessage: Message) = {
+  def extractSpecificHeaders(properties: Option[Properties])(zoneId: ZoneId, mime4JMessage: Message): Map[String,Option[EmailHeaderValue]] = {
     properties.getOrElse(Properties.empty()).value
       .flatMap(property => SpecificHeaderRequest.from(property).toOption)
       .map(_.retrieveHeader(zoneId, mime4JMessage))

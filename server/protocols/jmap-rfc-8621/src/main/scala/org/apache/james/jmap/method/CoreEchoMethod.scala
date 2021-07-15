@@ -27,7 +27,7 @@ import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
 
 class CoreEchoMethod extends Method {
-  override val methodName = MethodName("Core/echo")
+  override val methodName: MethodName = MethodName("Core/echo")
 
   override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): Publisher[InvocationWithContext] = SMono.just(invocation)
 

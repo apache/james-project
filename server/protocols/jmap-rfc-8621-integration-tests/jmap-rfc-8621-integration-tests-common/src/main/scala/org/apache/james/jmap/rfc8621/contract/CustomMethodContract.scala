@@ -74,7 +74,7 @@ import scala.util.{Success, Try}
 
 object CustomMethodContract {
   val CUSTOM: CapabilityIdentifier = "urn:apache:james:params:jmap:custom"
-  val eventId = EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4")
+  val eventId: EventId = EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4")
 
   private val expected_session_object: String =
     s"""{
@@ -219,7 +219,7 @@ class CustomBlobResolver extends BlobResolver {
 
 class CustomMethod extends Method {
 
-  override val methodName = MethodName("Custom/echo")
+  override val methodName: MethodName = MethodName("Custom/echo")
 
   override def process(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession): Publisher[InvocationWithContext] = SMono.just(invocation)
 

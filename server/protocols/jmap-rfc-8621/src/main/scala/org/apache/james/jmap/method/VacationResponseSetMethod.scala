@@ -45,7 +45,7 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 object VacationResponseUpdateResults {
   def empty(): VacationResponseUpdateResults = VacationResponseUpdateResults(Map(), Map())
 
-  def merge(a: VacationResponseUpdateResults, b: VacationResponseUpdateResults) = VacationResponseUpdateResults(a.updateSuccess ++ b.updateSuccess, a.updateFailures ++ b.updateFailures)
+  def merge(a: VacationResponseUpdateResults, b: VacationResponseUpdateResults): VacationResponseUpdateResults = VacationResponseUpdateResults(a.updateSuccess ++ b.updateSuccess, a.updateFailures ++ b.updateFailures)
 }
 
 case class VacationResponseUpdateResults(updateSuccess: Map[String, VacationResponseUpdateResponse],
@@ -54,7 +54,7 @@ sealed trait VacationResponseUpdateResult {
   def updated: Map[String, VacationResponseUpdateResponse]
   def notUpdated: Map[String, VacationResponseSetError]
 
-  def asVacationResponseUpdateResults = VacationResponseUpdateResults(updated, notUpdated)
+  def asVacationResponseUpdateResults: VacationResponseUpdateResults = VacationResponseUpdateResults(updated, notUpdated)
 }
 case object VacationResponseUpdateSuccess extends VacationResponseUpdateResult {
   override def updated: Map[String, VacationResponseUpdateResponse] = Map(VACATION_RESPONSE_PATCH_OBJECT_KEY -> VacationResponseUpdateResponse(JsObject(Seq())))

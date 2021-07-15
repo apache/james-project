@@ -172,8 +172,8 @@ case class Type(value: String) extends AnyVal
 case class Charset(value: String) extends AnyVal
 
 object Disposition {
-  val ATTACHMENT = Disposition("attachment")
-  val INLINE = Disposition("inline")
+  val ATTACHMENT: Disposition = Disposition("attachment")
+  val INLINE: Disposition = Disposition("inline")
 }
 
 case class Disposition(value: String) extends AnyVal

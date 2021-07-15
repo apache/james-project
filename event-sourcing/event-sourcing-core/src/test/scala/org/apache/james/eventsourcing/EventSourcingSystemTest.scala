@@ -38,7 +38,7 @@ import scala.jdk.CollectionConverters._
 object EventSourcingSystemTest {
   val PAYLOAD_1 = "payload1"
   val PAYLOAD_2 = "payload2"
-  val AGGREGATE_ID = TestAggregateId(42)
+  val AGGREGATE_ID: TestAggregateId = TestAggregateId(42)
 
   class MyCommand(val payload: String) extends Command {
     def getPayload: String = payload
@@ -148,7 +148,7 @@ trait EventSourcingSystemTest {
       .isInstanceOf(classOf[IllegalArgumentException])
   }
 
-  def simpleDispatcher(eventStore: EventStore) = new CommandHandler[EventSourcingSystemTest.MyCommand]() {
+  def simpleDispatcher(eventStore: EventStore): CommandHandler[EventSourcingSystemTest.MyCommand] = new CommandHandler[EventSourcingSystemTest.MyCommand]() {
     override def handledClass: Class[EventSourcingSystemTest.MyCommand] = classOf[EventSourcingSystemTest.MyCommand]
 
     override def handle(myCommand: EventSourcingSystemTest.MyCommand): Publisher[JavaList[_ <: Event]] = {
@@ -157,7 +157,7 @@ trait EventSourcingSystemTest {
     }
   }
 
-  def wordCuttingDispatcher(eventStore: EventStore) = new CommandHandler[EventSourcingSystemTest.MyCommand]() {
+  def wordCuttingDispatcher(eventStore: EventStore): CommandHandler[EventSourcingSystemTest.MyCommand] = new CommandHandler[EventSourcingSystemTest.MyCommand]() {
     override def handledClass: Class[EventSourcingSystemTest.MyCommand] = classOf[EventSourcingSystemTest.MyCommand]
 
     override def handle(myCommand: EventSourcingSystemTest.MyCommand): Publisher[JavaList[_ <: Event]] = {

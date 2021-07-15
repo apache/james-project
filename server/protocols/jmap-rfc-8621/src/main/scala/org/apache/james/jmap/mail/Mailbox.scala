@@ -67,7 +67,7 @@ case class MailboxRights(mayReadItems: MayReadItems,
                          maySubmit: MaySubmit)
 
 object MailboxNamespace {
-  def delegated(owner: Username) = DelegatedNamespace(owner)
+  def delegated(owner: Username): DelegatedNamespace = DelegatedNamespace(owner)
 
   def personal = PersonalNamespace
 }

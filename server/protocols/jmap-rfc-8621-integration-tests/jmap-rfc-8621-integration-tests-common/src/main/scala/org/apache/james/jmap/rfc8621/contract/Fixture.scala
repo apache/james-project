@@ -58,7 +58,7 @@ object Fixture {
       .setBody("testmail", StandardCharsets.UTF_8)
       .build
 
-  def baseRequestSpecBuilder(server: GuiceJamesServer) = new RequestSpecBuilder()
+  def baseRequestSpecBuilder(server: GuiceJamesServer): RequestSpecBuilder = new RequestSpecBuilder()
     .setContentType(ContentType.JSON)
     .setAccept(ContentType.JSON)
     .setConfig(newConfig.encoderConfig(encoderConfig.defaultContentCharset(StandardCharsets.UTF_8)))
