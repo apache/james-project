@@ -44,6 +44,7 @@ import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
 import org.apache.james.mailbox.tika.TikaConfiguration;
@@ -113,7 +114,6 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             elasticSearch.getDockerElasticSearch().clientProvider().get(),
             elasticSearch.getDockerElasticSearch().configuration());
 
-        InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         MailboxIdRoutingKeyFactory routingKeyFactory = new MailboxIdRoutingKeyFactory();
 
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
@@ -127,7 +127,7 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 new ElasticSearchIndexer(client,
                     MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
                 new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
-                    new InMemoryId.Factory(), messageIdFactory,
+                    new InMemoryId.Factory(), new InMemoryMessageId.Factory(),
                     MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
                 new MessageToElasticSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES),
                 preInstanciationStage.getSessionProvider(), routingKeyFactory))
@@ -138,6 +138,18 @@ class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest {
         storeMailboxManager = resources.getMailboxManager();
         messageIdManager = resources.getMessageIdManager();
         messageSearchIndex = resources.getSearchIndex();
+        eventBus = resources.getEventBus();
+        messageIdFactory = new InMemoryMessageId.Factory();
+    }
+
+    @Override
+    protected MessageId initNewBasedMessageId() {
+        return InMemoryMessageId.of(100);
+    }
+
+    @Override
+    protected MessageId initOtherBasedMessageId() {
+        return InMemoryMessageId.of(1000);
     }
 
     @Test
