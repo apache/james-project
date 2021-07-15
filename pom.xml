@@ -2830,7 +2830,17 @@
                     <version>0.1.4_0.9.23</version>
                     <configuration>
                         <config>${basedir}/.scalafix.conf</config>
+                        <mode>CHECK</mode>
                     </configuration>
+                    <executions>
+                        <execution>
+                            <id>scala-check-style</id>
+                            <goals>
+                                <goal>scalafix</goal>
+                            </goals>
+                            <phase>compile</phase>
+                        </execution>
+                    </executions>
                 </plugin>
                 <plugin>
                     <groupId>org.scalatest</groupId>
