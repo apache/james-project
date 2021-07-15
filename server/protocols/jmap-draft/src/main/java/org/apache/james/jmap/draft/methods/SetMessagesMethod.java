@@ -30,7 +30,6 @@ import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.SetMessagesRequest;
 import org.apache.james.jmap.draft.model.SetMessagesResponse;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -40,17 +39,14 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class SetMessagesMethod implements Method {
-
     private static final Method.Request.Name METHOD_NAME = Method.Request.name("setMessages");
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messagesSet");
 
     private final Set<SetMessagesProcessor> messagesProcessors;
-    private final MetricFactory metricFactory;
 
     @Inject
-    @VisibleForTesting SetMessagesMethod(Set<SetMessagesProcessor> messagesProcessors, MetricFactory metricFactory) {
+    @VisibleForTesting SetMessagesMethod(Set<SetMessagesProcessor> messagesProcessors) {
         this.messagesProcessors = messagesProcessors;
-        this.metricFactory = metricFactory;
     }
 
     @Override
@@ -68,17 +64,14 @@ public class SetMessagesMethod implements Method {
         Preconditions.checkArgument(request instanceof SetMessagesRequest);
         SetMessagesRequest setMessagesRequest = (SetMessagesRequest) request;
 
-        return Flux.from(metricFactory.decoratePublisherWithTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
-            setMessagesResponse(setMessagesRequest, mailboxSession)
-                .map(responses ->
-                    JmapResponse.builder().methodCallId(methodCallId)
-                        .response(responses)
-                        .responseName(RESPONSE_NAME)
-                        .build())))
+        return setMessagesResponse(setMessagesRequest, mailboxSession)
+            .map(responses -> JmapResponse.builder().methodCallId(methodCallId)
+                .response(responses)
+                .responseName(RESPONSE_NAME)
+                .build())
+            .flux()
             .subscriberContext(context(ACTION, mdc(setMessagesRequest)));
     }
-
-
 
     private MDCBuilder mdc(SetMessagesRequest setMessagesRequest) {
         return MDCBuilder.create()
