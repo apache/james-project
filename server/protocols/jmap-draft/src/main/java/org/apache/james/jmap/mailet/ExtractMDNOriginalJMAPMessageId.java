@@ -27,7 +27,6 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -106,7 +105,7 @@ public class ExtractMDNOriginalJMAPMessageId extends GenericMailet {
                 .from(SearchQuery.of(SearchQuery.mimeMessageID(messageId)))
                 .build();
             return Flux.from(mailboxManager.search(searchByRFC822MessageId, session, limit)).toStream().findFirst();
-        } catch (MailboxException | UsersRepositoryException e) {
+        } catch (UsersRepositoryException e) {
             LOGGER.error("unable to find message with Message-Id: " + messageId, e);
         }
         return Optional.empty();
