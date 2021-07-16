@@ -323,7 +323,7 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @param session
      *            the context for this call, not null
      */
-    Publisher<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, long limit) throws MailboxException;
+    Publisher<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, long limit);
 
     /**
      * Returns the list of MessageId of messages belonging to that Thread
@@ -334,7 +334,7 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      *          the context for this call, not null
      * @return  the list of MessageId of messages belonging to that Thread
      */
-    Publisher<MessageId> getThread(ThreadId threadId, MailboxSession session) throws MailboxException;
+    Publisher<MessageId> getThread(ThreadId threadId, MailboxSession session);
 
     /**
      * Does the given mailbox exist?
