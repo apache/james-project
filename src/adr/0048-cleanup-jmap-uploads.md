@@ -83,3 +83,5 @@ However, relying on clients to enforce effective deletion seems brittle as:
 ## References
 
  - [JIRA](https://issues.apache.org/jira/browse/JAMES-3544)
+ - [PR of this ADR](https://github.com/apache/james-project/pull/544)
+ - [Thread on server-dev mailing list](https://www.mail-archive.com/server-dev@james.apache.org/msg70591.html)
