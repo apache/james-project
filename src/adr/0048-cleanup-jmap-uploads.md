@@ -10,7 +10,7 @@ Not yet implemented.
 
 ## Context
 
-JMAP allow users to upload binary content called blobs to be later referenced via method calls. This includes but is not
+JMAP allows users to upload binary content called blobs to be later referenced via method calls. This includes but is not
 limited to `Email/set` for specifying the blobId of attachments and `Email/import`.
 
 The [specification](https://jmap.io/spec-core.html#binary-data) strongly encourages enforcing the cleanup of these uploads:
@@ -55,8 +55,8 @@ We will implement cleanup of the distributed `UploadRepository`. This will be do
 
 ## Consequences
 
-Upon migrating to the `UploadRepository`, previous uploads will not be carried other. No migration plan is provided as 
-the impact is minimal. Upload prior this change will never be cleaned up. This is acceptable as JMAP implementation are 
+Upon migrating to the `UploadRepository`, previous uploads will not be carried over. No migration plan is provided as 
+the impact is minimal. Upload prior this change will never be cleaned up. This is acceptable as JMAP implementations are
 marked as experimental.
 
 We can clean up attachment storage within the `mailbox-api` and its implementation:
