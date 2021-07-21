@@ -580,27 +580,6 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
   
   </section>
 
-  <section name="Apache HUPA">
-  
-    <p>Apache HUPA 0.0.2 is the latest stable version:</p>
-    <ul>
-
-      <li>Source (ZIP Format): <a href="https://www.apache.org/dyn/closer.lua/james/0.0.2/hupa-parent-0.0.2-source-release.zip">hupa-parent-0.0.2-source-release.zip</a>
-        [<a href="https://downloads.apache.org/james/hupa/0.0.2/hupa-parent-0.0.2-source-release.zip.sha512">SHA-512</a>]
-        [<a href="https://downloads.apache.org/james/hupa/0.0.2/hupa-parent-0.0.2-source-release.zip.asc">PGP</a>]
-      </li>
-    
-    <li>Binary (Java WAR): <a href="https://www.apache.org/dyn/closer.lua/james/0.0.2/hupa-0.0.2.war">hupa-0.0.2.war</a>
-      [<a href="https://downloads.apache.org/james/hupa/0.0.2/hupa-0.0.2.war.sha512">SHA-512</a>]
-      [<a href="https://downloads.apache.org/james/hupa/0.0.2/hupa-0.0.2.war.asc">PGP</a>]
-    </li>
-    
-    <li>Jars (including source and javadocs) for the modules are distributed through the standard 
-    <a href='https://maven.apache.org'>Maven</a> repositories on <a href="https://repo1.maven.org/maven2/org/apache/james/hupa">https://repo1.maven.org/maven2/org/apache/james/hupa</a>.</li>
-    </ul>
-  
-  </section>
-
 </body>
 
 </document>
