@@ -186,7 +186,7 @@ I use the following script to set up the uploads:
 # $2: Key footprint to use for signing
 
 sha512sum $1 > $1.sha512
-gpg -u $2 --output $1.asc --detach-sig $1
+gpg -u $2 --output $1.asc --detach-sig --armor $1
 svn add $1
 svn propset svn:mime-type application/octet-stream $1
 svn add $1.sha512
