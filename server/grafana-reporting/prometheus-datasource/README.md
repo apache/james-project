@@ -39,8 +39,26 @@ scrape_configs:
 Add Prometheus data source to Grafana.\
 You can do this either from [Grafana UI](https://prometheus.io/docs/visualization/grafana/) or from a [configuration file](https://grafana.com/docs/grafana/latest/datasources/prometheus/). 
 
-The following command allow you to run a fresh grafana server :
+The following `docker-compose.yaml` will help you install a simple Prometheus/ Grafana stack :
 
 ```
-docker run -i -p 3000:3000 grafana/grafana
+version: '3'
+#Metric monitoring
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./conf/prometheus.yml:/etc/prometheus/prometheus.yml
 ```
+
+## Getting dashboards
+
+All dasboards can be found [HERE](https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/). Import the different JSON files in this directory to Grafana via UI.
