@@ -279,10 +279,13 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     private Mono<BucketName> emptyBucket(BucketName bucketName) {
         return Mono.fromFuture(() -> client.listObjects(builder -> builder.bucket(bucketName.asString())))
-            .flatMapIterable(ListObjectsResponse::contents)
-            .window(EMPTY_BUCKET_BATCH_SIZE)
-            .flatMap(this::buildListForBatch, DEFAULT_CONCURRENCY)
-            .flatMap(identifiers -> deleteObjects(bucketName, identifiers), DEFAULT_CONCURRENCY)
+            .flatMap(response -> Flux.fromIterable(response.contents())
+                .window(EMPTY_BUCKET_BATCH_SIZE)
+                .flatMap(this::buildListForBatch, DEFAULT_CONCURRENCY)
+                .flatMap(identifiers -> deleteObjects(bucketName, identifiers), DEFAULT_CONCURRENCY)
+                .then(Mono.just(response)))
+            .flux()
+            .takeUntil(list -> !list.isTruncated())
             .then(Mono.just(bucketName));
     }
 
