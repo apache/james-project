@@ -15,8 +15,32 @@ Note: this section is in progress. It will be updated during all the development
 Changes to apply between 3.6.x and 3.7.x will be reported here.
 
 Change list:
-
+ - [Adding the threadId to the ElasticSearch index](#adding-the-threadid-to-the-elasticsearch-index)
  - [Rework message denormalization](#rework-message-denormalization)
+
+### Adding the threadId to the ElasticSearch index
+
+Date 22/07/2021
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3516
+
+Concerned product: Distributed James
+
+Add threadId to James document mapping to enable thread query search.
+
+We already have this field as part of newly created mappings, but we need to explicitly add this field to existing indices by doing:
+```
+curl -X PUT \
+  http://ip:ESport/mailbox_v1/_mapping \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "properties": {
+        "threadId": {
+            "type": "keyword"
+        }
+    }
+}'
+```
 
 ### Rework message denormalization
 
