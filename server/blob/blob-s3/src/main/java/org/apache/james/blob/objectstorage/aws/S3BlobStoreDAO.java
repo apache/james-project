@@ -41,6 +41,7 @@ import org.apache.james.blob.api.ObjectStoreIOException;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.util.DataChunker;
 import org.apache.james.util.ReactorUtils;
+import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
@@ -63,11 +64,11 @@ import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Configuration;
+import software.amazon.awssdk.services.s3.model.Bucket;
 import software.amazon.awssdk.services.s3.model.BucketAlreadyOwnedByYouException;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
-import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
@@ -307,5 +308,14 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .flatMapIterable(ListBucketsResponse::buckets)
                 .flatMap(bucket -> deleteResolvedBucket(BucketName.of(bucket.name())), DEFAULT_CONCURRENCY)
             .then();
+    }
+
+    @Override
+    public Publisher<BucketName> listBuckets() {
+        return Mono.fromFuture(client::listBuckets)
+            .flatMapIterable(ListBucketsResponse::buckets)
+            .map(Bucket::name)
+            .handle((bucket, sink) -> bucketNameResolver.unresolve(BucketName.of(bucket))
+                .ifPresent(sink::next));
     }
 }
