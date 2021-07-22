@@ -17,6 +17,7 @@ Changes to apply between 3.6.x and 3.7.x will be reported here.
 Change list:
  - [Adding the threadId to the ElasticSearch index](#adding-the-threadid-to-the-elasticsearch-index)
  - [Rework message denormalization](#rework-message-denormalization)
+ - [Adding threadId column to message metadata tables](#adding-threadid-column-to-message-metadata-tables)
 
 ### Adding the threadId to the ElasticSearch index
 
