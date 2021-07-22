@@ -26,6 +26,7 @@ import com.google.common.io.ByteSource
 import javax.inject.{Inject, Named}
 import org.apache.james.blob.api.{BlobId, BlobStore, BlobStoreDAO, BucketName}
 import org.reactivestreams.Publisher
+import reactor.core.publisher.Flux
 import reactor.core.scala.publisher.SMono
 
 
@@ -86,4 +87,6 @@ class PassThroughBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
     SMono.fromPublisher(blobStoreDAO.delete(bucketName, blobId))
       .`then`(SMono.just(Boolean.box(true)))
   }
+
+  override def listBuckets(): Publisher[BucketName] = Flux.concat(blobStoreDAO.listBuckets(), Flux.just(defaultBucketName)).distinct()
 }

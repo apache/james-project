@@ -58,6 +58,8 @@ public interface BlobStore {
 
     BucketName getDefaultBucketName();
 
+    Publisher<BucketName> listBuckets();
+
     Publisher<Void> deleteBucket(BucketName bucketName);
 
     Publisher<Boolean> delete(BucketName bucketName, BlobId blobId);
