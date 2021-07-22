@@ -1,0 +1,3089 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "iteration": 1626937233669,
+  "links": [],
+  "panels": [
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "hiddenSeries": false,
+      "id": 23,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "JMAP_request{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"JMAP-request\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "expr": "JMAP_request{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "refId": "B"
+        },
+        {
+          "expr": "JMAP_request{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "refId": "C"
+        },
+        {
+          "expr": "JMAP_request{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "refId": "D"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-request",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:137",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:138",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "hiddenSeries": false,
+      "id": 2,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "JMAP_getMailboxes{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"JMAP-getMailboxes\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "expr": "JMAP_getMailboxes{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "refId": "B"
+        },
+        {
+          "expr": "JMAP_getMailboxes{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "refId": "C"
+        },
+        {
+          "expr": "JMAP_getMailboxes{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "refId": "D"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-getMailboxes",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:215",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:216",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "hiddenSeries": false,
+      "id": 11,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "JMAP_getMessageList{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"JMAP-getMessageList\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "expr": "JMAP_getMessageList{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "refId": "B"
+        },
+        {
+          "expr": "JMAP_getMessageList{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "refId": "C"
+        },
+        {
+          "expr": "JMAP_getMessageList{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "refId": "D"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-getMessageList",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:372",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:373",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "hiddenSeries": false,
+      "id": 21,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "JMAP_getMessages{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"JMAP-getMessages\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "expr": "JMAP_getMessages{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "refId": "B"
+        },
+        {
+          "expr": "JMAP_getMessages{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "refId": "C"
+        },
+        {
+          "expr": "JMAP_getMessages{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "refId": "D"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-getMessages",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:450",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:451",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 6
+      },
+      "hiddenSeries": false,
+      "id": 10,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "JMAP_SetMessageDestructionProcessor{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"JMAP-SetMessageDestructionProcessor\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "expr": "JMAP_SetMessageDestructionProcessor{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "refId": "B"
+        },
+        {
+          "expr": "JMAP_SetMessageDestructionProcessor{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "refId": "C"
+        },
+        {
+          "expr": "JMAP_SetMessageDestructionProcessor{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "refId": "D"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-SetMessageDestructionProcessor",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:528",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:529",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 6
+      },
+      "hiddenSeries": false,
+      "id": 6,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "JMAP_SetMessagesUpdateProcessor{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"JMAP-SetMessagesUpdateProcessor\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "expr": "JMAP_SetMessagesUpdateProcessor{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "refId": "B"
+        },
+        {
+          "expr": "JMAP_SetMessagesUpdateProcessor{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "refId": "C"
+        },
+        {
+          "expr": "JMAP_SetMessagesUpdateProcessor{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "refId": "D"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-SetMessagesUpdateProcessor",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:606",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:607",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 6
+      },
+      "hiddenSeries": false,
+      "id": 16,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "JMAP_SetMessageCreationProcessor{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"JMAP-SetMessageCreationProcessor\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "expr": "JMAP_SetMessageCreationProcessor{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "refId": "B"
+        },
+        {
+          "expr": "JMAP_SetMessageCreationProcessor{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "refId": "C"
+        },
+        {
+          "expr": "JMAP_SetMessageCreationProcessor{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "refId": "D"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-SetMessageCreationProcessor",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:684",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:685",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 6
+      },
+      "hiddenSeries": false,
+      "id": 7,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "JMAP_setMessages{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"JMAP-setMessages\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "expr": "JMAP_setMessages{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "refId": "B"
+        },
+        {
+          "expr": "JMAP_setMessages{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "refId": "C"
+        },
+        {
+          "expr": "JMAP_setMessages{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "refId": "D"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-setMessages",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:762",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:763",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 12
+      },
+      "hiddenSeries": false,
+      "id": 29,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "JMAP_SetMailboxesDestructionProcessor",
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-SetMailboxesDestructionProcessor",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:2009",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:2010",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 12
+      },
+      "hiddenSeries": false,
+      "id": 31,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "JMAP_SetMailboxesCreationProcessor",
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-SetMailboxesCreationProcessor",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:2091",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:2092",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 12
+      },
+      "hiddenSeries": false,
+      "id": 33,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "JMAP_SetMailboxesUpdateProcessor",
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-SetMailboxesUpdateProcessor",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:2173",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:2174",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 12
+      },
+      "hiddenSeries": false,
+      "id": 20,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "JMAP_setMailboxes",
+          "interval": "",
+          "legendFormat": "",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"JMAP-setMailboxes\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-setMailboxes",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1383",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1384",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 20
+      },
+      "hiddenSeries": false,
+      "id": 9,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "JMAP_getVacationResponse{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"JMAP-getVacationResponse\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "expr": "JMAP_getVacationResponse{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "refId": "B"
+        },
+        {
+          "expr": "JMAP_getVacationResponse{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "refId": "C"
+        },
+        {
+          "expr": "JMAP_getVacationResponse{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "refId": "D"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-getVacationResponse",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:921",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:922",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 20
+      },
+      "hiddenSeries": false,
+      "id": 17,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "JMAP_setVacationResponse",
+          "interval": "",
+          "legendFormat": "quantile: {{quantile}}",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"JMAP-setVacationResponse\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-setVacationResponse",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1151",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1152",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 20
+      },
+      "hiddenSeries": false,
+      "id": 24,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "JMAP_mailboxes_provisioning{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"JMAP-mailboxes-provisioning\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "expr": "JMAP_mailboxes_provisioning{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "refId": "B"
+        },
+        {
+          "expr": "JMAP_mailboxes_provisioning{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "refId": "C"
+        },
+        {
+          "expr": "JMAP_mailboxes_provisioning{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "refId": "D"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-mailboxes-provisioning",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1229",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1230",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 20
+      },
+      "hiddenSeries": false,
+      "id": 25,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "JMAP_user_provisioning",
+          "interval": "",
+          "legendFormat": "",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"JMAP-user-provisioning\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-user-provisioning",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1771",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1772",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 26
+      },
+      "hiddenSeries": false,
+      "id": 22,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "JMAP_upload_post",
+          "interval": "",
+          "legendFormat": "",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"JMAP-upload-post\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-upload-post",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1461",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1462",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 26
+      },
+      "hiddenSeries": false,
+      "id": 18,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "JMAP_download_post",
+          "interval": "",
+          "legendFormat": "",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"JMAP-download-post\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-download-post",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1539",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1540",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 26
+      },
+      "hiddenSeries": false,
+      "id": 19,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "JMAP_download_get",
+          "interval": "",
+          "legendFormat": "",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"JMAP-download-get\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-download-get",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1693",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1694",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 26
+      },
+      "hiddenSeries": false,
+      "id": 26,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "JMAP_authentication_post{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"JMAP-authentication-post\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "expr": "JMAP_authentication_post{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "refId": "B"
+        },
+        {
+          "expr": "JMAP_authentication_post{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "refId": "C"
+        },
+        {
+          "expr": "JMAP_authentication_post{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "refId": "D"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-authentication-post",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1849",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1850",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "hiddenSeries": false,
+      "id": 27,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "JMAP_authentication_filter{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"JMAP-authentication-filter\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "expr": "JMAP_authentication_filter{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "refId": "B"
+        },
+        {
+          "expr": "JMAP_authentication_filter{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "refId": "C"
+        },
+        {
+          "expr": "JMAP_authentication_filter{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "refId": "D"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "JMAP-authentication-filter",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1927",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1928",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    }
+  ],
+  "refresh": false,
+  "schemaVersion": 30,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "selected": false,
+          "text": "james:8000",
+          "value": "james:8000"
+        },
+        "datasource": "$datasource",
+        "definition": "label_values(smtpConnections_total, instance)",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": false,
+        "label": null,
+        "multi": false,
+        "name": "WebAdmin",
+        "options": [],
+        "query": {
+          "query": "label_values(smtpConnections_total, instance)",
+          "refId": "prometheus-WebAdmin-Variable-Query"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "prometheus",
+          "value": "prometheus"
+        },
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": false,
+        "label": null,
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": {
+    "from": "now/d",
+    "to": "now/d"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "1h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d"
+    ]
+  },
+  "timezone": "browser",
+  "title": "James / JMAP board",
+  "uid": "blaANQAGke",
+  "version": 1
+}

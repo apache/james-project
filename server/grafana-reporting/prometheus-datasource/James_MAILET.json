@@ -1,0 +1,5287 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "iteration": 1626937330329,
+  "links": [],
+  "panels": [
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "hiddenSeries": false,
+      "id": 23,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "LocalDelivery{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"LocalDelivery\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "LocalDelivery{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"LocalDelivery\"",
+          "refId": "B",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "LocalDelivery{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"LocalDelivery\"",
+          "refId": "C",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "LocalDelivery{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.98\"}",
+          "interval": "",
+          "legendFormat": "p98",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"LocalDelivery\"",
+          "refId": "D",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "LocalDelivery{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"LocalDelivery\"",
+          "refId": "E",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "LocalDelivery{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.999\"}",
+          "interval": "",
+          "legendFormat": "p999",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"LocalDelivery\"",
+          "refId": "F",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "LocalDelivery",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:719",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:720",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "hiddenSeries": false,
+      "id": 2,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "spoolProcessing{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"spoolProcessing\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "spoolProcessing{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"spoolProcessing\"",
+          "refId": "B",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "spoolProcessing{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"spoolProcessing\"",
+          "refId": "C",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "spoolProcessing{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.98\"}",
+          "interval": "",
+          "legendFormat": "p98",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"spoolProcessing\"",
+          "refId": "D",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "spoolProcessing{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"spoolProcessing\"",
+          "refId": "E",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "spoolProcessing{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.999\"}",
+          "interval": "",
+          "legendFormat": "p999",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"spoolProcessing\"",
+          "refId": "F",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "spoolProcessing",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:823",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:824",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "hiddenSeries": false,
+      "id": 15,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "RecipientRewriteTable{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "quantile: {{quantile}}",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"RecipientRewriteTable\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "RecipientRewriteTable{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "quantile: {{quantile}}",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"RecipientRewriteTable\"",
+          "refId": "B",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "RecipientRewriteTable{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "quantile: {{quantile}}",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"RecipientRewriteTable\"",
+          "refId": "C",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "RecipientRewriteTable{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.98\"}",
+          "interval": "",
+          "legendFormat": "quantile: {{quantile}}",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"RecipientRewriteTable\"",
+          "refId": "D",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "RecipientRewriteTable{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "quantile: {{quantile}}",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"RecipientRewriteTable\"",
+          "refId": "E",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "RecipientRewriteTable{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.999\"}",
+          "interval": "",
+          "legendFormat": "quantile: {{quantile}}",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"RecipientRewriteTable\"",
+          "refId": "F",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "RecipientRewriteTable",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1300",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1301",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "hiddenSeries": false,
+      "id": 21,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ToProcessor{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ToProcessor\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ToProcessor{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ToProcessor\"",
+          "refId": "B",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ToProcessor{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ToProcessor\"",
+          "refId": "C",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ToProcessor{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.98\"}",
+          "interval": "",
+          "legendFormat": "p98",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ToProcessor\"",
+          "refId": "D",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ToProcessor{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ToProcessor\"",
+          "refId": "E",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ToProcessor{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.999\"}",
+          "interval": "",
+          "legendFormat": "p999",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ToProcessor\"",
+          "refId": "F",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "ToProcessor",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:929",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:930",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 6
+      },
+      "hiddenSeries": false,
+      "id": 10,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "PostmasterAlias{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"PostmasterAlias\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "PostmasterAlias{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"PostmasterAlias\"",
+          "refId": "B",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "PostmasterAlias{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"PostmasterAlias\"",
+          "refId": "C",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "PostmasterAlias{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.98\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"PostmasterAlias\"",
+          "refId": "D",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "PostmasterAlias{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.98\"}",
+          "interval": "",
+          "legendFormat": "p98",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"PostmasterAlias\"",
+          "refId": "E",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "PostmasterAlias{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"PostmasterAlias\"",
+          "refId": "F",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "PostmasterAlias{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.999\"}",
+          "interval": "",
+          "legendFormat": "p999",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"PostmasterAlias\"",
+          "refId": "G",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "PostmasterAlias",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:982",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:983",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 6
+      },
+      "hiddenSeries": false,
+      "id": 14,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "RemoveMimeHeader{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "quantile: {{quantile}}",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"RemoveMimeHeader\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "RemoveMimeHeader{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "quantile: {{quantile}}",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"RemoveMimeHeader\"",
+          "refId": "B",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "RemoveMimeHeader{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "quantile: {{quantile}}",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"RemoveMimeHeader\"",
+          "refId": "C",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "RemoveMimeHeader{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.98\"}",
+          "interval": "",
+          "legendFormat": "quantile: {{quantile}}",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"RemoveMimeHeader\"",
+          "refId": "D",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "RemoveMimeHeader{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "quantile: {{quantile}}",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"RemoveMimeHeader\"",
+          "refId": "E",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "RemoveMimeHeader{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.999\"}",
+          "interval": "",
+          "legendFormat": "quantile: {{quantile}}",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"RemoveMimeHeader\"",
+          "refId": "F",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "RemoveMimeHeader",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1247",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1248",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 6
+      },
+      "hiddenSeries": false,
+      "id": 24,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ICALToHeader{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "quantile: {{quantile}}",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ICALToHeader\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ICALToHeader{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "quantile: {{quantile}}",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ICALToHeader\"",
+          "refId": "B",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ICALToHeader{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ICALToHeader\"",
+          "refId": "C",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ICALToHeader{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.98\"}",
+          "interval": "",
+          "legendFormat": "quantile: {{quantile}}",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ICALToHeader\"",
+          "refId": "D",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ICALToHeader{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "quantile: {{quantile}}",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ICALToHeader\"",
+          "refId": "E",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ICALToHeader{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.999\"}",
+          "interval": "",
+          "legendFormat": "quantile: {{quantile}}",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ICALToHeader\"",
+          "refId": "F",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "ICALToHeader",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1512",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1513",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 6
+      },
+      "hiddenSeries": false,
+      "id": 20,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "StripAttachment{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"StripAttachment\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "StripAttachment{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"StripAttachment\"",
+          "refId": "B",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "StripAttachment{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"StripAttachment\"",
+          "refId": "C",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "StripAttachment{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.98\"}",
+          "interval": "",
+          "legendFormat": "p98",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"StripAttachment\"",
+          "refId": "D",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "StripAttachment{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"StripAttachment\"",
+          "refId": "E",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "StripAttachment{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.999\"}",
+          "interval": "",
+          "legendFormat": "p999",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"StripAttachment\"",
+          "refId": "F",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "StripAttachment",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1353",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1354",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 12
+      },
+      "hiddenSeries": false,
+      "id": 9,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "MimeDecodingMailet{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"MimeDecodingMailet\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "MimeDecodingMailet{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"MimeDecodingMailet\"",
+          "refId": "B",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "MimeDecodingMailet{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"MimeDecodingMailet\"",
+          "refId": "C",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "MimeDecodingMailet{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.98\"}",
+          "interval": "",
+          "legendFormat": "p98",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"MimeDecodingMailet\"",
+          "refId": "D",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "MimeDecodingMailet{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"MimeDecodingMailet\"",
+          "refId": "E",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "MimeDecodingMailet{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.999\"}",
+          "interval": "",
+          "legendFormat": "p999",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"MimeDecodingMailet\"",
+          "refId": "F",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "MimeDecodingMailet",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1406",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1407",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 12
+      },
+      "hiddenSeries": false,
+      "id": 17,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ICalendarParser{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ICalendarParser\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ICalendarParser{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ICalendarParser\"",
+          "refId": "B",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ICalendarParser{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ICalendarParser\"",
+          "refId": "C",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ICalendarParser{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.98\"}",
+          "interval": "",
+          "legendFormat": "p98",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ICalendarParser\"",
+          "refId": "D",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ICalendarParser{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ICalendarParser\"",
+          "refId": "E",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ICalendarParser{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.999\"}",
+          "interval": "",
+          "legendFormat": "p999",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ICalendarParser\"",
+          "refId": "F",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "ICalendarParser",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1459",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1460",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 12
+      },
+      "hiddenSeries": false,
+      "id": 18,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "VacationMailet{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"VacationMailet\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "VacationMailet{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"VacationMailet\"",
+          "refId": "B",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "VacationMailet{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.98\"}",
+          "interval": "",
+          "legendFormat": "p98",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"VacationMailet\"",
+          "refId": "C",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "VacationMailet{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"VacationMailet\"",
+          "refId": "D",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "VacationMailet{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.999\"}",
+          "interval": "",
+          "legendFormat": "p999",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"VacationMailet\"",
+          "refId": "E",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "VacationMailet",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:255",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:256",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 12
+      },
+      "hiddenSeries": false,
+      "id": 25,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ICALToJsonAttribute{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ICALToJsonAttribute\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ICALToJsonAttribute{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ICALToJsonAttribute\"",
+          "refId": "B",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ICALToJsonAttribute{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ICALToJsonAttribute\"",
+          "refId": "C",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ICALToJsonAttribute{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.98\"}",
+          "interval": "",
+          "legendFormat": "p98",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ICALToJsonAttribute\"",
+          "refId": "D",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ICALToJsonAttribute{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ICALToJsonAttribute\"",
+          "refId": "E",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "ICALToJsonAttribute{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.999\"}",
+          "interval": "",
+          "legendFormat": "p999",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"ICALToJsonAttribute\"",
+          "refId": "F",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "ICALToJsonAttribute",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1565",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1566",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "hiddenSeries": false,
+      "id": 22,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "connected",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "AmqpForwardAttribute{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.5\"}",
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"AmqpForwardAttribute\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "AmqpForwardAttribute{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"AmqpForwardAttribute\"",
+          "refId": "B",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "AmqpForwardAttribute{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"AmqpForwardAttribute\"",
+          "refId": "C",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "AmqpForwardAttribute{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.98\"}",
+          "interval": "",
+          "legendFormat": "p98",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"AmqpForwardAttribute\"",
+          "refId": "D",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "AmqpForwardAttribute{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"AmqpForwardAttribute\"",
+          "refId": "E",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "expr": "AmqpForwardAttribute{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.999\"}",
+          "interval": "",
+          "legendFormat": "p999",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"AmqpForwardAttribute\"",
+          "refId": "F",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "AmqpForwardAttribute",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:202",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:203",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 30,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "selected": false,
+          "text": "james:8000",
+          "value": "james:8000"
+        },
+        "datasource": "$datasource",
+        "definition": "label_values(smtpConnections_total, instance)",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": false,
+        "label": null,
+        "multi": false,
+        "name": "WebAdmin",
+        "options": [],
+        "query": {
+          "query": "label_values(smtpConnections_total, instance)",
+          "refId": "prometheus-WebAdmin-Variable-Query"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "prometheus",
+          "value": "prometheus"
+        },
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": false,
+        "label": null,
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-5m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "1h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d"
+    ]
+  },
+  "timezone": "browser",
+  "title": "James / MAILET",
+  "uid": "2_7Qak1Mk",
+  "version": 1
+}
