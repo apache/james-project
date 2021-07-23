@@ -131,11 +131,11 @@ Request count for the SMTP protocol
 
 Some example dashboards: +
 Latencies for the IMAP protocol +
-image::JMAP_board.png +
+image::JMAP_board.png[JMAP] +
 Latencies for the IMAP protocol +
-image::IMAP_board.png +
+image::IMAP_board.png[IMAP] +
 JVM statistics (heap, gcs, etc...) +
-image::JVM_board.png
+image::JVM_board.png[JVM]
 
 == Expose metrics for Elasticsearch collection
 
