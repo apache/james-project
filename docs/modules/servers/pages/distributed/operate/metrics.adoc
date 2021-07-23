@@ -112,6 +112,10 @@ Latencies and query counts for DNS resolution.
 Latencies for the IMAP protocol
 - https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_IMAP_CountBoard.json[IMAP counts] :
 Request counts for the IMAP protocol
+- https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_JMAP_Board.json[JMAP] :
+Latencies for the JMAP protocol
+- https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_JMAP_CountBoard.json[JMAP counts] :
+Request counts for the JMAP protocol
 - https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_JVM.json[JVM] :
 JVM statistics (heap, gcs, etc...)
 - https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_MAILET.json[Mailets] :
@@ -125,9 +129,13 @@ SMTP latencies reports
 - https://github.com/apache/james-project/tree/master/server/grafana-reporting/prometheus-datasource/James_SMTP_CountBoard.json[SMTP count] :
 Request count for the SMTP protocol
 
-This is for instance how the JMAP dashboard looks like: +
-
-image::metrics.png[metrics for the JMAP protocol request latencies]
+Some example dashboards: +
+Latencies for the IMAP protocol +
+image::JMAP_board.png +
+Latencies for the IMAP protocol +
+image::IMAP_board.png +
+JVM statistics (heap, gcs, etc...) +
+image::JVM_board.png
 
 == Expose metrics for Elasticsearch collection
 
