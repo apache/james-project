@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james;
 
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -40,7 +41,12 @@ class JamesCapabilitiesServerTest {
     }
 
     @RegisterExtension
-    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<JPAJamesConfiguration>(tmpDir ->
+        JPAJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .usersRepository(DEFAULT)
+            .build())
         .server(configuration -> JPAJamesServerMain.createServer(configuration)
             .overrideWith(new TestJPAConfigurationModule())
             .overrideWith(binder -> binder.bind(MailboxManager.class).toInstance(mailboxManager())))

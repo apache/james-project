@@ -19,6 +19,7 @@
 
 package org.apache.james;
 
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Durations.FIVE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Durations.ONE_MINUTE;
@@ -41,7 +42,12 @@ import com.google.common.base.Strings;
 class JPAJamesServerTest implements JamesServerContract {
 
     @RegisterExtension
-    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<JPAJamesConfiguration>(tmpDir ->
+        JPAJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .usersRepository(DEFAULT)
+            .build())
         .server(configuration -> JPAJamesServerMain.createServer(configuration)
             .overrideWith(new TestJPAConfigurationModule()))
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)

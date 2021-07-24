@@ -17,8 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.data;
 
+import org.apache.james.GuiceModuleTestExtension;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.inject.Module;
@@ -27,11 +28,11 @@ public class LdapTestExtension implements GuiceModuleTestExtension {
 
     private DockerLdapRule ldapRule;
 
-    LdapTestExtension() {
+    public LdapTestExtension() {
         this(new DockerLdapRule());
     }
 
-    LdapTestExtension(DockerLdapRule ldapRule) {
+    public LdapTestExtension(DockerLdapRule ldapRule) {
         this.ldapRule = ldapRule;
     }
 

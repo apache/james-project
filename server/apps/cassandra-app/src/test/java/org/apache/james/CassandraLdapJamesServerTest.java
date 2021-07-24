@@ -29,6 +29,7 @@ import java.time.Duration;
 
 import org.apache.commons.net.imap.IMAPClient;
 import org.apache.james.core.Domain;
+import org.apache.james.data.LdapTestExtension;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;

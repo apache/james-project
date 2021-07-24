@@ -21,10 +21,8 @@ package org.apache.james.modules.data;
 import com.google.inject.AbstractModule;
 
 public class JPADataModule extends AbstractModule {
-
     @Override
     protected void configure() {
-        install(new JPAUsersRepositoryModule());
         install(new JPADomainListModule());
         install(new JPARecipientRewriteTableModule());
         install(new JPAMailRepositoryModule());

@@ -17,9 +17,10 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.data;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.GuiceModuleTestRule;
 import org.apache.james.user.ldap.DockerLdapSingleton;
 import org.apache.james.user.ldap.LdapRepositoryConfiguration;
 import org.junit.runner.Description;
