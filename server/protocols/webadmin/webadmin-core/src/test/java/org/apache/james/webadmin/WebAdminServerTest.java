@@ -22,6 +22,7 @@ import static io.restassured.RestAssured.when;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.blankOrNullString;
 
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.Port;
@@ -74,6 +75,25 @@ class WebAdminServerTest {
                 .get()
             .then()
                 .body(is(firstAnswer));
+        } finally {
+            server.destroy();
+        }
+    }
+
+    @Test
+    void serverFieldShouldBeHidden() {
+        WebAdminServer server = WebAdminUtils.createWebAdminServer(myPublicRouteWithConstAnswer("1"))
+            .start();
+
+        try {
+            RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(server)
+                .setBasePath("/myRoute")
+                .build();
+
+            when()
+                .get()
+            .then()
+                .header("Server", blankOrNullString());
         } finally {
             server.destroy();
         }

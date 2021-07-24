@@ -114,6 +114,7 @@ public class WebAdminServer implements Startable {
             service.awaitInitialization();
             LOGGER.info("Web admin server started");
         }
+        hideSpecificResponseHeader();
         return this;
     }
 
@@ -181,6 +182,10 @@ public class WebAdminServer implements Startable {
                 .cause(ex)
                 .asString());
         });
+    }
+
+    private void hideSpecificResponseHeader() {
+        service.before(new ResponseHeaderFilter());
     }
 
     @PreDestroy
