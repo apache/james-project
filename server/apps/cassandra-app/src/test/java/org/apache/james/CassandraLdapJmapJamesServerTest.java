@@ -19,6 +19,7 @@
 
 package org.apache.james;
 
+import org.apache.james.data.LdapTestExtension;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.modules.TestJMAPServerModule;

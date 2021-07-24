@@ -19,6 +19,7 @@
 
 package org.apache.james;
 
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -34,7 +35,6 @@ import org.apache.james.domainlist.jpa.model.JPADomain;
 import org.apache.james.mailrepository.jpa.JPAUrl;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
-import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.user.jpa.model.JPAUser;
 import org.junit.After;
 import org.junit.Before;
@@ -56,9 +56,10 @@ public class JPAJamesServerTest {
     }
 
     private org.apache.james.GuiceJamesServer createJamesServer() throws IOException {
-        Configuration configuration = Configuration.builder()
+        JPAJamesConfiguration configuration = JPAJamesConfiguration.builder()
             .workingDirectory(temporaryFolder.newFolder())
             .configurationFromClasspath()
+            .usersRepository(DEFAULT)
             .build();
 
         return JPAJamesServerMain.createServer(configuration)

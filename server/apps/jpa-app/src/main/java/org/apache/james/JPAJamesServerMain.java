@@ -19,9 +19,11 @@
 
 package org.apache.james;
 
+import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.data.JPADataModule;
+import org.apache.james.modules.data.JPAUsersRepositoryModule;
 import org.apache.james.modules.data.SieveJPARepositoryModules;
 import org.apache.james.modules.mailbox.DefaultEventModule;
 import org.apache.james.modules.mailbox.JPAMailboxModule;
@@ -51,7 +53,6 @@ import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
-import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -99,7 +100,7 @@ public class JPAJamesServerMain implements JamesServerMain {
         new MailetProcessingModule(), JPA_SERVER_MODULE, PROTOCOLS);
 
     public static void main(String[] args) throws Exception {
-        Configuration configuration = Configuration.builder()
+        JPAJamesConfiguration configuration = JPAJamesConfiguration.builder()
             .useWorkingDirectoryEnvProperty()
             .build();
 
@@ -110,9 +111,10 @@ public class JPAJamesServerMain implements JamesServerMain {
         JamesServerMain.main(server);
     }
 
-    static GuiceJamesServer createServer(Configuration configuration) {
+    static GuiceJamesServer createServer(JPAJamesConfiguration configuration) {
         return GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(JPA_MODULE_AGGREGATE);
+            .combineWith(JPA_MODULE_AGGREGATE)
+            .combineWith(new UsersRepositoryModuleChooser(new JPAUsersRepositoryModule())
+                .chooseModules(configuration.getUsersRepositoryImplementation()));
     }
-
 }

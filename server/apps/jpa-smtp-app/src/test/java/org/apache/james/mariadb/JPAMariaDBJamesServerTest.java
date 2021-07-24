@@ -19,6 +19,7 @@
 
 package org.apache.james.mariadb;
 
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -28,9 +29,9 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.JPAJamesConfiguration;
 import org.apache.james.JPAJamesServerMain;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
-import org.apache.james.server.core.configuration.Configuration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -62,8 +63,9 @@ public class JPAMariaDBJamesServerTest {
     }
 
     private org.apache.james.GuiceJamesServer createJamesServer(String mariaDBUrl) throws IOException {
-        Configuration configuration = Configuration.builder()
+        JPAJamesConfiguration configuration = JPAJamesConfiguration.builder()
             .workingDirectory(temporaryFolder.newFolder())
+            .usersRepository(DEFAULT)
             .configurationFromClasspath()
             .build();
 

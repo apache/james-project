@@ -19,12 +19,19 @@
 
 package org.apache.james;
 
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
+
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JPAJamesServerWithAuthenticatedDatabaseSqlValidationTest extends JPAJamesServerWithSqlValidationTest {
 
     @RegisterExtension
-    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<JPAJamesConfiguration>(tmpDir ->
+        JPAJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .usersRepository(DEFAULT)
+            .build())
         .server(configuration -> JPAJamesServerMain.createServer(configuration)
             .overrideWith(new TestJPAConfigurationModuleWithSqlValidation.WithDatabaseAuthentication()))
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)

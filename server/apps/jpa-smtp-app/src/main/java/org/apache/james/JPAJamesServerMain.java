@@ -19,9 +19,11 @@
 
 package org.apache.james;
 
+import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.data.JPADataModule;
 import org.apache.james.modules.data.JPAEntityManagerModule;
+import org.apache.james.modules.data.JPAUsersRepositoryModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.queue.activemq.ActiveMQQueueModule;
@@ -35,7 +37,6 @@ import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.modules.server.WebAdminServerModule;
-import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -62,7 +63,7 @@ public class JPAJamesServerMain implements JamesServerMain {
         new ElasticSearchMetricReporterModule());
 
     public static void main(String[] args) throws Exception {
-        Configuration configuration = Configuration.builder()
+        JPAJamesConfiguration configuration = JPAJamesConfiguration.builder()
             .useWorkingDirectoryEnvProperty()
             .build();
 
@@ -72,9 +73,11 @@ public class JPAJamesServerMain implements JamesServerMain {
         JamesServerMain.main(server);
     }
 
-    public static GuiceJamesServer createServer(Configuration configuration) {
+    public static GuiceJamesServer createServer(JPAJamesConfiguration configuration) {
         return GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(JPA_SERVER_MODULE,  PROTOCOLS, new DKIMMailetModule());
+            .combineWith(JPA_SERVER_MODULE,  PROTOCOLS, new DKIMMailetModule())
+            .combineWith(new UsersRepositoryModuleChooser(new JPAUsersRepositoryModule())
+                .chooseModules(configuration.getUsersRepositoryImplementation()));
     }
 
 }
