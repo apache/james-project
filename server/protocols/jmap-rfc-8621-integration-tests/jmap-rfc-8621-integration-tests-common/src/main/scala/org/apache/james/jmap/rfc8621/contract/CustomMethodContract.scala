@@ -22,7 +22,6 @@ package org.apache.james.jmap.rfc8621.contract
 import java.io.{ByteArrayInputStream, InputStream}
 import java.net.URI
 import java.nio.charset.StandardCharsets
-
 import com.google.inject.AbstractModule
 import com.google.inject.multibindings.Multibinder
 import eu.timepit.refined.auto._
@@ -31,6 +30,7 @@ import eu.timepit.refined.refineV
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.http.ContentType.JSON
+
 import javax.inject.{Inject, Named}
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
@@ -38,6 +38,7 @@ import org.apache.james.GuiceJamesServer
 import org.apache.james.events.Event.EventId
 import org.apache.james.events.EventBus
 import org.apache.james.jmap.api.model.AccountId
+import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeEvent, TypeName}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.MethodName
@@ -46,7 +47,6 @@ import org.apache.james.jmap.core.{Capability, CapabilityProperties, State}
 import org.apache.james.jmap.draft.JmapGuiceProbe
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.mail
-import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.method.{InvocationWithContext, Method}
 import org.apache.james.jmap.rfc8621.contract.CustomMethodContract.CUSTOM
 import org.apache.james.jmap.rfc8621.contract.DownloadContract.accountId

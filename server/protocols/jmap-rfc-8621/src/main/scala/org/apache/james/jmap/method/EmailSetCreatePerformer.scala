@@ -21,15 +21,16 @@ package org.apache.james.jmap.method
 
 import java.time.ZonedDateTime
 import java.util.Date
-
 import eu.timepit.refined.auto._
+
 import javax.inject.Inject
 import javax.mail.Flags
 import org.apache.james.jmap.JMAPConfiguration
+import org.apache.james.jmap.api.model.Size.sanitizeSize
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Properties, SetError, UTCDate}
 import org.apache.james.jmap.json.EmailSetSerializer
-import org.apache.james.jmap.mail.{BlobId, Email, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailSetRequest, ThreadId}
+import org.apache.james.jmap.mail.{BlobId, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailSetRequest, ThreadId}
 import org.apache.james.jmap.method.EmailSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
 import org.apache.james.jmap.routes.{BlobNotFoundException, BlobResolvers}
 import org.apache.james.mailbox.MessageManager.AppendCommand
@@ -112,7 +113,7 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
     } yield {
       val blobId: Option[BlobId] = BlobId.of(appendResult.getId.getMessageId).toOption
       val threadId: ThreadId = ThreadId.fromJava(appendResult.getThreadId)
-      CreationSuccess(clientId, EmailCreationResponse(appendResult.getId.getMessageId, blobId, threadId, Email.sanitizeSize(appendResult.getSize)))
+      CreationSuccess(clientId, EmailCreationResponse(appendResult.getId.getMessageId, blobId, threadId, sanitizeSize(appendResult.getSize)))
     }
   }
 

@@ -20,17 +20,18 @@
 package org.apache.james.jmap.method
 
 import java.util.Date
-
 import eu.timepit.refined.auto._
+
 import javax.inject.Inject
 import org.apache.james.jmap.api.change.EmailChangeRepository
+import org.apache.james.jmap.api.model.Size.sanitizeSize
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, SetError, UuidState}
 import org.apache.james.jmap.json.{EmailSetSerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.{BlobId, Email, EmailCreationId, EmailCreationResponse, EmailImport, EmailImportRequest, EmailImportResponse, ThreadId, ValidatedEmailImport}
+import org.apache.james.jmap.mail.{BlobId, EmailCreationId, EmailCreationResponse, EmailImport, EmailImportRequest, EmailImportResponse, ThreadId, ValidatedEmailImport}
 import org.apache.james.jmap.method.EmailImportMethod.{ImportFailure, ImportResult, ImportResults, ImportSuccess, ImportWithBlob}
 import org.apache.james.jmap.routes.{Blob, BlobNotFoundException, BlobResolvers, ProcessingContext, SessionSupplier}
 import org.apache.james.mailbox.MessageManager.AppendCommand
@@ -173,7 +174,7 @@ class EmailImportMethod @Inject() (val metricFactory: MetricFactory,
   private def asEmailCreationResponse(appendResult: MessageManager.AppendResult): EmailCreationResponse = {
     val blobId: Option[BlobId] = BlobId.of(appendResult.getId.getMessageId).toOption
     val threadId: ThreadId = ThreadId.fromJava(appendResult.getThreadId)
-    EmailCreationResponse(appendResult.getId.getMessageId, blobId, threadId, Email.sanitizeSize(appendResult.getSize))
+    EmailCreationResponse(appendResult.getId.getMessageId, blobId, threadId, sanitizeSize(appendResult.getSize))
   }
 
   private def retrieveState(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[UuidState] =
