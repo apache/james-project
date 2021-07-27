@@ -21,10 +21,14 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import static org.apache.james.MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE;
 
+import java.util.List;
+
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.jmap.rfc8621.contract.ThreadGetContract;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -35,4 +39,15 @@ public class MemoryThreadGetMethodTest implements ThreadGetContract {
             .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .overrideWith(new TestJMAPServerModule()))
         .build();
+
+    @Override
+    public void awaitMessageCount(List<MailboxId> mailboxIds, SearchQuery query, long messageCount) {
+
+    }
+
+    @Override
+    public void initElasticSearchClient() {
+
+    }
+
 }

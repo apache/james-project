@@ -20,7 +20,9 @@
 package org.apache.james.jmap.rfc8621.contract
 
 import java.nio.charset.StandardCharsets
+import java.util
 
+import com.google.common.collect.ImmutableList
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
@@ -31,7 +33,7 @@ import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.mailbox.MessageManager
-import org.apache.james.mailbox.model.MailboxPath
+import org.apache.james.mailbox.model.{MailboxId, MailboxPath, SearchQuery}
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.mime4j.stream.RawField
 import org.apache.james.modules.MailboxProbeImpl
@@ -39,8 +41,15 @@ import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Test}
 
 trait ThreadGetContract {
+
+  protected def awaitMessageCount(mailboxIds: util.List[MailboxId], query: SearchQuery, messageCount: Long): Unit
+
+  protected def initElasticSearchClient(): Unit
+
   @BeforeEach
   def setUp(server: GuiceJamesServer): Unit = {
+    initElasticSearchClient()
+
     server.getProbe(classOf[DataProbeImpl])
       .fluent
       .addDomain(DOMAIN.asString)
@@ -154,6 +163,7 @@ trait ThreadGetContract {
         MessageManager.AppendCommand.from(Message.Builder.of.setSubject("Test")
         .setMessageId("Message-ID-1")
           .setBody("testmail", StandardCharsets.UTF_8)))
+    awaitMessageCount(ImmutableList.of, SearchQuery.matchAll, 1)
 
     // message2 reply to message1
     val message2: MessageManager.AppendResult = server.getProbe(classOf[MailboxProbeImpl])
@@ -162,6 +172,7 @@ trait ThreadGetContract {
           .setMessageId("Message-ID-2")
           .setField(new RawField("In-Reply-To", "Message-ID-1"))
           .setBody("testmail", StandardCharsets.UTF_8)))
+    awaitMessageCount(ImmutableList.of, SearchQuery.matchAll, 2)
 
     // message3 related to message1 through Subject and References message1's Message-ID
     val message3: MessageManager.AppendResult = server.getProbe(classOf[MailboxProbeImpl])
@@ -171,6 +182,8 @@ trait ThreadGetContract {
           .setField(new RawField("In-Reply-To", "Random-InReplyTo"))
           .addField(new RawField("References", "Message-ID-1"))
           .setBody("testmail", StandardCharsets.UTF_8)))
+
+    awaitMessageCount(ImmutableList.of, SearchQuery.matchAll, 3)
 
     val threadId = message1.getThreadId.serialize()
     val message1Id = message1.getId.getMessageId.serialize()
@@ -236,6 +249,8 @@ trait ThreadGetContract {
         MessageManager.AppendCommand.from(Message.Builder.of.setSubject("Test")
           .setMessageId("Message-ID-1")
           .setBody("testmail", StandardCharsets.UTF_8)))
+    awaitMessageCount(ImmutableList.of, SearchQuery.matchAll, 1)
+
     // message2 reply to message1
     val message2: MessageManager.AppendResult = server.getProbe(classOf[MailboxProbeImpl])
       .appendMessageAndGetAppendResult(BOB.asString(), bobPath,
@@ -252,6 +267,8 @@ trait ThreadGetContract {
           .setMessageId("Message-ID-3")
           .setBody("testmail", StandardCharsets.UTF_8)))
     val threadB = message3.getThreadId.serialize()
+
+    awaitMessageCount(ImmutableList.of, SearchQuery.matchAll, 3)
 
     val message1Id = message1.getId.getMessageId.serialize()
     val message2Id = message2.getId.getMessageId.serialize()
@@ -282,37 +299,11 @@ trait ThreadGetContract {
       .asString
 
     assertThatJson(response)
-      .isEqualTo(
-        s"""{
-           |	"sessionState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
-           |	"methodResponses": [
-           |		[
-           |			"Thread/get",
-           |			{
-           |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |				"state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
-           |				"list": [{
-           |						"id": "$threadA",
-           |						"emailIds": [
-           |							"$message1Id",
-           |							"$message2Id"
-           |						]
-           |					},
-           |					{
-           |						"id": "$threadB",
-           |						"emailIds": [
-           |							"$message3Id"
-           |						]
-           |					}
-           |				],
-           |				"notFound": [
-           |
-           |				]
-           |			},
-           |			"c1"
-           |		]
-           |	]
-           |}""".stripMargin)
+      .inPath("methodResponses[0][1].list")
+      .isArray
+      .contains(
+        s"""{"id":"$threadA","emailIds":["$message1Id","$message2Id"]}""",
+        s"""{"id":"$threadB","emailIds":["$message3Id"]}""")
   }
 
   @Test
@@ -334,6 +325,8 @@ trait ThreadGetContract {
           .setField(new RawField("In-Reply-To", "Message-ID-1"))
           .setBody("testmail", StandardCharsets.UTF_8)))
     val threadA = message1.getThreadId.serialize()
+
+    awaitMessageCount(ImmutableList.of, SearchQuery.matchAll, 2)
 
     val message1Id = message1.getId.getMessageId.serialize()
     val message2Id = message2.getId.getMessageId.serialize()
@@ -417,6 +410,8 @@ trait ThreadGetContract {
           .addField(new RawField("References", "Random-References"))
           .setBody("testmail", StandardCharsets.UTF_8)))
 
+    awaitMessageCount(ImmutableList.of, SearchQuery.matchAll, 3)
+
     val threadId1 = message1.getThreadId.serialize()
     val message1Id = message1.getId.getMessageId.serialize()
 
@@ -495,6 +490,8 @@ trait ThreadGetContract {
           .setField(new RawField("In-Reply-To", "Random-InReplyTo"))
           .addField(new RawField("References", "Message-ID-1"))
           .setBody("testmail", StandardCharsets.UTF_8)))
+
+    awaitMessageCount(ImmutableList.of, SearchQuery.matchAll, 3)
 
     val threadId1 = message1.getThreadId.serialize()
     val message1Id = message1.getId.getMessageId.serialize()
