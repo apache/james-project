@@ -15,7 +15,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1626937402362,
+  "id": 6,
+  "iteration": 1627368943059,
   "links": [],
   "panels": [
     {
@@ -2019,8 +2020,8 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "james:8000",
-          "value": "james:8000"
+          "text": "james-admin.tenant-upn:8000",
+          "value": "james-admin.tenant-upn:8000"
         },
         "datasource": "$datasource",
         "definition": "label_values(smtpConnections_total, instance)",
@@ -2048,8 +2049,8 @@
       {
         "current": {
           "selected": false,
-          "text": "prometheus",
-          "value": "prometheus"
+          "text": "Prometheus",
+          "value": "Prometheus"
         },
         "description": null,
         "error": null,

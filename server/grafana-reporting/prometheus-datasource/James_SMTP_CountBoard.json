@@ -15,50 +15,82 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1626937456256,
+  "id": 5,
+  "iteration": 1627368963082,
   "links": [],
   "panels": [
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
       "datasource": "$datasource",
-      "fill": 1,
-      "fillGradient": 0,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
       "gridPos": {
         "h": 7,
         "w": 12,
         "x": 0,
         "y": 0
       },
-      "hiddenSeries": false,
       "id": 8,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
       "links": [],
-      "nullPointMode": "connected",
       "options": {
-        "alertThreshold": true
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
       },
-      "percentage": false,
       "pluginVersion": "8.0.6",
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
       "targets": [
         {
           "bucketAggs": [
@@ -93,48 +125,10 @@
           "timeField": "@timestamp"
         }
       ],
-      "thresholds": [],
       "timeFrom": null,
-      "timeRegions": [],
       "timeShift": null,
-      "title": "SMTP Connections Total",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:569",
-          "format": "none",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:570",
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
+      "title": "SMTP Connections total",
+      "type": "timeseries"
     },
     {
       "aliasColors": {},
@@ -142,6 +136,12 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -164,13 +164,13 @@
       "lines": true,
       "linewidth": 1,
       "links": [],
-      "nullPointMode": "connected",
+      "nullPointMode": "null",
       "options": {
         "alertThreshold": true
       },
       "percentage": false,
       "pluginVersion": "8.0.6",
-      "pointradius": 5,
+      "pointradius": 2,
       "points": false,
       "renderer": "flot",
       "seriesOverrides": [],
@@ -192,9 +192,9 @@
             }
           ],
           "dsType": "prometheus",
-          "expr": "SMTP_ehlo_count{instance=\"$WebAdmin\",job=\"Apache James\"}",
+          "expr": "SMTP_ehlo{instance=\"$WebAdmin\",job=\"Apache James\", quantile=\"0.5\"}",
           "interval": "",
-          "legendFormat": "SMTP_ehlo",
+          "legendFormat": "p50",
           "metrics": [
             {
               "field": "p99",
@@ -229,6 +229,24 @@
           "query": "name:\"SMTP-ehlo\"",
           "refId": "A",
           "timeField": "@timestamp"
+        },
+        {
+          "expr": "SMTP_ehlo{instance=\"$WebAdmin\",job=\"Apache James\", quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "refId": "B"
+        },
+        {
+          "expr": "SMTP_ehlo{instance=\"$WebAdmin\",job=\"Apache James\", quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "refId": "C"
+        },
+        {
+          "expr": "SMTP_ehlo{instance=\"$WebAdmin\",job=\"Apache James\", quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "refId": "D"
         }
       ],
       "thresholds": [],
@@ -251,8 +269,7 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:622",
-          "format": "none",
+          "format": "ms",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -260,7 +277,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:623",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -316,11 +332,29 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "SMTP_quit_count{instance=\"$WebAdmin\", job=\"Apache James\"}",
+          "expr": "SMTP_quit{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.5\"}",
           "interval": "",
-          "legendFormat": "SMTP_quit",
+          "legendFormat": "p50",
           "queryType": "randomWalk",
           "refId": "A"
+        },
+        {
+          "expr": "SMTP_quit{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "refId": "B"
+        },
+        {
+          "expr": "SMTP_quit{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "refId": "C"
+        },
+        {
+          "expr": "SMTP_quit{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "refId": "D"
         }
       ],
       "thresholds": [],
@@ -344,7 +378,7 @@
       "yaxes": [
         {
           "$$hashKey": "object:383",
-          "format": "none",
+          "format": "ms",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -408,11 +442,29 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "SMTP_DATA_count{instance=\"$WebAdmin\", job=\"Apache James\"}",
+          "expr": "SMTP_DATA{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.5\"}",
           "interval": "",
-          "legendFormat": "SMTP_DATA",
+          "legendFormat": "p50",
           "queryType": "randomWalk",
           "refId": "A"
+        },
+        {
+          "expr": "SMTP_DATA{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "refId": "B"
+        },
+        {
+          "expr": "SMTP_DATA{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "refId": "C"
+        },
+        {
+          "expr": "SMTP_DATA{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "refId": "D"
         }
       ],
       "thresholds": [],
@@ -436,7 +488,7 @@
       "yaxes": [
         {
           "$$hashKey": "object:541",
-          "format": "none",
+          "format": "ms",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -500,11 +552,29 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "SMTP_rcpt_count{instance=\"$WebAdmin\", job=\"Apache James\"}",
+          "expr": "SMTP_rcpt{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.5\"}",
           "interval": "",
-          "legendFormat": "SMTP_rcpt",
+          "legendFormat": "p50",
           "queryType": "randomWalk",
           "refId": "A"
+        },
+        {
+          "expr": "SMTP_rcpt{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "refId": "B"
+        },
+        {
+          "expr": "SMTP_rcpt{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "refId": "C"
+        },
+        {
+          "expr": "SMTP_rcpt{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "refId": "D"
         }
       ],
       "thresholds": [],
@@ -528,7 +598,7 @@
       "yaxes": [
         {
           "$$hashKey": "object:623",
-          "format": "none",
+          "format": "ms",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -592,11 +662,29 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "SMTP_mail_count{instance=\"$WebAdmin\", job=\"Apache James\"}",
+          "expr": "SMTP_mail{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.5\"}",
           "interval": "",
-          "legendFormat": "SMTP_mail",
+          "legendFormat": "p50",
           "queryType": "randomWalk",
           "refId": "A"
+        },
+        {
+          "expr": "SMTP_mail{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.75\"}",
+          "interval": "",
+          "legendFormat": "p75",
+          "refId": "B"
+        },
+        {
+          "expr": "SMTP_mail{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "refId": "C"
+        },
+        {
+          "expr": "SMTP_mail{instance=\"$WebAdmin\", job=\"Apache James\", quantile=\"0.99\"}",
+          "interval": "",
+          "legendFormat": "p99",
+          "refId": "D"
         }
       ],
       "thresholds": [],
@@ -620,7 +708,7 @@
       "yaxes": [
         {
           "$$hashKey": "object:933",
-          "format": "none",
+          "format": "ms",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -653,8 +741,8 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "james:8000",
-          "value": "james:8000"
+          "text": "james-admin.tenant-upn:8000",
+          "value": "james-admin.tenant-upn:8000"
         },
         "datasource": "$datasource",
         "definition": "label_values(smtpConnections_total, instance)",
@@ -682,8 +770,8 @@
       {
         "current": {
           "selected": false,
-          "text": "prometheus",
-          "value": "prometheus"
+          "text": "Prometheus",
+          "value": "Prometheus"
         },
         "description": null,
         "error": null,
@@ -731,7 +819,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "James / SMTP count board",
-  "uid": "jN3_gwAMzp",
+  "title": "James / SMTP board",
+  "uid": "jN3_gwAMzi",
   "version": 1
 }

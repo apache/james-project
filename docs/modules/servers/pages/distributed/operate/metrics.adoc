@@ -142,6 +142,14 @@ JVM Statistics +
 
 image::JVM_board.png[JVM]
 
+BlobStore Statistics +
+
+image::BlobStore.png[BlobStore]
+
+webAdmin Statistics +
+
+image::webAdmin.png[webAdmin]
+
 == Expose metrics for Elasticsearch collection
 
 The following command allow you to run a fresh grafana server :
