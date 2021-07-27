@@ -24,8 +24,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import javax.mail.Flags;
@@ -44,12 +46,10 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.ThreadId;
-import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -68,7 +68,6 @@ import reactor.core.publisher.Flux;
 
 public abstract class ThreadIdGuessingAlgorithmContract {
     public static final Username USER = Username.of("quan");
-    private static final UidValidity UID_VALIDITY = UidValidity.of(42);
 
     protected EventBus eventBus;
     protected MessageId.Factory messageIdFactory;
@@ -88,11 +87,11 @@ public abstract class ThreadIdGuessingAlgorithmContract {
 
     protected abstract MessageMapper createMessageMapper(MailboxSession mailboxSession);
 
-    protected abstract MapperProvider provideMapper();
-
     protected abstract MessageId initNewBasedMessageId();
 
     protected abstract MessageId initOtherBasedMessageId();
+
+    protected abstract Flux<Void> saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject);
 
     @BeforeEach
     void setUp() throws Exception {
@@ -149,6 +148,11 @@ public abstract class ThreadIdGuessingAlgorithmContract {
             .addField(new RawField("References", "references2"))
             .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
 
+        Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID")),
+            Optional.of(new MimeMessageId("someInReplyTo")),
+            Optional.of(List.of(new MimeMessageId("references1"), new MimeMessageId("references2"))));
+        saveThreadData(mailboxSession.getUser(), mimeMessageIds, message.getId().getMessageId(), message.getThreadId(), Optional.of(new Subject("Test"))).collectList().block();
+
         // add new related mails
         ThreadId threadId = testee.guessThreadIdReactive(newBasedMessageId, mimeMessageId, inReplyTo, references, subject, mailboxSession).block();
 
@@ -176,6 +180,11 @@ public abstract class ThreadIdGuessingAlgorithmContract {
             .addField(new RawField("References", "references1"))
             .addField(new RawField("References", "references2"))
             .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
+
+        Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID")),
+            Optional.of(new MimeMessageId("someInReplyTo")),
+            Optional.of(List.of(new MimeMessageId("references1"), new MimeMessageId("references2"))));
+        saveThreadData(mailboxSession.getUser(), mimeMessageIds, message.getId().getMessageId(), message.getThreadId(), Optional.of(new Subject("Test"))).collectList().block();
 
         // add mails related to old message by subject but have non same identical Message-ID
         ThreadId threadId = testee.guessThreadIdReactive(newBasedMessageId, mimeMessageId, inReplyTo, references, subject, mailboxSession).block();
@@ -205,6 +214,11 @@ public abstract class ThreadIdGuessingAlgorithmContract {
             .addField(new RawField("References", "references2"))
             .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
 
+        Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID")),
+            Optional.of(new MimeMessageId("someInReplyTo")),
+            Optional.of(List.of(new MimeMessageId("references1"), new MimeMessageId("references2"))));
+        saveThreadData(mailboxSession.getUser(), mimeMessageIds, message.getId().getMessageId(), message.getThreadId(), Optional.of(new Subject("Test"))).collectList().block();
+
         // add mails related to old message by having identical Message-ID but non related subject
         ThreadId threadId = testee.guessThreadIdReactive(newBasedMessageId, mimeMessageId, inReplyTo, references, subject, mailboxSession).block();
 
@@ -232,6 +246,11 @@ public abstract class ThreadIdGuessingAlgorithmContract {
             .addField(new RawField("References", "references1"))
             .addField(new RawField("References", "references2"))
             .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
+
+        Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID")),
+            Optional.of(new MimeMessageId("someInReplyTo")),
+            Optional.of(List.of(new MimeMessageId("references1"), new MimeMessageId("references2"))));
+        saveThreadData(mailboxSession.getUser(), mimeMessageIds, message.getId().getMessageId(), message.getThreadId(), Optional.of(new Subject("Test"))).collectList().block();
 
         // add mails non related to old message by both subject and identical Message-ID
         ThreadId threadId = testee.guessThreadIdReactive(newBasedMessageId, mimeMessageId, inReplyTo, references, subject, mailboxSession).block();
@@ -321,5 +340,13 @@ public abstract class ThreadIdGuessingAlgorithmContract {
                 .addMetaData(messageMetaData)
                 .build(),
             new MailboxIdRegistrationKey(mailbox.getMailboxId())).block();
+    }
+
+    private Set<MimeMessageId> buildMimeMessageIdSet(Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references) {
+        Set<MimeMessageId> mimeMessageIds = new HashSet<>();
+        mimeMessageId.ifPresent(mimeMessageIds::add);
+        inReplyTo.ifPresent(mimeMessageIds::add);
+        references.ifPresent(mimeMessageIds::addAll);
+        return mimeMessageIds;
     }
 }

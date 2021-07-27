@@ -36,6 +36,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraThreadModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 
 public interface MailboxAggregateModule {
@@ -55,7 +56,8 @@ public interface MailboxAggregateModule {
         CassandraModSeqModule.MODULE,
         CassandraSchemaVersionModule.MODULE,
         CassandraSubscriptionModule.MODULE,
-        CassandraUidModule.MODULE);
+        CassandraUidModule.MODULE,
+        CassandraThreadModule.MODULE);
 
     CassandraModule MODULE_WITH_QUOTA = CassandraModule.aggregateModules(CassandraQuotaModule.MODULE, MODULE);
 }

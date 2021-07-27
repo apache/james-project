@@ -17,48 +17,55 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.mailbox.store.search;
+package org.apache.james.mailbox.cassandra;
 
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.core.Username;
+import org.apache.james.events.EventBusTestFixture;
+import org.apache.james.events.InVMEventBus;
+import org.apache.james.events.MemoryEventDeadLetters;
+import org.apache.james.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.inmemory.InMemoryCombinationManagerTestSystem;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
-import org.apache.james.mailbox.inmemory.InMemoryMessageId;
-import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.mail.CassandraThreadDAO;
+import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
 import org.apache.james.mailbox.store.ThreadIdGuessingAlgorithmContract;
 import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.SearchThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
+import org.apache.james.mailbox.store.quota.NoQuotaManager;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import reactor.core.publisher.Flux;
 
-public class SearchThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorithmContract {
-    private InMemoryMailboxManager mailboxManager;
+public class CassandraThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorithmContract {
+    private CassandraMailboxManager mailboxManager;
+    private CassandraThreadDAO threadDAO;
+
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MailboxAggregateModule.MODULE);
 
     @Override
     protected CombinationManagerTestSystem createTestingData() {
-        InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
-
-        mailboxManager = resources.getMailboxManager();
-        eventBus = resources.getEventBus();
-        messageIdFactory = resources.getMessageIdFactory();
-
-        return new InMemoryCombinationManagerTestSystem(
-            resources.getMailboxManager(),
-            resources.getMessageIdManager());
+        eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
+        CassandraCombinationManagerTestSystem testSystem = (CassandraCombinationManagerTestSystem) CassandraCombinationManagerTestSystem.createTestingData(cassandraCluster.getCassandraCluster(), new NoQuotaManager(), eventBus);
+        mailboxManager = (CassandraMailboxManager) testSystem.getMailboxManager();
+        messageIdFactory = new CassandraMessageId.Factory();
+        return testSystem;
     }
 
     @Override
     protected ThreadIdGuessingAlgorithm initThreadIdGuessingAlgorithm(CombinationManagerTestSystem testingData) {
-        return new SearchThreadIdGuessingAlgorithm(testingData.getMailboxManager(), testingData.getMessageIdManager());
+        threadDAO = new CassandraThreadDAO(cassandraCluster.getCassandraCluster().getConf());
+        return new CassandraThreadIdGuessingAlgorithm(mailboxManager, threadDAO);
     }
 
     @Override
@@ -68,16 +75,16 @@ public class SearchThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorit
 
     @Override
     protected MessageId initNewBasedMessageId() {
-        return InMemoryMessageId.of(100);
+        return messageIdFactory.generate();
     }
 
     @Override
     protected MessageId initOtherBasedMessageId() {
-        return InMemoryMessageId.of(1000);
+        return messageIdFactory.generate();
     }
 
     @Override
     protected Flux<Void> saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
-        return Flux.empty();
+        return threadDAO.insertSome(username, mimeMessageIds, messageId, threadId, baseSubject);
     }
 }

@@ -19,8 +19,6 @@
 
 package org.apache.james.mailbox.elasticsearch.v7;
 
-import java.io.IOException;
-
 import org.apache.james.backends.es.v7.ElasticSearchConfiguration;
 import org.apache.james.backends.es.v7.IndexCreationFactory;
 import org.apache.james.backends.es.v7.IndexName;
@@ -42,7 +40,7 @@ public class MailboxIndexCreationUtil {
                 .createIndexAndAliases(client, MailboxMappingFactory.getMappingContent());
     }
 
-    public static ReactorElasticSearchClient prepareDefaultClient(ReactorElasticSearchClient client, ElasticSearchConfiguration configuration) throws IOException {
+    public static ReactorElasticSearchClient prepareDefaultClient(ReactorElasticSearchClient client, ElasticSearchConfiguration configuration) {
         return prepareClient(client,
             MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
             MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
