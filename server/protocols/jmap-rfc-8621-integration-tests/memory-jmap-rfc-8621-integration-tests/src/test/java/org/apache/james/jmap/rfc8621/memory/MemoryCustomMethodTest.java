@@ -19,11 +19,9 @@
 
 package org.apache.james.jmap.rfc8621.memory;
 
-import static org.apache.james.MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE;
-
-import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
+import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.rfc8621.contract.CustomMethodContract;
 import org.apache.james.jmap.rfc8621.contract.CustomMethodModule;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -32,8 +30,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public class MemoryCustomMethodTest implements CustomMethodContract {
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
-        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE, new CustomMethodModule())
+        .server(configuration -> MemoryJamesServerMain.createServer(configuration)
+            .combineWith(new CustomMethodModule())
             .overrideWith(new TestJMAPServerModule()))
         .build();
 }

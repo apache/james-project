@@ -39,7 +39,7 @@ public class UserManageTest {
 
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
-        .server(configuration -> MemoryJamesServerMain.createServer(configuration))
+        .server(MemoryJamesServerMain::createServer)
         .build();
 
     private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
