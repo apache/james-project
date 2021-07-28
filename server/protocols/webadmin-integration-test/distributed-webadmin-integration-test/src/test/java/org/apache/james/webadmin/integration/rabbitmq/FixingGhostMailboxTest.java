@@ -82,7 +82,6 @@ import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
 import org.junit.jupiter.api.BeforeEach;
@@ -130,7 +129,6 @@ class FixingGhostMailboxTest {
         .extension(new RabbitMQExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
-            .overrideWith(new WebadminIntegrationTestModule())
             .overrideWith(binder -> binder.bind(CassandraConfiguration.class)
                 .toInstance(CassandraConfiguration.builder()
                     .mailboxReadRepair(0)

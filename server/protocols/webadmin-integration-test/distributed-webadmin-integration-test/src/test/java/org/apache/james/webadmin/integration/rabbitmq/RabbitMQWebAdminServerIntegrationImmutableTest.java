@@ -40,10 +40,7 @@ import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
-import org.apache.james.webadmin.RandomPortSupplier;
-import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.integration.WebAdminServerIntegrationImmutableTest;
-import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.apache.james.webadmin.routes.TasksRoutes;
 import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
 import org.eclipse.jetty.http.HttpStatus;
@@ -70,16 +67,7 @@ class RabbitMQWebAdminServerIntegrationImmutableTest extends WebAdminServerInteg
         .extension(new CassandraExtension())
         .extension(new AwsS3BlobStoreExtension())
         .extension(new RabbitMQExtension())
-        .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
-            .overrideWith(new WebadminIntegrationTestModule())
-            .overrideWith(binder -> binder.bind(WebAdminConfiguration.class)
-                .toInstance(WebAdminConfiguration.builder()
-                    .enabled()
-                    .corsDisabled()
-                    .host("127.0.0.1")
-                    .port(new RandomPortSupplier())
-                    .additionalRoute("org.apache.james.webadmin.dropwizard.MetricsRoutes")
-                    .build())))
+        .server(CassandraRabbitMQJamesServerMain::createServer)
         .lifeCycle(PER_CLASS)
         .build();
 
