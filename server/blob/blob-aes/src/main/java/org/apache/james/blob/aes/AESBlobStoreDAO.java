@@ -131,4 +131,9 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
     public Publisher<Void> deleteBucket(BucketName bucketName) {
         return underlying.deleteBucket(bucketName);
     }
+
+    @Override
+    public Publisher<BucketName> listBuckets() {
+        return underlying.listBuckets();
+    }
 }

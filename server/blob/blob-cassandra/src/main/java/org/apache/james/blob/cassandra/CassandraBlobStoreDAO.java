@@ -42,6 +42,7 @@ import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.DataChunker;
 import org.apache.james.util.ReactorUtils;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +70,6 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
     private final CassandraConfiguration configuration;
     private final BucketName defaultBucket;
 
-    private final MetricFactory metricFactory;
     private final Metric metricClOneHitCount;
     private final Metric metricClOneMissCount;
 
@@ -84,7 +84,6 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
         this.bucketDAO = bucketDAO;
         this.configuration = cassandraConfiguration;
         this.defaultBucket = defaultBucket;
-        this.metricFactory = metricFactory;
 
         this.metricClOneMissCount = metricFactory.generate(CASSANDRA_BLOBSTORE_CL_ONE_MISS_COUNT_METRIC_NAME);
         this.metricClOneHitCount = metricFactory.generate(CASSANDRA_BLOBSTORE_CL_ONE_HIT_COUNT_METRIC_NAME);
@@ -268,5 +267,12 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
             .stream()
             .reduce(ByteBuffer.allocate(targetSize), ByteBuffer::put)
             .array();
+    }
+
+    @Override
+    public Publisher<BucketName> listBuckets() {
+        return bucketDAO.listAll()
+            .map(Pair::getLeft)
+            .distinct();
     }
 }

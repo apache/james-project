@@ -95,6 +95,19 @@ public class BucketNameResolver {
             .orElse(bucketName);
     }
 
+    Optional<BucketName> unresolve(BucketName bucketName) {
+        if (isNameSpace(bucketName)) {
+            return Optional.of(bucketName);
+        }
+
+        return prefix.map(p -> {
+            if (bucketName.asString().startsWith(p)) {
+                return Optional.of(BucketName.of(bucketName.asString().substring(p.length())));
+            }
+            return Optional.<BucketName>empty();
+        }).orElse(Optional.of(bucketName));
+    }
+
     private boolean isNameSpace(BucketName bucketName) {
         return namespace
             .map(existingNamespace -> existingNamespace.equals(bucketName))

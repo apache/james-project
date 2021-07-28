@@ -29,12 +29,14 @@ import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
+import org.reactivestreams.Publisher;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import com.google.common.io.ByteSource;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MemoryBlobStoreDAO implements BlobStoreDAO {
@@ -109,5 +111,10 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
                 blobs.row(bucketName).clear();
             }
         });
+    }
+
+    @Override
+    public Publisher<BucketName> listBuckets() {
+        return Flux.fromIterable(blobs.rowKeySet());
     }
 }

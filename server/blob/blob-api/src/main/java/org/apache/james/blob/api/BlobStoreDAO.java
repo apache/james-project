@@ -99,4 +99,6 @@ public interface BlobStoreDAO {
      *  otherwise an IOObjectStoreException in its error channel
      */
     Publisher<Void> deleteBucket(BucketName bucketName);
+
+    Publisher<BucketName> listBuckets();
 }

@@ -322,4 +322,9 @@ public class CachedBlobStore implements BlobStore {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric(BLOBSTORE_BACKEND_LATENCY_METRIC_NAME,
             backend.readBytes(bucketName, blobId)));
     }
+
+    @Override
+    public Publisher<BucketName> listBuckets() {
+        return backend.listBuckets();
+    }
 }

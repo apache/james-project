@@ -28,11 +28,11 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class CassandraBlobStoreDAOTest implements BlobStoreDAOContract {
     private static final int CHUNK_SIZE = 10240;
-    private static final int MULTIPLE_CHUNK_SIZE = 3;
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobModule.MODULE);
@@ -60,4 +60,9 @@ public class CassandraBlobStoreDAOTest implements BlobStoreDAOContract {
         return testee;
     }
 
+    @Override
+    @Disabled("Not supported by the Cassandra blob store")
+    public void listBucketsShouldReturnBucketsWithNoBlob() {
+
+    }
 }
