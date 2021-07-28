@@ -35,7 +35,6 @@ import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.JwtFilter;
 import org.apache.james.webadmin.integration.JwtFilterIntegrationTest;
-import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.inject.name.Names;
@@ -61,8 +60,7 @@ class RabbitMQJwtFilterIntegrationTest extends JwtFilterIntegrationTest {
             .overrideWith(binder -> binder.bind(AuthenticationFilter.class).to(JwtFilter.class))
             .overrideWith(binder -> binder.bind(JwtTokenVerifier.Factory.class)
                 .annotatedWith(Names.named("webadmin"))
-                .toInstance(() -> JwtTokenVerifier.create(jwtConfiguration())))
-            .overrideWith(new WebadminIntegrationTestModule()))
+                .toInstance(() -> JwtTokenVerifier.create(jwtConfiguration()))))
         .lifeCycle(PER_CLASS)
         .build();
 }

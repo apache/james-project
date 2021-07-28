@@ -26,9 +26,10 @@ import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.utils.WebAdminGuiceProbe;
+import org.apache.james.webadmin.RandomPortSupplier;
+import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.integration.UnauthorizedModule;
-import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,8 +41,13 @@ class DisabledMetricsTest {
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
-            .overrideWith(new WebadminIntegrationTestModule())
-            .overrideWith(new UnauthorizedModule()))
+            .overrideWith(new UnauthorizedModule())
+            .overrideWith(binder -> binder.bind(WebAdminConfiguration.class)
+                .toInstance(WebAdminConfiguration.builder()
+                    .enabled()
+                    .host("127.0.0.1")
+                    .port(new RandomPortSupplier())
+                    .build())))
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 

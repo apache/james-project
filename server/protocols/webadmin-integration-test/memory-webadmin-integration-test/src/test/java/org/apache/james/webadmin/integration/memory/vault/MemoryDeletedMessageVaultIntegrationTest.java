@@ -24,7 +24,6 @@ import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
-import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.apache.james.webadmin.integration.vault.DeletedMessageVaultIntegrationTest;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -35,8 +34,7 @@ class MemoryDeletedMessageVaultIntegrationTest extends DeletedMessageVaultIntegr
         .extension(new ClockExtension())
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
-            .overrideWith(new TestDeleteMessageVaultPreDeletionHookModule())
-            .overrideWith(new WebadminIntegrationTestModule()))
+            .overrideWith(new TestDeleteMessageVaultPreDeletionHookModule()))
         .build();
 
     @Override

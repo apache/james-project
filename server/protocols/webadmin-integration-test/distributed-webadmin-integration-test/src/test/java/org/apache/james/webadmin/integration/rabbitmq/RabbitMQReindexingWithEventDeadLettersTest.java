@@ -53,7 +53,6 @@ import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -98,7 +97,6 @@ class RabbitMQReindexingWithEventDeadLettersTest {
         .extension(new AwsS3BlobStoreExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
-            .overrideWith(new WebadminIntegrationTestModule())
             .overrideWith(binder -> binder.bind(RetryBackoffConfiguration.class)
                 .toInstance(RetryBackoffConfiguration.builder()
                     .maxRetries(2)

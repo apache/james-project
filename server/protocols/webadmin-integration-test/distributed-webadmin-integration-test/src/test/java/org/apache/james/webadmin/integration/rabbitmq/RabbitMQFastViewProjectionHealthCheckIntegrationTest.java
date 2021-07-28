@@ -31,7 +31,6 @@ import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.webadmin.integration.FastViewProjectionHealthCheckIntegrationContract;
-import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RabbitMQFastViewProjectionHealthCheckIntegrationTest extends FastViewProjectionHealthCheckIntegrationContract {
@@ -52,7 +51,6 @@ class RabbitMQFastViewProjectionHealthCheckIntegrationTest extends FastViewProje
         .extension(new AwsS3BlobStoreExtension())
         .extension(new RabbitMQExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule())
-            .overrideWith(new WebadminIntegrationTestModule()))
+            .overrideWith(new TestJMAPServerModule()))
         .build();
 }

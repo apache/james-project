@@ -19,7 +19,6 @@
 
 package org.apache.james.cli;
 
-import static org.apache.james.MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayOutputStream;
@@ -29,10 +28,9 @@ import java.nio.charset.StandardCharsets;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
-import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.util.Port;
 import org.apache.james.utils.WebAdminGuiceProbe;
-import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,11 +43,8 @@ import com.google.common.collect.ImmutableList;
 class QuotaManageTest {
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                    .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE)
-                    .overrideWith(new WebadminIntegrationTestModule())
-                    .overrideWith(new TestJMAPServerModule()))
-            .build();
+        .server(MemoryJamesServerMain::createServer)
+        .build();
 
     private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
     private final ByteArrayOutputStream errorStreamCaptor = new ByteArrayOutputStream();

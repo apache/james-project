@@ -43,6 +43,8 @@ import org.apache.james.utils.NamingScheme;
 import org.apache.james.utils.PropertiesProvider;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.FixedPortSupplier;
+import org.apache.james.webadmin.PortSupplier;
+import org.apache.james.webadmin.RandomPortSupplier;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.TlsConfiguration;
 import org.apache.james.webadmin.WebAdminConfiguration;
@@ -125,7 +127,7 @@ public class WebAdminServerModule extends AbstractModule {
 
             return WebAdminConfiguration.builder()
                 .enable(configurationFile.getBoolean("enabled", DEFAULT_DISABLED))
-                .port(new FixedPortSupplier(configurationFile.getInt("port", WebAdminServer.DEFAULT_PORT)))
+                .port(port(configurationFile))
                 .tls(readHttpsConfiguration(configurationFile))
                 .enableCORS(configurationFile.getBoolean("cors.enable", DEFAULT_CORS_DISABLED))
                 .urlCORSOrigin(configurationFile.getString("cors.origin", DEFAULT_NO_CORS_ORIGIN))
@@ -138,6 +140,15 @@ public class WebAdminServerModule extends AbstractModule {
             LOGGER.info("No webadmin.properties file. Disabling WebAdmin interface.");
             return DISABLED_CONFIGURATION;
         }
+    }
+
+    private PortSupplier port(Configuration configurationFile) {
+        int portNumber = configurationFile.getInt("port", WebAdminServer.DEFAULT_PORT);
+
+        if (portNumber == 0) {
+            return new RandomPortSupplier();
+        }
+        return new FixedPortSupplier(portNumber);
     }
 
     @VisibleForTesting

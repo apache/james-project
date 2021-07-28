@@ -75,7 +75,6 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
 import org.apache.james.webadmin.routes.MailQueueRoutes;
 import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
@@ -110,8 +109,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
         .extension(new CassandraExtension())
         .extension(new AwsS3BlobStoreExtension())
         .extension(new RabbitMQExtension())
-        .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
-            .overrideWith(new WebadminIntegrationTestModule()))
+        .server(CassandraRabbitMQJamesServerMain::createServer)
         .build();
 
     private static final String DOMAIN = "domain";

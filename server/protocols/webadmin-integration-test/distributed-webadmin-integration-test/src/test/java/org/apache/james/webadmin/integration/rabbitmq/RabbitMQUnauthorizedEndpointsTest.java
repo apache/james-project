@@ -37,7 +37,6 @@ import org.apache.james.modules.TestRabbitMQModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.webadmin.integration.UnauthorizedEndpointsTest;
 import org.apache.james.webadmin.integration.UnauthorizedModule;
-import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.apache.james.webadmin.routes.AliasRoutes;
 import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
 import org.apache.james.webadmin.routes.CassandraMigrationRoutes;
@@ -83,7 +82,6 @@ class RabbitMQUnauthorizedEndpointsTest extends UnauthorizedEndpointsTest {
         .extension(new RabbitMQExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON))
-            .overrideWith(new WebadminIntegrationTestModule())
             .overrideWith(new UnauthorizedModule())
             .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton())))
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)

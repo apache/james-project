@@ -33,7 +33,6 @@ import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
-import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.apache.james.webadmin.integration.vault.DeletedMessageVaultIntegrationTest;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
@@ -63,8 +62,7 @@ class RabbitMQDeletedMessageVaultIntegrationTest extends DeletedMessageVaultInte
         .extension(new ClockExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
-            .overrideWith(new TestDeleteMessageVaultPreDeletionHookModule())
-            .overrideWith(new WebadminIntegrationTestModule()))
+            .overrideWith(new TestDeleteMessageVaultPreDeletionHookModule()))
         .build();
 
     @Override

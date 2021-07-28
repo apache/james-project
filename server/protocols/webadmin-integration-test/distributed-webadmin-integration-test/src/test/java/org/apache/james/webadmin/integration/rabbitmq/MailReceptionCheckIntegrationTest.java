@@ -48,7 +48,6 @@ import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -78,7 +77,6 @@ class MailReceptionCheckIntegrationTest {
         .extension(new AwsS3BlobStoreExtension())
         .extension(RABBIT_MQ_EXTENSION)
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
-            .overrideWith(new WebadminIntegrationTestModule())
             .overrideWith(binder -> binder.bind(MailReceptionCheck.Configuration.class)
                 .toInstance(new MailReceptionCheck.Configuration(
                     Optional.of(ALICE), Duration.ofSeconds(10))))
