@@ -286,7 +286,7 @@ public class CassandraMessageMetadata {
                 .composedMessageId(new ComposedMessageId(mailboxMessage.getMailboxId(), mailboxMessage.getMessageId(), mailboxMessage.getUid()))
                 .modSeq(mailboxMessage.getModSeq())
                 .flags(mailboxMessage.createFlags())
-                .threadId(ThreadId.fromBaseMessageId(mailboxMessage.getMessageId()))
+                .threadId(mailboxMessage.getThreadId())
                 .build(),
             Optional.of(mailboxMessage.getInternalDate()),
             Optional.of(mailboxMessage.getHeaderOctets()),
