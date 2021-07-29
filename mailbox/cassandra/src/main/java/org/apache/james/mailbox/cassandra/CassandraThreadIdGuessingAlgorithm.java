@@ -30,6 +30,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.mail.CassandraThreadDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraThreadLookupDAO;
 import org.apache.james.mailbox.exception.ThreadNotFoundException;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
@@ -46,11 +47,13 @@ import reactor.core.publisher.Mono;
 public class CassandraThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorithm {
     private final MailboxManager mailboxManager;
     private final CassandraThreadDAO threadDAO;
+    private final CassandraThreadLookupDAO threadLookupDAO;
 
     @Inject
-    public CassandraThreadIdGuessingAlgorithm(MailboxManager mailboxManager, CassandraThreadDAO threadDAO) {
+    public CassandraThreadIdGuessingAlgorithm(MailboxManager mailboxManager, CassandraThreadDAO threadDAO, CassandraThreadLookupDAO threadLookupDAO) {
         this.mailboxManager = mailboxManager;
         this.threadDAO = threadDAO;
+        this.threadLookupDAO = threadLookupDAO;
     }
 
     @Override
@@ -64,6 +67,7 @@ public class CassandraThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgor
             .switchIfEmpty(Mono.just(ThreadId.fromBaseMessageId(messageId)))
             .flatMap(threadId -> threadDAO
                 .insertSome(session.getUser(), mimeMessageIds, messageId, threadId, baseSubject)
+                .then(threadLookupDAO.insert(messageId, session.getUser(), mimeMessageIds))
                 .then(Mono.just(threadId)));
     }
 

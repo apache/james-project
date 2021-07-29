@@ -71,13 +71,13 @@ public abstract class ThreadIdGuessingAlgorithmContract {
 
     protected EventBus eventBus;
     protected MessageId.Factory messageIdFactory;
+    protected ThreadIdGuessingAlgorithm testee;
+    protected MessageId newBasedMessageId;
+    protected MailboxSession mailboxSession;
     private MailboxManager mailboxManager;
     private MessageManager inbox;
     private MessageMapper messageMapper;
-    private ThreadIdGuessingAlgorithm testee;
-    private MailboxSession mailboxSession;
     private CombinationManagerTestSystem testingData;
-    private MessageId newBasedMessageId;
     private MessageId otherBasedMessageId;
     private Mailbox mailbox;
 
@@ -342,7 +342,7 @@ public abstract class ThreadIdGuessingAlgorithmContract {
             new MailboxIdRegistrationKey(mailbox.getMailboxId())).block();
     }
 
-    private Set<MimeMessageId> buildMimeMessageIdSet(Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references) {
+    protected Set<MimeMessageId> buildMimeMessageIdSet(Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references) {
         Set<MimeMessageId> mimeMessageIds = new HashSet<>();
         mimeMessageId.ifPresent(mimeMessageIds::add);
         inReplyTo.ifPresent(mimeMessageIds::add);
