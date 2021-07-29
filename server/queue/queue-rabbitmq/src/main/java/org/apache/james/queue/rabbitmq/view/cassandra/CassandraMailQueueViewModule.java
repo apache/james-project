@@ -98,8 +98,7 @@ public interface CassandraMailQueueViewModule {
         .options(options -> options
             .compactionOptions(SchemaBuilder.timeWindowCompactionStrategy()
                 .compactionWindowSize(1)
-                .compactionWindowUnit(HOURS))
-            .readRepairChance(NO_READ_REPAIR))
+                .compactionWindowUnit(HOURS)))
         .statement(statement -> statement
             .addPartitionKey(EnqueuedMailsTable.QUEUE_NAME, text())
             .addPartitionKey(EnqueuedMailsTable.TIME_RANGE_START, timestamp())
@@ -142,8 +141,7 @@ public interface CassandraMailQueueViewModule {
             "existence in this table")
         .options(options -> options
             .compactionOptions(SchemaBuilder.timeWindowCompactionStrategy())
-            .bloomFilterFPChance(0.01)
-            .readRepairChance(NO_READ_REPAIR))
+            .bloomFilterFPChance(0.01))
         .statement(statement -> statement
             .addPartitionKey(DeletedMailTable.QUEUE_NAME, text())
             .addPartitionKey(DeletedMailTable.ENQUEUE_ID, uuid()))
