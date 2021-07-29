@@ -143,7 +143,10 @@ public interface UsersRepositoryContract {
         }
     }
 
-    UsersRepositoryImpl testee();
+    UsersRepository testee();
+
+    UsersRepository testee(Optional<Username> administrator) throws Exception;
+
 
     interface ReadOnlyContract extends UsersRepositoryContract {
         @Test
@@ -168,8 +171,8 @@ public interface UsersRepositoryContract {
 
         @Test
         default void isAdministratorShouldBeCaseInsensitive(TestSystem testSystem) throws Exception {
-            testee().setAdministratorId(Optional.of(testSystem.admin));
-            assertThat(testee().isAdministrator(testSystem.adminCaseVariation))
+            UsersRepository testee = testee(Optional.of(testSystem.admin));
+            assertThat(testee.isAdministrator(testSystem.adminCaseVariation))
                 .isTrue();
         }
 
@@ -514,23 +517,23 @@ public interface UsersRepositoryContract {
 
         @Test
         default void isAdministratorShouldReturnFalseWhenNotConfigured(TestSystem testSystem) throws Exception {
-            testee().setAdministratorId(Optional.empty());
+            UsersRepository testee = testee(Optional.empty());
 
-            assertThat(testee().isAdministrator(testSystem.admin)).isFalse();
+            assertThat(testee.isAdministrator(testSystem.admin)).isFalse();
         }
 
         @Test
         default void isAdministratorShouldReturnTrueWhenConfiguredAndUserIsAdmin(TestSystem testSystem) throws Exception {
-            testee().setAdministratorId(Optional.of(testSystem.admin));
+            UsersRepository testee = testee(Optional.of(testSystem.admin));
 
-            assertThat(testee().isAdministrator(testSystem.admin)).isTrue();
+            assertThat(testee.isAdministrator(testSystem.admin)).isTrue();
         }
 
         @Test
         default void isAdministratorShouldReturnFalseWhenConfiguredAndUserIsNotAdmin(TestSystem testSystem) throws Exception {
-            testee().setAdministratorId(Optional.of(testSystem.admin));
+            UsersRepository testee = testee(Optional.of(testSystem.admin));
 
-            assertThat(testee().isAdministrator(testSystem.user1)).isFalse();
+            assertThat(testee.isAdministrator(testSystem.user1)).isFalse();
         }
     }
 
@@ -644,14 +647,14 @@ public interface UsersRepositoryContract {
         default void assertDomainPartValidShouldThrowWhenDomainPartIsMissing() throws Exception {
             Username withoutDomainPart = Username.fromLocalPartWithoutDomain("localPartOnly");
 
-            assertThatThrownBy(() -> testee().assertDomainPartValid(withoutDomainPart))
+            assertThatThrownBy(() -> testee().assertValid(withoutDomainPart))
                 .isInstanceOf(InvalidUsernameException.class)
                 .hasMessage("Given Username needs to contain a @domainpart");
         }
 
         @Test
         default void assertDomainPartValidShouldThrowWhenDomainPartIsNotManaged(TestSystem testSystem) {
-            assertThatThrownBy(() -> testee().assertDomainPartValid(testSystem.userWithUnknownDomain))
+            assertThatThrownBy(() -> testee().assertValid(testSystem.userWithUnknownDomain))
                 .isInstanceOf(InvalidUsernameException.class)
                 .hasMessage("Domain does not exist in DomainList");
         }
@@ -662,7 +665,7 @@ public interface UsersRepositoryContract {
                 "localPart",
                 TestSystem.DOMAIN);
 
-            assertThatCode(() -> testee().assertDomainPartValid(userWithManagedDomain))
+            assertThatCode(() -> testee().assertValid(userWithManagedDomain))
                 .doesNotThrowAnyException();
         }
     }
@@ -698,7 +701,7 @@ public interface UsersRepositoryContract {
                 "localPart",
                 TestSystem.DOMAIN);
 
-            assertThatThrownBy(() -> testee().assertDomainPartValid(withDomainPart))
+            assertThatThrownBy(() -> testee().assertValid(withDomainPart))
                 .isInstanceOf(InvalidUsernameException.class)
                 .hasMessage("Given Username contains a @domainpart but virtualhosting support is disabled");
         }
@@ -707,7 +710,7 @@ public interface UsersRepositoryContract {
         default void assertDomainPartValidShouldNotThrowWhenDomainPartIsMissing() {
             Username withOutDomainPart = Username.fromLocalPartWithoutDomain("localPartOnly");
 
-            assertThatCode(() -> testee().assertDomainPartValid(withOutDomainPart))
+            assertThatCode(() -> testee().assertValid(withOutDomainPart))
                 .doesNotThrowAnyException();
         }
     }
