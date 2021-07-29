@@ -19,9 +19,13 @@
 
 package org.apache.james.mailbox.cassandra;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.core.Username;
 import org.apache.james.events.EventBusTestFixture;
@@ -31,6 +35,7 @@ import org.apache.james.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraThreadDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraThreadLookupDAO;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
@@ -42,6 +47,7 @@ import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import reactor.core.publisher.Flux;
@@ -49,6 +55,7 @@ import reactor.core.publisher.Flux;
 public class CassandraThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorithmContract {
     private CassandraMailboxManager mailboxManager;
     private CassandraThreadDAO threadDAO;
+    private CassandraThreadLookupDAO threadLookupDAO;
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MailboxAggregateModule.MODULE);
@@ -65,7 +72,8 @@ public class CassandraThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgo
     @Override
     protected ThreadIdGuessingAlgorithm initThreadIdGuessingAlgorithm(CombinationManagerTestSystem testingData) {
         threadDAO = new CassandraThreadDAO(cassandraCluster.getCassandraCluster().getConf());
-        return new CassandraThreadIdGuessingAlgorithm(mailboxManager, threadDAO);
+        threadLookupDAO = new CassandraThreadLookupDAO(cassandraCluster.getCassandraCluster().getConf());
+        return new CassandraThreadIdGuessingAlgorithm(mailboxManager, threadDAO, threadLookupDAO);
     }
 
     @Override
@@ -86,5 +94,22 @@ public class CassandraThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgo
     @Override
     protected Flux<Void> saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
         return threadDAO.insertSome(username, mimeMessageIds, messageId, threadId, baseSubject);
+    }
+
+    @Test
+    void guessThreadIdShouldSaveDataToThreadLookupTable() {
+        testee.guessThreadIdReactive(newBasedMessageId,
+            Optional.of(new MimeMessageId("Message-ID1")),
+            Optional.of(new MimeMessageId("someInReplyTo")),
+            Optional.of(List.of(new MimeMessageId("someReferences"), new MimeMessageId("Message-ID1"))),
+            Optional.of(new Subject("test")), mailboxSession).block();
+
+        Username username = mailboxSession.getUser();
+        Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID1")),
+            Optional.of(new MimeMessageId("someInReplyTo")),
+            Optional.of(List.of(new MimeMessageId("someReferences"), new MimeMessageId("Message-ID1"))));
+
+        assertThat(threadLookupDAO.selectOneRow(newBasedMessageId).block())
+            .isEqualTo(Pair.of(username, mimeMessageIds));
     }
 }
