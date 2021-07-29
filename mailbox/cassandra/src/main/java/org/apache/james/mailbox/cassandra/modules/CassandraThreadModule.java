@@ -19,16 +19,19 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
+import static com.datastax.driver.core.DataType.frozenSet;
 import static com.datastax.driver.core.DataType.text;
 import static com.datastax.driver.core.DataType.timeuuid;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIdTable.THREAD_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
+import static org.apache.james.mailbox.cassandra.table.CassandraThreadLookupTable.MIME_MESSAGE_IDS;
 import static org.apache.james.mailbox.cassandra.table.CassandraThreadTable.BASE_SUBJECT;
 import static org.apache.james.mailbox.cassandra.table.CassandraThreadTable.MIME_MESSAGE_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraThreadTable.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraThreadTable.USERNAME;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.mailbox.cassandra.table.CassandraThreadLookupTable;
 
 public interface CassandraThreadModule {
     CassandraModule MODULE = CassandraModule.builder()
@@ -40,6 +43,12 @@ public interface CassandraThreadModule {
             .addClusteringColumn(MESSAGE_ID, timeuuid())
             .addColumn(THREAD_ID, timeuuid())
             .addColumn(BASE_SUBJECT, text()))
+        .table(CassandraThreadLookupTable.TABLE_NAME)
+        .comment("Thread table lookup by messageId, using for deletion thread data")
+        .statement(statement -> statement
+            .addPartitionKey(MESSAGE_ID, timeuuid())
+            .addColumn(USERNAME, text())
+            .addColumn(MIME_MESSAGE_IDS, frozenSet(text())))
         .build();
 
 }

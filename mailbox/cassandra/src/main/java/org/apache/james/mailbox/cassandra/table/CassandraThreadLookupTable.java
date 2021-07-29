@@ -17,25 +17,15 @@
  * under the License.                                             *
  ******************************************************************/
 
-package org.apache.james.modules.mailbox;
+package org.apache.james.mailbox.cassandra.table;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.mailbox.cassandra.mail.CassandraThreadDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraThreadLookupDAO;
-import org.apache.james.mailbox.cassandra.modules.CassandraThreadModule;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
+import static org.apache.james.mailbox.cassandra.table.CassandraThreadTable.USERNAME;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.multibindings.Multibinder;
+public interface CassandraThreadLookupTable {
+    String TABLE_NAME = "threadLookupTable";
 
-public class CassandraThreadIdGuessingModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(CassandraThreadDAO.class).in(Scopes.SINGLETON);
-        bind(CassandraThreadLookupDAO.class).in(Scopes.SINGLETON);
+    String MIME_MESSAGE_IDS = "mimeMessageIds";
 
-        Multibinder.newSetBinder(binder(), CassandraModule.class)
-            .addBinding()
-            .toInstance(CassandraThreadModule.MODULE);
-    }
+    String[] FIELDS = {MESSAGE_ID, USERNAME, MIME_MESSAGE_IDS};
 }
