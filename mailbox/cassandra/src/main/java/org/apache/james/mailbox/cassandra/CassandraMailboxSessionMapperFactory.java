@@ -47,6 +47,8 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageMapper;
+import org.apache.james.mailbox.cassandra.mail.CassandraThreadDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraThreadLookupDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService;
 import org.apache.james.mailbox.cassandra.user.CassandraSubscriptionMapper;
@@ -68,6 +70,8 @@ import com.datastax.driver.core.Session;
 public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFactory implements AttachmentMapperFactory {
     private final UidProvider uidProvider;
     private final ModSeqProvider modSeqProvider;
+    private final CassandraThreadDAO threadDAO;
+    private final CassandraThreadLookupDAO threadLookupDAO;
     private final CassandraMessageDAO messageDAO;
     private final CassandraMessageDAOV3 messageDAOV3;
     private final CassandraMessageIdDAO messageIdDAO;
@@ -93,6 +97,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
 
     @Inject
     public CassandraMailboxSessionMapperFactory(UidProvider uidProvider, ModSeqProvider modSeqProvider, Session session,
+                                                CassandraThreadDAO threadDAO, CassandraThreadLookupDAO threadLookupDAO,
                                                 CassandraMessageDAO messageDAO,
                                                 CassandraMessageDAOV3 messageDAOV3, CassandraMessageIdDAO messageIdDAO, CassandraMessageIdToImapUidDAO imapUidDAO,
                                                 CassandraMailboxCounterDAO mailboxCounterDAO, CassandraMailboxRecentsDAO mailboxRecentsDAO, CassandraMailboxDAO mailboxDAO,
@@ -106,6 +111,8 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
                                                 CassandraUtils cassandraUtils, CassandraConfiguration cassandraConfiguration) {
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
+        this.threadDAO = threadDAO;
+        this.threadLookupDAO = threadLookupDAO;
         this.messageDAO = messageDAO;
         this.messageDAOV3 = messageDAOV3;
         this.messageIdDAO = messageIdDAO;
@@ -199,7 +206,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     }
 
     public DeleteMessageListener deleteMessageListener() {
-        return new DeleteMessageListener(imapUidDAO, messageIdDAO, messageDAO, messageDAOV3, attachmentDAOV2, ownerDAO,
+        return new DeleteMessageListener(threadDAO, threadLookupDAO, imapUidDAO, messageIdDAO, messageDAO, messageDAOV3, attachmentDAOV2, ownerDAO,
             attachmentMessageIdDAO, aclMapper, userMailboxRightsDAO, applicableFlagDAO, firstUnseenDAO, deletedMessageDAO,
             mailboxCounterDAO, mailboxRecentsDAO, blobStore, cassandraConfiguration);
     }

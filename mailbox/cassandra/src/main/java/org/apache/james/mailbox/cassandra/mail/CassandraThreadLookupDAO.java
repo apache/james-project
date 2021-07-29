@@ -33,7 +33,6 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -79,7 +78,7 @@ public class CassandraThreadLookupDAO {
             .setSet(MIME_MESSAGE_IDS, mimeMessageIdsString));
     }
 
-    public Mono<Pair<Username, Set<MimeMessageId>>> selectOneRow(MessageId messageId) {
+    public Mono<ThreadTablePartitionKey> selectOneRow(MessageId messageId) {
         return executor.executeSingleRow(
             select.bind().setUUID(MESSAGE_ID, ((CassandraMessageId) messageId).get()))
             .map(this::readRow);
@@ -90,12 +89,11 @@ public class CassandraThreadLookupDAO {
             .setUUID(MESSAGE_ID, ((CassandraMessageId) messageId).get()));
     }
 
-    private Pair<Username, Set<MimeMessageId>> readRow(Row row) {
+    private ThreadTablePartitionKey readRow(Row row) {
         Set<MimeMessageId> mimeMessageIds = row.getSet(MIME_MESSAGE_IDS, String.class)
             .stream()
             .map(MimeMessageId::new)
             .collect(ImmutableSet.toImmutableSet());
-        return Pair.of(Username.of(row.getString(USERNAME)),
-            mimeMessageIds);
+        return new ThreadTablePartitionKey(Username.of(row.getString(USERNAME)), mimeMessageIds);
     }
 }
