@@ -52,6 +52,8 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAOV3;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageMetadata;
+import org.apache.james.mailbox.cassandra.mail.CassandraThreadDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraThreadLookupDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.mail.MessageAttachmentRepresentation;
 import org.apache.james.mailbox.cassandra.mail.MessageRepresentation;
@@ -86,6 +88,8 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
 
     }
 
+    private final CassandraThreadDAO threadDAO;
+    private final CassandraThreadLookupDAO threadLookupDAO;
     private final CassandraMessageIdToImapUidDAO imapUidDAO;
     private final CassandraMessageIdDAO messageIdDAO;
     private final CassandraMessageDAO messageDAO;
@@ -104,13 +108,16 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
     private final CassandraConfiguration cassandraConfiguration;
 
     @Inject
-    public DeleteMessageListener(CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageDAO messageDAO,
+    public DeleteMessageListener(CassandraThreadDAO threadDAO, CassandraThreadLookupDAO threadLookupDAO,
+                                 CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageDAO messageDAO,
                                  CassandraMessageDAOV3 messageDAOV3, CassandraAttachmentDAOV2 attachmentDAO, CassandraAttachmentOwnerDAO ownerDAO,
                                  CassandraAttachmentMessageIdDAO attachmentMessageIdDAO, ACLMapper aclMapper,
                                  CassandraUserMailboxRightsDAO rightsDAO, CassandraApplicableFlagDAO applicableFlagDAO,
                                  CassandraFirstUnseenDAO firstUnseenDAO, CassandraDeletedMessageDAO deletedMessageDAO,
                                  CassandraMailboxCounterDAO counterDAO, CassandraMailboxRecentsDAO recentsDAO, BlobStore blobStore,
                                  CassandraConfiguration cassandraConfiguration) {
+        this.threadDAO = threadDAO;
+        this.threadLookupDAO = threadLookupDAO;
         this.imapUidDAO = imapUidDAO;
         this.messageIdDAO = messageIdDAO;
         this.messageDAO = messageDAO;
@@ -208,7 +215,11 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
                 .flatMap(this::deleteMessageBlobs)
                 .flatMap(this::deleteAttachmentMessageIds)
                 .then(messageDAO.delete(messageId))
-                .then(messageDAOV3.delete(messageId)));
+                .then(messageDAOV3.delete(messageId))
+                .then(threadLookupDAO.selectOneRow(messageId)
+                    .flatMap(key -> threadDAO.deleteSome(key.getUsername(), key.getMimeMessageIds())
+                        .collectList()))
+                .then(threadLookupDAO.deleteOneRow(messageId)));
     }
 
     private Mono<MessageRepresentation> deleteMessageBlobs(MessageRepresentation message) {

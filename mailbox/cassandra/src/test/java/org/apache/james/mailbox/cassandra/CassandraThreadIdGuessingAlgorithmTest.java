@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.core.Username;
 import org.apache.james.events.EventBusTestFixture;
@@ -37,6 +36,7 @@ import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraThreadDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraThreadLookupDAO;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
+import org.apache.james.mailbox.cassandra.mail.ThreadTablePartitionKey;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
@@ -110,6 +110,6 @@ public class CassandraThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgo
             Optional.of(List.of(new MimeMessageId("someReferences"), new MimeMessageId("Message-ID1"))));
 
         assertThat(threadLookupDAO.selectOneRow(newBasedMessageId).block())
-            .isEqualTo(Pair.of(username, mimeMessageIds));
+            .isEqualTo(new ThreadTablePartitionKey(username, mimeMessageIds));
     }
 }

@@ -23,7 +23,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.util.Set;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.core.Username;
@@ -68,7 +67,7 @@ public class CassandraThreadLookupDAOTest {
         testee.insert(messageId1, ALICE, Set.of(mimeMessageId1, mimeMessageId2)).block();
 
         assertThat(testee.selectOneRow(messageId1).block())
-            .isEqualTo(Pair.of(ALICE, Set.of(mimeMessageId1, mimeMessageId2)));
+            .isEqualTo(new ThreadTablePartitionKey(ALICE, Set.of(mimeMessageId1, mimeMessageId2)));
     }
 
     @Test
@@ -83,7 +82,7 @@ public class CassandraThreadLookupDAOTest {
         testee.insert(messageId2, BOB, Set.of(mimeMessageId3, mimeMessageId4)).block();
 
         assertThat(testee.selectOneRow(messageId1).block())
-            .isEqualTo(Pair.of(ALICE, Set.of(mimeMessageId1, mimeMessageId2)));
+            .isEqualTo(new ThreadTablePartitionKey(ALICE, Set.of(mimeMessageId1, mimeMessageId2)));
     }
 
     @Test
@@ -104,7 +103,7 @@ public class CassandraThreadLookupDAOTest {
 
         // message1's data should remain
         assertThat(testee.selectOneRow(messageId1).block())
-            .isEqualTo(Pair.of(ALICE, Set.of(mimeMessageId1, mimeMessageId2)));
+            .isEqualTo(new ThreadTablePartitionKey(ALICE, Set.of(mimeMessageId1, mimeMessageId2)));
     }
 
 }

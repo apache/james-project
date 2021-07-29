@@ -23,8 +23,12 @@ import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.mail.Flags;
 
@@ -64,8 +68,11 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAOV3;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraThreadDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraThreadLookupDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
+import org.apache.james.mailbox.cassandra.mail.ThreadTablePartitionKey;
 import org.apache.james.mailbox.cassandra.mail.eventsourcing.acl.ACLModule;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.FetchGroup;
@@ -73,14 +80,20 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.model.MimeMessageId;
+import org.apache.james.mailbox.store.mail.model.Subject;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.stream.RawField;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.util.streams.Limit;
@@ -92,6 +105,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Mono;
 
 public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMailboxManager> {
     public static final Username BOB = Username.of("Bob");
@@ -780,6 +795,77 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 .isEmpty();
         }
 
+        @Test
+        void deleteMailboxShouldCleanUpThreadData(CassandraCluster cassandraCluster) throws Exception {
+            // append a message
+            MessageManager.AppendResult message = inboxManager.appendMessage(MessageManager.AppendCommand.from(Message.Builder.of()
+                .setSubject("Test")
+                .setMessageId("Message-ID")
+                .setField(new RawField("In-Reply-To", "someInReplyTo"))
+                .addField(new RawField("References", "references1"))
+                .addField(new RawField("References", "references2"))
+                .setBody("testmail", StandardCharsets.UTF_8)), session);
+
+            Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID")),
+                Optional.of(new MimeMessageId("someInReplyTo")),
+                Optional.of(List.of(new MimeMessageId("references1"), new MimeMessageId("references2"))));
+            saveThreadData(session.getUser(), mimeMessageIds, message.getId().getMessageId(), message.getThreadId(), Optional.of(new Subject("Test"))).block();
+            CassandraMessageId cassandraMessageId = (CassandraMessageId) message.getId().getMessageId();
+            ThreadTablePartitionKey partitionKey = threadLookupDAO(cassandraCluster)
+                .selectOneRow(cassandraMessageId).block();
+
+            mailboxManager.deleteMailbox(inbox, session);
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(threadDAO(cassandraCluster)
+                    .selectSome(partitionKey.getUsername(), partitionKey.getMimeMessageIds()).collectList().block())
+                    .isEmpty();
+
+                softly.assertThat(threadLookupDAO(cassandraCluster)
+                    .selectOneRow(cassandraMessageId).block())
+                    .isNull();
+            });
+        }
+
+        @Test
+        void deleteMailboxShouldCleanUpThreadDataWhenFailure(CassandraCluster cassandraCluster) throws Exception {
+            // append a message
+            MessageManager.AppendResult message = inboxManager.appendMessage(MessageManager.AppendCommand.from(Message.Builder.of()
+                .setSubject("Test")
+                .setMessageId("Message-ID")
+                .setField(new RawField("In-Reply-To", "someInReplyTo"))
+                .addField(new RawField("References", "references1"))
+                .addField(new RawField("References", "references2"))
+                .setBody("testmail", StandardCharsets.UTF_8)), session);
+
+            Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID")),
+                Optional.of(new MimeMessageId("someInReplyTo")),
+                Optional.of(List.of(new MimeMessageId("references1"), new MimeMessageId("references2"))));
+            saveThreadData(session.getUser(), mimeMessageIds, message.getId().getMessageId(), message.getThreadId(), Optional.of(new Subject("Test"))).block();
+            CassandraMessageId cassandraMessageId = (CassandraMessageId) message.getId().getMessageId();
+            ThreadTablePartitionKey partitionKey = threadLookupDAO(cassandraCluster)
+                .selectOneRow(cassandraMessageId).block();
+
+            cassandraCluster.getConf().registerScenario(fail()
+                .times(1)
+                .whenQueryStartsWith("DELETE FROM threadTable"));
+            cassandraCluster.getConf().registerScenario(fail()
+                .times(1)
+                .whenQueryStartsWith("DELETE FROM threadLookupTable"));
+
+            mailboxManager.deleteMailbox(inbox, session);
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(threadDAO(cassandraCluster)
+                        .selectSome(partitionKey.getUsername(), partitionKey.getMimeMessageIds()).collectList().block())
+                    .isEmpty();
+
+                softly.assertThat(threadLookupDAO(cassandraCluster)
+                        .selectOneRow(cassandraMessageId).block())
+                    .isNull();
+            });
+        }
+
         private CassandraMailboxCounterDAO countersDAO(CassandraCluster cassandraCluster) {
             return new CassandraMailboxCounterDAO(cassandraCluster.getConf());
         }
@@ -846,6 +932,29 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 mock(BlobStore.class),
                 new HashBlobId.Factory(),
                 cassandra.getCassandraConsistenciesConfiguration());
+        }
+
+        private CassandraThreadDAO threadDAO(CassandraCluster cassandraCluster) {
+            return new CassandraThreadDAO(cassandraCluster.getConf());
+        }
+
+        private CassandraThreadLookupDAO threadLookupDAO(CassandraCluster cassandraCluster) {
+            return new CassandraThreadLookupDAO(cassandraCluster.getConf());
+        }
+
+        private Mono<Void> saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
+            return threadDAO(cassandra.getCassandraCluster())
+                .insertSome(username, mimeMessageIds, messageId, threadId, baseSubject)
+                .then(threadLookupDAO(cassandra.getCassandraCluster())
+                    .insert(messageId, username, mimeMessageIds));
+        }
+
+        private Set<MimeMessageId> buildMimeMessageIdSet(Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references) {
+            Set<MimeMessageId> mimeMessageIds = new HashSet<>();
+            mimeMessageId.ifPresent(mimeMessageIds::add);
+            inReplyTo.ifPresent(mimeMessageIds::add);
+            references.ifPresent(mimeMessageIds::addAll);
+            return mimeMessageIds;
         }
     }
 
