@@ -32,14 +32,14 @@
     <bannerLeft>
         <name>James Project</name>
         <src>images/logos/james-logo.png</src>
-        <href>http://james.apache.org/index.html</href>
+        <href>https://james.apache.org/index.html</href>
         <alt>james-logo.png</alt>
     </bannerLeft>
 
     <bannerRight>
         <name>The Apache Software Foundation</name>
         <src>images/logos/asf_logo_small.png</src>
-        <href>http://www.apache.org/index.html</href>
+        <href>https://www.apache.org/index.html</href>
     </bannerRight>
 
     <version position="none" />
@@ -58,22 +58,22 @@
         <links>
             <item
                 name="Home"
-                href="http://james.apache.org/index.html" />
+                href="https://james.apache.org/index.html" />
             <item
                 name="James"
-                href="http://james.apache.org/documentation.html" />
+                href="https://james.apache.org/documentation.html" />
             <item
                 name="Mime4J"
-                href="http://james.apache.org/mime4j/index.html" />
+                href="https://james.apache.org/mime4j/index.html" />
             <item
                 name="jSieve"
-                href="http://james.apache.org/jsieve/index.html" />
+                href="https://james.apache.org/jsieve/index.html" />
             <item
                 name="jSPF"
-                href="http://james.apache.org/jspf/index.html" />
+                href="https://james.apache.org/jspf/index.html" />
             <item
                 name="jDKIM"
-                href="http://james.apache.org/jdkim/index.html" />
+                href="https://james.apache.org/jdkim/index.html" />
         </links>
 
         <menu name="James components">
@@ -86,7 +86,7 @@
                 <item name="License" href="/license.html" />
                 <item name="Thanks" href="/thanks.html" />
                 <item name="Professional support" href="/support.html" />
-                <item name="Download releases" href="http://james.apache.org/download.cgi" />
+                <item name="Download releases" href="https://james.apache.org/download.cgi" />
             </item>
             <item name="Server" href="/server/index.html" collapse="true">
                 <item name="Advantages" href="/server/advantages.html"/>
@@ -168,14 +168,14 @@
                         </item>
                     </item>
                 </item>
-                <item name="Mailing Lists" href="http://james.apache.org/mail.html#James_Mailing_lists" />
+                <item name="Mailing Lists" href="https://james.apache.org/mail.html#James_Mailing_lists" />
                 <item name="Release Notes" href="/server/release-notes.html"/>
                 <item name="Javadoc" href="/server/apidocs/index.html" />
                 <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/JAMES" />
                 <item name="Sources" href="https://github.com/apache/james-project" />
                 <item name="RFCs" href="/server/rfcs.html"/>
                 <item name="Other versions" href="/server/other-versions.html"/>
-                <item name="Download releases" href="http://james.apache.org/download.cgi#Apache_James_Server" />
+                <item name="Download releases" href="https://james.apache.org/download.cgi#Apache_James_Server" />
             </item>
             <item name="Mailets" href="/mailet/index.html" collapse="true">
                 <item name="Quick Start" href="/mailet/quickstart.html"/>
@@ -189,7 +189,7 @@
                 <item name="Release Notes" href="/mailet/release-notes.html"/>
                 <item name="Java Docs" href="/mailet/apidocs"/>
                 <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/MAILET" />
-                <item name="Download releases" href="http://james.apache.org/download.cgi#Apache_Mailet" />
+                <item name="Download releases" href="httsp://james.apache.org/download.cgi#Apache_Mailet" />
             </item>
             <item name="Mailbox" href="/mailbox/index.html" collapse="true">
                 <item name="Source Code" href="/mailbox/source-code.html" />
@@ -206,7 +206,7 @@
                     <item name="Mailbox JPA" href="/mailbox/mailbox-jpa.html" />
                 </item>
                 <item name="Wiring" href="/mailbox/mailbox-spring.html" />
-                <item name="Download releases" href="http://james.apache.org/download.cgi" />
+                <item name="Download releases" href="https://james.apache.org/download.cgi" />
             </item>
             <item name="Protocols" href="/protocols/index.html" collapse="true">
                 <item name="SMTP" href="/protocols/smtp.html" />
@@ -215,7 +215,7 @@
                 <item name="Source Code" href="/protocols/source-code.html" />
                 <item name="Javadoc" href="/protocols/apidocs/index.html" />
                 <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/PROTOCOLS" />
-                <item name="Download Releases" href="http://james.apache.org/download.cgi#Apache_James_Protocols" />
+                <item name="Download Releases" href="https://james.apache.org/download.cgi#Apache_James_Protocols" />
             </item>
             <item name="MPT" href="/mpt/index.html" collapse="true">
                 <item name="Releases" href="/mpt/release-notes.html">
@@ -225,7 +225,7 @@
                 <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/MPT" />
                 <item name='Main Library' href='/mpt/main'/>
                 <item name='Application' href='/mpt/app'/>
-                <item name="Download releases" href="http://james.apache.org/download.cgi#Apache_MPT" />
+                <item name="Download releases" href="https://james.apache.org/download.cgi#Apache_MPT" />
             </item>
         </menu>
 
