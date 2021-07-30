@@ -2,10 +2,10 @@
 
 Read this page [on the website](http://james.apache.org/howTo/custom-smtp-hooks.html).
 
-The current project demonstrate how to write custom behaviours for Apache James SMTP server
+The current project demonstrates how to write custom behaviours for Apache James SMTP server
 by the means of SMTP hooks.
 
-SMTP hooks allows integrating third party systems with the SMTP stack, allows writing additional SMTP extensions, for
+SMTP hooks allow integrating third party systems with the SMTP stack and writing additional SMTP extensions, for
 instance.
 
 Start by importing the dependencies:
