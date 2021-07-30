@@ -20,15 +20,14 @@ package org.apache.james.jmap.mail
 
 import java.nio.charset.{StandardCharsets, Charset => NioCharset}
 import java.util.Date
-
 import cats.implicits._
 import com.google.common.net.MediaType
 import com.google.common.net.MediaType.{HTML_UTF_8, PLAIN_TEXT_UTF_8}
 import eu.timepit.refined
+import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.{AccountId, SetError, UTCDate, UuidState}
 import org.apache.james.jmap.mail.Disposition.INLINE
-import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.jmap.routes.{Blob, BlobResolvers}
 import org.apache.james.mailbox.MailboxSession

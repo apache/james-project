@@ -22,7 +22,6 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream}
 import java.nio.charset.StandardCharsets
 import java.util.stream
 import java.util.stream.Stream
-
 import com.google.common.base.CharMatcher
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
@@ -30,15 +29,16 @@ import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED}
 import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus, QueryStringDecoder}
+
 import javax.inject.{Inject, Named}
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
+import org.apache.james.jmap.api.model.Size.{Size, sanitizeSize}
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.{AccountId, Id, ProblemDetails}
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.ResponseSerializer
-import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.{BlobId, EmailBodyPart, PartId}
 import org.apache.james.jmap.routes.DownloadRoutes.{BUFFER_SIZE, LOGGER}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
@@ -101,7 +101,7 @@ case class MessageBlob(blobId: BlobId, message: MessageResult) extends Blob {
 }
 
 case class AttachmentBlob(attachmentMetadata: AttachmentMetadata, fileContent: InputStream) extends Blob {
-  override def size: Try[Size] = Success(UploadRoutes.sanitizeSize(attachmentMetadata.getSize))
+  override def size: Try[Size] = Success(sanitizeSize(attachmentMetadata.getSize))
 
   override def contentType: ContentType = attachmentMetadata.getType
 

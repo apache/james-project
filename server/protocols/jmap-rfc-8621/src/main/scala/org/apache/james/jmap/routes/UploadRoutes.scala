@@ -19,22 +19,12 @@
 
 package org.apache.james.jmap.routes
 
-import java.io.InputStream
-import java.nio.ByteBuffer
-import java.nio.charset.StandardCharsets
-import java.util.stream
-import java.util.stream.Stream
-
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.auto._
-import eu.timepit.refined.numeric.NonNegative
-import eu.timepit.refined.refineV
 import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, UNAUTHORIZED}
 import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus}
-import javax.inject.{Inject, Named}
 import org.apache.commons.fileupload.util.LimitedInputStream
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
+import org.apache.james.jmap.api.model.Size.{Size, sanitizeSize}
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.{AccountId, Id, JmapRfc8621Configuration, ProblemDetails}
 import org.apache.james.jmap.exceptions.UnauthorizedException
@@ -42,8 +32,7 @@ import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.{ResponseSerializer, UploadSerializer}
 import org.apache.james.jmap.mail.BlobId
-import org.apache.james.jmap.mail.Email.Size
-import org.apache.james.jmap.routes.UploadRoutes.{LOGGER, sanitizeSize}
+import org.apache.james.jmap.routes.UploadRoutes.LOGGER
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.mailbox.model.{AttachmentMetadata, ContentType}
 import org.apache.james.mailbox.{AttachmentManager, MailboxSession}
@@ -55,22 +44,17 @@ import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 
+import java.io.InputStream
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
+import java.util.stream
+import java.util.stream.Stream
+import javax.inject.{Inject, Named}
+
 case class TooBigUploadException() extends RuntimeException
 
 object UploadRoutes {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[DownloadRoutes])
-
-  type Size = Long Refined NonNegative
-  val Zero: Size = 0L
-
-  def sanitizeSize(value: Long): Size = {
-    val size: Either[String, Size] = refineV[NonNegative](value)
-    size.fold(e => {
-      LOGGER.error(s"Encountered an invalid upload files size: $e")
-      Zero
-    },
-      refinedValue => refinedValue)
-  }
 }
 
 case class UploadResponse(accountId: AccountId,

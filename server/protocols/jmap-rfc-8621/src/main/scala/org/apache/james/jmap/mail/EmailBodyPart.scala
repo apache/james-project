@@ -20,7 +20,6 @@
 package org.apache.james.jmap.mail
 
 import java.io.OutputStream
-
 import cats.implicits._
 import com.google.common.io.CountingOutputStream
 import eu.timepit.refined.api.Refined
@@ -28,8 +27,8 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import org.apache.commons.io.IOUtils
+import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.jmap.core.Properties
-import org.apache.james.jmap.mail.Email.Size
 import org.apache.james.jmap.mail.EmailBodyPart.{FILENAME_PREFIX, MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN}
 import org.apache.james.jmap.mail.PartId.PartIdValue
 import org.apache.james.mailbox.model.{Cid, MessageId, MessageResult}

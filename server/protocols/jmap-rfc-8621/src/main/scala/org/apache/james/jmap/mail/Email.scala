@@ -21,17 +21,14 @@ package org.apache.james.jmap.mail
 
 import cats.implicits._
 import eu.timepit.refined
-import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
-import eu.timepit.refined.numeric.NonNegative
-import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.jmap.api.model.Preview
+import org.apache.james.jmap.api.model.Size.{Size, sanitizeSize}
 import org.apache.james.jmap.api.projections.{MessageFastViewPrecomputedProperties, MessageFastViewProjection}
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.{Properties, UTCDate}
 import org.apache.james.jmap.mail.BracketHeader.sanitize
-import org.apache.james.jmap.mail.Email.{Size, sanitizeSize}
 import org.apache.james.jmap.mail.EmailHeaderName.{ADDRESSES_NAMES, DATE, MESSAGE_ID_NAMES}
 import org.apache.james.jmap.mail.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
 import org.apache.james.jmap.method.ZoneIdProvider
@@ -75,18 +72,6 @@ object Email {
       case Left(e) => Failure(new IllegalArgumentException(e))
       case scala.Right(value) => Success(UnparsedEmailId(value))
     }
-
-  type Size = Long Refined NonNegative
-  val Zero: Size = 0L
-
-  def sanitizeSize(value: Long): Size = {
-    val size: Either[String, Size] = refineV[NonNegative](value)
-    size.fold(e => {
-      logger.error(s"Encountered an invalid Email size: $e")
-      Zero
-    },
-      refinedValue => refinedValue)
-  }
 
   private[mail] def parseAsMime4JMessage(firstMessage: MessageResult): Try[Message] = {
     val defaultMessageBuilder = new DefaultMessageBuilder
