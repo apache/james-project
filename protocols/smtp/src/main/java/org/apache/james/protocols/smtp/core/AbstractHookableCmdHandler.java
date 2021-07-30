@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractHookableCmdHandler<HookT extends org.apache.james.protocols.smtp.hook.Hook> implements CommandHandler<SMTPSession>, ExtensibleHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractHookableCmdHandler.class);
 
-    private final MetricFactory metricFactory;
+    protected final MetricFactory metricFactory;
     private List<HookT> hooks;
     private List<HookResultHook> rHooks;
 
@@ -61,7 +61,7 @@ public abstract class AbstractHookableCmdHandler<HookT extends org.apache.james.
 
     @Override
     public Response onCommand(SMTPSession session, Request request) {
-        TimeMetric timeMetric = metricFactory.timer("SMTP-" + request.getCommand().toLowerCase(Locale.US));
+        TimeMetric timeMetric = timer(request);
         String command = request.getCommand();
         String parameters = request.getArgument();
 
@@ -86,7 +86,10 @@ public abstract class AbstractHookableCmdHandler<HookT extends org.apache.james.
         } finally {
             timeMetric.stopAndPublish();
         }
+    }
 
+    protected TimeMetric timer(Request request) {
+        return metricFactory.timer("SMTP-" + request.getCommand().toLowerCase(Locale.US));
     }
 
     /**

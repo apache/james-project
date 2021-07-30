@@ -26,8 +26,10 @@ import java.util.Collection;
 import javax.inject.Inject;
 
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSession.State;
+import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.UnknownCommandHandler;
 import org.apache.james.protocols.smtp.SMTPResponse;
@@ -82,5 +84,10 @@ public class UnknownCmdHandler extends AbstractHookableCmdHandler<UnknownHook> {
     @Override
     protected Class<UnknownHook> getHookInterface() {
         return UnknownHook.class;
+    }
+
+    @Override
+    protected TimeMetric timer(Request request) {
+        return metricFactory.timer("SMTP-unknown");
     }
 }
