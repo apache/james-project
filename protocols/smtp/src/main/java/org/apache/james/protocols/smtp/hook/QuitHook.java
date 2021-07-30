@@ -25,7 +25,7 @@ package org.apache.james.protocols.smtp.hook;
 import org.apache.james.protocols.smtp.SMTPSession;
 
 /**
- * Implement this interfaces to hook in the MAIL Command
+ * Implement this interfaces to hook in the QUIT Command
  * 
  */
 public interface QuitHook extends Hook {

@@ -28,7 +28,7 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * Implement this interfaces to hook in the MAIL Command
+ * Implement this interfaces to hook in the RCPT Command
  */
 public interface RcptHook extends Hook {
     /**
