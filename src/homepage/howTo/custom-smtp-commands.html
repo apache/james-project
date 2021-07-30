@@ -1,0 +1,184 @@
+---
+layout: howTo
+---
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+
+<!-- Main -->
+<div id="main">
+
+    <!-- Introduction -->
+    <section id="intro" class="main special">
+        <div class="">
+            <div class="content align-left">
+                <header class="major">
+                    <h1><b>Configure Custom SMTP commands</b></h1>
+                </header>
+
+                <p>
+                    The current project demonstrates how to write custom commands for Apache James SMTP server.
+                </p>
+
+                <p>
+                    Find this example on <a href="https://github.com/apache/james-project/tree/master/examples/custom-smtp-commands">GitHub</a>.
+                </p>
+
+                <p>
+                    Start by importing the dependencies:
+                </p>
+
+                <pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;james-server-protocols-smtp&lt;/artifactId&gt;
+&lt;/dependency&gt;
+                </code></pre>
+
+                <p>You can write your commands by extending the <code>CommandHandler&lt;SMTPSession&gt;</code> class. For instance:</p>
+
+                <pre><code>/**
+  * Copy of NoopCmdHandler
+  */
+public class MyNoopCmdHandler implements CommandHandler&lt;SMTPSession&gt; {
+    private static final Collection&lt;String&gt; COMMANDS = ImmutableSet.of(&quot;MYNOOP&quot;);
+
+    private static final Response NOOP = new SMTPResponse(SMTPRetCode.MAIL_OK,
+        DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.UNDEFINED_STATUS) + &quot; OK&quot;)
+        .immutable();
+
+    @Override
+    public Response onCommand(SMTPSession session, Request request) {
+        return NOOP;
+    }
+
+    @Override
+    public Collection&lt;String&gt; getImplCommands() {
+        return COMMANDS;
+    }
+}</code></pre>
+
+                <p>You then need to list the exposed SMTP commands with a <code>HandlersPackage</code>. For instance:</p>
+
+                <pre><code>/**
+ * This class copies CoreCmdHandlerLoader adding support for MYNOOP command
+ */
+public class MyCmdHandlerLoader implements HandlersPackage {
+
+    private final List&lt;String&gt; commands = new LinkedList&lt;&gt;();
+
+    public MyCmdHandlerLoader() {
+        Stream.of(
+            JamesWelcomeMessageHandler.class,
+            CommandDispatcher.class,
+            AuthCmdHandler.class,
+            JamesDataCmdHandler.class,
+            EhloCmdHandler.class,
+            ExpnCmdHandler.class,
+            HeloCmdHandler.class,
+            HelpCmdHandler.class,
+            JamesMailCmdHandler.class,
+            NoopCmdHandler.class,
+            QuitCmdHandler.class,
+            JamesRcptCmdHandler.class,
+            RsetCmdHandler.class,
+            VrfyCmdHandler.class,
+            MailSizeEsmtpExtension.class,
+            UsersRepositoryAuthHook.class,
+            AuthRequiredToRelayRcptHook.class,
+            SenderAuthIdentifyVerificationRcptHook.class,
+            PostmasterAbuseRcptHook.class,
+            ReceivedDataLineFilter.class,
+            DataLineJamesMessageHookHandler.class,
+            StartTlsCmdHandler.class,
+            AddDefaultAttributesMessageHook.class,
+            SendMailHandler.class,
+            UnknownCmdHandler.class,
+            CommandHandlerResultLogger.class,
+            HookResultLogger.class,
+            // Support MYNOOP
+            MyNoopCmdHandler.class)
+        .map(Class::getName)
+        .forEachOrdered(commands::add);
+    }
+
+    @Override
+    public List&lt;String&gt; getHandlers() {
+        return commands;
+    }
+}</code></pre>
+
+                <p>You can compile this example project:</p>
+
+                <pre><code>mvn clean install</code></pre>
+
+                <p>Write a configuration file telling James to use your <code>HandlerPackage</code>:</p>
+
+                <pre><code>&lt;smtpservers&gt;
+    &lt;smtpserver enabled=&quot;true&quot;&gt;
+        &lt;jmxName&gt;smtpserver-global&lt;/jmxName&gt;
+        &lt;bind&gt;0.0.0.0:25&lt;/bind&gt;
+        &lt;connectionBacklog&gt;200&lt;/connectionBacklog&gt;
+        &lt;tls socketTLS=&quot;false&quot; startTLS=&quot;false&quot;&gt;
+            &lt;keystore&gt;file://conf/keystore&lt;/keystore&gt;
+            &lt;secret&gt;james72laBalle&lt;/secret&gt;
+            &lt;provider&gt;org.bouncycastle.jce.provider.BouncyCastleProvider&lt;/provider&gt;
+            &lt;algorithm&gt;SunX509&lt;/algorithm&gt;
+        &lt;/tls&gt;
+        &lt;!-- ... --&gt;
+        &lt;handlerchain coreHandlersPackage=&quot;org.apache.james.examples.MyCmdHandlerLoader&quot;&gt;
+            &lt;handler class=&quot;org.apache.james.smtpserver.fastfail.ValidRcptHandler&quot;/&gt;
+        &lt;/handlerchain&gt;
+    &lt;/smtpserver&gt;
+&lt;/smtpservers&gt;</code></pre>
+
+                <p>Create a keystore (default password being <code>james72laBalle</code>):</p>
+
+                <pre><code>keytool -genkey -alias james -keyalg RSA -keystore keystore</code></pre>
+
+                <p>Then start a James server with your JAR and the configuration:</p>
+
+                <pre><code>docker run -d \
+  -v $PWD/smtpserver.xml:/root/conf/smtpserver.xml \
+  -v $PWD/exts:/root/extensions-jars \
+  -v $PWD/keystore:/root/conf/keystore \
+  -p 25:25 \
+  apache/james:memory-latest
+                </code></pre>
+
+                <p>You can play with <code>telnet</code> utility with the resulting server and use the <code>MYNOOP</code> command:</p>
+
+                <pre><code>$ $ telnet 127.0.0.1 25
+Trying 127.0.0.1...
+Connected to 127.0.0.1.
+Escape character is '^]'.
+220 Apache JAMES awesome SMTP Server
+MYNOOP
+250 2.0.0 OK
+quit
+221 2.0.0 1f0274082fc6 Service closing transmission channel
+Connection closed by foreign host.</code></pre>
+            </div>
+            <footer class="major">
+                <ul class="actions align-center">
+                    <li><a href="index.html" class="button">go back to other how-tos</a></li>
+                </ul>
+            </footer>
+        </div>
+    </section>
+
+</div>
