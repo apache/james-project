@@ -74,9 +74,6 @@
             <item
                 name="jDKIM"
                 href="http://james.apache.org/jdkim/index.html" />
-            <item
-                name="Hupa"
-                href="http://james.apache.org/hupa/index.html" />
         </links>
 
         <menu name="James components">
