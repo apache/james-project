@@ -866,6 +866,77 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             });
         }
 
+        @Test
+        void deleteMessageShouldCleanUpThreadData(CassandraCluster cassandraCluster) throws Exception {
+            // append a message
+            MessageManager.AppendResult message = inboxManager.appendMessage(MessageManager.AppendCommand.from(Message.Builder.of()
+                .setSubject("Test")
+                .setMessageId("Message-ID")
+                .setField(new RawField("In-Reply-To", "someInReplyTo"))
+                .addField(new RawField("References", "references1"))
+                .addField(new RawField("References", "references2"))
+                .setBody("testmail", StandardCharsets.UTF_8)), session);
+
+            Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID")),
+                Optional.of(new MimeMessageId("someInReplyTo")),
+                Optional.of(List.of(new MimeMessageId("references1"), new MimeMessageId("references2"))));
+            saveThreadData(session.getUser(), mimeMessageIds, message.getId().getMessageId(), message.getThreadId(), Optional.of(new Subject("Test"))).block();
+            CassandraMessageId cassandraMessageId = (CassandraMessageId) message.getId().getMessageId();
+            ThreadTablePartitionKey partitionKey = threadLookupDAO(cassandraCluster)
+                .selectOneRow(cassandraMessageId).block();
+
+            inboxManager.delete(ImmutableList.of(message.getId().getUid()), session);
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(threadDAO(cassandraCluster)
+                        .selectSome(partitionKey.getUsername(), partitionKey.getMimeMessageIds()).collectList().block())
+                    .isEmpty();
+
+                softly.assertThat(threadLookupDAO(cassandraCluster)
+                        .selectOneRow(cassandraMessageId).block())
+                    .isNull();
+            });
+        }
+
+        @Test
+        void deleteMessageShouldCleanUpThreadDataWhenFailure(CassandraCluster cassandraCluster) throws Exception {
+            // append a message
+            MessageManager.AppendResult message = inboxManager.appendMessage(MessageManager.AppendCommand.from(Message.Builder.of()
+                .setSubject("Test")
+                .setMessageId("Message-ID")
+                .setField(new RawField("In-Reply-To", "someInReplyTo"))
+                .addField(new RawField("References", "references1"))
+                .addField(new RawField("References", "references2"))
+                .setBody("testmail", StandardCharsets.UTF_8)), session);
+
+            Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID")),
+                Optional.of(new MimeMessageId("someInReplyTo")),
+                Optional.of(List.of(new MimeMessageId("references1"), new MimeMessageId("references2"))));
+            saveThreadData(session.getUser(), mimeMessageIds, message.getId().getMessageId(), message.getThreadId(), Optional.of(new Subject("Test"))).block();
+            CassandraMessageId cassandraMessageId = (CassandraMessageId) message.getId().getMessageId();
+            ThreadTablePartitionKey partitionKey = threadLookupDAO(cassandraCluster)
+                .selectOneRow(cassandraMessageId).block();
+
+            cassandraCluster.getConf().registerScenario(fail()
+                .times(1)
+                .whenQueryStartsWith("DELETE FROM threadTable"));
+            cassandraCluster.getConf().registerScenario(fail()
+                .times(1)
+                .whenQueryStartsWith("DELETE FROM threadLookupTable"));
+
+            inboxManager.delete(ImmutableList.of(message.getId().getUid()), session);
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(threadDAO(cassandraCluster)
+                        .selectSome(partitionKey.getUsername(), partitionKey.getMimeMessageIds()).collectList().block())
+                    .isEmpty();
+
+                softly.assertThat(threadLookupDAO(cassandraCluster)
+                        .selectOneRow(cassandraMessageId).block())
+                    .isNull();
+            });
+        }
+
         private CassandraMailboxCounterDAO countersDAO(CassandraCluster cassandraCluster) {
             return new CassandraMailboxCounterDAO(cassandraCluster.getConf());
         }
