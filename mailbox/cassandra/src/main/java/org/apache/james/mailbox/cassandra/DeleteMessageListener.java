@@ -204,7 +204,11 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
                 .flatMap(this::deleteMessageBlobs)
                 .flatMap(this::deleteAttachmentMessageIds)
                 .then(messageDAO.delete(messageId))
-                .then(messageDAOV3.delete(messageId)));
+                .then(messageDAOV3.delete(messageId))
+                .then(threadLookupDAO.selectOneRow(messageId)
+                    .flatMap(key -> threadDAO.deleteSome(key.getUsername(), key.getMimeMessageIds())
+                        .collectList()))
+                .then(threadLookupDAO.deleteOneRow(messageId)));
     }
 
     private Mono<Void> handleMessageDeletionAsPartOfMailboxDeletion(CassandraMessageId messageId, CassandraId excludedId) {
