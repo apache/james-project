@@ -174,7 +174,6 @@
                 <item name="Issue Tracker" href="https://issues.apache.org/jira/browse/JAMES" />
                 <item name="Sources" href="https://github.com/apache/james-project" />
                 <item name="RFCs" href="/server/rfcs.html"/>
-                <item name="Other versions" href="/server/other-versions.html"/>
                 <item name="Download releases" href="https://james.apache.org/download.cgi#Apache_James_Server" />
             </item>
             <item name="Mailets" href="/mailet/index.html" collapse="true">
