@@ -28,6 +28,8 @@ import static org.apache.james.user.ldap.DockerLdapSingleton.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Optional;
+
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConversionException;
 import org.apache.commons.configuration2.plist.PropertyListConfiguration;
@@ -35,6 +37,7 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.lib.UsersRepositoryContract;
 import org.apache.james.user.lib.UsersRepositoryImpl;
 import org.junit.jupiter.api.AfterAll;
@@ -142,15 +145,22 @@ class ReadOnlyUsersLDAPRepositoryTest {
         UserRepositoryExtension extension = UserRepositoryExtension.withVirtualHost();
 
         private ReadOnlyUsersLDAPRepository usersRepository;
+        private TestSystem testSystem;
 
         @BeforeEach
         void setUp(TestSystem testSystem) throws Exception {
             usersRepository = startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer), testSystem.getDomainList());
+            this.testSystem = testSystem;
         }
 
         @Override
         public UsersRepositoryImpl<ReadOnlyLDAPUsersDAO> testee() {
             return usersRepository;
+        }
+
+        @Override
+        public UsersRepository testee(Optional<Username> administrator) throws Exception {
+            return startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer, administrator), testSystem.getDomainList());
         }
 
         @Test
@@ -241,15 +251,22 @@ class ReadOnlyUsersLDAPRepositoryTest {
         UserRepositoryExtension extension = UserRepositoryExtension.withoutVirtualHosting();
 
         private ReadOnlyUsersLDAPRepository usersRepository;
+        private TestSystem testSystem;
 
         @BeforeEach
         void setUp(TestSystem testSystem) throws Exception {
             usersRepository = startUsersRepository(ldapRepositoryConfiguration(ldapContainer), testSystem.getDomainList());
+            this.testSystem = testSystem;
         }
 
         @Override
         public UsersRepositoryImpl<ReadOnlyLDAPUsersDAO> testee() {
             return usersRepository;
+        }
+
+        @Override
+        public UsersRepository testee(Optional<Username> administrator) throws Exception {
+            return startUsersRepository(ldapRepositoryConfiguration(ldapContainer, administrator), testSystem.getDomainList());
         }
 
         @Test
@@ -371,17 +388,25 @@ class ReadOnlyUsersLDAPRepositoryTest {
     }
 
     static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfiguration(LdapGenericContainer ldapContainer) {
+        return ldapRepositoryConfiguration(ldapContainer, Optional.of(Username.of(ADMIN_LOCAL_PART)));
+    }
+
+    static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfiguration(LdapGenericContainer ldapContainer,  Optional<Username> administrator) {
         PropertyListConfiguration configuration = baseConfiguration(ldapContainer);
         configuration.addProperty("[@userIdAttribute]", "uid");
-        configuration.addProperty("[@administratorId]", ADMIN_LOCAL_PART);
+        administrator.ifPresent(username -> configuration.addProperty("[@administratorId]", username.asString()));
         return configuration;
     }
 
     static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfigurationWithVirtualHosting(LdapGenericContainer ldapContainer) {
+        return ldapRepositoryConfigurationWithVirtualHosting(ldapContainer, Optional.of(ADMIN));
+    }
+
+    static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfigurationWithVirtualHosting(LdapGenericContainer ldapContainer, Optional<Username> administrator) {
         PropertyListConfiguration configuration = baseConfiguration(ldapContainer);
         configuration.addProperty("[@userIdAttribute]", "mail");
         configuration.addProperty("supportsVirtualHosting", true);
-        configuration.addProperty("[@administratorId]", ADMIN.asString());
+        administrator.ifPresent(username -> configuration.addProperty("[@administratorId]", username.asString()));
         return configuration;
     }
 

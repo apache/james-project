@@ -22,14 +22,19 @@ package org.apache.james.user.memory;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Optional;
+
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.lib.UsersRepositoryContract;
-import org.apache.james.user.lib.UsersRepositoryImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -46,14 +51,23 @@ class MemoryUsersRepositoryTest {
         UserRepositoryExtension extension = UserRepositoryExtension.withVirtualHost();
 
         private MemoryUsersRepository memoryUsersRepository;
+        private TestSystem testSystem;
 
         @BeforeEach
         void setUp(TestSystem testSystem) {
             memoryUsersRepository = MemoryUsersRepository.withVirtualHosting(testSystem.getDomainList());
+            this.testSystem = testSystem;
         }
 
         @Override
-        public UsersRepositoryImpl testee() {
+        public UsersRepository testee() {
+            return memoryUsersRepository;
+        }
+
+        @Override
+        public UsersRepository testee(Optional<Username> administrator) throws Exception {
+            MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withVirtualHosting(testSystem.getDomainList());
+            memoryUsersRepository.configure(configuration(administrator, true));
             return memoryUsersRepository;
         }
 
@@ -103,14 +117,23 @@ class MemoryUsersRepositoryTest {
         UserRepositoryExtension extension = UserRepositoryExtension.withoutVirtualHosting();
 
         private MemoryUsersRepository memoryUsersRepository;
+        private TestSystem testSystem;
 
         @BeforeEach
         void setUp(TestSystem testSystem) {
             memoryUsersRepository = MemoryUsersRepository.withoutVirtualHosting(testSystem.getDomainList());
+            this.testSystem = testSystem;
         }
 
         @Override
-        public UsersRepositoryImpl testee() {
+        public UsersRepository testee() {
+            return memoryUsersRepository;
+        }
+
+        @Override
+        public UsersRepository testee(Optional<Username> administrator) throws Exception {
+            MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withVirtualHosting(testSystem.getDomainList());
+            memoryUsersRepository.configure(configuration(administrator, false));
             return memoryUsersRepository;
         }
 
@@ -129,5 +152,13 @@ class MemoryUsersRepositoryTest {
             assertThatCode(() -> memoryUsersRepository.assertValid(Username.of("user")))
                 .doesNotThrowAnyException();
         }
+    }
+
+    private HierarchicalConfiguration<ImmutableNode> configuration(Optional<Username> administrator, boolean enableVirtualHosting) {
+        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
+        administrator.ifPresent(username -> configuration.addProperty("administratorId", username.asString()));
+
+        configuration.addProperty("enableVirtualHosting", enableVirtualHosting);
+        return configuration;
     }
 }

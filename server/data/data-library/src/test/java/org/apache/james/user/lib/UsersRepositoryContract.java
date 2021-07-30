@@ -34,6 +34,7 @@ import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.InvalidUsernameException;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.model.Algorithm;
@@ -53,15 +54,12 @@ public interface UsersRepositoryContract {
 
     class UserRepositoryExtension implements BeforeEachCallback, ParameterResolver {
 
-        private static final boolean ENABLE_VIRTUAL_HOSTING = true;
-        private static final boolean DISABLE_VIRTUAL_HOSTING = !ENABLE_VIRTUAL_HOSTING;
-
         public static UserRepositoryExtension withVirtualHost() {
-            return new UserRepositoryExtension(ENABLE_VIRTUAL_HOSTING);
+            return new UserRepositoryExtension(true);
         }
 
         public static UserRepositoryExtension withoutVirtualHosting() {
-            return new UserRepositoryExtension(DISABLE_VIRTUAL_HOSTING);
+            return new UserRepositoryExtension(false);
         }
 
         private final boolean supportVirtualHosting;
@@ -93,7 +91,7 @@ public interface UsersRepositoryContract {
 
     class TestSystem {
         static final Domain DOMAIN = Domain.of("james.org");
-        static final Domain UNKNOW_DOMAIN = Domain.of("unknown.org");
+        static final Domain UNKNOWN_DOMAIN = Domain.of("unknown.org");
 
         private final boolean supportVirtualHosting;
         private final SimpleDomainList domainList;
@@ -103,7 +101,7 @@ public interface UsersRepositoryContract {
         private final Username user3;
         private final Username admin;
         private final Username adminCaseVariation;
-        private final Username userWithUnknowDomain;
+        private final Username userWithUnknownDomain;
         private final Username invalidUsername;
 
         TestSystem(boolean supportVirtualHosting) throws Exception {
@@ -116,7 +114,7 @@ public interface UsersRepositoryContract {
             user1CaseVariation = toUsername("uSeRnaMe");
             admin = toUsername("admin");
             adminCaseVariation = toUsername("adMin");
-            userWithUnknowDomain = toUsername("unknown", UNKNOW_DOMAIN);
+            userWithUnknownDomain = toUsername("unknown", UNKNOWN_DOMAIN);
             invalidUsername = toUsername("userContains)*(");
         }
 
@@ -140,12 +138,15 @@ public interface UsersRepositoryContract {
             return admin;
         }
 
-        public Username getUserWithUnknowDomain() {
-            return userWithUnknowDomain;
+        public Username getUserWithUnknownDomain() {
+            return userWithUnknownDomain;
         }
     }
 
-    UsersRepositoryImpl testee();
+    UsersRepository testee();
+
+    UsersRepository testee(Optional<Username> administrator) throws Exception;
+
 
     interface ReadOnlyContract extends UsersRepositoryContract {
         @Test
@@ -169,9 +170,9 @@ public interface UsersRepositoryContract {
         }
 
         @Test
-        default void isAdministratorShouldBeCaseInsentive(TestSystem testSystem) throws Exception {
-            testee().setAdministratorId(Optional.of(testSystem.admin));
-            assertThat(testee().isAdministrator(testSystem.adminCaseVariation))
+        default void isAdministratorShouldBeCaseInsensitive(TestSystem testSystem) throws Exception {
+            UsersRepository testee = testee(Optional.of(testSystem.admin));
+            assertThat(testee.isAdministrator(testSystem.adminCaseVariation))
                 .isTrue();
         }
 
@@ -255,14 +256,14 @@ public interface UsersRepositoryContract {
         }
 
         @Test
-        default void containsShouldBeCaseInsentive(TestSystem testSystem) throws UsersRepositoryException {
+        default void containsShouldBeCaseInsensitive(TestSystem testSystem) throws UsersRepositoryException {
             testee().addUser(testSystem.user1CaseVariation, "password2");
 
             assertThat(testee().contains(testSystem.user1)).isTrue();
         }
 
         @Test
-        default void containsShouldBeCaseInsentiveWhenOriginalValueLowerCased(TestSystem testSystem) throws UsersRepositoryException {
+        default void containsShouldBeCaseInsensitiveWhenOriginalValueLowerCased(TestSystem testSystem) throws UsersRepositoryException {
             testee().addUser(testSystem.user1, "password2");
 
             assertThat(testee().contains(testSystem.user1CaseVariation)).isTrue();
@@ -294,7 +295,7 @@ public interface UsersRepositoryContract {
         }
 
         @Test
-        default void removeUserShouldBeCaseInsentiveOnCaseVariationUser(TestSystem testSystem) throws UsersRepositoryException {
+        default void removeUserShouldBeCaseInsensitiveOnCaseVariationUser(TestSystem testSystem) throws UsersRepositoryException {
             testee().addUser(testSystem.user1CaseVariation, "password2");
 
             testee().removeUser(testSystem.user1);
@@ -305,7 +306,7 @@ public interface UsersRepositoryContract {
         }
 
         @Test
-        default void removeUserShouldBeCaseInsentive(TestSystem testSystem) throws UsersRepositoryException {
+        default void removeUserShouldBeCaseInsensitive(TestSystem testSystem) throws UsersRepositoryException {
             testee().addUser(testSystem.user1, "password2");
 
             testee().removeUser(testSystem.user1CaseVariation);
@@ -316,7 +317,7 @@ public interface UsersRepositoryContract {
         }
 
         @Test
-        default void getUserByNameShouldBeCaseInsentive(TestSystem testSystem) throws UsersRepositoryException {
+        default void getUserByNameShouldBeCaseInsensitive(TestSystem testSystem) throws UsersRepositoryException {
             testee().addUser(testSystem.user1, "password2");
 
             assertThat(testee().getUserByName(testSystem.user1CaseVariation).getUserName())
@@ -333,7 +334,7 @@ public interface UsersRepositoryContract {
 
 
         @Test
-        default void testShouldBeCaseInsentiveOnCaseVariationUser(TestSystem testSystem) throws UsersRepositoryException {
+        default void testShouldBeCaseInsensitiveOnCaseVariationUser(TestSystem testSystem) throws UsersRepositoryException {
             String password = "password2";
             testee().addUser(testSystem.user1CaseVariation, password);
 
@@ -342,7 +343,7 @@ public interface UsersRepositoryContract {
         }
 
         @Test
-        default void testShouldBeCaseInsentive(TestSystem testSystem) throws UsersRepositoryException {
+        default void testShouldBeCaseInsensitive(TestSystem testSystem) throws UsersRepositoryException {
             String password = "password2";
             testee().addUser(testSystem.user1, password);
 
@@ -516,23 +517,23 @@ public interface UsersRepositoryContract {
 
         @Test
         default void isAdministratorShouldReturnFalseWhenNotConfigured(TestSystem testSystem) throws Exception {
-            testee().setAdministratorId(Optional.empty());
+            UsersRepository testee = testee(Optional.empty());
 
-            assertThat(testee().isAdministrator(testSystem.admin)).isFalse();
+            assertThat(testee.isAdministrator(testSystem.admin)).isFalse();
         }
 
         @Test
         default void isAdministratorShouldReturnTrueWhenConfiguredAndUserIsAdmin(TestSystem testSystem) throws Exception {
-            testee().setAdministratorId(Optional.of(testSystem.admin));
+            UsersRepository testee = testee(Optional.of(testSystem.admin));
 
-            assertThat(testee().isAdministrator(testSystem.admin)).isTrue();
+            assertThat(testee.isAdministrator(testSystem.admin)).isTrue();
         }
 
         @Test
         default void isAdministratorShouldReturnFalseWhenConfiguredAndUserIsNotAdmin(TestSystem testSystem) throws Exception {
-            testee().setAdministratorId(Optional.of(testSystem.admin));
+            UsersRepository testee = testee(Optional.of(testSystem.admin));
 
-            assertThat(testee().isAdministrator(testSystem.user1)).isFalse();
+            assertThat(testee.isAdministrator(testSystem.user1)).isFalse();
         }
     }
 
@@ -552,7 +553,7 @@ public interface UsersRepositoryContract {
 
         @Test
         default void addUserShouldThrowWhenUserDoesNotBelongToDomainList(TestSystem testSystem) {
-            assertThatThrownBy(() -> testee().addUser(testSystem.userWithUnknowDomain, "password"))
+            assertThatThrownBy(() -> testee().addUser(testSystem.userWithUnknownDomain, "password"))
                 .isInstanceOf(InvalidUsernameException.class)
                 .hasMessage("Domain does not exist in DomainList");
         }
@@ -566,7 +567,7 @@ public interface UsersRepositoryContract {
 
         @Test
         default void updateUserShouldThrowWhenUserDoesNotBelongToDomainList(TestSystem testSystem) {
-            assertThatThrownBy(() -> testee().updateUser(new DefaultUser(testSystem.userWithUnknowDomain, Algorithm.DEFAULT_FACTORY.of("hasAlg"))))
+            assertThatThrownBy(() -> testee().updateUser(new DefaultUser(testSystem.userWithUnknownDomain, Algorithm.DEFAULT_FACTORY.of("hasAlg"))))
                 .isInstanceOf(InvalidUsernameException.class)
                 .hasMessage("Domain does not exist in DomainList");
         }
@@ -579,7 +580,7 @@ public interface UsersRepositoryContract {
 
         @Test
         default void removeUserShouldThrowWhenUserDoesNotBelongToDomainList(TestSystem testSystem) {
-            assertThatThrownBy(() -> testee().removeUser(testSystem.userWithUnknowDomain))
+            assertThatThrownBy(() -> testee().removeUser(testSystem.userWithUnknownDomain))
                 .isInstanceOf(InvalidUsernameException.class)
                 .hasMessage("Domain does not exist in DomainList");
         }
@@ -595,25 +596,25 @@ public interface UsersRepositoryContract {
 
         @Test
         default void getUserByNameShouldNotThrowWhenUserDoesNotBelongToDomainList(TestSystem testSystem) {
-            assertThatCode(() -> testee().getUserByName(testSystem.userWithUnknowDomain))
+            assertThatCode(() -> testee().getUserByName(testSystem.userWithUnknownDomain))
                 .doesNotThrowAnyException();
         }
 
         @Test
         default void containsShouldNotThrowWhenUserDoesNotBelongToDomainList(TestSystem testSystem) {
-            assertThatCode(() -> testee().contains(testSystem.userWithUnknowDomain))
+            assertThatCode(() -> testee().contains(testSystem.userWithUnknownDomain))
                 .doesNotThrowAnyException();
         }
 
         @Test
         default void testShouldNotThrowWhenUserDoesNotBelongToDomainList(TestSystem testSystem) {
-            assertThatCode(() -> testee().test(testSystem.userWithUnknowDomain, "password"))
+            assertThatCode(() -> testee().test(testSystem.userWithUnknownDomain, "password"))
                 .doesNotThrowAnyException();
         }
 
         @Test
         default void isAdministratorShouldThrowWhenUserDoesNotBelongToDomainList(TestSystem testSystem) {
-            assertThatThrownBy(() -> testee().isAdministrator(testSystem.userWithUnknowDomain))
+            assertThatThrownBy(() -> testee().isAdministrator(testSystem.userWithUnknownDomain))
                 .isInstanceOf(InvalidUsernameException.class)
                 .hasMessage("Domain does not exist in DomainList");
         }
@@ -646,14 +647,14 @@ public interface UsersRepositoryContract {
         default void assertDomainPartValidShouldThrowWhenDomainPartIsMissing() throws Exception {
             Username withoutDomainPart = Username.fromLocalPartWithoutDomain("localPartOnly");
 
-            assertThatThrownBy(() -> testee().assertDomainPartValid(withoutDomainPart))
+            assertThatThrownBy(() -> testee().assertValid(withoutDomainPart))
                 .isInstanceOf(InvalidUsernameException.class)
                 .hasMessage("Given Username needs to contain a @domainpart");
         }
 
         @Test
         default void assertDomainPartValidShouldThrowWhenDomainPartIsNotManaged(TestSystem testSystem) {
-            assertThatThrownBy(() -> testee().assertDomainPartValid(testSystem.userWithUnknowDomain))
+            assertThatThrownBy(() -> testee().assertValid(testSystem.userWithUnknownDomain))
                 .isInstanceOf(InvalidUsernameException.class)
                 .hasMessage("Domain does not exist in DomainList");
         }
@@ -664,7 +665,7 @@ public interface UsersRepositoryContract {
                 "localPart",
                 TestSystem.DOMAIN);
 
-            assertThatCode(() -> testee().assertDomainPartValid(userWithManagedDomain))
+            assertThatCode(() -> testee().assertValid(userWithManagedDomain))
                 .doesNotThrowAnyException();
         }
     }
@@ -700,7 +701,7 @@ public interface UsersRepositoryContract {
                 "localPart",
                 TestSystem.DOMAIN);
 
-            assertThatThrownBy(() -> testee().assertDomainPartValid(withDomainPart))
+            assertThatThrownBy(() -> testee().assertValid(withDomainPart))
                 .isInstanceOf(InvalidUsernameException.class)
                 .hasMessage("Given Username contains a @domainpart but virtualhosting support is disabled");
         }
@@ -709,7 +710,7 @@ public interface UsersRepositoryContract {
         default void assertDomainPartValidShouldNotThrowWhenDomainPartIsMissing() {
             Username withOutDomainPart = Username.fromLocalPartWithoutDomain("localPartOnly");
 
-            assertThatCode(() -> testee().assertDomainPartValid(withOutDomainPart))
+            assertThatCode(() -> testee().assertValid(withOutDomainPart))
                 .doesNotThrowAnyException();
         }
     }

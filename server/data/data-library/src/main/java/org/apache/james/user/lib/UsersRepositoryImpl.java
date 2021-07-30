@@ -40,7 +40,6 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 
 public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository, Configurable {
@@ -162,10 +161,6 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
     @Override
     public boolean supportVirtualHosting() {
         return virtualHosting;
-    }
-
-    @VisibleForTesting void setAdministratorId(Optional<Username> username) {
-        this.administratorId = username;
     }
 
     @Override
