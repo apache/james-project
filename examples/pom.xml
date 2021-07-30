@@ -33,6 +33,7 @@
   <modules>
     <module>custom-listeners</module>
     <module>custom-mailets</module>
+    <module>custom-smtp-hooks</module>
   </modules>
   <properties>
     <james.groupId>org.apache.james</james.groupId>
