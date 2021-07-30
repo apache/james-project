@@ -40,6 +40,7 @@
   </properties>
 
   <modules>
+    <module>custom-james-assembly</module>
     <module>custom-listeners</module>
     <module>custom-mailets</module>
     <module>custom-smtp-command</module>
