@@ -1,0 +1,184 @@
+---
+layout: howTo
+---
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+
+<!-- Main -->
+<div id="main">
+
+    <!-- Introduction -->
+    <section id="intro" class="main special">
+        <div class="">
+            <div class="content align-left">
+                <header class="major">
+                    <h1><b>Configure Custom SMTP hooks</b></h1>
+                </header>
+
+                <p>
+                    The current project demonstrates how to write custom behaviors for Apache James SMTP server
+                    by the means of SMTP hooks.
+                </p>
+
+                <p>
+                    SMTP hooks allow integrating third party systems with the SMTP stack and writing additional SMTP extensions, for
+                    instance.
+                </p>
+
+                <p>
+                    Start by importing the dependencies:
+                </p>
+
+                <pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james.protocols&lt;/groupId&gt;
+    &lt;artifactId&gt;protocols-smtp/artifactId&gt;
+&lt;/dependency&gt;
+                </code></pre>
+
+                <ul>Allows writing the following hooks:
+                    <li><b>AuthHook</b>: hook in the AUTH Command</li>
+                    <li><b>HeloHook</b>: hook in the HELO Command</li>
+                    <li><b>MailHook</b>: hook in the MAIL Command</li>
+                    <li><b>MailParametersHook</b>: hook in the MAIL Command parameters</li>
+                    <li><b>RcptHook</b>: hook in the RCPT Command</li>
+                    <li><b>MessageHook</b>: hook in the DATA Command</li>
+                    <li><b>QuitHook</b>: hook in the QUIT Command</li>
+                    <li><b>UnknownHook</b>: hook for unknown commands</li>
+                </ul>
+
+                <pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;james-server-protocols-smtp&lt;/artifactId&gt;
+&lt;/dependency&gt;
+                </code></pre>
+
+                <p>James comes bundled with <a href="http://james.apache.org/server/dev-provided-smtp-hooks.html">provided SMTP hooks for common features</a>.
+                    We encourage you to review them before starting writing your own hooks.</p>
+
+                <ul>Allows writing the following hooks:
+                    <li><b>JamesMessageHook</b>: DATA command. Allows access to the message content.</li>
+                </ul>
+
+                <header class="major">
+                    <h2><b>Writing your own hooks</b></h2>
+                </header>
+
+                <p>
+                    Find this example on <a href="https://github.com/apache/james-project/tree/master/examples/custom-smtp-hooks">GitHub</a>.
+                </p>
+
+                <p>
+                    In this example we implement a single RCPT hook:
+                </p>
+
+                <pre><code>public class LoggingRcptHook implements RcptHook {
+    @Override
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt, Map&lt;String, String&gt; parameters) {
+        System.out.println(&quot;RCPT TO &quot; + rcpt + &quot;with parameters &quot; + parameters);
+
+        // Continue the SMTP transaction
+        return HookResult.DECLINED;
+    }
+}
+                </code></pre>
+
+                <p>You can compile this example project:</p>
+
+                <pre><code>mvn clean install</code></pre>
+
+                <p>Then embed your extension into a James server. First configure your hook:</p>
+
+                <pre><code>&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;smtpservers&gt;
+    &lt;smtpserver enabled=&quot;true&quot;&gt;
+        &lt;jmxName&gt;smtpserver-global&lt;/jmxName&gt;
+        &lt;bind&gt;0.0.0.0:25&lt;/bind&gt;
+        &lt;connectionBacklog&gt;200&lt;/connectionBacklog&gt;
+        &lt;tls socketTLS=&quot;false&quot; startTLS=&quot;false&quot;&gt;
+            &lt;keystore&gt;file://conf/keystore&lt;/keystore&gt;
+            &lt;secret&gt;james72laBalle&lt;/secret&gt;
+            &lt;provider&gt;org.bouncycastle.jce.provider.BouncyCastleProvider&lt;/provider&gt;
+            &lt;algorithm&gt;SunX509&lt;/algorithm&gt;
+        &lt;/tls&gt;
+        &lt;!-- ... --&gt;
+        &lt;handlerchain&gt;
+            &lt;handler class=&quot;org.apache.james.smtpserver.fastfail.ValidRcptHandler&quot;/&gt;
+            &lt;handler class=&quot;org.apache.james.smtpserver.CoreCmdHandlerLoader&quot;/&gt;
+            &lt;handler class=&quot;org.apache.james.examples.LoggingRcptHook&quot;/&gt;
+        &lt;/handlerchain&gt;
+    &lt;/smtpserver&gt;
+&lt;/smtpservers&gt;
+                </code></pre>
+
+                <p>Create a keystore (default password being <code>james72laBalle</code>):</p>
+
+                <pre><code>keytool -genkey -alias james -keyalg RSA -keystore keystore</code></pre>
+
+                <p>Then start a James server with your JAR and the configuration:</p>
+
+                <pre><code>docker run -d \
+  -v $PWD/smtpserver.xml:/root/conf/smtpserver.xml \
+  -v $PWD/exts:/root/extensions-jars \
+  -v $PWD/keystore:/root/conf/keystore \
+  -p 25:25 \
+  apache/james:memory-latest
+                </code></pre>
+
+                <p>You can play with <code>telnet</code> utility with the resulting server:</p>
+
+                <pre><code>$ telnet 127.0.0.1 25
+Trying 127.0.0.1...
+Connected to 127.0.0.1.
+Escape character is '^]'.
+220 Apache JAMES awesome SMTP Server
+EHLO toto.com
+250-177b73020637 Hello toto.com [172.17.0.1])
+250-PIPELINING
+250-ENHANCEDSTATUSCODES
+250 8BITMIME
+RCPT TO: &lt;b@c.com&gt;
+503 5.5.0 Need MAIL before RCPT
+MAIL FROM: &lt;b@c.com&gt;
+250 2.1.0 Sender &lt;b@c.com&gt; OK
+RCPT TO: &lt;c@d.com&gt;
+550 5.7.1 Requested action not taken: relaying denied
+quit
+                </code></pre>
+
+                <p>
+                    Now looking at the logs we can verify that our RCPT have well been executed:
+                </p>
+
+                <pre><code>06:49:15.734 [INFO ] o.a.j.GuiceJamesServer - JAMES server started
+06:49:30.275 [INFO ] o.a.j.p.n.BasicChannelUpstreamHandler - Connection established from 172.17.0.1
+06:50:18.892 [INFO ] o.a.j.i.n.ImapChannelUpstreamHandler - Connection established from 172.17.0.1
+06:50:19.152 [INFO ] o.a.j.i.n.ImapChannelUpstreamHandler - Connection closed for 172.17.0.1
+RCPT TO c@d.comwith parameters {TO:=, &lt;c@d.com&gt;=}</code></pre>
+
+                <p>Note that hooks can also be written for the LMTP protocol.</p>
+            </div>
+            <footer class="major">
+                <ul class="actions align-center">
+                    <li><a href="index.html" class="button">go back to other how-tos</a></li>
+                </ul>
+            </footer>
+        </div>
+    </section>
+
+</div>
