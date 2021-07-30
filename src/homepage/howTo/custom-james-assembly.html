@@ -1,0 +1,190 @@
+---
+layout: howTo
+---
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+
+<!-- Main -->
+<div id="main">
+
+    <!-- Introduction -->
+    <section id="intro" class="main special">
+        <div class="">
+            <div class="content align-left">
+                <header class="major">
+                    <h1><b>Write Custom James server assembly</b></h1>
+                </header>
+                <p>
+                    Find this example on <a href="https://github.com/apache/james-project/tree/master/examples/custom-james-assembly">GitHub</a>.
+                </p>
+
+                <p>
+                    The current project demonstrates how to write a custom assembly in order to write your
+                    own tailor-made server.
+                </p>
+
+                <ul>This enables:
+                    <li>Arbitrary composition of technologies (example JPA mailbox with Cassandra user management)</li>
+                    <li>Write any additional components</li>
+                    <li>Drop any unneeded component</li>
+                    <li>You have control on the dependencies and can reduce the classpath size</li>
+                </ul>
+
+                <header class="major">
+                    <h2><b>Example: Write an IMAP+SMTP only memory server</b></h2>
+                </header>
+
+                <p>
+                    In order to do this select the modules you wished to assemble
+                    <a href="https://github.com/apache/james-project/tree/master/server/container/guice">in the Guice building blocks</a>.
+                    We encourage you to have a fine grain control of your dependencies but for the sake of simplicity
+                    this example will reuse the dependencies of an existing James application:
+                </p>
+
+                <pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;${james.groupId}&lt;/groupId&gt;
+    &lt;artifactId&gt;james-server-memory-app&lt;/artifactId&gt;
+    &lt;version&gt;${project.version}&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+
+                <p>Once done assemble the guice modules together in a class implementing <code>JamesServerMain</code>:</p>
+
+                <pre><code>public class CustomJamesServerMain implements JamesServerMain {
+       public static final Module PROTOCOLS = Modules.combine(
+           new IMAPServerModule(),
+           new ProtocolHandlerModule(),
+           new MailRepositoryTaskSerializationModule(),
+           new SMTPServerModule());
+
+       public static final Module CUSTOM_SERVER_MODULE = Modules.combine(
+           new MailetProcessingModule(),
+           new MailboxModule(),
+           new MemoryDataModule(),
+           new MemoryEventStoreModule(),
+           new MemoryMailboxModule(),
+           new MemoryMailQueueModule(),
+           new TaskManagerModule(),
+           new RawPostDequeueDecoratorModule(),
+           binder -&gt; binder.bind(MailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
+               .toInstance(BaseHierarchicalConfiguration::new));
+
+       public static final Module CUSTOM_SERVER_AGGREGATE_MODULE = Modules.combine(
+           CUSTOM_SERVER_MODULE,
+           PROTOCOLS);
+
+       public static void main(String[] args) throws Exception {
+           Configuration configuration = Configuration.builder()
+               .useWorkingDirectoryEnvProperty()
+               .build();
+
+           JamesServerMain.main(GuiceJamesServer.forConfiguration(configuration)
+               .combineWith(CUSTOM_SERVER_AGGREGATE_MODULE));
+       }
+   }</code></pre>
+
+                <p>You need to write a minimal main method launching your guice module composition.</p>
+
+                <p>We do provide in this example <a href="https://github.com/GoogleContainerTools/jib/tree/master/jib-maven-plugin">JIB</a>
+                    to package this custom James assembly into docker:</p>
+
+                <pre><code>&lt;plugin&gt;
+    &lt;groupId&gt;com.google.cloud.tools&lt;/groupId&gt;
+    &lt;artifactId&gt;jib-maven-plugin&lt;/artifactId&gt;
+    &lt;version&gt;2.7.1&lt;/version&gt;
+    &lt;configuration&gt;
+        &lt;from&gt;
+            &lt;image&gt;adoptopenjdk:11-jdk-hotspot&lt;/image&gt;
+        &lt;/from&gt;
+        &lt;to&gt;
+            &lt;image&gt;apache/james&lt;/image&gt;
+            &lt;tags&gt;
+                &lt;tag&gt;custom-latest&lt;/tag&gt;
+            &lt;/tags&gt;
+        &lt;/to&gt;
+        &lt;container&gt;
+            &lt;mainClass&gt;org.apache.james.examples.CustomJamesServerMain&lt;/mainClass&gt;
+            &lt;ports&gt;
+                &lt;port&gt;25&lt;/port&gt; &lt;!-- JMAP --&gt;
+                &lt;port&gt;143&lt;/port&gt; &lt;!-- IMAP --&gt;
+            &lt;/ports&gt;
+            &lt;appRoot&gt;/root&lt;/appRoot&gt;
+            &lt;jvmFlags&gt;
+                &lt;jvmFlag&gt;-Dlogback.configurationFile=/root/conf/logback.xml&lt;/jvmFlag&gt;
+                &lt;jvmFlag&gt;-Dworking.directory=/root/&lt;/jvmFlag&gt;
+            &lt;/jvmFlags&gt;
+            &lt;creationTime&gt;USE_CURRENT_TIMESTAMP&lt;/creationTime&gt;
+        &lt;/container&gt;
+        &lt;extraDirectories&gt;
+            &lt;paths&gt;
+                &lt;path&gt;
+                    &lt;from&gt;sample-configuration&lt;/from&gt;
+                    &lt;into&gt;/root/conf&lt;/into&gt;
+                &lt;/path&gt;
+            &lt;/paths&gt;
+        &lt;/extraDirectories&gt;
+    &lt;/configuration&gt;
+    &lt;executions&gt;
+        &lt;execution&gt;
+            &lt;goals&gt;
+                &lt;goal&gt;buildTar&lt;/goal&gt;
+            &lt;/goals&gt;
+            &lt;phase&gt;package&lt;/phase&gt;
+        &lt;/execution&gt;
+    &lt;/executions&gt;
+&lt;/plugin&gt;}</code></pre>
+
+                <p>We provide a minimal <a href="https://github.com/apache/james-project/tree/master/examples/custom-james-assembly/sample-configuration">sample configuration</a>.
+                </p>
+
+                <p>You can compile this example project:</p>
+
+                <pre><code>mvn clean install</code></pre>
+
+                <p>Create a keystore (default password being <code>james72laBalle</code>):</p>
+
+                <pre><code>keytool -genkey -alias james -keyalg RSA -keystore keystore</code></pre>
+
+                <p>Import the build result:</p>
+
+                <pre><code>$ docker load -i target/jib-image.tar</code></pre>
+
+                <p>Then launch your custom server with docker:</p>
+
+                <pre><code>docker run \
+    -v $PWD/keystore:/root/conf/keystore \
+    -p 25:25 \
+    -p 143:143 \
+    -ti  \
+    apache/james:custom-latest
+                </code></pre>
+
+                <p>You will see that your custom James server starts smoothly:</p>
+
+                <pre><code>...
+09:40:25.884 [INFO ] o.a.j.GuiceJamesServer - JAMES server started</code></pre>
+            </div>
+            <footer class="major">
+                <ul class="actions align-center">
+                    <li><a href="index.html" class="button">go back to other how-tos</a></li>
+                </ul>
+            </footer>
+        </div>
+    </section>
+
+</div>
