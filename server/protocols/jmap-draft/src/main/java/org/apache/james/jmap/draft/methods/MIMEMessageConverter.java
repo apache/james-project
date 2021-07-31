@@ -105,6 +105,7 @@ public class MIMEMessageConverter {
     private static final List<String> LOWERCASED_COMPUTED_HEADERS = COMPUTED_HEADERS.stream()
             .map(s -> s.toLowerCase(Locale.ENGLISH))
             .collect(ImmutableList.toImmutableList());
+    private static final LenientFieldParser FIELD_PARSER = new LenientFieldParser();
 
     private final BasicBodyFactory bodyFactory;
     private final AttachmentContentLoader attachmentContentLoader;
@@ -133,7 +134,7 @@ public class MIMEMessageConverter {
         }
 
         Message.Builder messageBuilder = Message.Builder.of()
-            .use(new LenientFieldParser());
+            .use(FIELD_PARSER);
         if (isMultipart(creationMessageEntry.getValue(), messageAttachments)) {
             messageBuilder.setBody(createMultipart(creationMessageEntry.getValue(), messageAttachments, session));
         } else {

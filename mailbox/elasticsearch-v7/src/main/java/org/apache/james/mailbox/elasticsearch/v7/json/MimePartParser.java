@@ -44,6 +44,7 @@ import com.google.common.base.Preconditions;
 
 public class MimePartParser {
     private static final Logger LOGGER = LoggerFactory.getLogger(MimePartParser.class);
+    private static final LenientFieldParser FIELD_PARSER = new LenientFieldParser();
 
     private final Message message;
     private final TextExtractor textExtractor;
@@ -59,7 +60,7 @@ public class MimePartParser {
         this.currentlyBuildMimePart = new RootMimePartContainerBuilder();
         this.stream = new MimeTokenStream(
             MimeConfig.PERMISSIVE,
-            new DefaultBodyDescriptorBuilder(null, new LenientFieldParser(), DecodeMonitor.SILENT));
+            new DefaultBodyDescriptorBuilder(null, FIELD_PARSER, DecodeMonitor.SILENT));
     }
 
     public MimePart parse() throws IOException, MimeException {
