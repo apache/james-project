@@ -617,7 +617,7 @@
         <jackson.version>2.12.4</jackson.version>
         <feign.version>10.3.0</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
-        <metrics.version>4.1.17</metrics.version>
+        <metrics.version>4.2.3</metrics.version>
         <testcontainers.version>1.15.1</testcontainers.version>
         <assertj.version>3.3.0</assertj.version>
         <es.version>2.2.1</es.version>
