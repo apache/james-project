@@ -427,7 +427,7 @@ public interface RabbitMQManagementAPI {
     ErrorDecoder RETRY_500 = (methodKey, response) -> {
         if (response.status() == 500) {
             throw new RetryableException(response.status(), "Error encountered, scheduling retry",
-                response.request().httpMethod(), new Date());
+                response.request().httpMethod(), new Date(), response.request());
         }
         throw new RuntimeException("Non recoverable exception status: " + response.status());
     };
