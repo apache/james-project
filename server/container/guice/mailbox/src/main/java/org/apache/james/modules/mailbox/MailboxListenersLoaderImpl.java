@@ -32,7 +32,6 @@ import org.apache.james.utils.ClassName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
@@ -59,7 +58,7 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
     private ImmutableSet<EventListener.ReactiveGroupEventListener> wrap(Set<EventListener.GroupEventListener> nonReactiveGuiceDefinedListeners) {
         return nonReactiveGuiceDefinedListeners.stream()
             .map(EventListener::wrapReactive)
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 
     @Override

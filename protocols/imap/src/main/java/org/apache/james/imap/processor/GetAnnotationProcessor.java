@@ -50,7 +50,6 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -116,7 +115,7 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
 
         return mailboxAnnotations.stream()
             .filter(lowerPredicate)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private List<MailboxAnnotation> getMailboxAnnotations(ImapSession session, Set<MailboxAnnotationKey> keys, GetAnnotationRequest.Depth depth, MailboxPath mailboxPath) throws MailboxException {
@@ -147,7 +146,7 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
         ImmutableSortedSet<Integer> overLimitSizes = mailboxAnnotations.stream()
             .filter(filterOverSizedAnnotation)
             .map(MailboxAnnotation::size)
-            .collect(Guavate.toImmutableSortedSet(Comparator.reverseOrder()));
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.reverseOrder()));
 
         if (overLimitSizes.isEmpty()) {
             return Optional.empty();

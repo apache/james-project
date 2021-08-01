@@ -28,10 +28,10 @@ import org.apache.james.lifecycle.api.StartUpCheck;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 import reactor.core.publisher.Flux;
@@ -69,7 +69,7 @@ public class StartUpChecksPerformer {
         public List<String> badCheckNames() {
             return badChecks.stream()
                 .map(StartUpCheck.CheckResult::getName)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         }
     }
 
@@ -86,7 +86,7 @@ public class StartUpChecksPerformer {
             return Flux.fromIterable(startUpChecks)
                 .publishOn(Schedulers.elastic())
                 .map(this::checkQuietly)
-                .collect(Guavate.toImmutableList())
+                .collect(ImmutableList.toImmutableList())
                 .block();
         }
 
@@ -122,7 +122,7 @@ public class StartUpChecksPerformer {
         List<StartUpCheck.CheckResult> badChecks = startUpChecks.check()
             .stream()
             .filter(StartUpCheck.CheckResult::isBad)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         if (!badChecks.isEmpty()) {
             throw new StartUpChecksException(badChecks);

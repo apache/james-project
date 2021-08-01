@@ -68,7 +68,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
@@ -212,7 +211,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         if (useUids) {
             return uids.stream()
                 .map(MessageUid::asLong)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         } else {
             return uids.stream()
                 .map(uid -> session.getSelected().msn(uid))
@@ -220,13 +219,13 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                     nullableMsn.fold(
                         Stream::empty,
                         msn -> Stream.of(Integer.valueOf(msn.asInt()).longValue()))))
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         }
     }
 
     private Collection<MessageUid> performUidSearch(MessageManager mailbox, SearchQuery query, MailboxSession msession) throws MailboxException {
         return Flux.from(mailbox.search(query, msession))
-            .collect(Guavate.toImmutableList())
+            .collect(ImmutableList.toImmutableList())
             .block();
     }
 

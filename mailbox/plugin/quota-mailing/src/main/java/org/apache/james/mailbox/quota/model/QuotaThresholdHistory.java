@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -49,7 +48,7 @@ public class QuotaThresholdHistory {
     public QuotaThresholdHistory(List<QuotaThresholdChange> changes) {
         this.changes = changes.stream()
             .sorted(Comparator.comparing(QuotaThresholdChange::getInstant))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     public HistoryEvolution compareWithCurrentThreshold(QuotaThresholdChange thresholdChange, Duration gracePeriod) {

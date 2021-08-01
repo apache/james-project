@@ -30,7 +30,6 @@ import org.apache.james.mailrepository.api.Protocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -79,7 +78,7 @@ public class MailRepositoryStoreConfiguration {
         ImmutableList<Item> items = retrieveRegisteredClassConfiguration(configuration)
             .stream()
             .map(MailRepositoryStoreConfiguration::readItem)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         Optional<Protocol> defaultProtocol =
             Optional.ofNullable(configuration.getString("defaultProtocol", null)).map(Protocol::new)
@@ -105,7 +104,7 @@ public class MailRepositoryStoreConfiguration {
 
     private static Item readItem(HierarchicalConfiguration<ImmutableNode> configuration) {
         String className = configuration.getString("[@class]");
-        List<Protocol> protocolStream = Arrays.stream(configuration.getStringArray("protocols.protocol")).map(Protocol::new).collect(Guavate.toImmutableList());
+        List<Protocol> protocolStream = Arrays.stream(configuration.getStringArray("protocols.protocol")).map(Protocol::new).collect(ImmutableList.toImmutableList());
         HierarchicalConfiguration<ImmutableNode> extraConfig = extraConfig(configuration);
 
         return new Item(protocolStream, className, extraConfig);

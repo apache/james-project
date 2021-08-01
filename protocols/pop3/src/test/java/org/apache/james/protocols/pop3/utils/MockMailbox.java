@@ -31,7 +31,7 @@ import org.apache.james.protocols.pop3.mailbox.ImapMailbox;
 import org.apache.james.protocols.pop3.mailbox.ImapMessageMetaData;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 @SuppressWarnings("deprecation")
 public class MockMailbox extends ImapMailbox {
@@ -83,7 +83,7 @@ public class MockMailbox extends ImapMailbox {
         return messages.values()
             .stream()
             .map(m -> m.meta)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     @Override

@@ -24,7 +24,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 public class DTOConverter<T, U extends DTO> {
@@ -39,12 +39,12 @@ public class DTOConverter<T, U extends DTO> {
 
     public DTOConverter(Set<? extends DTOModule<? extends T, ? extends U>> modules) {
         typeToModule = modules.stream()
-            .collect(Guavate.toImmutableMap(
+            .collect(ImmutableMap.toImmutableMap(
                 DTOModule::getDomainObjectType,
                 Function.identity()));
 
         domainClassToModule = modules.stream()
-            .collect(Guavate.toImmutableMap(
+            .collect(ImmutableMap.toImmutableMap(
                 DTOModule::getDomainObjectClass,
                 Function.identity()));
     }

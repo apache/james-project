@@ -56,7 +56,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -229,7 +228,7 @@ class RabbitMQTest {
                 awaitAtMostOneMinute.until(
                     () -> countReceivedMessages(consumer2, consumer3, consumer4) == 30);
 
-                ImmutableList<Integer> expectedResult = IntStream.range(0, 10).boxed().collect(Guavate.toImmutableList());
+                ImmutableList<Integer> expectedResult = IntStream.range(0, 10).boxed().collect(ImmutableList.toImmutableList());
                 // Check every subscriber have receive all the messages.
                 assertThat(consumer2.getConsumedMessages()).containsOnlyElementsOf(expectedResult);
                 assertThat(consumer3.getConsumedMessages()).containsOnlyElementsOf(expectedResult);
@@ -269,7 +268,7 @@ class RabbitMQTest {
                 awaitAtMostOneMinute.until(
                     () -> countReceivedMessages(consumer2, consumer3, consumer4) == nbMessages);
 
-                ImmutableList<Integer> expectedResult = IntStream.range(0, nbMessages).boxed().collect(Guavate.toImmutableList());
+                ImmutableList<Integer> expectedResult = IntStream.range(0, nbMessages).boxed().collect(ImmutableList.toImmutableList());
 
                 assertThat(
                     Iterables.concat(

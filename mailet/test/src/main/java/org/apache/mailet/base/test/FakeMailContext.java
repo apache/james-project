@@ -48,7 +48,6 @@ import org.slf4j.Logger;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -71,7 +70,7 @@ public class FakeMailContext implements MailetContext {
             .recipients(mail.getRecipients())
             .message(mail.getMessage())
             .state(mail.getState())
-            .attributes(mail.attributes().collect(Guavate.toImmutableList()))
+            .attributes(mail.attributes().collect(ImmutableList.toImmutableList()))
             .fromMailet();
     }
 
@@ -169,10 +168,9 @@ public class FakeMailContext implements MailetContext {
             public Builder attributes(List<Attribute> attributes) {
                 this.attributes.putAll(attributes
                     .stream()
-                    .collect(Guavate.toImmutableMap(
+                    .collect(ImmutableMap.toImmutableMap(
                             attribute -> attribute.getName(),
-                            Function.identity()
-                    )));
+                            Function.identity())));
                 return this;
             }
 

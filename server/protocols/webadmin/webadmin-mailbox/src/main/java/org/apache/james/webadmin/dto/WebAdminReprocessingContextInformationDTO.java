@@ -32,7 +32,7 @@ import org.apache.mailbox.tools.indexer.FullReindexingTask;
 import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO;
 import org.apache.mailbox.tools.indexer.RunningOptionsDTO;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 public class WebAdminReprocessingContextInformationDTO implements AdditionalInformationDTO {
     public static class WebAdminErrorRecoveryIndexationDTO extends WebAdminReprocessingContextInformationDTO {
@@ -101,7 +101,7 @@ public class WebAdminReprocessingContextInformationDTO implements AdditionalInfo
         this.messageFailures = SerializableReIndexingExecutionFailures.from(failures);
         this.mailboxFailures = failures.mailboxFailures().stream()
             .map(MailboxId::serialize)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
         this.timestamp = timestamp;
     }
 

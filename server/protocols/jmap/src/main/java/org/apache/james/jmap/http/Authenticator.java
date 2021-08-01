@@ -25,7 +25,6 @@ import org.apache.james.jmap.exceptions.NoAuthorizationSuppliedException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
@@ -63,6 +62,6 @@ public class Authenticator {
         return new NoAuthorizationSuppliedException(AuthenticateHeader.of(
             authMethods.stream()
                 .map(AuthenticationStrategy::correspondingChallenge)
-                .collect(Guavate.toImmutableList())));
+                .collect(ImmutableList.toImmutableList())));
     }
 }

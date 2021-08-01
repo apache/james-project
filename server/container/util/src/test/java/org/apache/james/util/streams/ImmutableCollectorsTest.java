@@ -30,7 +30,6 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -41,7 +40,7 @@ class ImmutableCollectorsTest {
     void immutableListCollectorShouldReturnEmptyImmutableListWhenEmptyStream() {
         String[] data = {};
         List<String> actual = Arrays.stream(data)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
         assertThat(actual).isInstanceOf(ImmutableList.class);
         assertThat(actual).isEmpty();
     }
@@ -50,7 +49,7 @@ class ImmutableCollectorsTest {
     void immutableListCollectorShouldReturnImmutableListWhenOneElementStream() {
         String[] data = {"a"};
         List<String> actual = Arrays.stream(data)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
         assertThat(actual).isInstanceOf(ImmutableList.class);
         assertThat(actual).containsExactly("a");
     }
@@ -59,7 +58,7 @@ class ImmutableCollectorsTest {
     void immutableListCollectorShouldReturnImmutableListWhen3ElementsStream() {
         String[] data = {"a", "b", "c"};
         List<String> actual = Arrays.stream(data)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
         assertThat(actual).isInstanceOf(ImmutableList.class);
         assertThat(actual).containsExactly("a", "b", "c");
     }
@@ -68,7 +67,7 @@ class ImmutableCollectorsTest {
     void immutableSetCollectorShouldReturnEmptyImmutableSetWhenEmptyStream() {
         String[] data = {};
         Set<String> actual = Arrays.stream(data)
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
         assertThat(actual).isInstanceOf(ImmutableSet.class);
         assertThat(actual).isEmpty();
     }
@@ -77,7 +76,7 @@ class ImmutableCollectorsTest {
     void immutableSetCollectorShouldReturnImmutableSetWhenOneElementStream() {
         String[] data = {"a"};
         Set<String> actual = Arrays.stream(data)
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
         assertThat(actual).isInstanceOf(ImmutableSet.class);
         assertThat(actual).containsExactly("a");
     }
@@ -86,7 +85,7 @@ class ImmutableCollectorsTest {
     void immutableSetCollectorShouldReturnImmutableSetWhen3ElementsStream() {
         String[] data = {"a", "b", "c"};
         Set<String> actual = Arrays.stream(data)
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
         assertThat(actual).isInstanceOf(ImmutableSet.class);
         assertThat(actual).containsExactly("a", "b", "c");
     }
@@ -96,7 +95,7 @@ class ImmutableCollectorsTest {
     void immutableMapCollectorShouldReturnEmptyImmutableMapWhenEmptyStream() {
         String[] data = {};
         Map<String, Integer> actual = Arrays.stream(data)
-                .collect(Guavate.toImmutableMap(x -> x.toUpperCase(Locale.US), String::length));
+                .collect(ImmutableMap.toImmutableMap(x -> x.toUpperCase(Locale.US), String::length));
         assertThat(actual).isInstanceOf(ImmutableMap.class);
         assertThat(actual).isEmpty();
     }
@@ -105,7 +104,7 @@ class ImmutableCollectorsTest {
     void immutableMapCollectorShouldReturnAppliedImmutableMapWhenOneElementStream() {
         String[] data = {"a"};
         Map<String, Integer> actual = Arrays.stream(data)
-                .collect(Guavate.toImmutableMap(x -> x.toUpperCase(Locale.US), String::length));
+                .collect(ImmutableMap.toImmutableMap(x -> x.toUpperCase(Locale.US), String::length));
         assertThat(actual).isInstanceOf(ImmutableMap.class);
         assertThat(actual).containsExactly(entry("A", 1));
     }
@@ -114,7 +113,7 @@ class ImmutableCollectorsTest {
     void immutableMapCollectorShouldReturnAppliedImmutableMapWhen3ElementsStream() {
         String[] data = {"a", "bb", "ccc"};
         Map<String, Integer> actual = Arrays.stream(data)
-                .collect(Guavate.toImmutableMap(x -> x.toUpperCase(Locale.US), String::length));
+                .collect(ImmutableMap.toImmutableMap(x -> x.toUpperCase(Locale.US), String::length));
         assertThat(actual).isInstanceOf(ImmutableMap.class);
         assertThat(actual).containsExactly(entry("A", 1), entry("BB", 2), entry("CCC", 3));
     }

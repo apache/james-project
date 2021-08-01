@@ -44,7 +44,8 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 
@@ -53,7 +54,7 @@ public class MailDto {
         Optional<MessageContent> messageContent = fetchMessage(additionalFields, mail);
         return new MailDto(mail.getName(),
             mail.getMaybeSender().asOptional().map(MailAddress::asString),
-            mail.getRecipients().stream().map(MailAddress::asString).collect(Guavate.toImmutableList()),
+            mail.getRecipients().stream().map(MailAddress::asString).collect(ImmutableList.toImmutableList()),
             Optional.ofNullable(mail.getErrorMessage()),
             Optional.ofNullable(mail.getState()),
             Optional.ofNullable(mail.getRemoteHost()),
@@ -136,7 +137,7 @@ public class MailDto {
         return new HeadersDto(Collections
             .list(message.getAllHeaders())
             .stream()
-            .collect(Guavate.toImmutableListMultimap(Header::getName, (header) -> MimeUtil.unscrambleHeaderValue(header.getValue()))));
+            .collect(ImmutableListMultimap.toImmutableListMultimap(Header::getName, (header) -> MimeUtil.unscrambleHeaderValue(header.getValue()))));
     }
 
     private static Optional<ImmutableMap<String, HeadersDto>> fetchPerRecipientsHeaders(Set<AdditionalField> additionalFields, Mail mail) {
@@ -150,7 +151,7 @@ public class MailDto {
         return Optional.of(headersByRecipient
             .keySet()
             .stream()
-            .collect(Guavate.toImmutableMap(MailAddress::asString, (address) -> fetchPerRecipientHeader(headersByRecipient, address))));
+            .collect(ImmutableMap.toImmutableMap(MailAddress::asString, (address) -> fetchPerRecipientHeader(headersByRecipient, address))));
     }
 
     private static HeadersDto fetchPerRecipientHeader(
@@ -158,7 +159,7 @@ public class MailDto {
             MailAddress address) {
         return new HeadersDto(headersByRecipient.get(address)
             .stream()
-            .collect(Guavate.toImmutableListMultimap(PerRecipientHeaders.Header::getName, PerRecipientHeaders.Header::getValue)));
+            .collect(ImmutableListMultimap.toImmutableListMultimap(PerRecipientHeaders.Header::getName, PerRecipientHeaders.Header::getValue)));
     }
 
     private static Optional<ImmutableMap<String, String>> fetchAttributes(Set<AdditionalField> additionalFields, Mail mail) {
@@ -167,7 +168,7 @@ public class MailDto {
         }
 
         return Optional.of(mail.attributes()
-            .collect(Guavate.toImmutableMap(
+            .collect(ImmutableMap.toImmutableMap(
                 attribute -> attribute.getName().asString(),
                 attribute -> attribute.getValue().value().toString())));
     }

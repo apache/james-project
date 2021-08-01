@@ -23,10 +23,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public interface LinshareFixture {
 
@@ -77,7 +77,7 @@ public interface LinshareFixture {
         EXTERNAL_2);
 
     Map<String, Credential> USER_CREDENTIAL_MAP = USER_CREDENTIALS.stream()
-        .collect(Guavate.toImmutableMap(Credential::getUsername, Function.identity()));
+        .collect(ImmutableMap.toImmutableMap(Credential::getUsername, Function.identity()));
 
     String MATCH_ALL_QUERY = "{" +
         "\"combinator\": \"and\"," +

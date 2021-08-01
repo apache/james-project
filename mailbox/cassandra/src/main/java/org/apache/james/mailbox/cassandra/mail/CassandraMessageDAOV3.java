@@ -90,7 +90,6 @@ import com.datastax.driver.core.TypeCodec;
 import com.datastax.driver.core.TypeTokens;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
 import com.google.common.primitives.Bytes;
@@ -256,13 +255,13 @@ public class CassandraMessageDAOV3 {
     private ImmutableList<UDTValue> buildAttachmentUdt(MailboxMessage message) {
         return message.getAttachments().stream()
             .map(this::toUDT)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private ImmutableList<UDTValue> buildAttachmentUdt(List<MessageAttachmentRepresentation> attachments) {
         return attachments.stream()
             .map(this::toUDT)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private UDTValue toUDT(MessageAttachmentMetadata messageAttachment) {
@@ -319,7 +318,7 @@ public class CassandraMessageDAOV3 {
                 row.getInt(BODY_START_OCTET_LOWERCASE),
                 new ByteContent(content),
                 getProperties(row),
-                getAttachments(row).collect(Guavate.toImmutableList()),
+                getAttachments(row).collect(ImmutableList.toImmutableList()),
                 headerId,
                 bodyId));
     }

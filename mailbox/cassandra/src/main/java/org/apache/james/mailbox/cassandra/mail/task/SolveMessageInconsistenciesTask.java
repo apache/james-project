@@ -31,7 +31,6 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class SolveMessageInconsistenciesTask implements Task {
@@ -133,10 +132,10 @@ public class SolveMessageInconsistenciesTask implements Task {
             snapshot.getAddedMessageIdEntries(), snapshot.getUpdatedMessageIdEntries(), snapshot.getRemovedMessageIdEntries(), runningOptions,
             snapshot.getFixedInconsistencies().stream()
                 .map(this::toMessageInconsistenciesEntry)
-                .collect(Guavate.toImmutableList()),
+                .collect(ImmutableList.toImmutableList()),
             snapshot.getErrors().stream()
                 .map(this::toMessageInconsistenciesEntry)
-                .collect(Guavate.toImmutableList())));
+                .collect(ImmutableList.toImmutableList())));
     }
 
     private MessageInconsistenciesEntry toMessageInconsistenciesEntry(ComposedMessageId composedMessageId) {

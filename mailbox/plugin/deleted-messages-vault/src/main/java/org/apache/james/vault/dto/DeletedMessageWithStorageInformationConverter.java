@@ -37,7 +37,6 @@ import org.apache.james.vault.metadata.DeletedMessageWithStorageInformation;
 import org.apache.james.vault.metadata.StorageInformation;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class DeletedMessageWithStorageInformationConverter {
@@ -84,12 +83,12 @@ public class DeletedMessageWithStorageInformationConverter {
     private ImmutableList<MailboxId> deserializeOriginMailboxes(List<String> originMailboxes) {
         return originMailboxes.stream()
             .map(mailboxId -> mailboxIdFactory.fromString(mailboxId))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private ImmutableList<MailAddress> deserializeRecipients(List<String> recipients) throws AddressException {
         return recipients.stream()
             .map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow())
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 }

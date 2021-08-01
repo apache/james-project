@@ -52,10 +52,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -87,10 +87,10 @@ public class RecipientRewriteTableProcessor {
             return originalRcptParameter.map(parameters -> {
                 Map<MailAddress, RecipientDsnParameters> newRcptParameters = executionResult.getNewRecipients().stream()
                     .map(newRcpt -> Pair.of(newRcpt, parameters))
-                    .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue));
+                    .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
                 Map<MailAddress, RecipientDsnParameters> rcptParametersWithoutOriginal = rcptParameters.entrySet().stream()
                     .filter(rcpt -> !rcpt.getKey().equals(originalAddress))
-                    .collect(Guavate.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
+                    .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
 
                 return dsnParameters.withRcptParameters(ImmutableMap.<MailAddress, RecipientDsnParameters>builder()
                     .putAll(rcptParametersWithoutOriginal)
@@ -221,7 +221,7 @@ public class RecipientRewriteTableProcessor {
         return mail.getRecipients()
             .stream()
             .map(convertToMappingData)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private Decision executeRrtForRecipient(Mail mail, MailAddress recipient) {
@@ -254,12 +254,12 @@ public class RecipientRewriteTableProcessor {
             .collect(Collectors.partitioningBy(entry -> mailetContext.isLocalServer(entry.getKey())))
             .entrySet()
             .stream()
-            .collect(Guavate.toImmutableMap(
+            .collect(ImmutableMap.toImmutableMap(
                 Map.Entry::getKey,
                 entry -> entry.getValue()
                     .stream()
                     .flatMap(domainEntry -> domainEntry.getValue().stream())
-                    .collect(Guavate.toImmutableList())));
+                    .collect(ImmutableList.toImmutableList())));
     }
 
     private Stream<Map.Entry<Domain, Collection<MailAddress>>> mailAddressesPerDomain(Mappings mappings) {
@@ -267,8 +267,8 @@ public class RecipientRewriteTableProcessor {
             .map(mapping -> mapping.appendDomainIfNone(defaultDomainSupplier))
             .map(Mapping::asMailAddress)
             .flatMap(Optional::stream)
-            .collect(Guavate.toImmutableListMultimap(
-                MailAddress::getDomain))
+            .collect(ImmutableListMultimap.toImmutableListMultimap(
+                MailAddress::getDomain, Function.identity()))
             .asMap()
             .entrySet()
             .stream();

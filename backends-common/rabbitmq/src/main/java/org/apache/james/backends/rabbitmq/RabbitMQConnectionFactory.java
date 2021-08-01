@@ -40,7 +40,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.TrustStrategy;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -185,6 +185,6 @@ public class RabbitMQConnectionFactory {
         return connectionFactory.newConnection(configuration.rabbitMQHosts()
             .stream()
             .map(host -> new Address(host.getHostName(), host.getPort()))
-            .collect(Guavate.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
     }
 }

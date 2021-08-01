@@ -38,7 +38,7 @@ import org.apache.james.domainlist.lib.AbstractDomainList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 /**
  * JPA implementation of the DomainList.<br>
@@ -84,7 +84,7 @@ public class JPADomainList extends AbstractDomainList {
             return resultList
                     .stream()
                     .map(Domain::of)
-                    .collect(Guavate.toImmutableList());
+                    .collect(ImmutableList.toImmutableList());
         } catch (PersistenceException e) {
             LOGGER.error("Failed to list domains", e);
             throw new DomainListException("Unable to retrieve domains", e);

@@ -57,7 +57,7 @@ import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 /**
  * <code>SieveFileRepository</code> manages sieve scripts stored on the file system.
@@ -214,7 +214,7 @@ public class SieveFileRepository implements SieveRepository {
         return Stream.of(Optional.ofNullable(getUserDirectory(username).listFiles()).orElse(new File[]{}))
             .filter(file -> !SYSTEM_FILES.contains(file.getName()))
             .map(file -> new ScriptSummary(new ScriptName(file.getName()), isActive.test(file)))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private Predicate<File> isActiveValidator(File activeFile) {

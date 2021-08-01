@@ -34,7 +34,7 @@ import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -149,7 +149,7 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
                 .map(limit -> Pair.of(Quota.Scope.Domain, limit)),
             globalQuota.getGlobalMaxMessage()
                 .map(limit -> Pair.of(Quota.Scope.Global, limit)))
-            .collect(Guavate.toImmutableMap(
+            .collect(ImmutableMap.toImmutableMap(
                 Pair::getKey,
                 Pair::getValue));
     }
@@ -169,7 +169,7 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
                 .map(limit -> Pair.of(Quota.Scope.Domain, limit)),
             globalQuota.getGlobalMaxStorage()
                 .map(limit -> Pair.of(Quota.Scope.Global, limit)))
-            .collect(Guavate.toImmutableMap(
+            .collect(ImmutableMap.toImmutableMap(
                 Pair::getKey,
                 Pair::getValue));
     }
@@ -193,7 +193,7 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
                 domainLimits.getSizeLimit().stream().map(limit -> Pair.of(Quota.Scope.Domain, limit)),
                 globalLimits.stream().map(limit -> Pair.of(Quota.Scope.Global, limit)))
             .flatMap(Function.identity())
-            .collect(Guavate.toImmutableMap(
+            .collect(ImmutableMap.toImmutableMap(
                 Pair::getKey,
                 Pair::getValue));
     }
@@ -204,7 +204,7 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
                 domainLimits.getCountLimit().stream().map(limit -> Pair.of(Quota.Scope.Domain, limit)),
                 globalLimits.stream().map(limit -> Pair.of(Quota.Scope.Global, limit)))
             .flatMap(Function.identity())
-            .collect(Guavate.toImmutableMap(
+            .collect(ImmutableMap.toImmutableMap(
                 Pair::getKey,
                 Pair::getValue));
     }

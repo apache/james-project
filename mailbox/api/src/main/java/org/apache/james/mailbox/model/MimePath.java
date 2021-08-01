@@ -25,8 +25,8 @@ package org.apache.james.mailbox.model;
 import java.util.Arrays;
 import java.util.List;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Describes a path within a multipart MIME message. All implementations
@@ -68,7 +68,7 @@ public final class MimePath {
     public final String toString() {
         List<Integer> parts = Arrays.stream(positions)
             .boxed()
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         return "MIMEPath:"
             + Joiner.on('.')

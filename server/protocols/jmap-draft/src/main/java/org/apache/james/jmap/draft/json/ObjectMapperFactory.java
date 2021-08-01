@@ -51,7 +51,6 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -115,7 +114,7 @@ public class ObjectMapperFactory {
     public static class MDNActionModeDeserializer extends JsonDeserializer<DispositionActionMode> {
         private static final ImmutableList<String> ALLOWED_VALUES = Arrays.stream(DispositionActionMode.values())
             .map(DispositionActionMode::getValue)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         @Override
         public DispositionActionMode deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
@@ -129,7 +128,7 @@ public class ObjectMapperFactory {
     public static class MDNSendingModeDeserializer extends JsonDeserializer<DispositionSendingMode> {
         private static final ImmutableList<String> ALLOWED_VALUES = Arrays.stream(DispositionSendingMode.values())
             .map(DispositionSendingMode::getValue)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         @Override
         public DispositionSendingMode deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
@@ -158,7 +157,7 @@ public class ObjectMapperFactory {
     public static class MDNTypeDeserializer extends JsonDeserializer<DispositionType> {
         private static final ImmutableList<String> ALLOWED_VALUES = Arrays.stream(DispositionType.values())
             .map(DispositionType::getValue)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         @Override
         public DispositionType deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {

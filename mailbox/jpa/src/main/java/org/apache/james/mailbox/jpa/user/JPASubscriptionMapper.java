@@ -37,7 +37,7 @@ import org.apache.james.mailbox.jpa.user.model.JPASubscription;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 /**
  * JPA implementation of a {@link SubscriptionMapper}. This class is not thread-safe!
@@ -81,7 +81,7 @@ public class JPASubscriptionMapper extends JPATransactionalMapper implements Sub
                 .getResultList()
                 .stream()
                 .map(JPASubscription::toSubscription)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         } catch (PersistenceException e) {
             throw new SubscriptionException(e);
         }

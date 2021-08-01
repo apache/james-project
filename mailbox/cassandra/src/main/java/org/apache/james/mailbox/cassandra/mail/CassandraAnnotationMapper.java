@@ -47,9 +47,9 @@ import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Select;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class CassandraAnnotationMapper extends NonTransactionalMapper implements AnnotationMapper {
 
@@ -83,7 +83,7 @@ public class CassandraAnnotationMapper extends NonTransactionalMapper implements
         CassandraId cassandraId = (CassandraId)mailboxId;
         return keys.stream()
             .flatMap(annotation -> getAnnotationsByKeyWithOneDepth(cassandraId, annotation))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     @Override
@@ -91,7 +91,7 @@ public class CassandraAnnotationMapper extends NonTransactionalMapper implements
         CassandraId cassandraId = (CassandraId)mailboxId;
         return keys.stream()
             .flatMap(annotation -> getAnnotationsByKeyWithAllDepth(cassandraId, annotation))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     @Override
@@ -141,7 +141,7 @@ public class CassandraAnnotationMapper extends NonTransactionalMapper implements
     private Select.Where getStoredAnnotationsQueryForKeys(CassandraId mailboxId, Set<MailboxAnnotationKey> keys) {
         return getStoredAnnotationsQuery(mailboxId).and(in(CassandraAnnotationTable.KEY, keys.stream()
             .map(MailboxAnnotationKey::asString)
-            .collect(Guavate.toImmutableList())));
+            .collect(ImmutableList.toImmutableList())));
     }
 
     private Select.Where getStoredAnnotationsQueryLikeKey(CassandraId mailboxId, String key) {

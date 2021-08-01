@@ -26,7 +26,6 @@ import java.util.UUID;
 import org.apache.james.core.MailAddress;
 import org.apache.james.linshare.client.Document.DocumentId;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -128,7 +127,7 @@ public class ShareRequest {
             .stream()
             .map(DocumentId::getId)
             .map(UUID::toString)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     @Override

@@ -35,7 +35,6 @@ import org.apache.james.mailbox.model.MessageId;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -119,13 +118,13 @@ public class SetMessagesRequest implements JmapRequest {
         private ImmutableList<CreationMessageEntry> messageCreations() {
             return create.entrySet().stream()
                     .map(entry -> new CreationMessageEntry(entry.getKey(), entry.getValue()))
-                    .collect(Guavate.toImmutableList());
+                    .collect(ImmutableList.toImmutableList());
         }
 
         private ImmutableList<MDNCreationEntry> mdnSendings() {
             return sendMDN.entrySet().stream()
                     .map(entry -> new MDNCreationEntry(entry.getKey(), entry.getValue()))
-                    .collect(Guavate.toImmutableList());
+                    .collect(ImmutableList.toImmutableList());
         }
     }
 

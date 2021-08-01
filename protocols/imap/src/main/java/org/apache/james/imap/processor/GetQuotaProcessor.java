@@ -41,7 +41,6 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
@@ -100,7 +99,7 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
         // If any of the mailboxes owned by quotaRoot user can be read by the current user, then we should respond to him.
         final MailboxSession mailboxSession = session.getMailboxSession();
         List<Mailbox> mailboxList = Flux.from(quotaRootResolver.retrieveAssociatedMailboxes(quotaRoot, mailboxSession))
-            .collect(Guavate.toImmutableList())
+            .collect(ImmutableList.toImmutableList())
             .subscribeOn(Schedulers.elastic())
             .block();
         for (Mailbox mailbox : mailboxList) {

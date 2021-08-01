@@ -38,7 +38,7 @@ import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 
 import io.swagger.annotations.Api;
@@ -93,7 +93,7 @@ public class MappingRoutes implements Routes {
                     .map(mapping -> Pair.of(
                         entry.getKey().asString(),
                         MappingValueDTO.fromMapping(mapping))))
-                .collect(Guavate.toImmutableListMultimap(Pair::getLeft, Pair::getRight));
+                .collect(ImmutableListMultimap.toImmutableListMultimap(Pair::getLeft, Pair::getRight));
         } catch (RecipientRewriteTableException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
@@ -116,7 +116,7 @@ public class MappingRoutes implements Routes {
         return recipientRewriteTable.getStoredMappings(MappingSource.fromUser(username))
             .asStream()
             .map(mapping -> MappingValueDTO.fromMapping(mapping))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 }
 

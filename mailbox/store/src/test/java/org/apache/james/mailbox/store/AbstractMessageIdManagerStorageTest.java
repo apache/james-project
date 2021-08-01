@@ -52,8 +52,8 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public abstract class AbstractMessageIdManagerStorageTest {
     public static final Flags FLAGS = new Flags();
@@ -225,7 +225,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         List<MailboxId> messageMailboxIds = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, aliceSession)
             .stream()
             .map(MessageResult::getMailboxId)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         assertThat(messageMailboxIds).containsOnly(aliceMailbox1.getMailboxId(), aliceMailbox3.getMailboxId());
     }
@@ -438,7 +438,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         List<Flags> flags = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, aliceSession)
             .stream()
             .map(MessageResult::getFlags)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         assertThat(flags).hasSize(2);
         assertThat(flags.get(0)).isEqualTo(newFlags);
@@ -456,7 +456,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         List<Flags> flags = messageIdManager.getMessage(messageId1, FetchGroup.MINIMAL, aliceSession)
             .stream()
             .map(MessageResult::getFlags)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         assertThat(flags).hasSize(1);
         assertThat(flags.get(0)).isEqualTo(FLAGS);
@@ -472,7 +472,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         List<Flags> flags = messageIdManager.getMessage(messageId1, FetchGroup.MINIMAL, aliceSession)
             .stream()
             .map(MessageResult::getFlags)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         assertThat(flags).hasSize(1);
         assertThat(flags.get(0)).isEqualTo(FLAGS);
@@ -488,7 +488,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         List<Flags> flags = messageIdManager.getMessage(messageId1, FetchGroup.MINIMAL, aliceSession)
             .stream()
             .map(MessageResult::getFlags)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         assertThat(flags).hasSize(1);
         assertThat(flags.get(0)).isEqualTo(FLAGS);
@@ -504,7 +504,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
 
         Map<MessageId, Flags> flags = messageIdManager.getMessages(ImmutableList.of(messageId1, messageId2), FetchGroup.MINIMAL, aliceSession)
             .stream()
-            .collect(Guavate.toImmutableMap(MessageResult::getMessageId, MessageResult::getFlags));
+            .collect(ImmutableMap.toImmutableMap(MessageResult::getMessageId, MessageResult::getFlags));
 
         assertThat(flags).hasSize(2);
         assertThat(flags.get(messageId1)).isEqualTo(newFlags);

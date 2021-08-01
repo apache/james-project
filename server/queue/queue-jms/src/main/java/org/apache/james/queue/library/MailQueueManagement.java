@@ -42,7 +42,7 @@ import org.apache.james.queue.api.ManageableMailQueue.MailQueueIterator;
 import org.apache.james.queue.api.ManageableMailQueue.Type;
 import org.apache.mailet.Mail;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * JMX MBean implementation which expose management functions by wrapping a
@@ -150,7 +150,7 @@ public class MailQueueManagement extends StandardMBean implements MailQueueManag
             map.put(names[7], m.getRemoteHost());
             map.put(names[8], m.getErrorMessage());
             Map<String, String> attrs = m.attributes()
-                .collect(Guavate.toImmutableMap(
+                .collect(ImmutableMap.toImmutableMap(
                     attribute -> attribute.getName().asString(),
                     attribute -> attribute.getValue().value().toString()));
 

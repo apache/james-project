@@ -33,7 +33,7 @@ import org.apache.james.mailbox.model.AttachmentId;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.predicates.ThrowingPredicate;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -67,7 +67,7 @@ public class AttachmentChecker {
         return attachments.stream()
             .filter(Throwing.predicate(notExists).sneakyThrow())
             .map(Attachment::getBlobId)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private AttachmentId getAttachmentId(Attachment attachment) {

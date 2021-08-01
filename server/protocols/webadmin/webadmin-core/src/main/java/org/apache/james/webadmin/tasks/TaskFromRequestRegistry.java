@@ -29,7 +29,6 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -61,7 +60,7 @@ public class TaskFromRequestRegistry implements TaskFromRequest {
 
         public Builder registrations(Collection<TaskRegistration> taskRegistrations) {
             this.tasks.putAll(taskRegistrations.stream()
-                .collect(Guavate.toImmutableMap(
+                .collect(ImmutableMap.toImmutableMap(
                     TaskRegistration::registrationKey,
                     Function.identity())));
             return this;
@@ -161,7 +160,7 @@ public class TaskFromRequestRegistry implements TaskFromRequest {
         ImmutableList<String> supportedTasks = taskGenerators.keySet()
             .stream()
             .map(TaskRegistrationKey::asString)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
         return "Supported values are [" + Joiner.on(", ").join(supportedTasks) + "]";
     }
 }

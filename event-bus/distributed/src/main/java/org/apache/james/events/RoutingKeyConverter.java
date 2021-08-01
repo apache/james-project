@@ -27,8 +27,8 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 public class RoutingKeyConverter {
@@ -66,7 +66,7 @@ public class RoutingKeyConverter {
     @Inject
     public RoutingKeyConverter(Set<RegistrationKey.Factory> factories) {
         this.factories = factories.stream()
-            .collect(Guavate.toImmutableMap(factory -> factory.forClass().getName()));
+            .collect(ImmutableMap.toImmutableMap(factory -> factory.forClass().getName(), f -> f));
     }
 
     RegistrationKey toRegistrationKey(String routingKey) {

@@ -25,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Guice;
@@ -61,7 +60,7 @@ public class GuiceGenericLoader {
         private Class<T> locateClass(ClassName className, NamingScheme namingScheme) throws ClassNotFoundException {
             ImmutableList<Class<T>> classes = namingScheme.toFullyQualifiedClassNames(className)
                 .flatMap(this::tryLocateClass)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
 
             if (classes.size() == 0) {
                 throw new ClassNotFoundException(className.getName());
@@ -94,7 +93,7 @@ public class GuiceGenericLoader {
             .stream()
             .map(Throwing.<ClassName, Module>function(className -> instantiateNoChildModule(injector, className)))
             .peek(module -> LOGGER.info("Enabling injects contained in " + module.getClass().getCanonicalName()))
-            .collect(Guavate.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
         this.injector = injector.createChildInjector(additionalExtensionBindings);
     }
 

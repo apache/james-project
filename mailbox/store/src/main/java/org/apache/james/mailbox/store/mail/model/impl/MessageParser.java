@@ -50,7 +50,6 @@ import org.apache.james.mime4j.util.MimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
@@ -101,7 +100,7 @@ public class MessageParser {
             if (body instanceof Multipart) {
                 Multipart multipartBody = (Multipart) body;
                 return listAttachments(multipartBody, Context.fromSubType(multipartBody.getSubType()))
-                    .collect(Guavate.toImmutableList());
+                    .collect(ImmutableList.toImmutableList());
             } else {
                 return ImmutableList.of();
             }

@@ -42,7 +42,6 @@ import org.apache.james.mailbox.quota.model.QuotaThresholdChange;
 import org.apache.james.mailbox.quota.model.QuotaThresholdHistory;
 import org.apache.james.mailbox.quota.model.QuotaThresholds;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -163,7 +162,7 @@ public class UserQuotaThresholds {
                 .map(QuotaThresholdChangedEvent::getSizeHistoryEvolution)
                 .map(HistoryEvolution::getThresholdChange)
                 .flatMap(Optional::stream)
-                .collect(Guavate.toImmutableList()));
+                .collect(ImmutableList.toImmutableList()));
     }
 
     private QuotaThresholdHistory computeCountHistory() {
@@ -172,7 +171,7 @@ public class UserQuotaThresholds {
                 .map(QuotaThresholdChangedEvent::getCountHistoryEvolution)
                 .map(HistoryEvolution::getThresholdChange)
                 .flatMap(Optional::stream)
-                .collect(Guavate.toImmutableList()));
+                .collect(ImmutableList.toImmutableList()));
     }
 
     private List<QuotaThresholdChangedEvent> generateEvents(HistoryEvolution countHistoryEvolution, HistoryEvolution sizeHistoryEvolution, Quota<QuotaCountLimit, QuotaCountUsage> countQuota, Quota<QuotaSizeLimit, QuotaSizeUsage> sizeQuota) {

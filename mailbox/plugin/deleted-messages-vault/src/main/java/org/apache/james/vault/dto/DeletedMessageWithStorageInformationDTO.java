@@ -32,7 +32,6 @@ import org.apache.james.vault.metadata.StorageInformation;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -87,13 +86,13 @@ public class DeletedMessageWithStorageInformationDTO {
         private static ImmutableList<String> serializeOriginMailboxes(List<MailboxId> originMailboxes) {
             return originMailboxes.stream()
                 .map(MailboxId::serialize)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         }
 
         private static ImmutableList<String> serializeRecipients(List<MailAddress> recipients) {
             return recipients.stream()
                 .map(MailAddress::asString)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         }
 
         private static String serializeZonedDateTime(ZonedDateTime time) {

@@ -75,7 +75,6 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.TupleType;
 import com.datastax.driver.core.TupleValue;
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -182,7 +181,7 @@ public class CassandraMailRepositoryMailDaoV2 implements CassandraMailRepository
         List<MailAddress> recipients = row.getList(RECIPIENTS, String.class)
             .stream()
             .map(Throwing.function(MailAddress::new))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
         String state = row.getString(STATE);
         String remoteAddr = row.getString(REMOTE_ADDR);
         String remoteHost = row.getString(REMOTE_HOST);
@@ -213,17 +212,17 @@ public class CassandraMailRepositoryMailDaoV2 implements CassandraMailRepository
         return rowAttributes.entrySet()
             .stream()
             .map(Throwing.function(entry -> new Attribute(AttributeName.of(entry.getKey()), AttributeValue.fromJsonString(entry.getValue()))))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private ImmutableList<String> asStringList(Collection<MailAddress> mailAddresses) {
-        return mailAddresses.stream().map(MailAddress::asString).collect(Guavate.toImmutableList());
+        return mailAddresses.stream().map(MailAddress::asString).collect(ImmutableList.toImmutableList());
     }
 
     private ImmutableMap<String, String> toRawAttributeMap(Mail mail) {
         return mail.attributes()
             .map(attribute -> Pair.of(attribute.getName().asString(), toJson(attribute.getValue())))
-            .collect(Guavate.toImmutableMap(Pair::getLeft, Pair::getRight));
+            .collect(ImmutableMap.toImmutableMap(Pair::getLeft, Pair::getRight));
     }
 
     private ImmutableList<TupleValue> toTupleList(PerRecipientHeaders perRecipientHeaders) {
@@ -231,7 +230,7 @@ public class CassandraMailRepositoryMailDaoV2 implements CassandraMailRepository
             .entries()
             .stream()
             .map(entry -> userHeaderNameHeaderValueTriple.newValue(entry.getKey().asString(), entry.getValue().getName(), entry.getValue().getValue()))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private PerRecipientHeaders fromList(List<TupleValue> list) {

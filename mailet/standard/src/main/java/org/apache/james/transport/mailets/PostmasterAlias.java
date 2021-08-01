@@ -28,7 +28,8 @@ import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Rewrites recipient addresses to make sure email for the postmaster is
@@ -51,7 +52,7 @@ public class PostmasterAlias extends GenericMailet {
         Collection<MailAddress> postmasterAliases = mail.getRecipients()
             .stream()
             .filter(this::isPostmasterAlias)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         if (!postmasterAliases.isEmpty()) {
             mail.setRecipients(
@@ -60,7 +61,7 @@ public class PostmasterAlias extends GenericMailet {
                         .stream()
                         .filter(address -> !postmasterAliases.contains(address)),
                     Stream.of(getMailetContext().getPostmaster()))
-                .collect(Guavate.toImmutableSet()));
+                .collect(ImmutableSet.toImmutableSet()));
         }
     }
 

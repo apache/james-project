@@ -42,8 +42,8 @@ import org.apache.james.user.lib.UsersDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 /**
  * JPA based UserRepository
@@ -221,7 +221,7 @@ public class JPAUsersDAO implements UsersDAO, Configurable {
             return ((List<String>) entityManager.createNamedQuery("listUserNames").getResultList())
                 .stream()
                 .map(Username::of)
-                .collect(Guavate.toImmutableList()).iterator();
+                .collect(ImmutableList.toImmutableList()).iterator();
 
         } catch (PersistenceException e) {
             LOGGER.debug("Failed to find user", e);

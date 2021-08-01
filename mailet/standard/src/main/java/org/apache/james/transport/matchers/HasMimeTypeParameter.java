@@ -40,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -83,7 +82,7 @@ public class HasMimeTypeParameter extends GenericMatcher {
                         .splitToList(value)
                         .stream()
                         .map(this::conditionToPair)
-                        .collect(Guavate.toImmutableList());
+                        .collect(ImmutableList.toImmutableList());
                 } catch (IllegalArgumentException e) {
                     throw new MailetException("error parsing configuration", e);
                 }

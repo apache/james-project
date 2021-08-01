@@ -40,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 
@@ -92,7 +91,7 @@ public class MimeDecodingMailet extends GenericMailet {
                 .entrySet()
                 .stream()
                 .flatMap(convertToMapContent)
-                .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue));
+                .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
 
         mail.setAttribute(new Attribute(attributeName, AttributeValue.ofAny(extractedMimeContentByName)));
     }

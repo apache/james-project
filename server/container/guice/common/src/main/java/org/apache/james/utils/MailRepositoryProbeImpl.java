@@ -27,7 +27,6 @@ import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class MailRepositoryProbeImpl implements GuiceProbe {
@@ -58,7 +57,7 @@ public class MailRepositoryProbeImpl implements GuiceProbe {
 
     public List<MailRepositoryUrl> listRepositoryUrls() {
         return repositoryStore.getUrls()
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     public MailRepositoryStore getMailRepositoryStore() {

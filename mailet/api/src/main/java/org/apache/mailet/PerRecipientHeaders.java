@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.apache.james.core.MailAddress;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
@@ -33,6 +32,8 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 
 public class PerRecipientHeaders implements Serializable {
@@ -59,7 +60,7 @@ public class PerRecipientHeaders implements Serializable {
         return headersByRecipient.get(recipient)
             .stream()
             .map(Header::getName)
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 
     public PerRecipientHeaders addHeaderForRecipient(Header header, MailAddress recipient) {
@@ -115,7 +116,7 @@ public class PerRecipientHeaders implements Serializable {
                 Joiner.on(SEPARATOR)
                     .join(parts.stream()
                         .skip(1)
-                        .collect(Guavate.toImmutableList())));
+                        .collect(ImmutableList.toImmutableList())));
         }
 
         private final String name;

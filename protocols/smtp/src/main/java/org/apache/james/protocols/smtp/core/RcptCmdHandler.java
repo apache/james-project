@@ -45,8 +45,8 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -226,7 +226,7 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
         return Splitter.on(' ').splitToList(rcptOptions)
             .stream()
             .map(this::parseParameter)
-            .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue));
+            .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
     }
 
     private Pair<String, String> parseParameter(String rcptOption) {

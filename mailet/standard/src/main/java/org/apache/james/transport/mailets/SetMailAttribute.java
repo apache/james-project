@@ -28,7 +28,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.GenericMailet;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
 
@@ -58,7 +57,7 @@ public class SetMailAttribute extends GenericMailet {
     public void init() throws MailetException {
         entries = Streams.stream(getInitParameterNames())
             .map(name -> Attribute.convertToAttribute(name, getInitParameter(name)))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     @Override

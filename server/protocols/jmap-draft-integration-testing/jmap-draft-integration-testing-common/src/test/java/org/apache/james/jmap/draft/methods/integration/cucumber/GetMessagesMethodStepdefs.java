@@ -54,7 +54,6 @@ import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.utils.SMTPMessageSender;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
@@ -471,7 +470,7 @@ public class GetMessagesMethodStepdefs {
     public void postWithAListOfIds(List<String> ids) throws Exception {
         requestedMessageIds = ids.stream()
             .map(messageIdStepdefs::getMessageId)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
         askMessages(requestedMessageIds);
     }
 
@@ -512,7 +511,7 @@ public class GetMessagesMethodStepdefs {
     public void postWithParameters(List<String> ids, List<String> properties) throws Exception {
         requestedMessageIds = ids.stream()
             .map(messageIdStepdefs::getMessageId)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         String serializedIds = requestedMessageIds.stream()
             .map(MessageId::serialize)
@@ -565,7 +564,7 @@ public class GetMessagesMethodStepdefs {
 
     @Then("^the notFound list should contain the requested message id$")
     public void assertNotFoundListContainsRequestedMessages() {
-        ImmutableList<String> elements = requestedMessageIds.stream().map(MessageId::serialize).collect(Guavate.toImmutableList());
+        ImmutableList<String> elements = requestedMessageIds.stream().map(MessageId::serialize).collect(ImmutableList.toImmutableList());
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".notFound"))
             .containsExactlyElementsOf(elements);
     }
@@ -601,7 +600,7 @@ public class GetMessagesMethodStepdefs {
                     .getMailboxId(userMailbox.getKey(), userMailbox.getValue())
                     .serialize()))
             .distinct()
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         assertThat(httpClient.jsonPath.<JSONArray>read(FIRST_MESSAGE + ".mailboxIds"))
             .containsExactlyInAnyOrder(mailboxIds.toArray());

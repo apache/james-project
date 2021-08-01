@@ -33,7 +33,7 @@ import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.util.Port;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Multimap;
 
 import reactor.netty.DisposableServer;
@@ -59,7 +59,7 @@ public class JMAPServer implements Startable {
             .flatMap(version -> jmapRoutesHandlers.stream()
                 .flatMap(handler -> handler.routes(version)
                     .map(route -> Pair.of(version, route))))
-            .collect(Guavate.toImmutableListMultimap(
+            .collect(ImmutableListMultimap.toImmutableListMultimap(
                 Pair::getKey,
                 Pair::getValue));
     }

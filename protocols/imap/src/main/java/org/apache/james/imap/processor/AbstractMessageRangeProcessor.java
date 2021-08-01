@@ -46,7 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 
@@ -103,7 +103,7 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                     .stream())
                 .sneakyThrow())
             .map(IdRange::from)
-            .collect(Guavate.toImmutableList()))
+            .collect(ImmutableList.toImmutableList()))
             .toArray(IdRange[]::new);
 
         // get folder UIDVALIDITY

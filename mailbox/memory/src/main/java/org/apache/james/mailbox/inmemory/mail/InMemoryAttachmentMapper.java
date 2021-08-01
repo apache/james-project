@@ -40,7 +40,6 @@ import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -116,7 +115,7 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
             .map(Throwing.<ParsedAttachment, MessageAttachmentMetadata>function(
                 typedContent -> storeAttachmentForMessage(ownerMessageId, typedContent))
                 .sneakyThrow())
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private MessageAttachmentMetadata storeAttachmentForMessage(MessageId ownerMessageId, ParsedAttachment parsedAttachment) throws MailboxException {

@@ -30,7 +30,7 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.api.DomainListManagementMBean;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 public class DomainListManagement extends StandardMBean implements DomainListManagementMBean {
 
@@ -69,7 +69,7 @@ public class DomainListManagement extends StandardMBean implements DomainListMan
             return domainList.getDomains()
                 .stream()
                 .map(Domain::name)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         } catch (DomainListException e) {
             throw new Exception(e.getMessage());
         }

@@ -52,8 +52,8 @@ import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import io.swagger.annotations.Api;
@@ -120,7 +120,7 @@ public class GroupsRoutes implements Routes {
             message = "Internal server error - Something went bad on the server side.")
     })
     public List<MappingSource> listGroups(Request request, Response response) throws RecipientRewriteTableException {
-        return recipientRewriteTable.getSourcesForType(Mapping.Type.Group).collect(Guavate.toImmutableList());
+        return recipientRewriteTable.getSourcesForType(Mapping.Type.Group).collect(ImmutableList.toImmutableList());
     }
 
     @PUT
@@ -239,7 +239,7 @@ public class GroupsRoutes implements Routes {
                 .map(Mapping::asMailAddress)
                 .flatMap(Optional::stream)
                 .map(MailAddress::asString)
-                .collect(Guavate.toImmutableSortedSet());
+                .collect(ImmutableSortedSet.toImmutableSortedSet(String::compareTo));
     }
 
     private void ensureNonEmptyMappings(Mappings mappings) {

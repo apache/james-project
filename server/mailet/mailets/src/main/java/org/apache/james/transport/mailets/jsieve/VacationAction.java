@@ -35,7 +35,6 @@ import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -85,7 +84,7 @@ public class VacationAction implements MailAction {
             .concat(
                 actionVacation.getAddresses().stream().map(s -> retrieveAddressFromString(s, context)),
                 Stream.of(context.getRecipient()))
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
         return !Sets.intersection(currentMailAddresses, allowedMailAddresses).isEmpty();
     }
 

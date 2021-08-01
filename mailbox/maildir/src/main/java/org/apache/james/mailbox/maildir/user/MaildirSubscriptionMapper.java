@@ -37,8 +37,8 @@ import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -71,7 +71,7 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
         Set<String> subscriptionNames = readSubscriptionsForUser(user);
         return subscriptionNames.stream()
             .map(subscription -> new Subscription(user, subscription))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     @Override
@@ -120,7 +120,7 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
             try (BufferedReader reader = new BufferedReader(fileReader)) {
                 return reader.lines()
                     .filter(Predicate.not(Strings::isNullOrEmpty))
-                    .collect(Guavate.toImmutableSet());
+                    .collect(ImmutableSet.toImmutableSet());
             }
         }
     }

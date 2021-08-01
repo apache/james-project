@@ -60,7 +60,7 @@ import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Multimap;
 
 import reactor.core.publisher.Flux;
@@ -278,7 +278,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .map(mailboxId -> (CassandraId) mailboxId)
             .concatMap(mailboxId -> flagsUpdateWithRetry(newState, updateMode, mailboxId, messageId))
             .flatMap(this::updateCounts, ReactorUtils.DEFAULT_CONCURRENCY)
-            .collect(Guavate.toImmutableListMultimap(Pair::getLeft, Pair::getRight));
+            .collect(ImmutableListMultimap.toImmutableListMultimap(Pair::getLeft, Pair::getRight));
     }
 
     private Flux<Pair<MailboxId, UpdatedFlags>> flagsUpdateWithRetry(Flags newState, MessageManager.FlagsUpdateMode updateMode, MailboxId mailboxId, MessageId messageId) {

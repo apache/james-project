@@ -26,7 +26,6 @@ import java.util.function.Predicate;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Statement;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class StatementRecorder {
@@ -47,7 +46,7 @@ public class StatementRecorder {
                 .filter(BoundStatement.class::isInstance)
                 .map(BoundStatement.class::cast)
                 .filter(condition)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         }
 
         List<Statement> select(List<Statement> statements);

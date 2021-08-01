@@ -40,7 +40,7 @@ import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 class SpamAssassinTest {
 
@@ -173,7 +173,7 @@ class SpamAssassinTest {
                 .get(new MailAddress("user1@exemple.com"))
                 .stream()
                 .map(PerRecipientHeaders.Header::getName)
-                .collect(Guavate.toImmutableList()))
+                .collect(ImmutableList.toImmutableList()))
             .contains(SpamAssassinResult.FLAG_MAIL.asString(), SpamAssassinResult.STATUS_MAIL.asString());
     }
 

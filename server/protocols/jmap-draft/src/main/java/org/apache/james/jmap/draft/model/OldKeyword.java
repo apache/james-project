@@ -25,9 +25,9 @@ import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableSet;
 
 public class OldKeyword {
 
@@ -180,7 +180,7 @@ public class OldKeyword {
                     isFlagged.filter(b -> b).map(b -> Keyword.FLAGGED),
                     isUnread.filter(b -> !b).map(b -> Keyword.SEEN))
                 .flatMap(Optional::stream)
-                .collect(Guavate.toImmutableSet()));
+                .collect(ImmutableSet.toImmutableSet()));
     }
 
     @Override

@@ -29,7 +29,7 @@ import org.apache.james.mailetcontainer.api.MailetLoader;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 public class GuiceMailetLoader implements MailetLoader {
@@ -43,7 +43,7 @@ public class GuiceMailetLoader implements MailetLoader {
     public GuiceMailetLoader(GuiceGenericLoader genericLoader, Set<MailetConfigurationOverride> mailetConfigurationOverrides) {
         this.genericLoader = genericLoader;
         this.configurationOverrides = mailetConfigurationOverrides.stream()
-            .collect(Guavate.toImmutableMap(
+            .collect(ImmutableMap.toImmutableMap(
                 MailetConfigurationOverride::getClazz,
                 MailetConfigurationOverride::getNewConfiguration));
     }

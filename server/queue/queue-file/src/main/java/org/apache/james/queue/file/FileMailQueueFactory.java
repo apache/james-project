@@ -33,7 +33,7 @@ import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.queue.api.ManageableMailQueue;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * {@link MailQueueFactory} implementation which returns {@link FileCacheableMailQueue} instances
@@ -60,7 +60,7 @@ public class FileMailQueueFactory implements MailQueueFactory<ManageableMailQueu
         return queues.values()
             .stream()
             .map(MailQueue::getName)
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 
     /**

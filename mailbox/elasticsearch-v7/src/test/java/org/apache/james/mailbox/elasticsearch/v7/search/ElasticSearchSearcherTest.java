@@ -74,7 +74,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 class ElasticSearchSearcherTest {
 
@@ -145,15 +145,15 @@ class ElasticSearchSearcherTest {
         List<MailboxPath> mailboxPaths = IntStream
             .range(0, numberOfMailboxes)
             .mapToObj(index -> MailboxPath.forUser(USERNAME, "mailbox" + index))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         List<MailboxId> mailboxIds = mailboxPaths.stream()
             .map(Throwing.<MailboxPath, MailboxId>function(mailboxPath -> storeMailboxManager.createMailbox(mailboxPath, session).get()).sneakyThrow())
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         List<ComposedMessageId> composedMessageIds = mailboxPaths.stream()
             .map(Throwing.<MailboxPath, ComposedMessageId>function(mailboxPath -> addMessage(session, mailboxPath)).sneakyThrow())
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         awaitForElasticSearch(QueryBuilders.matchAllQuery(), composedMessageIds.size());
 
@@ -164,7 +164,7 @@ class ElasticSearchSearcherTest {
         List<MessageId> expectedMessageIds = composedMessageIds
             .stream()
             .map(ComposedMessageId::getMessageId)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
         assertThat(storeMailboxManager.search(multimailboxesSearchQuery, session, numberOfMailboxes + 1)
             .collectList().block())
             .containsExactlyInAnyOrderElementsOf(expectedMessageIds);

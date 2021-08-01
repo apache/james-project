@@ -37,7 +37,6 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.util.streams.Iterators;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -99,7 +98,7 @@ public class CassandraIndexTableHandler {
                     .flatMap(message -> updateDeletedMessageProjectionOnDelete(mailboxId, message.getComposedMessageId().getUid(), message.getFlags()), DEFAULT_CONCURRENCY),
             decrementCountersOnDeleteFlags(mailboxId, metaData.stream()
                 .map(ComposedMessageIdWithMetaData::getFlags)
-                .collect(Guavate.toImmutableList())))
+                .collect(ImmutableList.toImmutableList())))
             .then();
     }
 
@@ -135,10 +134,10 @@ public class CassandraIndexTableHandler {
         int lowConcurrency = 2;
         ImmutableSet<String> userFlags = messages.stream()
             .flatMap(message -> Stream.of(message.createFlags().getUserFlags()))
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
         List<Flags> flags = messages.stream()
             .flatMap(message -> Stream.of(message.createFlags()))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         return Flux.mergeDelayError(Queues.XS_BUFFER_SIZE,
                 Flux.fromIterable(messages)
@@ -170,7 +169,7 @@ public class CassandraIndexTableHandler {
         return applicableFlagDAO.updateApplicableFlags(mailboxId,
             updatedFlags.stream()
                 .flatMap(flags -> Iterators.toStream(flags.userFlagIterator()))
-                .collect(Guavate.toImmutableSet()));
+                .collect(ImmutableSet.toImmutableSet()));
     }
 
     private Mono<Void> updateDeletedOnFlagsUpdate(CassandraId mailboxId, List<UpdatedFlags> updatedFlags) {
@@ -199,7 +198,7 @@ public class CassandraIndexTableHandler {
     private Mono<Void> decrementCountersOnDelete(CassandraId mailboxId, Collection<MessageMetaData> metaData) {
         return decrementCountersOnDeleteFlags(mailboxId, metaData.stream()
             .map(MessageMetaData::getFlags)
-            .collect(Guavate.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
     }
 
     private Mono<Void> decrementCountersOnDeleteFlags(CassandraId mailboxId, Collection<Flags> flags) {

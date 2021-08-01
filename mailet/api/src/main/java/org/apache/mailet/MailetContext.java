@@ -32,7 +32,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Defines a set of methods that can be used to interact with the mailet
@@ -259,7 +259,7 @@ public interface MailetContext {
     default Collection<MailAddress> localRecipients(Collection<MailAddress> recipients) {
         return recipients.stream()
             .filter(this::isLocalEmail)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     /**

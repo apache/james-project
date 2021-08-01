@@ -35,7 +35,7 @@ import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 public class ClearMailRepositoryTask implements Task {
 
@@ -51,7 +51,7 @@ public class ClearMailRepositoryTask implements Task {
 
         public ClearMailRepositoryTask create(MailRepositoryPath mailRepositoryPath) throws MailRepositoryStore.MailRepositoryStoreException {
             List<MailRepository> mailRepositories = mailRepositoryStore.getByPath(mailRepositoryPath)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
             return new ClearMailRepositoryTask(mailRepositories, mailRepositoryPath);
         }
     }

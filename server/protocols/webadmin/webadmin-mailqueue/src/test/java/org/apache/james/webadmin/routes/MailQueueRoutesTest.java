@@ -33,7 +33,6 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
-import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -64,7 +63,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
@@ -263,7 +262,7 @@ class MailQueueRoutesTest {
                 String firstMail = "[0]";
                 List<String> expectedRecipients = mail.getRecipients().stream()
                         .map(MailAddress::asString)
-                        .collect(Guavate.toImmutableList());
+                        .collect(ImmutableList.toImmutableList());
 
                 when()
                     .get(FIRST_QUEUE.asString() + "/mails")

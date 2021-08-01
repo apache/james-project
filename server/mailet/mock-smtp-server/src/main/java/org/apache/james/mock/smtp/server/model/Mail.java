@@ -31,7 +31,6 @@ import org.apache.james.core.MailAddress;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -78,7 +77,7 @@ public class Mail {
                 .stream()
                 .filter(argString -> argString.contains("="))
                 .map(Parameter::fromString)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         }
 
         public static Parameter fromString(String argString) {
@@ -270,7 +269,7 @@ public class Mail {
         public static Envelope ofAddresses(MailAddress from, MailAddress... recipients) {
             return new Envelope(from, Stream.of(recipients)
                 .map(Recipient::of)
-                .collect(Guavate.toImmutableSet()), ImmutableSet.of());
+                .collect(ImmutableSet.toImmutableSet()), ImmutableSet.of());
         }
 
         public static Envelope of(MailAddress from, Recipient... recipients) {

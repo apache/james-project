@@ -45,7 +45,6 @@ import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.error.BasicErrorMessageFactory;
 import org.assertj.core.error.ErrorMessageFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> implements AutoCloseable {
@@ -176,7 +175,7 @@ public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> implements Aut
     private <T> List<T> sortAndCollect(Optional<Comparator<T>> sortBy, Stream<T> stream) {
         Stream<T> sortedStream = sortBy.map(comparator -> stream.sorted(comparator))
             .orElse(stream);
-        return sortedStream.collect(Guavate.toImmutableList());
+        return sortedStream.collect(ImmutableList.toImmutableList());
     }
 
     /**
@@ -305,6 +304,6 @@ public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> implements Aut
     private ImmutableList<ZipExtraField> extractJamesExtraFields(ZipArchiveEntry entry) {
         return Stream.of(entry.getExtraFields())
             .filter(field -> field instanceof WithZipHeader)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 }

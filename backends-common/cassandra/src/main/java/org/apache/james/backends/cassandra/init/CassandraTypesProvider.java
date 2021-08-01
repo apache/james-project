@@ -29,7 +29,6 @@ import org.apache.james.backends.cassandra.components.CassandraType;
 import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.UserType;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableMap;
 
 public class CassandraTypesProvider {
@@ -43,7 +42,7 @@ public class CassandraTypesProvider {
 
         userTypes = module.moduleTypes()
             .stream()
-            .collect(Guavate.toImmutableMap(
+            .collect(ImmutableMap.toImmutableMap(
                     CassandraType::getName,
                     type -> keyspaceMetadata.getUserType(type.getName())));
     }

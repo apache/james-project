@@ -45,7 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -152,7 +151,7 @@ public class AmqpForwardAttribute extends GenericMailet {
             .splitToList(userInfo);
         ImmutableList<String> passwordParts = parts.stream()
             .skip(1)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         return new RabbitMQConfiguration.ManagementCredentials(
             parts.get(0),

@@ -75,7 +75,6 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -151,7 +150,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             default RequireQuotaManager preDeletionHooks(Collection<PreDeletionHook> preDeletionHooks) {
                 return preDeletionHooksFactories(preDeletionHooks.stream()
                     .map(RequirePreDeletionHooks::toFactory)
-                    .collect(Guavate.toImmutableList()));
+                    .collect(ImmutableList.toImmutableList()));
             }
 
             default RequireQuotaManager noPreDeletionHooks() {
@@ -354,7 +353,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             ImmutableSet<PreDeletionHook> preDeletionHooksSet = preDeletionHooksFactories.build()
                 .stream()
                 .map(biFunction -> biFunction.apply(preInstanciationStage))
-                .collect(Guavate.toImmutableSet());
+                .collect(ImmutableSet.toImmutableSet());
             return new PreDeletionHooks(preDeletionHooksSet, new RecordingMetricFactory());
         }
     }

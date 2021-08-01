@@ -33,7 +33,6 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class ErrorRecoveryIndexationTask implements Task {
@@ -56,14 +55,14 @@ public class ErrorRecoveryIndexationTask implements Task {
                 .flatMap(dto -> dto.getUids()
                     .stream()
                     .map(uid -> new ReIndexingExecutionFailures.ReIndexingFailure(mailboxIdFactory.fromString(dto.getMailboxId()), MessageUid.of(uid))))
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         }
 
         private List<MailboxId> mailboxFailuresFromDTO(Optional<List<String>> mailboxFailures) {
             return mailboxFailures.map(mailboxIdList ->
                     mailboxIdList.stream()
                         .map(mailboxIdFactory::fromString)
-                        .collect(Guavate.toImmutableList()))
+                        .collect(ImmutableList.toImmutableList()))
                 .orElse(ImmutableList.of());
         }
 

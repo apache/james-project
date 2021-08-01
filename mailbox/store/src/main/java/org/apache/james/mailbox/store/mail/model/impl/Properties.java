@@ -47,7 +47,6 @@ import java.util.TreeMap;
 
 import org.apache.james.mailbox.store.mail.model.Property;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
@@ -95,7 +94,7 @@ public class Properties {
         return properties.stream()
             .filter(property -> property.isNamed(namespace, localName))
             .map(Property::getValue)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     

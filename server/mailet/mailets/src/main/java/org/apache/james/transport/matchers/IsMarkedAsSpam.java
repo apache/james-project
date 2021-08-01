@@ -29,7 +29,7 @@ import org.apache.james.spamassassin.SpamAssassinResult;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 /**
  * <p>
@@ -67,7 +67,7 @@ public class IsMarkedAsSpam extends GenericMatcher {
         return mail.getRecipients()
             .stream()
             .filter(recipient -> isMarkedAsSpam(mail, recipient))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     public boolean isMarkedAsSpam(Mail mail, MailAddress recipient) {

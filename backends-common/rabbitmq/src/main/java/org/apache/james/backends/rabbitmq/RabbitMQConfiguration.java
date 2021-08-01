@@ -40,7 +40,6 @@ import java.util.stream.Stream;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.james.util.Host;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -552,7 +551,7 @@ public class RabbitMQConfiguration {
         List<Host> hosts = Optional.ofNullable(configuration.getList(String.class, HOSTS))
             .map(hostList -> hostList.stream()
                 .map(string -> Host.parseConfString(string, DEFAULT_PORT))
-                .collect(Guavate.toImmutableList()))
+                .collect(ImmutableList.toImmutableList()))
             .orElse(ImmutableList.of());
 
         ManagementCredentials managementCredentials = ManagementCredentials.from(configuration);

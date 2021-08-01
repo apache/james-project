@@ -33,7 +33,6 @@ import org.apache.james.core.Domain;
 import org.apache.james.util.DurationParser;
 import org.apache.james.util.StreamUtils;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class DomainListConfiguration {
@@ -147,7 +146,7 @@ public class DomainListConfiguration {
         ImmutableList<Domain> configuredDomains = StreamUtils.ofNullable(config.getStringArray(CONFIGURE_DOMAIN_NAMES))
             .filter(Predicate.not(String::isEmpty))
             .map(Domain::of)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         return builder()
             .autoDetect(Optional.ofNullable(config.getBoolean(CONFIGURE_AUTODETECT, null)))

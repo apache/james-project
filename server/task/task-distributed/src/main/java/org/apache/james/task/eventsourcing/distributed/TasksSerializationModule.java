@@ -39,7 +39,7 @@ import org.apache.james.task.eventsourcing.Created;
 import org.apache.james.task.eventsourcing.Failed;
 import org.apache.james.task.eventsourcing.Started;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableSet;
 
 public interface TasksSerializationModule {
     @FunctionalInterface
@@ -111,6 +111,6 @@ public interface TasksSerializationModule {
         return Stream
             .of(CREATED, STARTED, CANCEL_REQUESTED, CANCELLED, COMPLETED, FAILED, UPDATED)
             .map(moduleFactory -> moduleFactory.create(jsonTaskSerializer, additionalInformationConverter, dtoConverter))
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 }

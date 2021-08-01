@@ -27,8 +27,8 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class ListMailboxAssert {
@@ -39,7 +39,7 @@ public class ListMailboxAssert {
         return mailboxes.stream()
             .map(mailbox ->
                 new InnerMailbox(mailbox.getMailboxId(), mailbox.getUser(), mailbox.getName(), mailbox.getNamespace()))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private ListMailboxAssert(List<Mailbox> actual) {

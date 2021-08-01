@@ -53,7 +53,6 @@ import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.consumers.ThrowingConsumer;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 
@@ -281,7 +280,7 @@ public interface MailsShouldBeWellReceived {
         return IntStream.range(0, nbUsers)
                 .boxed()
                 .map(index -> "user" + index + "@" + DOMAIN)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
     }
 
 }

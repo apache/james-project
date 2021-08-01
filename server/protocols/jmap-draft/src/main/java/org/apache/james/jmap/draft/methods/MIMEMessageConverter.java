@@ -68,7 +68,6 @@ import org.apache.james.mime4j.util.MimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -105,7 +104,7 @@ public class MIMEMessageConverter {
             FieldName.CONTENT_TRANSFER_ENCODING);
     private static final List<String> LOWERCASED_COMPUTED_HEADERS = COMPUTED_HEADERS.stream()
             .map(s -> s.toLowerCase(Locale.ENGLISH))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
     private final BasicBodyFactory bodyFactory;
     private final AttachmentContentLoader attachmentContentLoader;
@@ -232,10 +231,10 @@ public class MIMEMessageConverter {
         MultipartBuilder mixedMultipartBuilder = MultipartBuilder.create(MIXED_SUB_TYPE);
         List<MessageAttachmentMetadata> inlineAttachments = messageAttachments.stream()
             .filter(MessageAttachmentMetadata::isInline)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
         List<MessageAttachmentMetadata> besideAttachments = messageAttachments.stream()
             .filter(Predicate.not(MessageAttachmentMetadata::isInline))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         if (inlineAttachments.size() > 0) {
             mixedMultipartBuilder.addBodyPart(relatedInnerMessage(newMessage, inlineAttachments, session));
@@ -350,7 +349,7 @@ public class MIMEMessageConverter {
             .entrySet()
             .stream()
             .filter(entry -> !entry.getKey().equals("name"))
-            .collect(Guavate.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
+            .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     private String encode(String name) {

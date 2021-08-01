@@ -32,7 +32,6 @@ import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.eventsourcing.eventstore.History;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -56,12 +55,12 @@ public class DLPDomainConfiguration {
         }
 
         State add(List<DLPConfigurationItem> toAdd) {
-            ImmutableSet<DLPConfigurationItem> union = Stream.concat(this.rules.stream(), toAdd.stream()).collect(Guavate.toImmutableSet());
+            ImmutableSet<DLPConfigurationItem> union = Stream.concat(this.rules.stream(), toAdd.stream()).collect(ImmutableSet.toImmutableSet());
             return new State(union);
         }
 
         State remove(List<DLPConfigurationItem> toRemove) {
-            ImmutableSet<DLPConfigurationItem> filtered = rules.stream().filter(rule -> !toRemove.contains(rule)).collect(Guavate.toImmutableSet());
+            ImmutableSet<DLPConfigurationItem> filtered = rules.stream().filter(rule -> !toRemove.contains(rule)).collect(ImmutableSet.toImmutableSet());
             return new State(filtered);
         }
     }
@@ -93,7 +92,7 @@ public class DLPDomainConfiguration {
     }
 
     public List<Event> store(DLPRules updatedRules) {
-        ImmutableSet<DLPConfigurationItem> existingRules = retrieveRules().getItems().stream().collect(Guavate.toImmutableSet());
+        ImmutableSet<DLPConfigurationItem> existingRules = retrieveRules().getItems().stream().collect(ImmutableSet.toImmutableSet());
         ImmutableSet<DLPConfigurationItem> updatedRulesSet = ImmutableSet.copyOf(updatedRules);
 
         Optional<Event> removedRulesEvent = generateRemovedRulesEvent(existingRules, updatedRulesSet);
@@ -102,7 +101,7 @@ public class DLPDomainConfiguration {
         ImmutableList<Event> events = Stream
             .of(removedRulesEvent, addedRulesEvent)
             .flatMap(Optional::stream)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         events.forEach(this::apply);
         return events;

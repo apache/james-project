@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
@@ -56,9 +57,9 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -177,9 +178,9 @@ public class MessageAppender {
     private ImmutableList<MessageAttachmentMetadata> getMessageAttachments(MailboxSession session, ImmutableList<Attachment> attachments) throws MailboxException {
         Map<AttachmentId, AttachmentMetadata> attachmentsById = attachmentManager.getAttachments(attachments.stream()
             .map(attachment -> AttachmentId.from(attachment.getBlobId().getRawValue()))
-            .collect(Guavate.toImmutableList()), session)
+            .collect(ImmutableList.toImmutableList()), session)
             .stream()
-            .collect(Guavate.toImmutableMap(AttachmentMetadata::getAttachmentId));
+            .collect(ImmutableMap.toImmutableMap(AttachmentMetadata::getAttachmentId, Function.identity()));
 
         ThrowingFunction<Attachment, Optional<MessageAttachmentMetadata>> toMessageAttachment = att -> messageAttachment(att, attachmentsById);
 
@@ -187,7 +188,7 @@ public class MessageAppender {
         return attachments.stream()
             .map(Throwing.function(toMessageAttachment).sneakyThrow())
             .flatMap(Optional::stream)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private Optional<MessageAttachmentMetadata> messageAttachment(Attachment attachment, Map<AttachmentId, AttachmentMetadata> attachmentsById) throws MailboxException {

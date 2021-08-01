@@ -32,7 +32,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -175,7 +174,7 @@ public class DsnParameters {
                 .stream()
                 .map(string -> parseValue(string)
                     .orElseThrow(() -> new IllegalArgumentException(string + " could not be associated with any RCPT NOTIFY value")))
-                .collect(Guavate.toImmutableList())));
+                .collect(ImmutableList.toImmutableList())));
         }
 
         public static Optional<Notify> parseValue(String input) {
@@ -389,14 +388,14 @@ public class DsnParameters {
                 .entrySet()
                 .stream()
                 .map(Throwing.function(entry -> Pair.of(new MailAddress(entry.getKey()), Notify.fromAttributeValue(entry.getValue()))))
-                .collect(Guavate.entriesToMap()))
+                .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue)))
             .orElse(ImmutableMap.of());
         Map<MailAddress, MailAddress> orcpt = dsnAttributeValues.getOrcptAttributeValue()
             .map(mapAttributeValue -> mapAttributeValue.value()
                 .entrySet()
                 .stream()
                 .map(Throwing.function(entry -> Pair.of(new MailAddress(entry.getKey()), new MailAddress(entry.getValue().value()))))
-                .collect(Guavate.toImmutableMap(
+                .collect(ImmutableMap.toImmutableMap(
                     Pair::getKey,
                     Pair::getValue)))
             .orElse(ImmutableMap.of());
@@ -408,7 +407,7 @@ public class DsnParameters {
             .map(rcpt -> Pair.of(rcpt, new RecipientDsnParameters(
                 Optional.ofNullable(notify.get(rcpt)),
                 Optional.ofNullable(orcpt.get(rcpt)))))
-            .collect(Guavate.toImmutableMap(
+            .collect(ImmutableMap.toImmutableMap(
                 Pair::getKey,
                 Pair::getValue));
         return of(envId, ret, recipientDsnParameters);
@@ -447,13 +446,13 @@ public class DsnParameters {
             .filter(entry -> entry.getValue().getNotifyParameter().isPresent())
             .map(entry -> Pair.of(entry.getKey().asString(),
                 Notify.toAttributeValue(entry.getValue().getNotifyParameter().get())))
-            .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)))
+            .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue)))
             .asMapAttributeValueOf(String.class);
         Optional<AttributeValue<Map<String, AttributeValue<String>>>> orcptAttributeValue = AttributeValue.of(rcptParameters.entrySet().stream()
             .filter(entry -> entry.getValue().getOrcptParameter().isPresent())
             .map(entry -> Pair.of(entry.getKey().asString(),
                 AttributeValue.of(entry.getValue().getOrcptParameter().get().asString())))
-            .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)))
+            .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue)))
             .asMapAttributeValueOf(String.class);
 
         return new DsnAttributeValues(notifyAttributeValue, orcptAttributeValue, envIdAttributeValue, retAttributeValue);

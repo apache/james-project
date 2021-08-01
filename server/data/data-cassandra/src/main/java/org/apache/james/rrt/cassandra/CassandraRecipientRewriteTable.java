@@ -31,8 +31,8 @@ import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
 public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTable {
     private final CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO;
@@ -69,7 +69,7 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     @Override
     public Map<MappingSource, Mappings> getAllMappings() {
         return cassandraRecipientRewriteTableDAO.getAllMappings()
-            .collect(Guavate.toImmutableMap(
+            .collect(ImmutableMap.toImmutableMap(
                 pair -> pair.getLeft(),
                 pair -> MappingsImpl.fromMappings(pair.getRight()),
                 Mappings::union))

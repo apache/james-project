@@ -47,8 +47,8 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Multimap;
 
 import reactor.core.publisher.Flux;
@@ -67,7 +67,7 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
     @Override
     public List<MailboxMessage> find(Collection<MessageId> messageIds, MessageMapper.FetchType fetchType) {
         return findReactive(messageIds, fetchType)
-            .collect(Guavate.toImmutableList())
+            .collect(ImmutableList.toImmutableList())
             .block();
     }
 
@@ -97,7 +97,7 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
         return find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
             .stream()
             .map(MailboxMessage::getMailboxId)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     @Override
@@ -142,7 +142,7 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
             .filter(message -> mailboxIds.contains(message.getMailboxId()))
             .map(updateMessage(newState, updateMode))
             .distinct()
-            .collect(Guavate.toImmutableListMultimap(
+            .collect(ImmutableListMultimap.toImmutableListMultimap(
                 Pair::getKey,
                 Pair::getValue)))
             .subscribeOn(Schedulers.elastic());

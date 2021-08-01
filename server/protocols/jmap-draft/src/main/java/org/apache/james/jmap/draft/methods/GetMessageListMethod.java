@@ -57,10 +57,10 @@ import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.streams.Limit;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -238,7 +238,7 @@ public class GetMessageListMethod implements Method {
         SearchQuery.Builder searchQueryBuilder = SearchQuery.builder();
 
         messageListRequest.getFilter()
-            .map(filter -> new FilterToCriteria().convert(filter).collect(Guavate.toImmutableList()))
+            .map(filter -> new FilterToCriteria().convert(filter).collect(ImmutableList.toImmutableList()))
             .ifPresent(searchQueryBuilder::andCriteria);
         Set<MailboxId> inMailboxes = buildFilterMailboxesSet(messageListRequest.getFilter(), FilterCondition::getInMailboxes);
         Set<MailboxId> notInMailboxes = buildFilterMailboxesSet(messageListRequest.getFilter(), FilterCondition::getNotInMailboxes);
@@ -273,14 +273,14 @@ public class GetMessageListMethod implements Method {
 
     private Set<MailboxId> buildFilterMailboxesSet(Optional<Filter> maybeFilter, Function<FilterCondition, Optional<List<String>>> mailboxListExtractor) {
         return filterToFilterCondition(maybeFilter)
-            .flatMap(condition -> Guavate.stream(mailboxListExtractor.apply(condition)))
+            .flatMap(condition -> mailboxListExtractor.apply(condition).stream())
             .flatMap(List::stream)
             .map(mailboxIdFactory::fromString)
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
     
     private Stream<FilterCondition> filterToFilterCondition(Optional<Filter> maybeCondition) {
-        return Guavate.stream(maybeCondition)
+        return maybeCondition.stream()
             .flatMap(c -> {
                 if (c instanceof FilterCondition) {
                     return Stream.of((FilterCondition)c);

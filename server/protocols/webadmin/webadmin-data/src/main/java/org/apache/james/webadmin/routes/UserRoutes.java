@@ -55,7 +55,7 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -282,7 +282,7 @@ public class UserRoutes implements Routes {
             return canSendFrom
                 .allValidFromAddressesForUser(username)
                 .map(MailAddress::asString)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         } catch (RecipientRewriteTable.ErrorMappingException | RecipientRewriteTableException | UsersRepositoryException e) {
             String errorMessage = String.format("Error while listing allowed From headers for user '%s'", username);
             LOGGER.info(errorMessage, e);

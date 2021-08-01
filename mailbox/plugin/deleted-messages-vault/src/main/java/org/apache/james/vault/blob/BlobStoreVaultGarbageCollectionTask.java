@@ -34,7 +34,7 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
@@ -60,7 +60,7 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
         public List<String> getDeletedBuckets() {
             return deletedBuckets.stream()
                 .map(BucketName::asString)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         }
 
         @Override

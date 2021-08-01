@@ -52,9 +52,9 @@ import org.reactivestreams.Publisher;
 import org.threeten.extra.Temporals;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import reactor.core.publisher.Flux;
@@ -77,7 +77,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory<MemoryMailQueueF
         return mailQueues.values()
             .stream()
             .map(MemoryCacheableMailQueue::getName)
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 
     @Override
@@ -201,7 +201,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory<MemoryMailQueueF
         public long remove(Type type, String value) throws MailQueueException {
             ImmutableList<MemoryMailQueueItem> toBeRemoved = mailItems.stream()
                 .filter(item -> shouldRemove(item, type, value))
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
             toBeRemoved.forEach(mailItems::remove);
             return toBeRemoved.size();
         }

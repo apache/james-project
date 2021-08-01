@@ -26,8 +26,8 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.model.SearchQuery.Sort;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 
 /**
@@ -41,7 +41,7 @@ public class CombinedComparator implements Comparator<MailboxMessage> {
         Preconditions.checkArgument(!sorts.isEmpty());
         return new CombinedComparator(sorts.stream()
             .map(toComparator())
-            .collect(Guavate.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
     }
 
     private static Function<Sort, Comparator<MailboxMessage>> toComparator() {

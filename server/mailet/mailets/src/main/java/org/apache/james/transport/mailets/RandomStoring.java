@@ -46,8 +46,9 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Mono;
 
@@ -79,7 +80,7 @@ public class RandomStoring extends GenericMailet {
         Collection<MailAddress> mailAddresses = reroutingInfos
             .stream()
             .map(Throwing.function(info -> info.getUser().asMailAddress()))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         mail.setRecipients(mailAddresses);
         reroutingInfos.forEach(reroutingInfo ->
@@ -105,13 +106,13 @@ public class RandomStoring extends GenericMailet {
             .distinct()
             .mapToObj(reroutingInfos::get)
             .limit(randomRecipientsNumbers.get())
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 
     private List<ReroutingInfos> retrieveReroutingInfos() throws UsersRepositoryException {
         return Iterators.toStream(usersRepository.list())
             .flatMap(this::buildReRoutingInfos)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private Stream<ReroutingInfos> buildReRoutingInfos(Username username) {

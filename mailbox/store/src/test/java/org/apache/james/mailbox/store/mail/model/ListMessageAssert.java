@@ -31,8 +31,8 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class ListMessageAssert {
@@ -41,7 +41,7 @@ public class ListMessageAssert {
     private List<InnerMessage> messageToInnerMessage(List<MailboxMessage> messages) {
         return messages.stream()
             .map(message -> getInnerMessage(message))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private InnerMessage getInnerMessage(MailboxMessage message) {

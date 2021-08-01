@@ -104,7 +104,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -574,7 +573,7 @@ class MailboxesRoutesTest {
                 searchIndex.delete(systemSession, mailbox.getMailboxId(),
                     messages.stream()
                         .map(MessageResult::getUid)
-                        .collect(Guavate.toImmutableList()))
+                        .collect(ImmutableList.toImmutableList()))
                     .block();
 
                 String taskId = with()

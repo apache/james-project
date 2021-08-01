@@ -25,7 +25,6 @@ import javax.mail.MessagingException;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
@@ -46,7 +45,7 @@ public class MappingArgument {
             .splitToList(mapping)
             .stream()
             .map(MappingArgument::parseKeyValue)
-            .collect(Guavate.toImmutableMap(Pair::getLeft, Pair::getRight));
+            .collect(ImmutableMap.toImmutableMap(Pair::getLeft, Pair::getRight));
     }
 
     private static Pair<String, String> parseKeyValue(String keyValue) {

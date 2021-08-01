@@ -66,7 +66,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
@@ -254,7 +253,7 @@ public class JMAPModule extends AbstractModule {
                     badCheckDescription(searchCapabilities.contains(SearchCapabilities.AttachmentFileName),
                     "Attachment file name Search support in MailboxManager is required by JMAP Module"))
                 .flatMap(Optional::stream)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
 
             if (!badCheckDescriptions.isEmpty()) {
                 return CheckResult.builder()

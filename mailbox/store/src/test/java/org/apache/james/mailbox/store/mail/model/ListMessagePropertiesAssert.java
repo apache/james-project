@@ -24,15 +24,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import java.util.function.Function;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 
 
 public class ListMessagePropertiesAssert {
     private List<InnerProperty> propertiesToInnerProperties(List<Property> properties) {
         return properties.stream()
             .map(propertyToInnerProperty())
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private Function<Property, InnerProperty> propertyToInnerProperty() {

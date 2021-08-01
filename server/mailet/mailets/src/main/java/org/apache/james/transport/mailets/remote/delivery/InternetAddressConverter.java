@@ -25,7 +25,6 @@ import javax.mail.internet.InternetAddress;
 
 import org.apache.james.core.MailAddress;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
@@ -34,6 +33,6 @@ public class InternetAddressConverter {
         Preconditions.checkNotNull(recipients);
         return recipients.stream()
             .map(MailAddress::toInternetAddress)
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 }

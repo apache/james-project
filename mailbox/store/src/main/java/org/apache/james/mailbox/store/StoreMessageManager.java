@@ -108,9 +108,9 @@ import org.apache.james.util.streams.Iterators;
 import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 
 import reactor.core.publisher.Flux;
@@ -670,7 +670,7 @@ public class StoreMessageManager implements MessageManager {
         MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
 
         Iterator<UpdatedFlags> it = messageMapper.execute(() -> messageMapper.updateFlags(getMailboxEntity(), new FlagsUpdateCalculator(flags, flagsUpdateMode), set));
-        List<UpdatedFlags> updatedFlags = Iterators.toStream(it).collect(Guavate.toImmutableList());
+        List<UpdatedFlags> updatedFlags = Iterators.toStream(it).collect(ImmutableList.toImmutableList());
 
         eventBus.dispatch(EventFactory.flagsUpdated()
                 .randomEventId()
@@ -682,7 +682,7 @@ public class StoreMessageManager implements MessageManager {
             .subscribeOn(Schedulers.elastic())
             .block();
 
-        return updatedFlags.stream().collect(Guavate.toImmutableMap(
+        return updatedFlags.stream().collect(ImmutableMap.toImmutableMap(
             UpdatedFlags::getUid,
             UpdatedFlags::getNewFlags));
     }
@@ -771,7 +771,7 @@ public class StoreMessageManager implements MessageManager {
 
         return updatedFlags.stream()
             .map(UpdatedFlags::getUid)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private void runPredeletionHooks(List<MessageUid> uids, MailboxSession session) {
@@ -781,7 +781,7 @@ public class StoreMessageManager implements MessageManager {
             .publishOn(Schedulers.elastic())
             .flatMap(range -> messageMapper.findInMailboxReactive(mailbox, range, FetchType.Metadata, UNLIMITED), DEFAULT_CONCURRENCY)
             .map(mailboxMessage -> MetadataWithMailboxId.from(mailboxMessage.metaData(), mailboxMessage.getMailboxId()))
-            .collect(Guavate.toImmutableList())
+            .collect(ImmutableList.toImmutableList())
             .map(DeleteOperation::from);
 
         deleteOperation.flatMap(preDeletionHooks::runHooks).block();
@@ -828,7 +828,7 @@ public class StoreMessageManager implements MessageManager {
             List<MailboxMessage> originalMessages = groupedOriginalRows.next();
             originalRowsCopy.addAll(originalMessages.stream()
                 .map(MailboxMessage::metaData)
-                .collect(Guavate.toImmutableList()));
+                .collect(ImmutableList.toImmutableList()));
             List<MessageMetaData> data = messageMapper.execute(
                 () -> messageMapper.move(getMailboxEntity(), originalMessages));
             movedRows.addAll(data);
@@ -864,7 +864,7 @@ public class StoreMessageManager implements MessageManager {
                     .messageMoves(messageMoves)
                     .messageId(messageIds.build())
                     .build(),
-                messageMoves.impactedMailboxIds().map(MailboxIdRegistrationKey::new).collect(Guavate.toImmutableSet())))
+                messageMoves.impactedMailboxIds().map(MailboxIdRegistrationKey::new).collect(ImmutableSet.toImmutableSet())))
             .subscribeOn(Schedulers.elastic())
             .blockLast();
 
@@ -906,7 +906,7 @@ public class StoreMessageManager implements MessageManager {
                     .messageId(messageIds.build())
                     .session(session)
                     .build(),
-                messageMoves.impactedMailboxIds().map(MailboxIdRegistrationKey::new).collect(Guavate.toImmutableSet())))
+                messageMoves.impactedMailboxIds().map(MailboxIdRegistrationKey::new).collect(ImmutableSet.toImmutableSet())))
             .subscribeOn(Schedulers.elastic())
             .blockLast();
 

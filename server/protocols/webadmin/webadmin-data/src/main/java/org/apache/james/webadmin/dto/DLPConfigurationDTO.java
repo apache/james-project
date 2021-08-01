@@ -26,7 +26,6 @@ import org.apache.james.util.streams.Iterables;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -38,7 +37,7 @@ public class DLPConfigurationDTO {
         return new DLPConfigurationDTO(
             Iterables.toStream(dlpConfigurations)
                 .map(DLPConfigurationItemDTO::toDTO)
-                .collect(Guavate.toImmutableList()));
+                .collect(ImmutableList.toImmutableList()));
     }
 
     private final ImmutableList<DLPConfigurationItemDTO> rules;
@@ -57,6 +56,6 @@ public class DLPConfigurationDTO {
     public DLPRules toDLPConfiguration() throws DuplicateRulesIdsException {
         return new DLPRules(rules.stream()
             .map(DLPConfigurationItemDTO::toDLPConfiguration)
-            .collect(Guavate.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
     }
 }

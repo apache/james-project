@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -36,7 +37,7 @@ import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * use:
@@ -87,7 +88,7 @@ public class HasHeader extends GenericMatcher {
                     .stream()
                     .filter(entry -> entry.getValue().getName().equals(headerName))
                     .map(entry -> entry.getKey())
-                    .collect(Guavate.toImmutableSet());
+                    .collect(ImmutableSet.toImmutableSet());
         }
     }
 
@@ -116,8 +117,8 @@ public class HasHeader extends GenericMatcher {
                     .entries()
                     .stream()
                     .filter(entry -> entry.getValue().getName().equals(headerName) && entry.getValue().getValue().equals(headerValue))
-                    .map(entry -> entry.getKey())
-                    .collect(Guavate.toImmutableSet());
+                    .map(Map.Entry::getKey)
+                    .collect(ImmutableSet.toImmutableSet());
         }
     }
 

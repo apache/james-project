@@ -33,7 +33,6 @@ import java.util.stream.Stream;
 
 import org.apache.james.rrt.lib.Mapping.Type;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -140,7 +139,7 @@ public class MappingsImpl implements Mappings, Serializable {
             return new MappingsImpl(mappings.build()
                 .stream()
                 .sorted(new DefaultMappingOrderingPolicy().comparator())
-                .collect(Guavate.toImmutableList()));
+                .collect(ImmutableList.toImmutableList()));
         }
 
     }
@@ -155,7 +154,7 @@ public class MappingsImpl implements Mappings, Serializable {
     public Iterable<String> asStrings() {
         return mappings.stream()
             .map(Mapping::asString)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     @Override

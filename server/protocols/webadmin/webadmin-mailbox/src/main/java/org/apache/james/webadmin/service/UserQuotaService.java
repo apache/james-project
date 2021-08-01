@@ -42,7 +42,7 @@ import org.apache.james.webadmin.dto.UsersQuotaDetailsDTO;
 import org.apache.james.webadmin.dto.ValidatedQuotaDTO;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 public class UserQuotaService {
@@ -146,6 +146,6 @@ public class UserQuotaService {
                 .user(user)
                 .detail(getQuota(user))
                 .build()))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 }

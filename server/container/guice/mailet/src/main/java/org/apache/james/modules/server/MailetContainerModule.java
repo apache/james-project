@@ -61,7 +61,6 @@ import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -209,7 +208,7 @@ public class MailetContainerModule extends AbstractModule {
                         throw new RuntimeException("Can not perform checks as transport processor is not an instance of " + MailProcessor.class);
                     }
                 })
-                .collect(Guavate.toImmutableListMultimap(
+                .collect(ImmutableListMultimap.toImmutableListMultimap(
                     Pair::getKey,
                     Pair::getValue));
             for (ProcessorsCheck check : processorsCheckSet) {
@@ -257,7 +256,7 @@ public class MailetContainerModule extends AbstractModule {
                     } catch (ConfigurationException e) {
                         return Stream.of(e);
                     }
-                }).collect(Guavate.toImmutableList());
+                }).collect(ImmutableList.toImmutableList());
 
                 if (failures.size() == checks.size()) {
                     throw failures.get(0);

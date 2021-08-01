@@ -45,7 +45,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
@@ -129,7 +128,7 @@ public class ContactExtractor extends GenericMailet implements Mailet {
                 getRecipients(mimeMessage, Message.RecipientType.TO),
                 getRecipients(mimeMessage, Message.RecipientType.CC),
                 getRecipients(mimeMessage, Message.RecipientType.BCC))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private Stream<String> getRecipients(MimeMessage mimeMessage, RecipientType recipientType) throws MessagingException {

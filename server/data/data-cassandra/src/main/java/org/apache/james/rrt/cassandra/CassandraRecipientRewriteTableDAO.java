@@ -41,7 +41,7 @@ import org.apache.james.rrt.lib.MappingsImpl;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -108,7 +108,7 @@ public class CassandraRecipientRewriteTableDAO {
             .setString(USER, source.getFixedUser())
             .setString(DOMAIN, source.getFixedDomain()))
             .map(row -> row.getString(MAPPING))
-            .collect(Guavate.toImmutableList())
+            .collect(ImmutableList.toImmutableList())
             .map(MappingsImpl::fromCollection)
             .filter(Predicate.not(MappingsImpl::isEmpty));
     }

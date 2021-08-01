@@ -22,6 +22,7 @@ package org.apache.james.mailetcontainer.impl;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -41,7 +42,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 
 class LocalResources {
     private static final EnumSet<Mapping.Type> ALIAS_TYPES = EnumSet.of(Mapping.Type.Alias, Mapping.Type.DomainAlias);
@@ -105,7 +107,7 @@ class LocalResources {
         return addressByDomains(mailAddresses)
             .flatMap(this::hasLocalDomain)
             .filter(this::belongsToALocalUser)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private Stream<MailAddress> hasLocalDomain(Map.Entry<Domain, Collection<MailAddress>> entry) {
@@ -117,8 +119,8 @@ class LocalResources {
 
     private Stream<Map.Entry<Domain, Collection<MailAddress>>> addressByDomains(Collection<MailAddress> mailAddresses) {
         return mailAddresses.stream()
-            .collect(Guavate.toImmutableListMultimap(
-                MailAddress::getDomain))
+            .collect(ImmutableListMultimap.toImmutableListMultimap(
+                MailAddress::getDomain, Function.identity()))
             .asMap()
             .entrySet()
             .stream();

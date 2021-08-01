@@ -71,8 +71,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
 
 import reactor.core.publisher.Flux;
@@ -295,7 +295,7 @@ public class CassandraMessageMapper implements MessageMapper {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         return deletedMessageDAO.retrieveDeletedMessage(mailboxId, messageRange)
-            .collect(Guavate.toImmutableList())
+            .collect(ImmutableList.toImmutableList())
             .block();
     }
 
@@ -307,7 +307,7 @@ public class CassandraMessageMapper implements MessageMapper {
             .concatMap(range -> messageIdDAO.retrieveMessages(mailboxId, range, Limit.unlimited()))
             .map(CassandraMessageMetadata::getComposedMessageId)
             .flatMap(this::expungeOne, cassandraConfiguration.getExpungeChunkSize())
-            .collect(Guavate.toImmutableMap(MailboxMessage::getUid, MailboxMessage::metaData))
+            .collect(ImmutableMap.toImmutableMap(MailboxMessage::getUid, MailboxMessage::metaData))
             .flatMap(messageMap -> indexTableHandler.updateIndexOnDelete(mailboxId, messageMap.values())
                 .thenReturn(messageMap))
             .subscribeOn(Schedulers.elastic())
@@ -335,7 +335,7 @@ public class CassandraMessageMapper implements MessageMapper {
     public List<MessageMetaData> move(Mailbox mailbox, List<MailboxMessage> original) throws MailboxException {
         List<ComposedMessageIdWithMetaData> beforeCopy = original.stream()
             .map(MailboxMessage::getComposedMessageIdWithMetaData)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         List<MessageMetaData> messageMetaData = copy(mailbox, original);
         deleteAndHandleIndexUpdates(beforeCopy).block();
@@ -484,7 +484,7 @@ public class CassandraMessageMapper implements MessageMapper {
                 original.setFlags(new FlagsBuilder().add(original.createFlags()).add(Flag.RECENT).build());
                 return original;
             })
-            .collect(Guavate.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
     }
 
     @Override
@@ -526,13 +526,13 @@ public class CassandraMessageMapper implements MessageMapper {
                     aMessage.setUid(uidAndModseq.getKey());
                     aMessage.setModSeq((uidAndModseq.getValue()));
                     return aMessage;
-                }).collect(Guavate.toImmutableList()));
+                }).collect(ImmutableList.toImmutableList()));
 
         return block(messagesWithUidAndModSeq
             .flatMap(list -> insertIds(list, mailboxId).thenReturn(list))
             .map(list -> list.stream()
                 .map(MailboxMessage::metaData)
-                .collect(Guavate.toImmutableList())));
+                .collect(ImmutableList.toImmutableList())));
     }
 
     private Mono<Void> save(Mailbox mailbox, MailboxMessage message) throws MailboxException {

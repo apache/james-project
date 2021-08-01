@@ -29,8 +29,8 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class StreamUtils {
 
@@ -85,7 +85,7 @@ public class StreamUtils {
         return previous -> {
             List<T> generated = previous.stream()
                 .flatMap(generator)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
 
             if (generated.isEmpty()) {
                 return Optional.empty();

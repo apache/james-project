@@ -51,8 +51,8 @@ import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import io.swagger.annotations.Api;
@@ -127,7 +127,7 @@ public class ForwardRoutes implements Routes {
             message = "Internal server error - Something went bad on the server side.")
     })
     public List<MappingSource> listForwards(Request request, Response response) throws RecipientRewriteTableException {
-        return recipientRewriteTable.getSourcesForType(Mapping.Type.Forward).collect(Guavate.toImmutableList());
+        return recipientRewriteTable.getSourcesForType(Mapping.Type.Forward).collect(ImmutableList.toImmutableList());
     }
 
     @PUT
@@ -238,7 +238,7 @@ public class ForwardRoutes implements Routes {
                 .map(MailAddress::asString)
                 .sorted()
                 .map(ForwardDestinationResponse::new)
-                .collect(Guavate.toImmutableSet());
+                .collect(ImmutableSet.toImmutableSet());
     }
 
     private void ensureNonEmptyMappings(Mappings mappings) {

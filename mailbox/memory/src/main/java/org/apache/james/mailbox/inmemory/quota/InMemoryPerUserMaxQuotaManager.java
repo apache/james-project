@@ -33,7 +33,7 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableMap;
 
 public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
 
@@ -79,7 +79,7 @@ public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
                 Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaFunction)),
                 Pair.of(Quota.Scope.Global, maxMessage))
             .filter(pair -> pair.getValue().isPresent())
-            .collect(Guavate.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
+            .collect(ImmutableMap.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
     }
 
     @Override
@@ -90,7 +90,7 @@ public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
                 Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaFunction)),
                 Pair.of(Quota.Scope.Global, maxStorage))
             .filter(pair -> pair.getValue().isPresent())
-            .collect(Guavate.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
+            .collect(ImmutableMap.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
     }
 
     @Override

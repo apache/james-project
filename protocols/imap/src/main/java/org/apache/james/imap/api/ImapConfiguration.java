@@ -25,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.imap.api.message.Capability;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -102,7 +101,7 @@ public class ImapConfiguration {
                     .filter(Builder::noBlankString)
                     .map(StringUtils::normalizeSpace)
                     .map(Capability::of)
-                    .collect(Guavate.toImmutableSet());
+                    .collect(ImmutableSet.toImmutableSet());
             return new ImapConfiguration(
                     enableIdle.orElse(DEFAULT_ENABLE_IDLE),
                     idleTimeInterval.orElse(DEFAULT_HEARTBEAT_INTERVAL_IN_SECONDS),

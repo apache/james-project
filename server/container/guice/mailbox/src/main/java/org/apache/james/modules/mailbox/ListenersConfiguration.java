@@ -24,7 +24,6 @@ import java.util.Optional;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -46,7 +45,7 @@ public class ListenersConfiguration {
         return new ListenersConfiguration(listeners
                 .stream()
                 .map(ListenerConfiguration::from)
-                .collect(Guavate.toImmutableList()),
+                .collect(ImmutableList.toImmutableList()),
             consumeGroups.orElse(true));
     }
     

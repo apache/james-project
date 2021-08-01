@@ -24,7 +24,6 @@ import java.util.stream.Stream;
 
 import org.apache.commons.configuration2.Configuration;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -44,7 +43,7 @@ public enum  BlobExportImplChoice {
     private static ImmutableList<String> plainImplNames() {
         return Stream.of(values())
             .map(impl -> impl.name)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     static Optional<BlobExportImplChoice> from(Configuration configuration) {

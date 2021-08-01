@@ -34,7 +34,7 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.streams.Iterators;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 public class ScanningQuotaSearcher implements QuotaSearcher {
     private final UsersRepository usersRepository;
@@ -54,7 +54,7 @@ public class ScanningQuotaSearcher implements QuotaSearcher {
             .skip(query.getOffset().getValue());
 
         return limit(results, query.getLimit())
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private Stream<Username> limit(Stream<Username> results, Limit limit) {

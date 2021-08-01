@@ -46,8 +46,8 @@ import org.apache.james.util.io.CurrentPositionInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Flux;
@@ -82,7 +82,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
         Preconditions.checkArgument(attachmentIds != null);
         return Flux.fromIterable(attachmentIds)
             .flatMap(this::getAttachmentsAsMono, DEFAULT_CONCURRENCY)
-            .collect(Guavate.toImmutableList())
+            .collect(ImmutableList.toImmutableList())
             .block();
     }
 
@@ -135,13 +135,13 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     @Override
     public Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId) throws MailboxException {
         return attachmentMessageIdDAO.getOwnerMessageIds(attachmentId)
-            .collect(Guavate.toImmutableList())
+            .collect(ImmutableList.toImmutableList())
             .block();
     }
 
     @Override
     public Collection<Username> getOwners(AttachmentId attachmentId) throws MailboxException {
-        return ownerDAO.retrieveOwners(attachmentId).collect(Guavate.toImmutableList()).block();
+        return ownerDAO.retrieveOwners(attachmentId).collect(ImmutableList.toImmutableList()).block();
     }
 
     private Mono<MessageAttachmentMetadata> storeAttachmentAsync(ParsedAttachment parsedAttachment, MessageId ownerMessageId) {

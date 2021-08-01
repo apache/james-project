@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.dto;
 
 import java.util.List;
+import java.util.function.Function;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
@@ -27,7 +28,8 @@ import org.apache.james.mailbox.model.MailboxId;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Multimap;
 
 public class SerializableReIndexingExecutionFailures {
@@ -55,7 +57,7 @@ public class SerializableReIndexingExecutionFailures {
             reIndexingExecutionFailures.messageFailures()
                 .stream()
                 .map(failure -> new SerializableReIndexingExecutionFailures.SerializableReIndexingFailure(failure.getMailboxId(), failure.getUid()))
-                .collect(Guavate.toImmutableList()));
+                .collect(ImmutableList.toImmutableList()));
     }
 
     private final List<SerializableReIndexingFailure> failures;
@@ -67,6 +69,6 @@ public class SerializableReIndexingExecutionFailures {
     @JsonValue
     public Multimap<String, SerializableReIndexingFailure> failures() {
         return failures.stream()
-            .collect(Guavate.toImmutableListMultimap(SerializableReIndexingFailure::getSerializedMailboxId));
+            .collect(ImmutableListMultimap.toImmutableListMultimap(SerializableReIndexingFailure::getSerializedMailboxId, Function.identity()));
     }
 }

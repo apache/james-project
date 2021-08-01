@@ -28,7 +28,7 @@ import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 
@@ -50,6 +50,6 @@ public class PreDeletionHookModule extends AbstractModule {
         return configuration.getHooksConfiguration()
             .stream()
             .map(Throwing.function(loader::createHook).sneakyThrow())
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 }

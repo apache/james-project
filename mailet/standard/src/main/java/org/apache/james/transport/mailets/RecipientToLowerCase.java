@@ -28,7 +28,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 /**
  * {@link GenericMailet} which convert all Recipients to lowercase
@@ -39,7 +39,7 @@ public class RecipientToLowerCase extends GenericMailet {
     public void service(Mail mail) throws MessagingException {
         mail.setRecipients(mail.getRecipients().stream()
             .map(Throwing.function(this::toLowerCase))
-            .collect(Guavate.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
     }
 
     private MailAddress toLowerCase(MailAddress mailAddress) throws AddressException {

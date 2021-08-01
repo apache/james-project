@@ -30,7 +30,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 
@@ -62,7 +61,7 @@ public class MailAttributesToMimeHeaders extends GenericMailet {
             .parse(simpleMappings)
             .entrySet()
             .stream()
-            .collect(Guavate.toImmutableMap(
+            .collect(ImmutableMap.toImmutableMap(
                 entry -> AttributeName.of(entry.getKey()),
                 entry -> entry.getValue()));
     }

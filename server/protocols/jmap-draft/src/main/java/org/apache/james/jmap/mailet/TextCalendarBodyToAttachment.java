@@ -33,8 +33,8 @@ import javax.mail.internet.MimeMultipart;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 /**
  * This mailet converts Content-Type of MimeMessage from text/calendar to mulitpart/mixed
@@ -86,7 +86,7 @@ public class TextCalendarBodyToAttachment extends GenericMailet {
         return Collections.list(mimeMessage.getAllHeaders())
             .stream()
             .filter(header -> header.getName().startsWith(CONTENT_HEADER_PREFIX))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private MimeBodyPart createMimeBodyPartWithContentHeadersFromMimeMessage(MimeMessage mimeMessage, List<Header> contentHeaders) throws MessagingException {

@@ -40,7 +40,6 @@ import org.apache.commons.configuration2.sync.LockMode;
 import org.apache.commons.configuration2.sync.Synchronizer;
 import org.apache.commons.lang3.StringUtils;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class DelegatedPropertiesConfiguration implements Configuration {
@@ -289,7 +288,7 @@ public class DelegatedPropertiesConfiguration implements Configuration {
                 .stream()
                 .map(String.class::cast)
                 .flatMap(this::splitAndStripDoubleQuotes)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         } catch (ConversionException e) {
             return configuration.getList(key);
         } catch (NoSuchElementException e) {

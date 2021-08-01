@@ -56,7 +56,8 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class MaildirMessageMapper extends AbstractMessageMapper {
 
@@ -251,13 +252,13 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
     private Map<MessageUid, MessageMetaData> deleteDeletedMessages(Mailbox mailbox, List<MailboxMessage> messages) throws MailboxException {
         return messages.stream()
             .peek(Throwing.<MailboxMessage>consumer(message -> delete(mailbox, message)).sneakyThrow())
-            .collect(Guavate.toImmutableMap(MailboxMessage::getUid, MailboxMessage::metaData));
+            .collect(ImmutableMap.toImmutableMap(MailboxMessage::getUid, MailboxMessage::metaData));
     }
 
     private List<MessageUid> getUidList(List<MailboxMessage> messages) {
         return messages.stream()
             .map(MailboxMessage::getUid)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     @Override

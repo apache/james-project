@@ -25,8 +25,8 @@ import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.util.streams.Iterators;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 
 public class ApplicableFlagCalculator {
@@ -41,7 +41,7 @@ public class ApplicableFlagCalculator {
         return ApplicableFlagBuilder.builder()
             .add(Iterators.toStream(mailboxMessages.iterator())
                 .map(MailboxMessage::createFlags)
-                .collect(Guavate.toImmutableList()))
+                .collect(ImmutableList.toImmutableList()))
             .build();
     }
 }

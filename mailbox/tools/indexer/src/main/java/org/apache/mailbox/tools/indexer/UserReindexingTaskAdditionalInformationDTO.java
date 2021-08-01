@@ -32,7 +32,6 @@ import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO.Reinde
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class UserReindexingTaskAdditionalInformationDTO implements AdditionalInformationDTO {
@@ -56,7 +55,7 @@ public class UserReindexingTaskAdditionalInformationDTO implements AdditionalInf
                 details.getFailedReprocessedMailCount(),
                 Optional.empty(),
                 Optional.of(ReprocessingContextInformationDTO.serializeFailures(details.failures())),
-                Optional.of(details.failures().mailboxFailures().stream().map(MailboxId::serialize).collect(Guavate.toImmutableList())),
+                Optional.of(details.failures().mailboxFailures().stream().map(MailboxId::serialize).collect(ImmutableList.toImmutableList())),
                 details.timestamp(),
                 Optional.of(RunningOptionsDTO.toDTO(details.getRunningOptions()))))
             .typeName(UserReindexingTask.USER_RE_INDEXING.asString())

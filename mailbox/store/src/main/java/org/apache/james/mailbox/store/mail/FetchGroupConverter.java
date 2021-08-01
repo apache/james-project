@@ -25,7 +25,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.FetchGroup.Profile;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 public class FetchGroupConverter {
     /**
@@ -40,7 +40,7 @@ public class FetchGroupConverter {
         Collection<MessageMapper.FetchType> fetchTypes = group.profiles()
             .stream()
             .map(FetchGroupConverter::toFetchType)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         return reduce(fetchTypes);
     }

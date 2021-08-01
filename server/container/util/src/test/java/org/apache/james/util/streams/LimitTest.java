@@ -27,7 +27,6 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -55,7 +54,7 @@ class LimitTest {
         assertThat(
             testee
                 .applyOnStream(aList.stream())
-                .collect(Guavate.toImmutableList())
+                .collect(ImmutableList.toImmutableList())
         ).isEqualTo(aList);
     }
 
@@ -74,7 +73,7 @@ class LimitTest {
 
         assertThat(testee
             .applyOnStream(aList.stream())
-            .collect(Guavate.toImmutableList())
+            .collect(ImmutableList.toImmutableList())
         ).isEqualTo(ImmutableList.of(1, 2, 3));
     }
 

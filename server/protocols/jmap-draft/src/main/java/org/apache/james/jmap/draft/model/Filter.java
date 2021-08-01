@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 import org.apache.james.jmap.draft.json.FilterDeserializer;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 @JsonDeserialize(using = FilterDeserializer.class)
 public interface Filter {
@@ -49,7 +49,7 @@ public interface Filter {
 
     default List<FilterCondition> breadthFirstVisit() {
         return this.breadthFirstVisit(0)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     default Stream<FilterCondition> breadthFirstVisit(int depth) {

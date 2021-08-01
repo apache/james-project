@@ -30,7 +30,6 @@ import org.apache.james.mock.smtp.server.model.MockSMTPBehaviorInformation;
 import org.apache.james.mock.smtp.server.model.MockSmtpBehaviors;
 import org.apache.james.mock.smtp.server.model.SMTPExtension;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
@@ -78,7 +77,7 @@ class SMTPBehaviorRepository {
                 .getBehaviorList()
                 .stream()
                 .map(MockSMTPBehaviorInformation::from)
-                .collect(Guavate.toImmutableList()));
+                .collect(ImmutableList.toImmutableList()));
         }
     }
 

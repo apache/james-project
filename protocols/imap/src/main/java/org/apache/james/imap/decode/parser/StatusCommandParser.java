@@ -33,7 +33,6 @@ import org.apache.james.imap.decode.base.AbstractImapCommandParser;
 import org.apache.james.imap.message.request.StatusRequest;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -59,7 +58,7 @@ public class StatusCommandParser extends AbstractImapCommandParser {
 
         EnumSet<StatusDataItems.StatusItem> items = EnumSet.copyOf(words.stream()
             .map(Throwing.function(this::parseStatus).sneakyThrow())
-            .collect(Guavate.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
 
         return new StatusDataItems(items);
     }

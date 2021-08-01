@@ -45,7 +45,6 @@ import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -410,7 +409,7 @@ public interface MailboxEvents {
             return getUids()
                 .stream()
                 .map(uid -> getMetaData(uid).getMessageId())
-                .collect(Guavate.toImmutableSet());
+                .collect(ImmutableSet.toImmutableSet());
         }
     }
 
@@ -483,14 +482,14 @@ public interface MailboxEvents {
         public Collection<MessageUid> getUids() {
             return updatedFlags.stream()
                 .map(UpdatedFlags::getUid)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         }
 
         public Collection<MessageId> getMessageIds() {
             return updatedFlags.stream()
                 .map(UpdatedFlags::getMessageId)
                 .flatMap(Optional::stream)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         }
 
         public List<UpdatedFlags> getUpdatedFlags() {

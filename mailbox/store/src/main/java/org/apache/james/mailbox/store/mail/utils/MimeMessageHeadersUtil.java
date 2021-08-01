@@ -30,7 +30,7 @@ import org.apache.james.mime4j.field.UnstructuredFieldImpl;
 import org.apache.james.mime4j.message.HeaderImpl;
 import org.apache.james.mime4j.stream.Field;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 public class MimeMessageHeadersUtil {
     public static Optional<MimeMessageId> parseMimeMessageId(HeaderImpl headers) {
@@ -46,7 +46,7 @@ public class MimeMessageHeadersUtil {
         if (!mimeMessageIdFields.isEmpty()) {
             List<MimeMessageId> mimeMessageIdList = mimeMessageIdFields.stream()
                 .map(mimeMessageIdField -> new MimeMessageId(mimeMessageIdField.getBody()))
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
             return Optional.of(mimeMessageIdList);
         }
         return Optional.empty();

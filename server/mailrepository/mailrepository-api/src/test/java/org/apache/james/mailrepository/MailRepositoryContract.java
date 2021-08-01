@@ -54,7 +54,6 @@ import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.runnable.ThrowingRunnable;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
@@ -483,7 +482,7 @@ public interface MailRepositoryContract {
         ConcurrentHashMap.KeySetView<MailKey, Boolean> expectedResult = ConcurrentHashMap.newKeySet();
         List<Object> locks = IntStream.range(0, nbKeys)
             .boxed()
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         ThrowingRunnable add = () -> {
             int keyIndex = computeKeyIndex(nbKeys, Math.abs(ThreadLocalRandom.current().nextInt()));

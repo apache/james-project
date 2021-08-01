@@ -40,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
@@ -194,7 +193,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         Multimap<DomainType, Domain> domainsWithType = getDomainsWithType();
         ImmutableSet<Domain> allDomains = domainsWithType.values()
             .stream()
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
         if (configuration.isCacheEnabled()) {
             domainsWithType.get(DomainType.Internal)
@@ -232,7 +231,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     private ImmutableList<Domain> detectIps(Collection<Domain> domains) {
         if (configuration.isAutoDetectIp()) {
             return getDomainsIpStream(domains, dns, LOGGER)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         }
         return ImmutableList.of();
     }
