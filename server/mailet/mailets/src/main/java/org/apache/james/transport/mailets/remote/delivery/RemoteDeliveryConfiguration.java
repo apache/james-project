@@ -33,10 +33,10 @@ import org.apache.mailet.base.MailetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class RemoteDeliveryConfiguration {
 
@@ -131,7 +131,7 @@ public class RemoteDeliveryConfiguration {
                 .stream()
                 .filter(propertyName -> propertyName.startsWith(JAVAX_PREFIX))
                 .map(propertyName -> Pair.of(propertyName, mailetConfig.getInitParameter(propertyName)))
-                .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)));
+                .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue)));
         return result;
     }
 

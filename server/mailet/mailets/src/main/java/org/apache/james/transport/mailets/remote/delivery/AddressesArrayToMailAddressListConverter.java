@@ -30,7 +30,6 @@ import org.apache.james.core.MailAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class AddressesArrayToMailAddressListConverter {
@@ -40,11 +39,10 @@ public class AddressesArrayToMailAddressListConverter {
         if (addresses == null) {
             return ImmutableList.of();
         }
-        return Arrays.asList(addresses)
-            .stream()
-            .map(address -> toMailAddress(address))
+        return Arrays.stream(addresses)
+            .map(AddressesArrayToMailAddressListConverter::toMailAddress)
             .flatMap(Optional::stream)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private static Optional<MailAddress> toMailAddress(Address address) {

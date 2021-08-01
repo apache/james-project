@@ -24,7 +24,6 @@ import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableListMultimap;
 
 public class GuavaUtils {
@@ -32,6 +31,6 @@ public class GuavaUtils {
         return rights.entrySet()
             .stream()
             .flatMap(e -> e.getValue().stream().map(right -> Pair.of(e.getKey(), right)))
-            .collect(Guavate.toImmutableListMultimap(Pair::getKey, Pair::getValue));
+            .collect(ImmutableListMultimap.toImmutableListMultimap(Pair::getKey, Pair::getValue));
     }
 }

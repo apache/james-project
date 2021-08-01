@@ -69,8 +69,8 @@ import org.apache.openjpa.persistence.jdbc.ElementJoinColumns;
 import org.apache.openjpa.persistence.jdbc.Index;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Abstract base class for JPA based implementations of
@@ -366,7 +366,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     public Properties getProperties() {
         return new PropertyBuilder(properties.stream()
             .map(JPAProperty::toProperty)
-            .collect(Guavate.toImmutableList()))
+            .collect(ImmutableList.toImmutableList()))
             .build();
     }
 
@@ -523,7 +523,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
                 .map(Throwing.<ParsedAttachment, MessageAttachmentMetadata>function(
                     attachmentMetadata -> attachmentMetadata.asMessageAttachment(generateFixedAttachmentId(counter.incrementAndGet())))
                     .sneakyThrow())
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -44,7 +44,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.consumers.ThrowingBiConsumer;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -59,7 +58,7 @@ class MailReferenceDTO {
             Optional.ofNullable(mail.getRecipients()).map(Collection::stream)
                 .orElse(Stream.empty())
                 .map(MailAddress::asString)
-                .collect(Guavate.toImmutableList()),
+                .collect(ImmutableList.toImmutableList()),
             mail.getName(),
             mail.getMaybeSender().asOptional().map(MailAddress::asString),
             mail.getState(),
@@ -88,7 +87,7 @@ class MailReferenceDTO {
         Function<Attribute, String> value = attribute -> attribute.getValue().toJson().toString();
         return mail
                 .attributes()
-                .collect(Guavate.toImmutableMap(name, value));
+                .collect(ImmutableMap.toImmutableMap(name, value));
     }
 
     private final String enqueueId;
@@ -214,7 +213,7 @@ class MailReferenceDTO {
             .sender(sender.map(MaybeSender::getMailSender).orElse(MaybeSender.nullSender()))
             .addRecipients(recipients.stream()
                 .map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow())
-                .collect(Guavate.toImmutableList()))
+                .collect(ImmutableList.toImmutableList()))
             .errorMessage(errorMessage)
             .remoteAddr(remoteAddr)
             .remoteHost(remoteHost)

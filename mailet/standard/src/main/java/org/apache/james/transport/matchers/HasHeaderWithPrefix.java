@@ -21,6 +21,7 @@ package org.apache.james.transport.matchers;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import javax.mail.Header;
 import javax.mail.MessagingException;
@@ -30,8 +31,8 @@ import org.apache.james.transport.mailets.utils.MimeMessageUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Matches emails with headers having a given prefix.
@@ -76,7 +77,7 @@ public class HasHeaderWithPrefix extends GenericMatcher {
                 .entries()
                 .stream()
                 .filter(entry -> entry.getValue().getName().startsWith(prefix))
-                .map(entry -> entry.getKey())
-                .collect(Guavate.toImmutableSet());
+                .map(Map.Entry::getKey)
+                .collect(ImmutableSet.toImmutableSet());
     }
 }

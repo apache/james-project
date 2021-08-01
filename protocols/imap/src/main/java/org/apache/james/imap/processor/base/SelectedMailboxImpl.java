@@ -61,7 +61,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
@@ -159,7 +158,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
             applicableFlags = applicableFlags.updateWithNewFlags(messageManager.getApplicableFlags(mailboxSession));
         }
         ImmutableList<MessageUid> uids = Flux.from(messageManager.search(SearchQuery.of(SearchQuery.all()), mailboxSession))
-            .collect(Guavate.toImmutableList())
+            .collect(ImmutableList.toImmutableList())
             .block();
         uidMsnConverter.addAll(uids);
     }

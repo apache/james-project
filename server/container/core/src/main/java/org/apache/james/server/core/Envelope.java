@@ -34,8 +34,8 @@ import org.apache.james.mime4j.dom.address.MailboxList;
 import org.apache.james.util.StreamUtils;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 
 public class Envelope {
     public interface ValidationPolicy {
@@ -70,7 +70,7 @@ public class Envelope {
 
         return new Envelope(sender,
             StreamUtils.flatten(Stream.of(to, cc, bcc))
-                .collect(Guavate.toImmutableSet()));
+                .collect(ImmutableSet.toImmutableSet()));
     }
 
     private static Optional<MailAddress> newMailAddress(ValidationPolicy validationPolicy, String addressAsString) {

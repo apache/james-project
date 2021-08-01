@@ -59,7 +59,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -110,7 +109,7 @@ public class MailImpl implements Disposable, Mail {
 
     private static ImmutableList<Attribute> duplicateAttributes(Mail mail) {
         try {
-            return mail.attributes().map(Attribute::duplicate).collect(Guavate.toImmutableList());
+            return mail.attributes().map(Attribute::duplicate).collect(ImmutableList.toImmutableList());
         } catch (IllegalStateException e) {
             LOGGER.error("Error while cloning Mail attributes", e);
             return ImmutableList.of();
@@ -186,7 +185,7 @@ public class MailImpl implements Disposable, Mail {
         public Builder addRecipients(String... recipients) {
             return addRecipients(Arrays.stream(recipients)
                 .map(Throwing.function(MailAddress::new))
-                .collect(Guavate.toImmutableList()));
+                .collect(ImmutableList.toImmutableList()));
         }
 
         public Builder addRecipient(MailAddress recipient) {
@@ -290,7 +289,7 @@ public class MailImpl implements Disposable, Mail {
     private static ImmutableList<MailAddress> getRecipients(MimeMessage mimeMessage) throws MessagingException {
         return Arrays.stream(mimeMessage.getAllRecipients())
             .map(Throwing.function(MailImpl::castToMailAddress).sneakyThrow())
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private static MailAddress getSender(MimeMessage mimeMessage) throws MessagingException {

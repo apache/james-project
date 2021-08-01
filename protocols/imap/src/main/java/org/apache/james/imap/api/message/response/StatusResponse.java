@@ -39,7 +39,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.UidValidity;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * <p>
@@ -59,7 +59,7 @@ public interface StatusResponse extends ImapResponseMessage {
             .flatMap(charset -> Stream.concat(
                 Stream.of(charset.name()),
                 charset.aliases().stream()))
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
     /**
      * Gets the server response type of this status message.

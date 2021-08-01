@@ -26,8 +26,8 @@ import org.apache.commons.math3.distribution.EnumeratedDistribution;
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.util.Pair;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class DiscreteDistribution<T> {
 
@@ -69,7 +69,7 @@ public class DiscreteDistribution<T> {
     private DiscreteDistribution(List<DistributionEntry<T>> distribution) {
         enumeratedDistribution = new EnumeratedDistribution<>(new MersenneTwister(), distribution.stream()
             .map(DistributionEntry::toPair)
-            .collect(Guavate.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
     }
 
     public Stream<T> generateRandomStream() {

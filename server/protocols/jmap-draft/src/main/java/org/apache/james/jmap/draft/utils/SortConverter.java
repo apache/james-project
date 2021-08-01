@@ -27,9 +27,9 @@ import org.apache.james.mailbox.model.SearchQuery.Sort;
 import org.apache.james.mailbox.model.SearchQuery.Sort.Order;
 import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class SortConverter {
@@ -53,7 +53,7 @@ public class SortConverter {
         Preconditions.checkNotNull(jmapSorts);
         return jmapSorts.stream()
             .map(SortConverter::toSort)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private static Sort toSort(String jmapSort) {

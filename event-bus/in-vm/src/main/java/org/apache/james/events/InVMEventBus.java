@@ -27,8 +27,8 @@ import javax.inject.Inject;
 
 import org.apache.james.events.delivery.EventDelivery;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
@@ -118,6 +118,6 @@ public class InVMEventBus implements EventBus {
     private Set<EventListener.ReactiveEventListener> registeredListenersByKeys(Set<RegistrationKey> keys) {
         return keys.stream()
             .flatMap(registrationKey -> registrations.get(registrationKey).stream())
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 }

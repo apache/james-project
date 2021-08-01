@@ -37,9 +37,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
 /** 
  * Strong typing for attribute value, which represents the value of an attribute stored in a mail.
@@ -237,7 +237,7 @@ public class AttributeValue<T> {
             Map<String, AttributeValue<U>> castedMap = aMap.entrySet()
                 .stream()
                 .flatMap(entry -> entry.getValue().asAttributeValueOf(type).stream().map(castedValue -> Pair.of(entry.getKey(), castedValue)))
-                .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue));
+                .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
             return Optional.of(new AttributeValue<>(castedMap, new Serializer.MapSerializer()));
         } else {
             return Optional.empty();

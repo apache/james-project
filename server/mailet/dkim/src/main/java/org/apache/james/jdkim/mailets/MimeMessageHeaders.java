@@ -29,7 +29,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.jdkim.api.Headers;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Iterators;
@@ -46,16 +45,16 @@ final class MimeMessageHeaders implements Headers {
     public MimeMessageHeaders(MimeMessage message) throws MessagingException {
         ImmutableList<Pair<String, String>> headsAndLines = Streams.stream(Iterators.forEnumeration(message.getAllHeaderLines()))
                 .map(Throwing.function(this::extractHeaderLine).sneakyThrow())
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
 
         fields = headsAndLines
             .stream()
             .map(Pair::getKey)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         headers = headsAndLines
             .stream()
-            .collect(Guavate.toImmutableListMultimap(
+            .collect(ImmutableListMultimap.toImmutableListMultimap(
                 pair -> pair.getKey().toLowerCase(Locale.US),
                 Pair::getValue));
     }

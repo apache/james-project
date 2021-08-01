@@ -44,7 +44,6 @@ import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import org.slf4j.MDC;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
@@ -108,7 +107,7 @@ class ReactorUtilsTest {
                     .forOperation(i -> Mono.fromCallable(() -> stopwatch.elapsed(TimeUnit.MILLISECONDS))))
                 .map(i -> i / 100)
                 .doOnSubscribe(signal -> stopwatch.start())
-                .collect(Guavate.toImmutableList())
+                .collect(ImmutableList.toImmutableList())
                 .block();
 
             // delayElements also delay the first element
@@ -150,7 +149,7 @@ class ReactorUtilsTest {
                     .elements(windowMaxSize)
                     .per(windowDuration)
                     .forOperation(longRunningOperation))
-                .collect(Guavate.toImmutableList())
+                .collect(ImmutableList.toImmutableList())
                 .block();
 
             assertThat(ongoingProcessingUponComputationStart)
@@ -263,7 +262,7 @@ class ReactorUtilsTest {
                 .take(10)
                 .groupBy(Function.identity())
                 .flatMap(Flux::count)
-                .collect(Guavate.toImmutableList())
+                .collect(ImmutableList.toImmutableList())
                 .block();
 
             // We verify that we generate 2 elements by slice and not 3
@@ -285,7 +284,7 @@ class ReactorUtilsTest {
                     .per(windowDuration)
                     .forOperation(Mono::just))
                 .take(10)
-                .collect(Guavate.toImmutableList())
+                .collect(ImmutableList.toImmutableList())
                 .block();
 
             assertThat(results).containsExactly(0L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L);
@@ -304,7 +303,7 @@ class ReactorUtilsTest {
                     .per(windowDuration)
                     .forOperation(Mono::just))
                 .take(10)
-                .collect(Guavate.toImmutableList())
+                .collect(ImmutableList.toImmutableList())
                 .block();
 
             assertThat(results).containsExactly(0L, 1L);

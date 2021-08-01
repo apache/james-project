@@ -37,10 +37,10 @@ import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 
 /**
@@ -303,7 +303,7 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
         Set<String> bad = Streams.stream(getInitParameterNames())
             .filter(not(allowed::contains))
             .filter(not(ERROR_PARAMETERS::contains))
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
         if (!bad.isEmpty()) {
             throw new MessagingException("Unexpected init parameters found: " + bad);

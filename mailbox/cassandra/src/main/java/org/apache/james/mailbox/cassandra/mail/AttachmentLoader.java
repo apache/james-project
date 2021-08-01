@@ -28,7 +28,6 @@ import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
@@ -52,7 +51,7 @@ public class AttachmentLoader {
 
     private Mono<List<MessageAttachmentMetadata>> loadAttachments(Stream<MessageAttachmentRepresentation> messageAttachmentRepresentations, MessageMapper.FetchType fetchType) {
         if (fetchType == MessageMapper.FetchType.Body || fetchType == MessageMapper.FetchType.Full) {
-            return getAttachments(messageAttachmentRepresentations.collect(Guavate.toImmutableList()));
+            return getAttachments(messageAttachmentRepresentations.collect(ImmutableList.toImmutableList()));
         } else {
             return Mono.just(ImmutableList.of());
         }
@@ -64,7 +63,7 @@ public class AttachmentLoader {
                 .flatMapSequential(attachmentRepresentation ->
                         attachmentMapper.getAttachmentsAsMono(attachmentRepresentation.getAttachmentId())
                             .map(attachment -> constructMessageAttachment(attachment, attachmentRepresentation)))
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
     }
 
     private MessageAttachmentMetadata constructMessageAttachment(AttachmentMetadata attachment, MessageAttachmentRepresentation messageAttachmentRepresentation) {

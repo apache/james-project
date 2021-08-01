@@ -54,9 +54,9 @@ import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -124,7 +124,7 @@ public class AliasRoutes implements Routes {
         return recipientRewriteTable.getMappingsForType(Mapping.Type.Alias)
             .flatMap(mapping -> mapping.asMailAddress().stream())
             .map(MailAddress::asString)
-            .collect(Guavate.toImmutableSortedSet());
+            .collect(ImmutableSortedSet.toImmutableSortedSet(String::compareTo));
     }
 
     @PUT
@@ -245,6 +245,6 @@ public class AliasRoutes implements Routes {
         return recipientRewriteTable.listSources(Mapping.alias(destinationAddress.asString()))
             .sorted(Comparator.comparing(MappingSource::asMailAddressString))
             .map(AliasSourcesResponse::new)
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 }

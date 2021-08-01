@@ -37,7 +37,7 @@ import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxACL.SpecialName;
 import org.apache.james.mime4j.dom.address.Mailbox;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 
 /**
@@ -291,7 +291,7 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
                 .filter(not(implicitRights::contains))
                 .map(Rfc4314Rights::new),
             Stream.of(implicitRights))
-        .collect(Guavate.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
     }
 
     @Override

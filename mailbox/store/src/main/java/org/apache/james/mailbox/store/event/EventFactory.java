@@ -23,6 +23,7 @@ import java.time.Instant;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.SortedMap;
+import java.util.function.Function;
 
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountLimit;
@@ -52,7 +53,6 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
@@ -129,7 +129,7 @@ public class EventFactory {
         default T addMetaData(Iterable<MessageMetaData> metaData) {
             return metaData(ImmutableList.copyOf(metaData)
                 .stream()
-                .collect(Guavate.toImmutableSortedMap(MessageMetaData::getUid)));
+                .collect(ImmutableSortedMap.toImmutableSortedMap(MessageUid::compareTo, MessageMetaData::getUid, Function.identity())));
         }
 
         default T addMetaData(Iterator<MessageMetaData> metaData) {
@@ -140,7 +140,7 @@ public class EventFactory {
             return metaData(ImmutableList.copyOf(messages)
                 .stream()
                 .map(MailboxMessage::metaData)
-                .collect(Guavate.toImmutableSortedMap(MessageMetaData::getUid)));
+                .collect(ImmutableSortedMap.toImmutableSortedMap(MessageUid::compareTo, MessageMetaData::getUid, Function.identity())));
         }
     }
 

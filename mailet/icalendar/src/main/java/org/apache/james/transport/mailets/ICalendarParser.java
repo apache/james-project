@@ -36,9 +36,9 @@ import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
@@ -120,7 +120,7 @@ public class ICalendarParser extends GenericMailet {
         Map<String, Calendar> calendars = icsAttachments.entrySet()
             .stream()
             .flatMap(entry -> createCalendar(entry.getKey(), entry.getValue()))
-            .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue));
+            .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
 
         mail.setAttribute(new Attribute(destinationAttributeName, AttributeValue.ofAny(calendars)));
     }

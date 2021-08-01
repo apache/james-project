@@ -35,7 +35,7 @@ import org.apache.james.webadmin.dto.UserResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 public class UserService {
 
@@ -54,7 +54,7 @@ public class UserService {
             .orElse(Stream.of())
             .map(Username::asString)
             .map(UserResponse::new)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     public void removeUser(Username username) throws UsersRepositoryException {

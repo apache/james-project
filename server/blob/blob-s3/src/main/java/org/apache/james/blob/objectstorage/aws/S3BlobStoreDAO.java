@@ -44,9 +44,9 @@ import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
 import com.google.common.io.FileBackedOutputStream;
 
@@ -293,7 +293,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
     private Mono<List<ObjectIdentifier>> buildListForBatch(Flux<S3Object> batch) {
         return batch
             .map(element -> ObjectIdentifier.builder().key(element.key()).build())
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private Mono<DeleteObjectsResponse> deleteObjects(BucketName bucketName, List<ObjectIdentifier> identifiers) {

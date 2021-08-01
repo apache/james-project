@@ -45,7 +45,6 @@ import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -151,7 +150,7 @@ public class SetFilterMethod implements Method {
     private Mono<JmapResponse> updateFilter(MethodCallId methodCallId, SetFilterRequest request, Username username) throws DuplicatedRuleException, MultipleMailboxIdException {
         ImmutableList<Rule> rules = request.getSingleton().stream()
             .map(JmapRuleDTO::toRule)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         ensureNoDuplicatedRules(rules);
         ensureNoMultipleMailboxesRules(rules);
@@ -168,7 +167,7 @@ public class SetFilterMethod implements Method {
         ImmutableList<Rule.Id> idWithMultipleMailboxes = rules.stream()
             .filter(rule -> rule.getAction().getAppendInMailboxes().getMailboxIds().size() > 1)
             .map(Rule::getId)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         if (!idWithMultipleMailboxes.isEmpty()) {
             throw new MultipleMailboxIdException(idWithMultipleMailboxes);

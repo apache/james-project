@@ -34,7 +34,7 @@ import java.util.stream.IntStream;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.junit.jupiter.api.Test;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Test-case for PROTOCOLS-62
@@ -48,7 +48,7 @@ public class AbstractProtocolTransportTest {
     void testWriteOrder() throws InterruptedException, UnsupportedEncodingException {
         final List<Response> messages = IntStream.range(0, 2000)
             .mapToObj(i -> new TestResponse())
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         checkWrittenResponses(messages);
     }

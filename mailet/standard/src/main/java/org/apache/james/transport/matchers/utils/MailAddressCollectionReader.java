@@ -27,10 +27,10 @@ import javax.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 
 
 public class MailAddressCollectionReader {
@@ -41,7 +41,7 @@ public class MailAddressCollectionReader {
             .stream()
             .filter(Predicate.not(Strings::isNullOrEmpty))
             .map(MailAddressCollectionReader::getMailAddress)
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 
     private static Optional<MailAddress> getMailAddress(String s) {

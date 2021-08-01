@@ -34,7 +34,6 @@ import org.apache.james.mailbox.quota.model.QuotaThreshold;
 import org.apache.james.mailbox.quota.model.QuotaThresholds;
 import org.apache.james.util.DurationParser;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -87,7 +86,7 @@ public class QuotaMailingListenerConfiguration {
                 RenderingInformation.from(
                     Optional.ofNullable(node.getString(XmlKeys.BODY_TEMPLATE)),
                     Optional.ofNullable(node.getString(XmlKeys.SUBJECT_TEMPLATE)))))
-            .collect(Guavate.toImmutableMap(
+            .collect(ImmutableMap.toImmutableMap(
                 pair -> new QuotaThreshold(pair.getLeft()),
                 Pair::getRight));
     }

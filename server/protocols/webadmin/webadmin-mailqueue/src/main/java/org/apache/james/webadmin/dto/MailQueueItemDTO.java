@@ -27,9 +27,9 @@ import java.util.Optional;
 import org.apache.james.core.MailAddress;
 import org.apache.james.queue.api.ManageableMailQueue;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 
 public class MailQueueItemDTO {
 
@@ -74,7 +74,7 @@ public class MailQueueItemDTO {
         public Builder recipients(Collection<MailAddress> recipients) {
             this.recipients = recipients.stream()
                     .map(MailAddress::asString)
-                    .collect(Guavate.toImmutableList());
+                    .collect(ImmutableList.toImmutableList());
             return this;
         }
 

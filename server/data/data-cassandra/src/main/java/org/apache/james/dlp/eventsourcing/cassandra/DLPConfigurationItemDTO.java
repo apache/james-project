@@ -19,8 +19,6 @@
 
 package org.apache.james.dlp.eventsourcing.cassandra;
 
-import static com.github.steveash.guavate.Guavate.toImmutableList;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -31,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class DLPConfigurationItemDTO {
 
@@ -52,7 +51,7 @@ public class DLPConfigurationItemDTO {
         return configurationItems
             .stream()
             .map(DLPConfigurationItemDTO::from)
-            .collect(toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     public static List<DLPConfigurationItem> fromDTOs(List<DLPConfigurationItemDTO> configurationItems) {
@@ -61,7 +60,7 @@ public class DLPConfigurationItemDTO {
         return configurationItems
             .stream()
             .map(DLPConfigurationItemDTO::toDLPConfiguration)
-            .collect(toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private final String id;

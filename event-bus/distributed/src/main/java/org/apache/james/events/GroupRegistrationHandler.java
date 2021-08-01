@@ -39,7 +39,7 @@ import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -136,7 +136,7 @@ class GroupRegistrationHandler {
             .flatMapIterable(aa -> groupRegistrations.values()
                 .stream()
                 .map(group -> Pair.of(group, aa))
-                .collect(Guavate.toImmutableList()))
+                .collect(ImmutableList.toImmutableList()))
             .flatMap(event -> event.getLeft().runListenerReliably(DEFAULT_RETRY_COUNT, event.getRight()))
                 .then(Mono.<Void>fromRunnable(acknowledgableDelivery::ack).subscribeOn(Schedulers.elastic()))
             .then()

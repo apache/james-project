@@ -22,7 +22,6 @@ package org.apache.james.util;
 import java.util.List;
 import java.util.Optional;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -47,7 +46,7 @@ public class Host {
             .stream()
             .map(string -> Host.parse(string, defaultPort))
             .distinct()
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     public static Host from(String hostname, int port) {

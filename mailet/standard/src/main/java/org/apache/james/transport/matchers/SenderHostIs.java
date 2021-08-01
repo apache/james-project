@@ -28,10 +28,10 @@ import org.apache.mailet.base.GenericMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 
 /**
  * <p>Checkes the sender's displayed domain name against a supplied list.</p>
@@ -64,7 +64,7 @@ public class SenderHostIs extends GenericMatcher {
             .splitToList(condition)
             .stream()
             .map(Domain::of)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     /**

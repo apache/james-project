@@ -46,7 +46,6 @@ import org.apache.james.util.MDCBuilder;
 
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -128,7 +127,7 @@ public class GetMessagesMethod implements Method {
         MessageProperties.ReadProfile readProfile = getMessagesRequest.getProperties().computeReadLevel();
         MessageViewFactory<? extends MessageView> factory = messageViewFactory.getFactory(readProfile);
         Mono<? extends Set<? extends MessageView>> messageViewsMono = factory.fromMessageIds(getMessagesRequest.getIds(), mailboxSession)
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
 
         return messageViewsMono.map(messageViews ->
             GetMessagesResponse.builder()

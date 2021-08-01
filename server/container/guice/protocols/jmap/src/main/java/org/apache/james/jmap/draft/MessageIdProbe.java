@@ -39,7 +39,7 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.utils.GuiceProbe;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 public class MessageIdProbe implements GuiceProbe {
     private final MailboxManager mailboxManager;
@@ -70,6 +70,6 @@ public class MessageIdProbe implements GuiceProbe {
         return messages.stream()
             .flatMap(Throwing.function(messageResult -> messageResult.getLoadedAttachments().stream()))
             .map(MessageAttachmentMetadata::getAttachmentId)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 }

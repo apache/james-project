@@ -39,7 +39,6 @@ import org.apache.james.mailbox.store.search.SearchUtil;
 import org.apache.james.mime4j.MimeException;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -182,7 +181,7 @@ public class IndexableMessage {
         private List<MimePart> setFlattenedAttachments(MimePart parsingResult, IndexAttachments indexAttachments) {
             if (IndexAttachments.YES.equals(indexAttachments)) {
                 return parsingResult.getAttachmentsStream()
-                    .collect(Guavate.toImmutableList());
+                    .collect(ImmutableList.toImmutableList());
             } else {
                 return ImmutableList.of();
             }

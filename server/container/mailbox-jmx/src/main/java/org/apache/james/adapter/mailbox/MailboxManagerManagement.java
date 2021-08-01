@@ -47,8 +47,8 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 /**
  * JMX managmenent for Mailboxes
@@ -111,7 +111,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
             boxes = mList.stream()
                 .map(aMList -> aMList.getPath().getName())
                 .sorted()
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         } catch (MailboxException e) {
             LOGGER.error("Error list mailboxes for user {}", username, e);
         } catch (IOException e) {
@@ -221,7 +221,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
                 .build(),
             Minimal,
             session)
-            .collect(Guavate.toImmutableList())
+            .collect(ImmutableList.toImmutableList())
             .block();
     }
 

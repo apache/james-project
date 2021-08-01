@@ -36,9 +36,9 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
 
@@ -77,7 +77,7 @@ public class SetMessagesDestructionProcessor implements SetMessagesProcessor {
                             .type(SetError.Type.NOT_FOUND)
                             .description("The message " + messageId.serialize() + " can't be found")
                             .build()))
-                    .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)))
+                    .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue)))
                 .build())
             .onErrorResume(e -> {
                 LOGGER.error("An error occurred when deleting a message", e);
@@ -89,7 +89,7 @@ public class SetMessagesDestructionProcessor implements SetMessagesProcessor {
                                     .type(SetError.Type.ERROR)
                                     .description("An error occurred while deleting messages " + messageId.serialize())
                                     .build()))
-                            .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)))
+                            .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue)))
                         .build());
             });
     }

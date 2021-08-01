@@ -50,9 +50,9 @@ import org.apache.james.vault.search.Operator;
 import org.apache.james.vault.search.Query;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableTable;
 
 public class QueryTranslator {
@@ -197,7 +197,7 @@ public class QueryTranslator {
     public QueryDTO toDTO(Query query) throws QueryTranslatorException {
         List<QueryElement> queryElements = query.getCriteria().stream()
             .map(this::toDTO)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
         return new QueryDTO(Combinator.AND.getValue(), queryElements);
     }
 
@@ -224,7 +224,7 @@ public class QueryTranslator {
         return Query.and(queryDTO.getCriteria().stream()
             .map(queryElement -> (CriterionDTO) queryElement)
             .map(Throwing.function(this::translate))
-            .collect(Guavate.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
     }
 
     private boolean combinatorIsValid(String combinator) {

@@ -40,7 +40,6 @@ import org.apache.james.backends.es.v7.ElasticSearchConfiguration.SSLConfigurati
 import org.apache.james.backends.es.v7.ElasticSearchConfiguration.SSLConfiguration.SSLValidationStrategy;
 import org.apache.james.util.Host;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -512,7 +511,7 @@ public class ElasticSearchConfiguration {
         } else {
             return multiHosts.stream()
                 .map(ipAndPort -> Host.parse(ipAndPort, DEFAULT_PORT_AS_OPTIONAL))
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         }
     }
 

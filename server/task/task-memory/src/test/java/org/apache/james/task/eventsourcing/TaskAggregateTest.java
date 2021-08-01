@@ -35,7 +35,7 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
 import org.junit.jupiter.api.Test;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
 
 import scala.Option;
@@ -53,7 +53,7 @@ class TaskAggregateTest {
                     Stream.iterate(EventId.first(), EventId::next),
                     Arrays.stream(events),
                     (id, event) -> event.apply(id))
-                .collect(Guavate.toImmutableList())).toList());
+                .collect(ImmutableList.toImmutableList())).toList());
     }
 
     @Test

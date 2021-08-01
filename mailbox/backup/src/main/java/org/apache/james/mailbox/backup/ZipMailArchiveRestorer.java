@@ -39,8 +39,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class ZipMailArchiveRestorer implements MailArchiveRestorer {
 
@@ -71,7 +71,7 @@ public class ZipMailArchiveRestorer implements MailArchiveRestorer {
         return mailboxes.stream()
             .flatMap(Throwing.<MailboxWithAnnotationsArchiveEntry, Stream<ImmutablePair<SerializedMailboxId, MessageManager>>>function(
                 mailboxEntry -> restoreMailboxEntry(session, mailboxEntry).stream()).sneakyThrow())
-            .collect(Guavate.entriesToImmutableMap());
+            .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     private List<MailboxWithAnnotationsArchiveEntry> readMailboxes(MailArchiveIterator iterator) {

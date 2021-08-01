@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -72,9 +73,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
@@ -148,7 +149,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         Map<MessageId, UpdateMessagePatch> patches = request.buildUpdatePatches(updatePatchConverter);
 
         return Flux.from(messageIdManager.messagesMetadata(patches.keySet(), mailboxSession))
-            .collect(Guavate.toImmutableListMultimap(metaData -> metaData.getComposedMessageId().getMessageId()))
+            .collect(ImmutableListMultimap.toImmutableListMultimap(metaData -> metaData.getComposedMessageId().getMessageId(), Function.identity()))
             .flatMap(messages -> {
                 if (isAMassiveFlagUpdate(patches, messages)) {
                     return Mono.fromCallable(() -> applyRangedFlagUpdate(patches, messages, mailboxSession))
@@ -196,7 +197,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         UpdateMessagePatch patch = patches.values().iterator().next();
         List<MessageRange> uidRanges = MessageRange.toRanges(messages.values().stream().map(metaData -> metaData.getComposedMessageId().getUid())
             .distinct()
-            .collect(Guavate.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
 
         if (patch.isValid()) {
             return uidRanges.stream().map(range -> {
@@ -205,7 +206,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                     .filter(entry -> range.includes(entry.getValue().getComposedMessageId().getUid()))
                     .map(Map.Entry::getKey)
                     .distinct()
-                    .collect(Guavate.toImmutableList());
+                    .collect(ImmutableList.toImmutableList());
                 try {
                     mailboxManager.getMailbox(mailboxId, mailboxSession)
                         .setFlags(patch.applyToState(new Flags()), FlagsUpdateMode.REPLACE, range, mailboxSession);
@@ -245,7 +246,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         UpdateMessagePatch patch = patches.values().iterator().next();
         List<MessageRange> uidRanges = MessageRange.toRanges(messages.values().stream().map(metaData -> metaData.getComposedMessageId().getUid())
             .distinct()
-            .collect(Guavate.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
 
         if (patch.isValid()) {
             return uidRanges.stream().map(range -> {
@@ -254,7 +255,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                     .filter(entry -> range.includes(entry.getValue().getComposedMessageId().getUid()))
                     .map(Map.Entry::getKey)
                     .distinct()
-                    .collect(Guavate.toImmutableList());
+                    .collect(ImmutableList.toImmutableList());
                 try {
                     MailboxId targetId = mailboxIdFactory.fromString(patch.getMailboxIds().get().iterator().next());
                     mailboxManager.moveMessages(range, mailboxId, targetId, mailboxSession);
@@ -364,7 +365,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                                    Set<MailboxId> outboxMailboxes) {
         ImmutableList<MailboxId> previousMailboxes = messagesToBeUpdated.stream()
             .map(metaData -> metaData.getComposedMessageId().getMailboxId())
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
         List<MailboxId> targetMailboxes = getTargetedMailboxes(previousMailboxes, updateMessagePatch);
 
         boolean isDraft = messagesToBeUpdated.stream()
@@ -400,7 +401,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
 
     private List<MailboxId> getTargetedMailboxes(ImmutableList<MailboxId> previousMailboxes, UpdateMessagePatch updateMessagePatch) {
         return updateMessagePatch.getMailboxIds()
-            .map(ids -> ids.stream().map(mailboxIdFactory::fromString).collect(Guavate.toImmutableList()))
+            .map(ids -> ids.stream().map(mailboxIdFactory::fromString).collect(ImmutableList.toImmutableList()))
             .orElse(previousMailboxes);
     }
 
@@ -416,7 +417,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
             .stream()
             .flatMap(Collection::stream)
             .map(mailboxIdFactory::fromString)
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 
     private boolean isTargetingOutbox(Set<MailboxId> outboxes, Set<MailboxId> targetMailboxIds) {
@@ -426,7 +427,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     private Mono<Set<MailboxId>> listMailboxIdsForRole(MailboxSession session, Role role) {
         return Flux.from(systemMailboxesProvider.getMailboxByRole(role, session.getUser()))
             .map(MessageManager::getId)
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 
     private Mono<Void> updateFlags(MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession, ComposedMessageIdWithMetaData message) {
@@ -444,7 +445,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
             List<MailboxId> mailboxIds = serializedMailboxIds.get()
                 .stream()
                 .map(mailboxIdFactory::fromString)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
 
             return Mono.from(messageIdManager.setInMailboxesReactive(messageId, mailboxIds, mailboxSession));
         }

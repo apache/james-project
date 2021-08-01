@@ -26,7 +26,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -58,6 +58,6 @@ public interface UidProvider {
     default Mono<List<MessageUid>> nextUids(MailboxId mailboxId, int count) {
         return Flux.range(0, count)
             .flatMap(i -> nextUidReactive(mailboxId))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 }

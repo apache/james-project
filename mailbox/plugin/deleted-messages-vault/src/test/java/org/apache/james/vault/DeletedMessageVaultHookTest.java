@@ -61,7 +61,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
@@ -175,7 +174,7 @@ class DeletedMessageVaultHookTest {
 
         ImmutableList<MessageId> ids = IntStream.range(0, 1000)
             .mapToObj(Throwing.intFunction(i -> appendMessage(messageManager).getMessageId()))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         assertThatCode(() -> Mono.from(messageIdManager.delete(ids, aliceSession)).subscribeOn(Schedulers.elastic()).block())
             .doesNotThrowAnyException();
@@ -199,7 +198,7 @@ class DeletedMessageVaultHookTest {
         long messageSize = messageSize(bobMessageManager, composedMessageId);
 
         DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(aliceMailbox), messageId, ALICE, messageSize);
-        bobMessageManager.delete(Flux.from(bobMessageManager.search(searchQuery, bobSession)).collect(Guavate.toImmutableList()).block(), bobSession);
+        bobMessageManager.delete(Flux.from(bobMessageManager.search(searchQuery, bobSession)).collect(ImmutableList.toImmutableList()).block(), bobSession);
 
         assertThat(Flux.from(messageVault.search(ALICE, Query.ALL)).blockFirst())
             .isEqualTo(deletedMessage);
@@ -220,7 +219,7 @@ class DeletedMessageVaultHookTest {
         MessageManager bobMessageManager = mailboxManager.getMailbox(aliceMailbox, bobSession);
         appendMessage(aliceMessageManager);
 
-        bobMessageManager.delete(Flux.from(bobMessageManager.search(searchQuery, bobSession)).collect(Guavate.toImmutableList()).block(), bobSession);
+        bobMessageManager.delete(Flux.from(bobMessageManager.search(searchQuery, bobSession)).collect(ImmutableList.toImmutableList()).block(), bobSession);
 
         assertThat(Flux.from(messageVault.search(BOB, Query.ALL)).collectList().block())
             .isEmpty();
@@ -246,7 +245,7 @@ class DeletedMessageVaultHookTest {
 
         long messageSize = messageSize(bobMessageManager, composedMessageId);
         DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(bobMailbox), messageId, BOB, messageSize);
-        bobMessageManager.delete(Flux.from(bobMessageManager.search(searchQuery, bobSession)).collect(Guavate.toImmutableList()).block(), bobSession);
+        bobMessageManager.delete(Flux.from(bobMessageManager.search(searchQuery, bobSession)).collect(ImmutableList.toImmutableList()).block(), bobSession);
 
         assertThat(Flux.from(messageVault.search(BOB, Query.ALL)).blockFirst())
             .isEqualTo(deletedMessage);
@@ -270,7 +269,7 @@ class DeletedMessageVaultHookTest {
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(bobMailbox), bobSession);
 
-        bobMessageManager.delete(Flux.from(bobMessageManager.search(searchQuery, bobSession)).collect(Guavate.toImmutableList()).block(), bobSession);
+        bobMessageManager.delete(Flux.from(bobMessageManager.search(searchQuery, bobSession)).collect(ImmutableList.toImmutableList()).block(), bobSession);
 
         assertThat(Flux.from(messageVault.search(ALICE, Query.ALL)).collectList().block())
             .isEmpty();
@@ -296,7 +295,7 @@ class DeletedMessageVaultHookTest {
 
         long messageSize = messageSize(bobMessageManager, composedMessageId);
         DeletedMessage deletedMessage = buildDeletedMessage(ImmutableList.of(bobMailbox), messageId, BOB, messageSize);
-        bobMessageManager.delete(Flux.from(bobMessageManager.search(searchQuery, bobSession)).collect(Guavate.toImmutableList()).block(), bobSession);
+        bobMessageManager.delete(Flux.from(bobMessageManager.search(searchQuery, bobSession)).collect(ImmutableList.toImmutableList()).block(), bobSession);
 
         assertThat(Flux.from(messageVault.search(BOB, Query.ALL)).blockFirst())
             .isEqualTo(deletedMessage);
@@ -320,7 +319,7 @@ class DeletedMessageVaultHookTest {
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(aliceMailbox, bobMailbox), bobSession);
 
-        bobMessageManager.delete(Flux.from(bobMessageManager.search(searchQuery, bobSession)).collect(Guavate.toImmutableList()).block(), bobSession);
+        bobMessageManager.delete(Flux.from(bobMessageManager.search(searchQuery, bobSession)).collect(ImmutableList.toImmutableList()).block(), bobSession);
 
         assertThat(Flux.from(messageVault.search(ALICE, Query.ALL)).collectList().block())
             .isEmpty();

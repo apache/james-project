@@ -34,7 +34,7 @@ import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Slice;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlicingContext.SlicingContext;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -102,7 +102,7 @@ public class CassandraMailQueueMailDelete {
                     .filter(slice -> slice.getStartSliceInstant().isBefore(newBrowseStartInstant))
                     .flatMap(slice -> IntStream.range(0, configuration.getBucketCount()).boxed()
                         .map(bucket -> SlicingContext.of(BucketedSlices.BucketId.of(bucket), slice.getStartSliceInstant())))
-                    .collect(Guavate.toImmutableList()))
+                    .collect(ImmutableList.toImmutableList()))
             .concatMap(slice -> deleteEmailsFromBrowseProjection(mailQueueName, slice))
             .concatMap(slice -> enqueuedMailsDAO.deleteBucket(mailQueueName, Slice.of(slice.getTimeRangeStart()), slice.getBucketId()))
             .then(contentStartDAO.updateContentStart(mailQueueName, newBrowseStartInstant));

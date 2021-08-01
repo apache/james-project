@@ -25,7 +25,6 @@ import org.junit.rules.RuleChain;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -63,7 +62,7 @@ public class AggregateGuiceModuleTestRule implements GuiceModuleTestRule {
         List<Module> modules = subrule
                     .stream()
                     .map(GuiceModuleTestRule::getModule)
-                    .collect(Guavate.toImmutableList());
+                    .collect(ImmutableList.toImmutableList());
 
         return Modules.combine(modules);
     }

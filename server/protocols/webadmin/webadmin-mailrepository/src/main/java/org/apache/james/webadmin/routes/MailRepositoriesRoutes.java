@@ -69,8 +69,9 @@ import org.apache.james.webadmin.utils.ParametersExtractor;
 import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -230,7 +231,7 @@ public class MailRepositoriesRoutes implements Routes {
     })
     public void defineGetMailRepositories() {
         service.get(MAIL_REPOSITORIES,
-            (request, response) -> repositoryStoreService.listMailRepositories().collect(Guavate.toImmutableList()),
+            (request, response) -> repositoryStoreService.listMailRepositories().collect(ImmutableList.toImmutableList()),
             jsonTransformer);
     }
 
@@ -520,7 +521,7 @@ public class MailRepositoriesRoutes implements Routes {
             .splitToList(additionalFieldsParam)
             .stream()
             .map((field) -> AdditionalField.find(field).orElseThrow(() -> new IllegalArgumentException(field)))
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 
     private Optional<String> parseTargetProcessor(Request request) {

@@ -35,7 +35,8 @@ import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.util.streams.Iterators;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class DataProbeImpl implements GuiceProbe, DataProbe {
     private final DomainList domainList;
@@ -91,7 +92,7 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
 
     @Override
     public List<String> listDomains() throws Exception {
-        return domainList.getDomains().stream().map(Domain::name).collect(Guavate.toImmutableList());
+        return domainList.getDomains().stream().map(Domain::name).collect(ImmutableList.toImmutableList());
     }
 
     @Override
@@ -99,8 +100,7 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
         return recipientRewriteTable.getAllMappings()
             .entrySet()
             .stream()
-            .collect(
-                Guavate.toImmutableMap(
+            .collect(ImmutableMap.toImmutableMap(
                     entry -> entry.getKey().asString(),
                     Map.Entry::getValue));
 

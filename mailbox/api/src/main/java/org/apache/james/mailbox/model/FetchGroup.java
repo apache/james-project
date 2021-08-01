@@ -26,7 +26,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 
@@ -97,7 +96,7 @@ public class FetchGroup extends Profiles<FetchGroup> {
                 partContentDescriptors.stream()
                     .filter(descriptor -> !descriptor.path().equals(path)),
                 Stream.of(newContent))
-                .collect(Guavate.toImmutableSet()));
+                .collect(ImmutableSet.toImmutableSet()));
     }
 
     public FetchGroup addPartContent(MimePath path, Profile... profiles) {

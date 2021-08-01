@@ -633,7 +633,6 @@
         <maven-reporting-impl.version>3.0.0</maven-reporting-impl.version>
         <maven-reporting-api.version>3.0</maven-reporting-api.version>
         <qdox.version>2.0.0</qdox.version>
-        <guavate.version>1.0.0</guavate.version>
         <javax.activation.groupId>javax.activation</javax.activation.groupId>
         <javax.activation.artifactId>activation</javax.activation.artifactId>
         <javax.persistence.version>1.0.2</javax.persistence.version>
@@ -2085,11 +2084,6 @@
                 <groupId>com.github.stefanbirkner</groupId>
                 <artifactId>system-lambda</artifactId>
                 <version>1.2.0</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.steveash.guavate</groupId>
-                <artifactId>guavate</artifactId>
-                <version>${guavate.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>

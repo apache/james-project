@@ -79,10 +79,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
 
 import reactor.core.publisher.Flux;
@@ -352,7 +352,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
                 Joiner.on('\n')
                     .join(headers.stream()
                         .map(PerRecipientHeaders.Header::asString)
-                        .collect(Guavate.toImmutableList()))));
+                        .collect(ImmutableList.toImmutableList()))));
 
         String recipientsAsString = joiner.join(mail.getRecipients());
 
@@ -363,13 +363,13 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
         String sender = mail.getMaybeSender().asString("");
 
         props.putAll(mail.attributes()
-            .collect(Guavate.toImmutableMap(
+            .collect(ImmutableMap.toImmutableMap(
                 attribute -> attribute.getName().asString(),
                 attribute -> attribute.getValue().toJson().toString())));
 
         ImmutableList<String> attributeNames = mail.attributeNames()
             .map(AttributeName::asString)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         props.put(JAMES_MAIL_ATTRIBUTE_NAMES, joiner.join(attributeNames));
         props.put(JAMES_MAIL_SENDER, sender);
@@ -466,7 +466,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
             splitter.splitToList(attributeNames)
             .stream()
             .flatMap(attributeName -> mailAttribute(message, attributeName))
-            .collect(Guavate.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
 
         builder.sender(MaybeSender.getMailSender(message.getStringProperty(JAMES_MAIL_SENDER)).asOptional());
         builder.state(message.getStringProperty(JAMES_MAIL_STATE));

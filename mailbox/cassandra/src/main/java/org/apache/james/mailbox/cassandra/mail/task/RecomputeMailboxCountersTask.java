@@ -32,7 +32,6 @@ import org.apache.james.task.TaskType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.scheduler.Schedulers;
@@ -100,6 +99,6 @@ public class RecomputeMailboxCountersTask implements Task {
             snapshot.getProcessedMailboxCount(),
             snapshot.getFailedMailboxes().stream()
                 .map(MailboxId::serialize)
-                .collect(Guavate.toImmutableList())));
+                .collect(ImmutableList.toImmutableList())));
     }
 }

@@ -63,7 +63,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 class SmtpRandomStoringTest {
@@ -76,7 +75,7 @@ class SmtpRandomStoringTest {
     private static final ImmutableList<String> USERS = LongStream.range(0L, USERS_NUMBERS)
         .boxed()
         .map(index -> "user" + index + "@" + DEFAULT_DOMAIN)
-        .collect(Guavate.toImmutableList());
+        .collect(ImmutableList.toImmutableList());
 
     private static final ImmutableList<String> MAILBOXES = ImmutableList.of(MailboxConstants.INBOX, "arbitrary");
     private static final int NUMBER_OF_MAILS = 100;
@@ -165,7 +164,7 @@ class SmtpRandomStoringTest {
         connections = USERS
             .stream()
             .map(this::createIMAPConnection)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         awaitAtMostTenSeconds
             .untilAsserted(() -> checkNumberOfMessages(connections));
@@ -176,7 +175,7 @@ class SmtpRandomStoringTest {
         connections = USERS
             .stream()
             .map(this::createIMAPConnection)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         awaitAtMostTenSeconds
             .untilAsserted(() -> checkMailboxesHaveBeenFilled(connections));

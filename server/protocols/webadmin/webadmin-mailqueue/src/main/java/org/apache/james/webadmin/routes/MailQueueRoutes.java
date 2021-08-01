@@ -61,8 +61,8 @@ import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Booleans;
 
 import io.swagger.annotations.Api;
@@ -140,7 +140,7 @@ public class MailQueueRoutes implements Routes {
             (request, response) -> mailQueueFactory.listCreatedMailQueues()
                 .stream()
                 .map(MailQueueName::asString)
-                .collect(Guavate.toImmutableList()),
+                .collect(ImmutableList.toImmutableList()),
             jsonTransformer);
     }
 
@@ -245,7 +245,7 @@ public class MailQueueRoutes implements Routes {
             return limit.applyOnStream(Iterators.toStream(queue.browse()))
                     .map(Throwing.function(MailQueueItemDTO::from).sneakyThrow())
                     .filter(item -> filter(item, isDelayed))
-                    .collect(Guavate.toImmutableList());
+                    .collect(ImmutableList.toImmutableList());
         } catch (MailQueueException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)

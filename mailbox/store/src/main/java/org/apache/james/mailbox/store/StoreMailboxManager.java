@@ -95,9 +95,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -369,7 +369,7 @@ public class StoreMailboxManager implements MailboxManager {
         return intermediatePaths
             .stream()
             .flatMap(Throwing.<MailboxPath, Stream<MailboxId>>function(mailboxPath -> manageMailboxCreation(mailboxSession, isRootPath, mailboxPath)).sneakyThrow())
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private Stream<MailboxId> manageMailboxCreation(MailboxSession mailboxSession, boolean isRootPath, MailboxPath mailboxPath) throws MailboxException {
@@ -462,7 +462,7 @@ public class StoreMailboxManager implements MailboxManager {
 
         return quotaRootPublisher.zipWith(messageCountPublisher).flatMap(quotaRootWithMessageCount -> messageMapper.findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, UNLIMITED)
             .map(message -> MetadataWithMailboxId.from(message.metaData(), message.getMailboxId()))
-            .collect(Guavate.toImmutableList())
+            .collect(ImmutableList.toImmutableList())
             .flatMap(metadata -> {
                 long totalSize = metadata.stream()
                     .map(MetadataWithMailboxId::getMessageMetaData)
@@ -687,7 +687,7 @@ public class StoreMailboxManager implements MailboxManager {
                 List<MailboxPath> hierarchyLevels = path.getHierarchyLevels(session.getPathDelimiter());
                 return Lists.reverse(hierarchyLevels).stream().skip(1);
             })
-            .collect(Guavate.toImmutableMap(
+            .collect(ImmutableMap.toImmutableMap(
                 Function.identity(),
                 any -> true,
                 (a, b) -> true));
@@ -786,7 +786,7 @@ public class StoreMailboxManager implements MailboxManager {
     public Flux<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, long limit) {
         return getInMailboxIds(expression, session)
             .filter(id -> !expression.getNotInMailboxes().contains(id))
-            .collect(Guavate.toImmutableSet())
+            .collect(ImmutableSet.toImmutableSet())
             .flatMapMany(Throwing.function(ids -> index.search(session, ids, expression.getSearchQuery(), limit)));
     }
 
@@ -841,7 +841,7 @@ public class StoreMailboxManager implements MailboxManager {
             .list()
             .map(Mailbox::generateAssociatedPath)
             .distinct()
-            .collect(Guavate.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
     }
 
     @Override

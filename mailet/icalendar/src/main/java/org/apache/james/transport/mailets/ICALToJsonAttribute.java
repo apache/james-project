@@ -51,9 +51,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 
 import net.fortuna.ical4j.model.Calendar;
 
@@ -184,7 +184,7 @@ public class ICALToJsonAttribute extends GenericMailet {
         Map<String, byte[]> jsonsInByteForm = calendars.entrySet()
             .stream()
             .flatMap(calendar -> toJson(calendar, rawCalendars, mail, transportSender, replyTo))
-            .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue));
+            .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
         mail.setAttribute(new Attribute(destinationAttributeName, AttributeValue.ofAny(jsonsInByteForm)));
     }
 

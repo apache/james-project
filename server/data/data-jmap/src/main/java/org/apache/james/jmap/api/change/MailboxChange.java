@@ -35,7 +35,6 @@ import org.apache.james.mailbox.events.MailboxEvents.MailboxRenamed;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -156,7 +155,7 @@ public class MailboxChange implements JmapChange {
                     .build());
 
             return Stream.concat(Stream.of(ownerChange), shareeChanges)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         }
 
         public List<JmapChange> fromMailboxACLUpdated(MailboxACLUpdated mailboxACLUpdated, ZonedDateTime now, List<AccountId> sharees) {
@@ -179,7 +178,7 @@ public class MailboxChange implements JmapChange {
                     .build());
 
             return Stream.concat(Stream.of(ownerChange), shareeChanges)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         }
 
         public List<JmapChange> fromMailboxDeletion(MailboxDeletion mailboxDeletion, ZonedDateTime now) {
@@ -207,7 +206,7 @@ public class MailboxChange implements JmapChange {
                     .build());
 
             return Stream.concat(Stream.of(ownerChange), shareeChanges)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         }
     }
 

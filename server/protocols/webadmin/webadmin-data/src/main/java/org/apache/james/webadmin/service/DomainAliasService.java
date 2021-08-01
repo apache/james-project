@@ -32,7 +32,6 @@ import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.webadmin.dto.DomainAliasResponse;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableSet;
 
 public class DomainAliasService {
@@ -72,7 +71,7 @@ public class DomainAliasService {
     public ImmutableSet<DomainAliasResponse> listDomainAliases(Domain domain) throws RecipientRewriteTableException {
         return recipientRewriteTable.listSources(Mapping.domainAlias(domain))
             .map(DomainAliasResponse::new)
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 
     public boolean hasAliases(Domain domain) throws DomainListException, RecipientRewriteTableException {

@@ -40,8 +40,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -156,7 +156,7 @@ public class MailetProcessorImpl extends AbstractStateMailetProcessor {
         ImmutableList<Mail> afterMatching = step.getInFlightMails()
             .stream()
             .flatMap(Throwing.<Mail, Stream<Mail>>function(mail -> matcherSplitter.split(mail).stream()).sneakyThrow())
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
         afterMatching
             .stream().filter(mail -> mail.removeAttribute(MATCHER_MATCHED_ATTRIBUTE).isPresent())
             .forEach(Throwing.consumer(processor::process).sneakyThrow());
@@ -169,7 +169,7 @@ public class MailetProcessorImpl extends AbstractStateMailetProcessor {
         return step.nextStepBuilder()
             .inFlight(afterMatching.stream()
                 .filter(mail -> mail.getState().equals(getState()))
-                .collect(Guavate.toImmutableList()))
+                .collect(ImmutableList.toImmutableList()))
             .encountered(afterMatching);
     }
 
@@ -199,7 +199,7 @@ public class MailetProcessorImpl extends AbstractStateMailetProcessor {
             this.pairsToBeProcessed = pairs.stream()
                 .map(pair -> Pair.of(new MatcherSplitter(metricFactory, this, pair),
                     new ProcessorImpl(metricFactory, this, pair.getMailet())))
-                .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue));
+                .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
         } catch (Exception e) {
             throw new MessagingException("Unable to setup routing for MailetMatcherPairs", e);
         }

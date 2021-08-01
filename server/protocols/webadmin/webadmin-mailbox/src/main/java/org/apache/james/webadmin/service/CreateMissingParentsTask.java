@@ -45,7 +45,7 @@ import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -144,7 +144,7 @@ public class CreateMissingParentsTask implements Task {
                 .stream()
                 .filter(path -> path.hasParent(delimiter))
                 .flatMap(path -> path.getParents(delimiter))
-                .collect(Guavate.toImmutableSet());
+                .collect(ImmutableSet.toImmutableSet());
 
             return Flux.fromIterable(parentPaths)
                 .filter(Predicate.not(mailboxPaths::contains))
@@ -181,9 +181,9 @@ public class CreateMissingParentsTask implements Task {
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
         return Optional.of(AdditionalInformation.from(
-            created.stream().map(MailboxId::serialize).collect(Guavate.toImmutableSet()),
+            created.stream().map(MailboxId::serialize).collect(ImmutableSet.toImmutableSet()),
             totalCreated.get(),
-            failures.stream().collect(Guavate.toImmutableSet()),
+            failures.stream().collect(ImmutableSet.toImmutableSet()),
             totalFailure.get()));
     }
 

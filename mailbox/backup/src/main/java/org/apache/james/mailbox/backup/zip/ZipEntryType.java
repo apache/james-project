@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
 
 public enum ZipEntryType {
@@ -42,7 +42,7 @@ public enum ZipEntryType {
         Stream<Integer> indices = IntStream.range(0, values().length).boxed();
 
         entryByOrdinal = Streams.zip(indices, valuesAsStream, ImmutablePair::of)
-            .collect(Guavate.entriesToImmutableMap());
+            .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     public static Optional<ZipEntryType> zipEntryType(int ordinal) {

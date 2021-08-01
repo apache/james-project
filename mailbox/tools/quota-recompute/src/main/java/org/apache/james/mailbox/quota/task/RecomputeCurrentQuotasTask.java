@@ -31,7 +31,6 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.scheduler.Schedulers;
@@ -105,6 +104,6 @@ public class RecomputeCurrentQuotasTask implements Task {
             snapshot.getFailedQuotaRoots()
                 .stream()
                 .map(QuotaRoot::asString)
-                .collect(Guavate.toImmutableList()), runningOptions));
+                .collect(ImmutableList.toImmutableList()), runningOptions));
     }
 }

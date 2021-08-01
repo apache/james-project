@@ -22,11 +22,12 @@ package org.apache.james.utils;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
 public class GuiceProbeProvider {
     private final Map<Class<GuiceProbe>, GuiceProbe> registry;
@@ -35,7 +36,7 @@ public class GuiceProbeProvider {
     @Inject
     public GuiceProbeProvider(Set<GuiceProbe> guiceProbes) {
         this.registry = guiceProbes.stream()
-            .collect(Guavate.toImmutableMap(guiceProbe -> (Class<GuiceProbe>) guiceProbe.getClass()));
+            .collect(ImmutableMap.toImmutableMap(guiceProbe -> (Class<GuiceProbe>) guiceProbe.getClass(), Function.identity()));
     }
 
     @SuppressWarnings("unchecked")

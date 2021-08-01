@@ -56,7 +56,6 @@ import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
 import org.apache.openjpa.persistence.ArgumentException;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
@@ -426,7 +425,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     private List<MessageUid> getUidList(List<MailboxMessage> messages) {
         return messages.stream()
             .map(message -> message.getUid())
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private int deleteMessagesInMailbox(JPAId mailboxId) {

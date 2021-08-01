@@ -30,7 +30,7 @@ import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableSet;
 
 public class BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO implements AdditionalInformationDTO {
     static BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO fromDomainObject(BlobStoreVaultGarbageCollectionTask.AdditionalInformation additionalInformation, String type) {
@@ -82,7 +82,7 @@ public class BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO impleme
             deletedBuckets
                 .stream()
                 .map(BucketName::of)
-                .collect(Guavate.toImmutableSet()),
+                .collect(ImmutableSet.toImmutableSet()),
             timestamp);
     }
 

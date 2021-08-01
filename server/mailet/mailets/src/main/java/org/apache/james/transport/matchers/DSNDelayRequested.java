@@ -31,9 +31,9 @@ import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Returns the list of Recipients for which DSN DELAY notifications
@@ -74,7 +74,7 @@ public class DSNDelayRequested extends GenericMatcher {
     public Collection<MailAddress> match(Mail mail) {
         return mail.getRecipients().stream()
             .filter(recipient -> delayRequested(mail, recipient))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private Boolean delayRequested(Mail mail, MailAddress recipient) {

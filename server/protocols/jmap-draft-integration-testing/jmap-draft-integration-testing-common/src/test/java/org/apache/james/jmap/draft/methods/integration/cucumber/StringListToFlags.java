@@ -26,14 +26,13 @@ import javax.mail.Flags;
 import org.apache.james.jmap.draft.model.Keyword;
 import org.apache.james.mailbox.FlagsBuilder;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class StringListToFlags {
     public static Flags fromFlagList(List<String> flagList) {
         ImmutableList<Flags> flags = flagList.stream()
             .map(StringListToFlags::toFlags)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
         return new FlagsBuilder().add(flags)
             .build();
     }

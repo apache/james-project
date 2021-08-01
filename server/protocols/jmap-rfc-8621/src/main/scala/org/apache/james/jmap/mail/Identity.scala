@@ -21,7 +21,7 @@ package org.apache.james.jmap.mail
 
 import java.nio.charset.StandardCharsets
 
-import com.github.steveash.guavate.Guavate
+import com.google.common.collect.ImmutableList
 import com.google.common.hash.Hashing
 import eu.timepit.refined.auto._
 import eu.timepit.refined.refineV
@@ -85,7 +85,7 @@ case class IdentityGetResponse(accountId: AccountId,
 class IdentityFactory @Inject()(canSendFrom: CanSendFrom) {
   def listIdentities(session: MailboxSession): List[Identity] =
     canSendFrom.allValidFromAddressesForUser(session.getUser)
-      .collect(Guavate.toImmutableList()).asScala.toList
+      .collect(ImmutableList.toImmutableList()).asScala.toList
       .flatMap(address =>
         from(address).map(id =>
           Identity(

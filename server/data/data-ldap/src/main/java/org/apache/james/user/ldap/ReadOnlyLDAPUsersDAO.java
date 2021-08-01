@@ -45,7 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableSet;
 import com.unboundid.ldap.sdk.Attribute;
 import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.Entry;
@@ -179,7 +179,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         return searchResult.getSearchEntries()
             .stream()
             .map(Throwing.function(Entry::getParsedDN))
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 
     private Stream<Username> getAllUsernamesFromLDAP() throws LDAPException {

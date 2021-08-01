@@ -51,9 +51,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -92,7 +92,7 @@ public interface MessageViewFactory<T extends MessageView> {
         static Set<MailboxId> getMailboxIds(Collection<MessageResult> messageResults) {
             return messageResults.stream()
                 .map(MessageResult::getMailboxId)
-                .collect(Guavate.toImmutableSet());
+                .collect(ImmutableSet.toImmutableSet());
         }
 
         static Keywords getKeywords(Collection<MessageResult> messageResults) {
@@ -116,7 +116,7 @@ public interface MessageViewFactory<T extends MessageView> {
             return header.getFieldsAsMap()
                 .entrySet()
                 .stream()
-                .collect(Guavate.toImmutableMap(entry -> entry.getValue().get(0).getName(),
+                .collect(ImmutableMap.toImmutableMap(entry -> entry.getValue().get(0).getName(),
                     entry -> entry.getValue().stream()
                         .map(Field::getBody)
                         .map(body -> DecoderUtil.decodeEncodedWords(body, DecodeMonitor.SILENT))

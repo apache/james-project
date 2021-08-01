@@ -35,8 +35,8 @@ import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * <p>Convert attributes of type Collection&lt;String&gt; to headers</p>
@@ -66,10 +66,9 @@ public class MailAttributesListToMimeHeaders extends GenericMailet {
             .parse(simpleMappings)
             .entrySet()
             .stream()
-            .collect(Guavate.toImmutableMap(
+            .collect(ImmutableMap.toImmutableMap(
                     entry -> AttributeName.of(entry.getKey()),
-                    entry -> entry.getValue()
-            ));
+                    entry -> entry.getValue()));
     }
 
     @Override

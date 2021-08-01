@@ -50,7 +50,7 @@ import org.apache.james.mailbox.store.mail.UidProvider;
 import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -144,7 +144,7 @@ public class CassandraUidProvider implements UidProvider {
     private List<MessageUid> range(MessageUid lowerExclusive, MessageUid higherInclusive) {
         return LongStream.range(lowerExclusive.asLong() + 1, higherInclusive.asLong() + 1)
             .mapToObj(MessageUid::of)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     @Override

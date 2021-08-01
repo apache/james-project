@@ -50,7 +50,7 @@ import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.apache.james.mime4j.stream.RecursionMode;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 
 public class MaildirMessage implements Message {
@@ -278,7 +278,7 @@ public class MaildirMessage implements Message {
                 .map(Throwing.<ParsedAttachment, MessageAttachmentMetadata>function(
                     attachmentMetadata -> attachmentMetadata.asMessageAttachment(generateFixedAttachmentId(counter.incrementAndGet())))
                     .sneakyThrow())
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -46,7 +46,6 @@ import org.apache.james.util.streams.Iterators;
 import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
@@ -182,7 +181,7 @@ public interface MessageMapper extends Mapper {
     default List<MessageMetaData> copy(Mailbox mailbox, List<MailboxMessage> original) throws MailboxException {
         return original.stream()
             .map(Throwing.<MailboxMessage, MessageMetaData>function(message -> copy(mailbox, message)).sneakyThrow())
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
     
     /**
@@ -197,7 +196,7 @@ public interface MessageMapper extends Mapper {
     default List<MessageMetaData> move(Mailbox mailbox, List<MailboxMessage> original) throws MailboxException {
         return original.stream()
             .map(Throwing.<MailboxMessage, MessageMetaData>function(message -> move(mailbox, message)).sneakyThrow())
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     

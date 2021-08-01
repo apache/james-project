@@ -41,7 +41,6 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.rules.ExternalResource;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class SMTPMessageSender extends ExternalResource implements Closeable, AfterEachCallback {
@@ -149,7 +148,7 @@ public class SMTPMessageSender extends ExternalResource implements Closeable, Af
     public SMTPMessageSender sendMessage(Mail mail) throws MessagingException, IOException {
         String from = mail.getMaybeSender().asString();
         ImmutableList<String> recipients = mail.getRecipients().stream()
-            .map(MailAddress::asString).collect(Guavate.toImmutableList());
+            .map(MailAddress::asString).collect(ImmutableList.toImmutableList());
         String message = asString(mail.getMessage());
 
         return sendMessageWithHeaders(from, recipients, message);

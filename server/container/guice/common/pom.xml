@@ -147,10 +147,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.steveash.guavate</groupId>
-            <artifactId>guavate</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
         </dependency>

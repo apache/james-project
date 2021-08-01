@@ -42,7 +42,6 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 import io.swagger.annotations.Api;
@@ -138,7 +137,7 @@ public class HealthCheckRoutes implements PublicRoutes {
     public Object getHealthChecks(Request request, Response response) {
         return healthChecks.stream()
                 .map(healthCheck -> new HealthCheckDto(healthCheck.componentName()))
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
     }
     
     private int getCorrespondingStatusCode(ResultStatus resultStatus) {

@@ -34,7 +34,6 @@ import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
@@ -79,7 +78,7 @@ public class MainStepdefs {
     public ImmutableList<String> getMailboxIdsList(String username, Stream<String> mailboxes) {
         return mailboxes.map(mailbox -> getMailboxId(username, mailbox)
                 .serialize())
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     public ImmutableList<String> getMailboxIdsList(String username, Collection<String> mailboxes) {

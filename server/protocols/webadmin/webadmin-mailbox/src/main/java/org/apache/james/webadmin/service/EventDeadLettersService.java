@@ -29,8 +29,8 @@ import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.Group;
 import org.apache.james.task.Task;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 
@@ -48,7 +48,7 @@ public class EventDeadLettersService {
     public List<String> listGroupsAsStrings() {
         return deadLetters.groupsWithFailedEvents()
             .map(Group::asString)
-            .collect(Guavate.toImmutableList())
+            .collect(ImmutableList.toImmutableList())
             .block();
     }
 
@@ -56,7 +56,7 @@ public class EventDeadLettersService {
         return deadLetters.failedIds(group)
             .map(EventDeadLetters.InsertionId::getId)
             .map(UUID::toString)
-            .collect(Guavate.toImmutableList())
+            .collect(ImmutableList.toImmutableList())
             .block();
     }
 

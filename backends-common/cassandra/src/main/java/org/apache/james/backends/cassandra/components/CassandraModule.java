@@ -28,7 +28,6 @@ import java.util.function.Function;
 import com.datastax.driver.core.schemabuilder.Create;
 import com.datastax.driver.core.schemabuilder.CreateType;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -79,10 +78,10 @@ public interface CassandraModule {
         public Builder modules(Collection<CassandraModule> modules) {
             tables.addAll(modules.stream()
                 .flatMap(module -> module.moduleTables().stream())
-                .collect(Guavate.toImmutableList()));
+                .collect(ImmutableList.toImmutableList()));
             types.addAll(modules.stream()
                 .flatMap(module -> module.moduleTypes().stream())
-                .collect(Guavate.toImmutableList()));
+                .collect(ImmutableList.toImmutableList()));
             return this;
         }
 

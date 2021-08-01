@@ -48,7 +48,6 @@ import org.apache.mailet.Mail;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class MailRepositoryStoreService {
@@ -102,7 +101,7 @@ public class MailRepositoryStoreService {
     }
 
     public Task createClearMailRepositoryTask(MailRepositoryPath path) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
-        return new ClearMailRepositoryTask(getRepositories(path).collect(Guavate.toImmutableList()), path);
+        return new ClearMailRepositoryTask(getRepositories(path).collect(ImmutableList.toImmutableList()), path);
     }
 
     public Stream<MailRepository> getRepositories(MailRepositoryPath path) throws MailRepositoryStore.MailRepositoryStoreException {

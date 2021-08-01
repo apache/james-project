@@ -27,7 +27,6 @@ import javax.mail.internet.InternetAddress;
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class MailAddressUtils {
@@ -46,7 +45,7 @@ public class MailAddressUtils {
 
     public static List<InternetAddress> toInternetAddresses(List<MailAddress> mailAddresses) {
         return streamOfInternetAddress(mailAddresses)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     public static InternetAddress[] toInternetAddressArray(List<MailAddress> mailAddresses) {

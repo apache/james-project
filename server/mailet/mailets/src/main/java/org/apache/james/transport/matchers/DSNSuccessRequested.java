@@ -31,9 +31,9 @@ import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Returns the list of Recipients for which DSN SUCCESS notifications
@@ -74,7 +74,7 @@ public class DSNSuccessRequested extends GenericMatcher {
     public Collection<MailAddress> match(Mail mail) {
         return mail.getRecipients().stream()
             .filter(recipient -> successRequested(mail, recipient))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private Boolean successRequested(Mail mail, MailAddress recipient) {

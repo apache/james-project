@@ -30,7 +30,7 @@ import org.apache.james.imap.decode.ImapCommandParser;
 import org.apache.james.imap.decode.ImapCommandParserFactory;
 import org.apache.james.imap.decode.base.AbstractImapCommandParser;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * A factory for ImapCommand instances, provided based on the command name.
@@ -111,7 +111,7 @@ public class ImapParserFactory implements ImapCommandParserFactory {
             new SetAnnotationCommandParser(statusResponseFactory),
             new GetAnnotationCommandParser(statusResponseFactory));
 
-        imapCommands = parsers.collect(Guavate.toImmutableMap(
+        imapCommands = parsers.collect(ImmutableMap.toImmutableMap(
                 parser -> parser.getCommand().getName(),
                 Function.identity()));
     }

@@ -26,6 +26,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -33,9 +34,9 @@ import javax.inject.Inject;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicHeaderValueParser;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import reactor.netty.http.server.HttpServerRequest;
@@ -53,7 +54,7 @@ public class VersionParser {
                 "%s is not a supported JMAP version", jmapConfiguration);
 
         this.supportedVersions = supportedVersions.stream()
-            .collect(Guavate.toImmutableMap(version -> version.asString().toLowerCase(Locale.US)));
+            .collect(ImmutableMap.toImmutableMap(version -> version.asString().toLowerCase(Locale.US), Function.identity()));
     }
 
     public Set<Version> getSupportedVersions() {

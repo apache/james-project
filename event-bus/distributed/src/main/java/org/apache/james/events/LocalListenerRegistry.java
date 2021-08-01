@@ -26,7 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
@@ -96,7 +95,7 @@ class LocalListenerRegistry {
     }
 
     private ImmutableSet<EventListener.ReactiveEventListener> removeListenerFromSet(EventListener listener, ImmutableSet<EventListener.ReactiveEventListener> listeners) {
-        ImmutableSet<EventListener.ReactiveEventListener> remainingListeners = listeners.stream().filter(not(listener::equals)).collect(Guavate.toImmutableSet());
+        ImmutableSet<EventListener.ReactiveEventListener> remainingListeners = listeners.stream().filter(not(listener::equals)).collect(ImmutableSet.toImmutableSet());
         if (remainingListeners.isEmpty()) {
             return ImmutableSet.of();
         }

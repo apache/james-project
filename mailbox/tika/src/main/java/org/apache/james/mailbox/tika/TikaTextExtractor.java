@@ -46,7 +46,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -109,14 +108,14 @@ public class TikaTextExtractor implements TextExtractor {
             ObjectNode node = (ObjectNode) treeNode.get(0);
             return ContentAndMetadata.from(ImmutableList.copyOf(node.fields())
                 .stream()
-                .collect(Guavate.toImmutableMap(Entry::getKey, entry -> asListOfString(entry.getValue()))));
+                .collect(ImmutableMap.toImmutableMap(Entry::getKey, entry -> asListOfString(entry.getValue()))));
         }
 
         @VisibleForTesting List<String> asListOfString(JsonNode jsonNode) {
             if (jsonNode.isArray()) {
                 return ImmutableList.copyOf(jsonNode.elements()).stream()
                     .map(JsonNode::asText)
-                    .collect(Guavate.toImmutableList());
+                    .collect(ImmutableList.toImmutableList());
             }
             return ImmutableList.of(jsonNode.asText());
         }
@@ -136,7 +135,7 @@ public class TikaTextExtractor implements TextExtractor {
             return new ContentAndMetadata(Optional.ofNullable(content(contentAndMetadataMap)),
                     contentAndMetadataMap.entrySet().stream()
                         .filter(allHeadersButTika())
-                        .collect(Guavate.toImmutableMap(Entry::getKey, Entry::getValue)));
+                        .collect(ImmutableMap.toImmutableMap(Entry::getKey, Entry::getValue)));
         }
 
         private static Predicate<? super Entry<String, List<String>>> allHeadersButTika() {

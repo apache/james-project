@@ -31,7 +31,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.james.core.Username;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -187,7 +186,7 @@ public interface EventBusTestFixture {
             Preconditions.checkArgument(parts.get(0).equals(TestEvent.class.getCanonicalName()));
 
             Event.EventId eventId = Event.EventId.of(UUID.fromString(parts.get(1)));
-            Username username = Username.of(Joiner.on("&").join(parts.stream().skip(2).collect(Guavate.toImmutableList())));
+            Username username = Username.of(Joiner.on("&").join(parts.stream().skip(2).collect(ImmutableList.toImmutableList())));
             return new TestEvent(eventId, username);
         }
     }

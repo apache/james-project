@@ -30,7 +30,6 @@ import org.apache.james.task.TaskType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class SolveMailboxInconsistenciesTask implements Task {
@@ -108,7 +107,7 @@ public class SolveMailboxInconsistenciesTask implements Task {
             snapshot.getProcessedMailboxPathEntries(),
             snapshot.getFixedInconsistencies().stream()
                 .map(MailboxId::serialize)
-                .collect(Guavate.toImmutableList()),
+                .collect(ImmutableList.toImmutableList()),
             snapshot.getConflictingEntries(),
             snapshot.getErrors()));
     }

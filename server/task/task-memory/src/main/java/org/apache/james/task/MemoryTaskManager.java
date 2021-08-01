@@ -32,8 +32,8 @@ import javax.inject.Inject;
 
 import org.reactivestreams.Publisher;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -142,7 +142,7 @@ public class MemoryTaskManager implements TaskManager {
         return idToExecutionDetails.entrySet()
             .stream()
             .filter(details -> details.getValue().getStatus().equals(status))
-            .collect(Guavate.entriesToImmutableMap());
+            .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     @Override

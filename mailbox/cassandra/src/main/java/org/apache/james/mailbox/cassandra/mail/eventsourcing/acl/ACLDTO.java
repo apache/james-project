@@ -28,13 +28,13 @@ import org.apache.james.mailbox.model.MailboxACL;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableMap;
 
 public class ACLDTO {
     public static ACLDTO fromACL(MailboxACL acl) {
         return new ACLDTO(acl.getEntries().entrySet().stream()
             .map(entry -> Pair.of(entry.getKey().serialize(), entry.getValue().serialize()))
-            .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)));
+            .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue)));
     }
 
     private final Map<String, String> entries;
@@ -53,7 +53,7 @@ public class ACLDTO {
         return new MailboxACL(entries.entrySet().stream()
             .map(Throwing.function(entry -> Pair.of(MailboxACL.EntryKey.deserialize(entry.getKey()),
                 MailboxACL.Rfc4314Rights.deserialize(entry.getValue()))))
-            .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)));
+            .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue)));
     }
 
     @Override

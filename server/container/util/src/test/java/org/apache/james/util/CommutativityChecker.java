@@ -25,8 +25,8 @@ import java.util.function.BinaryOperator;
 import org.apache.commons.lang3.tuple.Pair;
 import org.paukov.combinatorics3.Generator;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 
 public class CommutativityChecker<T> {
     private final Set<T> valuesToTest;
@@ -46,7 +46,7 @@ public class CommutativityChecker<T> {
             .stream()
             .map(list -> Pair.of(list.get(0), list.get(1)))
             .filter(this::isNotCommutative)
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 
     private boolean isNotCommutative(Pair<T, T> pair) {

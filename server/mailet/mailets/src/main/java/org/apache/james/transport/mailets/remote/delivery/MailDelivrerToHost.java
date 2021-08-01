@@ -49,7 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableListMultimap;
 import com.sun.mail.smtp.SMTPMessage;
 import com.sun.mail.smtp.SMTPTransport;
 
@@ -107,7 +107,7 @@ public class MailDelivrerToHost {
                     .flatMap(DsnParameters.RecipientDsnParameters::getNotifyParameter)
                     .map(this::toJavaxNotify),
                 address))
-            .collect(Guavate.toImmutableListMultimap(
+            .collect(ImmutableListMultimap.toImmutableListMultimap(
                 Pair::getKey,
                 Pair::getValue))
             .asMap()

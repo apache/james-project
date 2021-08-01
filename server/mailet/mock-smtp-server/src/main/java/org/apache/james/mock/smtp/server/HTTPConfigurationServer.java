@@ -44,7 +44,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
@@ -147,7 +147,7 @@ public class HTTPConfigurationServer {
     private Publisher<Void> getBehaviors(HttpServerRequest req, HttpServerResponse res) {
         MockSmtpBehaviors mockSmtpBehaviors = new MockSmtpBehaviors(smtpBehaviorRepository.remainingBehaviors()
             .map(MockSMTPBehaviorInformation::getBehavior)
-            .collect(Guavate.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
 
         try {
             return res.status(OK)

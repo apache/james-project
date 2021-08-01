@@ -28,7 +28,7 @@ import org.apache.james.jmap.draft.model.message.view.MessageFullView;
 import org.apache.james.server.core.Envelope;
 import org.apache.james.util.StreamUtils;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableSet;
 
 public class EnvelopeUtils {
     public static Envelope fromMessage(MessageFullView jmapMessage) {
@@ -42,7 +42,7 @@ public class EnvelopeUtils {
 
         return new Envelope(sender,
             StreamUtils.flatten(Stream.of(to, cc, bcc))
-                .collect(Guavate.toImmutableSet()));
+                .collect(ImmutableSet.toImmutableSet()));
     }
 
     private static Stream<MailAddress> emailersToMailAddresses(List<Emailer> emailers) {

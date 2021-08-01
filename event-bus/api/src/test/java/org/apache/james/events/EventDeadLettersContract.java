@@ -36,7 +36,6 @@ import org.apache.james.events.EventDeadLetters.InsertionId;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.Test;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -87,7 +86,7 @@ interface EventDeadLettersContract {
 
     static ImmutableMap<Integer, Group> concurrentGroups() {
         return IntStream.range(0, CONCURRENT_GROUPS.size()).boxed()
-            .collect(Guavate.toImmutableMap(Function.identity(), CONCURRENT_GROUPS::get));
+            .collect(ImmutableMap.toImmutableMap(Function.identity(), CONCURRENT_GROUPS::get));
     }
 
     static Event event(Event.EventId eventId) {

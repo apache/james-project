@@ -69,9 +69,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Implementation of a MailRepository on a database.
@@ -456,10 +456,9 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
                         oos.writeObject(((MailImpl) mc).getAttributesRaw());
                     } else {
                         Map<String, Serializable> temp = mc.attributes()
-                                .collect(Guavate.toImmutableMap(
+                                .collect(ImmutableMap.toImmutableMap(
                                         attribute -> attribute.getName().asString(),
-                                        attribute -> (Serializable) attribute.getValue().value()
-                                ));
+                                        attribute -> (Serializable) attribute.getValue().value()));
 
                         oos.writeObject(temp);
                     }
@@ -491,10 +490,9 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
                 oos.writeObject(((MailImpl) mc).getAttributesRaw());
             } else {
                 Map<String, Serializable> temp = mc.attributes()
-                    .collect(Guavate.toImmutableMap(
+                    .collect(ImmutableMap.toImmutableMap(
                             attribute -> attribute.getName().asString(),
-                            attribute -> (Serializable) attribute.getValue().value()
-                    ));
+                            attribute -> (Serializable) attribute.getValue().value()));
                 oos.writeObject(temp);
             }
             oos.flush();
@@ -661,7 +659,7 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
             .entrySet()
             .stream()
             .map(entry -> Attribute.convertToAttribute(entry.getKey(), entry.getValue()))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     @Override

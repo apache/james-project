@@ -42,7 +42,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import ch.qos.logback.classic.Level;
@@ -195,7 +195,7 @@ public class PeriodicalHealthChecksTest {
             softly.assertThat(loggingEvents.list).hasSize(2);
             softly.assertThat(loggingEvents.list.stream()
                 .map(event -> new Tuple(event.getLevel(), event.getFormattedMessage()))
-                .collect(Guavate.toImmutableList()))
+                .collect(ImmutableList.toImmutableList()))
                 .containsExactlyInAnyOrder(
                     new Tuple(Level.ERROR, "UNHEALTHY: testing : cause"),
                     new Tuple(Level.WARN, "DEGRADED: testing : cause"));

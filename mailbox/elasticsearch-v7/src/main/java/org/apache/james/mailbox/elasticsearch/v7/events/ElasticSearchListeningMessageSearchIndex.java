@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.elasticsearch.v7.events;
 
-import static com.github.steveash.guavate.Guavate.toImmutableList;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.IS_ANSWERED;
 import static org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.IS_DELETED;
 import static org.apache.james.mailbox.elasticsearch.v7.json.JsonMessageConstants.IS_DRAFT;

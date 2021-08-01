@@ -38,10 +38,10 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -705,7 +705,7 @@ public class MailboxACL {
     public MailboxACL(Map.Entry<EntryKey, Rfc4314Rights>... entries) {
         this(Optional.ofNullable(entries)
                 .map(array -> Arrays.stream(array)
-                    .collect(Guavate.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue)))
+                    .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue)))
                 .orElseGet(ImmutableMap::of));
     }
 
@@ -782,7 +782,7 @@ public class MailboxACL {
                 entry.getKey(),
                 except(entry.getValue(), other.getEntries().get(entry.getKey()))))
             .filter(pair -> !pair.getValue().isEmpty())
-            .collect(Guavate.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue)));
+            .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue)));
     }
 
     private Rfc4314Rights except(Rfc4314Rights thisRight, Rfc4314Rights exceptRights) {
@@ -826,7 +826,7 @@ public class MailboxACL {
                     .map(entry -> Pair.of(entry.getKey(),
                         entry.getKey().equals(key) ? replacement : entry.getValue()))
                     .filter(pair -> pair.getValue() != null && !pair.getValue().isEmpty())
-                    .collect(Guavate.toImmutableMap(Pair::getKey, Pair::getValue)));
+                    .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue)));
         } else {
             return Optional.ofNullable(replacement)
                 .filter(Predicate.not(Rfc4314Rights::isEmpty))
@@ -866,11 +866,11 @@ public class MailboxACL {
             Stream.concat(
                     this.entries.entrySet().stream(),
                     other.getEntries().entrySet().stream())
-                .collect(Guavate.toImmutableListMultimap(Map.Entry::getKey, Map.Entry::getValue))
+                .collect(ImmutableListMultimap.toImmutableListMultimap(Map.Entry::getKey, Map.Entry::getValue))
                 .asMap()
                 .entrySet()
                 .stream()
-                .collect(Guavate.toImmutableMap(Map.Entry::getKey, e -> union(e.getValue()))));
+                .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, e -> union(e.getValue()))));
     }
 
     private Rfc4314Rights union(Collection<Rfc4314Rights> rights) {
@@ -888,6 +888,6 @@ public class MailboxACL {
         return this.entries.entrySet().stream()
             .filter(entry -> !entry.getKey().isNegative())
             .filter(entry -> entry.getKey().getNameType().equals(nameType))
-            .collect(Guavate.entriesToMap());
+            .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }

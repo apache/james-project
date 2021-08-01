@@ -32,8 +32,8 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.reactivestreams.Publisher;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
@@ -94,6 +94,6 @@ public class RecordingMetricFactory implements MetricFactory {
     public Map<String, Integer> countForPrefixName(String prefixName) {
         return counters.entrySet().stream()
             .filter(entry -> entry.getKey().startsWith(prefixName))
-            .collect(Guavate.toImmutableMap(Map.Entry::getKey, e -> e.getValue().get()));
+            .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, e -> e.getValue().get()));
     }
 }

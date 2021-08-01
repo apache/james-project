@@ -37,7 +37,7 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.util.StreamUtils;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 public class AliasReverseResolverImpl implements AliasReverseResolver {
     private final RecipientRewriteTable recipientRewriteTable;
@@ -74,9 +74,9 @@ public class AliasReverseResolverImpl implements AliasReverseResolver {
 
     private CanSendFromImpl.DomainFetcher domainFetcher(Username user) {
         HashMap<Domain, List<Domain>> fetchedDomains = new HashMap<>();
-        List<Domain> userDomains = relatedDomains(user).collect(Guavate.toImmutableList());
+        List<Domain> userDomains = relatedDomains(user).collect(ImmutableList.toImmutableList());
         user.getDomainPart().ifPresent(domain -> fetchedDomains.put(domain, userDomains));
-        Function<Domain, List<Domain>> computeDomain = givenDomain -> Stream.concat(userDomains.stream(), fetchDomains(givenDomain)).collect(Guavate.toImmutableList());
+        Function<Domain, List<Domain>> computeDomain = givenDomain -> Stream.concat(userDomains.stream(), fetchDomains(givenDomain)).collect(ImmutableList.toImmutableList());
         return givenUsername ->
             givenUsername
                 .getDomainPart()

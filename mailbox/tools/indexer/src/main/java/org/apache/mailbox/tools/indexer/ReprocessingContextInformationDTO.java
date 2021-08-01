@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.james.json.DTOModule;
@@ -34,7 +35,6 @@ import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -95,7 +95,7 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
                     details.getFailedReprocessedMailCount(),
                     Optional.empty(),
                     Optional.of(serializeFailures(details.failures())),
-                    Optional.of(details.failures().mailboxFailures().stream().map(MailboxId::serialize).collect(Guavate.toImmutableList())),
+                    Optional.of(details.failures().mailboxFailures().stream().map(MailboxId::serialize).collect(ImmutableList.toImmutableList())),
                     details.timestamp(),
                     Optional.of(RunningOptionsDTO.toDTO(details.getRunningOptions()))))
                 .typeName(ErrorRecoveryIndexationTask.PREVIOUS_FAILURES_INDEXING.asString())
@@ -145,7 +145,7 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
                     details.getFailedReprocessedMailCount(),
                     Optional.empty(),
                     Optional.of(serializeFailures(details.failures())),
-                    Optional.of(details.failures().mailboxFailures().stream().map(MailboxId::serialize).collect(Guavate.toImmutableList())),
+                    Optional.of(details.failures().mailboxFailures().stream().map(MailboxId::serialize).collect(ImmutableList.toImmutableList())),
                     details.timestamp(),
                     Optional.of(RunningOptionsDTO.toDTO(details.getRunningOptions()))))
                 .typeName(FullReindexingTask.FULL_RE_INDEXING.asString())
@@ -169,12 +169,12 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
             .stream()
             .flatMap(failuresForMailbox ->
                 getReIndexingFailureStream(mailboxIdFactory, failuresForMailbox))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         return new ReIndexingExecutionFailures(reIndexingFailures,
             mailboxFailures.stream()
                 .map(mailboxIdFactory::fromString)
-                .collect(Guavate.toImmutableList()));
+                .collect(ImmutableList.toImmutableList()));
     }
 
     private static Stream<ReIndexingExecutionFailures.ReIndexingFailure> getReIndexingFailureStream(MailboxId.Factory mailboxIdFactory, ReindexingFailureDTO failuresForMailbox) {
@@ -187,7 +187,7 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
     static List<ReindexingFailureDTO> serializeFailures(ReIndexingExecutionFailures failures) {
         ImmutableListMultimap<MailboxId, ReIndexingExecutionFailures.ReIndexingFailure> failuresByMailbox = failures.messageFailures()
             .stream()
-            .collect(Guavate.toImmutableListMultimap(ReIndexingExecutionFailures.ReIndexingFailure::getMailboxId));
+            .collect(ImmutableListMultimap.toImmutableListMultimap(ReIndexingExecutionFailures.ReIndexingFailure::getMailboxId, Function.identity()));
 
         return failuresByMailbox
             .asMap()
@@ -197,7 +197,7 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
                 new ReindexingFailureDTO(
                     failureByMailbox.getKey().serialize(),
                     extractMessageUidsFromFailure(failureByMailbox)))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private static ImmutableList<Long> extractMessageUidsFromFailure(Map.Entry<MailboxId, Collection<ReIndexingExecutionFailures.ReIndexingFailure>> failureByMailbox) {
@@ -205,7 +205,7 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
             .getValue()
             .stream()
             .map(failure -> failure.getUid().asLong())
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     static List<ReindexingFailureDTO> resolveFailure(Optional<List<ReindexingFailureDTO>> failures, Optional<List<ReindexingFailureDTO>> messageFailures) {

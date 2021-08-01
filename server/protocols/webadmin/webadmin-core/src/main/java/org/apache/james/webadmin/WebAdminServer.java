@@ -48,7 +48,7 @@ import org.apache.james.webadmin.utils.JsonExtractException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 import spark.Service;
 
@@ -83,14 +83,14 @@ public class WebAdminServer implements Startable {
     private static List<Routes> privateRoutes(List<Routes> routes) {
         return routes.stream()
             .filter(route -> !(route instanceof PublicRoutes))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private static List<PublicRoutes> publicRoutes(List<Routes>  routes) {
         return routes.stream()
             .filter(PublicRoutes.class::isInstance)
             .map(PublicRoutes.class::cast)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     public WebAdminServer start() {

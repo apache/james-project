@@ -26,7 +26,6 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
@@ -39,7 +38,7 @@ public class PreDeletionHooksConfiguration {
         return new PreDeletionHooksConfiguration(entries
             .stream()
             .map(Throwing.function(PreDeletionHookConfiguration::from).sneakyThrow())
-            .collect(Guavate.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()));
     }
 
     public static PreDeletionHooksConfiguration forHooks(PreDeletionHookConfiguration... hooks) {

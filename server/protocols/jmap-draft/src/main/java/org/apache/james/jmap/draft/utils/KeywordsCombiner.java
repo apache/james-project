@@ -26,8 +26,8 @@ import java.util.function.BinaryOperator;
 import org.apache.james.jmap.draft.model.Keyword;
 import org.apache.james.jmap.draft.model.Keywords;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 public class KeywordsCombiner implements BinaryOperator<Keywords> {
@@ -52,13 +52,13 @@ public class KeywordsCombiner implements BinaryOperator<Keywords> {
         return Sets.union(set1, set2)
             .stream()
             .filter(keyword -> !exceptKeywords.contains(keyword))
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 
     public Set<Keyword> intersect(Set<Keyword> set1, Set<Keyword> set2, List<Keyword> forKeywords) {
         return Sets.intersection(set1, set2)
             .stream()
             .filter(forKeywords::contains)
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 }

@@ -56,7 +56,7 @@ import org.apache.james.imap.encode.VanishedResponseEncoder;
 import org.apache.james.imap.encode.XListResponseEncoder;
 import org.apache.james.imap.encode.base.EndImapEncoder;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * TODO: perhaps a POJO would be better
@@ -68,7 +68,7 @@ public class DefaultImapEncoderFactory implements ImapEncoderFactory {
 
         DefaultImapEncoder(Stream<ImapResponseEncoder> encoders, EndImapEncoder endImapEncoder) {
             this.encoders = encoders
-                .collect(Guavate.toImmutableMap(
+                .collect(ImmutableMap.toImmutableMap(
                     ImapResponseEncoder::acceptableMessages,
                     Function.identity()));
             this.endImapEncoder = endImapEncoder;

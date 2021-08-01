@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.apache.commons.configuration2.Configuration;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class ExtensionConfiguration {
@@ -34,7 +33,7 @@ public class ExtensionConfiguration {
         return new ExtensionConfiguration(
             Arrays.stream(configuration.getStringArray("guice.extension.module"))
                 .map(ClassName::new)
-                .collect(Guavate.toImmutableList()));
+                .collect(ImmutableList.toImmutableList()));
     }
 
     private final List<ClassName> additionalGuiceModulesForExtensions;

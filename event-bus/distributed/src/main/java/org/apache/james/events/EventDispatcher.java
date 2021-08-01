@@ -39,7 +39,7 @@ import org.apache.james.util.StructuredLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.rabbitmq.client.AMQP;
@@ -171,7 +171,7 @@ public class EventDispatcher {
         return remoteDispatch(serializedEvent,
             keys.stream()
                 .map(RoutingKey::of)
-                .collect(Guavate.toImmutableList()));
+                .collect(ImmutableList.toImmutableList()));
     }
 
     private Mono<Void> remoteDispatch(byte[] serializedEvent, Collection<RoutingKey> routingKeys) {

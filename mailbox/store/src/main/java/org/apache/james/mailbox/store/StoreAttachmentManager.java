@@ -46,7 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -104,7 +104,7 @@ public class StoreAttachmentManager implements AttachmentManager {
             ImmutableSet<AttachmentId> owned = Sets.difference(ImmutableSet.copyOf(attachmentIds), referencedByMessages)
                 .stream()
                 .filter(Throwing.<AttachmentId>predicate(id -> isExplicitlyAOwner(id, mailboxSession)).sneakyThrow())
-                .collect(Guavate.toImmutableSet());
+                .collect(ImmutableSet.toImmutableSet());
 
             return ImmutableSet.<AttachmentId>builder()
                 .addAll(referencedByMessages)
@@ -129,7 +129,7 @@ public class StoreAttachmentManager implements AttachmentManager {
                 attachmentId -> getRelatedMessageIds(attachmentId, mailboxSession).stream()
                     .map(messageId -> Pair.of(messageId, attachmentId)))
                 .sneakyThrow())
-            .collect(Guavate.toImmutableListMultimap(
+            .collect(ImmutableListMultimap.toImmutableListMultimap(
                 Pair::getKey,
                 Pair::getValue))
             .asMap();
@@ -139,7 +139,7 @@ public class StoreAttachmentManager implements AttachmentManager {
         return entries.entrySet().stream()
             .filter(entry -> accessibleMessages.contains(entry.getKey()))
             .flatMap(entry -> entry.getValue().stream())
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 
     private boolean isExplicitlyAOwner(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException {

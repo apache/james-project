@@ -55,7 +55,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
@@ -277,7 +276,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
                .map(ignored -> Arrays.stream(maildirRoot.listFiles())
                        .flatMap(Throwing.<File, Stream<Mailbox>>function(domain -> visitUsersForMailboxList(domain, domain.listFiles()).stream()).sneakyThrow()))
                .switchIfEmpty(Mono.fromCallable(() -> visitUsersForMailboxList(null, maildirRoot.listFiles()).stream()))
-               .flatMapIterable(mailboxes -> mailboxes.collect(Guavate.toImmutableList()));
+               .flatMapIterable(mailboxes -> mailboxes.collect(ImmutableList.toImmutableList()));
     }
 
     private List<Mailbox> visitUsersForMailboxList(File domain, File[] users) throws MailboxException {

@@ -32,7 +32,6 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.events.MailboxEvents;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -95,7 +94,7 @@ public class MailboxAndEmailChange implements JmapChange {
                             .build()));
 
             return Stream.concat(Stream.of(ownerChange), shareeChanges)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         }
 
         public List<JmapChange> fromFlagsUpdated(MailboxEvents.FlagsUpdated messageFlagUpdated, ZonedDateTime now, List<AccountId> sharees) {
@@ -141,7 +140,7 @@ public class MailboxAndEmailChange implements JmapChange {
                             .build()));
 
                 return Stream.concat(Stream.of(ownerChange), shareeChanges)
-                    .collect(Guavate.toImmutableList());
+                    .collect(ImmutableList.toImmutableList());
             }
             Stream<EmailChange> shareeChanges = sharees.stream()
                 .map(shareeId -> EmailChange.builder()
@@ -153,7 +152,7 @@ public class MailboxAndEmailChange implements JmapChange {
                     .build());
 
             return Stream.concat(Stream.of(ownerEmailChange), shareeChanges)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         }
 
         public Flux<JmapChange> fromExpunged(MailboxEvents.Expunged expunged, ZonedDateTime now, List<Username> sharees) {

@@ -40,7 +40,6 @@ import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -64,7 +63,7 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
             .getResultList()
             .stream()
             .map(READ_ROW)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     @Override
@@ -78,7 +77,7 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
                             .setParameter("idParam", jpaId.getRawId())
                             .setParameter("keyParam", input.asString())
                             .getSingleResult()))
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         } catch (NoResultException e) {
             return ImmutableList.of();
         }
@@ -112,7 +111,7 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
                     .stream()
                     .map(READ_ROW)
                     .filter(predicateFunction.apply(key)))
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         } catch (NoResultException e) {
             return ImmutableList.of();
         }

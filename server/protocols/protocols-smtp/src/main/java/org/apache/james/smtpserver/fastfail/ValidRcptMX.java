@@ -43,7 +43,7 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 /**
  * This class can be used to reject email with bogus MX which is send from a
@@ -119,7 +119,7 @@ public class ValidRcptMX implements RcptHook, ProtocolHandler {
 
             Collection<String> bannedNetworks = Arrays.stream(networks)
                 .map(String::trim)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
 
             setBannedNetworks(bannedNetworks, dnsService);
 

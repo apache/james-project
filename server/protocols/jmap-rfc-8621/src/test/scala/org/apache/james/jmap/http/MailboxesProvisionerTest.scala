@@ -23,7 +23,7 @@ import java.time.Duration
 import java.util.function.Predicate
 
 import com.github.fge.lambdas.Throwing
-import com.github.steveash.guavate.Guavate
+import com.google.common.collect.ImmutableList
 import org.apache.james.core.Username
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources
@@ -63,7 +63,7 @@ class MailboxesProvisionerTest {
       .containsOnlyElementsOf(DefaultMailboxes.DEFAULT_MAILBOXES
         .stream
         .map((mailboxName: String) => MailboxPath.forUser(USERNAME, mailboxName))
-        .collect(Guavate.toImmutableList()))
+        .collect(ImmutableList.toImmutableList()))
   }
 
   @Test
@@ -98,6 +98,6 @@ class MailboxesProvisionerTest {
       .containsOnlyElementsOf(DefaultMailboxes.DEFAULT_MAILBOXES
         .stream
         .map((mailboxName: String) => MailboxPath.forUser(USERNAME, mailboxName))
-        .collect(Guavate.toImmutableList()))
+        .collect(ImmutableList.toImmutableList()))
   }
 }

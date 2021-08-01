@@ -39,7 +39,6 @@ import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.smtpserver.DataLineJamesMessageHookHandler;
 import org.apache.mailet.Mail;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class MailetContainerHandler extends DataLineJamesMessageHookHandler {
@@ -121,13 +120,13 @@ public class MailetContainerHandler extends DataLineJamesMessageHookHandler {
                         .smtpReturnCode(SMTPRetCode.MAIL_OK)
                         .smtpDescription(DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received <" + recipient.asString() + ">")
                         .build()))
-                    .collect(Guavate.toImmutableList()));
+                    .collect(ImmutableList.toImmutableList()));
 
         } catch (Exception e) {
             return LMTPMultiResponse.of(
                 recipients.stream()
                     .map(recipient -> new SMTPResponse(SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.UNDEFINED_STATUS) + " Temporary error deliver message <" + recipient.asString() + ">"))
-                    .collect(Guavate.toImmutableList()));
+                    .collect(ImmutableList.toImmutableList()));
         }
     }
 
@@ -135,7 +134,7 @@ public class MailetContainerHandler extends DataLineJamesMessageHookHandler {
         return LMTPMultiResponse.of(
             recipients.stream()
                 .map(recipient -> executeFor(mail, recipient))
-                .collect(Guavate.toImmutableList()));
+                .collect(ImmutableList.toImmutableList()));
     }
 
     private SMTPResponse executeFor(Mail mail, MailAddress recipient) {

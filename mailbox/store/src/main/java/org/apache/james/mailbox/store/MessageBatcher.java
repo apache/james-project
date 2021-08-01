@@ -25,8 +25,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class MessageBatcher {
 
@@ -53,7 +53,7 @@ public class MessageBatcher {
                 .stream()
                 .flatMap(Throwing.function(range -> batchedOperation.execute(range)
                                                                     .stream()))
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         } else {
             return batchedOperation.execute(set);
         }

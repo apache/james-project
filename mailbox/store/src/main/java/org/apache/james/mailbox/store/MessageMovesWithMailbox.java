@@ -28,7 +28,6 @@ import java.util.stream.Stream;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageMoves;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -110,7 +109,7 @@ public class MessageMovesWithMailbox {
             .targetMailboxes(targetMailboxes)
             .previousMailboxes(previousMailboxes.stream()
                 .filter(predicate)
-                .collect(Guavate.toImmutableSet()))
+                .collect(ImmutableSet.toImmutableSet()))
             .build();
     }
 
@@ -119,7 +118,7 @@ public class MessageMovesWithMailbox {
             .previousMailboxes(previousMailboxes)
             .targetMailboxes(targetMailboxes.stream()
                 .filter(predicate)
-                .collect(Guavate.toImmutableSet()))
+                .collect(ImmutableSet.toImmutableSet()))
             .build();
     }
 
@@ -127,10 +126,10 @@ public class MessageMovesWithMailbox {
         return MessageMoves.builder()
             .previousMailboxIds(previousMailboxes.stream()
                 .map(Mailbox::getMailboxId)
-                .collect(Guavate.toImmutableSet()))
+                .collect(ImmutableSet.toImmutableSet()))
             .targetMailboxIds(targetMailboxes.stream()
                 .map(Mailbox::getMailboxId)
-                .collect(Guavate.toImmutableSet()))
+                .collect(ImmutableSet.toImmutableSet()))
             .build();
     }
 

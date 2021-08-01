@@ -24,7 +24,6 @@ import java.util.Optional;
 
 import org.apache.james.server.core.configuration.Configuration;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
@@ -119,7 +118,7 @@ public class JamesServerBuilder<T extends Configuration> {
         ImmutableList<Module> modules = extensions.build()
             .stream()
             .map(GuiceModuleTestExtension::getModule)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         return server
             .buildServer(configurationProvider.buildConfiguration(file))

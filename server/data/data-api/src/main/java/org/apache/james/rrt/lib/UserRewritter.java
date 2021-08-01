@@ -36,7 +36,6 @@ import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
@@ -121,7 +120,7 @@ public interface UserRewritter extends Serializable {
             return IntStream
                 .rangeClosed(1, match.groupCount())
                 .mapToObj(match::group)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         }
 
         private String replaceParameters(String input, List<String> parameters) {

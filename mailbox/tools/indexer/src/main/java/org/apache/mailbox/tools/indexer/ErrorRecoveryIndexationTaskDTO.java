@@ -32,7 +32,8 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Multimap;
 
 public class ErrorRecoveryIndexationTaskDTO implements TaskDTO {
@@ -51,19 +52,19 @@ public class ErrorRecoveryIndexationTaskDTO implements TaskDTO {
         Multimap<MailboxId, ReIndexingExecutionFailures.ReIndexingFailure> failuresByMailboxId = task.getPreviousFailures()
             .messageFailures()
             .stream()
-            .collect(Guavate.toImmutableListMultimap(ReIndexingExecutionFailures.ReIndexingFailure::getMailboxId, Function.identity()));
+            .collect(ImmutableListMultimap.toImmutableListMultimap(ReIndexingExecutionFailures.ReIndexingFailure::getMailboxId, Function.identity()));
 
         List<ReindexingFailureDTO> failureDTOs = failuresByMailboxId.asMap()
             .entrySet()
             .stream()
             .map(ErrorRecoveryIndexationTaskDTO::failuresByMailboxToReindexingFailureDTO)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         List<String> failureMailboxDTOs = task.getPreviousFailures()
             .mailboxFailures()
             .stream()
             .map(MailboxId::serialize)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
         return new ErrorRecoveryIndexationTaskDTO(type, failureDTOs, Optional.of(failureMailboxDTOs), Optional.of(RunningOptionsDTO.toDTO(task.getRunningOptions())));
     }
 
@@ -74,7 +75,7 @@ public class ErrorRecoveryIndexationTaskDTO implements TaskDTO {
             .stream()
             .map(ReIndexingExecutionFailures.ReIndexingFailure::getUid)
             .map(MessageUid::asLong)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
         return new ReindexingFailureDTO(entry.getKey().serialize(), uids);
     }
 

@@ -32,9 +32,9 @@ import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Returns the list of Recipients for which DSN FAILURE notifications
@@ -77,7 +77,7 @@ public class DSNFailureRequested extends GenericMatcher {
     public Collection<MailAddress> match(Mail mail) {
         return mail.getRecipients().stream()
             .filter(recipient -> failureRequested(mail, recipient))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private Boolean failureRequested(Mail mail, MailAddress recipient) {

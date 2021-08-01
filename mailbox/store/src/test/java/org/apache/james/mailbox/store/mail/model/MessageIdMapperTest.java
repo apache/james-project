@@ -57,7 +57,6 @@ import org.junit.Assume;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
@@ -906,7 +905,7 @@ public abstract class MessageIdMapperTest {
             sut.find(ImmutableList.of(message1.getMessageId(), message2.getMessageId()), FetchType.Metadata)
                 .stream()
                 .map(message -> Pair.of(message.getMessageId(), message.getMailboxId()))
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
 
         assertThat(storedMessages)
             .containsOnly(Pair.of(message1.getMessageId(), benwaInboxMailbox.getMailboxId()));

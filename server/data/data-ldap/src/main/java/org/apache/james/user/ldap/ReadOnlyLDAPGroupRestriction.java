@@ -30,7 +30,7 @@ import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
@@ -138,6 +138,6 @@ public class ReadOnlyLDAPGroupRestriction {
         com.unboundid.ldap.sdk.Attribute members = entry.getAttribute(memberAttribute);
         return Arrays.stream(members.getValues())
             .map(Throwing.function(DN::new))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 }

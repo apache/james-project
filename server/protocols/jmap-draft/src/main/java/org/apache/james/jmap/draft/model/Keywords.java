@@ -33,7 +33,6 @@ import org.apache.james.mailbox.FlagsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -116,7 +115,7 @@ public class Keywords {
             return new Keywords(keywordStream
                     .peek(validator::validate)
                     .filter(filter)
-                    .collect(Guavate.toImmutableSet()));
+                    .collect(ImmutableSet.toImmutableSet()));
         }
 
         public Keywords from(Keyword... keywords) {
@@ -190,7 +189,7 @@ public class Keywords {
 
     public ImmutableMap<String, Boolean> asMap() {
         return keywords.stream()
-            .collect(Guavate.toImmutableMap(Keyword::getFlagName, keyword -> Keyword.FLAG_VALUE));
+            .collect(ImmutableMap.toImmutableMap(Keyword::getFlagName, keyword -> Keyword.FLAG_VALUE));
     }
 
     public ImmutableSet<Keyword> getKeywords() {

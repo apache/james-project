@@ -32,9 +32,9 @@ import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Table;
 
 public class InMemoryAnnotationMapper implements AnnotationMapper {
@@ -53,7 +53,7 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
                 .entrySet()
                 .stream()
                 .map(input -> MailboxAnnotation.newInstance(new MailboxAnnotationKey(input.getKey()), input.getValue()))
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
         } finally {
             lock.readLock().unlock();
         }
@@ -69,7 +69,7 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
         return retrieveAllAnnotations((InMemoryId) mailboxId)
             .stream()
             .filter(input -> keys.contains(input.getKey()))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     @Override
@@ -77,7 +77,7 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
         return retrieveAllAnnotations((InMemoryId) mailboxId)
             .stream()
             .filter(getPredicateFilterByAll(keys))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     @Override
@@ -85,7 +85,7 @@ public class InMemoryAnnotationMapper implements AnnotationMapper {
         return getAnnotationsByKeysWithAllDepth(mailboxId, keys)
             .stream()
             .filter(getPredicateFilterByOne(keys))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private Predicate<MailboxAnnotation> getPredicateFilterByAll(final Set<MailboxAnnotationKey> keys) {

@@ -31,14 +31,14 @@ import org.apache.james.task.TaskExecutionDetails;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 public class ExecutionDetailsDto {
     public static List<ExecutionDetailsDto> from(DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationConverter,
                                                  List<TaskExecutionDetails> tasksDetails) {
         return tasksDetails.stream()
             .map(details -> ExecutionDetailsDto.from(additionalInformationConverter, details))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     public static ExecutionDetailsDto from(DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationConverter,

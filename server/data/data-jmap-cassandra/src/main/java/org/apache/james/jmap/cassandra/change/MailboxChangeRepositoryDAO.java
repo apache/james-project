@@ -55,7 +55,6 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.UserType;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -127,7 +126,7 @@ public class MailboxChangeRepositoryDAO {
             .filter(CassandraId.class::isInstance)
             .map(CassandraId.class::cast)
             .map(CassandraId::asUuid)
-            .collect(Guavate.toImmutableSet());
+            .collect(ImmutableSet.toImmutableSet());
     }
 
     Flux<MailboxChange> getAllChanges(AccountId accountId) {
@@ -171,6 +170,6 @@ public class MailboxChangeRepositoryDAO {
     private ImmutableList<MailboxId> toIdSet(Set<UUID> uuidSet) {
         return uuidSet.stream()
             .map(CassandraId::of)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 }

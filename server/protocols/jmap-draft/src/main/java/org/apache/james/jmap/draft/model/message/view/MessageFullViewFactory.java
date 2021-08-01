@@ -58,9 +58,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 import reactor.core.publisher.Flux;
@@ -210,7 +210,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
     private List<Attachment> getAttachments(List<MessageAttachmentMetadata> attachments) {
         return attachments.stream()
                 .map(this::fromMailboxAttachment)
-                .collect(Guavate.toImmutableList());
+                .collect(ImmutableList.toImmutableList());
     }
 
     private Attachment fromMailboxAttachment(MessageAttachmentMetadata attachment) {

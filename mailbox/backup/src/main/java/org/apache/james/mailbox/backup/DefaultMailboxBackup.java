@@ -48,8 +48,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -94,7 +94,7 @@ public class DefaultMailboxBackup implements MailboxBackup {
         List<MailAccountContent> accountContents = getAccountContentForUser(session);
         List<MailboxWithAnnotations> mailboxes = accountContents.stream()
             .map(MailAccountContent::getMailboxWithAnnotations)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         Stream<MessageResult> messages = allMessagesForUser(accountContents);
         archive(mailboxes, messages, destination);
@@ -152,7 +152,7 @@ public class DefaultMailboxBackup implements MailboxBackup {
             .map(MailboxMetaData::getPath);
         List<MailAccountContent> mailboxes = paths
             .flatMap(path -> getMailboxWithAnnotationsFromPath(session, path))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         return mailboxes;
     }

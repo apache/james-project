@@ -57,7 +57,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -108,7 +107,7 @@ public class WebAdminServerModule extends AbstractModule {
             .map(ClassName::new)
             .map(Throwing.function(loader.<Routes>withNamingSheme(NamingScheme.IDENTITY)::instantiate))
             .peek(routes -> LOGGER.info("Loading WebAdmin route extension {}", routes.getClass().getCanonicalName()))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
 
         return ImmutableList.<Routes>builder()
             .addAll(routesList)

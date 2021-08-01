@@ -74,7 +74,6 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.UDTValue;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
 import com.google.common.primitives.Bytes;
@@ -207,7 +206,7 @@ public class CassandraMessageDAO {
     private ImmutableList<UDTValue> buildAttachmentUdt(MailboxMessage message) {
         return message.getAttachments().stream()
             .map(this::toUDT)
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     private UDTValue toUDT(MessageAttachmentMetadata messageAttachment) {
@@ -231,7 +230,7 @@ public class CassandraMessageDAO {
                 .setString(Properties.NAMESPACE, property.getNamespace())
                 .setString(Properties.NAME, property.getLocalName())
                 .setString(Properties.VALUE, property.getValue()))
-            .collect(Guavate.toImmutableList());
+            .collect(ImmutableList.toImmutableList());
     }
 
     public Mono<MessageRepresentation> retrieveMessage(ComposedMessageIdWithMetaData id, FetchType fetchType) {
@@ -264,7 +263,7 @@ public class CassandraMessageDAO {
                 row.getInt(BODY_START_OCTET),
                 new ByteContent(content),
                 getProperties(row),
-                getAttachments(row).collect(Guavate.toImmutableList()),
+                getAttachments(row).collect(ImmutableList.toImmutableList()),
                 headerId,
                 bodyId));
     }
@@ -281,7 +280,7 @@ public class CassandraMessageDAO {
                 row.getInt(BODY_START_OCTET),
                 new ByteContent(EMPTY_BYTE_ARRAY),
                 getProperties(row),
-                getAttachments(row).collect(Guavate.toImmutableList()),
+                getAttachments(row).collect(ImmutableList.toImmutableList()),
                 headerId,
                 bodyId);
     }
