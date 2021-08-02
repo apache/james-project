@@ -80,6 +80,14 @@ public class MailboxCounters {
         return mailboxId -> count -> unseen -> new Builder.FinalStage(count, unseen, mailboxId);
     }
 
+    public static MailboxCounters empty(MailboxId mailboxId) {
+        return MailboxCounters.builder()
+            .mailboxId(mailboxId)
+            .count(0)
+            .unseen(0)
+            .build();
+    }
+
     private final MailboxId mailboxId;
     private final long count;
     private final long unseen;

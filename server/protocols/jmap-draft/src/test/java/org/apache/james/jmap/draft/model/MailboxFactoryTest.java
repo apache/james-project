@@ -182,11 +182,7 @@ public class MailboxFactoryTest {
         Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath,
             Optional.of(ImmutableList.of(new MailboxMetaData(parentMailboxPath, parentId, DELIMITER,
                 MailboxMetaData.Children.CHILDREN_ALLOWED_BUT_UNKNOWN, MailboxMetaData.Selectability.NONE, new MailboxACL(),
-                MailboxCounters.builder()
-                    .mailboxId(parentId)
-                    .count(0)
-                    .unseen(0)
-                    .build()))),
+                MailboxCounters.empty(parentId)))),
             mailboxSession).block();
         assertThat(id).contains(parentId);
     }
@@ -223,11 +219,7 @@ public class MailboxFactoryTest {
                 MailboxMetaData.Children.NO_INFERIORS,
                 MailboxMetaData.Selectability.NONE,
                 MailboxACL.EMPTY,
-                MailboxCounters.builder()
-                    .mailboxId(preLoadedId)
-                    .count(0)
-                    .unseen(0)
-                    .build()))))
+                MailboxCounters.empty(preLoadedId)))))
             .build()
             .block();
 

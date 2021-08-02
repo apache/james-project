@@ -165,11 +165,7 @@ public class CassandraMessageMapper implements MessageMapper {
 
     public Mono<MailboxCounters> readMailboxCounters(CassandraId mailboxId) {
         return mailboxCounterDAO.retrieveMailboxCounters(mailboxId)
-            .defaultIfEmpty(MailboxCounters.builder()
-                .mailboxId(mailboxId)
-                .count(0)
-                .unseen(0)
-                .build());
+            .defaultIfEmpty(MailboxCounters.empty(mailboxId));
     }
 
     private void readRepair(Mailbox mailbox, MailboxCounters counters) {

@@ -224,11 +224,7 @@ public class StoreMessageManager implements MessageManager {
         if (storeRightManager.hasRight(mailbox, MailboxACL.Right.Read, mailboxSession)) {
             return mapperFactory.createMessageMapper(mailboxSession).getMailboxCounters(mailbox);
         }
-        return MailboxCounters.builder()
-            .mailboxId(mailbox.getMailboxId())
-            .count(0)
-            .unseen(0)
-            .build();
+        return MailboxCounters.empty(mailbox.getMailboxId());
     }
 
 
@@ -237,11 +233,7 @@ public class StoreMessageManager implements MessageManager {
         if (storeRightManager.hasRight(mailbox, MailboxACL.Right.Read, mailboxSession)) {
             return mapperFactory.createMessageMapper(mailboxSession).getMailboxCountersReactive(mailbox);
         }
-        return Mono.just(MailboxCounters.builder()
-            .mailboxId(mailbox.getMailboxId())
-            .count(0)
-            .unseen(0)
-            .build());
+        return Mono.just(MailboxCounters.empty(mailbox.getMailboxId()));
     }
 
     /**
