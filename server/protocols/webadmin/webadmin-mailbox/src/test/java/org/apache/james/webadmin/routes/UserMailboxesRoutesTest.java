@@ -23,6 +23,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static io.restassured.http.ContentType.JSON;
+import static javax.mail.Flags.Flag.SEEN;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.routes.UserMailboxesRoutes.USERS_BASE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -964,6 +965,141 @@ class UserMailboxesRoutesTest {
         void getMessageCountShouldReturnErrorWhenMailboxDoesNotExist() {
             Map<String, Object> errors = when()
                 .get(MAILBOX_NAME + "/messageCount")
+            .then()
+                .statusCode(NOT_FOUND_404)
+                .contentType(JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", NOT_FOUND_404)
+                .containsEntry("type", ERROR_TYPE_NOTFOUND)
+                .containsEntry("message", "Invalid get on user mailboxes")
+                .containsEntry("details", String.format("#private:%s:%s can not be found", USERNAME.asString(), MAILBOX_NAME));
+        }
+
+        @Test
+        void getUnseenMessageCountShouldReturnZeroWhenMailBoxEmpty() {
+            with()
+                .put(MAILBOX_NAME);
+
+            String response = when()
+                .get(MAILBOX_NAME + "/unseenMessageCount")
+            .then()
+                .statusCode(OK_200)
+                .extract()
+                .body().asString();
+
+            assertThat(response)
+                .isEqualTo("0");
+        }
+
+        @Test
+        void getUnseenMessageCountShouldReturnZeroWhenMailBoxDoNotHaveAnyUnSeenEmail() {
+            with()
+                .put(MAILBOX_NAME);
+
+            MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, MAILBOX_NAME);
+            MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+
+            IntStream.range(0, 10)
+                .forEach(index -> {
+                    try {
+                        mailboxManager.getMailbox(mailboxPath, systemSession)
+                            .appendMessage(
+                                MessageManager.AppendCommand.builder()
+                                    .withFlags(new Flags(SEEN))
+                                    .build("header: value\r\n\r\nbody"),
+                                systemSession);
+                    } catch (MailboxException e) {
+                        LOGGER.warn("Error when append message " + e);
+                    }
+                });
+
+            String response = when()
+                .get(MAILBOX_NAME + "/unseenMessageCount")
+            .then()
+                .statusCode(OK_200)
+                .extract()
+                .body().asString();
+
+            assertThat(response)
+                .isEqualTo("0");
+        }
+
+        @Test
+        void getUnseenMessageCountShouldReturnNumberOfUnSeenEmails() {
+            with()
+                .put(MAILBOX_NAME);
+
+            MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, MAILBOX_NAME);
+            MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+
+            IntStream.range(0, 5)
+                .forEach(index -> {
+                    try {
+                        mailboxManager.getMailbox(mailboxPath, systemSession)
+                            .appendMessage(
+                                MessageManager.AppendCommand.builder()
+                                    .withFlags(new Flags(SEEN))
+                                    .build("header: value\r\n\r\nbody"),
+                                systemSession);
+                    } catch (MailboxException e) {
+                        LOGGER.warn("Error when append message " + e);
+                    }
+                });
+
+            IntStream.range(0, 10)
+                .forEach(index -> {
+                    try {
+                        mailboxManager.getMailbox(mailboxPath, systemSession)
+                            .appendMessage(
+                                MessageManager.AppendCommand.builder()
+                                    .build("header: value\r\n\r\nbody"),
+                                systemSession);
+                    } catch (MailboxException e) {
+                        LOGGER.warn("Error when append message " + e);
+                    }
+                });
+
+            String response = when()
+                .get(MAILBOX_NAME + "/unseenMessageCount")
+            .then()
+                .statusCode(OK_200)
+                .extract()
+                .body().asString();
+
+            assertThat(response)
+                .isEqualTo("10");
+        }
+
+        @Test
+        void getUnseenMessageCountShouldReturnErrorWhenUserIsNotFound() throws UsersRepositoryException {
+            when(usersRepository.contains(USERNAME)).thenReturn(false);
+
+            Map<String, Object> errors = when()
+                .get(MAILBOX_NAME + "/unseenMessageCount")
+            .then()
+                .statusCode(NOT_FOUND_404)
+                .contentType(JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", NOT_FOUND_404)
+                .containsEntry("type", ERROR_TYPE_NOTFOUND)
+                .containsEntry("message", "Invalid get on user mailboxes")
+                .containsEntry("details", "User does not exist");
+        }
+
+        @Test
+        void getUnseenMessageCountShouldReturnErrorWhenMailboxDoesNotExist() {
+            Map<String, Object> errors = when()
+                .get(MAILBOX_NAME + "/unseenMessageCount")
             .then()
                 .statusCode(NOT_FOUND_404)
                 .contentType(JSON)
