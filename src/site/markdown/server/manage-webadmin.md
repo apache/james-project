@@ -32,7 +32,7 @@ Finally, please note that in case of a malformed URL the 400 bad request respons
  - [Administrating domains](#Administrating_domains)
  - [Administrating users](#Administrating_users)
  - [Administrating mailboxes](#Administrating_mailboxes)
- - [Administrating messages](#Administrating_messages)
+ - [Administrating messages](#Administrating_Messages)
  - [Administrating user mailboxes](#Administrating_user_mailboxes)
  - [Administrating quotas by users](#Administrating_quotas_by_users)
  - [Administrating quotas by domains](#Administrating_quotas_by_domains)
