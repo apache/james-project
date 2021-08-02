@@ -40,8 +40,7 @@ public interface CassandraBlobCacheModule {
             .compactionOptions(SchemaBuilder.timeWindowCompactionStrategy()
                 .compactionWindowSize(1)
                 .compactionWindowUnit(HOURS))
-            .compressionOptions(SchemaBuilder.lz4().withChunkLengthInKb(8))
-            .readRepairChance(NO_READ_REPAIR))
+            .compressionOptions(SchemaBuilder.lz4().withChunkLengthInKb(8)))
         .comment("Write through cache for small blobs stored in a slower blob store implementation.")
         .statement(statement -> statement
             .addPartitionKey(ID, DataType.text())
