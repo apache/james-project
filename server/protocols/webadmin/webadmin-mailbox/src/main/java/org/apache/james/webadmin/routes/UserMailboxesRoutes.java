@@ -91,6 +91,7 @@ public class UserMailboxesRoutes implements Routes {
     public static final String USER_MAILBOXES_BASE = USERS_BASE + Constants.SEPARATOR + USER_NAME + Constants.SEPARATOR + MAILBOXES;
     public static final String SPECIFIC_MAILBOX = USER_MAILBOXES_BASE + Constants.SEPARATOR + MAILBOX_NAME;
     public static final String MESSAGE_COUNT_PATH = SPECIFIC_MAILBOX + "/messageCount";
+    public static final String UNSEEN_MESSAGE_COUNT_PATH = SPECIFIC_MAILBOX + "/unseenMessageCount";
 
     private final UserMailboxesService userMailboxesService;
     private final JsonTransformer jsonTransformer;
@@ -132,6 +133,8 @@ public class UserMailboxesRoutes implements Routes {
 
         reIndexMailboxesRoute()
             .ifPresent(route -> service.post(USER_MAILBOXES_BASE, route, jsonTransformer));
+
+        unseenMessageCount();
     }
 
     @GET
@@ -355,7 +358,7 @@ public class UserMailboxesRoutes implements Routes {
     })
     @ApiOperation(value = "Counting emails in a given mailbox.")
     @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "The number emails in a given mailbox", response = String.class),
+        @ApiResponse(code = HttpStatus.OK_200, message = "The number emails in a given mailbox", response = Long.class),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid mailbox name"),
         @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform"),
         @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "Invalid get on user mailboxes"),
@@ -365,6 +368,44 @@ public class UserMailboxesRoutes implements Routes {
         service.get(MESSAGE_COUNT_PATH, (request, response) -> {
             try {
                 return userMailboxesService.messageCount(getUsernameParam(request), new MailboxName(request.params(MAILBOX_NAME)));
+            } catch (IllegalStateException | MailboxNotFoundException e) {
+                LOGGER.info("Invalid get on user mailbox", e);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .type(ErrorType.NOT_FOUND)
+                    .message("Invalid get on user mailboxes")
+                    .cause(e)
+                    .haltError();
+            } catch (IllegalArgumentException | MailboxNameException e) {
+                LOGGER.info("Attempt to test existence of an invalid mailbox", e);
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Attempt to test existence of an invalid mailbox")
+                    .cause(e)
+                    .haltError();
+            }
+        });
+    }
+
+    @GET
+    @Path("/{mailboxName}/unseenMessageCount")
+    @ApiImplicitParams({
+        @ApiImplicitParam(required = true, dataType = "string", name = "username", paramType = "path"),
+        @ApiImplicitParam(required = true, dataType = "string", name = "mailboxName", paramType = "path")
+    })
+    @ApiOperation(value = "Counting unseen emails in a given mailbox.")
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.OK_200, message = "The number unseen emails in a given mailbox", response = Long.class),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid mailbox name"),
+        @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform"),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "Invalid get on user mailboxes"),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
+    })
+    public void unseenMessageCount() {
+        service.get(UNSEEN_MESSAGE_COUNT_PATH, (request, response) -> {
+            try {
+                return userMailboxesService.unseenMessageCount(getUsernameParam(request), new MailboxName(request.params(MAILBOX_NAME)));
             } catch (IllegalStateException | MailboxNotFoundException e) {
                 LOGGER.info("Invalid get on user mailbox", e);
                 throw ErrorResponder.builder()
