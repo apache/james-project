@@ -49,6 +49,7 @@ import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import javax.mail.Flags;
 
@@ -102,6 +103,7 @@ import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.dto.WebAdminUserReindexingTaskAdditionalInformationDTO;
@@ -119,6 +121,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -128,6 +132,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 class UserMailboxesRoutesTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserMailboxesRoutesTest.class);
+
     public static MailboxMetaData testMetadata(MailboxPath path, MailboxId mailboxId, char delimiter) {
         return new MailboxMetaData(path, mailboxId, delimiter, MailboxMetaData.Children.CHILDREN_ALLOWED_BUT_UNKNOWN, MailboxMetaData.Selectability.NONE, new MailboxACL(),
             MailboxCounters.empty(mailboxId));
@@ -180,6 +186,8 @@ class UserMailboxesRoutesTest {
     @Nested
     class NormalBehaviour {
 
+        private MailboxManager mailboxManager;
+
         @BeforeEach
         void setUp() throws Exception {
             InMemoryMailboxManager mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
@@ -188,6 +196,7 @@ class UserMailboxesRoutesTest {
             Mockito.when(searchIndex.deleteAll(any(), any())).thenReturn(Mono.empty());
 
             createServer(mailboxManager, mailboxManager.getMapperFactory(), new InMemoryId.Factory(), searchIndex);
+            this.mailboxManager = mailboxManager;
         }
 
         @Test
@@ -881,6 +890,93 @@ class UserMailboxesRoutesTest {
                 .satisfies(map -> assertThat(map).hasSize(2)
                     .containsKeys("mailboxId")
                     .containsEntry("mailboxName", MAILBOX_NAME));
+        }
+
+        @Test
+        void getMessageCountShouldReturnZeroWhenMailBoxEmpty() {
+            with()
+                .put(MAILBOX_NAME);
+
+            String response = when()
+                .get(MAILBOX_NAME + "/messageCount")
+            .then()
+                .statusCode(OK_200)
+                .extract()
+                .body().asString();
+
+            assertThat(response)
+                .isEqualTo("0");
+        }
+
+        @Test
+        void getMessageCountShouldReturnTotalEmailsInMailBox() {
+            with()
+                .put(MAILBOX_NAME);
+
+            MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, MAILBOX_NAME);
+            MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+
+            IntStream.range(0, 10)
+                .forEach(index -> {
+                    try {
+                        mailboxManager.getMailbox(mailboxPath, systemSession)
+                            .appendMessage(
+                                MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
+                                systemSession);
+                    } catch (MailboxException e) {
+                        LOGGER.warn("Error when append message " + e);
+                    }
+                });
+
+            String response = when()
+                .get(MAILBOX_NAME + "/messageCount")
+            .then()
+                .statusCode(OK_200)
+                .extract()
+                .body().asString();
+
+            assertThat(response)
+                .isEqualTo("10");
+        }
+
+        @Test
+        void getMessageCountShouldReturnErrorWhenUserIsNotFound() throws UsersRepositoryException {
+            when(usersRepository.contains(USERNAME)).thenReturn(false);
+
+            Map<String, Object> errors = when()
+                .get(MAILBOX_NAME + "/messageCount")
+            .then()
+                .statusCode(NOT_FOUND_404)
+                .contentType(JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", NOT_FOUND_404)
+                .containsEntry("type", ERROR_TYPE_NOTFOUND)
+                .containsEntry("message", "Invalid get on user mailboxes")
+                .containsEntry("details", "User does not exist");
+        }
+
+        @Test
+        void getMessageCountShouldReturnErrorWhenMailboxDoesNotExist() {
+            Map<String, Object> errors = when()
+                .get(MAILBOX_NAME + "/messageCount")
+            .then()
+                .statusCode(NOT_FOUND_404)
+                .contentType(JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", NOT_FOUND_404)
+                .containsEntry("type", ERROR_TYPE_NOTFOUND)
+                .containsEntry("message", "Invalid get on user mailboxes")
+                .containsEntry("details", String.format("#private:%s:%s can not be found", USERNAME.asString(), MAILBOX_NAME));
         }
     }
 
