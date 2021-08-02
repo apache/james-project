@@ -108,6 +108,12 @@ public class UserMailboxesService {
             .forEach(Throwing.consumer(path -> deleteMailbox(mailboxSession, path)));
     }
 
+    public long messageCount(Username username, MailboxName mailboxName) throws UsersRepositoryException, MailboxException {
+        usernamePreconditions(username);
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
+        return mailboxManager.getMailbox(MailboxPath.forUser(username, mailboxName.asString()), mailboxSession).getMessageCount(mailboxSession);
+    }
+
     private Stream<MailboxPath> listChildren(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
         return listUserMailboxes(mailboxSession)
             .map(MailboxMetaData::getPath)
