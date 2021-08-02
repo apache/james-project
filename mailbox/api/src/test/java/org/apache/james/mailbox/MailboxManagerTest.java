@@ -1524,11 +1524,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .getMailboxCounters(session2);
 
             assertThat(mailboxCounters)
-                .isEqualTo(MailboxCounters.builder()
-                    .mailboxId(mailboxIdInbox1.get())
-                    .count(0)
-                    .unseen(0)
-                    .build());
+                .isEqualTo(MailboxCounters.empty(mailboxIdInbox1.get()));
         }
 
         @Test

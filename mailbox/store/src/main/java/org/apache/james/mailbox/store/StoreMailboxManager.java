@@ -697,24 +697,14 @@ public class StoreMailboxManager implements MailboxManager {
         Map<MailboxPath, Boolean> parentMap = parentMap(mailboxes, session);
         return mailboxFlux -> mailboxFlux
                 .map(Throwing.<Mailbox, MailboxMetaData>function(
-                    mailbox -> toMailboxMetadata(session, parentMap, mailbox, MailboxCounters
-                        .builder()
-                        .mailboxId(mailbox.getMailboxId())
-                        .count(0)
-                        .unseen(0)
-                        .build()))
+                    mailbox -> toMailboxMetadata(session, parentMap, mailbox, MailboxCounters.empty(mailbox.getMailboxId())))
                     .sneakyThrow());
     }
 
     private Mono<MailboxCounters> retrieveCounters(MessageMapper messageMapper, Mailbox mailbox, MailboxSession session) {
         return messageMapper.getMailboxCountersReactive(mailbox)
             .filter(Throwing.<MailboxCounters>predicate(counter -> storeRightManager.hasRight(mailbox, Right.Read, session)).sneakyThrow())
-            .switchIfEmpty(Mono.just(MailboxCounters
-                .builder()
-                .mailboxId(mailbox.getMailboxId())
-                .count(0)
-                .unseen(0)
-                .build()));
+            .switchIfEmpty(Mono.just(MailboxCounters.empty(mailbox.getMailboxId())));
     }
 
     private Flux<Mailbox> searchMailboxes(MailboxQuery mailboxQuery, MailboxSession session, Right right) {

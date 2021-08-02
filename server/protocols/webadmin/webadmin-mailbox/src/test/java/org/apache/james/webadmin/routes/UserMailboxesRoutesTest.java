@@ -130,11 +130,7 @@ import reactor.core.publisher.Mono;
 class UserMailboxesRoutesTest {
     public static MailboxMetaData testMetadata(MailboxPath path, MailboxId mailboxId, char delimiter) {
         return new MailboxMetaData(path, mailboxId, delimiter, MailboxMetaData.Children.CHILDREN_ALLOWED_BUT_UNKNOWN, MailboxMetaData.Selectability.NONE, new MailboxACL(),
-            MailboxCounters.builder()
-                .mailboxId(mailboxId)
-                .count(0)
-                .unseen(0)
-                .build());
+            MailboxCounters.empty(mailboxId));
     }
 
     private static final Username USERNAME = Username.of("username");

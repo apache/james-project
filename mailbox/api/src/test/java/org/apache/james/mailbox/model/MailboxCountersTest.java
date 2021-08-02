@@ -43,11 +43,7 @@ class MailboxCountersTest {
                 .unseen(0)
                 .build()
                 .sanitize())
-            .isEqualTo(MailboxCounters.builder()
-                .mailboxId(MAILBOX_ID)
-                .count(0)
-                .unseen(0)
-                .build());
+            .isEqualTo(MailboxCounters.empty(MAILBOX_ID));
     }
 
     @Test

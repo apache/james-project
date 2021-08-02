@@ -242,11 +242,7 @@ class CassandraMailboxCounterDAOTest {
         testee.decrementUnseenAndCount(MAILBOX_ID).block();
 
         assertThat(testee.retrieveMailboxCounters(MAILBOX_ID).block())
-            .isEqualTo(MailboxCounters.builder()
-                .mailboxId(MAILBOX_ID)
-                .count(0)
-                .unseen(0)
-                .build());
+            .isEqualTo(MailboxCounters.empty(MAILBOX_ID));
     }
 
     @Test
@@ -259,11 +255,7 @@ class CassandraMailboxCounterDAOTest {
 
     @Test
     void resetCountersShouldNoopWhenZeroAndNoData() {
-        MailboxCounters counters = MailboxCounters.builder()
-            .mailboxId(MAILBOX_ID)
-            .count(0)
-            .unseen(0)
-            .build();
+        MailboxCounters counters = MailboxCounters.empty(MAILBOX_ID);
 
         testee.resetCounters(counters).block();
 
@@ -273,11 +265,7 @@ class CassandraMailboxCounterDAOTest {
 
     @Test
     void resetCountersShouldNoopWhenZeroAndZeroData() {
-        MailboxCounters counters = MailboxCounters.builder()
-            .mailboxId(MAILBOX_ID)
-            .count(0)
-            .unseen(0)
-            .build();
+        MailboxCounters counters = MailboxCounters.empty(MAILBOX_ID);
 
         testee.incrementUnseen(MAILBOX_ID).block();
         testee.decrementUnseen(MAILBOX_ID).block();
