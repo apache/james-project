@@ -358,7 +358,7 @@ public class UserMailboxesRoutes implements Routes {
     })
     @ApiOperation(value = "Counting emails in a given mailbox.")
     @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "The number emails in a given mailbox", response = Long.class),
+        @ApiResponse(code = HttpStatus.OK_200, message = "The number of emails in a given mailbox", response = Long.class),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid mailbox name"),
         @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform"),
         @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "Invalid get on user mailboxes"),
@@ -396,7 +396,7 @@ public class UserMailboxesRoutes implements Routes {
     })
     @ApiOperation(value = "Counting unseen emails in a given mailbox.")
     @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "The number unseen emails in a given mailbox", response = Long.class),
+        @ApiResponse(code = HttpStatus.OK_200, message = "The number of unseen emails in a given mailbox", response = Long.class),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid mailbox name"),
         @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform"),
         @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "Invalid get on user mailboxes"),

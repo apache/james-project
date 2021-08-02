@@ -990,6 +990,8 @@ by an admin to ensure Cassandra message consistency.
  - [Exporting user mailboxes](#Exporting_user_mailboxes)
  - [ReIndexing a user mails](#ReIndexing_a_user_mails)
  - [Recomputing User JMAP fast message view projection](#Recomputing_User_JMAP_fast_message_view_projection)
+ - [Counting emails](#Counting_emails)
+ - [Counting unseen emails](#Couting_unseen_emails)
 
 ### Creating a mailbox
 
@@ -1166,6 +1168,41 @@ Warning: Canceling this task should be considered unsafe as it will leave the cu
 
 Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
 concurrent changes done during the reIndexing might be ignored.
+
+### Counting emails
+
+```bash
+curl -XGET http://ip:port/users/{usernameToBeUsed}/mailboxes/{mailboxName}/messageCount
+```
+
+Will return the total count of messages within the mailbox of that user.
+
+Resource name `usernameToBeUsed` should be an existing user.    
+Resource name `mailboxName` should not be empty, nor contain `% *` characters, nor starting with `#`.
+
+Response codes:
+
+- 200: The number of emails in a given mailbox
+- 400: Invalid mailbox name
+- 404: Invalid get on user mailboxes. The `usernameToBeUsed` or `mailboxName` does not exit'
+
+### Counting unseen emails
+
+```bash
+curl -XGET http://ip:port/users/{usernameToBeUsed}/mailboxes/{mailboxName}/unseenMessageCount
+```
+
+Will return the total count of unseen messages within the mailbox of that user.
+
+Resource name `usernameToBeUsed` should be an existing user.    
+Resource name `mailboxName` should not be empty, nor contain `% *` characters, nor starting with `#`.
+
+Response codes:
+
+- 200: The number of unseen emails in a given mailbox
+- 400: Invalid mailbox name
+- 404: Invalid get on user mailboxes. The `usernameToBeUsed` or `mailboxName` does not exit'
+
 
 ### Subscribing a user to all of its mailboxes
  
