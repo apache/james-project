@@ -40,18 +40,26 @@ link:https://www.datastax.com/blog/2013/07/lightweight-transactions-cassandra-20
 
 ==== About multi data-center setups
 
-As strong consistency is required for some operations, and as lightweight transactions are
-slow across data centers, running James with a
+As strong consistency is required for some operation, especially regarding IMAP monotic UID and MODSEQ generation,
+and as lightweight transactions are slow across data centers, running James with a
 link:https://docs.datastax.com/en/ddac/doc/datastax_enterprise/production/DDACmultiDCperWorkloadType.html[multi data-center]
 Cassandra setup is discouraged.
 
-However xref:distributed/configure/cassandra.adoc[this page] enables setting alternative read level,
+However, xref:distributed/configure/cassandra.adoc[this page] enables setting alternative read level,
 which could be acceptable regarding limited requirements. `LOCAL_QUORUM` coupled with `LOCAL_SERIAL`
-is likely the only scalable setup.
+is likely the only scalable setup. Some options were added to turn off SERIAL consistency usage for message
+and mailbox management. However, the use of Lightweight Transaction cannot be disabled for UIDs and ModSeqs.
 
 Running the Distributed Server IMAP server in a multi datacenter setup will likely result either in data loss,
 or very slow operations - as we rely on monotic UID generation, without strong consistency, UIDs could be allocated
-several times. Other protocols, like JMAP, suffer less from such limitations.
+several times.
+
+We did wire a multi-DC friendly distributed, POP3 only server that leverages acceptable performance while staying
+consistent. This is achieved by having a reduced feature set - supporting only the POP3 server and using messageIds as
+identifiers (generated without synchronisation using TimeUUIDs). You can find this application
+link:https://github.com/apache/james-project/tree/master/server/apps/distributed-pop3-app[on GitHub]. In the future,
+JMAP support could be added, but requires followup developments as some components critically depends on UIDs
+(for instance the search).
 
 === ElasticSearch consistency model
 
