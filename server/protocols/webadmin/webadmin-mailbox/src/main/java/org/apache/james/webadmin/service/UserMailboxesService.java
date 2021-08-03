@@ -172,8 +172,16 @@ public class UserMailboxesService {
         }
     }
 
-    private void usernamePreconditions(Username username) throws UsersRepositoryException {
+    public void usernamePreconditions(Username username) throws UsersRepositoryException {
         Preconditions.checkState(usersRepository.contains(username), "User does not exist");
+    }
+
+    public void mailboxExistPreconditions(Username username, MailboxName mailboxName) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
+        MailboxPath mailboxPath = MailboxPath.forUser(username, mailboxName.asString())
+            .assertAcceptable(mailboxSession.getPathDelimiter());
+        Preconditions.checkState(Boolean.TRUE.equals(Mono.from(mailboxManager.mailboxExists(mailboxPath, mailboxSession)).block()),
+            "Mailbox does not exist. " + mailboxPath.asString());
     }
 
     private Stream<MailboxMetaData> listUserMailboxes(MailboxSession mailboxSession) throws MailboxException {

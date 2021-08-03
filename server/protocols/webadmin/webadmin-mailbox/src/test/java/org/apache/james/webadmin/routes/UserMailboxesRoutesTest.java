@@ -28,6 +28,7 @@ import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.routes.UserMailboxesRoutes.USERS_BASE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.eclipse.jetty.http.HttpStatus.BAD_REQUEST_400;
+import static org.eclipse.jetty.http.HttpStatus.CREATED_201;
 import static org.eclipse.jetty.http.HttpStatus.INTERNAL_SERVER_ERROR_500;
 import static org.eclipse.jetty.http.HttpStatus.NOT_FOUND_404;
 import static org.eclipse.jetty.http.HttpStatus.NO_CONTENT_204;
@@ -108,6 +109,8 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.dto.WebAdminUserReindexingTaskAdditionalInformationDTO;
+import org.apache.james.webadmin.service.ClearMailboxContentTask;
+import org.apache.james.webadmin.service.ClearMailboxContentTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.UserMailboxesService;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.mailbox.tools.indexer.ReIndexerImpl;
@@ -170,7 +173,8 @@ class UserMailboxesRoutesTest {
                     taskManager,
                     ImmutableSet.of(new UserMailboxesRoutes.UserReIndexingTaskRegistration(reIndexer))),
                 new TasksRoutes(taskManager, new JsonTransformer(),
-                    DTOConverter.of(WebAdminUserReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory))))
+                    DTOConverter.of(WebAdminUserReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory),
+                        ClearMailboxContentTaskAdditionalInformationDTO.SERIALIZATION_MODULE)))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
@@ -1114,6 +1118,63 @@ class UserMailboxesRoutesTest {
                 .containsEntry("message", "Invalid get on user mailboxes")
                 .containsEntry("details", String.format("#private:%s:%s can not be found", USERNAME.asString(), MAILBOX_NAME));
         }
+
+        @Test
+        void deleteMailboxContentShouldReturnErrorWhenUserIsNotFound() throws UsersRepositoryException {
+            when(usersRepository.contains(USERNAME)).thenReturn(false);
+
+            Map<String, Object> errors = when()
+                .delete(MAILBOX_NAME + "/messages")
+            .then()
+                .statusCode(NOT_FOUND_404)
+                .contentType(JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", NOT_FOUND_404)
+                .containsEntry("type", ERROR_TYPE_NOTFOUND)
+                .containsEntry("message", "Invalid get on user mailboxes")
+                .containsEntry("details", "User does not exist");
+        }
+
+        @Test
+        void deleteMailboxContentShouldReturnErrorWhenMailboxDoesNotExist() {
+            Map<String, Object> errors = when()
+                .delete(MAILBOX_NAME + "/messages")
+            .then()
+                .statusCode(NOT_FOUND_404)
+                .contentType(JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", NOT_FOUND_404)
+                .containsEntry("type", ERROR_TYPE_NOTFOUND)
+                .containsEntry("message", "Invalid get on user mailboxes")
+                .containsEntry("details", String.format("Mailbox does not exist. #private:%s:%s", USERNAME.asString(), MAILBOX_NAME));
+        }
+
+        @Test
+        void deleteMailboxContentShouldReturnTaskId() {
+            with()
+                .put(MAILBOX_NAME);
+
+            String taskId = when()
+                .delete(MAILBOX_NAME + "/messages")
+            .then()
+                .statusCode(CREATED_201)
+                .extract()
+                .jsonPath()
+                .get("taskId");
+
+            assertThat(taskId)
+                .isNotEmpty();
+        }
     }
 
     @Nested
@@ -1803,6 +1864,135 @@ class UserMailboxesRoutesTest {
 
                 assertThat(searchIndex.retrieveIndexedFlags(mailbox, uid).blockOptional())
                     .isEmpty();
+            }
+
+            @Test
+            void userReprocessingShouldReturnTaskDetailWhenDeleteMailboxContentWithNoEmail() {
+                with()
+                    .put(MAILBOX_NAME);
+
+                String taskId = when()
+                    .delete(MAILBOX_NAME + "/messages")
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("status", Matchers.is("completed"))
+                    .body("taskId", Matchers.is(notNullValue()))
+                    .body("type", Matchers.is(ClearMailboxContentTask.TASK_TYPE.asString()))
+                    .body("startedDate", Matchers.is(notNullValue()))
+                    .body("submitDate", Matchers.is(notNullValue()))
+                    .body("completedDate", Matchers.is(notNullValue()))
+                    .body("additionalInformation.username", Matchers.is(USERNAME.asString()))
+                    .body("additionalInformation.mailboxName", Matchers.is(MAILBOX_NAME))
+                    .body("additionalInformation.messagesSuccessCount", Matchers.is(0))
+                    .body("additionalInformation.messagesFailCount", Matchers.is(0));
+            }
+
+            @Test
+            void userReprocessingShouldReturnTaskDetailWhenDeleteMailboxContentWithHasEmails() {
+                with()
+                    .put(MAILBOX_NAME);
+
+                MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, MAILBOX_NAME);
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+
+                IntStream.range(0, 10)
+                    .forEach(index -> {
+                        try {
+                            mailboxManager.getMailbox(mailboxPath, systemSession)
+                                .appendMessage(
+                                    MessageManager.AppendCommand.builder()
+                                        .build("header: value\r\n\r\nbody"),
+                                    systemSession);
+                        } catch (MailboxException e) {
+                            LOGGER.warn("Error when append message " + e);
+                        }
+                    });
+
+                String taskId = when()
+                    .delete(MAILBOX_NAME + "/messages")
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                    .then()
+                    .body("status", Matchers.is("completed"))
+                    .body("taskId", Matchers.is(notNullValue()))
+                    .body("type", Matchers.is(ClearMailboxContentTask.TASK_TYPE.asString()))
+                    .body("startedDate", Matchers.is(notNullValue()))
+                    .body("submitDate", Matchers.is(notNullValue()))
+                    .body("completedDate", Matchers.is(notNullValue()))
+                    .body("additionalInformation.username", Matchers.is(USERNAME.asString()))
+                    .body("additionalInformation.mailboxName", Matchers.is(MAILBOX_NAME))
+                    .body("additionalInformation.messagesSuccessCount", Matchers.is(10))
+                    .body("additionalInformation.messagesFailCount", Matchers.is(0));
+            }
+
+            @Test
+            void userReprocessingShouldEmptyMailboxWhenDeleteMailboxContent() throws MailboxException {
+                with()
+                    .put(MAILBOX_NAME);
+
+                MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, MAILBOX_NAME);
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+
+                mailboxManager.getMailbox(mailboxPath, systemSession)
+                    .appendMessage(
+                        MessageManager.AppendCommand.builder()
+                            .build("header: value\r\n\r\nbody"),
+                        systemSession);
+
+                String taskId = when()
+                    .delete(MAILBOX_NAME + "/messages")
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await");
+
+                assertThat(mailboxManager.getMailbox(mailboxPath, systemSession).getMailboxCounters(systemSession).getCount())
+                    .isEqualTo(0);
+            }
+
+            @Test
+            void userReprocessingShouldNotClearUnRelatedMailboxWhenDeleteMailboxContent() throws MailboxException {
+                with()
+                    .put(MAILBOX_NAME);
+
+                String unRelatedMailbox = "unRelatedMailbox";
+                with()
+                    .put(unRelatedMailbox);
+                MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, unRelatedMailbox);
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+
+                mailboxManager.getMailbox(mailboxPath, systemSession)
+                    .appendMessage(
+                        MessageManager.AppendCommand.builder()
+                            .build("header: value\r\n\r\nbody"),
+                        systemSession);
+
+                String taskId = when()
+                    .delete(MAILBOX_NAME + "/messages")
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await");
+
+                assertThat(mailboxManager.getMailbox(mailboxPath, systemSession).getMailboxCounters(systemSession).getCount())
+                    .isEqualTo(1);
             }
         }
 
