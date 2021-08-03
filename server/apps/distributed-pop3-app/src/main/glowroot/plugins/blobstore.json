@@ -1,0 +1,26 @@
+{
+  "name": "BlobStore Plugin",
+  "id": "blob_store",
+  "instrumentation": [
+    {
+      "captureKind": "trace-entry",
+      "traceEntryMessageTemplate": "{{this.class.name}}.{{methodName}}",
+      "timerName": "blobstore",
+      "className": "org.apache.james.blob.objectstorage.BlobPutter",
+      "methodName": "putDirectly",
+      "methodParameterTypes": [
+        ".."
+      ]
+    },
+    {
+      "captureKind": "trace-entry",
+      "traceEntryMessageTemplate": "{{this.class.name}}.{{methodName}}",
+      "timerName": "blobstore",
+      "className": "org.apache.james.blob.objectstorage.BlobPutter",
+      "methodName": "putAndComputeId",
+      "methodParameterTypes": [
+        ".."
+      ]
+    }
+  ]
+}

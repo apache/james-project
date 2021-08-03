@@ -1,0 +1,70 @@
+= Guice-Distributed POP3 Server How-to
+
+This server diverges from the distributed server by only using MessageId backed by a TimeUUID as a message identifier,
+thus is multi-datacenter friendly, however comes with a reduced feature set (only supports SMTP protocol).
+
+== Requirements
+
+ * Java 11 SDK
+
+Third party compulsory dependencies:
+
+ * Cassandra 3.11.10
+ * ElasticSearch 7.10.2
+ * RabbitMQ-Management 3.8.18
+ * Zenko Cloudserver or AWS S3
+
+[source]
+----
+$ docker run -d -p 9042:9042 --name=cassandra cassandra:3.11.10
+$ docker run -d -p 9200:9200 --name=elasticsearch --env 'discovery.type=single-node' docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+$ docker run -d -p 5672:5672 -p 15672:15672 --name=rabbitmq rabbitmq:3.8.18-management
+$ docker run -d --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 zenko/cloudserver:8.2.6
+----
+
+== Docker distribution
+
+To import the image locally:
+
+[source]
+----
+docker image load -i target/jib-image.tar
+----
+
+Then run it:
+
+[source]
+----
+docker run apache/james:distributed-pop3-latest
+----
+
+For security reasons you are required to generate your own keystore, that you can mount into the container via a volume:
+
+[source]
+----
+keytool -genkey -alias james -keyalg RSA -keystore keystore
+docker run -v $PWD/keystore:/root/conf/keystore docker run apache/james:distributed-pop3-latest
+----
+
+Use the [JAVA_TOOL_OPTIONS environment option](https://github.com/GoogleContainerTools/jib/blob/master/docs/faq.md#jvm-flags)
+to pass extra JVM flags. For instance:
+
+[source]
+----
+docker run -e "JAVA_TOOL_OPTIONS=-Xmx500m -Xms500m" apache/james:distributed-pop3-latest
+----
+
+[Glowroot APM](https://glowroot.org/) is packaged as part of the docker distribution to easily enable valuable performances insights.
+Disabled by default, its java agent can easily be enabled:
+
+[source]
+----
+docker run -e "JAVA_TOOL_OPTIONS=-javaagent:/root/glowroot.jar" apache/james:distributed-pop3-latest
+----
+The [CLI](https://james.apache.org/server/manage-cli.html) can easily be used:
+
+
+[source]
+----
+docker exec CONTAINER-ID james-cli ListDomains
+----
