@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -41,7 +40,6 @@ import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
@@ -125,13 +123,14 @@ public class DistributedMailboxAdapter implements Mailbox {
 
     @Override
     public void remove(String... uids) {
-        Stream.of(uids)
+        Flux.just(uids)
             .map(messageIdFactory::fromString)
-            .map(Throwing.function(messageId -> messageIdManager.delete(messageId, ImmutableList.of(mailbox.getId()), session)))
+            .concatMap(messageId -> messageIdManager.deleteReactive(messageId, ImmutableList.of(mailbox.getId()), session))
             // Clear synchronously metadataStore to avoid race conditions
-            .forEach(deleteResult -> Flux.fromIterable(deleteResult.getDestroyed())
+            .concatMap(deleteResult -> Flux.fromIterable(deleteResult.getDestroyed())
                 .concatMap(messageId -> Mono.from(metadataStore.remove(mailbox.getId(), messageId)))
-                .blockLast());
+                .then())
+            .blockLast();
     }
 
     @Override

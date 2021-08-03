@@ -200,23 +200,25 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     @Override
     public DeleteResult delete(MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException {
+        return  MailboxReactorUtils.block(deleteReactive(messageId, mailboxIds, mailboxSession)
+            .subscribeOn(Schedulers.elastic()));
+    }
+
+    @Override
+    public Mono<DeleteResult> deleteReactive(MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
-        MailboxReactorUtils.block(assertRightsOnMailboxIds(mailboxIds, mailboxSession, Right.DeleteMessages));
-
-        List<MailboxMessage> messageList = messageIdMapper
-            .find(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
-            .stream()
-            .filter(inMailboxes(mailboxIds))
-            .collect(ImmutableList.toImmutableList());
-
-        if (!messageList.isEmpty()) {
-            deleteWithPreHooks(messageIdMapper, messageList, mailboxSession)
-                .subscribeOn(Schedulers.elastic())
-                .block();
-            return DeleteResult.destroyed(messageId);
-        }
-        return DeleteResult.notFound(messageId);
+        return assertRightsOnMailboxIds(mailboxIds, mailboxSession, Right.DeleteMessages)
+            .then(messageIdMapper.findReactive(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
+                .filter(inMailboxes(mailboxIds))
+                .collectList())
+            .flatMap(messageList -> {
+                if (!messageList.isEmpty()) {
+                    return deleteWithPreHooks(messageIdMapper, messageList, mailboxSession)
+                        .thenReturn(DeleteResult.destroyed(messageId));
+                }
+                return Mono.just(DeleteResult.notFound(messageId));
+            });
     }
 
     @Override
