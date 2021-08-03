@@ -30,6 +30,7 @@ import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.webadmin.dto.DTOModuleInjections;
+import org.apache.james.webadmin.service.ClearMailboxContentTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.CreateMissingParentsTask;
 import org.apache.james.webadmin.service.CreateMissingParentsTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliverAllTaskDTO;
@@ -140,4 +141,11 @@ public class WebadminMailboxTaskSerializationModule extends AbstractModule {
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminCreateMissingParentsAdditionalInformation() {
         return CreateMissingParentsTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
+
+    @Named(DTOModuleInjections.WEBADMIN_DTO)
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminClearMailboxContentAdditionalInformation() {
+        return ClearMailboxContentTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
 }

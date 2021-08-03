@@ -35,13 +35,18 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNameException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.indexer.ReIndexer;
+import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.service.ClearMailboxContentTask;
 import org.apache.james.webadmin.service.UserMailboxesService;
+import org.apache.james.webadmin.tasks.TaskFromRequest;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
 import org.apache.james.webadmin.tasks.TaskIdDto;
@@ -92,6 +97,7 @@ public class UserMailboxesRoutes implements Routes {
     public static final String SPECIFIC_MAILBOX = USER_MAILBOXES_BASE + Constants.SEPARATOR + MAILBOX_NAME;
     public static final String MESSAGE_COUNT_PATH = SPECIFIC_MAILBOX + "/messageCount";
     public static final String UNSEEN_MESSAGE_COUNT_PATH = SPECIFIC_MAILBOX + "/unseenMessageCount";
+    public static final String MESSAGES_PATH = SPECIFIC_MAILBOX + "/messages";
 
     private final UserMailboxesService userMailboxesService;
     private final JsonTransformer jsonTransformer;
@@ -135,6 +141,9 @@ public class UserMailboxesRoutes implements Routes {
             .ifPresent(route -> service.post(USER_MAILBOXES_BASE, route, jsonTransformer));
 
         unseenMessageCount();
+
+        TaskFromRequest clearMailboxContentTaskRequest = this::clearMailboxContent;
+        service.delete(MESSAGES_PATH, clearMailboxContentTaskRequest.asRoute(taskManager), jsonTransformer);
     }
 
     @GET
@@ -424,5 +433,39 @@ public class UserMailboxesRoutes implements Routes {
                     .haltError();
             }
         });
+    }
+
+    @DELETE
+    @Path("/{mailboxName}/messages")
+    @ApiOperation(value = "Clearing content of a given mailbox.", nickname = "ClearMailboxContent")
+    @ApiImplicitParams({
+        @ApiImplicitParam(required = true, dataType = "string", name = "username", paramType = "path"),
+        @ApiImplicitParam(required = true, dataType = "string", name = "mailboxName", paramType = "path")
+    })
+    @ApiResponses(
+        {
+            @ApiResponse(code = HttpStatus.CREATED_201, message = "The taskId of the given scheduled task", response = TaskIdDto.class),
+            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid mailbox name"),
+            @ApiResponse(code = HttpStatus.UNAUTHORIZED_401, message = "Unauthorized. The user is not authenticated on the platform"),
+            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "Invalid get on user mailboxes. The `username` or `mailboxName` does not exit"),
+        })
+
+    public Task clearMailboxContent(Request request) throws UsersRepositoryException, MailboxException {
+        Username username = getUsernameParam(request);
+        MailboxName mailboxName = new MailboxName(request.params(MAILBOX_NAME));
+        try {
+            userMailboxesService.usernamePreconditions(username);
+            userMailboxesService.mailboxExistPreconditions(username, mailboxName);
+        } catch (IllegalStateException e) {
+            LOGGER.info("Invalid put on user mailbox", e);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .type(ErrorType.NOT_FOUND)
+                .message("Invalid get on user mailboxes")
+                .cause(e)
+                .haltError();
+        }
+
+        return new ClearMailboxContentTask(username, mailboxName, userMailboxesService);
     }
 }
