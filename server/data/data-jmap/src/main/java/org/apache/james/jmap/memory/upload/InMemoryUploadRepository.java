@@ -86,7 +86,7 @@ public class InMemoryUploadRepository implements UploadRepository {
 
     private Mono<Upload> retrieveUpload(UploadMetaData uploadMetaData) {
         return Mono.from(blobStore.readBytes(bucketName, uploadMetaData.blobId()))
-            .map(content -> Upload.from(uploadMetaData, new ByteArrayInputStream(content)));
+            .map(content -> Upload.from(uploadMetaData, () -> new ByteArrayInputStream(content)));
     }
 
     private byte[] toByteArray(InputStream inputStream) {

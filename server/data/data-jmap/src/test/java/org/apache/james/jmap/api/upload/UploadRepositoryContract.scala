@@ -19,6 +19,10 @@
 
  package org.apache.james.jmap.api.upload
 
+ import java.io.InputStream
+ import java.nio.charset.StandardCharsets
+ import java.util.UUID
+
  import org.apache.commons.io.IOUtils
  import org.apache.james.core.Username
  import org.apache.james.jmap.api.model.Size.sanitizeSize
@@ -77,7 +81,7 @@
        .isEqualTo(CONTENT_TYPE)
      assertThat(actualUpload.size)
        .isEqualTo(sanitizeSize(DATA_STRING.length))
-     assertThat(actualUpload.content.readAllBytes())
+     assertThat(actualUpload.content.apply().readAllBytes())
        .isEqualTo(DATA_STRING.getBytes)
    }
 
