@@ -19,9 +19,11 @@
 
 package org.apache.james.cli.mailbox;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.cli.WebAdminCli;
 import org.apache.james.httpclient.MailboxClient;
 import org.apache.james.httpclient.model.MailboxName;
@@ -51,7 +53,9 @@ public class MailboxListCommand implements Callable<Integer> {
             MailboxClient mailboxClient = mailboxCommand.fullyQualifiedURL("/users");
             Response rs = mailboxClient.getMailboxList(userName);
             if (rs.status() == SUCCEED_CODE) {
-                List<MailboxName> mailboxNameList = new ObjectMapper().readValue(String.valueOf(rs.body()), new TypeReference<List<MailboxName>>(){});
+                String bodyString = IOUtils.toString(rs.body().asInputStream(), StandardCharsets.UTF_8);
+                List<MailboxName> mailboxNameList = new ObjectMapper().readValue(bodyString, new TypeReference<>() {
+                });
                 mailboxNameList.forEach(mailboxName -> mailboxCommand.out.println(mailboxName.getMailboxName()));
                 return WebAdminCli.CLI_FINISHED_SUCCEED;
             } else if (rs.status() == USERNAME_NOT_FOUND_CODE) {

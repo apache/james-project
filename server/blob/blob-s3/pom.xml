@@ -33,7 +33,7 @@
     <name>Apache James :: Server :: Blob :: S3</name>
 
     <properties>
-        <s3-sdk.version>2.15.73</s3-sdk.version>
+        <s3-sdk.version>2.17.9</s3-sdk.version>
     </properties>
 
     <dependencies>
@@ -76,22 +76,22 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec</artifactId>
-            <version>4.1.58.Final</version>
+            <version>4.1.65.Final</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec-http</artifactId>
-            <version>4.1.58.Final</version>
+            <version>4.1.65.Final</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec-http2</artifactId>
-            <version>4.1.58.Final</version>
+            <version>4.1.65.Final</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-handler</artifactId>
-            <version>4.1.58.Final</version>
+            <version>4.1.65.Final</version>
         </dependency>
         <dependency>
             <groupId>io.projectreactor.addons</groupId>

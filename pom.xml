@@ -588,23 +588,23 @@
 
         <james.groupId>org.apache.james</james.groupId>
         <james.protocols.groupId>${james.groupId}.protocols</james.protocols.groupId>
-        <activemq.version>5.16.1</activemq.version>
+        <activemq.version>5.16.2</activemq.version>
         <apache-mime4j.version>0.8.5</apache-mime4j.version>
         <apache.openjpa.version>3.1.2</apache.openjpa.version>
         <derby.version>10.14.2.0</derby.version>
-        <log4j2.version>2.14.0</log4j2.version>
+        <log4j2.version>2.14.1</log4j2.version>
         <javax.inject.version>1</javax.inject.version>
         <javax.activation.groupId>javax.activation</javax.activation.groupId>
         <javax.activation.artifactId>activation</javax.activation.artifactId>
         <jsieve.version>0.7</jsieve.version>
         <spring.version>4.3.25.RELEASE</spring.version>
-        <activmq-artemis.version>2.16.0</activmq-artemis.version>
+        <activmq-artemis.version>2.17.0</activmq-artemis.version>
         <apache-jspf-resolver.version>1.0.1</apache-jspf-resolver.version>
         <javamail.version>1.5.4</javamail.version>
         <javax-activation.version>1.1.1</javax-activation.version>
-        <slf4j.version>1.7.27</slf4j.version>
+        <slf4j.version>1.7.32</slf4j.version>
 
-        <dnsjava.version>3.3.1</dnsjava.version>
+        <dnsjava.version>3.4.1</dnsjava.version>
         <junit.jupiter.version>5.7.0</junit.jupiter.version>
         <junit.platform.version>1.7.0</junit.platform.version>
         <junit.vintage.version>5.7.0</junit.vintage.version>
@@ -614,15 +614,15 @@
         <cucumber.version>2.4.0</cucumber.version>
 
         <pax-logging-api.version>1.6.4</pax-logging-api.version>
-        <jackson.version>2.12.1</jackson.version>
-        <feign.version>10.3.0</feign.version>
+        <jackson.version>2.12.4</jackson.version>
+        <feign.version>11.6</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
-        <metrics.version>4.1.17</metrics.version>
-        <testcontainers.version>1.15.1</testcontainers.version>
+        <metrics.version>4.2.3</metrics.version>
+        <testcontainers.version>1.15.3</testcontainers.version>
         <assertj.version>3.3.0</assertj.version>
         <es.version>2.2.1</es.version>
         <es-reporter.version>6.0.0-RC3</es-reporter.version>
-        <guava.version>25.1-jre</guava.version>
+        <guava.version>30.1.1-jre</guava.version>
 
         <jutf7.version>1.0.0</jutf7.version>
         <apache.httpcomponents.version>4.5.13</apache.httpcomponents.version>
@@ -639,13 +639,13 @@
         <jaxb.version>2.3.1</jaxb.version>
         <lucene.version>3.6.2</lucene.version>
         <jasypt.version>1.9.3</jasypt.version>
-        <guice.version>4.2.3</guice.version>
-        <logback.version>1.2.3</logback.version>
+        <guice.version>5.0.1</guice.version>
+        <logback.version>1.2.5</logback.version>
 
-        <bouncycastle.version>1.68</bouncycastle.version>
+        <bouncycastle.version>1.69</bouncycastle.version>
 
         <scala.base>2.13</scala.base>
-        <scala.version>${scala.base}.4</scala.version>
+        <scala.version>${scala.base}.6</scala.version>
         <scalatestplus-play.version>5.0.0</scalatestplus-play.version>
         <doclint>none</doclint>
     </properties>
@@ -2063,7 +2063,7 @@
             <dependency>
                 <groupId>com.github.dpaukov</groupId>
                 <artifactId>combinatoricslib3</artifactId>
-                <version>3.3.0</version>
+                <version>3.3.1</version>
             </dependency>
             <dependency>
                 <groupId>com.github.fge</groupId>
@@ -2078,7 +2078,7 @@
             <dependency>
                 <groupId>com.github.spullara.mustache.java</groupId>
                 <artifactId>compiler</artifactId>
-                <version>0.9.7</version>
+                <version>0.9.10</version>
             </dependency>
             <dependency>
                 <groupId>com.github.stefanbirkner</groupId>
@@ -2103,12 +2103,12 @@
             <dependency>
                 <groupId>com.ibm.icu</groupId>
                 <artifactId>icu4j</artifactId>
-                <version>68.2</version>
+                <version>69.1</version>
             </dependency>
             <dependency>
                 <groupId>com.jayway.jsonpath</groupId>
                 <artifactId>json-path</artifactId>
-                <version>2.5.0</version>
+                <version>2.6.0</version>
             </dependency>
             <dependency>
                 <groupId>com.linagora</groupId>
@@ -2118,7 +2118,7 @@
             <dependency>
                 <groupId>com.rabbitmq</groupId>
                 <artifactId>amqp-client</artifactId>
-                <version>5.10.0</version>
+                <version>5.13.0</version>
             </dependency>
             <dependency>
                 <groupId>com.sparkjava</groupId>
@@ -2195,12 +2195,12 @@
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
-                <version>2.8.0</version>
+                <version>2.11.0</version>
             </dependency>
             <dependency>
                 <groupId>commons-net</groupId>
                 <artifactId>commons-net</artifactId>
-                <version>3.7.2</version>
+                <version>3.8.0</version>
             </dependency>
             <dependency>
                 <groupId>concurrent</groupId>
@@ -2280,7 +2280,7 @@
             <dependency>
                 <groupId>io.projectreactor</groupId>
                 <artifactId>reactor-bom</artifactId>
-                <version>2020.0.3</version>
+                <version>2020.0.9</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -2292,7 +2292,7 @@
             <dependency>
                 <groupId>io.rest-assured</groupId>
                 <artifactId>rest-assured</artifactId>
-                <version>4.3.3</version>
+                <version>4.4.0</version>
                 <exclusions>
                     <exclusion>
                         <groupId>commons-logging</groupId>
@@ -2338,12 +2338,12 @@
             <dependency>
                 <groupId>net.javacrumbs.json-unit</groupId>
                 <artifactId>json-unit-assertj</artifactId>
-                <version>2.23.0</version>
+                <version>2.27.0</version>
             </dependency>
             <dependency>
                 <groupId>nl.jqno.equalsverifier</groupId>
                 <artifactId>equalsverifier</artifactId>
-                <version>3.5.2</version>
+                <version>3.7</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.activemq</groupId>
@@ -2380,12 +2380,12 @@
             <dependency>
                 <groupId>org.apache.ant</groupId>
                 <artifactId>ant</artifactId>
-                <version>1.10.9</version>
+                <version>1.10.11</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.ant</groupId>
                 <artifactId>ant-antunit</artifactId>
-                <version>1.4</version>
+                <version>1.10.11</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -2411,12 +2411,12 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
-                <version>3.11</version>
+                <version>3.12.0</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-pool2</artifactId>
-                <version>2.9.0</version>
+                <version>2.10.0</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -2547,7 +2547,7 @@
             <dependency>
                 <groupId>org.awaitility</groupId>
                 <artifactId>awaitility</artifactId>
-                <version>4.0.3</version>
+                <version>4.1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
@@ -2577,7 +2577,7 @@
             <dependency>
                 <groupId>org.jsoup</groupId>
                 <artifactId>jsoup</artifactId>
-                <version>1.13.1</version>
+                <version>1.14.1</version>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
@@ -2622,7 +2622,7 @@
             <dependency>
                 <groupId>org.scala-lang.modules</groupId>
                 <artifactId>scala-java8-compat_${scala.base}</artifactId>
-                <version>0.9.1</version>
+                <version>1.0.0</version>
             </dependency>
             <dependency>
                 <groupId>org.scalacheck</groupId>
@@ -2735,7 +2735,7 @@
             <dependency>
                 <groupId>org.threeten</groupId>
                 <artifactId>threeten-extra</artifactId>
-                <version>1.5.0</version>
+                <version>1.6.0</version>
             </dependency>
             <dependency>
                 <groupId>pl.pragmatists</groupId>
