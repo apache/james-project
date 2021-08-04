@@ -19,15 +19,15 @@
 
 package org.apache.james.jmap.api.model
 
+import java.io.InputStream
+
 import org.apache.james.blob.api.BlobId
 import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.mailbox.model.ContentType
 
-import java.io.InputStream
-
 object Upload {
 
-  def from(metaData: UploadMetaData, content: InputStream): Upload =
+  def from(metaData: UploadMetaData, content: () => InputStream): Upload =
     Upload(uploadId = metaData.uploadId,
       size = metaData.size,
       contentType = metaData.contentType,
@@ -37,7 +37,7 @@ object Upload {
 case class Upload(uploadId: UploadId,
                   size: Size,
                   contentType: ContentType,
-                  content: InputStream)
+                  content: () => InputStream)
 
 case class UploadNotFoundException(uploadId: UploadId) extends RuntimeException(s"Upload not found $uploadId")
 
