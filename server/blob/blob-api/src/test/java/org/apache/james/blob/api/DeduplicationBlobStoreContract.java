@@ -55,7 +55,7 @@ public interface DeduplicationBlobStoreContract {
 
         BlobId blobId = Mono.from(store.save(defaultBucketName, SHORT_STRING, storagePolicy)).block();
 
-        assertThat(blobId).isEqualTo(blobIdFactory().from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
+        assertThat(blobId).isEqualTo(blobIdFactory().from("MfemXjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY="));
     }
 
     @ParameterizedTest
@@ -66,7 +66,7 @@ public interface DeduplicationBlobStoreContract {
 
         BlobId blobId = Mono.from(store.save(defaultBucketName, SHORT_BYTEARRAY, storagePolicy)).block();
 
-        assertThat(blobId).isEqualTo(blobIdFactory().from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
+        assertThat(blobId).isEqualTo(blobIdFactory().from("MfemXjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY="));
     }
 
     @ParameterizedTest
@@ -77,6 +77,6 @@ public interface DeduplicationBlobStoreContract {
 
         BlobId blobId = Mono.from(store.save(defaultBucketName, new ByteArrayInputStream(SHORT_BYTEARRAY), storagePolicy)).block();
 
-        assertThat(blobId).isEqualTo(blobIdFactory().from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
+        assertThat(blobId).isEqualTo(blobIdFactory().from("MfemXjFVhqwZi9eYtmKc5JA9CJlHbVdBqfMuLlIbamY="));
     }
 }
