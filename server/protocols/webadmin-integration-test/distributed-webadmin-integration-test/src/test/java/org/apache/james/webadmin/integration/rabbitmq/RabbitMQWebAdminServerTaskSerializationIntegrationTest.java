@@ -32,6 +32,7 @@ import static org.hamcrest.collection.IsMapWithSize.anEmptyMap;
 
 import java.io.ByteArrayInputStream;
 import java.util.Date;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.mail.Flags;
@@ -80,6 +81,7 @@ import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
 import org.apache.james.webadmin.routes.MailQueueRoutes;
 import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
+import org.apache.james.webadmin.service.ClearMailboxContentTask;
 import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes;
 import org.eclipse.jetty.http.HttpStatus;
 import org.hamcrest.Matchers;
@@ -87,6 +89,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.github.fge.lambdas.Throwing;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -678,6 +682,38 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("type", is("deleted-messages-delete"))
             .body("additionalInformation.username", is(USERNAME))
             .body("additionalInformation.deleteMessageId", is(composedMessageId.getMessageId().serialize()));
+    }
+
+    @Test
+    void deleteMailboxContentShouldComplete(GuiceJamesServer server) throws Exception {
+        server.getProbe(DataProbeImpl.class).addUser(USERNAME, "secret");
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
+
+        mailboxProbe.appendMessage(
+            USERNAME,
+            MailboxPath.inbox(Username.of(USERNAME)),
+            new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
+            new Date(),
+            false,
+            new Flags());
+
+        String taskId = given()
+            .delete("users/" + USERNAME + "/mailboxes/" + MailboxConstants.INBOX + "/messages")
+            .jsonPath()
+            .getString("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+            .then()
+            .body("status", is(TaskManager.Status.COMPLETED.getValue()))
+            .body("taskId", is(taskId))
+            .body("type", is(ClearMailboxContentTask.TASK_TYPE.asString()))
+            .body("additionalInformation.messagesSuccessCount", is(1))
+            .body("additionalInformation.messagesFailCount", is(0))
+            .body("additionalInformation.username", is(USERNAME))
+            .body("additionalInformation.mailboxName", is(MailboxConstants.INBOX));
     }
 
     private MailboxAdded createMailboxAdded() {

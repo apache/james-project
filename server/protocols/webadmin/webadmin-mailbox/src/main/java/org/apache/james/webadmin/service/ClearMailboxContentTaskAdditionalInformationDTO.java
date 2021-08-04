@@ -27,6 +27,8 @@ import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.james.webadmin.validation.MailboxName;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class ClearMailboxContentTaskAdditionalInformationDTO implements AdditionalInformationDTO {
 
     public static final AdditionalInformationDTOModule<ClearMailboxContentTask.AdditionalInformation, ClearMailboxContentTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
@@ -63,7 +65,12 @@ public class ClearMailboxContentTaskAdditionalInformationDTO implements Addition
     private final long messagesSuccessCount;
     private final long messagesFailCount;
 
-    public ClearMailboxContentTaskAdditionalInformationDTO(String type, String username, String mailboxName, Instant timestamp, long messagesSuccessCount, long messagesFailCount) {
+    public ClearMailboxContentTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+                                                           @JsonProperty("username") String username,
+                                                           @JsonProperty("mailboxName") String mailboxName,
+                                                           @JsonProperty("timestamp") Instant timestamp,
+                                                           @JsonProperty("messagesSuccessCount") long messagesSuccessCount,
+                                                           @JsonProperty("messagesFailCount") long messagesFailCount) {
         this.type = type;
         this.username = username;
         this.mailboxName = mailboxName;
