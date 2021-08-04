@@ -1,0 +1,440 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 11,
+  "iteration": 1627368129681,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 30,
+      "links": [],
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "exemplar": true,
+          "expr": "webAdmin{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.5\"}",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "legendFormat": "p50",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"getByName\"",
+          "refId": "A",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "exemplar": true,
+          "expr": "webAdmin{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.75\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "p75",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"getByName\"",
+          "refId": "B",
+          "timeField": "@timestamp"
+        },
+        {
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "dsType": "prometheus",
+          "exemplar": true,
+          "expr": "webAdmin{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.95\"}",
+          "interval": "",
+          "legendFormat": "p95",
+          "metrics": [
+            {
+              "field": "p99",
+              "id": "1",
+              "meta": {},
+              "pipelineAgg": "3",
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p50",
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p75",
+              "id": "4",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            },
+            {
+              "field": "p95",
+              "id": "5",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "name:\"getByName\"",
+          "refId": "C",
+          "timeField": "@timestamp"
+        },
+        {
+          "exemplar": true,
+          "expr": "webAdmin{instance=\"$WebAdmin\",job=\"Apache James\",quantile=\"0.99\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "p99",
+          "refId": "D"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "webAdmin Connection",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Derivative Max count"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "opm"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 29,
+      "links": [],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "webAdmin_count {instance=\"$WebAdmin\",job=\"Apache James\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "Total Connections",
+          "refId": "A"
+        },
+        {
+          "exemplar": true,
+          "expr": "rate(webAdmin_count {instance=\"$WebAdmin\",job=\"Apache James\"} [5m])",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "Connection Rate 5m",
+          "refId": "B"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "webAdmin Connection Rate",
+      "type": "stat"
+    }
+  ],
+  "refresh": false,
+  "schemaVersion": 30,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "selected": false,
+          "text": "james-admin.tenant-upn:8000",
+          "value": "james-admin.tenant-upn:8000"
+        },
+        "datasource": "$datasource",
+        "definition": "label_values(smtpConnections_total, instance)",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": false,
+        "label": null,
+        "multi": false,
+        "name": "WebAdmin",
+        "options": [],
+        "query": {
+          "query": "label_values(smtpConnections_total, instance)",
+          "refId": "prometheus-WebAdmin-Variable-Query"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "Prometheus",
+          "value": "Prometheus"
+        },
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": false,
+        "label": null,
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-5m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "1h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d"
+    ]
+  },
+  "timezone": "browser",
+  "title": "James / JAMES webAdmin",
+  "uid": "FRUdWPWnz",
+  "version": 3
+}
