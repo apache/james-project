@@ -1,0 +1,5 @@
+{
+  "mailboxName": "mbn1",
+  "type": "ClearMailboxContentTask",
+  "username": "bob@domain.tld"
+}

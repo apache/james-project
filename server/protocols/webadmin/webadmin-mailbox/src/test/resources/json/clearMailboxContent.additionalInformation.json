@@ -1,0 +1,8 @@
+{
+  "mailboxName": "mbx1",
+  "messagesFailCount": 9,
+  "messagesSuccessCount": 10,
+  "timestamp": "2007-12-03T10:15:30Z",
+  "type": "ClearMailboxContentTask",
+  "username": "bob@domain.tld"
+}
