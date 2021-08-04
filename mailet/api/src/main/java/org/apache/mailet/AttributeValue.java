@@ -48,6 +48,7 @@ import com.google.common.collect.ImmutableMap;
  */
 public class AttributeValue<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AttributeValue.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public static AttributeValue<Boolean> of(Boolean value) {
         Preconditions.checkNotNull(value, "value should not be null");
@@ -170,8 +171,7 @@ public class AttributeValue<T> {
     }
 
     public static AttributeValue<?> fromJsonString(String json) throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode tree = objectMapper.readTree(json);
+        JsonNode tree = OBJECT_MAPPER.readTree(json);
         return fromJson(tree);
     }
 

@@ -26,9 +26,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.elasticsearch.v7.IndexAttachments;
@@ -40,7 +37,6 @@ import org.apache.james.mime4j.MimeException;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 public class IndexableMessage {
@@ -121,16 +117,6 @@ public class IndexableMessage {
             EMailers bcc = EMailers.from(headerCollection.getBccAddressSet());
             String sentDate = DATE_TIME_FORMATTER.format(headerCollection.getSentDate().orElse(internalDate));
             Optional<String> mimeMessageID = headerCollection.getMessageID();
-
-            String text = Stream.of(from.serialize(),
-                        to.serialize(),
-                        cc.serialize(),
-                        bcc.serialize(),
-                        subjects.serialize(),
-                        bodyText.orElse(null),
-                        bodyHtml.orElse(null))
-                    .filter(Predicate.not(Strings::isNullOrEmpty))
-                    .collect(Collectors.joining(" "));
 
             long uid = message.getUid().asLong();
             String mailboxId = message.getMailboxId().serialize();

@@ -48,7 +48,7 @@ public class EMailer implements SerializableMessage {
 
     @Override
     public String serialize() {
-        return Joiner.on(" ").join(name, address);
+        return Joiner.on(" ").join(name.orElse(" "), address);
     }
 
     @Override

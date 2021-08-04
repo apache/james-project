@@ -47,12 +47,14 @@ import org.apache.james.mime4j.stream.RecursionMode;
 
 public class MimeDescriptorImpl implements MimeDescriptor {
 
+    private static final LenientFieldParser FIELD_PARSER = new LenientFieldParser();
+
     public static MimeDescriptorImpl build(InputStream stream) throws IOException, MimeException {
         // Disable line length limit
         // See https://issues.apache.org/jira/browse/IMAP-132
         //
         final MimeTokenStream parser = new MimeTokenStream(MimeConfig.PERMISSIVE,
-            new DefaultBodyDescriptorBuilder(null, new LenientFieldParser(), DecodeMonitor.SILENT));
+            new DefaultBodyDescriptorBuilder(null, FIELD_PARSER, DecodeMonitor.SILENT));
         
         parser.parse(stream);
         

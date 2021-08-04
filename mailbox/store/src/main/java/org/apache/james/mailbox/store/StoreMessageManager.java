@@ -135,6 +135,7 @@ public class StoreMessageManager implements MessageManager {
     protected static final Flags MINIMAL_PERMANET_FLAGS;
     private static final SearchQuery LIST_ALL_QUERY = SearchQuery.of(SearchQuery.all());
     private static final SearchQuery LIST_FROM_ONE = SearchQuery.of(SearchQuery.uid(new SearchQuery.UidRange(MessageUid.MIN_VALUE, MessageUid.MAX_VALUE)));
+    private static final LenientFieldParser FIELD_PARSER = new LenientFieldParser();
 
     private static class MediaType {
         final String mediaType;
@@ -439,7 +440,7 @@ public class StoreMessageManager implements MessageManager {
 
     private MimeTokenStream getParser(BodyOffsetInputStream bIn) {
         final MimeTokenStream parser = new MimeTokenStream(MimeConfig.PERMISSIVE,
-            new DefaultBodyDescriptorBuilder(null, new LenientFieldParser(), DecodeMonitor.SILENT));
+            new DefaultBodyDescriptorBuilder(null, FIELD_PARSER, DecodeMonitor.SILENT));
 
         parser.setRecursionMode(RecursionMode.M_NO_RECURSE);
         parser.parse(bIn);
