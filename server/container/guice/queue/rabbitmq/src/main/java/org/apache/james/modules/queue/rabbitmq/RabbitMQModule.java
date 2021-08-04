@@ -51,6 +51,7 @@ import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueMailStor
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueView;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewStartUpCheck;
+import org.apache.james.queue.rabbitmq.view.cassandra.ContentStartDAO;
 import org.apache.james.queue.rabbitmq.view.cassandra.DeletedMailsDAO;
 import org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDAO;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
@@ -87,6 +88,7 @@ public class RabbitMQModule extends AbstractModule {
         bind(CassandraMailQueueBrowser.class).in(Scopes.SINGLETON);
         bind(CassandraMailQueueMailDelete.class).in(Scopes.SINGLETON);
         bind(CassandraMailQueueMailStore.class).in(Scopes.SINGLETON);
+        bind(ContentStartDAO.class).in(Scopes.SINGLETON);
         bind(SimpleConnectionPool.class).in(Scopes.SINGLETON);
 
         Multibinder<CassandraModule> cassandraModuleBinder = Multibinder.newSetBinder(binder(), CassandraModule.class);
