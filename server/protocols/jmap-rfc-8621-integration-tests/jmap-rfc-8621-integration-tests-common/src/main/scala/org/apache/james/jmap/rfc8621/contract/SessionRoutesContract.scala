@@ -123,7 +123,7 @@ object SessionRoutesContract {
                          |  },
                          |  "username" : "bob@domain.tld",
                          |  "apiUrl" : "http://domain.com/jmap",
-                         |  "downloadUrl" : "http://domain.com/download/{accountId}/{blobId}/?type={type}&name={name}",
+                         |  "downloadUrl" : "http://domain.com/download/{accountId}/{blobId}?type={type}&name={name}",
                          |  "uploadUrl" : "http://domain.com/upload/{accountId}",
                          |  "eventSourceUrl" : "http://domain.com/eventSource?types={types}&closeAfter={closeafter}&ping={ping}",
                          |  "state" : "2c9f1b12-b35a-43e6-9af2-0106fb53a943"
@@ -163,7 +163,7 @@ trait SessionRoutesContract {
         .get("/session")
       .`then`
         .statusCode(SC_OK)
-        .header("Content-Length", "3026")
+        .header("Content-Length", "3025")
         .contentType(JSON)
       .extract()
         .body()
