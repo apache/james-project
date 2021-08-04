@@ -24,8 +24,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
 
-import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
 
@@ -69,14 +67,14 @@ public class HashBlobIdTest {
     public void forPayloadShouldHashEmptyArray() {
         BlobId blobId = BLOB_ID_FACTORY.forPayload(new byte[0]);
 
-        assertThat(blobId.asString()).isEqualTo("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+        assertThat(blobId.asString()).isEqualTo("47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=");
     }
 
     @Test
     public void forPayloadShouldHashArray() {
         BlobId blobId = BLOB_ID_FACTORY.forPayload("content".getBytes(StandardCharsets.UTF_8));
 
-        assertThat(blobId.asString()).isEqualTo("ed7002b439e9ac845f22357d822bac1444730fbdb6016d3ec9432297b9ec9f73");
+        assertThat(blobId.asString()).isEqualTo("7XACtDnprIRfIjV9giusFERzD722AW0+yUMil7nsn3M=");
     }
 
     @Test
