@@ -42,6 +42,8 @@
 
  trait UploadRepositoryContract {
 
+   def randomUploadId(): UploadId = UploadId.from(UUID.randomUUID())
+
    def testee: UploadRepository
 
    def data(): InputStream = IOUtils.toInputStream(DATA_STRING, StandardCharsets.UTF_8)
@@ -87,7 +89,7 @@
 
    @Test
    def retrieveShouldThrowWhenUploadIdIsNotExist(): Unit = {
-     assertThatThrownBy(() => SMono.fromPublisher(testee.retrieve(UploadId.from(UUID.randomUUID()), USER)).block())
+     assertThatThrownBy(() => SMono.fromPublisher(testee.retrieve(randomUploadId(), USER)).block())
        .isInstanceOf(classOf[UploadNotFoundException])
    }
 
