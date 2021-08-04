@@ -992,7 +992,7 @@ by an admin to ensure Cassandra message consistency.
  - [Recomputing User JMAP fast message view projection](#Recomputing_User_JMAP_fast_message_view_projection)
  - [Counting emails](#Counting_emails)
  - [Counting unseen emails](#Couting_unseen_emails)
-
+ - [Clearing mailbox content][#Clearing_mailbox_content]   
 ### Creating a mailbox
 
 ```
@@ -1203,6 +1203,40 @@ Response codes:
 - 400: Invalid mailbox name
 - 404: Invalid get on user mailboxes. The `usernameToBeUsed` or `mailboxName` does not exit'
 
+
+### Clearing mailbox content
+
+```
+curl -XDELETE http://ip:port/users/{usernameToBeUsed}/mailboxes/{mailboxName}/messages
+```
+
+Will schedule a task for clearing all the mails in `mailboxName` mailbox of `usernameToBeUsed`.
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+Resource name `usernameToBeUsed` should be an existing user.
+
+Resource name `mailboxName` should not be empty, nor contain `% *` characters, nor starting with `#`.
+
+Response codes:
+
+- 201: Success. Corresponding task id is returned.
+- 400: Invalid mailbox name
+- 404: Invalid get on user mailboxes. The `username` or `mailboxName` does not exit
+
+The scheduled task will have the following type `ClearMailboxContentTask` and
+the following `additionalInformation`:
+
+```
+{
+    "mailboxName": "mbx1",
+    "messagesFailCount": 9,
+    "messagesSuccessCount": 10,
+    "timestamp": "2007-12-03T10:15:30Z",
+    "type": "ClearMailboxContentTask",
+    "username": "bob@domain.tld"
+}
+```
 
 ### Subscribing a user to all of its mailboxes
  
