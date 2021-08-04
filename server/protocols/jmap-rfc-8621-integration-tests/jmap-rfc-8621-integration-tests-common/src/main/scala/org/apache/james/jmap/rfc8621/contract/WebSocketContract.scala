@@ -74,7 +74,7 @@ trait WebSocketContract {
             ws.send(WebSocketFrame.text(
               """{
                 |  "@type": "Request",
-                |  "requestId": "req-36",
+                |  "id": "req-36",
                 |  "using": [ "urn:ietf:params:jmap:core"],
                 |  "methodCalls": [
                 |    [
@@ -121,7 +121,7 @@ trait WebSocketContract {
               ws.send(WebSocketFrame.text(
                 """{
                   |  "@type": "Request",
-                  |  "requestId": "req-36",
+                  |  "id": "req-36",
                   |  "using": [ "urn:ietf:params:jmap:core"],
                   |  "methodCalls": [
                   |    [
@@ -144,7 +144,7 @@ trait WebSocketContract {
               ws.send(WebSocketFrame.text(
                 """{
                   |  "@type": "Request",
-                  |  "requestId": "req-36",
+                  |  "id": "req-36",
                   |  "using": [ "urn:ietf:params:jmap:core"],
                   |  "methodCalls": [
                   |    [
@@ -222,7 +222,7 @@ trait WebSocketContract {
           ws =>
             ws.send(WebSocketFrame.text(
               """{
-                |  "requestId": "req-36",
+                |  "id": "req-36",
                 |  "using": [ "urn:ietf:params:jmap:core"],
                 |  "methodCalls": [
                 |    [
@@ -262,7 +262,7 @@ trait WebSocketContract {
             ws.send(WebSocketFrame.text(
               """{
                 |  "@type": 42,
-                |  "requestId": "req-36",
+                |  "id": "req-36",
                 |  "using": [ "urn:ietf:params:jmap:core"],
                 |  "methodCalls": [
                 |    [
@@ -302,7 +302,7 @@ trait WebSocketContract {
             ws.send(WebSocketFrame.text(
               """{
                 |  "@type": "unknown",
-                |  "requestId": "req-36",
+                |  "id": "req-36",
                 |  "using": [ "urn:ietf:params:jmap:core"],
                 |  "methodCalls": [
                 |    [
@@ -342,7 +342,7 @@ trait WebSocketContract {
             ws.send(WebSocketFrame.text(
               """{
                 |  "@type": "Response",
-                |  "requestId": "req-36",
+                |  "id": "req-36",
                 |  "using": [ "urn:ietf:params:jmap:core"],
                 |  "methodCalls": [
                 |    [
@@ -433,7 +433,7 @@ trait WebSocketContract {
             ws.send(WebSocketFrame.text(
               s"""{
                  |  "@type": "Request",
-                 |  "requestId": "req-36",
+                 |  "id": "req-36",
                  |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
                  |  "methodCalls": [
                  |    ["Email/set", {
@@ -486,7 +486,7 @@ trait WebSocketContract {
     def createEmail(ws: WebSocket[Identity]): Identity[Unit] = ws.send(WebSocketFrame.text(
         s"""{
            |  "@type": "Request",
-           |  "requestId": "req-36",
+           |  "id": "req-36",
            |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
            |  "methodCalls": [
            |    ["Email/set", {
@@ -548,7 +548,7 @@ trait WebSocketContract {
             ws.send(WebSocketFrame.text(
               s"""{
                  |  "@type": "Request",
-                 |  "requestId": "req-36",
+                 |  "id": "req-36",
                  |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:vacationresponse"],
                  |  "methodCalls": [
                  |    ["VacationResponse/set", {
@@ -610,7 +610,7 @@ trait WebSocketContract {
             ws.send(WebSocketFrame.text(
               s"""{
                  |  "@type": "Request",
-                 |  "requestId": "req-36",
+                 |  "id": "req-36",
                  |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
                  |  "methodCalls": [
                  |    ["Email/set", {
@@ -668,7 +668,7 @@ trait WebSocketContract {
             ws.send(WebSocketFrame.text(
               s"""{
                  |  "@type": "Request",
-                 |  "requestId": "req-36",
+                 |  "id": "req-36",
                  |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
                  |  "methodCalls": [
                  |    ["Email/set", {
@@ -794,7 +794,7 @@ trait WebSocketContract {
             ws.send(WebSocketFrame.text(
               s"""{
                  |  "@type": "Request",
-                 |  "requestId": "req-36",
+                 |  "id": "req-36",
                  |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
                  |  "methodCalls": [
                  |    ["Email/set", {
@@ -867,7 +867,7 @@ trait WebSocketContract {
             ws.send(WebSocketFrame.text(
               s"""{
                  |  "@type": "Request",
-                 |  "requestId": "req-36",
+                 |  "id": "req-36",
                  |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
                  |  "methodCalls": [
                  |    ["Email/set", {
@@ -995,7 +995,7 @@ trait WebSocketContract {
             ws.send(WebSocketFrame.text(
               s"""{
                  |  "@type": "Request",
-                 |  "requestId": "req-36",
+                 |  "id": "req-36",
                  |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
                  |  "methodCalls": [
                  |    ["Email/set", {

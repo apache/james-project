@@ -19,11 +19,11 @@
 
 package org.apache.james.jmap.json
 
+import javax.inject.Inject
 import org.apache.james.jmap.change.{TypeName, TypeState, TypeStateFactory}
 import org.apache.james.jmap.core.{AccountId, OutboundMessage, PingMessage, PushState, RequestId, State, StateChange, WebSocketError, WebSocketInboundMessage, WebSocketPushDisable, WebSocketPushEnable, WebSocketRequest, WebSocketResponse}
 import play.api.libs.json.{Format, JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
 
-import javax.inject.Inject
 import scala.util.Try
 
 case class PushSerializer @Inject()(typeStateFactory: TypeStateFactory) {
@@ -33,7 +33,7 @@ case class PushSerializer @Inject()(typeStateFactory: TypeStateFactory) {
   private implicit val webSocketRequestReads: Reads[WebSocketRequest] = {
     case jsObject: JsObject =>
       for {
-        requestId <- jsObject.value.get("requestId")
+        requestId <- jsObject.value.get("id")
           .map(requestIdJson => requestIdFormat.reads(requestIdJson).map(Some(_)))
           .getOrElse(JsSuccess(None))
         request <- ResponseSerializer.deserializeRequestObject(jsObject)
