@@ -19,35 +19,41 @@
 
 package org.apache.james.jmap.api.model;
 
-import org.apache.commons.text.RandomStringGenerator;
+import java.util.UUID;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 public class UploadId {
-    public static final RandomStringGenerator RANDOM_STRING_GENERATOR = new RandomStringGenerator.Builder()
-        .withinRange('a', 'z')
-        .build();
-
     public static UploadId random() {
-        return new UploadId(RANDOM_STRING_GENERATOR.generate(20));
+        return new UploadId(UUID.randomUUID());
     }
 
     public static UploadId from(String id) {
         Preconditions.checkNotNull(id);
         Preconditions.checkArgument(!id.isEmpty());
+        return new UploadId(UUID.fromString(id));
+    }
+
+    public static UploadId from(UUID id) {
+        Preconditions.checkNotNull(id);
+
         return new UploadId(id);
     }
 
-    private final String id;
+    private final UUID id;
 
-    public UploadId(String id) {
+    public UploadId(UUID id) {
         this.id = id;
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
+    }
+
+    public String asString() {
+        return id.toString();
     }
 
     @Override
