@@ -29,9 +29,6 @@
  import org.junit.jupiter.api.Test
  import reactor.core.scala.publisher.SMono
 
- import java.io.InputStream
- import java.nio.charset.StandardCharsets
-
  object UploadRepositoryContract {
    private lazy val CONTENT_TYPE: ContentType = ContentType
      .of("text/html")
@@ -86,7 +83,7 @@
 
    @Test
    def retrieveShouldThrowWhenUploadIdIsNotExist(): Unit = {
-     assertThatThrownBy(() => SMono.fromPublisher(testee.retrieve(UploadId.from("notFoundId"), USER)).block())
+     assertThatThrownBy(() => SMono.fromPublisher(testee.retrieve(UploadId.from(UUID.randomUUID()), USER)).block())
        .isInstanceOf(classOf[UploadNotFoundException])
    }
 
