@@ -128,8 +128,8 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
       }, {
           case request: WebSocketRequest =>
             jmapApi.process(request.requestObject, clientContext.session)
-              .map[OutboundMessage](WebSocketResponse(request.requestId, _))
-              .onErrorResume(e => SMono.just(asError(request.requestId)(e)))
+              .map[OutboundMessage](WebSocketResponse(request.id, _))
+              .onErrorResume(e => SMono.just(asError(request.id)(e)))
               .subscribeOn(Schedulers.elastic)
           case pushEnable: WebSocketPushEnable =>
             SMono(eventBus.register(

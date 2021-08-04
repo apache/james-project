@@ -33,7 +33,7 @@ case class PingMessage(interval: Interval) extends OutboundMessage
 
 case class RequestId(value: String) extends AnyVal
 
-case class WebSocketRequest(requestId: Option[RequestId], requestObject: RequestObject) extends WebSocketInboundMessage
+case class WebSocketRequest(id: Option[RequestId], requestObject: RequestObject) extends WebSocketInboundMessage
 
 case class WebSocketResponse(requestId: Option[RequestId], responseObject: ResponseObject) extends OutboundMessage
 
