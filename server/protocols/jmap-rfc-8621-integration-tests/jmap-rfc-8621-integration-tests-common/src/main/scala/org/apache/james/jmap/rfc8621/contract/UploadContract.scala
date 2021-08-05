@@ -62,7 +62,7 @@ trait UploadContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(VALID_INPUT)
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -93,7 +93,7 @@ trait UploadContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(VALID_INPUT)
     .when
-      .post(s"/upload/$ALICE_ACCOUNT_ID/")
+      .post(s"/upload/$ALICE_ACCOUNT_ID")
     .`then`
       .statusCode(SC_FORBIDDEN)
       .header("Content-Length", "84")
@@ -109,7 +109,7 @@ trait UploadContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(VALID_INPUT)
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -139,7 +139,7 @@ trait UploadContract {
       .contentType(ContentType.BINARY)
       .body(BIG_INPUT)
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_BAD_REQUEST)
       .body("status", equalTo(400))
@@ -157,7 +157,7 @@ trait UploadContract {
       .contentType(ContentType.BINARY)
       .body(VALID_INPUT)
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_UNAUTHORIZED)
       .header("WWW-Authenticate", "Basic realm=\"simple\", Bearer realm=\"JWT\"")
