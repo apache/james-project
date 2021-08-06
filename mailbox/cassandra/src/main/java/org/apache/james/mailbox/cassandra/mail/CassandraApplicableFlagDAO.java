@@ -19,11 +19,10 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.add;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.addAll;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
 import static org.apache.james.mailbox.cassandra.table.CassandraApplicableFlagTable.FIELDS;
 import static org.apache.james.mailbox.cassandra.table.CassandraApplicableFlagTable.MAILBOX_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraApplicableFlagTable.TABLE_NAME;
@@ -40,15 +39,13 @@ import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.datastax.driver.core.querybuilder.Update;
-import com.datastax.driver.core.querybuilder.Update.Assignments;
 
 import reactor.core.publisher.Mono;
 
 public class CassandraApplicableFlagDAO {
-
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement select;
+    private final PreparedStatement update;
     private final PreparedStatement delete;
 
     @Inject
@@ -56,6 +53,7 @@ public class CassandraApplicableFlagDAO {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.select = prepareSelect(session);
         this.delete = prepareDelete(session);
+        this.update = prepareUpdate(session);
     }
 
     private PreparedStatement prepareSelect(Session session) {
@@ -67,6 +65,12 @@ public class CassandraApplicableFlagDAO {
     private PreparedStatement prepareDelete(Session session) {
         return session.prepare(QueryBuilder.delete()
             .from(TABLE_NAME)
+            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
+    }
+
+    private PreparedStatement prepareUpdate(Session session) {
+        return session.prepare(QueryBuilder.update(TABLE_NAME)
+            .with(addAll(USER_FLAGS, bindMarker(USER_FLAGS)))
             .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
     }
 
@@ -87,18 +91,8 @@ public class CassandraApplicableFlagDAO {
         if (toBeAdded.isEmpty()) {
             return Mono.empty();
         }
-        return cassandraAsyncExecutor.executeVoid(updateQuery(cassandraId, toBeAdded));
+        return cassandraAsyncExecutor.executeVoid(update.bind()
+            .setUUID(MAILBOX_ID, cassandraId.asUuid())
+            .setSet(USER_FLAGS, toBeAdded));
     }
-
-    private Update.Where updateQuery(CassandraId cassandraId, Set<String> userFlags) {
-        return addUserFlagsToQuery(userFlags,
-                update(TABLE_NAME).with())
-            .where(eq(MAILBOX_ID, cassandraId.asUuid()));
-    }
-
-    private Assignments addUserFlagsToQuery(Set<String> userFlags, Assignments updateQuery) {
-        userFlags.forEach(userFlag -> updateQuery.and(add(USER_FLAGS, userFlag)));
-        return updateQuery;
-    }
-
 }
