@@ -151,7 +151,7 @@ trait EmailImportContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(ClassLoader.getSystemResourceAsStream("eml/alternative.eml"))
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -278,7 +278,7 @@ trait EmailImportContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(ClassLoader.getSystemResourceAsStream("eml/alternative.eml"))
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -290,7 +290,7 @@ trait EmailImportContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(ClassLoader.getSystemResourceAsStream("eml/html.eml"))
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -428,7 +428,7 @@ trait EmailImportContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(ClassLoader.getSystemResourceAsStream("eml/alternative.eml"))
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -520,7 +520,7 @@ trait EmailImportContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body("whatever")
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -595,7 +595,7 @@ trait EmailImportContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(ClassLoader.getSystemResourceAsStream("eml/alternative.eml"))
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -834,7 +834,7 @@ trait EmailImportContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body("whatever")
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -903,7 +903,7 @@ trait EmailImportContract {
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body("whatever")
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
