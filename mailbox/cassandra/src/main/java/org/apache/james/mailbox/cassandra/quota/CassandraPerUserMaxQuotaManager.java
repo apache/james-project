@@ -180,11 +180,10 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
         return Mono.zip(
                 perUserQuota.getLimits(quotaRoot),
                 Mono.justOrEmpty(quotaRoot.getDomain()).flatMap(perDomainQuota::getLimits).switchIfEmpty(Mono.just(Limits.empty())),
-                globalQuota.getGlobalMaxStorage().map(Optional::of).switchIfEmpty(Mono.just(Optional.empty())),
-                globalQuota.getGlobalMaxMessage().map(Optional::of).switchIfEmpty(Mono.just(Optional.empty())))
+                globalQuota.getGlobalLimits())
             .map(tuple -> new QuotaDetails(
-                countDetails(tuple.getT1(), tuple.getT2(), tuple.getT4()),
-                sizeDetails(tuple.getT1(), tuple.getT2(), tuple.getT3())))
+                countDetails(tuple.getT1(), tuple.getT2(), tuple.getT3().getCountLimit()),
+                sizeDetails(tuple.getT1(), tuple.getT2(), tuple.getT3().getSizeLimit())))
             .block();
     }
 

@@ -131,4 +131,12 @@ public class CassandraGlobalMaxQuotaDao {
         return queryExecutor.executeVoid(removeMessageMaxQuotaStatement.bind()
             .setString(KEY, VALUE));
     }
+
+    Mono<Limits> getGlobalLimits() {
+        return queryExecutor.executeSingleRow(getGlobalMaxStatement.bind()
+            .setString(KEY, VALUE))
+            .map(row -> new Limits(
+                Optional.ofNullable(row.get(STORAGE, Long.class)).flatMap(QuotaCodec::longToQuotaSize),
+                Optional.ofNullable(row.get(MESSAGE, Long.class)).flatMap(QuotaCodec::longToQuotaCount)));
+    }
 }
