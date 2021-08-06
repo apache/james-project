@@ -19,10 +19,10 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import static com.datastax.driver.core.querybuilder.QueryBuilder.addAll;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.gte;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.lte;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
@@ -76,6 +76,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.util.streams.Limit;
 
+import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
@@ -133,24 +134,24 @@ public class CassandraMessageIdDAO {
     }
 
     private PreparedStatement prepareInsert(Session session) {
-        return session.prepare(insertInto(TABLE_NAME)
-                .value(MAILBOX_ID, bindMarker(MAILBOX_ID))
-                .value(IMAP_UID, bindMarker(IMAP_UID))
-                .value(THREAD_ID, bindMarker(THREAD_ID))
-                .value(MOD_SEQ, bindMarker(MOD_SEQ))
-                .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
-                .value(ANSWERED, bindMarker(ANSWERED))
-                .value(DELETED, bindMarker(DELETED))
-                .value(DRAFT, bindMarker(DRAFT))
-                .value(FLAGGED, bindMarker(FLAGGED))
-                .value(RECENT, bindMarker(RECENT))
-                .value(SEEN, bindMarker(SEEN))
-                .value(USER, bindMarker(USER))
-                .value(USER_FLAGS, bindMarker(USER_FLAGS))
-                .value(INTERNAL_DATE, bindMarker(INTERNAL_DATE))
-                .value(BODY_START_OCTET, bindMarker(BODY_START_OCTET))
-                .value(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS))
-                .value(HEADER_CONTENT, bindMarker(HEADER_CONTENT)));
+        return session.prepare(update(TABLE_NAME)
+            .with(set(THREAD_ID, bindMarker(THREAD_ID)))
+            .and(set(MESSAGE_ID, bindMarker(MESSAGE_ID)))
+            .and(set(MOD_SEQ, bindMarker(MOD_SEQ)))
+            .and(set(ANSWERED, bindMarker(ANSWERED)))
+            .and(set(DELETED, bindMarker(DELETED)))
+            .and(set(DRAFT, bindMarker(DRAFT)))
+            .and(set(FLAGGED, bindMarker(FLAGGED)))
+            .and(set(RECENT, bindMarker(RECENT)))
+            .and(set(SEEN, bindMarker(SEEN)))
+            .and(set(USER, bindMarker(USER)))
+            .and(addAll(USER_FLAGS, bindMarker(USER_FLAGS)))
+            .and(set(INTERNAL_DATE, bindMarker(INTERNAL_DATE)))
+            .and(set(BODY_START_OCTET, bindMarker(BODY_START_OCTET)))
+            .and(set(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS)))
+            .and(set(HEADER_CONTENT, bindMarker(HEADER_CONTENT)))
+            .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
+            .and(eq(IMAP_UID, bindMarker(IMAP_UID))));
     }
 
     private PreparedStatement prepareUpdate(Session session) {
@@ -243,7 +244,15 @@ public class CassandraMessageIdDAO {
         ComposedMessageId composedMessageId = metadata.getComposedMessageId().getComposedMessageId();
         Flags flags = metadata.getComposedMessageId().getFlags();
         ThreadId threadId = metadata.getComposedMessageId().getThreadId();
-        return cassandraAsyncExecutor.executeVoid(insert.bind()
+
+        BoundStatement boundStatement = insert.bind();
+        if (metadata.getComposedMessageId().getFlags().getUserFlags().length == 0) {
+            boundStatement.unset(USER_FLAGS);
+        } else {
+            boundStatement.setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags()));
+        }
+
+        return cassandraAsyncExecutor.executeVoid(boundStatement
                 .setUUID(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
                 .setLong(IMAP_UID, composedMessageId.getUid().asLong())
                 .setUUID(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
@@ -256,7 +265,6 @@ public class CassandraMessageIdDAO {
                 .setBool(RECENT, flags.contains(Flag.RECENT))
                 .setBool(SEEN, flags.contains(Flag.SEEN))
                 .setBool(USER, flags.contains(Flag.USER))
-                .setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags()))
                 .setTimestamp(INTERNAL_DATE, metadata.getInternalDate().get())
                 .setInt(BODY_START_OCTET, Math.toIntExact(metadata.getBodyStartOctet().get()))
                 .setLong(FULL_CONTENT_OCTETS, metadata.getSize().get())

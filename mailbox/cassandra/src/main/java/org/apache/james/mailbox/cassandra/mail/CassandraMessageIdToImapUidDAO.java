@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import static com.datastax.driver.core.querybuilder.QueryBuilder.addAll;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
@@ -148,7 +149,24 @@ public class CassandraMessageIdToImapUidDAO {
         if (cassandraConfiguration.isMessageWriteStrongConsistency()) {
             return session.prepare(insert.ifNotExists());
         } else {
-            return session.prepare(insert);
+            return session.prepare(update(TABLE_NAME)
+                .with(set(THREAD_ID, bindMarker(THREAD_ID)))
+                .and(set(MOD_SEQ, bindMarker(MOD_SEQ)))
+                .and(set(ANSWERED, bindMarker(ANSWERED)))
+                .and(set(DELETED, bindMarker(DELETED)))
+                .and(set(DRAFT, bindMarker(DRAFT)))
+                .and(set(FLAGGED, bindMarker(FLAGGED)))
+                .and(set(RECENT, bindMarker(RECENT)))
+                .and(set(SEEN, bindMarker(SEEN)))
+                .and(set(USER, bindMarker(USER)))
+                .and(addAll(USER_FLAGS, bindMarker(USER_FLAGS)))
+                .and(set(INTERNAL_DATE, bindMarker(INTERNAL_DATE)))
+                .and(set(BODY_START_OCTET, bindMarker(BODY_START_OCTET)))
+                .and(set(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS)))
+                .and(set(HEADER_CONTENT, bindMarker(HEADER_CONTENT)))
+                .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID)))
+                .and(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
+                .and(eq(IMAP_UID, bindMarker(IMAP_UID))));
         }
     }
 
@@ -223,24 +241,31 @@ public class CassandraMessageIdToImapUidDAO {
         ComposedMessageId composedMessageId = metadata.getComposedMessageId().getComposedMessageId();
         Flags flags = metadata.getComposedMessageId().getFlags();
         ThreadId threadId = metadata.getComposedMessageId().getThreadId();
-        return cassandraAsyncExecutor.executeVoid(insert.bind()
-                .setUUID(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
-                .setUUID(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
-                .setLong(IMAP_UID, composedMessageId.getUid().asLong())
-                .setLong(MOD_SEQ, metadata.getComposedMessageId().getModSeq().asLong())
-                .setUUID(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get())
-                .setBool(ANSWERED, flags.contains(Flag.ANSWERED))
-                .setBool(DELETED, flags.contains(Flag.DELETED))
-                .setBool(DRAFT, flags.contains(Flag.DRAFT))
-                .setBool(FLAGGED, flags.contains(Flag.FLAGGED))
-                .setBool(RECENT, flags.contains(Flag.RECENT))
-                .setBool(SEEN, flags.contains(Flag.SEEN))
-                .setBool(USER, flags.contains(Flag.USER))
-                .setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags()))
-                .setTimestamp(INTERNAL_DATE, metadata.getInternalDate().get())
-                .setInt(BODY_START_OCTET, Math.toIntExact(metadata.getBodyStartOctet().get()))
-                .setLong(FULL_CONTENT_OCTETS, metadata.getSize().get())
-                .setString(HEADER_CONTENT, metadata.getHeaderContent().get().asString()));
+
+        BoundStatement boundStatement = insert.bind();
+        if (metadata.getComposedMessageId().getFlags().getUserFlags().length == 0) {
+            boundStatement.unset(USER_FLAGS);
+        } else {
+            boundStatement.setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags()));
+        }
+
+        return cassandraAsyncExecutor.executeVoid(boundStatement
+            .setUUID(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
+            .setUUID(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
+            .setLong(IMAP_UID, composedMessageId.getUid().asLong())
+            .setLong(MOD_SEQ, metadata.getComposedMessageId().getModSeq().asLong())
+            .setUUID(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get())
+            .setBool(ANSWERED, flags.contains(Flag.ANSWERED))
+            .setBool(DELETED, flags.contains(Flag.DELETED))
+            .setBool(DRAFT, flags.contains(Flag.DRAFT))
+            .setBool(FLAGGED, flags.contains(Flag.FLAGGED))
+            .setBool(RECENT, flags.contains(Flag.RECENT))
+            .setBool(SEEN, flags.contains(Flag.SEEN))
+            .setBool(USER, flags.contains(Flag.USER))
+            .setTimestamp(INTERNAL_DATE, metadata.getInternalDate().get())
+            .setInt(BODY_START_OCTET, Math.toIntExact(metadata.getBodyStartOctet().get()))
+            .setLong(FULL_CONTENT_OCTETS, metadata.getSize().get())
+            .setString(HEADER_CONTENT, metadata.getHeaderContent().get().asString()));
     }
 
     public Mono<Void> insertForce(CassandraMessageMetadata metadata) {
