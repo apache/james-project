@@ -4,6 +4,8 @@ import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 
 import java.io.InputStream;
 
+import javax.inject.Inject;
+
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.Username;
@@ -26,6 +28,7 @@ public class CassandraUploadRepository implements UploadRepository {
     private final BlobStore blobStore;
     private final BucketNameGenerator bucketNameGenerator;
 
+    @Inject
     public CassandraUploadRepository(UploadDAO uploadDAO, BlobStore blobStore, BucketNameGenerator bucketNameGenerator) {
         this.uploadDAO = uploadDAO;
         this.blobStore = blobStore;
@@ -33,7 +36,7 @@ public class CassandraUploadRepository implements UploadRepository {
     }
 
     @Override
-    public Publisher<UploadId> upload(InputStream data, ContentType contentType, Username user) {
+    public Publisher<UploadMetaData> upload(InputStream data, ContentType contentType, Username user) {
         UploadId uploadId = generateId();
         UploadBucketName uploadBucketName = bucketNameGenerator.current();
         BucketName bucketName = uploadBucketName.asBucketName();
@@ -41,7 +44,8 @@ public class CassandraUploadRepository implements UploadRepository {
         return Mono.fromCallable(() -> new CountingInputStream(data))
             .flatMap(countingInputStream -> Mono.from(blobStore.save(bucketName, countingInputStream, LOW_COST))
                 .map(blobId -> new UploadDAO.UploadRepresentation(uploadId, bucketName, blobId, contentType, countingInputStream.getCount(), user))
-                .flatMap(upload -> uploadDAO.save(upload).thenReturn(upload.getId())));
+                .flatMap(upload -> uploadDAO.save(upload)
+                    .thenReturn(UploadMetaData.from(uploadId, upload.getContentType(), upload.getSize(), upload.getBlobId()))));
     }
 
     @Override

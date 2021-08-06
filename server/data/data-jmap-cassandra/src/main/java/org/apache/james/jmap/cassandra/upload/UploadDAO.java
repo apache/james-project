@@ -32,6 +32,8 @@ import static org.apache.james.jmap.cassandra.upload.UploadModule.SIZE;
 import static org.apache.james.jmap.cassandra.upload.UploadModule.TABLE_NAME;
 import static org.apache.james.jmap.cassandra.upload.UploadModule.USER;
 
+import javax.inject.Inject;
+
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
@@ -128,6 +130,7 @@ public class UploadDAO {
     private final PreparedStatement insert;
     private final PreparedStatement selectOne;
 
+    @Inject
     public UploadDAO(Session session, BlobId.Factory blobIdFactory, UploadConfiguration configuration) {
         this.executor = new CassandraAsyncExecutor(session);
         this.blobIdFactory = blobIdFactory;

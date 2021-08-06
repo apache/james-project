@@ -70,7 +70,7 @@ class CassandraUploadRepositoryTest implements UploadRepositoryContract {
     @Test
     void uploadShouldExpire() throws Exception {
         Username bob = Username.of("bob");
-        UploadId id = Mono.from(testee.upload(data(), ContentType.of("text/plain"), bob)).block();
+        UploadId id = Mono.from(testee.upload(data(), ContentType.of("text/plain"), bob)).block().uploadId();
 
         Thread.sleep(6000);
 

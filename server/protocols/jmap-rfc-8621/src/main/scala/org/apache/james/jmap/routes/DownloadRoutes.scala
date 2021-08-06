@@ -22,6 +22,7 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream}
 import java.nio.charset.StandardCharsets
 import java.util.stream
 import java.util.stream.Stream
+
 import com.google.common.base.CharMatcher
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
@@ -29,10 +30,11 @@ import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, UNAUTHORIZED}
 import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus, QueryStringDecoder}
-
 import javax.inject.{Inject, Named}
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.api.model.Size.{Size, sanitizeSize}
+import org.apache.james.jmap.api.model.{Upload, UploadId, UploadNotFoundException}
+import org.apache.james.jmap.api.upload.UploadRepository
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.{AccountId, Id, ProblemDetails}
 import org.apache.james.jmap.exceptions.UnauthorizedException
@@ -100,6 +102,14 @@ case class MessageBlob(blobId: BlobId, message: MessageResult) extends Blob {
   override def content: InputStream = message.getFullContent.getInputStream
 }
 
+case class UploadedBlob(blobId: BlobId, upload: Upload) extends Blob {
+  override def contentType: ContentType = upload.contentType
+
+  override def size: Try[Size] = Success(upload.size)
+
+  override def content: InputStream = upload.content()
+}
+
 case class AttachmentBlob(attachmentMetadata: AttachmentMetadata, fileContent: InputStream) extends Blob {
   override def size: Try[Size] = Success(sanitizeSize(attachmentMetadata.getSize))
 
@@ -132,6 +142,27 @@ class MessageBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
         messageIdManager.getMessagesReactive(List(messageId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
         .map[Blob](MessageBlob(blobId, _))
         .switchIfEmpty(SMono.error(BlobNotFoundException(blobId))))
+    }
+  }
+}
+
+class UploadResolver @Inject()(val uploadRepository: UploadRepository) extends BlobResolver {
+  private val prefix = "uploads-"
+
+  override def resolve(blobId: BlobId, mailboxSession: MailboxSession): BlobResolutionResult = {
+    if (!blobId.value.value.startsWith(prefix)) {
+      NonApplicable
+    } else {
+      val uploadIdAsString = blobId.value.value.substring(prefix.length)
+      Try(UploadId.from(uploadIdAsString)) match {
+        case Failure(_) => NonApplicable
+        case Success(uploadId) => Applicable(
+          SMono(uploadRepository.retrieve(uploadId, mailboxSession.getUser))
+            .map(upload => UploadedBlob(blobId, upload))
+            .onErrorResume {
+              case _: UploadNotFoundException => SMono.error(BlobNotFoundException(blobId))
+            })
+      }
     }
   }
 }

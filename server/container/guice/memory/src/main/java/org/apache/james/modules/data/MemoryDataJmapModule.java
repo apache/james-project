@@ -26,11 +26,13 @@ import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.api.projections.MessageFastViewProjectionHealthCheck;
+import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.api.vacation.NotificationRegistry;
 import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
 import org.apache.james.jmap.memory.projections.MemoryEmailQueryView;
 import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
+import org.apache.james.jmap.memory.upload.InMemoryUploadRepository;
 import org.apache.james.jmap.memory.vacation.MemoryNotificationRegistry;
 import org.apache.james.jmap.memory.vacation.MemoryVacationRepository;
 import org.apache.james.mailbox.extractor.TextExtractor;
@@ -47,6 +49,9 @@ public class MemoryDataJmapModule extends AbstractModule {
     protected void configure() {
         bind(MemoryAccessTokenRepository.class).in(Scopes.SINGLETON);
         bind(AccessTokenRepository.class).to(MemoryAccessTokenRepository.class);
+
+        bind(InMemoryUploadRepository.class).in(Scopes.SINGLETON);
+        bind(UploadRepository.class).to(InMemoryUploadRepository.class);
 
         bind(MemoryVacationRepository.class).in(Scopes.SINGLETON);
         bind(VacationRepository.class).to(MemoryVacationRepository.class);
