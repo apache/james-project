@@ -21,6 +21,7 @@ package org.apache.james.mailbox.model;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -31,6 +32,7 @@ import org.apache.james.mailbox.ModSeq;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Represent a Flag update for a message
@@ -90,27 +92,6 @@ public class UpdatedFlags {
         }
     }
 
-    private final MessageUid uid;
-    /**
-     * The usage of Optional here is for backward compatibility (to be able to still dequeue older events)
-     */
-    private final Optional<MessageId> messageId;
-    private final Flags oldFlags;
-    private final Flags newFlags;
-    private final Flags modifiedFlags;
-    private final ModSeq modSeq;
-
-    private UpdatedFlags(MessageUid uid, Optional<MessageId> messageId, ModSeq modSeq, Flags oldFlags, Flags newFlags) {
-       this.uid = uid;
-       this.messageId = messageId;
-       this.modSeq = modSeq;
-       this.oldFlags = oldFlags;
-       this.newFlags = newFlags;
-       this.modifiedFlags = new Flags();
-       addModifiedSystemFlags(oldFlags, newFlags, modifiedFlags);
-       addModifiedUserFlags(oldFlags, newFlags, modifiedFlags);
-    }
-    
     private static void addModifiedSystemFlags(Flags oldFlags, Flags newFlags, Flags modifiedFlags) {
         if (isChanged(oldFlags, newFlags, Flags.Flag.ANSWERED)) {
             modifiedFlags.add(Flags.Flag.ANSWERED);
@@ -131,13 +112,13 @@ public class UpdatedFlags {
             modifiedFlags.add(Flags.Flag.SEEN);
         }
     }
-    
+
     private static void addModifiedUserFlags(Flags oldFlags, Flags newFlags, Flags modifiedFlags) {
         addModifiedUserFlags(oldFlags, newFlags, oldFlags.getUserFlags(), modifiedFlags);
         addModifiedUserFlags(oldFlags, newFlags, newFlags.getUserFlags(), modifiedFlags);
 
     }
-    
+
 
     private static void addModifiedUserFlags(Flags oldFlags, Flags newFlags, String[] userflags, Flags modifiedFlags) {
         for (String userFlag : userflags) {
@@ -146,7 +127,7 @@ public class UpdatedFlags {
             }
         }
     }
-    
+
     private static boolean isChanged(Flags original, Flags updated, Flags.Flag flag) {
         return original != null && updated != null && (original.contains(flag) ^ updated.contains(flag));
     }
@@ -155,6 +136,26 @@ public class UpdatedFlags {
         return original != null && updated != null && (original.contains(userFlag) ^ updated.contains(userFlag));
     }
 
+    private final MessageUid uid;
+    /**
+     * The usage of Optional here is for backward compatibility (to be able to still dequeue older events)
+     */
+    private final Optional<MessageId> messageId;
+    private final Flags oldFlags;
+    private final Flags newFlags;
+    private final Flags modifiedFlags;
+    private final ModSeq modSeq;
+
+    private UpdatedFlags(MessageUid uid, Optional<MessageId> messageId, ModSeq modSeq, Flags oldFlags, Flags newFlags) {
+       this.uid = uid;
+       this.messageId = messageId;
+       this.modSeq = modSeq;
+       this.oldFlags = oldFlags;
+       this.newFlags = newFlags;
+       this.modifiedFlags = new Flags();
+       addModifiedSystemFlags(oldFlags, newFlags, modifiedFlags);
+       addModifiedUserFlags(oldFlags, newFlags, modifiedFlags);
+    }
     
     /**
      * Return the old {@link Flags} for the message
@@ -207,8 +208,12 @@ public class UpdatedFlags {
      * @return <code>Flags.Flag</code> <code>Iterator</code>, not null
      */
 
-    public Iterator<Flags.Flag> systemFlagIterator() {
-        return Arrays.asList(modifiedFlags.getSystemFlags()).iterator();
+    public List<Flags.Flag> modifiedSystemFlags() {
+        return ImmutableList.copyOf(modifiedFlags.getSystemFlags());
+    }
+
+    public List<String> modifiedUserFlags() {
+        return ImmutableList.copyOf(modifiedFlags.getUserFlags());
     }
     
     /**

@@ -604,12 +604,23 @@ public class CassandraMessageMapper implements MessageMapper {
 
     private Mono<Boolean> updateFlags(ComposedMessageIdWithMetaData oldMetadata, Flags newFlags, ModSeq newModSeq) {
         ComposedMessageIdWithMetaData newMetadata = ComposedMessageIdWithMetaData.builder()
-                .composedMessageId(oldMetadata.getComposedMessageId())
-                .modSeq(newModSeq)
-                .flags(newFlags)
-                .threadId(oldMetadata.getThreadId())
-                .build();
-        return imapUidDAO.updateMetadata(newMetadata, oldMetadata.getModSeq())
+            .composedMessageId(oldMetadata.getComposedMessageId())
+            .modSeq(newModSeq)
+            .flags(newFlags)
+            .threadId(oldMetadata.getThreadId())
+            .build();
+
+        ComposedMessageId composedMessageId = newMetadata.getComposedMessageId();
+        ModSeq previousModseq = oldMetadata.getModSeq();
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .messageId(composedMessageId.getMessageId())
+            .modSeq(newMetadata.getModSeq())
+            .oldFlags(oldMetadata.getFlags())
+            .newFlags(newMetadata.getFlags())
+            .uid(composedMessageId.getUid())
+            .build();
+
+        return imapUidDAO.updateMetadata(composedMessageId, updatedFlags, previousModseq)
             .flatMap(success -> {
                 if (success) {
                     return messageIdDAO.updateMetadata(newMetadata).thenReturn(true);

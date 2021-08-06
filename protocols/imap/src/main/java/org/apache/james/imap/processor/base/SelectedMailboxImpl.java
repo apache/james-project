@@ -260,7 +260,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
 
     private boolean interestingFlags(UpdatedFlags updated) {
         boolean result;
-        final Iterator<Flags.Flag> it = updated.systemFlagIterator();
+        final Iterator<Flags.Flag> it = updated.modifiedSystemFlags().iterator();
         if (it.hasNext()) {
             final Flags.Flag flag = it.next();
             if (flag.equals(uninterestingFlag)) {
@@ -428,7 +428,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener {
             // See IMAP-287
             List<UpdatedFlags> uflags = updated.getUpdatedFlags();
             for (UpdatedFlags u : uflags) {
-                Iterator<Flag> flags = u.systemFlagIterator();
+                Iterator<Flag> flags = u.modifiedSystemFlags().iterator();
 
                 while (flags.hasNext()) {
                     if (Flag.RECENT.equals(flags.next())) {
