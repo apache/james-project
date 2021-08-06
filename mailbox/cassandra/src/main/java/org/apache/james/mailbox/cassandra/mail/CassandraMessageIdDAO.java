@@ -24,6 +24,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.gte;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.lte;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.removeAll;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
@@ -74,6 +75,7 @@ import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.ThreadId;
+import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.util.streams.Limit;
 
 import com.datastax.driver.core.BoundStatement;
@@ -83,6 +85,7 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -92,6 +95,8 @@ public class CassandraMessageIdDAO {
     private static final String IMAP_UID_GTE = IMAP_UID + "_GTE";
     private static final String IMAP_UID_LTE = IMAP_UID + "_LTE";
     public static final String LIMIT = "LIMIT_BIND_MARKER";
+    private static final String ADDED_USERS_FLAGS = "added_user_flags";
+    private static final String REMOVED_USERS_FLAGS = "removed_user_flags";
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final BlobId.Factory blobIdFactory;
@@ -164,7 +169,8 @@ public class CassandraMessageIdDAO {
                 .and(set(RECENT, bindMarker(RECENT)))
                 .and(set(SEEN, bindMarker(SEEN)))
                 .and(set(USER, bindMarker(USER)))
-                .and(set(USER_FLAGS, bindMarker(USER_FLAGS)))
+                .and(addAll(USER_FLAGS, bindMarker(ADDED_USERS_FLAGS)))
+                .and(removeAll(USER_FLAGS, bindMarker(REMOVED_USERS_FLAGS)))
                 .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID)))
                 .and(eq(IMAP_UID, bindMarker(IMAP_UID))));
     }
@@ -271,21 +277,68 @@ public class CassandraMessageIdDAO {
                 .setString(HEADER_CONTENT, metadata.getHeaderContent().get().asString()));
     }
 
-    public Mono<Void> updateMetadata(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
-        ComposedMessageId composedMessageId = composedMessageIdWithMetaData.getComposedMessageId();
-        Flags flags = composedMessageIdWithMetaData.getFlags();
-        return cassandraAsyncExecutor.executeVoid(update.bind()
-                .setLong(MOD_SEQ, composedMessageIdWithMetaData.getModSeq().asLong())
-                .setBool(ANSWERED, flags.contains(Flag.ANSWERED))
-                .setBool(DELETED, flags.contains(Flag.DELETED))
-                .setBool(DRAFT, flags.contains(Flag.DRAFT))
-                .setBool(FLAGGED, flags.contains(Flag.FLAGGED))
-                .setBool(RECENT, flags.contains(Flag.RECENT))
-                .setBool(SEEN, flags.contains(Flag.SEEN))
-                .setBool(USER, flags.contains(Flag.USER))
-                .setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags()))
-                .setUUID(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
-                .setLong(IMAP_UID, composedMessageId.getUid().asLong()));
+    public Mono<Void> updateMetadata(ComposedMessageId composedMessageId, UpdatedFlags updatedFlags) {
+        return cassandraAsyncExecutor.executeVoid(updateBoundStatement(composedMessageId, updatedFlags));
+    }
+
+    private BoundStatement updateBoundStatement(ComposedMessageId id, UpdatedFlags updatedFlags) {
+        final BoundStatement boundStatement = update.bind()
+            .setLong(MOD_SEQ, updatedFlags.getModSeq().asLong())
+            .setUUID(MAILBOX_ID, ((CassandraId) id.getMailboxId()).asUuid())
+            .setLong(IMAP_UID, id.getUid().asLong());
+
+        if (updatedFlags.isChanged(Flag.ANSWERED)) {
+            boundStatement.setBool(ANSWERED, updatedFlags.isModifiedToSet(Flag.ANSWERED));
+        } else {
+            boundStatement.unset(ANSWERED);
+        }
+        if (updatedFlags.isChanged(Flag.DRAFT)) {
+            boundStatement.setBool(DRAFT, updatedFlags.isModifiedToSet(Flag.DRAFT));
+        } else {
+            boundStatement.unset(DRAFT);
+        }
+        if (updatedFlags.isChanged(Flag.FLAGGED)) {
+            boundStatement.setBool(FLAGGED, updatedFlags.isModifiedToSet(Flag.FLAGGED));
+        } else {
+            boundStatement.unset(FLAGGED);
+        }
+        if (updatedFlags.isChanged(Flag.DELETED)) {
+            boundStatement.setBool(DELETED, updatedFlags.isModifiedToSet(Flag.DELETED));
+        } else {
+            boundStatement.unset(DELETED);
+        }
+        if (updatedFlags.isChanged(Flag.RECENT)) {
+            boundStatement.setBool(RECENT, updatedFlags.getNewFlags().contains(Flag.RECENT));
+        } else {
+            boundStatement.unset(RECENT);
+        }
+        if (updatedFlags.isChanged(Flag.SEEN)) {
+            boundStatement.setBool(SEEN, updatedFlags.isModifiedToSet(Flag.SEEN));
+        } else {
+            boundStatement.unset(SEEN);
+        }
+        if (updatedFlags.isChanged(Flag.USER)) {
+            boundStatement.setBool(USER, updatedFlags.isModifiedToSet(Flag.USER));
+        } else {
+            boundStatement.unset(USER);
+        }
+        Sets.SetView<String> removedFlags = Sets.difference(
+            ImmutableSet.copyOf(updatedFlags.getOldFlags().getUserFlags()),
+            ImmutableSet.copyOf(updatedFlags.getNewFlags().getUserFlags()));
+        Sets.SetView<String> addedFlags = Sets.difference(
+            ImmutableSet.copyOf(updatedFlags.getNewFlags().getUserFlags()),
+            ImmutableSet.copyOf(updatedFlags.getOldFlags().getUserFlags()));
+        if (addedFlags.isEmpty()) {
+            boundStatement.unset(ADDED_USERS_FLAGS);
+        } else {
+            boundStatement.setSet(ADDED_USERS_FLAGS, addedFlags);
+        }
+        if (removedFlags.isEmpty()) {
+            boundStatement.unset(REMOVED_USERS_FLAGS);
+        } else {
+            boundStatement.setSet(REMOVED_USERS_FLAGS, removedFlags);
+        }
+        return boundStatement;
     }
 
     public Mono<Optional<CassandraMessageMetadata>> retrieve(CassandraId mailboxId, MessageUid uid) {

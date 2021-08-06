@@ -352,7 +352,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
         return imapUidDAO.updateMetadata(composedMessageId, updatedFlags, previousModseq)
             .filter(FunctionalUtils.identityPredicate())
-            .flatMap(any -> messageIdDAO.updateMetadata(newComposedId)
+            .flatMap(any -> messageIdDAO.updateMetadata(composedMessageId, updatedFlags)
                 .thenReturn(Pair.of(oldComposedId.getFlags(), newComposedId)))
             .single();
     }
