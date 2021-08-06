@@ -21,6 +21,7 @@ package org.apache.james.queue.rabbitmq.view.cassandra;
 
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
@@ -47,18 +48,20 @@ public class CassandraMailQueueMailDelete {
     private final EnqueuedMailsDAO enqueuedMailsDAO;
     private final CassandraMailQueueBrowser cassandraMailQueueBrowser;
     private final CassandraMailQueueViewConfiguration configuration;
+    private final Clock clock;
 
     @Inject
     CassandraMailQueueMailDelete(DeletedMailsDAO deletedMailsDao,
                                  BrowseStartDAO browseStartDao,
                                  ContentStartDAO contentStartDAO, EnqueuedMailsDAO enqueuedMailsDAO, CassandraMailQueueBrowser cassandraMailQueueBrowser,
-                                 CassandraMailQueueViewConfiguration configuration) {
+                                 CassandraMailQueueViewConfiguration configuration, Clock clock) {
         this.deletedMailsDao = deletedMailsDao;
         this.browseStartDao = browseStartDao;
         this.contentStartDAO = contentStartDAO;
         this.enqueuedMailsDAO = enqueuedMailsDAO;
         this.cassandraMailQueueBrowser = cassandraMailQueueBrowser;
         this.configuration = configuration;
+        this.clock = clock;
     }
 
     Mono<Void> considerDeleted(EnqueueId enqueueId, MailQueueName mailQueueName) {
@@ -86,7 +89,10 @@ public class CassandraMailQueueMailDelete {
     }
 
     private Mono<Instant> findNewBrowseStart(MailQueueName mailQueueName) {
-        return cassandraMailQueueBrowser.browseReferences(mailQueueName)
+        Slice currentSlice = Slice.of(clock.instant());
+        return browseStartDao.findBrowseStart(mailQueueName)
+            .filter(browseStart -> browseStart.isBefore(currentSlice.getStartSliceInstant()))
+            .flatMapMany(browseStart -> cassandraMailQueueBrowser.browseReferences(mailQueueName, browseStart))
             .map(enqueuedItem -> enqueuedItem.getSlicingContext().getTimeRangeStart())
             .next();
     }

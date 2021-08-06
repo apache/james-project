@@ -127,7 +127,11 @@ public class CassandraMailQueueBrowser {
 
     Flux<EnqueuedItemWithSlicingContext> browseReferences(MailQueueName queueName) {
         return browseStartDao.findBrowseStart(queueName)
-            .flatMapMany(this::allSlicesStartingAt)
+            .flatMapMany(browseStart -> browseReferences(queueName, browseStart));
+    }
+
+    Flux<EnqueuedItemWithSlicingContext> browseReferences(MailQueueName queueName, Instant browseStart) {
+        return allSlicesStartingAt(browseStart)
             .flatMapSequential(slice -> browseSlice(queueName, slice));
     }
 

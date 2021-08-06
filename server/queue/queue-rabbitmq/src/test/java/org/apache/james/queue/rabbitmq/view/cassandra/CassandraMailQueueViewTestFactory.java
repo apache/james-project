@@ -43,7 +43,7 @@ public class CassandraMailQueueViewTestFactory {
 
         CassandraMailQueueBrowser cassandraMailQueueBrowser = new CassandraMailQueueBrowser(browseStartDao, deletedMailsDao, enqueuedMailsDao, mimeMessageStoreFactory, configuration, clock);
         CassandraMailQueueMailStore cassandraMailQueueMailStore = new CassandraMailQueueMailStore(enqueuedMailsDao, browseStartDao, contentStartDAO, configuration, clock);
-        CassandraMailQueueMailDelete cassandraMailQueueMailDelete = new CassandraMailQueueMailDelete(deletedMailsDao, browseStartDao, contentStartDAO, enqueuedMailsDao, cassandraMailQueueBrowser, configuration);
+        CassandraMailQueueMailDelete cassandraMailQueueMailDelete = new CassandraMailQueueMailDelete(deletedMailsDao, browseStartDao, contentStartDAO, enqueuedMailsDao, cassandraMailQueueBrowser, configuration, clock);
 
         return new CassandraMailQueueView.Factory(
             cassandraMailQueueMailStore,
