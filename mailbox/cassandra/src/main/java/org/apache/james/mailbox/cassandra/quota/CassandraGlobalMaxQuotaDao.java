@@ -137,6 +137,7 @@ public class CassandraGlobalMaxQuotaDao {
             .setString(KEY, VALUE))
             .map(row -> new Limits(
                 Optional.ofNullable(row.get(STORAGE, Long.class)).flatMap(QuotaCodec::longToQuotaSize),
-                Optional.ofNullable(row.get(MESSAGE, Long.class)).flatMap(QuotaCodec::longToQuotaCount)));
+                Optional.ofNullable(row.get(MESSAGE, Long.class)).flatMap(QuotaCodec::longToQuotaCount)))
+            .switchIfEmpty(Mono.just(Limits.empty()));
     }
 }

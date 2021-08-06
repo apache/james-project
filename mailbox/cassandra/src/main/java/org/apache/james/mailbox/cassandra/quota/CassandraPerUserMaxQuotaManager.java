@@ -33,7 +33,6 @@ import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
-import org.reactivestreams.Publisher;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -177,19 +176,19 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
 
     @Override
     public QuotaDetails quotaDetails(QuotaRoot quotaRoot) {
-        return Mono.zip(
-                perUserQuota.getLimits(quotaRoot),
-                Mono.justOrEmpty(quotaRoot.getDomain()).flatMap(perDomainQuota::getLimits).switchIfEmpty(Mono.just(Limits.empty())),
-                globalQuota.getGlobalLimits())
-            .map(tuple -> new QuotaDetails(
-                countDetails(tuple.getT1(), tuple.getT2(), tuple.getT3().getCountLimit()),
-                sizeDetails(tuple.getT1(), tuple.getT2(), tuple.getT3().getSizeLimit())))
+        return quotaDetailsReactive(quotaRoot)
             .block();
     }
 
     @Override
-    public Publisher<QuotaDetails> quotaDetailsReactive(QuotaRoot quotaRoot) {
-        return MaxQuotaManager.super.quotaDetailsReactive(quotaRoot);
+    public Mono<QuotaDetails> quotaDetailsReactive(QuotaRoot quotaRoot) {
+        return Mono.zip(
+            perUserQuota.getLimits(quotaRoot),
+            Mono.justOrEmpty(quotaRoot.getDomain()).flatMap(perDomainQuota::getLimits).switchIfEmpty(Mono.just(Limits.empty())),
+            globalQuota.getGlobalLimits())
+            .map(tuple -> new QuotaDetails(
+                countDetails(tuple.getT1(), tuple.getT2(), tuple.getT3().getCountLimit()),
+                sizeDetails(tuple.getT1(), tuple.getT2(), tuple.getT3().getSizeLimit())));
     }
 
     private Map<Quota.Scope, QuotaSizeLimit> sizeDetails(Limits userLimits, Limits domainLimits, Optional<QuotaSizeLimit> globalLimits) {
