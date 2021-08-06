@@ -18,6 +18,23 @@ Change list:
  - [Adding the threadId to the ElasticSearch index](#adding-the-threadid-to-the-elasticsearch-index)
  - [Rework message denormalization](#rework-message-denormalization)
  - [Adding threadId column to message metadata tables](#adding-threadid-column-to-message-metadata-tables)
+ - [Restructure maximum quotas definition](#restructure-maximum-quotas-definition)
+ 
+### Restructure maximum quotas definition
+
+Date 06/08/2021
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3630
+
+Concerned product: Distributed James and
+Concerned product: Distributed James Cassandra James server
+
+We restructured maximum global quota in order to store them in a single Cassandra row. This enables to retrieve this 
+data on a single primary key read, which is important for performance when receiving many emails over SMTP.
+
+Please recreate the maximum quota after the upgrade. 
+
+`defaultMaxQuota` table can be dropped.
 
 ### Adding the threadId to the ElasticSearch index
 

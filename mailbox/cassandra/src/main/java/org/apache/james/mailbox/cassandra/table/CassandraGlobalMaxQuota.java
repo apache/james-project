@@ -20,9 +20,9 @@
 package org.apache.james.mailbox.cassandra.table;
 
 public interface CassandraGlobalMaxQuota {
-    String TABLE_NAME = "defaultMaxQuota";
+    String TABLE_NAME = "defaultMaxQuota2";
 
-    String TYPE = "type";
+    String KEY = "key";
     String VALUE = "value";
 
     String MESSAGE = "message";

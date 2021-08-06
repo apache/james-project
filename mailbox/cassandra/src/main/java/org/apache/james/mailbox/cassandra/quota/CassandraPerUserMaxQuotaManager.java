@@ -33,6 +33,7 @@ import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.reactivestreams.Publisher;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -185,6 +186,11 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
                 countDetails(tuple.getT1(), tuple.getT2(), tuple.getT4()),
                 sizeDetails(tuple.getT1(), tuple.getT2(), tuple.getT3())))
             .block();
+    }
+
+    @Override
+    public Publisher<QuotaDetails> quotaDetailsReactive(QuotaRoot quotaRoot) {
+        return MaxQuotaManager.super.quotaDetailsReactive(quotaRoot);
     }
 
     private Map<Quota.Scope, QuotaSizeLimit> sizeDetails(Limits userLimits, Limits domainLimits, Optional<QuotaSizeLimit> globalLimits) {
