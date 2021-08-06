@@ -21,8 +21,10 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.prependAll;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
@@ -140,27 +142,27 @@ public class CassandraMessageDAOV3 {
     }
 
     private PreparedStatement prepareInsert(Session session) {
-        return session.prepare(insertInto(TABLE_NAME)
-            .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
-            .value(INTERNAL_DATE, bindMarker(INTERNAL_DATE))
-            .value(BODY_START_OCTET, bindMarker(BODY_START_OCTET))
-            .value(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS))
-            .value(BODY_OCTECTS, bindMarker(BODY_OCTECTS))
-            .value(BODY_CONTENT, bindMarker(BODY_CONTENT))
-            .value(HEADER_CONTENT, bindMarker(HEADER_CONTENT))
-            .value(CONTENT_DESCRIPTION, bindMarker(CONTENT_DESCRIPTION))
-            .value(CONTENT_DISPOSITION_TYPE, bindMarker(CONTENT_DISPOSITION_TYPE))
-            .value(MEDIA_TYPE, bindMarker(MEDIA_TYPE))
-            .value(SUB_TYPE, bindMarker(SUB_TYPE))
-            .value(CONTENT_ID, bindMarker(CONTENT_ID))
-            .value(CONTENT_MD5, bindMarker(CONTENT_MD5))
-            .value(CONTENT_TRANSFER_ENCODING, bindMarker(CONTENT_TRANSFER_ENCODING))
-            .value(CONTENT_LOCATION, bindMarker(CONTENT_LOCATION))
-            .value(CONTENT_LANGUAGE, bindMarker(CONTENT_LANGUAGE))
-            .value(CONTENT_DISPOSITION_PARAMETERS, bindMarker(CONTENT_DISPOSITION_PARAMETERS))
-            .value(CONTENT_TYPE_PARAMETERS, bindMarker(CONTENT_TYPE_PARAMETERS))
-            .value(TEXTUAL_LINE_COUNT, bindMarker(TEXTUAL_LINE_COUNT))
-            .value(ATTACHMENTS, bindMarker(ATTACHMENTS)));
+        return session.prepare(update(TABLE_NAME)
+            .with(set(INTERNAL_DATE, bindMarker(INTERNAL_DATE)))
+            .and(set(BODY_START_OCTET, bindMarker(BODY_START_OCTET)))
+            .and(set(FULL_CONTENT_OCTETS, bindMarker(FULL_CONTENT_OCTETS)))
+            .and(set(BODY_OCTECTS, bindMarker(BODY_OCTECTS)))
+            .and(set(BODY_CONTENT, bindMarker(BODY_CONTENT)))
+            .and(set(HEADER_CONTENT, bindMarker(HEADER_CONTENT)))
+            .and(set(CONTENT_DESCRIPTION, bindMarker(CONTENT_DESCRIPTION)))
+            .and(set(CONTENT_DISPOSITION_TYPE, bindMarker(CONTENT_DISPOSITION_TYPE)))
+            .and(set(MEDIA_TYPE, bindMarker(MEDIA_TYPE)))
+            .and(set(SUB_TYPE, bindMarker(SUB_TYPE)))
+            .and(set(CONTENT_ID, bindMarker(CONTENT_ID)))
+            .and(set(CONTENT_MD5, bindMarker(CONTENT_MD5)))
+            .and(set(CONTENT_TRANSFER_ENCODING, bindMarker(CONTENT_TRANSFER_ENCODING)))
+            .and(set(CONTENT_LOCATION, bindMarker(CONTENT_LOCATION)))
+            .and(set(CONTENT_LANGUAGE, bindMarker(CONTENT_LANGUAGE)))
+            .and(set(CONTENT_DISPOSITION_PARAMETERS, bindMarker(CONTENT_DISPOSITION_PARAMETERS)))
+            .and(set(CONTENT_TYPE_PARAMETERS, bindMarker(CONTENT_TYPE_PARAMETERS)))
+            .and(set(TEXTUAL_LINE_COUNT, bindMarker(TEXTUAL_LINE_COUNT)))
+            .and(prependAll(ATTACHMENTS, bindMarker(ATTACHMENTS)))
+            .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
     }
 
     private PreparedStatement prepareDelete(Session session) {
@@ -176,7 +178,7 @@ public class CassandraMessageDAOV3 {
 
     public Mono<Void> save(MessageRepresentation message) {
         CassandraMessageId messageId = (CassandraMessageId) message.getMessageId();
-        return cassandraAsyncExecutor.executeVoid(insert.bind()
+        BoundStatement boundStatement = insert.bind()
             .setUUID(MESSAGE_ID, messageId.get())
             .setTimestamp(INTERNAL_DATE, message.getInternalDate())
             .setInt(BODY_START_OCTET, message.getBodyStartOctet())
@@ -195,8 +197,15 @@ public class CassandraMessageDAOV3 {
             .setString(CONTENT_LOCATION, message.getProperties().getContentLocation())
             .setList(CONTENT_LANGUAGE, message.getProperties().getContentLanguage())
             .setMap(CONTENT_DISPOSITION_PARAMETERS, message.getProperties().getContentDispositionParameters())
-            .setMap(CONTENT_TYPE_PARAMETERS, message.getProperties().getContentTypeParameters())
-            .setList(ATTACHMENTS, buildAttachmentUdt(message.getAttachments())));
+            .setMap(CONTENT_TYPE_PARAMETERS, message.getProperties().getContentTypeParameters());
+
+        if (message.getAttachments().isEmpty()) {
+            boundStatement.unset(ATTACHMENTS);
+        } else {
+            boundStatement.setList(ATTACHMENTS, buildAttachmentUdt(message.getAttachments()));
+        }
+
+        return cassandraAsyncExecutor.executeVoid(boundStatement);
     }
 
     private Mono<Tuple2<BlobId, BlobId>> saveContent(MailboxMessage message) throws MailboxException {
@@ -229,7 +238,7 @@ public class CassandraMessageDAOV3 {
 
     private BoundStatement boundWriteStatement(MailboxMessage message, Tuple2<BlobId, BlobId> pair) {
         CassandraMessageId messageId = (CassandraMessageId) message.getMessageId();
-        return insert.bind()
+        BoundStatement boundStatement = insert.bind()
             .setUUID(MESSAGE_ID, messageId.get())
             .setTimestamp(INTERNAL_DATE, message.getInternalDate())
             .setInt(BODY_START_OCTET, (int) (message.getHeaderOctets()))
@@ -248,8 +257,15 @@ public class CassandraMessageDAOV3 {
             .setString(CONTENT_LOCATION, message.getProperties().getContentLocation())
             .setList(CONTENT_LANGUAGE, message.getProperties().getContentLanguage())
             .setMap(CONTENT_DISPOSITION_PARAMETERS, message.getProperties().getContentDispositionParameters())
-            .setMap(CONTENT_TYPE_PARAMETERS, message.getProperties().getContentTypeParameters())
-            .setList(ATTACHMENTS, buildAttachmentUdt(message));
+            .setMap(CONTENT_TYPE_PARAMETERS, message.getProperties().getContentTypeParameters());
+
+        if (message.getAttachments().isEmpty()) {
+            boundStatement.unset(ATTACHMENTS);
+        } else {
+            boundStatement.setList(ATTACHMENTS, buildAttachmentUdt(message));
+        }
+
+        return boundStatement;
     }
 
     private ImmutableList<UDTValue> buildAttachmentUdt(MailboxMessage message) {

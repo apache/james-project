@@ -223,7 +223,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
             cassandra.getConf()
                 .registerScenario(fail()
                     .forever()
-                    .whenQueryStartsWith("INSERT INTO messageV3"));
+                    .whenQueryStartsWith("UPDATE messageV3"));
 
             try {
                 messageMapper.add(benwaInboxMailbox, message1);
