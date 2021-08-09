@@ -31,7 +31,9 @@ import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus}
 import javax.inject.{Inject, Named}
 import org.apache.commons.fileupload.util.LimitedInputStream
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
-import org.apache.james.jmap.api.model.Size.{Size, sanitizeSize}
+import org.apache.james.jmap.api.model.Size.Size
+import org.apache.james.jmap.api.model.{UploadId, UploadMetaData}
+import org.apache.james.jmap.api.upload.UploadRepository
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.{AccountId, Id, JmapRfc8621Configuration, ProblemDetails}
 import org.apache.james.jmap.exceptions.UnauthorizedException
@@ -41,8 +43,8 @@ import org.apache.james.jmap.json.{ResponseSerializer, UploadSerializer}
 import org.apache.james.jmap.mail.BlobId
 import org.apache.james.jmap.routes.UploadRoutes.LOGGER
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
-import org.apache.james.mailbox.model.{AttachmentMetadata, ContentType}
-import org.apache.james.mailbox.{AttachmentManager, MailboxSession}
+import org.apache.james.mailbox.MailboxSession
+import org.apache.james.mailbox.model.ContentType
 import org.apache.james.util.ReactorUtils
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
@@ -64,7 +66,7 @@ case class UploadResponse(accountId: AccountId,
 
 class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
                              val configuration: JmapRfc8621Configuration,
-                             val attachmentManager: AttachmentManager,
+                             val uploadRepository: UploadRepository,
                              val serializer: UploadSerializer) extends JMAPRoutes {
 
   class CancelledUploadException extends RuntimeException
@@ -159,15 +161,17 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
 
   def uploadContent(accountId: AccountId, contentType: ContentType, inputStream: InputStream, session: MailboxSession): SMono[UploadResponse] =
     SMono
-      .fromPublisher(attachmentManager.storeAttachment(contentType, inputStream, session))
+      .fromPublisher(uploadRepository.upload(inputStream, contentType, session.getUser))
       .map(fromAttachment(_, accountId))
 
-  private def fromAttachment(attachmentMetadata: AttachmentMetadata, accountId: AccountId): UploadResponse =
+  private def fromAttachment(uploadMetaData: UploadMetaData, accountId: AccountId): UploadResponse =
     UploadResponse(
-        blobId = BlobId.of(attachmentMetadata.getAttachmentId.getId).get,
-        `type` = ContentType.of(attachmentMetadata.getType.asString),
-        size = sanitizeSize(attachmentMetadata.getSize),
+        blobId = asBlobId(uploadMetaData.uploadId),
+        `type` = uploadMetaData.contentType,
+        size = uploadMetaData.size,
         accountId = accountId)
+
+  private def asBlobId(uploadId: UploadId): BlobId = BlobId.of(s"uploads-${uploadId.asString()}" ).get
 
   private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails, statusCode: HttpResponseStatus = BAD_REQUEST): SMono[Void] =
     SMono.fromCallable(() => ResponseSerializer.serialize(details).toString)

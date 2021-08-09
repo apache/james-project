@@ -24,11 +24,12 @@ import java.io.InputStream;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.model.Upload;
 import org.apache.james.jmap.api.model.UploadId;
+import org.apache.james.jmap.api.model.UploadMetaData;
 import org.apache.james.mailbox.model.ContentType;
 import org.reactivestreams.Publisher;
 
 public interface UploadRepository {
-    Publisher<UploadId> upload(InputStream data, ContentType contentType, Username user);
+    Publisher<UploadMetaData> upload(InputStream data, ContentType contentType, Username user);
 
     Publisher<Upload> retrieve(UploadId id, Username user);
 }

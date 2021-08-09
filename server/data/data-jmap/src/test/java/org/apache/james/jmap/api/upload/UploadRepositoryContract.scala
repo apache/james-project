@@ -50,7 +50,7 @@
 
    @Test
    def uploadShouldSuccess(): Unit = {
-     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block()
+     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block().uploadId
 
      assertThat(SMono.fromPublisher(testee.retrieve(uploadId, USER)).block())
        .isNotNull
@@ -58,7 +58,7 @@
 
    @Test
    def uploadShouldReturnDifferentIdWhenDifferentData(): Unit = {
-     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block()
+     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block().uploadId
 
      assertThat(uploadId)
        .isNotEqualTo(SMono.fromPublisher(testee.upload(IOUtils.toInputStream("abcxyz", StandardCharsets.UTF_8), CONTENT_TYPE, USER)).block())
@@ -66,7 +66,7 @@
 
    @Test
    def uploadSameContentShouldReturnDifferentId(): Unit = {
-     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block()
+     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block().uploadId
 
      assertThat(uploadId)
        .isNotEqualTo(SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block())
@@ -74,7 +74,7 @@
 
    @Test
    def retrieveShouldSuccess(): Unit = {
-     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block()
+     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block().uploadId
      val actualUpload: Upload = SMono.fromPublisher(testee.retrieve(uploadId, USER)).block()
 
      assertThat(actualUpload.uploadId)
@@ -95,7 +95,7 @@
 
    @Test
    def retrieveShouldThrowWhenUserIsNotOwnerOfUpload(): Unit = {
-     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block()
+     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block().uploadId
 
      assertThatThrownBy(() => SMono.fromPublisher(testee.retrieve(uploadId, Username.of("Alice"))).block())
        .isInstanceOf(classOf[UploadNotFoundException])

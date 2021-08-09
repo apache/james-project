@@ -25,9 +25,12 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.function.Predicate;
 
+import javax.inject.Inject;
+
 public class BucketNameGenerator {
     private final Clock clock;
 
+    @Inject
     public BucketNameGenerator(Clock clock) {
         this.clock = clock;
     }

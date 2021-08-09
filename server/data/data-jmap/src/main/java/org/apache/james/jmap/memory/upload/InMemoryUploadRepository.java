@@ -59,7 +59,7 @@ public class InMemoryUploadRepository implements UploadRepository {
     }
 
     @Override
-    public Publisher<UploadId> upload(InputStream data, ContentType contentType, Username user) {
+    public Publisher<UploadMetaData> upload(InputStream data, ContentType contentType, Username user) {
         Preconditions.checkNotNull(data);
         Preconditions.checkNotNull(contentType);
         Preconditions.checkNotNull(user);
@@ -69,7 +69,7 @@ public class InMemoryUploadRepository implements UploadRepository {
             .map(blobId -> {
                 UploadId uploadId = UploadId.random();
                 uploadStore.put(uploadId, new ImmutablePair<>(user, UploadMetaData.from(uploadId, contentType, dataAsByte.length, blobId)));
-                return uploadId;
+                return UploadMetaData.from(uploadId, contentType, dataAsByte.length, blobId);
             });
     }
 
