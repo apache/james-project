@@ -20,12 +20,14 @@
 package org.apache.james.blob.api;
 
 import java.io.IOException;
+import java.util.Base64;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 
@@ -35,16 +37,21 @@ public class HashBlobId implements BlobId {
         @Override
         public HashBlobId forPayload(byte[] payload) {
             Preconditions.checkArgument(payload != null);
-            return new HashBlobId(Hashing.sha256().hashBytes(payload).toString());
+            return base64(Hashing.sha256().hashBytes(payload));
         }
 
         @Override
         public BlobId forPayload(ByteSource payload) {
             try {
-                return new HashBlobId(payload.hash(Hashing.sha256()).toString());
+                return base64(payload.hash(Hashing.sha256()));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        private HashBlobId base64(HashCode hashCode) {
+            byte[] bytes = hashCode.asBytes();
+            return new HashBlobId(Base64.getEncoder().encodeToString(bytes));
         }
 
         @Override
