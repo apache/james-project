@@ -45,6 +45,7 @@ class StoreAttachmentManagerTest {
     static final AttachmentId ATTACHMENT_ID = AttachmentId.from("1");
     static final AttachmentMetadata ATTACHMENT = AttachmentMetadata.builder()
         .attachmentId(ATTACHMENT_ID)
+        .messageId(MESSAGE_ID)
         .size(48)
         .type("type")
         .build();
@@ -68,7 +69,6 @@ class StoreAttachmentManagerTest {
     void getAttachmentShouldThrowWhenAttachmentDoesNotBelongToUser() throws Exception {
         MailboxSession mailboxSession = mock(MailboxSession.class);
         when(attachmentMapper.getAttachment(ATTACHMENT_ID)).thenReturn(ATTACHMENT);
-        when(attachmentMapper.getRelatedMessageIds(ATTACHMENT_ID)).thenReturn(MESSAGE_IDS);
         when(messageIdManager.accessibleMessages(MESSAGE_IDS, mailboxSession)).thenReturn(ImmutableSet.of());
 
         assertThatThrownBy(() -> testee.getAttachment(ATTACHMENT_ID, mailboxSession))

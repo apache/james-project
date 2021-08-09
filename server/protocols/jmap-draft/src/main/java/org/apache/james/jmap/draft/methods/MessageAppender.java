@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.draft.exceptions.SizeExceededException;
 import org.apache.james.jmap.draft.methods.ValueWithId.CreationMessageEntry;
@@ -48,6 +49,7 @@ import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mime4j.dom.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -178,6 +180,18 @@ public class MessageAppender {
                     return Stream.of(MessageAttachmentMetadata.builder()
                         .attachment(AttachmentMetadata.builder()
                             .attachmentId(AttachmentId.from(blob.getBlobId().getRawValue()))
+                            // TODO dedicated POJOs for JMAP attachment creation
+                            .messageId(new MessageId() {
+                                @Override
+                                public String serialize() {
+                                    throw new NotImplementedException("Fake message id: we should likely use an AttachmentCreationEntry POJO to hold these info");
+                                }
+
+                                @Override
+                                public boolean isSerializable() {
+                                    return false;
+                                }
+                            })
                             .size(blob.getSize())
                             .type(attachment.getType())
                             .build())

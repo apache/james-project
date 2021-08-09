@@ -28,6 +28,13 @@ public class AttachmentMetadata {
         private AttachmentId attachmentId;
         private Long size;
         private ContentType type;
+        private MessageId messageId;
+
+        public Builder messageId(MessageId messageId) {
+            Preconditions.checkArgument(messageId != null);
+            this.messageId = messageId;
+            return this;
+        }
 
         public Builder attachmentId(AttachmentId attachmentId) {
             Preconditions.checkArgument(attachmentId != null);
@@ -55,8 +62,9 @@ public class AttachmentMetadata {
             Preconditions.checkState(type != null, "'type' is mandatory");
             Preconditions.checkState(size != null, "'size' is mandatory");
             Preconditions.checkState(attachmentId != null, "'attachmentId' is mandatory");
+            Preconditions.checkState(messageId != null, "'messageId' is mandatory");
 
-            return new AttachmentMetadata(attachmentId, type, size);
+            return new AttachmentMetadata(attachmentId, type, size, messageId);
         }
     }
 
@@ -67,11 +75,13 @@ public class AttachmentMetadata {
     private final AttachmentId attachmentId;
     private final ContentType type;
     private final long size;
+    private final MessageId messageId;
 
-    private AttachmentMetadata(AttachmentId attachmentId, ContentType type, long size) {
+    private AttachmentMetadata(AttachmentId attachmentId, ContentType type, long size, MessageId messageId) {
         this.attachmentId = attachmentId;
         this.type = type;
         this.size = size;
+        this.messageId = messageId;
     }
 
     public AttachmentId getAttachmentId() {
@@ -86,6 +96,9 @@ public class AttachmentMetadata {
         return size;
     }
 
+    public MessageId getMessageId() {
+        return messageId;
+    }
 
     @Override
     public boolean equals(Object obj) {
@@ -93,14 +106,15 @@ public class AttachmentMetadata {
             AttachmentMetadata other = (AttachmentMetadata) obj;
             return Objects.equal(attachmentId, other.attachmentId)
                 && Objects.equal(type, other.type)
-                && Objects.equal(size, other.size);
+                && Objects.equal(size, other.size)
+                && Objects.equal(messageId, other.messageId);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(attachmentId, type, size);
+        return Objects.hashCode(attachmentId, type, size, messageId);
     }
 
     @Override
@@ -108,6 +122,7 @@ public class AttachmentMetadata {
         return MoreObjects
                 .toStringHelper(this)
                 .add("attachmentId", attachmentId)
+                .add("messageId", messageId)
                 .add("type", type)
                 .add("size", size)
                 .toString();

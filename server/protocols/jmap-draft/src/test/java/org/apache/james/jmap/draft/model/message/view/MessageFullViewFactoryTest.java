@@ -63,6 +63,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
@@ -501,6 +502,7 @@ class MessageFullViewFactoryTest {
                 .content(ClassLoader.getSystemResourceAsStream("spamMail.eml"))
                 .attachments(ImmutableList.of(MessageAttachmentMetadata.builder()
                         .attachment(AttachmentMetadata.builder()
+                                .messageId(InMemoryMessageId.of(46))
                                 .attachmentId(AttachmentId.from(blodId.getRawValue()))
                                 .size(payload.length())
                                 .type(type)

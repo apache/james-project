@@ -85,7 +85,6 @@ public class MIMEMessageConverter {
     private static final String ALTERNATIVE_SUB_TYPE = "alternative";
     private static final String MIXED_SUB_TYPE = "mixed";
     private static final String RELATED_SUB_TYPE = "related";
-    private static final String FIELD_PARAMETERS_SEPARATOR = ";";
     private static final String QUOTED_PRINTABLE = "quoted-printable";
     private static final String BASE64 = "base64";
     private static final String IN_REPLY_TO_HEADER = "In-Reply-To";

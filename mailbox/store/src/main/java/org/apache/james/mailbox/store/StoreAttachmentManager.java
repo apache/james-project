@@ -21,15 +21,11 @@ package org.apache.james.mailbox.store;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -39,16 +35,10 @@ import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 
 public class StoreAttachmentManager implements AttachmentManager {
-    private static final Logger LOGGER = LoggerFactory.getLogger(StoreAttachmentManager.class);
-
     private final AttachmentMapperFactory attachmentMapperFactory;
     private final MessageIdManager messageIdManager;
 
@@ -60,76 +50,47 @@ public class StoreAttachmentManager implements AttachmentManager {
 
     @Override
     public boolean exists(AttachmentId attachmentId, MailboxSession session) throws MailboxException {
-        return userHasAccessToAttachment(attachmentId, session);
+        AttachmentMetadata attachment = attachmentMapperFactory.getAttachmentMapper(session)
+            .getAttachment(attachmentId);
+        return exists(attachment, session);
+    }
+
+    public boolean exists(AttachmentMetadata attachment, MailboxSession session) throws MailboxException {
+        return !messageIdManager.accessibleMessages(ImmutableList.of(attachment.getMessageId()), session).isEmpty();
     }
 
     @Override
     public AttachmentMetadata getAttachment(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException, AttachmentNotFoundException {
-        if (!userHasAccessToAttachment(attachmentId, mailboxSession)) {
+        AttachmentMetadata attachment = attachmentMapperFactory.getAttachmentMapper(mailboxSession).getAttachment(attachmentId);
+        if (!exists(attachment, mailboxSession)) {
             throw new AttachmentNotFoundException(attachmentId.getId());
         }
-        return attachmentMapperFactory.getAttachmentMapper(mailboxSession).getAttachment(attachmentId);
+        return attachment;
     }
 
     @Override
     public List<AttachmentMetadata> getAttachments(List<AttachmentId> attachmentIds, MailboxSession mailboxSession) throws MailboxException {
-        Collection<AttachmentId> accessibleAttachmentIds = keepAccessible(attachmentIds, mailboxSession);
+        List<AttachmentMetadata> attachments = attachmentMapperFactory.getAttachmentMapper(mailboxSession)
+            .getAttachments(attachmentIds);
 
-        return attachmentMapperFactory.getAttachmentMapper(mailboxSession).getAttachments(accessibleAttachmentIds);
-    }
+        Set<MessageId> accessibleMessageIds = messageIdManager.accessibleMessages(attachments.stream()
+            .map(AttachmentMetadata::getMessageId)
+            .collect(ImmutableList.toImmutableList()),
+            mailboxSession);
 
-    private boolean userHasAccessToAttachment(AttachmentId attachmentId, MailboxSession mailboxSession) {
-        try {
-            return isReferencedInUserMessages(attachmentId, mailboxSession);
-        } catch (MailboxException e) {
-            LOGGER.warn("Error while checking attachment related accessible message ids", e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    private Collection<AttachmentId> keepAccessible(Collection<AttachmentId> attachmentIds, MailboxSession mailboxSession) {
-        try {
-            return  referencedInUserMessages(attachmentIds, mailboxSession);
-        } catch (MailboxException e) {
-            LOGGER.warn("Error while checking attachment related accessible message ids", e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    private boolean isReferencedInUserMessages(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException {
-        Collection<MessageId> relatedMessageIds = getRelatedMessageIds(attachmentId, mailboxSession);
-        return !messageIdManager
-            .accessibleMessages(relatedMessageIds, mailboxSession)
-            .isEmpty();
-    }
-
-    private Set<AttachmentId> referencedInUserMessages(Collection<AttachmentId> attachmentIds, MailboxSession mailboxSession) throws MailboxException {
-        Map<MessageId, Collection<AttachmentId>> entries = attachmentIds.stream()
-            .flatMap(Throwing.<AttachmentId, Stream<Pair<MessageId, AttachmentId>>>function(
-                attachmentId -> getRelatedMessageIds(attachmentId, mailboxSession).stream()
-                    .map(messageId -> Pair.of(messageId, attachmentId)))
-                .sneakyThrow())
-            .collect(ImmutableListMultimap.toImmutableListMultimap(
-                Pair::getKey,
-                Pair::getValue))
-            .asMap();
-
-        Set<MessageId> accessibleMessages = messageIdManager.accessibleMessages(entries.keySet(), mailboxSession);
-
-        return entries.entrySet().stream()
-            .filter(entry -> accessibleMessages.contains(entry.getKey()))
-            .flatMap(entry -> entry.getValue().stream())
-            .collect(ImmutableSet.toImmutableSet());
-    }
-
-    private Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException {
-        return attachmentMapperFactory.getAttachmentMapper(mailboxSession).getRelatedMessageIds(attachmentId);
+        return attachments.stream()
+            .filter(entry -> accessibleMessageIds.contains(entry.getMessageId()))
+            .collect(ImmutableList.toImmutableList());
     }
 
     @Override
     public InputStream loadAttachmentContent(AttachmentId attachmentId, MailboxSession mailboxSession) throws AttachmentNotFoundException, IOException {
-        if (!userHasAccessToAttachment(attachmentId, mailboxSession)) {
-            throw new AttachmentNotFoundException(attachmentId.getId());
+        try {
+            if (!exists(attachmentId, mailboxSession)) {
+                throw new AttachmentNotFoundException(attachmentId.getId());
+            }
+        } catch (MailboxException e) {
+            throw new RuntimeException(e);
         }
         return attachmentMapperFactory.getAttachmentMapper(mailboxSession).loadAttachmentContent(attachmentId);
     }

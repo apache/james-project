@@ -41,6 +41,7 @@ import org.apache.james.jmap.draft.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.draft.model.CreationMessageId;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.Cid;
@@ -619,6 +620,7 @@ class MIMEMessageConverterTest {
             AttachmentId blodId = AttachmentId.from("blodId");
             MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .attachment(AttachmentMetadata.builder()
+                    .messageId(InMemoryMessageId.of(46))
                     .attachmentId(blodId)
                     .size(text.getBytes().length)
                     .type(expectedMimeType)
@@ -671,6 +673,7 @@ class MIMEMessageConverterTest {
             AttachmentId blodId = AttachmentId.from("blodId");
             MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .attachment(AttachmentMetadata.builder()
+                    .messageId(InMemoryMessageId.of(46))
                     .attachmentId(blodId)
                     .size(text.getBytes().length)
                     .type(expectedMimeType)
@@ -727,6 +730,7 @@ class MIMEMessageConverterTest {
             AttachmentId blodId = AttachmentId.from("blodId");
             MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .attachment(AttachmentMetadata.builder()
+                    .messageId(InMemoryMessageId.of(46))
                     .attachmentId(blodId)
                     .size(text.getBytes().length)
                     .type(expectedMimeType)
@@ -814,6 +818,7 @@ class MIMEMessageConverterTest {
             MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .name(name)
                 .attachment(AttachmentMetadata.builder()
+                    .messageId(InMemoryMessageId.of(46))
                     .attachmentId(blodId)
                     .size(text.getBytes().length)
                     .type(expectedMimeType)
@@ -860,6 +865,7 @@ class MIMEMessageConverterTest {
             MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .name("ديناصور.png")
                 .attachment(AttachmentMetadata.builder()
+                    .messageId(InMemoryMessageId.of(46))
                     .attachmentId(blodId)
                     .size(text.getBytes().length)
                     .type(type)
@@ -901,6 +907,7 @@ class MIMEMessageConverterTest {
             MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .name("ديناصور.png")
                 .attachment(AttachmentMetadata.builder()
+                    .messageId(InMemoryMessageId.of(46))
                     .attachmentId(blodId)
                     .size(text.getBytes().length)
                     .type(type)
@@ -941,6 +948,7 @@ class MIMEMessageConverterTest {
             MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .name("ديناصور.png")
                 .attachment(AttachmentMetadata.builder()
+                    .messageId(InMemoryMessageId.of(46))
                     .attachmentId(blodId)
                     .size(text.getBytes().length)
                     .type(type)
@@ -982,6 +990,7 @@ class MIMEMessageConverterTest {
             MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .name("fgh.png")
                 .attachment(AttachmentMetadata.builder()
+                    .messageId(InMemoryMessageId.of(46))
                     .attachmentId(blodId)
                     .size(text.getBytes().length)
                     .type(type)
@@ -1012,6 +1021,7 @@ class MIMEMessageConverterTest {
             MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .name("fgh.png")
                 .attachment(AttachmentMetadata.builder()
+                    .messageId(InMemoryMessageId.of(46))
                     .attachmentId(blodId)
                     .size(text.getBytes().length)
                     .type(type)
@@ -1041,6 +1051,7 @@ class MIMEMessageConverterTest {
             MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .name("fgh.png")
                 .attachment(AttachmentMetadata.builder()
+                    .messageId(InMemoryMessageId.of(46))
                     .attachmentId(blodId)
                     .size(text.getBytes().length)
                     .type(type)
@@ -1069,6 +1080,7 @@ class MIMEMessageConverterTest {
             String type = "image/png; name=abc.png";
             MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .attachment(AttachmentMetadata.builder()
+                    .messageId(InMemoryMessageId.of(46))
                     .attachmentId(blodId)
                     .size(text.getBytes().length)
                     .type(type)
@@ -1097,6 +1109,7 @@ class MIMEMessageConverterTest {
             String type = "image/png";
             MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .attachment(AttachmentMetadata.builder()
+                    .messageId(InMemoryMessageId.of(46))
                     .attachmentId(blodId)
                     .size(text.getBytes().length)
                     .type(type)
@@ -1134,6 +1147,7 @@ class MIMEMessageConverterTest {
             MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .name(name)
                 .attachment(AttachmentMetadata.builder()
+                    .messageId(InMemoryMessageId.of(46))
                     .attachmentId(blodId)
                     .size(text.getBytes().length)
                     .type(type)
@@ -1178,6 +1192,7 @@ class MIMEMessageConverterTest {
             MessageAttachmentMetadata inline = MessageAttachmentMetadata.builder()
                 .name("ديناصور.png")
                 .attachment(AttachmentMetadata.builder()
+                    .messageId(InMemoryMessageId.of(46))
                     .attachmentId(blodId)
                     .size(text.getBytes().length)
                     .type(type)
@@ -1199,6 +1214,7 @@ class MIMEMessageConverterTest {
             MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
                 .name("att.pdf")
                 .attachment(AttachmentMetadata.builder()
+                    .messageId(InMemoryMessageId.of(46))
                     .attachmentId(blodId2)
                     .size(text2.getBytes().length)
                     .type(type)

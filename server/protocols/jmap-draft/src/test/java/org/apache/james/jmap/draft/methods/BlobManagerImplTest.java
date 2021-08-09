@@ -44,6 +44,7 @@ import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.ByteContent;
@@ -88,6 +89,7 @@ class BlobManagerImplTest {
     void retrieveShouldReturnBlobWhenAttachment() throws Exception {
         when(attachmentManager.getAttachment(ATTACHMENT_ID, session))
             .thenReturn(AttachmentMetadata.builder()
+                .messageId(InMemoryMessageId.of(45))
                 .attachmentId(ATTACHMENT_ID)
                 .size(BYTES.length)
                 .type(CONTENT_TYPE)

@@ -21,6 +21,7 @@ package org.apache.james.mailbox.cassandra.modules;
 
 import static com.datastax.driver.core.DataType.bigint;
 import static com.datastax.driver.core.DataType.text;
+import static com.datastax.driver.core.DataType.timeuuid;
 import static com.datastax.driver.core.DataType.uuid;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -45,6 +46,7 @@ public interface CassandraAttachmentModule {
             .addColumn(CassandraAttachmentV2Table.ID, text())
             .addColumn(CassandraAttachmentV2Table.BLOB_ID, text())
             .addColumn(CassandraAttachmentV2Table.TYPE, text())
+            .addColumn(CassandraAttachmentV2Table.MESSAGE_ID, timeuuid())
             .addColumn(CassandraAttachmentV2Table.SIZE, bigint()))
 
         .table(CassandraAttachmentMessageIdTable.TABLE_NAME)

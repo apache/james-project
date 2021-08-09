@@ -239,7 +239,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
     private Mono<Void> deleteUnreferencedAttachments(MessageRepresentation message) {
         return Flux.fromIterable(message.getAttachments())
             .filterWhen(attachment -> hasOtherMessagesReferences(message, attachment), DEFAULT_CONCURRENCY)
-            .concatMap(attachment -> attachmentDAO.getAttachment(attachment.getAttachmentId())
+            .concatMap(attachment -> attachmentDAO.getAttachment(attachment.getAttachmentId(), Mono.just((CassandraMessageId) message.getMessageId()))
                 .map(CassandraAttachmentDAOV2.DAOAttachment::getBlobId)
                 .flatMap(blobId -> Mono.from(blobStore.delete(blobStore.getDefaultBucketName(), blobId)))
                 .then(attachmentDAO.delete(attachment.getAttachmentId())))

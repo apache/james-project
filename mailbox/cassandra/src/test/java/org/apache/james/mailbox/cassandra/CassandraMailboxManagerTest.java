@@ -177,7 +177,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited()).collectList().block())
                     .isEmpty();
 
-                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId).blockOptional())
+                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId, Mono.just((CassandraMessageId) appendResult.getId().getMessageId())).blockOptional())
                     .isEmpty();
 
                 softly.assertThat(attachmentMessageIdDAO(cassandraCluster).getOwnerMessageIds(attachmentId).collectList().block())
@@ -238,7 +238,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited()).collectList().block())
                     .isEmpty();
 
-                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId).blockOptional())
+                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId, Mono.just((CassandraMessageId) appendResult.getId().getMessageId())).blockOptional())
                     .isEmpty();
 
                 softly.assertThat(attachmentMessageIdDAO(cassandraCluster).getOwnerMessageIds(attachmentId).collectList().block())
@@ -277,7 +277,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited()).collectList().block())
                     .isEmpty();
 
-                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId).blockOptional())
+                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId, Mono.just((CassandraMessageId) appendResult.getId().getMessageId())).blockOptional())
                     .isEmpty();
 
                 softly.assertThat(attachmentMessageIdDAO(cassandraCluster).getOwnerMessageIds(attachmentId).collectList().block())
@@ -316,7 +316,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited()).collectList().block())
                     .isEmpty();
 
-                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId).blockOptional())
+                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId, Mono.just((CassandraMessageId) appendResult.getId().getMessageId())).blockOptional())
                     .isEmpty();
 
                 softly.assertThat(attachmentMessageIdDAO(cassandraCluster).getOwnerMessageIds(attachmentId).collectList().block())
@@ -355,7 +355,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited()).collectList().block())
                     .isEmpty();
 
-                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId).blockOptional())
+                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId, Mono.just((CassandraMessageId) appendResult.getId().getMessageId())).blockOptional())
                     .isEmpty();
 
                 softly.assertThat(attachmentMessageIdDAO(cassandraCluster).getOwnerMessageIds(attachmentId).collectList().block())
@@ -383,7 +383,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
                     .blockOptional()).isEmpty();
 
-                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId).blockOptional())
+                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId, Mono.just((CassandraMessageId) appendResult.getId().getMessageId())).blockOptional())
                     .isEmpty();
 
                 softly.assertThat(attachmentMessageIdDAO(cassandraCluster).getOwnerMessageIds(attachmentId).collectList().block())
@@ -415,7 +415,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
                     .blockOptional()).isEmpty();
 
-                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId).blockOptional())
+                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId, Mono.just((CassandraMessageId) appendResult.getId().getMessageId())).blockOptional())
                     .isEmpty();
 
                 softly.assertThat(attachmentMessageIdDAO(cassandraCluster).getOwnerMessageIds(attachmentId).collectList().block())
@@ -447,78 +447,11 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
                 softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
                     .blockOptional()).isEmpty();
 
-                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId).blockOptional())
+                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId, Mono.just((CassandraMessageId) appendResult.getId().getMessageId())).blockOptional())
                     .isEmpty();
 
                 softly.assertThat(attachmentMessageIdDAO(cassandraCluster).getOwnerMessageIds(attachmentId).collectList().block())
                     .doesNotContain(cassandraMessageId);
-            });
-        }
-
-        @Test
-        void deleteMailboxShouldNotUnreferenceMessageMetadataWhenOtherReference(CassandraCluster cassandraCluster) throws Exception {
-            AppendResult appendResult = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
-                .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
-
-            AttachmentId attachmentId = Iterators.toStream(inboxManager.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session))
-                .map(Throwing.function(MessageResult::getLoadedAttachments))
-                .flatMap(Collection::stream)
-                .map(MessageAttachmentMetadata::getAttachmentId)
-                .findFirst()
-                .get();
-
-            mailboxManager.copyMessages(MessageRange.all(), inboxId, otherBoxManager.getId(), session);
-
-            mailboxManager.deleteMailbox(inbox, session);
-
-            SoftAssertions.assertSoftly(softly -> {
-                CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
-                CassandraId mailboxId = (CassandraId) appendResult.getId().getMailboxId();
-
-                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
-                    .blockOptional()).isPresent();
-
-                softly.assertThat(imapUidDAO(cassandraCluster).retrieve(cassandraMessageId, Optional.of(mailboxId)).collectList().block())
-                    .isEmpty();
-
-                softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited()).collectList().block())
-                    .isEmpty();
-
-                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId).blockOptional())
-                    .isPresent();
-
-                softly.assertThat(attachmentMessageIdDAO(cassandraCluster).getOwnerMessageIds(attachmentId).collectList().block())
-                    .contains(cassandraMessageId);
-            });
-        }
-
-        @Test
-        void deleteShouldNotUnreferenceMessageMetadataWhenOtherReference(CassandraCluster cassandraCluster) throws Exception {
-            AppendResult appendResult = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
-                .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
-
-            AttachmentId attachmentId = Iterators.toStream(inboxManager.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session))
-                .map(Throwing.function(MessageResult::getLoadedAttachments))
-                .flatMap(Collection::stream)
-                .map(MessageAttachmentMetadata::getAttachmentId)
-                .findFirst()
-                .get();
-
-            mailboxManager.copyMessages(MessageRange.all(), inboxId, otherBoxManager.getId(), session);
-
-            inboxManager.delete(ImmutableList.of(appendResult.getId().getUid()), session);
-
-            SoftAssertions.assertSoftly(softly -> {
-                CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
-
-                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
-                    .blockOptional()).isPresent();
-
-                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId).blockOptional())
-                    .isPresent();
-
-                softly.assertThat(attachmentMessageIdDAO(cassandraCluster).getOwnerMessageIds(attachmentId).collectList().block())
-                    .contains(cassandraMessageId);
             });
         }
 

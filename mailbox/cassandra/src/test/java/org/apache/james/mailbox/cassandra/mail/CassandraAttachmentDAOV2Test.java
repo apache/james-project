@@ -29,6 +29,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachment;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.model.AttachmentId;
@@ -36,6 +37,10 @@ import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.datastax.driver.core.utils.UUIDs;
+
+import reactor.core.publisher.Mono;
 
 class CassandraAttachmentDAOV2Test {
     private static final AttachmentId ATTACHMENT_ID = AttachmentId.from("id1");
@@ -59,7 +64,7 @@ class CassandraAttachmentDAOV2Test {
 
     @Test
     void getAttachmentShouldReturnEmptyWhenAbsent() {
-        Optional<DAOAttachment> attachment = testee.getAttachment(ATTACHMENT_ID).blockOptional();
+        Optional<DAOAttachment> attachment = testee.getAttachment(ATTACHMENT_ID, Mono.empty()).blockOptional();
 
         assertThat(attachment).isEmpty();
     }
@@ -74,6 +79,7 @@ class CassandraAttachmentDAOV2Test {
     void getAttachmentShouldReturnAttachmentWhenStored() {
         AttachmentMetadata attachment = AttachmentMetadata.builder()
             .attachmentId(ATTACHMENT_ID)
+            .messageId(CassandraMessageId.Factory.of(UUIDs.timeBased()))
             .type("application/json")
             .size(4)
             .build();
@@ -81,7 +87,7 @@ class CassandraAttachmentDAOV2Test {
         DAOAttachment daoAttachment = CassandraAttachmentDAOV2.from(attachment, blobId);
         testee.storeAttachment(daoAttachment).block();
 
-        Optional<DAOAttachment> actual = testee.getAttachment(ATTACHMENT_ID).blockOptional();
+        Optional<DAOAttachment> actual = testee.getAttachment(ATTACHMENT_ID, Mono.empty()).blockOptional();
 
         assertThat(actual).contains(daoAttachment);
     }
@@ -89,6 +95,7 @@ class CassandraAttachmentDAOV2Test {
     @Test
     void getAttachmentShouldNotReturnDeletedAttachments() {
         AttachmentMetadata attachment = AttachmentMetadata.builder()
+            .messageId(CassandraMessageId.Factory.of(UUIDs.timeBased()))
             .attachmentId(ATTACHMENT_ID)
             .type("application/json")
             .size(36)
@@ -99,7 +106,7 @@ class CassandraAttachmentDAOV2Test {
 
         testee.delete(ATTACHMENT_ID).block();
 
-        Optional<DAOAttachment> actual = testee.getAttachment(ATTACHMENT_ID).blockOptional();
+        Optional<DAOAttachment> actual = testee.getAttachment(ATTACHMENT_ID, Mono.empty()).blockOptional();
 
         assertThat(actual).isEmpty();
     }
@@ -115,6 +122,7 @@ class CassandraAttachmentDAOV2Test {
         AttachmentMetadata attachment1 = AttachmentMetadata.builder()
             .attachmentId(ATTACHMENT_ID)
             .type("application/json")
+            .messageId(CassandraMessageId.Factory.of(UUIDs.timeBased()))
             .size(36)
             .build();
         BlobId blobId1 = BLOB_ID_FACTORY.from("blobId");
@@ -124,6 +132,7 @@ class CassandraAttachmentDAOV2Test {
         AttachmentMetadata attachment2 = AttachmentMetadata.builder()
             .attachmentId(ATTACHMENT_ID_2)
             .type("application/json")
+            .messageId(CassandraMessageId.Factory.of(UUIDs.timeBased()))
             .size(36)
             .build();
         BlobId blobId2 = BLOB_ID_FACTORY.from("blobId");
@@ -139,6 +148,7 @@ class CassandraAttachmentDAOV2Test {
         AttachmentMetadata attachment1 = AttachmentMetadata.builder()
             .attachmentId(ATTACHMENT_ID)
             .type("application/json")
+            .messageId(CassandraMessageId.Factory.of(UUIDs.timeBased()))
             .size(36)
             .build();
         BlobId blobId = BLOB_ID_FACTORY.from("blobId");
@@ -148,6 +158,7 @@ class CassandraAttachmentDAOV2Test {
         AttachmentMetadata attachment2 = AttachmentMetadata.builder()
             .attachmentId(ATTACHMENT_ID_2)
             .type("application/json")
+            .messageId(CassandraMessageId.Factory.of(UUIDs.timeBased()))
             .size(36)
             .build();
         DAOAttachment daoAttachment2 = CassandraAttachmentDAOV2.from(attachment2, blobId);
