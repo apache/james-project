@@ -17,9 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store;
+package org.apache.james.jmap.draft.methods;
 
-import static org.apache.james.mailbox.store.StoreBlobManager.MESSAGE_RFC822_CONTENT_TYPE;
+import static org.apache.james.jmap.draft.methods.StoreBlobManager.MESSAGE_RFC822_CONTENT_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,17 +31,17 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.core.Username;
+import org.apache.james.jmap.draft.exceptions.BlobNotFoundException;
+import org.apache.james.jmap.draft.model.Blob;
+import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
-import org.apache.james.mailbox.exception.BlobNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
-import org.apache.james.mailbox.model.Blob;
-import org.apache.james.mailbox.model.BlobId;
 import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.ContentType;
@@ -61,8 +61,8 @@ class StoreBlobManagerTest {
     static final ContentType CONTENT_TYPE = ContentType.of("text/plain");
     static final byte[] BYTES = "abc".getBytes(StandardCharsets.UTF_8);
     static final TestMessageId MESSAGE_ID = TestMessageId.of(125);
-    static final BlobId BLOB_ID_ATTACHMENT = BlobId.fromString(ID);
-    static final BlobId BLOB_ID_MESSAGE = BlobId.fromString(MESSAGE_ID.serialize());
+    static final BlobId BLOB_ID_ATTACHMENT = BlobId.of(ID);
+    static final BlobId BLOB_ID_MESSAGE = BlobId.of(MESSAGE_ID.serialize());
     StoreBlobManager blobManager;
 
     AttachmentManager attachmentManager;
@@ -93,7 +93,7 @@ class StoreBlobManagerTest {
 
         SoftAssertions.assertSoftly(Throwing.consumer(
             softly -> {
-                assertThat(blob.getBlobId()).isEqualTo(BlobId.fromString(ATTACHMENT_ID.getId()));
+                assertThat(blob.getBlobId()).isEqualTo(BlobId.of(ATTACHMENT_ID.getId()));
                 assertThat(blob.getContentType()).isEqualTo(CONTENT_TYPE);
                 assertThat(blob.getSize()).isEqualTo(BYTES.length);
                 assertThat(blob.getStream()).hasSameContentAs(new ByteArrayInputStream(BYTES));
@@ -240,7 +240,7 @@ class StoreBlobManagerTest {
     @Test
     void toBlobIdShouldReturnBlobIdCorrespondingToAMessageId() {
         assertThat(blobManager.toBlobId(MESSAGE_ID))
-            .isEqualTo(BlobId.fromString("125"));
+            .isEqualTo(BlobId.of("125"));
     }
 
 }

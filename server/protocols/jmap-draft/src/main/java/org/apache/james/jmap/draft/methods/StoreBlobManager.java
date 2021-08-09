@@ -17,23 +17,22 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store;
+package org.apache.james.jmap.draft.methods;
 
 import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.james.jmap.draft.exceptions.BlobNotFoundException;
+import org.apache.james.jmap.draft.model.Blob;
+import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.mailbox.AttachmentManager;
-import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
-import org.apache.james.mailbox.exception.BlobNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
-import org.apache.james.mailbox.model.Blob;
-import org.apache.james.mailbox.model.BlobId;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.FetchGroup;
@@ -58,7 +57,7 @@ public class StoreBlobManager implements BlobManager {
 
     @Override
     public BlobId toBlobId(MessageId messageId) {
-        return BlobId.fromString(messageId.serialize());
+        return BlobId.of(messageId.serialize());
     }
 
     @Override
@@ -70,7 +69,7 @@ public class StoreBlobManager implements BlobManager {
 
     private Optional<Blob> getBlobFromAttachment(BlobId blobId, MailboxSession mailboxSession) throws MailboxException {
         try {
-            AttachmentId attachmentId = AttachmentId.from(blobId);
+            AttachmentId attachmentId = blobId.asAttachmentId();
             AttachmentMetadata attachment = attachmentManager.getAttachment(attachmentId, mailboxSession);
 
             Blob blob = Blob.builder()
@@ -105,7 +104,7 @@ public class StoreBlobManager implements BlobManager {
 
     private Optional<MessageId> retrieveMessageId(BlobId blobId) {
         try {
-            return Optional.of(messageIdFactory.fromString(blobId.asString()));
+            return Optional.of(messageIdFactory.fromString(blobId.getRawValue()));
         } catch (IllegalArgumentException e) {
             return Optional.empty();
         }

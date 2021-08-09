@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.Flags;
 
+import org.apache.james.jmap.draft.methods.StoreBlobManager;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.Keyword;
 import org.apache.james.jmap.draft.model.Keywords;
@@ -69,7 +70,8 @@ class MessageMetadataViewFactoryTest {
                 .build("header: value\r\n\r\nbody"),
             session).getId();
 
-        testee = new MessageMetadataViewFactory(resources.getBlobManager(), messageIdManager);
+        StoreBlobManager blobManager = new StoreBlobManager(resources.getAttachmentManager(), resources.getMessageIdManager(), resources.getMessageIdFactory());
+        testee = new MessageMetadataViewFactory(blobManager, messageIdManager);
     }
 
     @Test

@@ -35,11 +35,11 @@ import javax.mail.internet.SharedInputStream;
 import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedProperties;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
+import org.apache.james.jmap.draft.methods.BlobManager;
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.Emailer;
 import org.apache.james.jmap.draft.model.Keywords;
-import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageUid;
@@ -112,7 +112,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
     private MessageFullView instanciateMessageFullView(MetaDataWithContent message, Message mimeMessage, Optional<String> htmlBody, Optional<String> textBody, MessageFastViewPrecomputedProperties messageProjection) {
         return MessageFullView.builder()
                 .id(message.getMessageId())
-                .blobId(BlobId.of(blobManager.toBlobId(message.getMessageId())))
+                .blobId(blobManager.toBlobId(message.getMessageId()))
                 .threadId(message.getMessageId().serialize())
                 .mailboxIds(message.getMailboxIds())
                 .inReplyToMessageId(Helpers.getHeaderValue(mimeMessage, "in-reply-to"))

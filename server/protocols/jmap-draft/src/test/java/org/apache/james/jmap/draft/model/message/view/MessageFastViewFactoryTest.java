@@ -37,6 +37,7 @@ import javax.mail.Flags;
 
 import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedProperties;
+import org.apache.james.jmap.draft.methods.StoreBlobManager;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.Keyword;
 import org.apache.james.jmap.draft.model.Keywords;
@@ -53,7 +54,6 @@ import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.StoreBlobManager;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.html.HtmlTextExtractor;
@@ -145,7 +145,7 @@ class MessageFastViewFactoryTest {
         Mono.from(fastViewProjection.store(previewComputedMessage3.getMessageId(), PROJECTION_4))
             .block();
 
-        blobManager = resources.getBlobManager();
+        blobManager = new StoreBlobManager(resources.getAttachmentManager(), resources.getMessageIdManager(), resources.getMessageIdFactory());
         messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor, messageIdManager,
             new MemoryMessageFastViewProjection(new RecordingMetricFactory()));
         messageFastViewFactory = new MessageFastViewFactory(blobManager, messageIdManager, fastViewProjection, messageFullViewFactory);

@@ -42,6 +42,7 @@ import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.draft.exceptions.MailboxNotOwnedException;
+import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.draft.model.CreationMessageId;
@@ -54,7 +55,6 @@ import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
 import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.AttachmentManager;
-import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -149,7 +149,7 @@ public class SetMessagesCreationProcessorTest {
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
         BlobManager blobManager = mock(BlobManager.class);
-        when(blobManager.toBlobId(any(MessageId.class))).thenReturn(org.apache.james.mailbox.model.BlobId.fromString("fake"));
+        when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.of("fake"));
         MessageIdManager messageIdManager = mock(MessageIdManager.class);
         recipientRewriteTable = new MemoryRecipientRewriteTable();
 

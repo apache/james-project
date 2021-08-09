@@ -42,7 +42,6 @@ import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.Authorizator;
-import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MessageIdManager;
@@ -98,7 +97,6 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreAttachmentManager;
-import org.apache.james.mailbox.store.StoreBlobManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
@@ -152,7 +150,6 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(CassandraMailboxManager.class).in(Scopes.SINGLETON);
         bind(StoreSubscriptionManager.class).in(Scopes.SINGLETON);
         bind(StoreAttachmentManager.class).in(Scopes.SINGLETON);
-        bind(StoreBlobManager.class).in(Scopes.SINGLETON);
         bind(StoreMessageIdManager.class).in(Scopes.SINGLETON);
         bind(StoreRightManager.class).in(Scopes.SINGLETON);
         bind(SessionProviderImpl.class).in(Scopes.SINGLETON);
@@ -175,7 +172,6 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(ReIndexerImpl.class).in(Scopes.SINGLETON);
         bind(MessageIdReIndexerImpl.class).in(Scopes.SINGLETON);
 
-        bind(BlobManager.class).to(StoreBlobManager.class);
         bind(MessageMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
         bind(MailboxMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
         bind(AttachmentMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
