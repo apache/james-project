@@ -21,6 +21,7 @@ package org.apache.james.jmap.draft;
 
 import org.apache.james.jmap.draft.json.ObjectMapperFactory;
 import org.apache.james.jmap.draft.methods.BlobManager;
+import org.apache.james.jmap.draft.methods.BlobManagerImpl;
 import org.apache.james.jmap.draft.methods.GetFilterMethod;
 import org.apache.james.jmap.draft.methods.GetMailboxesMethod;
 import org.apache.james.jmap.draft.methods.GetMessageListMethod;
@@ -44,7 +45,6 @@ import org.apache.james.jmap.draft.methods.SetMessagesMethod;
 import org.apache.james.jmap.draft.methods.SetMessagesProcessor;
 import org.apache.james.jmap.draft.methods.SetMessagesUpdateProcessor;
 import org.apache.james.jmap.draft.methods.SetVacationResponseMethod;
-import org.apache.james.jmap.draft.methods.StoreBlobManager;
 import org.apache.james.jmap.http.AccessTokenAuthenticationStrategy;
 import org.apache.james.jmap.http.Authenticator;
 import org.apache.james.jmap.http.InjectionKeys;
@@ -97,8 +97,8 @@ public class DraftMethodsModule extends AbstractModule {
         setMessagesProcessors.addBinding().to(SendMDNProcessor.class);
 
 
-        bind(StoreBlobManager.class).in(Scopes.SINGLETON);
-        bind(BlobManager.class).to(StoreBlobManager.class);
+        bind(BlobManagerImpl.class).in(Scopes.SINGLETON);
+        bind(BlobManager.class).to(BlobManagerImpl.class);
     }
 
     @Provides

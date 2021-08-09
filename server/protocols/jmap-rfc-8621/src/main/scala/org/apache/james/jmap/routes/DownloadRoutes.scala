@@ -169,7 +169,7 @@ class UploadResolver @Inject()(val uploadRepository: UploadRepository) extends B
 
 class AttachmentBlobResolver @Inject()(val attachmentManager: AttachmentManager) extends BlobResolver {
   override def resolve(blobId: BlobId, mailboxSession: MailboxSession): BlobResolutionResult =
-    AttachmentId.from(org.apache.james.mailbox.model.BlobId.fromString(blobId.value.value)) match {
+    AttachmentId.from(blobId.value.value) match {
       case attachmentId: AttachmentId =>
         Try(attachmentManager.getAttachment(attachmentId, mailboxSession)) match {
           case Success(attachmentMetadata) => Applicable(

@@ -30,7 +30,7 @@ import java.util.Optional;
 
 import javax.mail.Flags;
 
-import org.apache.james.jmap.draft.methods.StoreBlobManager;
+import org.apache.james.jmap.draft.methods.BlobManagerImpl;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.Keyword;
 import org.apache.james.jmap.draft.model.Keywords;
@@ -76,7 +76,7 @@ class MessageHeaderViewFactoryTest {
                 .withFlags(new Flags(Flags.Flag.SEEN))
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("fullMessage.eml")),
             session).getId();
-        StoreBlobManager blobManager = new StoreBlobManager(resources.getAttachmentManager(), resources.getMessageIdManager(), resources.getMessageIdFactory());
+        BlobManagerImpl blobManager = new BlobManagerImpl(resources.getAttachmentManager(), resources.getMessageIdManager(), resources.getMessageIdFactory());
 
         testee = new MessageHeaderViewFactory(blobManager, messageIdManager);
     }

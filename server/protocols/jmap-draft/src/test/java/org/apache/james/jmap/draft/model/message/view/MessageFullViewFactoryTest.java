@@ -42,7 +42,7 @@ import javax.mail.Flags;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedProperties;
-import org.apache.james.jmap.draft.methods.StoreBlobManager;
+import org.apache.james.jmap.draft.methods.BlobManagerImpl;
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.Emailer;
@@ -126,7 +126,7 @@ class MessageFullViewFactoryTest {
             session).getId();
 
         fastViewProjection = spy(new MemoryMessageFastViewProjection(new RecordingMetricFactory()));
-        StoreBlobManager blobManager = new StoreBlobManager(resources.getAttachmentManager(), resources.getMessageIdManager(), resources.getMessageIdFactory());
+        BlobManagerImpl blobManager = new BlobManagerImpl(resources.getAttachmentManager(), resources.getMessageIdManager(), resources.getMessageIdFactory());
         messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor,
             messageIdManager,
             fastViewProjection);

@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.draft.methods;
 
-import static org.apache.james.jmap.draft.methods.StoreBlobManager.MESSAGE_RFC822_CONTENT_TYPE;
+import static org.apache.james.jmap.draft.methods.BlobManagerImpl.MESSAGE_RFC822_CONTENT_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -55,7 +55,7 @@ import org.junit.jupiter.api.Test;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
-class StoreBlobManagerTest {
+class BlobManagerImplTest {
     static final String ID = "abc";
     static final AttachmentId ATTACHMENT_ID = AttachmentId.from(ID);
     static final ContentType CONTENT_TYPE = ContentType.of("text/plain");
@@ -63,7 +63,7 @@ class StoreBlobManagerTest {
     static final TestMessageId MESSAGE_ID = TestMessageId.of(125);
     static final BlobId BLOB_ID_ATTACHMENT = BlobId.of(ID);
     static final BlobId BLOB_ID_MESSAGE = BlobId.of(MESSAGE_ID.serialize());
-    StoreBlobManager blobManager;
+    BlobManagerImpl blobManager;
 
     AttachmentManager attachmentManager;
     MessageIdManager messageIdManager;
@@ -75,7 +75,7 @@ class StoreBlobManagerTest {
         messageIdManager = mock(MessageIdManager.class);
         session = MailboxSessionUtil.create(Username.of("user"));
 
-        blobManager = new StoreBlobManager(attachmentManager, messageIdManager, new TestMessageId.Factory());
+        blobManager = new BlobManagerImpl(attachmentManager, messageIdManager, new TestMessageId.Factory());
     }
 
     @Test

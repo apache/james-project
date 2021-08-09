@@ -41,15 +41,15 @@ import org.apache.james.mailbox.model.MessageResult;
 
 import com.github.fge.lambdas.Throwing;
 
-public class StoreBlobManager implements BlobManager {
+public class BlobManagerImpl implements BlobManager {
     public static final ContentType MESSAGE_RFC822_CONTENT_TYPE = ContentType.of("message/rfc822");
     private final AttachmentManager attachmentManager;
     private final MessageIdManager messageIdManager;
     private final MessageId.Factory messageIdFactory;
 
     @Inject
-    public StoreBlobManager(AttachmentManager attachmentManager, MessageIdManager messageIdManager,
-                            MessageId.Factory messageIdFactory) {
+    public BlobManagerImpl(AttachmentManager attachmentManager, MessageIdManager messageIdManager,
+                           MessageId.Factory messageIdFactory) {
         this.attachmentManager = attachmentManager;
         this.messageIdManager = messageIdManager;
         this.messageIdFactory = messageIdFactory;
