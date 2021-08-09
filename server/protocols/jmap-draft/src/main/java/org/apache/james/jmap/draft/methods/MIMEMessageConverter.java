@@ -34,12 +34,12 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.draft.model.message.view.MessageViewFactory;
-import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.AttachmentNotFoundException;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.EncoderUtil;
@@ -108,11 +108,11 @@ public class MIMEMessageConverter {
     private static final LenientFieldParser FIELD_PARSER = new LenientFieldParser();
 
     private final BasicBodyFactory bodyFactory;
-    private final AttachmentContentLoader attachmentContentLoader;
+    private final BlobManager blobManager;
 
     @Inject
-    public MIMEMessageConverter(AttachmentContentLoader attachmentContentLoader) {
-        this.attachmentContentLoader = attachmentContentLoader;
+    public MIMEMessageConverter(BlobManager blobManager) {
+        this.blobManager = blobManager;
         this.bodyFactory = new BasicBodyFactory();
     }
 
@@ -306,15 +306,15 @@ public class MIMEMessageConverter {
         return att -> { 
             try {
                 builder.addBodyPart(attachmentBodyPart(att, session));
-            } catch (IOException | AttachmentNotFoundException e) {
+            } catch (IOException | MailboxException e) {
                 LOGGER.error("Error while creating attachment", e);
                 throw new RuntimeException(e);
             }
         };
     }
 
-    private BodyPart attachmentBodyPart(MessageAttachmentMetadata att, MailboxSession session) throws IOException, AttachmentNotFoundException {
-        try (InputStream attachmentStream = attachmentContentLoader.load(att.getAttachment(), session)) {
+    private BodyPart attachmentBodyPart(MessageAttachmentMetadata att, MailboxSession session) throws IOException, MailboxException {
+        try (InputStream attachmentStream = blobManager.retrieve(BlobId.of(att.getAttachmentId().getId()), session).getStream()) {
             BodyPartBuilder builder = BodyPartBuilder.create()
                 .use(bodyFactory)
                 .setBody(new BasicBodyFactory().binaryBody(ByteStreams.toByteArray(attachmentStream)))

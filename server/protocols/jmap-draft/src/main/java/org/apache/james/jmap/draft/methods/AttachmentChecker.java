@@ -24,12 +24,11 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.james.jmap.draft.exceptions.AttachmentsNotFoundException;
+import org.apache.james.jmap.draft.exceptions.BlobNotFoundException;
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.BlobId;
-import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.AttachmentId;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.predicates.ThrowingPredicate;
@@ -39,11 +38,11 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class AttachmentChecker {
-    private final AttachmentManager attachmentManager;
+    private final BlobManager blobManager;
 
     @Inject
-    public AttachmentChecker(AttachmentManager attachmentManager) {
-        this.attachmentManager = attachmentManager;
+    public AttachmentChecker(BlobManager blobManager) {
+        this.blobManager = blobManager;
     }
 
     public Mono<Void> assertAttachmentsExist(ValueWithId.CreationMessageEntry entry, MailboxSession session) {
@@ -63,14 +62,17 @@ public class AttachmentChecker {
 
     private List<BlobId> listAttachmentsNotFound(List<Attachment> attachments, MailboxSession session) throws MailboxException {
         ThrowingPredicate<Attachment> notExists =
-            attachment -> !attachmentManager.exists(getAttachmentId(attachment), session);
+            attachment -> {
+                try {
+                    blobManager.retrieve(attachment.getBlobId(), session);
+                    return false;
+                } catch (BlobNotFoundException e) {
+                    return true;
+                }
+            };
         return attachments.stream()
             .filter(Throwing.predicate(notExists).sneakyThrow())
             .map(Attachment::getBlobId)
             .collect(ImmutableList.toImmutableList());
-    }
-
-    private AttachmentId getAttachmentId(Attachment attachment) {
-        return AttachmentId.from(attachment.getBlobId().getRawValue());
     }
 }

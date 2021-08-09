@@ -37,7 +37,9 @@ object Upload {
 case class Upload(uploadId: UploadId,
                   size: Size,
                   contentType: ContentType,
-                  content: () => InputStream)
+                  content: () => InputStream) {
+  def sizeAsLong(): java.lang.Long = size.value
+}
 
 case class UploadNotFoundException(uploadId: UploadId) extends RuntimeException(s"Upload not found $uploadId")
 
@@ -52,5 +54,7 @@ object UploadMetaData {
 case class UploadMetaData(uploadId: UploadId,
                           contentType: ContentType,
                           size: Size,
-                          blobId: BlobId)
+                          blobId: BlobId) {
+  def sizeAsLong(): java.lang.Long = size.value
+}
 
