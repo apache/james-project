@@ -152,7 +152,7 @@ public class CassandraMailQueueBrowser {
     private Flux<EnqueuedItemWithSlicingContext> browseSlice(MailQueueName queueName, Slice slice) {
         return
             allBucketIds()
-                .flatMap(bucketId -> browseBucket(queueName, slice, bucketId), DEFAULT_CONCURRENCY)
+                .concatMap(bucketId -> browseBucket(queueName, slice, bucketId), DEFAULT_CONCURRENCY)
                 .sort(Comparator.comparing(enqueuedMail -> enqueuedMail.getEnqueuedItem().getEnqueuedTime()));
     }
 
