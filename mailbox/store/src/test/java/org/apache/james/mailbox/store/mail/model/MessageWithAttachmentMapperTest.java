@@ -107,8 +107,8 @@ public abstract class MessageWithAttachmentMapperTest {
         ThreadId threadId2 = ThreadId.fromBaseMessageId(messageId2);
         MessageId messageId3 = mapperProvider.generateMessageId();
         ThreadId threadId3 = ThreadId.fromBaseMessageId(messageId3);
-        List<MessageAttachmentMetadata> message1Attachments = attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(attachment1), messageId1);
-        List<MessageAttachmentMetadata> message2Attachments = attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(attachment2, attachment3), messageId2);
+        List<MessageAttachmentMetadata> message1Attachments = attachmentMapper.storeAttachments(ImmutableList.of(attachment1), messageId1);
+        List<MessageAttachmentMetadata> message2Attachments = attachmentMapper.storeAttachments(ImmutableList.of(attachment2, attachment3), messageId2);
 
         messageWith1Attachment = createMessage(attachmentsMailbox, messageId1, threadId1, "Subject: Test7 \n\nBody7\n.\n", BODY_START, new PropertyBuilder(),
                 message1Attachments);

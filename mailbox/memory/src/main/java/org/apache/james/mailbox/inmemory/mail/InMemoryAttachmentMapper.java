@@ -21,19 +21,16 @@ package org.apache.james.mailbox.inmemory.mail;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
-import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
@@ -47,21 +44,17 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
-import reactor.core.publisher.Mono;
-
 public class InMemoryAttachmentMapper implements AttachmentMapper {
-    
     private static final int INITIAL_SIZE = 128;
+
     private final Map<AttachmentId, AttachmentMetadata> attachmentsById;
     private final Map<AttachmentId, byte[]> attachmentsRawContentById;
     private final Multimap<AttachmentId, MessageId> messageIdsByAttachmentId;
-    private final Multimap<AttachmentId, Username> ownersByAttachmentId;
 
     public InMemoryAttachmentMapper() {
         attachmentsById = new ConcurrentHashMap<>(INITIAL_SIZE);
         attachmentsRawContentById = new ConcurrentHashMap<>(INITIAL_SIZE);
         messageIdsByAttachmentId = Multimaps.synchronizedSetMultimap(HashMultimap.create());
-        ownersByAttachmentId = Multimaps.synchronizedSetMultimap(HashMultimap.create());
     }
 
     @Override
@@ -86,31 +79,7 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public Mono<AttachmentMetadata> storeAttachmentForOwner(ContentType contentType, InputStream inputStream, Username owner) {
-        return Mono.fromCallable(() -> {
-            byte[] bytes = toByteArray(inputStream);
-            AttachmentMetadata attachment = AttachmentMetadata.builder()
-                .type(contentType)
-                .attachmentId(AttachmentId.random())
-                .size(bytes.length)
-                .build();
-            attachmentsById.put(attachment.getAttachmentId(), attachment);
-            attachmentsRawContentById.put(attachment.getAttachmentId(), bytes);
-            ownersByAttachmentId.put(attachment.getAttachmentId(), owner);
-            return attachment;
-        });
-    }
-
-    private byte[] toByteArray(InputStream inputStream) {
-        try {
-            return IOUtils.toByteArray(inputStream);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    @Override
-    public List<MessageAttachmentMetadata> storeAttachmentsForMessage(Collection<ParsedAttachment> parsedAttachments, MessageId ownerMessageId) throws MailboxException {
+    public List<MessageAttachmentMetadata> storeAttachments(Collection<ParsedAttachment> parsedAttachments, MessageId ownerMessageId) throws MailboxException {
         return parsedAttachments.stream()
             .map(Throwing.<ParsedAttachment, MessageAttachmentMetadata>function(
                 typedContent -> storeAttachmentForMessage(ownerMessageId, typedContent))
@@ -138,11 +107,6 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     @Override
     public Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId) throws MailboxException {
         return messageIdsByAttachmentId.get(attachmentId);
-    }
-
-    @Override
-    public Collection<Username> getOwners(final AttachmentId attachmentId) throws MailboxException {
-        return ownersByAttachmentId.get(attachmentId);
     }
 
     @Override

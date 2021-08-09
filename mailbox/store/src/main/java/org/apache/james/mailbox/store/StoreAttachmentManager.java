@@ -30,7 +30,6 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.core.Username;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -38,17 +37,14 @@ import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
-import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
-import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 public class StoreAttachmentManager implements AttachmentManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreAttachmentManager.class);
@@ -82,16 +78,9 @@ public class StoreAttachmentManager implements AttachmentManager {
         return attachmentMapperFactory.getAttachmentMapper(mailboxSession).getAttachments(accessibleAttachmentIds);
     }
 
-    @Override
-    public Publisher<AttachmentMetadata> storeAttachment(ContentType contentType, InputStream attachmentContent, MailboxSession mailboxSession) {
-        return attachmentMapperFactory.getAttachmentMapper(mailboxSession)
-            .storeAttachmentForOwner(contentType, attachmentContent, mailboxSession.getUser());
-    }
-
     private boolean userHasAccessToAttachment(AttachmentId attachmentId, MailboxSession mailboxSession) {
         try {
-            return isExplicitlyAOwner(attachmentId, mailboxSession)
-                || isReferencedInUserMessages(attachmentId, mailboxSession);
+            return isReferencedInUserMessages(attachmentId, mailboxSession);
         } catch (MailboxException e) {
             LOGGER.warn("Error while checking attachment related accessible message ids", e);
             throw new RuntimeException(e);
@@ -100,16 +89,7 @@ public class StoreAttachmentManager implements AttachmentManager {
 
     private Collection<AttachmentId> keepAccessible(Collection<AttachmentId> attachmentIds, MailboxSession mailboxSession) {
         try {
-            Set<AttachmentId> referencedByMessages = referencedInUserMessages(attachmentIds, mailboxSession);
-            ImmutableSet<AttachmentId> owned = Sets.difference(ImmutableSet.copyOf(attachmentIds), referencedByMessages)
-                .stream()
-                .filter(Throwing.<AttachmentId>predicate(id -> isExplicitlyAOwner(id, mailboxSession)).sneakyThrow())
-                .collect(ImmutableSet.toImmutableSet());
-
-            return ImmutableSet.<AttachmentId>builder()
-                .addAll(referencedByMessages)
-                .addAll(owned)
-                .build();
+            return  referencedInUserMessages(attachmentIds, mailboxSession);
         } catch (MailboxException e) {
             LOGGER.warn("Error while checking attachment related accessible message ids", e);
             throw new RuntimeException(e);
@@ -140,13 +120,6 @@ public class StoreAttachmentManager implements AttachmentManager {
             .filter(entry -> accessibleMessages.contains(entry.getKey()))
             .flatMap(entry -> entry.getValue().stream())
             .collect(ImmutableSet.toImmutableSet());
-    }
-
-    private boolean isExplicitlyAOwner(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException {
-        Collection<Username> explicitOwners = attachmentMapperFactory.getAttachmentMapper(mailboxSession)
-            .getOwners(attachmentId);
-        return explicitOwners.stream()
-            .anyMatch(username -> mailboxSession.getUser().equals(username));
     }
 
     private Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException {

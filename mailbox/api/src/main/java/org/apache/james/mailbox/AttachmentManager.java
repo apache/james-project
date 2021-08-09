@@ -27,8 +27,6 @@ import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
-import org.apache.james.mailbox.model.ContentType;
-import org.reactivestreams.Publisher;
 
 public interface AttachmentManager extends AttachmentContentLoader {
 
@@ -37,8 +35,6 @@ public interface AttachmentManager extends AttachmentContentLoader {
     AttachmentMetadata getAttachment(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException, AttachmentNotFoundException;
 
     List<AttachmentMetadata> getAttachments(List<AttachmentId> attachmentIds, MailboxSession mailboxSession) throws MailboxException;
-
-    Publisher<AttachmentMetadata> storeAttachment(ContentType contentType, InputStream attachmentContent, MailboxSession mailboxSession);
 
     InputStream loadAttachmentContent(AttachmentId attachmentId, MailboxSession mailboxSession) throws AttachmentNotFoundException, IOException;
 

@@ -42,7 +42,6 @@ import org.apache.james.mailbox.cassandra.mail.ACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMessageIdDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentOwnerDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
@@ -95,7 +94,6 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
     private final CassandraMessageDAO messageDAO;
     private final CassandraMessageDAOV3 messageDAOV3;
     private final CassandraAttachmentDAOV2 attachmentDAO;
-    private final CassandraAttachmentOwnerDAO ownerDAO;
     private final CassandraAttachmentMessageIdDAO attachmentMessageIdDAO;
     private final ACLMapper aclMapper;
     private final CassandraUserMailboxRightsDAO rightsDAO;
@@ -110,7 +108,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
     @Inject
     public DeleteMessageListener(CassandraThreadDAO threadDAO, CassandraThreadLookupDAO threadLookupDAO,
                                  CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageDAO messageDAO,
-                                 CassandraMessageDAOV3 messageDAOV3, CassandraAttachmentDAOV2 attachmentDAO, CassandraAttachmentOwnerDAO ownerDAO,
+                                 CassandraMessageDAOV3 messageDAOV3, CassandraAttachmentDAOV2 attachmentDAO,
                                  CassandraAttachmentMessageIdDAO attachmentMessageIdDAO, ACLMapper aclMapper,
                                  CassandraUserMailboxRightsDAO rightsDAO, CassandraApplicableFlagDAO applicableFlagDAO,
                                  CassandraFirstUnseenDAO firstUnseenDAO, CassandraDeletedMessageDAO deletedMessageDAO,
@@ -123,7 +121,6 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
         this.messageDAO = messageDAO;
         this.messageDAOV3 = messageDAOV3;
         this.attachmentDAO = attachmentDAO;
-        this.ownerDAO = ownerDAO;
         this.attachmentMessageIdDAO = attachmentMessageIdDAO;
         this.aclMapper = aclMapper;
         this.rightsDAO = rightsDAO;
@@ -241,7 +238,6 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
 
     private Mono<Void> deleteUnreferencedAttachments(MessageRepresentation message) {
         return Flux.fromIterable(message.getAttachments())
-            .filterWhen(attachment -> ownerDAO.retrieveOwners(attachment.getAttachmentId()).hasElements().map(negate()), DEFAULT_CONCURRENCY)
             .filterWhen(attachment -> hasOtherMessagesReferences(message, attachment), DEFAULT_CONCURRENCY)
             .concatMap(attachment -> attachmentDAO.getAttachment(attachment.getAttachmentId())
                 .map(CassandraAttachmentDAOV2.DAOAttachment::getBlobId)

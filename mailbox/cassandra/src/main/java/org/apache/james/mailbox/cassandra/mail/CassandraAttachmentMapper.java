@@ -30,19 +30,16 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachment;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
-import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.util.ReactorUtils;
-import org.apache.james.util.io.CurrentPositionInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,14 +56,12 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     private final CassandraAttachmentDAOV2 attachmentDAOV2;
     private final BlobStore blobStore;
     private final CassandraAttachmentMessageIdDAO attachmentMessageIdDAO;
-    private final CassandraAttachmentOwnerDAO ownerDAO;
 
     @Inject
-    public CassandraAttachmentMapper(CassandraAttachmentDAOV2 attachmentDAOV2, BlobStore blobStore, CassandraAttachmentMessageIdDAO attachmentMessageIdDAO, CassandraAttachmentOwnerDAO ownerDAO) {
+    public CassandraAttachmentMapper(CassandraAttachmentDAOV2 attachmentDAOV2, BlobStore blobStore, CassandraAttachmentMessageIdDAO attachmentMessageIdDAO) {
         this.attachmentDAOV2 = attachmentDAOV2;
         this.blobStore = blobStore;
         this.attachmentMessageIdDAO = attachmentMessageIdDAO;
-        this.ownerDAO = ownerDAO;
     }
 
     @Override
@@ -105,28 +100,13 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public Mono<AttachmentMetadata> storeAttachmentForOwner(ContentType contentType, InputStream inputStream, Username owner) {
-        CurrentPositionInputStream currentPositionInputStream = new CurrentPositionInputStream(inputStream);
-        AttachmentId attachmentId = AttachmentId.random();
-        return ownerDAO.addOwner(attachmentId, owner)
-            .then(Mono.from(blobStore.save(blobStore.getDefaultBucketName(), currentPositionInputStream, LOW_COST)))
-                .map(blobId -> new DAOAttachment(attachmentId, blobId, contentType, currentPositionInputStream.getPosition()))
-            .flatMap(attachmentDAOV2::storeAttachment)
-            .then(Mono.defer(() -> Mono.just(AttachmentMetadata.builder()
-                .attachmentId(attachmentId)
-                .type(contentType)
-                .size(currentPositionInputStream.getPosition())
-                .build())));
-    }
-
-    @Override
-    public List<MessageAttachmentMetadata> storeAttachmentsForMessage(Collection<ParsedAttachment> parsedAttachments, MessageId ownerMessageId) throws MailboxException {
-        return storeAttachmentsForMessageReactive(parsedAttachments, ownerMessageId)
+    public List<MessageAttachmentMetadata> storeAttachments(Collection<ParsedAttachment> parsedAttachments, MessageId ownerMessageId) throws MailboxException {
+        return storeAttachmentsReactive(parsedAttachments, ownerMessageId)
             .block();
     }
 
     @Override
-    public Mono<List<MessageAttachmentMetadata>> storeAttachmentsForMessageReactive(Collection<ParsedAttachment> attachments, MessageId ownerMessageId) {
+    public Mono<List<MessageAttachmentMetadata>> storeAttachmentsReactive(Collection<ParsedAttachment> attachments, MessageId ownerMessageId) {
         return Flux.fromIterable(attachments)
             .concatMap(attachment -> storeAttachmentAsync(attachment, ownerMessageId))
             .collectList();
@@ -137,11 +117,6 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
         return attachmentMessageIdDAO.getOwnerMessageIds(attachmentId)
             .collect(ImmutableList.toImmutableList())
             .block();
-    }
-
-    @Override
-    public Collection<Username> getOwners(AttachmentId attachmentId) throws MailboxException {
-        return ownerDAO.retrieveOwners(attachmentId).collect(ImmutableList.toImmutableList()).block();
     }
 
     private Mono<MessageAttachmentMetadata> storeAttachmentAsync(ParsedAttachment parsedAttachment, MessageId ownerMessageId) {
