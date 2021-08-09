@@ -22,8 +22,6 @@ package org.apache.james.jmap.draft.methods;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -34,6 +32,7 @@ import java.time.ZonedDateTime;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.methods.ValueWithId.MessageWithId;
+import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.Blob;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.CreationMessage;
@@ -41,11 +40,7 @@ import org.apache.james.jmap.draft.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.draft.model.CreationMessageId;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
-import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.AttachmentId;
-import org.apache.james.mailbox.model.AttachmentMetadata;
-import org.apache.james.mailbox.model.Cid;
-import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mime4j.codec.EncoderUtil;
 import org.apache.james.mime4j.codec.EncoderUtil.Usage;
 import org.apache.james.mime4j.dom.Entity;
@@ -66,18 +61,16 @@ import com.google.common.collect.ImmutableMap;
 
 class MIMEMessageConverterTest {
     MailboxSession session;
-    BlobManager blobManager;
 
     @BeforeEach
     void setUp() {
         session = MailboxSessionUtil.create(Username.of("bob"));
-        blobManager = mock(BlobManager.class);
     }
 
     @Test
     void convertToMimeShouldAddInReplyToHeaderWhenProvided() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
 
         String matchingMessageId = "unique-message-id";
         CreationMessage messageHavingInReplyTo = CreationMessage.builder()
@@ -89,7 +82,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo), ImmutableList.of());
 
         // Then
         assertThat(result.getHeader().getFields("In-Reply-To")).extracting(Field::getBody)
@@ -99,7 +92,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldGenerateMessageId() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
 
         CreationMessage message = CreationMessage.builder()
                 .mailboxIds(ImmutableList.of("dead-beef-1337"))
@@ -108,7 +101,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), message), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), message), ImmutableList.of());
 
         // Then
         assertThat(result.getHeader().getFields("Message-ID")).extracting(Field::getBody)
@@ -118,7 +111,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldGenerateMessageIdWhenSenderWithoutDomain() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
 
         CreationMessage message = CreationMessage.builder()
                 .from(DraftEmailer.builder().email("sender").build())
@@ -128,7 +121,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), message), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), message), ImmutableList.of());
 
         // Then
         assertThat(result.getHeader().getFields("Message-ID")).extracting(Field::getBody)
@@ -138,7 +131,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldGenerateMessageIdContainingSenderDomain() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
 
         CreationMessage message = CreationMessage.builder()
                 .from(DraftEmailer.builder().email("email@domain.com").build())
@@ -148,7 +141,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), message), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), message), ImmutableList.of());
 
         // Then
         assertThat(result.getHeader().getFields("Message-ID")).hasSize(1);
@@ -159,7 +152,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldAddHeaderWhenProvided() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
 
         CreationMessage messageHavingInReplyTo = CreationMessage.builder()
                 .from(DraftEmailer.builder().name("sender").build())
@@ -170,7 +163,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo), ImmutableList.of());
 
         // Then
         assertThat(result.getHeader().getFields("FIRST")).extracting(Field::getBody)
@@ -180,7 +173,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldAddHeadersWhenProvided() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
 
         CreationMessage messageHavingInReplyTo = CreationMessage.builder()
                 .from(DraftEmailer.builder().name("sender").build())
@@ -191,7 +184,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo), ImmutableList.of());
 
         // Then
         assertThat(result.getHeader().getFields("FIRST")).extracting(Field::getBody)
@@ -203,7 +196,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldFilterGeneratedHeadersWhenProvided() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
 
         String joesEmail = "joe@example.com";
         CreationMessage messageHavingInReplyTo = CreationMessage.builder()
@@ -215,7 +208,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo), ImmutableList.of());
 
         // Then
         assertThat(result.getFrom()).extracting(Mailbox::getAddress)
@@ -229,7 +222,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldFilterGeneratedHeadersRegardlessOfCaseWhenProvided() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
 
         String joesEmail = "joe@example.com";
         CreationMessage messageHavingInReplyTo = CreationMessage.builder()
@@ -241,7 +234,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo), ImmutableList.of());
 
         // Then
         assertThat(result.getFrom()).extracting(Mailbox::getAddress)
@@ -255,7 +248,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldAddMultivaluedHeadersWhenProvided() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
 
         CreationMessage messageHavingInReplyTo = CreationMessage.builder()
                 .from(DraftEmailer.builder().name("sender").build())
@@ -266,7 +259,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo), ImmutableList.of());
 
         // Then
         assertThat(result.getHeader().getFields("FIRST")).extracting(Field::getBody)
@@ -276,7 +269,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldFilterEmptyHeaderNames() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
 
         CreationMessage messageHavingInReplyTo = CreationMessage.builder()
                 .from(DraftEmailer.builder().name("joe").build())
@@ -287,7 +280,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo), ImmutableList.of());
 
         // Then
         assertThat(result.getHeader().getFields("")).isEmpty();
@@ -296,7 +289,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldFilterWhiteSpacesOnlyHeaderNames() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
 
         CreationMessage messageHavingInReplyTo = CreationMessage.builder()
                 .from(DraftEmailer.builder().name("joe").build())
@@ -307,7 +300,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), messageHavingInReplyTo), ImmutableList.of());
 
         // Then
         assertThat(result.getHeader().getFields("   ")).isEmpty();
@@ -316,18 +309,18 @@ class MIMEMessageConverterTest {
 
     @Test
     void convertToMimeShouldThrowWhenMessageIsNull() {
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
 
         assertThatThrownBy(() -> sut.convertToMime(
                 new ValueWithId.CreationMessageEntry(CreationMessageId.of("any"), null),
-                ImmutableList.of(), session))
+                ImmutableList.of()))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void convertToMimeShouldSetBothFromAndSenderHeaders() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
 
         String joesEmail = "joe@example.com";
         CreationMessage testMessage = CreationMessage.builder()
@@ -338,7 +331,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getFrom()).extracting(Mailbox::getAddress).allMatch(f -> f.equals(joesEmail));
@@ -348,7 +341,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldSetCorrectLocalDate() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
 
         Instant now = Instant.now();
         ZonedDateTime messageDate = ZonedDateTime.ofInstant(now, ZoneId.systemDefault());
@@ -362,7 +355,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getDate()).isEqualToIgnoringMillis(Date.from(now));
@@ -371,7 +364,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldSetQuotedPrintableContentTransferEncodingWhenText() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
 
         CreationMessage testMessage = CreationMessage.builder()
                 .mailboxId("dead-bada55")
@@ -382,7 +375,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getHeader()
@@ -394,7 +387,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldSetTextBodyWhenProvided() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
         TextBody expected = new BasicBodyFactory().textBody("Hello all!", StandardCharsets.UTF_8);
 
         CreationMessage testMessage = CreationMessage.builder()
@@ -406,7 +399,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getBody()).isEqualToComparingOnlyGivenFields(expected, "content", "charset");
@@ -415,7 +408,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldSetEmptyBodyWhenNoBodyProvided() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
         TextBody expected = new BasicBodyFactory().textBody("", StandardCharsets.UTF_8);
 
         CreationMessage testMessage = CreationMessage.builder()
@@ -426,7 +419,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getBody()).isEqualToComparingOnlyGivenFields(expected, "content", "charset");
@@ -435,7 +428,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldSetHtmlBodyWhenProvided() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
         TextBody expected = new BasicBodyFactory().textBody("Hello <b>all</b>!", StandardCharsets.UTF_8);
 
         CreationMessage testMessage = CreationMessage.builder()
@@ -447,7 +440,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getBody()).isEqualToComparingOnlyGivenFields(expected, "content", "charset");
@@ -456,7 +449,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldGenerateMultipartWhenHtmlBodyAndTextBodyProvided() throws Exception {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
 
         CreationMessage testMessage = CreationMessage.builder()
                 .mailboxId("dead-bada55")
@@ -468,7 +461,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getBody()).isInstanceOf(Multipart.class);
@@ -481,7 +474,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertShouldGenerateExpectedMultipartWhenHtmlAndTextBodyProvided() throws Exception {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
 
         CreationMessage testMessage = CreationMessage.builder()
                 .mailboxId("dead-bada55")
@@ -505,7 +498,7 @@ class MIMEMessageConverterTest {
 
         // When
         byte[] convert = sut.convert(new MessageWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         String actual = new String(convert, StandardCharsets.UTF_8);
@@ -517,7 +510,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldSetMimeTypeWhenTextBody() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
 
         CreationMessage testMessage = CreationMessage.builder()
                 .mailboxId("dead-bada55")
@@ -528,7 +521,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getMimeType()).isEqualTo("text/plain");
@@ -537,7 +530,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldSetMimeTypeWhenHtmlBody() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
 
         CreationMessage testMessage = CreationMessage.builder()
                 .mailboxId("dead-bada55")
@@ -548,7 +541,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getMimeType()).isEqualTo("text/html");
@@ -557,7 +550,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldSetEmptyHtmlBodyWhenProvided() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
         TextBody expected = new BasicBodyFactory().textBody("", StandardCharsets.UTF_8);
 
         CreationMessage testMessage = CreationMessage.builder()
@@ -569,7 +562,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getBody()).isEqualToComparingOnlyGivenFields(expected, "content", "charset");
@@ -579,7 +572,7 @@ class MIMEMessageConverterTest {
     @Test
     void convertToMimeShouldSetEmptyTextBodyWhenProvided() {
         // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+        MIMEMessageConverter sut = new MIMEMessageConverter();
         TextBody expected = new BasicBodyFactory().textBody("", StandardCharsets.UTF_8);
 
         CreationMessage testMessage = CreationMessage.builder()
@@ -591,7 +584,7 @@ class MIMEMessageConverterTest {
 
         // When
         Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(), session);
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of());
 
         // Then
         assertThat(result.getBody()).isEqualToComparingOnlyGivenFields(expected, "content", "charset");
@@ -604,7 +597,7 @@ class MIMEMessageConverterTest {
         @Test
         void convertToMimeShouldAddAttachment() throws Exception {
             // Given
-            MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+            MIMEMessageConverter sut = new MIMEMessageConverter();
 
             CreationMessage testMessage = CreationMessage.builder()
                 .mailboxId("dead-bada55")
@@ -618,18 +611,15 @@ class MIMEMessageConverterTest {
             String text = "123456";
             TextBody expectedBody = new BasicBodyFactory().textBody(text.getBytes(), StandardCharsets.UTF_8);
             AttachmentId blodId = AttachmentId.from("blodId");
-            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
-                .attachment(AttachmentMetadata.builder()
-                    .messageId(InMemoryMessageId.of(46))
-                    .attachmentId(blodId)
-                    .size(text.getBytes().length)
+            Attachment.WithBlob attachment = new Attachment.WithBlob(
+                Attachment.builder()
+                    .blobId(BlobId.of(blodId.getId()))
+                    .cid(expectedCID)
                     .type(expectedMimeType)
-                    .build())
-                .cid(Cid.from(expectedCID))
-                .isInline(true)
-                .build();
-            when(blobManager.retrieve(BlobId.of(blodId.getId()), session))
-                .thenReturn(Blob.builder()
+                    .isInline(true)
+                    .size(text.getBytes().length)
+                    .build(),
+                Blob.builder()
                     .payload(() -> new ByteArrayInputStream(text.getBytes()))
                     .id(BlobId.of(blodId.getId()))
                     .size(text.getBytes().length)
@@ -638,7 +628,7 @@ class MIMEMessageConverterTest {
 
             // When
             Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment), session);
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
             Multipart typedResult = (Multipart)result.getBody();
 
             assertThat(typedResult.getBodyParts())
@@ -657,7 +647,7 @@ class MIMEMessageConverterTest {
         @Test
         void convertToMimeShouldPreservePartCharset() throws Exception {
             // Given
-            MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+            MIMEMessageConverter sut = new MIMEMessageConverter();
 
             CreationMessage testMessage = CreationMessage.builder()
                 .mailboxId("dead-bada55")
@@ -671,18 +661,16 @@ class MIMEMessageConverterTest {
             String text = "123456";
             TextBody expectedBody = new BasicBodyFactory().textBody(text.getBytes(), StandardCharsets.UTF_8);
             AttachmentId blodId = AttachmentId.from("blodId");
-            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
-                .attachment(AttachmentMetadata.builder()
-                    .messageId(InMemoryMessageId.of(46))
-                    .attachmentId(blodId)
+
+            Attachment.WithBlob attachment = new Attachment.WithBlob(
+                Attachment.builder()
+                    .blobId(BlobId.of(blodId.getId()))
+                    .cid(expectedCID)
+                    .isInline(true)
                     .size(text.getBytes().length)
                     .type(expectedMimeType)
-                    .build())
-                .cid(Cid.from(expectedCID))
-                .isInline(true)
-                .build();
-            when(blobManager.retrieve(BlobId.of(blodId.getId()), session))
-                .thenReturn(Blob.builder()
+                    .build(),
+                Blob.builder()
                     .payload(() -> new ByteArrayInputStream(text.getBytes()))
                     .id(BlobId.of(blodId.getId()))
                     .size(text.getBytes().length)
@@ -691,7 +679,7 @@ class MIMEMessageConverterTest {
 
             // When
             Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment), session);
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
             Multipart typedResult = (Multipart)result.getBody();
 
             assertThat(typedResult.getBodyParts())
@@ -711,7 +699,7 @@ class MIMEMessageConverterTest {
         @Test
         void convertToMimeShouldAddAttachmentAndMultipartAlternativeWhenOneAttachementAndTextAndHtmlBody() throws Exception {
             // Given
-            MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+            MIMEMessageConverter sut = new MIMEMessageConverter();
 
             CreationMessage testMessage = CreationMessage.builder()
                 .mailboxId("dead-bada55")
@@ -727,19 +715,17 @@ class MIMEMessageConverterTest {
             String expectedMimeType = "image/png";
             String text = "123456";
             TextBody expectedAttachmentBody = new BasicBodyFactory().textBody(text.getBytes(), StandardCharsets.UTF_8);
+
             AttachmentId blodId = AttachmentId.from("blodId");
-            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
-                .attachment(AttachmentMetadata.builder()
-                    .messageId(InMemoryMessageId.of(46))
-                    .attachmentId(blodId)
+            Attachment.WithBlob attachment = new Attachment.WithBlob(
+                Attachment.builder()
+                    .blobId(BlobId.of(blodId.getId()))
+                    .cid(expectedCID)
+                    .isInline(true)
                     .size(text.getBytes().length)
                     .type(expectedMimeType)
-                    .build())
-                .cid(Cid.from(expectedCID))
-                .isInline(true)
-                .build();
-            when(blobManager.retrieve(BlobId.of(blodId.getId()), session))
-                .thenReturn(Blob.builder()
+                    .build(),
+                Blob.builder()
                     .payload(() -> new ByteArrayInputStream(text.getBytes()))
                     .id(BlobId.of(blodId.getId()))
                     .size(text.getBytes().length)
@@ -748,7 +734,7 @@ class MIMEMessageConverterTest {
 
             // When
             Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment), session);
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
             Multipart typedResult = (Multipart)result.getBody();
 
             assertThat(typedResult.getBodyParts())
@@ -776,7 +762,7 @@ class MIMEMessageConverterTest {
         @Test
         void convertShouldEncodeWhenNonASCIICharacters() {
             // Given
-            MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+            MIMEMessageConverter sut = new MIMEMessageConverter();
 
             CreationMessage testMessage = CreationMessage.builder()
                     .mailboxId("dead-bada55")
@@ -786,9 +772,9 @@ class MIMEMessageConverterTest {
                     .build();
 
             // When
-            ImmutableList<MessageAttachmentMetadata> attachments = ImmutableList.of();
+            ImmutableList<Attachment.WithBlob> attachments = ImmutableList.of();
             byte[] convert = sut.convert(new ValueWithId.CreationMessageEntry(
-                    CreationMessageId.of("user|mailbox|1"), testMessage), attachments, session);
+                    CreationMessageId.of("user|mailbox|1"), testMessage), attachments);
 
             String expectedEncodedContent = "Some non-ASCII characters: =C3=A1=C3=84=C3=8E=C3=9F=C3=BF";
 
@@ -800,7 +786,7 @@ class MIMEMessageConverterTest {
         @Test
         void convertToMimeShouldAddAttachmentAndContainsIndicationAboutTheWayToEncodeFilenamesAttachmentInTheInputStreamWhenSending() throws Exception {
             // Given
-            MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+            MIMEMessageConverter sut = new MIMEMessageConverter();
 
             CreationMessage testMessage = CreationMessage.builder()
                 .mailboxIds(ImmutableList.of("dead-bada55"))
@@ -815,29 +801,26 @@ class MIMEMessageConverterTest {
             String name = "ديناصور.png";
             String expectedName = EncoderUtil.encodeEncodedWord(name, Usage.TEXT_TOKEN);
             AttachmentId blodId = AttachmentId.from("blodId");
-            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
-                .name(name)
-                .attachment(AttachmentMetadata.builder()
-                    .messageId(InMemoryMessageId.of(46))
-                    .attachmentId(blodId)
+
+            Attachment.WithBlob attachment = new Attachment.WithBlob(
+                Attachment.builder()
+                    .name(name)
+                    .blobId(BlobId.of(blodId.getId()))
+                    .cid(expectedCID)
+                    .isInline(true)
                     .size(text.getBytes().length)
                     .type(expectedMimeType)
-                    .build())
-                .cid(Cid.from(expectedCID))
-                .isInline(true)
-                .build();
-            when(blobManager.retrieve(BlobId.of(blodId.getId()), session))
-                .thenReturn(Blob.builder()
+                    .build(),
+                Blob.builder()
                     .payload(() -> new ByteArrayInputStream(text.getBytes()))
                     .id(BlobId.of(blodId.getId()))
                     .size(text.getBytes().length)
                     .contentType(expectedMimeType)
                     .build());
 
-
             // When
             Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment), session);
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
             Multipart typedResult = (Multipart)result.getBody();
 
             assertThat(typedResult.getBodyParts())
@@ -850,7 +833,7 @@ class MIMEMessageConverterTest {
 
         @Test
         void convertToMimeShouldHaveMixedMultipart() throws Exception {
-            MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+            MIMEMessageConverter sut = new MIMEMessageConverter();
 
             CreationMessage testMessage = CreationMessage.builder()
                 .mailboxIds(ImmutableList.of("dead-bada55"))
@@ -862,20 +845,17 @@ class MIMEMessageConverterTest {
             String text = "123456";
             String type = "image/png";
             AttachmentId blodId = AttachmentId.from("blodId");
-            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
-                .name("ديناصور.png")
-                .attachment(AttachmentMetadata.builder()
-                    .messageId(InMemoryMessageId.of(46))
-                    .attachmentId(blodId)
+
+            Attachment.WithBlob attachment = new Attachment.WithBlob(
+                Attachment.builder()
+                    .blobId(BlobId.of(blodId.getId()))
+                    .cid("cid")
+                    .name("ديناصور.png")
+                    .isInline(false)
                     .size(text.getBytes().length)
                     .type(type)
-                    .build())
-                .cid(Cid.from("cid"))
-                .isInline(false)
-                .build();
-
-            when(blobManager.retrieve(BlobId.of(blodId.getId()), session))
-                .thenReturn(Blob.builder()
+                    .build(),
+                Blob.builder()
                     .payload(() -> new ByteArrayInputStream(text.getBytes()))
                     .id(BlobId.of(blodId.getId()))
                     .size(text.getBytes().length)
@@ -883,7 +863,7 @@ class MIMEMessageConverterTest {
                     .build());
 
             Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment), session);
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
 
             assertThat(result.getBody()).isInstanceOf(Multipart.class);
             Multipart typedResult = (Multipart)result.getBody();
@@ -892,7 +872,7 @@ class MIMEMessageConverterTest {
 
         @Test
         void convertToMimeShouldNotHaveInnerMultipartWhenNoInline() throws Exception {
-            MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+            MIMEMessageConverter sut = new MIMEMessageConverter();
 
             CreationMessage testMessage = CreationMessage.builder()
                 .mailboxIds(ImmutableList.of("dead-bada55"))
@@ -904,19 +884,17 @@ class MIMEMessageConverterTest {
             String text = "123456";
             String type = "image/png";
             AttachmentId blodId = AttachmentId.from("blodId");
-            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
-                .name("ديناصور.png")
-                .attachment(AttachmentMetadata.builder()
-                    .messageId(InMemoryMessageId.of(46))
-                    .attachmentId(blodId)
+
+            Attachment.WithBlob attachment = new Attachment.WithBlob(
+                Attachment.builder()
+                    .blobId(BlobId.of(blodId.getId()))
+                    .cid("cid")
+                    .name("ديناصور.png")
+                    .isInline(false)
                     .size(text.getBytes().length)
                     .type(type)
-                    .build())
-                .cid(Cid.from("cid"))
-                .isInline(false)
-                .build();
-            when(blobManager.retrieve(BlobId.of(blodId.getId()), session))
-                .thenReturn(Blob.builder()
+                    .build(),
+                Blob.builder()
                     .payload(() -> new ByteArrayInputStream(text.getBytes()))
                     .id(BlobId.of(blodId.getId()))
                     .size(text.getBytes().length)
@@ -924,7 +902,7 @@ class MIMEMessageConverterTest {
                     .build());
 
             Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment), session);
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
             Multipart typedResult = (Multipart)result.getBody();
 
             assertThat(typedResult.getBodyParts())
@@ -933,7 +911,7 @@ class MIMEMessageConverterTest {
 
         @Test
         void convertToMimeShouldHaveChildrenAttachmentParts() throws Exception {
-            MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+            MIMEMessageConverter sut = new MIMEMessageConverter();
 
             CreationMessage testMessage = CreationMessage.builder()
                 .mailboxIds(ImmutableList.of("dead-bada55"))
@@ -945,19 +923,17 @@ class MIMEMessageConverterTest {
             String text = "123456";
             AttachmentId blodId = AttachmentId.from("blodId");
             String type = "image/png";
-            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
-                .name("ديناصور.png")
-                .attachment(AttachmentMetadata.builder()
-                    .messageId(InMemoryMessageId.of(46))
-                    .attachmentId(blodId)
+
+            Attachment.WithBlob attachment = new Attachment.WithBlob(
+                Attachment.builder()
+                    .blobId(BlobId.of(blodId.getId()))
+                    .cid("cid")
+                    .name("ديناصور.png")
+                    .isInline(false)
                     .size(text.getBytes().length)
                     .type(type)
-                    .build())
-                .cid(Cid.from("cid"))
-                .isInline(false)
-                .build();
-            when(blobManager.retrieve(BlobId.of(blodId.getId()), session))
-                .thenReturn(Blob.builder()
+                    .build(),
+                Blob.builder()
                     .payload(() -> new ByteArrayInputStream(text.getBytes()))
                     .id(BlobId.of(blodId.getId()))
                     .size(text.getBytes().length)
@@ -965,7 +941,7 @@ class MIMEMessageConverterTest {
                     .build());
 
             Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment), session);
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
             Multipart typedResult = (Multipart)result.getBody();
 
             assertThat(typedResult.getBodyParts())
@@ -975,7 +951,7 @@ class MIMEMessageConverterTest {
 
         @Test
         void convertToMimeShouldNotThrowWhenNameInContentTypeFieldAndAttachmentMetadata() throws Exception {
-            MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+            MIMEMessageConverter sut = new MIMEMessageConverter();
 
             CreationMessage testMessage = CreationMessage.builder()
                 .mailboxIds(ImmutableList.of("dead-bada55"))
@@ -986,20 +962,18 @@ class MIMEMessageConverterTest {
 
             String text = "123456";
             String type = "image/png; name=abc.png";
-            final AttachmentId blodId = AttachmentId.from("blodId");
-            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
-                .name("fgh.png")
-                .attachment(AttachmentMetadata.builder()
-                    .messageId(InMemoryMessageId.of(46))
-                    .attachmentId(blodId)
+            AttachmentId blodId = AttachmentId.from("blodId");
+
+            Attachment.WithBlob attachment = new Attachment.WithBlob(
+                Attachment.builder()
+                    .blobId(BlobId.of(blodId.getId()))
+                    .cid("cid")
+                    .name("fgh.png")
+                    .isInline(false)
                     .size(text.getBytes().length)
                     .type(type)
-                    .build())
-                .cid(Cid.from("cid"))
-                .isInline(false)
-                .build();
-            when(blobManager.retrieve(BlobId.of(blodId.getId()), session))
-                .thenReturn(Blob.builder()
+                    .build(),
+                Blob.builder()
                     .payload(() -> new ByteArrayInputStream(text.getBytes()))
                     .id(BlobId.of(blodId.getId()))
                     .size(text.getBytes().length)
@@ -1007,35 +981,26 @@ class MIMEMessageConverterTest {
                     .build());
 
             assertThatCode(() -> sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                    CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment), session))
+                    CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment)))
                 .doesNotThrowAnyException();
         }
 
         @Test
         void attachmentNameShouldBeOverriddenWhenSpecified() throws Exception {
-            MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+            MIMEMessageConverter sut = new MIMEMessageConverter();
 
             String text = "123456";
             AttachmentId blodId = AttachmentId.from("blodId");
             String type = "image/png; name=abc.png; charset=\"iso-8859-1\"";
-            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
-                .name("fgh.png")
-                .attachment(AttachmentMetadata.builder()
-                    .messageId(InMemoryMessageId.of(46))
-                    .attachmentId(blodId)
+
+            Attachment attachment = Attachment.builder()
+                    .blobId(BlobId.of(blodId.getId()))
+                    .cid("cid")
+                    .name("fgh.png")
+                    .isInline(false)
                     .size(text.getBytes().length)
                     .type(type)
-                    .build())
-                .cid(Cid.from("cid"))
-                .isInline(false)
-                .build();
-            when(blobManager.retrieve(BlobId.of(blodId.getId()), session))
-                .thenReturn(Blob.builder()
-                    .payload(() -> new ByteArrayInputStream(text.getBytes()))
-                    .id(BlobId.of(blodId.getId()))
-                    .size(text.getBytes().length)
-                    .contentType(type)
-                    .build());
+                    .build();
 
             assertThat(sut.contentTypeField(attachment).getBody())
                 .isEqualTo("image/png; charset=iso-8859-1; name=\"=?US-ASCII?Q?fgh.png?=\"");
@@ -1043,29 +1008,19 @@ class MIMEMessageConverterTest {
 
         @Test
         void nameShouldBeAddedToContentTypeWhenSpecified() throws Exception {
-            MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+            MIMEMessageConverter sut = new MIMEMessageConverter();
 
             String text = "123456";
             String type = "image/png";
             AttachmentId blodId = AttachmentId.from("blodId");
-            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
+            Attachment attachment = Attachment.builder()
+                .blobId(BlobId.of(blodId.getId()))
+                .cid("cid")
                 .name("fgh.png")
-                .attachment(AttachmentMetadata.builder()
-                    .messageId(InMemoryMessageId.of(46))
-                    .attachmentId(blodId)
-                    .size(text.getBytes().length)
-                    .type(type)
-                    .build())
-                .cid(Cid.from("cid"))
                 .isInline(false)
+                .size(text.getBytes().length)
+                .type(type)
                 .build();
-            when(blobManager.retrieve(BlobId.of(blodId.getId()), session))
-                .thenReturn(Blob.builder()
-                    .payload(() -> new ByteArrayInputStream(text.getBytes()))
-                    .id(BlobId.of(blodId.getId()))
-                    .size(text.getBytes().length)
-                    .contentType(type)
-                    .build());
 
             assertThat(sut.contentTypeField(attachment).getBody())
                 .isEqualTo("image/png; name=\"=?US-ASCII?Q?fgh.png?=\"");
@@ -1073,28 +1028,19 @@ class MIMEMessageConverterTest {
 
         @Test
         void attachmentNameShouldBePreservedWhenNameNotSpecified() throws Exception {
-            MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+            MIMEMessageConverter sut = new MIMEMessageConverter();
 
             String text = "123456";
             AttachmentId blodId = AttachmentId.from("blodId");
             String type = "image/png; name=abc.png";
-            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
-                .attachment(AttachmentMetadata.builder()
-                    .messageId(InMemoryMessageId.of(46))
-                    .attachmentId(blodId)
-                    .size(text.getBytes().length)
-                    .type(type)
-                    .build())
-                .cid(Cid.from("cid"))
+
+            Attachment attachment = Attachment.builder()
+                .blobId(BlobId.of(blodId.getId()))
+                .cid("cid")
                 .isInline(false)
+                .size(text.getBytes().length)
+                .type(type)
                 .build();
-            when(blobManager.retrieve(BlobId.of(blodId.getId()), session))
-                .thenReturn(Blob.builder()
-                    .payload(() -> new ByteArrayInputStream(text.getBytes()))
-                    .id(BlobId.of(blodId.getId()))
-                    .size(text.getBytes().length)
-                    .contentType(type)
-                    .build());
 
             assertThat(sut.contentTypeField(attachment).getBody())
                 .isEqualTo(type);
@@ -1102,28 +1048,18 @@ class MIMEMessageConverterTest {
 
         @Test
         void attachmentNameShouldBeUnspecifiedWhenNone() throws Exception {
-            MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+            MIMEMessageConverter sut = new MIMEMessageConverter();
 
             String text = "123456";
             AttachmentId blodId = AttachmentId.from("blodId");
             String type = "image/png";
-            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
-                .attachment(AttachmentMetadata.builder()
-                    .messageId(InMemoryMessageId.of(46))
-                    .attachmentId(blodId)
-                    .size(text.getBytes().length)
-                    .type(type)
-                    .build())
-                .cid(Cid.from("cid"))
+            Attachment attachment = Attachment.builder()
+                .blobId(BlobId.of(blodId.getId()))
+                .cid("cid")
                 .isInline(false)
+                .size(text.getBytes().length)
+                .type(type)
                 .build();
-            when(blobManager.retrieve(BlobId.of(blodId.getId()), session))
-                .thenReturn(Blob.builder()
-                    .payload(() -> new ByteArrayInputStream(text.getBytes()))
-                    .id(BlobId.of(blodId.getId()))
-                    .size(text.getBytes().length)
-                    .contentType(type)
-                    .build());
 
             assertThat(sut.contentTypeField(attachment).getBody())
                 .isEqualTo(type);
@@ -1131,7 +1067,7 @@ class MIMEMessageConverterTest {
 
         @Test
         void convertToMimeShouldHaveChildMultipartWhenOnlyInline() throws Exception {
-            MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+            MIMEMessageConverter sut = new MIMEMessageConverter();
 
             CreationMessage testMessage = CreationMessage.builder()
                 .mailboxIds(ImmutableList.of("dead-bada55"))
@@ -1144,19 +1080,17 @@ class MIMEMessageConverterTest {
             String text = "123456";
             AttachmentId blodId = AttachmentId.from("blodId");
             String type = "image/png";
-            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
-                .name(name)
-                .attachment(AttachmentMetadata.builder()
-                    .messageId(InMemoryMessageId.of(46))
-                    .attachmentId(blodId)
+
+            Attachment.WithBlob attachment = new Attachment.WithBlob(
+                Attachment.builder()
+                    .blobId(BlobId.of(blodId.getId()))
+                    .cid("cid")
+                    .name(name)
+                    .isInline(true)
                     .size(text.getBytes().length)
                     .type(type)
-                    .build())
-                .cid(Cid.from("cid"))
-                .isInline(true)
-                .build();
-            when(blobManager.retrieve(BlobId.of(blodId.getId()), session))
-                .thenReturn(Blob.builder()
+                    .build(),
+                Blob.builder()
                     .payload(() -> new ByteArrayInputStream(text.getBytes()))
                     .id(BlobId.of(blodId.getId()))
                     .size(text.getBytes().length)
@@ -1164,7 +1098,7 @@ class MIMEMessageConverterTest {
                     .build());
 
             Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                    CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment), session);
+                    CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
             Multipart typedResult = (Multipart)result.getBody();
 
             assertThat(typedResult.getBodyParts())
@@ -1177,7 +1111,7 @@ class MIMEMessageConverterTest {
 
         @Test
         void convertToMimeShouldHaveChildMultipartWhenBothInlinesAndAttachments() throws Exception {
-            MIMEMessageConverter sut = new MIMEMessageConverter(blobManager);
+            MIMEMessageConverter sut = new MIMEMessageConverter();
 
             CreationMessage testMessage = CreationMessage.builder()
                 .mailboxIds(ImmutableList.of("dead-bada55"))
@@ -1189,50 +1123,43 @@ class MIMEMessageConverterTest {
             String text = "inline data";
             String type = "image/png";
             AttachmentId blodId = AttachmentId.from("blodId");
-            MessageAttachmentMetadata inline = MessageAttachmentMetadata.builder()
-                .name("ديناصور.png")
-                .attachment(AttachmentMetadata.builder()
-                    .messageId(InMemoryMessageId.of(46))
-                    .attachmentId(blodId)
+
+            Attachment.WithBlob inline = new Attachment.WithBlob(
+                Attachment.builder()
+                    .blobId(BlobId.of(blodId.getId()))
+                    .cid("cid")
+                    .name("ديناصور.png")
+                    .isInline(true)
                     .size(text.getBytes().length)
                     .type(type)
-                    .build())
-                .cid(Cid.from("cid"))
-                .isInline(true)
-                .build();
-            when(blobManager.retrieve(BlobId.of(blodId.getId()), session))
-                .thenReturn(Blob.builder()
+                    .build(),
+                Blob.builder()
                     .payload(() -> new ByteArrayInputStream(text.getBytes()))
                     .id(BlobId.of(blodId.getId()))
                     .size(text.getBytes().length)
                     .contentType(type)
                     .build());
 
-
             String text2 = "attachment data";
             final AttachmentId blodId2 = AttachmentId.from("blodId2");
-            MessageAttachmentMetadata attachment = MessageAttachmentMetadata.builder()
-                .name("att.pdf")
-                .attachment(AttachmentMetadata.builder()
-                    .messageId(InMemoryMessageId.of(46))
-                    .attachmentId(blodId2)
-                    .size(text2.getBytes().length)
+            Attachment.WithBlob attachment = new Attachment.WithBlob(
+                Attachment.builder()
+                    .blobId(BlobId.of(blodId.getId()))
+                    .cid("cid2")
+                    .name("att.pdf")
+                    .isInline(false)
+                    .size(text.getBytes().length)
                     .type(type)
-                    .build())
-                .cid(Cid.from("cid2"))
-                .isInline(false)
-                .build();
-            when(blobManager.retrieve(BlobId.of(blodId2.getId()), session))
-                .thenReturn(Blob.builder()
+                    .build(),
+                Blob.builder()
                     .payload(() -> new ByteArrayInputStream(text.getBytes()))
-                    .id(BlobId.of(blodId2.getId()))
+                    .id(BlobId.of(blodId.getId()))
                     .size(text.getBytes().length)
                     .contentType(type)
                     .build());
 
-
             Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                    CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(inline, attachment), session);
+                    CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(inline, attachment));
             Multipart typedResult = (Multipart)result.getBody();
 
             assertThat(typedResult.getBodyParts())

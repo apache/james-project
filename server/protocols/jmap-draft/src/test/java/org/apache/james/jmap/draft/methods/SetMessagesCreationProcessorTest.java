@@ -173,7 +173,7 @@ public class SetMessagesCreationProcessorTest {
         
         fakeSystemMailboxesProvider = new TestSystemMailboxesProvider(() -> optionalOutbox, () -> optionalDrafts);
         session = MailboxSessionUtil.create(USER);
-        MIMEMessageConverter mimeMessageConverter = new MIMEMessageConverter(mock(BlobManager.class));
+        MIMEMessageConverter mimeMessageConverter = new MIMEMessageConverter();
         messageAppender = new MessageAppender(mockedMailboxManager, mockMessageIdManager, mimeMessageConverter, blobManager, JMAPConfiguration.builder().enable().build());
         messageSender = new MessageSender(mockedMailSpool);
         referenceUpdater = new ReferenceUpdater(mockMessageIdManager, mockedMailboxManager);
