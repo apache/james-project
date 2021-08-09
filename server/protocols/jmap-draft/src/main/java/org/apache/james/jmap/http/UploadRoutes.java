@@ -40,11 +40,12 @@ import javax.inject.Named;
 import org.apache.james.jmap.Endpoint;
 import org.apache.james.jmap.JMAPRoute;
 import org.apache.james.jmap.JMAPRoutes;
+import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.draft.exceptions.BadRequestException;
 import org.apache.james.jmap.draft.exceptions.InternalErrorException;
+import org.apache.james.jmap.draft.methods.BlobManagerImpl;
 import org.apache.james.jmap.draft.model.UploadResponse;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
-import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.metrics.api.MetricFactory;
@@ -71,14 +72,14 @@ public class UploadRoutes implements JMAPRoutes {
 
     private final MetricFactory metricFactory;
     private final Authenticator authenticator;
-    private final AttachmentManager attachmentManager;
+    private final UploadRepository uploadRepository;
     private final ObjectMapper objectMapper;
 
     @Inject
-    private UploadRoutes(MetricFactory metricFactory, @Named(InjectionKeys.DRAFT) Authenticator authenticator, AttachmentManager attachmentManager, ObjectMapper objectMapper) {
+    private UploadRoutes(MetricFactory metricFactory, @Named(InjectionKeys.DRAFT) Authenticator authenticator, UploadRepository uploadRepository, ObjectMapper objectMapper) {
         this.metricFactory = metricFactory;
         this.authenticator = authenticator;
-        this.attachmentManager = attachmentManager;
+        this.uploadRepository = uploadRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -142,11 +143,11 @@ public class UploadRoutes implements JMAPRoutes {
     }
 
     private Mono<UploadResponse> uploadContent(ContentType contentType, InputStream inputStream, MailboxSession session) {
-        return Mono.from(attachmentManager.storeAttachment(contentType, inputStream, session))
-            .map(attachment -> UploadResponse.builder()
-                .blobId(attachment.getAttachmentId().getId())
-                .type(attachment.getType().asString())
-                .size(attachment.getSize())
+        return Mono.from(uploadRepository.upload(inputStream, contentType, session.getUser()))
+            .map(upload -> UploadResponse.builder()
+                .blobId(BlobManagerImpl.UPLOAD_PREFIX + upload.uploadId().asString())
+                .type(upload.contentType().asString())
+                .size(upload.sizeAsLong())
                 .build())
             .onErrorMap(e -> e.getCause() instanceof EOFException, any -> new CancelledUploadException())
             .onErrorMap(e -> !(e instanceof CancelledUploadException), e -> new InternalErrorException("Error while uploading content", e));

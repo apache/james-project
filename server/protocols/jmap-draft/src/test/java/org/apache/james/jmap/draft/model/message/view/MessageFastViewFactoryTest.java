@@ -35,6 +35,9 @@ import java.util.Optional;
 
 import javax.mail.Flags;
 
+import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedProperties;
 import org.apache.james.jmap.draft.methods.BlobManagerImpl;
@@ -45,6 +48,7 @@ import org.apache.james.jmap.draft.model.Number;
 import org.apache.james.jmap.draft.model.PreviewDTO;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
+import org.apache.james.jmap.memory.upload.InMemoryUploadRepository;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
@@ -55,6 +59,7 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.util.mime.MessageContentExtractor;
@@ -145,7 +150,8 @@ class MessageFastViewFactoryTest {
         Mono.from(fastViewProjection.store(previewComputedMessage3.getMessageId(), PROJECTION_4))
             .block();
 
-        blobManager = new BlobManagerImpl(resources.getAttachmentManager(), resources.getMessageIdManager(), resources.getMessageIdFactory());
+        blobManager = new BlobManagerImpl(resources.getAttachmentManager(), resources.getMessageIdManager(), resources.getMessageIdFactory(),
+            new InMemoryUploadRepository(new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new HashBlobId.Factory())));
         messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor, messageIdManager,
             new MemoryMessageFastViewProjection(new RecordingMetricFactory()));
         messageFastViewFactory = new MessageFastViewFactory(blobManager, messageIdManager, fastViewProjection, messageFullViewFactory);

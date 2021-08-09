@@ -29,6 +29,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
+import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.core.Username;
 import org.apache.james.events.Group;
 import org.apache.james.events.InVMEventBus;
@@ -42,6 +45,7 @@ import org.apache.james.jmap.draft.methods.BlobManagerImpl;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
+import org.apache.james.jmap.memory.upload.InMemoryUploadRepository;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
@@ -60,6 +64,7 @@ import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.util.mime.MessageContentExtractor;
@@ -132,7 +137,8 @@ class ComputeMessageFastViewProjectionListenerTest {
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
 
-        BlobManagerImpl blobManager = new BlobManagerImpl(resources.getAttachmentManager(), resources.getMessageIdManager(), resources.getMessageIdFactory());
+        BlobManagerImpl blobManager = new BlobManagerImpl(resources.getAttachmentManager(), resources.getMessageIdManager(), resources.getMessageIdFactory(),
+            new InMemoryUploadRepository(new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new HashBlobId.Factory())));
         messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor, messageIdManager, messageFastViewProjection);
 
         FakeAuthenticator authenticator = new FakeAuthenticator();
