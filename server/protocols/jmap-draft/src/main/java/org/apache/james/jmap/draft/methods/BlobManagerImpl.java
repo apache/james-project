@@ -23,6 +23,9 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.james.jmap.api.model.UploadId;
+import org.apache.james.jmap.api.model.UploadNotFoundException;
+import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.draft.exceptions.BlobNotFoundException;
 import org.apache.james.jmap.draft.model.Blob;
 import org.apache.james.jmap.draft.model.BlobId;
@@ -41,18 +44,24 @@ import org.apache.james.mailbox.model.MessageResult;
 
 import com.github.fge.lambdas.Throwing;
 
+import reactor.core.publisher.Mono;
+
 public class BlobManagerImpl implements BlobManager {
     public static final ContentType MESSAGE_RFC822_CONTENT_TYPE = ContentType.of("message/rfc822");
+    public static final String UPLOAD_PREFIX = "upload-";
+
     private final AttachmentManager attachmentManager;
     private final MessageIdManager messageIdManager;
     private final MessageId.Factory messageIdFactory;
+    private final UploadRepository uploadRepository;
 
     @Inject
     public BlobManagerImpl(AttachmentManager attachmentManager, MessageIdManager messageIdManager,
-                           MessageId.Factory messageIdFactory) {
+                           MessageId.Factory messageIdFactory, UploadRepository uploadRepository) {
         this.attachmentManager = attachmentManager;
         this.messageIdManager = messageIdManager;
         this.messageIdFactory = messageIdFactory;
+        this.uploadRepository = uploadRepository;
     }
 
     @Override
@@ -62,9 +71,27 @@ public class BlobManagerImpl implements BlobManager {
 
     @Override
     public Blob retrieve(BlobId blobId, MailboxSession mailboxSession) throws MailboxException, BlobNotFoundException {
-        return getBlobFromAttachment(blobId, mailboxSession)
-                .orElseGet(() -> getBlobFromMessage(blobId, mailboxSession)
+        return getBlobFromUpload(blobId, mailboxSession)
+            .or(Throwing.supplier(() -> getBlobFromAttachment(blobId, mailboxSession)).sneakyThrow())
+            .orElseGet(() -> getBlobFromMessage(blobId, mailboxSession)
                 .orElseThrow(() -> new BlobNotFoundException(blobId)));
+    }
+
+    private Optional<Blob> getBlobFromUpload(BlobId blobId, MailboxSession mailboxSession) {
+        if (blobId.getRawValue().startsWith(UPLOAD_PREFIX)) {
+            UploadId uploadId = UploadId.from(blobId.getRawValue().substring(UPLOAD_PREFIX.length()));
+
+            return Mono.from(uploadRepository.retrieve(uploadId, mailboxSession.getUser()))
+                .map(upload -> Blob.builder()
+                    .id(blobId)
+                    .contentType(upload.contentType())
+                    .size(upload.sizeAsLong())
+                    .payload(upload.content()::apply)
+                    .build())
+                .onErrorResume(UploadNotFoundException.class, e -> Mono.empty())
+                .blockOptional();
+        }
+        return Optional.empty();
     }
 
     private Optional<Blob> getBlobFromAttachment(BlobId blobId, MailboxSession mailboxSession) throws MailboxException {

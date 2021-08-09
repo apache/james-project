@@ -30,10 +30,14 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.exceptions.BlobNotFoundException;
 import org.apache.james.jmap.draft.model.Blob;
 import org.apache.james.jmap.draft.model.BlobId;
+import org.apache.james.jmap.memory.upload.InMemoryUploadRepository;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -48,6 +52,7 @@ import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -75,7 +80,8 @@ class BlobManagerImplTest {
         messageIdManager = mock(MessageIdManager.class);
         session = MailboxSessionUtil.create(Username.of("user"));
 
-        blobManager = new BlobManagerImpl(attachmentManager, messageIdManager, new TestMessageId.Factory());
+        blobManager = new BlobManagerImpl(attachmentManager, messageIdManager, new TestMessageId.Factory(),
+            new InMemoryUploadRepository(new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new HashBlobId.Factory())));
     }
 
     @Test
