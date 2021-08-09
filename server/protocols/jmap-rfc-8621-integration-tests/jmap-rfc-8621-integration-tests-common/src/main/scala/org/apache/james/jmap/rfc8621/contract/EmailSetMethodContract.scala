@@ -2052,7 +2052,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -2183,7 +2183,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -2252,7 +2252,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -2394,7 +2394,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -2658,7 +2658,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -2832,7 +2832,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -2983,7 +2983,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -3115,7 +3115,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -3261,7 +3261,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -3528,7 +3528,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -3688,7 +3688,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract
@@ -3968,7 +3968,7 @@ trait EmailSetMethodContract {
       .contentType("text/plain")
       .body(payload)
     .when
-      .post(s"/upload/$ACCOUNT_ID/")
+      .post(s"/upload/$ACCOUNT_ID")
     .`then`
       .statusCode(SC_CREATED)
       .extract

@@ -19,9 +19,16 @@
 
 package org.apache.james.jmap.routes
 
+import java.io.InputStream
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
+import java.util.stream
+import java.util.stream.Stream
+
 import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, UNAUTHORIZED}
 import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus}
+import javax.inject.{Inject, Named}
 import org.apache.commons.fileupload.util.LimitedInputStream
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.api.model.Size.{Size, sanitizeSize}
@@ -44,13 +51,6 @@ import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 
-import java.io.InputStream
-import java.nio.ByteBuffer
-import java.nio.charset.StandardCharsets
-import java.util.stream
-import java.util.stream.Stream
-import javax.inject.{Inject, Named}
-
 case class TooBigUploadException() extends RuntimeException
 
 object UploadRoutes {
@@ -71,7 +71,7 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
   class MaxFileSizeUploadException extends RuntimeException
 
   private val accountIdParam: String = "accountId"
-  private val uploadURI = s"/upload/{$accountIdParam}/"
+  private val uploadURI = s"/upload/{$accountIdParam}"
 
   override def routes(): stream.Stream[JMAPRoute] = Stream.of(
     JMAPRoute.builder
