@@ -169,7 +169,7 @@ public class MessageAppender {
         return message.getKeywords().asFlags();
     }
 
-    private ImmutableList<MessageAttachmentMetadata> getMessageAttachments(MailboxSession session, ImmutableList<Attachment> attachments) throws MailboxException {
+    private ImmutableList<MessageAttachmentMetadata> getMessageAttachments(MailboxSession session, ImmutableList<Attachment> attachments) {
         return attachments
             .stream()
             .flatMap(attachment -> {
