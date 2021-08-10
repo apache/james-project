@@ -179,7 +179,6 @@ public class SetMessagesCreationProcessorTest {
         referenceUpdater = new ReferenceUpdater(mockMessageIdManager, mockedMailboxManager);
         sut = new SetMessagesCreationProcessor(messageFullViewFactory,
             fakeSystemMailboxesProvider,
-            new AttachmentChecker(mock(BlobManager.class)),
             new RecordingMetricFactory(),
             mockedMailboxManager,
             mockedMailboxIdFactory,
@@ -273,7 +272,7 @@ public class SetMessagesCreationProcessorTest {
     @Test
     public void processShouldReturnNonEmptyCreatedWhenRequestHasNonEmptyCreate() throws MailboxException {
         // Given
-        sut = new SetMessagesCreationProcessor(messageFullViewFactory, fakeSystemMailboxesProvider, new AttachmentChecker(mock(BlobManager.class)), new RecordingMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory, messageAppender, messageSender, referenceUpdater, canSendFrom);
+        sut = new SetMessagesCreationProcessor(messageFullViewFactory, fakeSystemMailboxesProvider, new RecordingMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory, messageAppender, messageSender, referenceUpdater, canSendFrom);
 
         // When
         SetMessagesResponse result = sut.process(createMessageInOutbox, session);
@@ -289,7 +288,7 @@ public class SetMessagesCreationProcessorTest {
         // Given
         TestSystemMailboxesProvider doNotProvideOutbox = new TestSystemMailboxesProvider(Optional::empty, () -> optionalDrafts);
         SetMessagesCreationProcessor sut = new SetMessagesCreationProcessor(messageFullViewFactory, doNotProvideOutbox,
-            new AttachmentChecker(mock(BlobManager.class)), new RecordingMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory,
+            new RecordingMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory,
             messageAppender,
             messageSender,
             referenceUpdater,

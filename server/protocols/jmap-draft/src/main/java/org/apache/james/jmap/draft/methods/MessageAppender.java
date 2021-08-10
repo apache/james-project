@@ -21,6 +21,7 @@ package org.apache.james.jmap.draft.methods;
 
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -28,10 +29,13 @@ import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.jmap.JMAPConfiguration;
+import org.apache.james.jmap.draft.exceptions.AttachmentsNotFoundException;
+import org.apache.james.jmap.draft.exceptions.BlobNotFoundException;
 import org.apache.james.jmap.draft.exceptions.SizeExceededException;
 import org.apache.james.jmap.draft.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.Blob;
+import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.Keywords;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory.MetaDataWithContent;
@@ -50,6 +54,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -166,13 +171,13 @@ public class MessageAppender {
     }
 
     private ImmutableList<Attachment.WithBlob> getMessageAttachments(MailboxSession session, ImmutableList<Attachment> attachments) {
-        return attachments
+        ImmutableList<Attachment.WithBlob> result = attachments
             .stream()
             .flatMap(attachment -> {
                 try {
                     Blob blob = blobManager.retrieve(attachment.getBlobId(), session);
                     return Stream.of(new Attachment.WithBlob(attachment, blob));
-                } catch (MailboxException e) {
+                } catch (BlobNotFoundException | MailboxException e) {
                     LOGGER.warn(String.format("Attachment %s not found", attachment.getBlobId()));
                     return Stream.empty();
                 } catch (IllegalStateException e) {
@@ -181,5 +186,12 @@ public class MessageAppender {
                 }
             })
             .collect(ImmutableList.toImmutableList());
+
+        if (result.size() != attachments.size()) {
+            Sets.SetView<BlobId> notFound = Sets.difference(attachments.stream().map(Attachment::getBlobId).collect(Collectors.toSet()),
+                result.stream().map(att -> att.getAttachment().getBlobId()).collect(Collectors.toSet()));
+            throw new AttachmentsNotFoundException(ImmutableList.copyOf(notFound));
+        }
+        return result;
     }
 }
