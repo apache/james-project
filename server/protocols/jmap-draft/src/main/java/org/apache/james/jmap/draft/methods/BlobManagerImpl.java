@@ -40,9 +40,12 @@ import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.util.ReactorUtils;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableSet;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class BlobManagerImpl implements BlobManager {
@@ -65,23 +68,32 @@ public class BlobManagerImpl implements BlobManager {
 
     @Override
     public Blob retrieve(BlobId blobId, MailboxSession mailboxSession) throws MailboxException, BlobNotFoundException {
-        return getBlobFromUpload(blobId, mailboxSession)
-            .or(Throwing.supplier(() -> getBlobFromAttachment(blobId, mailboxSession)).sneakyThrow())
-            .orElseGet(() -> getBlobFromMessage(blobId, mailboxSession)
-                .orElseThrow(() -> new BlobNotFoundException(blobId)));
+        try {
+            return getBlobFromUpload(blobId, mailboxSession)
+                .switchIfEmpty(Mono.fromCallable(() -> getBlobFromAttachment(blobId, mailboxSession))
+                    .handle(ReactorUtils.publishIfPresent()))
+                .switchIfEmpty(getBlobFromMessage(blobId, mailboxSession))
+                .switchIfEmpty(Mono.error(() -> new BlobNotFoundException(blobId)))
+                .block();
+        } catch (Exception e) {
+            if (e.getCause() instanceof MailboxException) {
+                throw (MailboxException) e.getCause();
+            }
+            throw e;
+        }
     }
 
-    private Optional<Blob> getBlobFromUpload(BlobId blobId, MailboxSession mailboxSession) {
+    private Mono<Blob> getBlobFromUpload(BlobId blobId, MailboxSession mailboxSession) {
         return blobId.asUploadId()
-            .flatMap(uploadId -> Mono.from(uploadRepository.retrieve(uploadId, mailboxSession.getUser()))
+            .map(uploadId -> Mono.from(uploadRepository.retrieve(uploadId, mailboxSession.getUser()))
                 .map(upload -> Blob.builder()
                     .id(blobId)
                     .contentType(upload.contentType())
                     .size(upload.sizeAsLong())
                     .payload(upload.content()::apply)
                     .build())
-                .onErrorResume(UploadNotFoundException.class, e -> Mono.empty())
-                .blockOptional());
+                .onErrorResume(UploadNotFoundException.class, e -> Mono.empty()))
+            .orElse(Mono.empty());
     }
 
     private Optional<Blob> getBlobFromAttachment(BlobId blobId, MailboxSession mailboxSession) throws MailboxException {
@@ -107,7 +119,7 @@ public class BlobManagerImpl implements BlobManager {
         }
     }
 
-    private Optional<Blob> getBlobFromMessage(BlobId blobId, MailboxSession mailboxSession) {
+    private Mono<Blob> getBlobFromMessage(BlobId blobId, MailboxSession mailboxSession) {
         return retrieveMessageId(blobId)
                 .flatMap(messageId -> loadMessageAsInputStream(messageId, mailboxSession))
                 .map(Throwing.function(
@@ -119,23 +131,17 @@ public class BlobManagerImpl implements BlobManager {
                         .build()));
     }
 
-    private Optional<MessageId> retrieveMessageId(BlobId blobId) {
+    private Mono<MessageId> retrieveMessageId(BlobId blobId) {
         try {
-            return Optional.of(messageIdFactory.fromString(blobId.getRawValue()));
+            return Mono.just(messageIdFactory.fromString(blobId.getRawValue()));
         } catch (IllegalArgumentException e) {
-            return Optional.empty();
+            return Mono.empty();
         }
     }
 
-    private Optional<Content> loadMessageAsInputStream(MessageId messageId, MailboxSession mailboxSession)  {
-        try {
-            return messageIdManager.getMessage(messageId, FetchGroup.FULL_CONTENT, mailboxSession)
-                .stream()
+    private Mono<Content> loadMessageAsInputStream(MessageId messageId, MailboxSession mailboxSession)  {
+            return Flux.from(messageIdManager.getMessagesReactive(ImmutableSet.of(messageId), FetchGroup.FULL_CONTENT, mailboxSession))
                 .map(Throwing.function(MessageResult::getFullContent))
-                .findFirst();
-        } catch (MailboxException e) {
-            throw new RuntimeException(e);
-        }
+                .next();
     }
-
 }
