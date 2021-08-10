@@ -200,24 +200,35 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     @Override
     public DeleteResult delete(MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException {
-        return  MailboxReactorUtils.block(deleteReactive(messageId, mailboxIds, mailboxSession)
+        return  MailboxReactorUtils.block(deleteReactive(ImmutableList.of(messageId), mailboxIds, mailboxSession)
             .subscribeOn(Schedulers.elastic()));
     }
 
     @Override
-    public Mono<DeleteResult> deleteReactive(MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) {
+    public Mono<DeleteResult> deleteReactive(List<MessageId> messageIds, List<MailboxId> mailboxIds, MailboxSession mailboxSession) {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
         return assertRightsOnMailboxIds(mailboxIds, mailboxSession, Right.DeleteMessages)
-            .then(messageIdMapper.findReactive(ImmutableList.of(messageId), MessageMapper.FetchType.Metadata)
+            .then(messageIdMapper.findReactive(messageIds, MessageMapper.FetchType.Metadata)
                 .filter(inMailboxes(mailboxIds))
                 .collectList())
             .flatMap(messageList -> {
+                Set<MessageId> found = messageList.stream()
+                    .map(Message::getMessageId)
+                    .collect(ImmutableSet.toImmutableSet());
+                Set<MessageId> notFound = Sets.difference(ImmutableSet.copyOf(messageIds), found);
+
+                DeleteResult result = DeleteResult.builder()
+                    .addDestroyed(found)
+                    .addNotFound(notFound)
+                    .build();
+
+
                 if (!messageList.isEmpty()) {
                     return deleteWithPreHooks(messageIdMapper, messageList, mailboxSession)
-                        .thenReturn(DeleteResult.destroyed(messageId));
+                        .thenReturn(result);
                 }
-                return Mono.just(DeleteResult.notFound(messageId));
+                return Mono.just(result);
             });
     }
 

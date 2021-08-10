@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -32,6 +33,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.DeleteResult;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
@@ -123,13 +125,14 @@ public class DistributedMailboxAdapter implements Mailbox {
 
     @Override
     public void remove(String... uids) {
-        Flux.just(uids)
+        ImmutableList<MessageId> messageIds = Stream.of(uids)
             .map(messageIdFactory::fromString)
-            .concatMap(messageId -> messageIdManager.deleteReactive(messageId, ImmutableList.of(mailbox.getId()), session))
-            // Clear synchronously metadataStore to avoid race conditions
-            .concatMap(deleteResult -> Flux.fromIterable(deleteResult.getDestroyed())
-                .concatMap(messageId -> Mono.from(metadataStore.remove(mailbox.getId(), messageId)))
-                .then())
+            .collect(ImmutableList.toImmutableList());
+
+        Mono.from(messageIdManager.deleteReactive(messageIds, ImmutableList.of(mailbox.getId()), session))
+            .flatMapIterable(DeleteResult::getDestroyed)
+            // Clear synchronously metadataStore to avoid race condition
+            .concatMap(messageId -> Mono.from(metadataStore.remove(mailbox.getId(), messageId)))
             .blockLast();
     }
 

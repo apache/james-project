@@ -68,7 +68,7 @@ public interface MessageIdManager {
 
     DeleteResult delete(MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
 
-    Publisher<DeleteResult> deleteReactive(MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession);
+    Publisher<DeleteResult> deleteReactive(List<MessageId> messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession);
 
     Publisher<DeleteResult> delete(List<MessageId> messageId, MailboxSession mailboxSession);
 
