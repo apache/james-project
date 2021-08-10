@@ -146,6 +146,7 @@ public class CassandraAttachmentDAOV2 {
     private final BlobId.Factory blobIdFactory;
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insertStatement;
+    private final PreparedStatement insertMessageIdStatement;
     private final PreparedStatement deleteStatement;
     private final PreparedStatement selectStatement;
     private final PreparedStatement listBlobs;
@@ -162,6 +163,7 @@ public class CassandraAttachmentDAOV2 {
         this.insertStatement = prepareInsert(session);
         this.deleteStatement = prepareDelete(session);
         this.listBlobs = prepareSelectBlobs(session);
+        this.insertMessageIdStatement = prepareInsertMessageId(session);
     }
 
     private PreparedStatement prepareSelectBlobs(Session session) {
@@ -184,6 +186,13 @@ public class CassandraAttachmentDAOV2 {
                 .value(TYPE, bindMarker(TYPE))
                 .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
                 .value(SIZE, bindMarker(SIZE)));
+    }
+
+    private PreparedStatement prepareInsertMessageId(Session session) {
+        return session.prepare(
+            insertInto(TABLE_NAME)
+                .value(ID_AS_UUID, bindMarker(ID_AS_UUID))
+                .value(MESSAGE_ID, bindMarker(MESSAGE_ID)));
     }
 
     private PreparedStatement prepareSelect(Session session) {
@@ -211,6 +220,14 @@ public class CassandraAttachmentDAOV2 {
                 .setUUID(MESSAGE_ID, messageId.get())
                 .setString(TYPE, attachment.getType().asString())
                 .setString(BLOB_ID, attachment.getBlobId().asString()));
+    }
+
+    public Mono<Void> insertMessageId(AttachmentId attachmentId, MessageId messageId) {
+        CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId;
+        return cassandraAsyncExecutor.executeVoid(
+            insertMessageIdStatement.bind()
+                .setUUID(ID_AS_UUID, attachmentId.asUUID())
+                .setUUID(MESSAGE_ID, cassandraMessageId.get()));
     }
 
     public Mono<Void> delete(AttachmentId attachmentId) {

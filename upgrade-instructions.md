@@ -122,6 +122,11 @@ cqlsh:apache_james> ALTER TABLE attachmentV2 ADD message_id timeuuid ;
 Newly stored attachment will then store their corresponding messageId alongside `attachmentV2` and will no longer need
 to read `messageIdTable`.
 
+We furthermore propose a migration task for adding `message_id` field to `attachmentV2` and thus 
+ensure you leverage the benefits of this change:
+
+See how to [upgrade to the latest schema version](https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-webadmin.md#upgrading-to-the-latest-version) (V12).
+
 ### Adding the threadId to the ElasticSearch index
 
 Date 22/07/2021
