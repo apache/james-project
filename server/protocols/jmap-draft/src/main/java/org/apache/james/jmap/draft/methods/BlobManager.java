@@ -24,10 +24,7 @@ import org.apache.james.jmap.draft.model.Blob;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MessageId;
 
 public interface BlobManager {
-    BlobId toBlobId(MessageId messageId);
-
     Blob retrieve(BlobId blobId, MailboxSession mailboxSession) throws MailboxException, BlobNotFoundException;
 }

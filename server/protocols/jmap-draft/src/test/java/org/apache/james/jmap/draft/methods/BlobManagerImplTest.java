@@ -245,10 +245,4 @@ class BlobManagerImplTest {
             .isInstanceOf(RuntimeException.class);
     }
 
-    @Test
-    void toBlobIdShouldReturnBlobIdCorrespondingToAMessageId() {
-        assertThat(blobManager.toBlobId(MESSAGE_ID))
-            .isEqualTo(BlobId.of("125"));
-    }
-
 }

@@ -23,7 +23,6 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.james.jmap.api.model.UploadId;
 import org.apache.james.jmap.api.model.UploadNotFoundException;
 import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.draft.exceptions.BlobNotFoundException;
@@ -65,11 +64,6 @@ public class BlobManagerImpl implements BlobManager {
     }
 
     @Override
-    public BlobId toBlobId(MessageId messageId) {
-        return BlobId.of(messageId.serialize());
-    }
-
-    @Override
     public Blob retrieve(BlobId blobId, MailboxSession mailboxSession) throws MailboxException, BlobNotFoundException {
         return getBlobFromUpload(blobId, mailboxSession)
             .or(Throwing.supplier(() -> getBlobFromAttachment(blobId, mailboxSession)).sneakyThrow())
@@ -78,10 +72,8 @@ public class BlobManagerImpl implements BlobManager {
     }
 
     private Optional<Blob> getBlobFromUpload(BlobId blobId, MailboxSession mailboxSession) {
-        if (blobId.getRawValue().startsWith(UPLOAD_PREFIX)) {
-            UploadId uploadId = UploadId.from(blobId.getRawValue().substring(UPLOAD_PREFIX.length()));
-
-            return Mono.from(uploadRepository.retrieve(uploadId, mailboxSession.getUser()))
+        return blobId.asUploadId()
+            .flatMap(uploadId -> Mono.from(uploadRepository.retrieve(uploadId, mailboxSession.getUser()))
                 .map(upload -> Blob.builder()
                     .id(blobId)
                     .contentType(upload.contentType())
@@ -89,9 +81,7 @@ public class BlobManagerImpl implements BlobManager {
                     .payload(upload.content()::apply)
                     .build())
                 .onErrorResume(UploadNotFoundException.class, e -> Mono.empty())
-                .blockOptional();
-        }
-        return Optional.empty();
+                .blockOptional());
     }
 
     private Optional<Blob> getBlobFromAttachment(BlobId blobId, MailboxSession mailboxSession) throws MailboxException {
