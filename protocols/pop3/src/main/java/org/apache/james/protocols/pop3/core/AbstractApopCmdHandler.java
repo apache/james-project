@@ -23,6 +23,7 @@ import java.util.Collection;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.Username;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
@@ -58,7 +59,7 @@ public abstract class AbstractApopCmdHandler extends AbstractPassCmdHandler {
         String[] parts = null;
         boolean syntaxError = false;
         if (parameters != null) {
-            parts = parameters.split(" ");
+            parts = StringUtils.split(parameters, " ");
             if (parts.length != 2) {
                 syntaxError = true;
             }

@@ -22,6 +22,7 @@ package org.apache.james.protocols.smtp;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.protocols.api.AbstractResponse;
 
 /**
@@ -56,7 +57,7 @@ public class SMTPResponse extends AbstractResponse {
     
 
     private  static String extractCode(String raw) {
-        String[] args = raw.split(" ");
+        String[] args = StringUtils.split(raw, " ");
         if (args != null && args.length > 1) {
             return args[0];
             
@@ -66,7 +67,7 @@ public class SMTPResponse extends AbstractResponse {
     }
     
     private  static String extractResponse(String raw) {
-        String[] args = raw.split(" ");
+        String[] args = StringUtils.split(raw, " ");
         if (args != null && args.length > 1) {
             return args[2];
             

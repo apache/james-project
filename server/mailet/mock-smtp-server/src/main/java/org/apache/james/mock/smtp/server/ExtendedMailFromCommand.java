@@ -29,7 +29,12 @@ import org.subethamail.smtp.server.BaseCommand;
 import org.subethamail.smtp.server.Session;
 import org.subethamail.smtp.util.EmailUtils;
 
+import com.google.common.base.CharMatcher;
+
 public class ExtendedMailFromCommand extends BaseCommand {
+
+    public static final CharMatcher NUMBER_MATCHER = CharMatcher.inRange('0', '9');
+
     public ExtendedMailFromCommand() {
         super("MAIL", "Specifies the sender.", "FROM: <sender> [ <parameters> ]");
     }
@@ -56,7 +61,7 @@ public class ExtendedMailFromCommand extends BaseCommand {
                 int sizec = largs.indexOf(" size=");
                 if (sizec > -1) {
                     String ssize = largs.substring(sizec + 6).trim();
-                    if (ssize.length() > 0 && ssize.matches("[0-9]+")) {
+                    if (ssize.length() > 0 && NUMBER_MATCHER.matchesAllOf(ssize)) {
                         size = Integer.parseInt(ssize);
                     }
                 }

@@ -44,10 +44,10 @@ import com.google.common.collect.ImmutableList;
 
 public class DelegatedPropertiesConfiguration implements Configuration {
 
-    private final String delimiter;
+    private final char delimiter;
     private final Configuration configuration;
 
-    DelegatedPropertiesConfiguration(String delimiter, Configuration configuration) {
+    DelegatedPropertiesConfiguration(char delimiter, Configuration configuration) {
         this.delimiter = delimiter;
         this.configuration = configuration;
     }
@@ -378,7 +378,7 @@ public class DelegatedPropertiesConfiguration implements Configuration {
         return Optional.ofNullable(value)
             .filter(s -> !StringUtils.isAllBlank(s))
             .map(notNullValue -> Stream
-                .of(StringUtils.strip(notNullValue, "\"").split(delimiter))
+                .of(StringUtils.split(StringUtils.strip(notNullValue, "\""), delimiter))
                 .map(String::trim)
                 .filter(s -> !StringUtils.isAllBlank(s)))
             .orElseGet(Stream::empty);

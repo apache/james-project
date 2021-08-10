@@ -183,7 +183,7 @@ class AttachmentBlobResolver @Inject()(val attachmentManager: AttachmentManager)
 class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
                                         val messageIdManager: MessageIdManager) extends BlobResolver {
   private def asMessageAndPartId(blobId: BlobId): Try[(MessageId, PartId)] = {
-    blobId.value.value.split("_").toList match {
+    blobId.value.value.split('_').toList match {
       case List(messageIdString, partIdString) => for {
         messageId <- Try(messageIdFactory.fromString(messageIdString))
         partId <- PartId.parse(partIdString)

@@ -40,12 +40,14 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.lib.jmx.ServerMBean;
 import org.apache.james.protocols.netty.AbstractAsyncServer;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
+import org.apache.james.util.Host;
 import org.apache.james.util.concurrent.JMXEnabledThreadPoolExecutor;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.ChannelPipelineFactory;
@@ -165,14 +167,14 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             return;
         }
 
-        String[] listen = config.getString("bind", "0.0.0.0:" + getDefaultPort()).split(",");
+        String[] listen = StringUtils.split(config.getString("bind", "0.0.0.0:" + getDefaultPort()), ',');
         List<InetSocketAddress> bindAddresses = new ArrayList<>();
         for (String aListen : listen) {
-            String[] bind = aListen.split(":");
+            Host host = Host.parseConfString(aListen);
 
             InetSocketAddress address;
-            String ip = bind[0].trim();
-            int port = Integer.parseInt(bind[1].trim());
+            String ip = host.getHostName();
+            int port = host.getPort();
             if (!ip.equals("0.0.0.0")) {
                 try {
                     ip = InetAddress.getByName(ip).getHostName();

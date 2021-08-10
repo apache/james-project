@@ -48,7 +48,6 @@ public class PropertiesProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("org.apache.james.CONFIGURATION");
     private static final char COMMA = ',';
-    private static final String COMMA_STRING = ",";
 
     @VisibleForTesting
     public static PropertiesProvider forTesting() {
@@ -96,7 +95,7 @@ public class PropertiesProvider {
                 .setListDelimiterHandler(new DefaultListDelimiterHandler(COMMA))
                 .setFile(propertiesFile));
 
-        return new DelegatedPropertiesConfiguration(COMMA_STRING, builder.getConfiguration());
+        return new DelegatedPropertiesConfiguration(COMMA, builder.getConfiguration());
     }
 
     private Optional<File> getConfigurationFile(String fileName) {
