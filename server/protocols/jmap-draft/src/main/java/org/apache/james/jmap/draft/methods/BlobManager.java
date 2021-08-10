@@ -19,12 +19,17 @@
 
 package org.apache.james.jmap.draft.methods;
 
+import java.util.Collection;
+
 import org.apache.james.jmap.draft.exceptions.BlobNotFoundException;
 import org.apache.james.jmap.draft.model.Blob;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.reactivestreams.Publisher;
 
 public interface BlobManager {
     Blob retrieve(BlobId blobId, MailboxSession mailboxSession) throws MailboxException, BlobNotFoundException;
+
+    Publisher<Blob> retrieve(Collection<BlobId> blobIds, MailboxSession session);
 }

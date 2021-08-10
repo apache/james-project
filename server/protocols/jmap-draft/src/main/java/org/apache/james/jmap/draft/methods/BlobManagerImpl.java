@@ -19,7 +19,11 @@
 
 package org.apache.james.jmap.draft.methods;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 
@@ -41,9 +45,12 @@ import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.util.ReactorUtils;
+import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -64,6 +71,41 @@ public class BlobManagerImpl implements BlobManager {
         this.messageIdManager = messageIdManager;
         this.messageIdFactory = messageIdFactory;
         this.uploadRepository = uploadRepository;
+    }
+
+    @Override
+    public Publisher<Blob> retrieve(Collection<BlobId> blobIds, MailboxSession session) {
+        Set<BlobId> supplied = ImmutableSet.copyOf(blobIds);
+        Set<BlobId> encodingUploads = blobIds.stream()
+            .filter(blobId -> blobId.asUploadId().isPresent())
+            .collect(ImmutableSet.toImmutableSet());
+        Set<BlobId> notEncodingUploads = Sets.difference(supplied, encodingUploads);
+
+        Flux<Blob> uploads = Flux.fromIterable(encodingUploads)
+            .flatMap(blobId -> getBlobFromUpload(blobId, session));
+
+
+        List<AttachmentId> notEncodingUploadsAsAttachmentIds = notEncodingUploads.stream()
+            .map(BlobId::asAttachmentId)
+            .collect(ImmutableList.toImmutableList());
+
+        Flux<Blob> attachmentOrMessage = Mono.fromCallable(() -> attachmentManager.getAttachments(notEncodingUploadsAsAttachmentIds, session))
+            .flatMapIterable(Function.identity())
+            .map(attachment -> loadAttachmentContent(attachment, session))
+            .collect(ImmutableList.toImmutableList())
+            .flatMapMany(attachmentsBlobs -> {
+                Set<BlobId> attachmentBlobIds = attachmentsBlobs
+                    .stream()
+                    .map(Blob::getBlobId)
+                    .collect(ImmutableSet.toImmutableSet());
+                Set<BlobId> messageBlobIds = Sets.difference(notEncodingUploads, attachmentBlobIds);
+
+                return Flux.merge(Flux.fromIterable(attachmentsBlobs),
+                    Flux.fromIterable(messageBlobIds)
+                        .flatMap(blobId -> getBlobFromMessage(blobId, session)));
+            });
+
+        return Flux.merge(uploads, attachmentOrMessage);
     }
 
     @Override
@@ -101,22 +143,26 @@ public class BlobManagerImpl implements BlobManager {
             AttachmentId attachmentId = blobId.asAttachmentId();
             AttachmentMetadata attachment = attachmentManager.getAttachment(attachmentId, mailboxSession);
 
-            Blob blob = Blob.builder()
-                .id(blobId)
-                .payload(() -> {
-                    try {
-                        return attachmentManager.loadAttachmentContent(attachmentId, mailboxSession);
-                    } catch (AttachmentNotFoundException e) {
-                        throw new BlobNotFoundException(blobId, e);
-                    }
-                })
-                .size(attachment.getSize())
-                .contentType(attachment.getType())
-                .build();
-            return Optional.of(blob);
+            return Optional.of(loadAttachmentContent(attachment, mailboxSession));
         } catch (AttachmentNotFoundException e) {
             return Optional.empty();
         }
+    }
+
+    private Blob loadAttachmentContent(AttachmentMetadata attachment, MailboxSession mailboxSession) {
+        BlobId blobId = BlobId.of(attachment.getAttachmentId());
+        return Blob.builder()
+            .id(blobId)
+            .payload(() -> {
+                try {
+                    return attachmentManager.loadAttachmentContent(attachment.getAttachmentId(), mailboxSession);
+                } catch (AttachmentNotFoundException e) {
+                    throw new BlobNotFoundException(blobId, e);
+                }
+            })
+            .size(attachment.getSize())
+            .contentType(attachment.getType())
+            .build();
     }
 
     private Mono<Blob> getBlobFromMessage(BlobId blobId, MailboxSession mailboxSession) {

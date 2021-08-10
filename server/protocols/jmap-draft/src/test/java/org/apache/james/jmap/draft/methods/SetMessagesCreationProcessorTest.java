@@ -30,6 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.UnknownHostException;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -146,6 +147,7 @@ public class SetMessagesCreationProcessorTest {
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
         BlobManager blobManager = mock(BlobManager.class);
+        when(blobManager.retrieve(any(Collection.class), any())).thenReturn(Flux.empty());
         MessageIdManager messageIdManager = mock(MessageIdManager.class);
         recipientRewriteTable = new MemoryRecipientRewriteTable();
 
@@ -164,6 +166,7 @@ public class SetMessagesCreationProcessorTest {
         mockedMailSpool = mock(MailSpool.class);
         when(mockedMailSpool.send(any(), any())).thenReturn(Mono.empty());
         mockedAttachmentManager = mock(AttachmentManager.class);
+        when(mockedAttachmentManager.getAttachments(any(), any())).thenReturn(ImmutableList.of());
         mockedMailboxManager = mock(MailboxManager.class);
         mockedMailboxIdFactory = mock(Factory.class);
         MessageIdManager mockMessageIdManager = mock(MessageIdManager.class);
