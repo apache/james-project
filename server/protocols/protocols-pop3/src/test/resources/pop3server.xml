@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<pop3server enabled="true">
+    <jmxName>pop3server</jmxName>
+    <bind>127.0.0.1:0</bind>
+    <helloName>myMailServer</helloName>
+    <connectiontimeout>3600</connectiontimeout>
+    <handlerchain>
+        <handler class="org.apache.james.pop3server.core.CoreCmdHandlerLoader"/>
+    </handlerchain>
+</pop3server>
