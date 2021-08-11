@@ -67,6 +67,7 @@ import org.apache.james.modules.server.ElasticSearchMetricReporterModule;
 import org.apache.james.modules.server.InconsistencyQuotasSolvingRoutesModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.JmapTasksModule;
+import org.apache.james.modules.server.JmapUploadCleanupModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
@@ -97,6 +98,7 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
         new DLPRoutesModule(),
         new InconsistencyQuotasSolvingRoutesModule(),
         new InconsistencySolvingRoutesModule(),
+        new JmapUploadCleanupModule(),
         new JmapTasksModule(),
         new MailboxesExportRoutesModule(),
         new MailboxRoutesModule(),
