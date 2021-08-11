@@ -43,6 +43,7 @@ public class ProtocolSessionImpl implements ProtocolSession {
     private final Map<AttachmentKey<?>, Object> sessionState;
     private Username username;
     protected final ProtocolConfiguration config;
+    private boolean needsCommandInjectionDetection;
     private static final String DELIMITER = "\r\n";
     
     public ProtocolSessionImpl(ProtocolTransport transport, ProtocolConfiguration config) {
@@ -50,6 +51,22 @@ public class ProtocolSessionImpl implements ProtocolSession {
         this.connectionState = new HashMap<>();
         this.sessionState = new HashMap<>();
         this.config = config;
+        this.needsCommandInjectionDetection = true;
+    }
+
+    @Override
+    public boolean needsCommandInjectionDetection() {
+        return needsCommandInjectionDetection;
+    }
+
+    @Override
+    public void startDetectingCommandInjection() {
+        needsCommandInjectionDetection = true;
+    }
+
+    @Override
+    public void stopDetectingCommandInjection() {
+        needsCommandInjectionDetection = false;
     }
 
     @Override

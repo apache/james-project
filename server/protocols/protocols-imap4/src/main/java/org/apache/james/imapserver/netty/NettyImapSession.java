@@ -44,6 +44,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     private int handlerCount;
     private final boolean plainAuthDisallowed;
     private final SessionId sessionId;
+    private boolean needsCommandInjectionDetection;
 
     public NettyImapSession(Channel channel, SSLContext sslContext, String[] enabledCipherSuites, boolean compress, boolean plainAuthDisallowed, SessionId sessionId) {
         this.channel = channel;
@@ -52,6 +53,22 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         this.compress = compress;
         this.plainAuthDisallowed = plainAuthDisallowed;
         this.sessionId = sessionId;
+        this.needsCommandInjectionDetection = true;
+    }
+
+    @Override
+    public boolean needsCommandInjectionDetection() {
+        return needsCommandInjectionDetection;
+    }
+
+    @Override
+    public void startDetectingCommandInjection() {
+        needsCommandInjectionDetection = true;
+    }
+
+    @Override
+    public void stopDetectingCommandInjection() {
+        needsCommandInjectionDetection = false;
     }
 
     @Override

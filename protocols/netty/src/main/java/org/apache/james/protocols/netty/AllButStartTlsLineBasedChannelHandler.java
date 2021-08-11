@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.protocols.smtp;
+package org.apache.james.protocols.netty;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.james.protocols.netty.HandlerConstants;
+import org.apache.james.protocols.api.CommandDetectionSession;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
@@ -32,21 +32,20 @@ import org.jboss.netty.handler.codec.frame.LineBasedFrameDecoder;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 
-
 public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder {
-
-    private static final String STARTTLS = "starttls";
     private static final Boolean FAIL_FAST = true;
     private final ChannelPipeline pipeline;
+    private final String pattern;
 
-    public AllButStartTlsLineBasedChannelHandler(ChannelPipeline pipeline, int maxFrameLength, boolean stripDelimiter) {
+    public AllButStartTlsLineBasedChannelHandler(ChannelPipeline pipeline, int maxFrameLength, boolean stripDelimiter, String pattern) {
         super(maxFrameLength, stripDelimiter, !FAIL_FAST);
         this.pipeline = pipeline;
+        this.pattern = pattern;
     }
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws Exception {
-        SMTPSession session = (SMTPSession) pipeline.getContext(HandlerConstants.CORE_HANDLER).getAttachment();
+        CommandDetectionSession session = retrieveSession(ctx, channel);
 
         if (session == null || session.needsCommandInjectionDetection()) {
             String trimedLowerCasedInput = readAll(buffer).trim().toLowerCase(Locale.US);
@@ -55,6 +54,10 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
             }
         }
         return super.decode(ctx, channel, buffer);
+    }
+
+    protected CommandDetectionSession retrieveSession(ChannelHandlerContext ctx, Channel channel) {
+        return (CommandDetectionSession) pipeline.getContext(HandlerConstants.CORE_HANDLER).getAttachment();
     }
 
     private String readAll(ChannelBuffer buffer) {
@@ -68,13 +71,13 @@ public class AllButStartTlsLineBasedChannelHandler extends LineBasedFrameDecoder
         return hasInvalidStartTlsPart(parts) || multiPartsAndOneStartTls(parts);
     }
 
-    private boolean multiPartsAndOneStartTls(List<String> parts) {
+    protected boolean multiPartsAndOneStartTls(List<String> parts) {
         return parts.stream()
-            .anyMatch(line -> line.startsWith(STARTTLS)) && parts.size() > 1;
+            .anyMatch(line -> line.startsWith(pattern)) && parts.size() > 1;
     }
 
-    private boolean hasInvalidStartTlsPart(List<String> parts) {
+    protected boolean hasInvalidStartTlsPart(List<String> parts) {
         return parts.stream()
-            .anyMatch(line -> line.startsWith(STARTTLS) && !line.endsWith(STARTTLS));
+            .anyMatch(line -> line.startsWith(pattern) && !line.endsWith(pattern));
     }
 }

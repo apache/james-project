@@ -35,7 +35,7 @@ import com.google.common.base.Strings;
 /**
  * Session for a protocol. Every new connection generates a new session
  */
-public interface ProtocolSession {
+public interface ProtocolSession extends CommandDetectionSession {
    
     enum State {
         Connection,
@@ -237,5 +237,4 @@ public interface ProtocolSession {
      * @return size of the pushed line handler
      */
     int getPushedLineHandlerCount();
-
 }

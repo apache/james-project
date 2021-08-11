@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.protocols.smtp;
+package org.apache.james.protocols.netty;
 
 public class CommandInjectionDetectedException extends RuntimeException {
 
