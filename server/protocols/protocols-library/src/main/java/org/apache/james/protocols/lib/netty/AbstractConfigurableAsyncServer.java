@@ -170,11 +170,11 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         String[] listen = StringUtils.split(config.getString("bind", "0.0.0.0:" + getDefaultPort()), ',');
         List<InetSocketAddress> bindAddresses = new ArrayList<>();
         for (String aListen : listen) {
-            Host host = Host.parseConfString(aListen);
+            String[] bind = StringUtils.split(aListen, ':');
 
             InetSocketAddress address;
-            String ip = host.getHostName();
-            int port = host.getPort();
+            String ip = bind[0].trim();
+            int port = Integer.parseInt(bind[1].trim());
             if (!ip.equals("0.0.0.0")) {
                 try {
                     ip = InetAddress.getByName(ip).getHostName();
