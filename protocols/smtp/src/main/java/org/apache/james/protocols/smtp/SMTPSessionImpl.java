@@ -42,20 +42,6 @@ public class SMTPSessionImpl extends ProtocolSessionImpl implements SMTPSession 
         needsCommandInjectionDetection = true;
     }
 
-    @Override
-    public boolean needsCommandInjectionDetection() {
-        return needsCommandInjectionDetection;
-    }
-
-    @Override
-    public void startDetectingCommadInjection() {
-        needsCommandInjectionDetection = true;
-    }
-
-    @Override
-    public void stopDetectingCommandInjection() {
-        needsCommandInjectionDetection = false;
-    }
 
     @Override
     public boolean isRelayingAllowed() {

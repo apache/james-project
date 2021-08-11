@@ -73,6 +73,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                     session.setMailboxSession(mailboxSession);
                     provisionInbox(session, mailboxManager, mailboxSession);
                     okComplete(request, responder);
+                    session.stopDetectingCommandInjection();
                 } catch (BadCredentialsException e) {
                     authFailure = true;
                 }

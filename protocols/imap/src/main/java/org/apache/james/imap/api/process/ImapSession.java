@@ -26,6 +26,7 @@ import org.apache.commons.text.RandomStringGenerator;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.protocols.api.CommandDetectionSession;
 
 /**
  * Encapsulates all state held for an ongoing Imap session, which commences when
@@ -34,7 +35,7 @@ import org.apache.james.mailbox.MailboxSession;
  * 
  * @version $Revision: 109034 $
  */
-public interface ImapSession {
+public interface ImapSession extends CommandDetectionSession {
     class SessionId {
         private static final RandomStringGenerator RANDOM_STRING_GENERATOR = new RandomStringGenerator.Builder()
             .withinRange('a', 'z')
