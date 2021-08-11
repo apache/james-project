@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
+import java.io.EOFException;
 import java.util.Properties;
 
 import javax.mail.Folder;
@@ -37,6 +38,7 @@ import javax.mail.search.RecipientStringTerm;
 import javax.mail.search.SearchTerm;
 import javax.mail.search.SubjectTerm;
 
+import org.apache.commons.net.imap.IMAPSClient;
 import org.apache.james.core.Username;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
@@ -51,6 +53,8 @@ import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.protocols.lib.mock.ConfigLoader;
+import org.apache.james.server.core.configuration.Configuration;
+import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.utils.TestIMAPClient;
 import org.junit.jupiter.api.AfterEach;
@@ -100,6 +104,13 @@ class IMAPServerTest {
                 memoryIntegrationResources.getQuotaRootResolver(),
                 metricFactory),
             new ImapMetrics(metricFactory));
+
+        Configuration configuration = Configuration.builder()
+            .workingDirectory("../")
+            .configurationFromClasspath()
+            .build();
+        FileSystemImpl fileSystem = new FileSystemImpl(configuration.directories());
+        imapServer.setFileSystem(fileSystem);
 
         imapServer.configure(ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream(configurationFile)));
         imapServer.init();
@@ -179,6 +190,41 @@ class IMAPServerTest {
             assertThat(testIMAPClient.select("INBOX")
                     .readFirstMessage())
                 .contains("\r\n" + _129K_MESSAGE + ")\r\n");
+        }
+    }
+
+    @Nested
+    class StartTLS {
+        IMAPServer imapServer;
+        private int port;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            imapServer = createImapServer("imapServerStartTLS.xml");
+            port = imapServer.getListenAddresses().get(0).getPort();
+        }
+
+        @AfterEach
+        void tearDown() {
+            imapServer.destroy();
+        }
+
+        @Test
+        void extraLinesBatchedWithStartTLSShouldBeSanitized() throws Exception {
+            IMAPSClient imapClient = new IMAPSClient();
+            imapClient.connect("127.0.0.1", port);
+            assertThatThrownBy(() -> imapClient.sendCommand("STARTTLS\r\nA1 NOOP\r\n"))
+                .isInstanceOf(EOFException.class)
+                .hasMessage("Connection closed without indication.");
+        }
+
+        @Test
+        void lineFollowingStartTLSShouldBeSanitized() throws Exception {
+            IMAPSClient imapClient = new IMAPSClient();
+            imapClient.connect("127.0.0.1", port);
+            assertThatThrownBy(() -> imapClient.sendCommand("STARTTLS A1 NOOP\r\n"))
+                .isInstanceOf(EOFException.class)
+                .hasMessage("Connection closed without indication.");
         }
     }
 
