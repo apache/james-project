@@ -47,7 +47,6 @@ import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.lib.jmx.ServerMBean;
 import org.apache.james.protocols.netty.AbstractAsyncServer;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
-import org.apache.james.util.Host;
 import org.apache.james.util.concurrent.JMXEnabledThreadPoolExecutor;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.ChannelPipelineFactory;
