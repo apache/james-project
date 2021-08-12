@@ -26,21 +26,16 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 import org.apache.james.webadmin.validation.MailboxName;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.MoreObjects;
 
 import reactor.core.scheduler.Schedulers;
 
 public class ClearMailboxContentTask implements Task {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ClearMailboxContentTask.class);
-
     public static class Context {
         public static class Snapshot {
             private final long messagesSuccessCount;
@@ -182,15 +177,10 @@ public class ClearMailboxContentTask implements Task {
     }
 
     @Override
-    public Result run() throws InterruptedException {
-        try {
-            return userMailboxesService.clearMailboxContent(username, mailboxName, context)
-                .subscribeOn(Schedulers.elastic())
-                .block();
-        } catch (MailboxException e) {
-            LOGGER.error("Has an error when clear the mailbox content. ", e);
-            throw new InterruptedException(e.getMessage());
-        }
+    public Result run() {
+        return userMailboxesService.clearMailboxContent(username, mailboxName, context)
+            .subscribeOn(Schedulers.elastic())
+            .block();
     }
 
     @Override

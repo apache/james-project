@@ -105,13 +105,14 @@ public class UserMailboxesService {
             .block();
     }
 
-    public Mono<Result> clearMailboxContent(Username username, MailboxName mailboxName, ClearMailboxContentTask.Context context) throws MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
-        MessageManager messageManager = mailboxManager.getMailbox(MailboxPath.forUser(username, mailboxName.asString()), mailboxSession);
 
-        return Flux.from(messageManager.listMessagesMetadata(MessageRange.all(), mailboxSession))
-            .map(metaData -> metaData.getComposedMessageId().getUid())
-            .concatMap(messageUid -> deleteMessage(messageManager, messageUid, mailboxSession, context))
+    public Mono<Result> clearMailboxContent(Username username, MailboxName mailboxName, ClearMailboxContentTask.Context context) {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
+
+        return Mono.from(mailboxManager.getMailboxReactive(MailboxPath.forUser(username, mailboxName.asString()), mailboxSession))
+            .flatMapMany(messageManager -> Flux.from(messageManager.listMessagesMetadata(MessageRange.all(), mailboxSession))
+                .map(metaData -> metaData.getComposedMessageId().getUid())
+                .concatMap(messageUid -> deleteMessage(messageManager, messageUid, mailboxSession, context)))
             .onErrorResume(e -> {
                 LOGGER.error("Error when clear mailbox content. Mailbox {} for user {}", mailboxName.asString(), username, e);
                 context.incrementMessageFails();
