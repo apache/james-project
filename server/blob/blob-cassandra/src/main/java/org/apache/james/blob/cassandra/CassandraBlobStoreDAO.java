@@ -275,4 +275,13 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
             .map(Pair::getLeft)
             .distinct();
     }
+
+    @Override
+    public Publisher<BlobId> listBlobs(BucketName bucketName) {
+        if (isDefaultBucket(bucketName)) {
+            return defaultBucketDAO.listBlobs();
+        } else {
+            return bucketDAO.listAll(bucketName);
+        }
+    }
 }

@@ -31,7 +31,7 @@ public class CassandraBlobStoreFactory {
     public static BlobStoreFactory.RequireStoringStrategy forTesting(Session session, MetricFactory metricFactory) {
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
         CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, session);
-        CassandraDefaultBucketDAO defaultBucketDAO = new CassandraDefaultBucketDAO(session);
+        CassandraDefaultBucketDAO defaultBucketDAO = new CassandraDefaultBucketDAO(session, blobIdFactory);
         CassandraBlobStoreDAO blobStoreDAO = new CassandraBlobStoreDAO(defaultBucketDAO, bucketDAO, CassandraConfiguration.DEFAULT_CONFIGURATION, BucketName.DEFAULT, metricFactory);
         return BlobStoreFactory.builder()
             .blobStoreDAO(blobStoreDAO)

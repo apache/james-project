@@ -118,4 +118,9 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
     public Publisher<BucketName> listBuckets() {
         return Flux.fromIterable(ImmutableSet.copyOf(blobs.rowKeySet()));
     }
+
+    @Override
+    public Publisher<BlobId> listBlobs(BucketName bucketName) {
+        return Flux.fromIterable(ImmutableSet.copyOf(blobs.row(bucketName).keySet()));
+    }
 }

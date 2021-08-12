@@ -25,7 +25,7 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.TestBlobId;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -42,9 +42,9 @@ public class CassandraBlobStoreDAOTest implements BlobStoreDAOContract {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        TestBlobId.Factory blobIdFactory = new TestBlobId.Factory();
         CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, cassandra.getConf());
-        defaultBucketDAO = new CassandraDefaultBucketDAO(cassandra.getConf());
+        defaultBucketDAO = new CassandraDefaultBucketDAO(cassandra.getConf(), blobIdFactory);
         testee = new CassandraBlobStoreDAO(
             defaultBucketDAO,
             bucketDAO,

@@ -21,6 +21,7 @@ package org.apache.james.blob.api;
 
 import static org.apache.james.blob.api.BlobStoreDAOFixture.ELEVEN_KILOBYTES;
 import static org.apache.james.blob.api.BlobStoreDAOFixture.EMPTY_BYTEARRAY;
+import static org.apache.james.blob.api.BlobStoreDAOFixture.OTHER_TEST_BLOB_ID;
 import static org.apache.james.blob.api.BlobStoreDAOFixture.SHORT_BYTEARRAY;
 import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BLOB_ID;
 import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET_NAME;
@@ -47,6 +48,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import com.google.common.io.ByteSource;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface ReadSaveBlobStoreDAOContract {
@@ -304,6 +306,22 @@ public interface ReadSaveBlobStoreDAOContract {
 
         assertThatThrownBy(() -> Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, getThrowingInputStream())).block())
             .isInstanceOf(ObjectStoreIOException.class);
+    }
+
+    @Test
+    default void listShouldReturnEmptyByDefault() {
+        assertThat(Flux.from(testee().listBlobs(TEST_BUCKET_NAME)).collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    default void listShouldReturnPresentBlobs() {
+        BlobStoreDAO store = testee();
+        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, ByteSource.wrap(ELEVEN_KILOBYTES))).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, OTHER_TEST_BLOB_ID, ByteSource.wrap(ELEVEN_KILOBYTES))).block();
+
+        assertThat(Flux.from(testee().listBlobs(TEST_BUCKET_NAME)).collectList().block())
+            .containsOnly(TEST_BLOB_ID, OTHER_TEST_BLOB_ID);
     }
 
     static Stream<Arguments> blobs() {

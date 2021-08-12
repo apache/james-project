@@ -50,11 +50,12 @@ class S3PrefixAndNamespaceTest implements BlobStoreContract {
             .bucketPrefix("prefix")
             .build();
 
-        s3BlobStoreDAO = new S3BlobStoreDAO(s3Configuration);
+        HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        s3BlobStoreDAO = new S3BlobStoreDAO(s3Configuration, blobIdFactory);
 
         testee = BlobStoreFactory.builder()
             .blobStoreDAO(s3BlobStoreDAO)
-            .blobIdFactory(new HashBlobId.Factory())
+            .blobIdFactory(blobIdFactory)
             .bucket(BucketName.of("namespace"))
             .deduplication();
     }

@@ -41,6 +41,7 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.google.common.annotations.VisibleForTesting;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraDefaultBucketDAO {
@@ -51,10 +52,12 @@ public class CassandraDefaultBucketDAO {
     private final PreparedStatement selectPart;
     private final PreparedStatement delete;
     private final PreparedStatement deleteParts;
+    private final PreparedStatement listBlobs;
+    private final BlobId.Factory blobIdFactory;
 
     @Inject
     @VisibleForTesting
-    public CassandraDefaultBucketDAO(Session session) {
+    public CassandraDefaultBucketDAO(Session session, BlobId.Factory blobIdFactory) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.insert = prepareInsert(session);
         this.select = prepareSelect(session);
@@ -62,6 +65,8 @@ public class CassandraDefaultBucketDAO {
         this.selectPart = prepareSelectPart(session);
         this.delete = prepareDelete(session);
         this.deleteParts = prepareDeleteParts(session);
+        this.listBlobs = prepareListBlobs(session);
+        this.blobIdFactory = blobIdFactory;
     }
 
     private PreparedStatement prepareSelect(Session session) {
@@ -75,6 +80,11 @@ public class CassandraDefaultBucketDAO {
             .from(DefaultBucketBlobParts.TABLE_NAME)
             .where(eq(DefaultBucketBlobParts.ID, bindMarker(DefaultBucketBlobParts.ID)))
             .and(eq(DefaultBucketBlobParts.CHUNK_NUMBER, bindMarker(DefaultBucketBlobParts.CHUNK_NUMBER))));
+    }
+
+    private PreparedStatement prepareListBlobs(Session session) {
+        return session.prepare(select(DefaultBucketBlobParts.ID)
+            .from(DefaultBucketBlobParts.TABLE_NAME));
     }
 
     private PreparedStatement prepareInsert(Session session) {
@@ -159,6 +169,11 @@ public class CassandraDefaultBucketDAO {
         return cassandraAsyncExecutor.executeVoid(
             deleteParts.bind()
                 .setString(DefaultBucketBlobParts.ID, blobId.asString()));
+    }
+
+    Flux<BlobId> listBlobs() {
+        return cassandraAsyncExecutor.executeRows(listBlobs.bind())
+            .map(row -> blobIdFactory.from(row.getString(DefaultBucketBlobParts.ID)));
     }
 
     private ByteBuffer rowToData(Row row) {
