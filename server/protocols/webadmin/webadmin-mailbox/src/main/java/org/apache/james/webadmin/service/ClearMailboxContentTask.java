@@ -30,7 +30,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
-import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.validation.MailboxName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -188,7 +187,7 @@ public class ClearMailboxContentTask implements Task {
             return userMailboxesService.clearMailboxContent(username, mailboxName, context)
                 .subscribeOn(Schedulers.elastic())
                 .block();
-        } catch (UsersRepositoryException | MailboxException e) {
+        } catch (MailboxException e) {
             LOGGER.error("Has an error when clear the mailbox content. ", e);
             throw new InterruptedException(e.getMessage());
         }
