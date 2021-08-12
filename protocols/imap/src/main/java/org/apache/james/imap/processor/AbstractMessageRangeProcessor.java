@@ -88,10 +88,13 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                     getOperationName(), session.getSelected().getMailboxId(), targetMailbox, request.getIdSet(), e);
             no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         } catch (Exception e) {
-            if (e.getCause() instanceof MailboxException)
-            LOGGER.error("{} failed from mailbox {} to {} for sequence-set {}",
-                getOperationName(), session.getSelected().getMailboxId(), targetMailbox, request.getIdSet(), e.getCause());
-            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            if (e.getCause() instanceof MailboxException) {
+                LOGGER.error("{} failed from mailbox {} to {} for sequence-set {}",
+                    getOperationName(), session.getSelected().getMailboxId(), targetMailbox, request.getIdSet(), e.getCause());
+                no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            } else {
+                throw e;
+            }
         }
     }
 
