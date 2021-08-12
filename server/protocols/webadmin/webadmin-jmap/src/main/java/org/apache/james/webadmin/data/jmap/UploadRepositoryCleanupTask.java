@@ -89,12 +89,12 @@ public class UploadRepositoryCleanupTask implements Task {
     }
 
     @Override
-    public Result run() throws InterruptedException {
+    public Result run() {
         if (EXPIRED.equals(scope)) {
             return uploadRepository.purge()
                 .thenReturn(Result.COMPLETED)
                 .onErrorResume(error -> {
-                    LOGGER.error("Has an error when clean upload repository");
+                    LOGGER.error("Error when cleaning upload repository", error);
                     return Mono.just(Result.PARTIAL);
                 })
                 .subscribeOn(Schedulers.elastic())
