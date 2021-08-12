@@ -19,10 +19,14 @@
 package org.apache.james.pop3server;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
 import java.io.Reader;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -31,6 +35,7 @@ import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.net.pop3.POP3Client;
 import org.apache.commons.net.pop3.POP3MessageInfo;
 import org.apache.commons.net.pop3.POP3Reply;
+import org.apache.commons.net.pop3.POP3SClient;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.filesystem.api.FileSystem;
@@ -61,6 +66,7 @@ import org.jboss.netty.util.HashedWheelTimer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.google.inject.name.Names;
@@ -104,6 +110,37 @@ public class POP3ServerTest {
         protocolHandlerChain.dispose();
         pop3Server.destroy();
         hashedWheelTimer.stop();
+    }
+
+    @Nested
+    class StartTlsSanitizing {
+        @Test
+        void connectionAreClosedWhenSTLSFollowedByACommand() throws Exception{
+            finishSetUp(pop3Configuration);
+
+            pop3Client = new POP3SClient();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+            pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+            pop3Client.sendCommand("STLS\r\nCAPA\r\n");
+
+            assertThatThrownBy(() -> pop3Client.sendCommand("quit"))
+                .isInstanceOf(IOException.class);
+        }
+
+        @Test
+        void connectionAreClosedWhenSTLSFollowedByText() throws Exception{
+            finishSetUp(pop3Configuration);
+
+            pop3Client = new POP3SClient();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+            pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+            pop3Client.sendCommand("STLS unexpected\r\n");
+
+            assertThatThrownBy(() -> pop3Client.sendCommand("quit"))
+                .isInstanceOf(IOException.class);
+        }
     }
 
     @Test

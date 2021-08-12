@@ -3,6 +3,11 @@
     <jmxName>pop3server</jmxName>
     <bind>127.0.0.1:0</bind>
     <helloName>myMailServer</helloName>
+    <tls socketTLS="false" startTLS="true">
+        <keystore>classpath://keystore</keystore>
+        <secret>james72laBalle</secret>
+        <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+    </tls>
     <connectiontimeout>3600</connectiontimeout>
     <handlerchain>
         <handler class="org.apache.james.pop3server.core.CoreCmdHandlerLoader"/>
