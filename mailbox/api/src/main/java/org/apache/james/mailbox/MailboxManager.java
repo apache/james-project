@@ -346,7 +346,7 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @return A publisher holding true when the mailbox exists and is accessible for the given
      *            user, false otherwise
      */
-    Publisher<Boolean> mailboxExists(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
+    Publisher<Boolean> mailboxExists(MailboxPath mailboxPath, MailboxSession session);
 
     /**
      * Does the user INBOX exist?
@@ -356,7 +356,7 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @return true when the INBOX exists and is accessible for the given
      *            user, false otherwise
      */
-    default Publisher<Boolean> hasInbox(MailboxSession session) throws MailboxException {
+    default Publisher<Boolean> hasInbox(MailboxSession session) {
         return mailboxExists(MailboxPath.inbox(session), session);
     }
 

@@ -159,6 +159,7 @@ class MemoryUsersRepositoryTest {
         administrator.ifPresent(username -> configuration.addProperty("administratorId", username.asString()));
 
         configuration.addProperty("enableVirtualHosting", enableVirtualHosting);
+        configuration.addProperty("algorithm", "none");
         return configuration;
     }
 }

@@ -93,5 +93,5 @@ public interface MessageIdMapper {
      * @return Metadata of the update, indexed by mailboxIds.
      * @throws MailboxException
      */
-    Mono<Multimap<MailboxId, UpdatedFlags>> setFlags(MessageId messageId, List<MailboxId> mailboxIds, Flags newState, MessageManager.FlagsUpdateMode updateMode) throws MailboxException;
+    Mono<Multimap<MailboxId, UpdatedFlags>> setFlags(MessageId messageId, List<MailboxId> mailboxIds, Flags newState, MessageManager.FlagsUpdateMode updateMode);
 }
