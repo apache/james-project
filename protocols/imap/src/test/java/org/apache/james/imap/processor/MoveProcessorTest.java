@@ -200,7 +200,7 @@ public class MoveProcessorTest {
         when(selectedMailbox.existsCount()).thenReturn(8L);
         when(selectedMailbox.getPath()).thenReturn(selected);
         imapSession.selected(selectedMailbox);
-        when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenThrow(new MailboxException());
+        when(mockMailboxManager.mailboxExists(INBOX, mailboxSession)).thenReturn(Mono.error(new MailboxException()));
 
         StatusResponse noResponse = mock(StatusResponse.class);
         when(mockStatusResponseFactory.taggedNo(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class))).thenReturn(noResponse);
