@@ -38,6 +38,7 @@ import javax.mail.search.RecipientStringTerm;
 import javax.mail.search.SearchTerm;
 import javax.mail.search.SubjectTerm;
 
+import org.apache.commons.net.imap.IMAPReply;
 import org.apache.commons.net.imap.IMAPSClient;
 import org.apache.james.core.Username;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
@@ -225,6 +226,19 @@ class IMAPServerTest {
             assertThatThrownBy(() -> imapClient.sendCommand("STARTTLS A1 NOOP\r\n"))
                 .isInstanceOf(EOFException.class)
                 .hasMessage("Connection closed without indication.");
+        }
+
+        @Test
+        void startTLSShouldFailWhenAuthenticated() throws Exception {
+            // Avoids session fixation attacks as described in https://www.usenix.org/system/files/sec21-poddebniak.pdf
+            // section 6.2
+
+            IMAPSClient imapClient = new IMAPSClient();
+            imapClient.connect("127.0.0.1", port);
+            imapClient.login(USER.asString(), USER_PASS);
+            int imapCode = imapClient.sendCommand("STARTTLS\r\n");
+
+            assertThat(imapCode).isEqualTo(IMAPReply.NO);
         }
     }
 

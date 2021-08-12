@@ -129,6 +129,22 @@ public class POP3ServerTest {
         }
 
         @Test
+        void startTLSShouldFailWhenAuthenticated() throws Exception{
+            // Avoids session fixation attacks as described in https://www.usenix.org/system/files/sec21-poddebniak.pdf
+            // section 6.2
+            finishSetUp(pop3Configuration);
+
+            pop3Client = new POP3SClient();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+            pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+            usersRepository.addUser(Username.of("known"), "test");
+            pop3Client.login("known", "test");
+
+            int replyCode = pop3Client.sendCommand("STLS\r\n");
+            assertThat(replyCode).isEqualTo(POP3Reply.ERROR);
+        }
+
+        @Test
         void connectionAreClosedWhenSTLSFollowedByText() throws Exception{
             finishSetUp(pop3Configuration);
 
