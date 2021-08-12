@@ -69,6 +69,7 @@ import software.amazon.awssdk.services.s3.model.BucketAlreadyOwnedByYouException
 import software.amazon.awssdk.services.s3.model.DeleteObjectsResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
@@ -86,9 +87,11 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     private final BucketNameResolver bucketNameResolver;
     private final S3AsyncClient client;
+    private final BlobId.Factory blobIdFactory;
 
     @Inject
-    S3BlobStoreDAO(S3BlobStoreConfiguration configuration) {
+    S3BlobStoreDAO(S3BlobStoreConfiguration configuration, BlobId.Factory blobIdFactory) {
+        this.blobIdFactory = blobIdFactory;
         AwsS3AuthConfiguration authConfiguration = configuration.getSpecificAuthConfiguration();
 
         S3Configuration pathStyleAccess = S3Configuration.builder()
@@ -317,5 +320,16 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .map(Bucket::name)
             .handle((bucket, sink) -> bucketNameResolver.unresolve(BucketName.of(bucket))
                 .ifPresent(sink::next));
+    }
+
+    @Override
+    public Publisher<BlobId> listBlobs(BucketName bucketName) {
+        return Mono.fromFuture(() -> client.listObjects(builder -> builder.bucket(bucketName.asString())))
+            .flux()
+            .takeUntil(list -> !list.isTruncated())
+            .flatMapIterable(ListObjectsResponse::contents)
+            .map(S3Object::key)
+            .map(blobIdFactory::from)
+            .onErrorResume(NoSuchBucketException.class, e -> Flux.empty());
     }
 }

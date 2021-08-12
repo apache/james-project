@@ -34,6 +34,7 @@ import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.blob.api.TestBlobId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -47,7 +48,7 @@ class CassandraDefaultBucketDAOTest {
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        testee = new CassandraDefaultBucketDAO(cassandraCluster.getCassandraCluster().getConf());
+        testee = new CassandraDefaultBucketDAO(cassandraCluster.getCassandraCluster().getConf(), new TestBlobId.Factory());
     }
 
     @Test

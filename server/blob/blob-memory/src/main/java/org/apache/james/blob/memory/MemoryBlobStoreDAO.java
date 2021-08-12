@@ -33,6 +33,7 @@ import org.reactivestreams.Publisher;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Table;
 import com.google.common.io.ByteSource;
 
@@ -116,5 +117,10 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
     @Override
     public Publisher<BucketName> listBuckets() {
         return Flux.fromIterable(blobs.rowKeySet());
+    }
+
+    @Override
+    public Publisher<BlobId> listBlobs(BucketName bucketName) {
+        return Flux.fromIterable(ImmutableSet.copyOf(blobs.row(bucketName).keySet()));
     }
 }

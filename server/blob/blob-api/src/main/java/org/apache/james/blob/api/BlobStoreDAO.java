@@ -101,4 +101,6 @@ public interface BlobStoreDAO {
     Publisher<Void> deleteBucket(BucketName bucketName);
 
     Publisher<BucketName> listBuckets();
+
+    Publisher<BlobId> listBlobs(BucketName bucketName);
 }

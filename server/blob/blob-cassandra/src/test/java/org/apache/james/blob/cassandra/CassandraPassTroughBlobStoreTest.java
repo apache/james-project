@@ -46,7 +46,7 @@ public class CassandraPassTroughBlobStoreTest implements DeleteBlobStoreContract
     void setUp(CassandraCluster cassandra) {
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
         CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, cassandra.getConf());
-        defaultBucketDAO = spy(new CassandraDefaultBucketDAO(cassandra.getConf()));
+        defaultBucketDAO = spy(new CassandraDefaultBucketDAO(cassandra.getConf(), blobIdFactory));
         CassandraConfiguration cassandraConfiguration = CassandraConfiguration.builder()
             .blobPartSize(CHUNK_SIZE)
             .build();
