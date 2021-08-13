@@ -18,13 +18,12 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.search;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -53,7 +52,7 @@ public class SearchUtil {
     private static final char OPEN_SQUARE_BRACKED = '[';
     private static final char CLOSE_SQUARE_BRACKED = ']';
     private static final char COLON = ':';
-    
+
     /**
      * Return the DISPLAY ADDRESS for the given {@link Mailbox}. 
      * 
@@ -240,11 +239,10 @@ public class SearchUtil {
             //    as described in "Internationalization Considerations".
             //    Convert all tabs and continuations to space.  Convert all
             //    multiple spaces to a single space.
-            String decodedSubject = MimeUtil.unfold(DecoderUtil.decodeEncodedWords(subject, DecodeMonitor.SILENT));
-            decodedSubject = new String(decodedSubject.getBytes(UTF_8), UTF_8);
-
             // replace all tabs with spaces and replace multiple spaces with one space
-            decodedSubject = decodedSubject.replaceAll("\t", " ").replaceAll("( ){2,}", " ");
+            String decodedSubject = StringUtils.normalizeSpace(
+                MimeUtil.unfold(
+                    DecoderUtil.decodeEncodedWords(subject, DecodeMonitor.SILENT)));
             
             
             while (true) {
