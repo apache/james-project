@@ -105,6 +105,6 @@ Requiring minimal applicative knowledge, this would be a very candidate for such
 
 ## References
 
- - [JIRA](https://issues.apache.org/jira/browse/JAMES-XXX)
- - [PR of this ADR](https://github.com/apache/james-project/pull/XXX)
- - [Thread on server-dev mailing list](https://www.mail-archive.com/server-dev@james.apache.org/msgXXX.html)
+ - [JIRA](https://issues.apache.org/jira/browse/JAMES-XXXX)
+ - [PR of this ADR](https://github.com/apache/james-project/pull/594)
+ - [Thread on server-dev mailing list](https://www.mail-archive.com/server-dev@james.apache.org/msg70734.html)
