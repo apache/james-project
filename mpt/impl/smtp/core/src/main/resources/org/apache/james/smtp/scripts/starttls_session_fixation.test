@@ -1,0 +1,26 @@
+S: 220 mydomain.tld smtp
+
+C: ehlo yopmail.com
+S: 250.*
+S: 250-AUTH LOGIN PLAIN
+S: 250-AUTH=LOGIN PLAIN
+S: 250-PIPELINING
+S: 250-ENHANCEDSTATUSCODES
+S: 250-8BITMIME
+S: 250 STARTTLS
+
+C: AUTH LOGIN
+S: 334 VXNlcm5hbWU6
+C: Ym9iQG15ZG9tYWluLnRsZA==
+S: 334 UGFzc3dvcmQ6
+C: c2VjcmV0
+S: 235 Authentication Successful
+
+
+C: mail from:<bob@mydomain.tld>
+C: rcpt to:<matthieu@yopmail.com>
+S: 250 2.1.0 Sender <bob@mydomain.tld> OK
+S: 250 2.1.5 Recipient <matthieu@yopmail.com> OK
+
+C: starttls
+S: 501 .*
