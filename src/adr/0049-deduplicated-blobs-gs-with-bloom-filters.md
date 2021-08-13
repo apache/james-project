@@ -38,7 +38,7 @@ eventually garbage collected.
 
 To avoid concurrency issues, where we could garbage collect a blob at the same time a new reference to it appear,
 a `reference generation` notion will be added. The de-duplicating id of the blobs which before where constructed
-using only the hash of their content,  will now include this `reference generation` too. To avoid synchronisation 
+using only the hash of their content,  will now include this `reference generation` too. To avoid synchronization 
 issues, the `generation` will be time based.
 
 So only blobs belonging to the `reference generation` `n-2` will be eligible for garbage collection to avoid 
@@ -63,7 +63,7 @@ The garbage collection is a heavy-weight task whose complexity is proportional t
 Regarding the garbage collection generation duration tradeoff:
  - The longer, the longer it will take to effectively delete blobs
  - However, the longer, the more efficient deduplication will be (deduplication is of course scoped to a single 
-   genetation).
+   generation).
  - Generation duration do not impact the overall process speed.
  
 Please note that this design do not require additional responsibilities for blobStore user and is thus fully transparent 
