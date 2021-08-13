@@ -18,6 +18,7 @@ Change list:
  - [Adding the threadId to the ElasticSearch index](#adding-the-threadid-to-the-elasticsearch-index)
  - [Rework message denormalization](#rework-message-denormalization)
  - [Adding threadId column to message metadata tables](#adding-threadid-column-to-message-metadata-tables)
+ - [Removal of old tables for Cassandra mailRepository](#removal-of-old-tables-for-cassandra-mailrepository)
  - [Restructure maximum quotas definition](#restructure-maximum-quotas-definition)
  
 ### Restructure maximum quotas definition
@@ -55,7 +56,49 @@ rolling upgrade with an empty mailqueue.
 
 To achieve an empty mailqueue, start a James server with SMTP and JMAP ports not exposed:
 they will consume existing mails without creating new ones.
+ 
+### Removal of old tables for Cassandra mailRepository
 
+Date 13/08/2021
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3631
+
+Concerned products: Cassandra James, only for installation performed in 2018 or before (3.4.0).
+
+To audit if you need to perform this upgrade run on a Cassandra server:
+
+```
+nodetool tablestats KEYSPACE mailrepositorycontent
+```
+
+A non-zero value in the key estimates means you need to perform a migration.
+
+Migrating content of `mailrepositorycontent` table needs to be done prior a rolling upgrade. After the rolling upgrade 
+the table can be removed.
+
+In order to move content of the `mailrepositorycontent` table to `mailrepositorycontentv2` table for ``:
+
+ - In `mailetcontainer.xml` define an orphan processor with just a ToRepository mailet for the processor you wishes to 
+ migrate. Here:
+ 
+```
+        <processor state="migrate-address-error" enableJmx="true">
+            <mailet match="All" class="ToRepository">
+                <repositoryPath>cassandra://var/mail/address-error/</repositoryPath>
+            </mailet>
+        </processor>
+```
+
+ - (Restart James for the configuration changes to be applied...)
+
+ - Then trigger a reprocessing from the mailRepository to the processor you created. This can be done via webamin:
+ https://james.apache.org/server/manage-webadmin.html#Administrating_mail_repositories . Here:
+ 
+```
+curl -XPATCH http://ip:port/mailRepositories/var%2Fmail%2Faddress-error%2F/mails?action=reprocess&processor=migrate-address-error
+```
+
+ - Once the processing is finished you can clean up your configuration.
 
 ### Adding the threadId to the ElasticSearch index
 
