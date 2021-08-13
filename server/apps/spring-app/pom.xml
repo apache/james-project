@@ -64,7 +64,9 @@
 
         <!-- Use filesystem to copy message by default -->
         <james.system-property1>-Djames.message.usememorycopy=false</james.system-property1>
-        <james.system-properties>${james.system-property1}</james.system-properties>
+        <!-- Prevents Logjam (CVE-2015-4000) -->
+        <james.system-property2>-Djdk.tls.ephemeralDHKeySize=2048</james.system-property2>
+        <james.system-properties>${james.system-property1} ${james.system-property2}</james.system-properties>
         <!-- this name is used for James's folders on Debian systems and james user -->
         <james.debian.user>apache-james</james.debian.user>
 
