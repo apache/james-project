@@ -252,7 +252,7 @@ public class CassandraMessageIdDAO {
         ThreadId threadId = metadata.getComposedMessageId().getThreadId();
 
         BoundStatement boundStatement = insert.bind();
-        if (metadata.getComposedMessageId().getFlags().getUserFlags().length == 0) {
+        if (flags.getUserFlags().length == 0) {
             boundStatement.unset(USER_FLAGS);
         } else {
             boundStatement.setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags()));
