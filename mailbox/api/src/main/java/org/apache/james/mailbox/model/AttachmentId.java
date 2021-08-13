@@ -31,10 +31,6 @@ public class AttachmentId {
 
     public static final RandomStringGenerator RANDOM_STRING_GENERATOR = new RandomStringGenerator.Builder().withinRange('a', 'z').build();
 
-    public static AttachmentId from(BlobId blobId) {
-        return new AttachmentId(blobId.asString());
-    }
-
     public static AttachmentId random() {
         return new AttachmentId(RANDOM_STRING_GENERATOR.generate(20));
     }

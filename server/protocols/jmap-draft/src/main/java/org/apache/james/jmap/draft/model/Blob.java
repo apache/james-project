@@ -17,13 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.model;
+package org.apache.james.jmap.draft.model;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 
-import org.apache.james.mailbox.exception.BlobNotFoundException;
+import org.apache.james.jmap.draft.exceptions.BlobNotFoundException;
+import org.apache.james.mailbox.model.ContentType;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;

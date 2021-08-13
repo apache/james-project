@@ -44,16 +44,16 @@ import org.apache.james.jmap.JMAPRoute;
 import org.apache.james.jmap.JMAPRoutes;
 import org.apache.james.jmap.draft.api.SimpleTokenFactory;
 import org.apache.james.jmap.draft.exceptions.BadRequestException;
+import org.apache.james.jmap.draft.exceptions.BlobNotFoundException;
 import org.apache.james.jmap.draft.exceptions.InternalErrorException;
+import org.apache.james.jmap.draft.methods.BlobManager;
 import org.apache.james.jmap.draft.model.AttachmentAccessToken;
+import org.apache.james.jmap.draft.model.Blob;
+import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.utils.DownloadPath;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
-import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.BlobNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.Blob;
-import org.apache.james.mailbox.model.BlobId;
 import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.mime4j.codec.EncoderUtil;
@@ -202,7 +202,7 @@ public class DownloadRoutes implements JMAPRoutes {
 
     private boolean attachmentExists(MailboxSession mailboxSession, String blobId) throws MailboxException {
         try {
-            blobManager.retrieve(BlobId.fromString(blobId), mailboxSession);
+            blobManager.retrieve(BlobId.of(blobId), mailboxSession);
             return true;
         } catch (BlobNotFoundException e) {
             return false;
@@ -213,7 +213,7 @@ public class DownloadRoutes implements JMAPRoutes {
     Mono<Void> download(MailboxSession mailboxSession, DownloadPath downloadPath, HttpServerResponse response) {
         String blobId = downloadPath.getBlobId();
         try {
-            Blob blob = blobManager.retrieve(BlobId.fromString(blobId), mailboxSession);
+            Blob blob = blobManager.retrieve(BlobId.of(blobId), mailboxSession);
 
             return Mono.usingWhen(
                 Mono.fromCallable(blob::getStream),

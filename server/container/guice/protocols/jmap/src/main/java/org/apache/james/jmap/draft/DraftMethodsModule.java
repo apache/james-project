@@ -20,6 +20,8 @@
 package org.apache.james.jmap.draft;
 
 import org.apache.james.jmap.draft.json.ObjectMapperFactory;
+import org.apache.james.jmap.draft.methods.BlobManager;
+import org.apache.james.jmap.draft.methods.BlobManagerImpl;
 import org.apache.james.jmap.draft.methods.GetFilterMethod;
 import org.apache.james.jmap.draft.methods.GetMailboxesMethod;
 import org.apache.james.jmap.draft.methods.GetMessageListMethod;
@@ -93,6 +95,10 @@ public class DraftMethodsModule extends AbstractModule {
         setMessagesProcessors.addBinding().to(SetMessagesCreationProcessor.class);
         setMessagesProcessors.addBinding().to(SetMessagesDestructionProcessor.class);
         setMessagesProcessors.addBinding().to(SendMDNProcessor.class);
+
+
+        bind(BlobManagerImpl.class).in(Scopes.SINGLETON);
+        bind(BlobManager.class).to(BlobManagerImpl.class);
     }
 
     @Provides

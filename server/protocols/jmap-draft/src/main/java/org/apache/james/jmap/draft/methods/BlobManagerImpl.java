@@ -17,23 +17,25 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store;
+package org.apache.james.jmap.draft.methods;
 
 import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.james.jmap.api.model.UploadId;
+import org.apache.james.jmap.api.model.UploadNotFoundException;
+import org.apache.james.jmap.api.upload.UploadRepository;
+import org.apache.james.jmap.draft.exceptions.BlobNotFoundException;
+import org.apache.james.jmap.draft.model.Blob;
+import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.mailbox.AttachmentManager;
-import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
-import org.apache.james.mailbox.exception.BlobNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
-import org.apache.james.mailbox.model.Blob;
-import org.apache.james.mailbox.model.BlobId;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.FetchGroup;
@@ -42,35 +44,59 @@ import org.apache.james.mailbox.model.MessageResult;
 
 import com.github.fge.lambdas.Throwing;
 
-public class StoreBlobManager implements BlobManager {
+import reactor.core.publisher.Mono;
+
+public class BlobManagerImpl implements BlobManager {
     public static final ContentType MESSAGE_RFC822_CONTENT_TYPE = ContentType.of("message/rfc822");
+    public static final String UPLOAD_PREFIX = "upload-";
+
     private final AttachmentManager attachmentManager;
     private final MessageIdManager messageIdManager;
     private final MessageId.Factory messageIdFactory;
+    private final UploadRepository uploadRepository;
 
     @Inject
-    public StoreBlobManager(AttachmentManager attachmentManager, MessageIdManager messageIdManager,
-                            MessageId.Factory messageIdFactory) {
+    public BlobManagerImpl(AttachmentManager attachmentManager, MessageIdManager messageIdManager,
+                           MessageId.Factory messageIdFactory, UploadRepository uploadRepository) {
         this.attachmentManager = attachmentManager;
         this.messageIdManager = messageIdManager;
         this.messageIdFactory = messageIdFactory;
+        this.uploadRepository = uploadRepository;
     }
 
     @Override
     public BlobId toBlobId(MessageId messageId) {
-        return BlobId.fromString(messageId.serialize());
+        return BlobId.of(messageId.serialize());
     }
 
     @Override
     public Blob retrieve(BlobId blobId, MailboxSession mailboxSession) throws MailboxException, BlobNotFoundException {
-        return getBlobFromAttachment(blobId, mailboxSession)
-                .orElseGet(() -> getBlobFromMessage(blobId, mailboxSession)
+        return getBlobFromUpload(blobId, mailboxSession)
+            .or(Throwing.supplier(() -> getBlobFromAttachment(blobId, mailboxSession)).sneakyThrow())
+            .orElseGet(() -> getBlobFromMessage(blobId, mailboxSession)
                 .orElseThrow(() -> new BlobNotFoundException(blobId)));
+    }
+
+    private Optional<Blob> getBlobFromUpload(BlobId blobId, MailboxSession mailboxSession) {
+        if (blobId.getRawValue().startsWith(UPLOAD_PREFIX)) {
+            UploadId uploadId = UploadId.from(blobId.getRawValue().substring(UPLOAD_PREFIX.length()));
+
+            return Mono.from(uploadRepository.retrieve(uploadId, mailboxSession.getUser()))
+                .map(upload -> Blob.builder()
+                    .id(blobId)
+                    .contentType(upload.contentType())
+                    .size(upload.sizeAsLong())
+                    .payload(upload.content()::apply)
+                    .build())
+                .onErrorResume(UploadNotFoundException.class, e -> Mono.empty())
+                .blockOptional();
+        }
+        return Optional.empty();
     }
 
     private Optional<Blob> getBlobFromAttachment(BlobId blobId, MailboxSession mailboxSession) throws MailboxException {
         try {
-            AttachmentId attachmentId = AttachmentId.from(blobId);
+            AttachmentId attachmentId = blobId.asAttachmentId();
             AttachmentMetadata attachment = attachmentManager.getAttachment(attachmentId, mailboxSession);
 
             Blob blob = Blob.builder()
@@ -105,7 +131,7 @@ public class StoreBlobManager implements BlobManager {
 
     private Optional<MessageId> retrieveMessageId(BlobId blobId) {
         try {
-            return Optional.of(messageIdFactory.fromString(blobId.asString()));
+            return Optional.of(messageIdFactory.fromString(blobId.getRawValue()));
         } catch (IllegalArgumentException e) {
             return Optional.empty();
         }

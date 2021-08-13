@@ -27,7 +27,6 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class AttachmentIdTest {
-
     @Test
     void randomShouldGenerateDifferentIds() {
         AttachmentId attachmentId = AttachmentId.random();
@@ -42,12 +41,6 @@ class AttachmentIdTest {
     }
 
     @Test
-    void fromShouldThrowWhenBlobIdIsNull() {
-        BlobId value = null;
-        assertThatThrownBy(() -> AttachmentId.from(value)).isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
     void fromShouldThrowWhenIdIsEmpty() {
         assertThatThrownBy(() -> AttachmentId.from("")).isInstanceOf(IllegalArgumentException.class);
     }
@@ -56,13 +49,6 @@ class AttachmentIdTest {
     void fromStringShouldWork() {
         String expectedId = "f07e5a815613c5abeddc4b682247a4c42d8a95df";
         AttachmentId attachmentId = AttachmentId.from(expectedId);
-        assertThat(attachmentId.getId()).isEqualTo(expectedId);
-    }
-
-    @Test
-    void fromBlobIdShouldWork() {
-        String expectedId = "f07e5a815613c5abeddc4b682247a4c42d8a95df";
-        AttachmentId attachmentId = AttachmentId.from(BlobId.fromString(expectedId));
         assertThat(attachmentId.getId()).isEqualTo(expectedId);
     }
 

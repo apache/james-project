@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.model;
+package org.apache.james.jmap.draft.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -25,13 +25,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
-import org.apache.james.mailbox.model.Blob.InputStreamSupplier;
+import org.apache.james.jmap.draft.model.Blob.InputStreamSupplier;
+import org.apache.james.mailbox.model.ContentType;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class BlobTest {
-    static final BlobId ID = BlobId.fromString("123");
+    static final BlobId ID = BlobId.of("123");
     static final ContentType CONTENT_TYPE = ContentType.of("text/plain");
     static final InputStreamSupplier PAYLOAD = () -> new ByteArrayInputStream("abc".getBytes(StandardCharsets.UTF_8));
     static final int LENGTH = 3;

@@ -21,9 +21,7 @@ package org.apache.james.jmap.draft.methods;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
@@ -33,10 +31,10 @@ import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.draft.exceptions.SizeExceededException;
 import org.apache.james.jmap.draft.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.draft.model.Attachment;
+import org.apache.james.jmap.draft.model.Blob;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.Keywords;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory.MetaDataWithContent;
-import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -51,15 +49,11 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mime4j.dom.Message;
-import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
-import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -81,16 +75,16 @@ public class MessageAppender {
 
     private final MailboxManager mailboxManager;
     private final MessageIdManager messageIdManager;
-    private final AttachmentManager attachmentManager;
     private final MIMEMessageConverter mimeMessageConverter;
-    private JMAPConfiguration configuration;
+    private final BlobManager blobManager;
+    private final JMAPConfiguration configuration;
 
     @Inject
-    public MessageAppender(MailboxManager mailboxManager, MessageIdManager messageIdManager, AttachmentManager attachmentManager, MIMEMessageConverter mimeMessageConverter, JMAPConfiguration configuration) {
+    public MessageAppender(MailboxManager mailboxManager, MessageIdManager messageIdManager, MIMEMessageConverter mimeMessageConverter, BlobManager blobManager, JMAPConfiguration configuration) {
         this.mailboxManager = mailboxManager;
         this.messageIdManager = messageIdManager;
-        this.attachmentManager = attachmentManager;
         this.mimeMessageConverter = mimeMessageConverter;
+        this.blobManager = blobManager;
         this.configuration = configuration;
     }
 
@@ -175,36 +169,30 @@ public class MessageAppender {
         return message.getKeywords().asFlags();
     }
 
-    private ImmutableList<MessageAttachmentMetadata> getMessageAttachments(MailboxSession session, ImmutableList<Attachment> attachments) throws MailboxException {
-        Map<AttachmentId, AttachmentMetadata> attachmentsById = attachmentManager.getAttachments(attachments.stream()
-            .map(attachment -> AttachmentId.from(attachment.getBlobId().getRawValue()))
-            .collect(ImmutableList.toImmutableList()), session)
+    private ImmutableList<MessageAttachmentMetadata> getMessageAttachments(MailboxSession session, ImmutableList<Attachment> attachments) {
+        return attachments
             .stream()
-            .collect(ImmutableMap.toImmutableMap(AttachmentMetadata::getAttachmentId, Function.identity()));
-
-        ThrowingFunction<Attachment, Optional<MessageAttachmentMetadata>> toMessageAttachment = att -> messageAttachment(att, attachmentsById);
-
-
-        return attachments.stream()
-            .map(Throwing.function(toMessageAttachment).sneakyThrow())
-            .flatMap(Optional::stream)
+            .flatMap(attachment -> {
+                try {
+                    Blob blob = blobManager.retrieve(attachment.getBlobId(), session);
+                    return Stream.of(MessageAttachmentMetadata.builder()
+                        .attachment(AttachmentMetadata.builder()
+                            .attachmentId(AttachmentId.from(blob.getBlobId().getRawValue()))
+                            .size(blob.getSize())
+                            .type(attachment.getType())
+                            .build())
+                        .cid(attachment.getCid().map(Cid::from))
+                        .isInline(attachment.isIsInline())
+                        .name(attachment.getName())
+                        .build());
+                } catch (MailboxException e) {
+                    LOGGER.warn(String.format("Attachment %s not found", attachment.getBlobId()));
+                    return Stream.empty();
+                } catch (IllegalStateException e) {
+                    LOGGER.error(String.format("Attachment %s is not well-formed", attachment.getBlobId()), e);
+                    return Stream.empty();
+                }
+            })
             .collect(ImmutableList.toImmutableList());
-    }
-
-    private Optional<MessageAttachmentMetadata> messageAttachment(Attachment attachment, Map<AttachmentId, AttachmentMetadata> attachmentsById) throws MailboxException {
-        try {
-            AttachmentId attachmentId = AttachmentId.from(attachment.getBlobId().getRawValue());
-            return OptionalUtils.executeIfEmpty(Optional.ofNullable(attachmentsById.get(attachmentId))
-                .map(attachmentMetadata -> MessageAttachmentMetadata.builder()
-                    .attachment(attachmentMetadata)
-                .name(attachment.getName().orElse(null))
-                .cid(attachment.getCid().map(Cid::from).orElse(null))
-                .isInline(attachment.isIsInline())
-                .build()),
-                () -> LOGGER.error(String.format("Attachment %s not found", attachment.getBlobId())));
-        } catch (IllegalStateException e) {
-            LOGGER.error(String.format("Attachment %s is not well-formed", attachment.getBlobId()), e);
-            return Optional.empty();
-        }
     }
 }

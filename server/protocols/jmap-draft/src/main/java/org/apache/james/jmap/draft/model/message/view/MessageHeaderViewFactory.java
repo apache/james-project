@@ -24,9 +24,8 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.james.jmap.draft.model.BlobId;
+import org.apache.james.jmap.draft.methods.BlobManager;
 import org.apache.james.jmap.draft.model.Emailer;
-import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.model.FetchGroup;
@@ -76,7 +75,7 @@ public class MessageHeaderViewFactory implements MessageViewFactory<MessageHeade
         return Mono.just(MessageHeaderView.messageHeaderBuilder()
             .id(firstMessageResult.getMessageId())
             .mailboxIds(mailboxIds)
-            .blobId(BlobId.of(blobManager.toBlobId(firstMessageResult.getMessageId())))
+            .blobId(blobManager.toBlobId(firstMessageResult.getMessageId()))
             .threadId(firstMessageResult.getMessageId().serialize())
             .keywords(Helpers.getKeywords(messageResults))
             .size(firstMessageResult.getSize())

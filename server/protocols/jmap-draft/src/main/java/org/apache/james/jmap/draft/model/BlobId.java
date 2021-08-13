@@ -20,19 +20,16 @@ package org.apache.james.jmap.draft.model;
 
 import java.util.Objects;
 
+import org.apache.james.mailbox.model.AttachmentId;
+
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 public class BlobId {
-
     public static BlobId of(String rawValue) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(rawValue), "'rawValue' is mandatory");
         return new BlobId(rawValue);
-    }
-
-    public static BlobId of(org.apache.james.mailbox.model.BlobId blobId) {
-        return new BlobId(blobId.asString());
     }
 
     private final String rawValue;
@@ -44,6 +41,10 @@ public class BlobId {
     @JsonValue
     public String getRawValue() {
         return rawValue;
+    }
+
+    public AttachmentId asAttachmentId() {
+        return AttachmentId.from(rawValue);
     }
     
     @Override

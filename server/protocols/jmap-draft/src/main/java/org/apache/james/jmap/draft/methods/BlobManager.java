@@ -17,25 +17,17 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.exception;
+package org.apache.james.jmap.draft.methods;
 
-import org.apache.james.mailbox.model.BlobId;
+import org.apache.james.jmap.draft.exceptions.BlobNotFoundException;
+import org.apache.james.jmap.draft.model.Blob;
+import org.apache.james.jmap.draft.model.BlobId;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MessageId;
 
-public class BlobNotFoundException extends RuntimeException {
+public interface BlobManager {
+    BlobId toBlobId(MessageId messageId);
 
-    private final BlobId blobId;
-
-    public BlobNotFoundException(BlobId blobId) {
-        super("Could not retrieve " + blobId.asString());
-        this.blobId = blobId;
-    }
-
-    public BlobNotFoundException(BlobId blobId, Throwable cause) {
-        super("Could not retrieve " + blobId.asString(), cause);
-        this.blobId = blobId;
-    }
-
-    public BlobId getBlobId() {
-        return blobId;
-    }
+    Blob retrieve(BlobId blobId, MailboxSession mailboxSession) throws MailboxException, BlobNotFoundException;
 }

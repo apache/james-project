@@ -23,17 +23,19 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
+
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.exceptions.AttachmentsNotFoundException;
+import org.apache.james.jmap.draft.exceptions.BlobNotFoundException;
 import org.apache.james.jmap.draft.model.Attachment;
+import org.apache.james.jmap.draft.model.Blob;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessageId;
-import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.AttachmentId;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,7 +51,7 @@ public class AttachmentCheckerTest {
         .mailboxId("id")
         .subject("Hey! ");
 
-    private AttachmentManager attachmentManager;
+    private BlobManager blobManager;
     private MailboxSession session;
 
     private AttachmentChecker sut;
@@ -57,16 +59,15 @@ public class AttachmentCheckerTest {
     @Before
     public void setUp() {
         session = MailboxSessionUtil.create(Username.of("Jonhy"));
-        attachmentManager = mock(AttachmentManager.class);
+        blobManager = mock(BlobManager.class);
 
-        sut = new AttachmentChecker(attachmentManager);
+        sut = new AttachmentChecker(blobManager);
     }
 
     @Test
     public void assertAttachmentsExistShouldThrowWhenUnknownBlobId() throws MailboxException {
         BlobId unknownBlobId = BlobId.of("unknownBlobId");
-        AttachmentId unknownAttachmentId = AttachmentId.from(unknownBlobId.getRawValue());
-        when(attachmentManager.exists(unknownAttachmentId, session)).thenReturn(false);
+        when(blobManager.retrieve(unknownBlobId, session)).thenThrow(new BlobNotFoundException(unknownBlobId));
 
         assertThatThrownBy(() -> sut.assertAttachmentsExist(
             new ValueWithId.CreationMessageEntry(
@@ -82,8 +83,13 @@ public class AttachmentCheckerTest {
     @Test
     public void assertAttachmentsExistShouldNotThrowWhenAttachmentExists() throws Exception {
         BlobId blobId = BlobId.of("unknownBlobId");
-        AttachmentId attachmentId = AttachmentId.from(blobId.getRawValue());
-        when(attachmentManager.exists(attachmentId, session)).thenReturn(true);
+        when(blobManager.retrieve(blobId, session))
+            .thenReturn(Blob.builder()
+                .contentType("text/plain")
+                .size(38)
+                .payload(() -> new ByteArrayInputStream("".getBytes()))
+                .id(blobId)
+                .build());
 
         sut.assertAttachmentsExist(
             new ValueWithId.CreationMessageEntry(
@@ -99,11 +105,9 @@ public class AttachmentCheckerTest {
     public void assertAttachmentsExistShouldThrowWhenUnknownBlobIds() throws MailboxException {
         BlobId unknownBlobId1 = BlobId.of("unknownBlobId1");
         BlobId unknownBlobId2 = BlobId.of("unknownBlobId2");
-        AttachmentId unknownAttachmentId1 = AttachmentId.from(unknownBlobId1.getRawValue());
-        AttachmentId unknownAttachmentId2 = AttachmentId.from(unknownBlobId2.getRawValue());
 
-        when(attachmentManager.exists(unknownAttachmentId1, session)).thenReturn(false);
-        when(attachmentManager.exists(unknownAttachmentId2, session)).thenReturn(false);
+        when(blobManager.retrieve(unknownBlobId1, session)).thenThrow(new BlobNotFoundException(unknownBlobId1));
+        when(blobManager.retrieve(unknownBlobId2, session)).thenThrow(new BlobNotFoundException(unknownBlobId2));
 
         assertThatThrownBy(() -> sut.assertAttachmentsExist(
             new ValueWithId.CreationMessageEntry(
@@ -122,11 +126,21 @@ public class AttachmentCheckerTest {
     public void assertAttachmentsExistShouldNotThrowWhenKnownBlobIds() throws Exception {
         BlobId blobId1 = BlobId.of("unknownBlobId1");
         BlobId blobId2 = BlobId.of("unknownBlobId2");
-        AttachmentId attachmentId1 = AttachmentId.from(blobId1.getRawValue());
-        AttachmentId attachmentId2 = AttachmentId.from(blobId2.getRawValue());
 
-        when(attachmentManager.exists(attachmentId1, session)).thenReturn(true);
-        when(attachmentManager.exists(attachmentId2, session)).thenReturn(true);
+        when(blobManager.retrieve(blobId1, session))
+            .thenReturn(Blob.builder()
+                .contentType("text/plain")
+                .size(38)
+                .payload(() -> new ByteArrayInputStream("".getBytes()))
+                .id(blobId1)
+                .build());
+        when(blobManager.retrieve(blobId2, session))
+            .thenReturn(Blob.builder()
+                .contentType("text/plain")
+                .size(38)
+                .payload(() -> new ByteArrayInputStream("".getBytes()))
+                .id(blobId2)
+                .build());
 
         sut.assertAttachmentsExist(
             new ValueWithId.CreationMessageEntry(
@@ -143,11 +157,16 @@ public class AttachmentCheckerTest {
     public void assertAttachmentsExistShouldThrowWhenAtLeastOneUnknownBlobId() throws MailboxException {
         BlobId blobId1 = BlobId.of("unknownBlobId1");
         BlobId unknownBlobId2 = BlobId.of("unknownBlobId2");
-        AttachmentId attachmentId1 = AttachmentId.from(blobId1.getRawValue());
-        AttachmentId unknownAttachmentId2 = AttachmentId.from(unknownBlobId2.getRawValue());
 
-        when(attachmentManager.exists(attachmentId1, session)).thenReturn(true);
-        when(attachmentManager.exists(unknownAttachmentId2, session)).thenReturn(false);
+
+        when(blobManager.retrieve(blobId1, session))
+            .thenReturn(Blob.builder()
+                .contentType("text/plain")
+                .size(38)
+                .payload(() -> new ByteArrayInputStream("".getBytes()))
+                .id(blobId1)
+                .build());
+        when(blobManager.retrieve(unknownBlobId2, session)).thenThrow(new BlobNotFoundException(unknownBlobId2));
 
         assertThatThrownBy(() -> sut.assertAttachmentsExist(
             new ValueWithId.CreationMessageEntry(

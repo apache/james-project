@@ -30,6 +30,7 @@ import org.apache.james.events.InVMEventBus;
 import org.apache.james.events.MemoryEventDeadLetters;
 import org.apache.james.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.AttachmentContentLoader;
+import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.MessageIdManager;
@@ -55,7 +56,6 @@ import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreAttachmentManager;
-import org.apache.james.mailbox.store.StoreBlobManager;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
@@ -344,9 +344,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
             listenersToBeRegistered.build().forEach(eventBus::register);
 
-            StoreBlobManager blobManager = new StoreBlobManager(attachmentManager, messageIdManager, messageIdFactory);
-
-            return new InMemoryIntegrationResources(manager, storeRightManager, messageIdFactory, currentQuotaCalculator, currentQuotaManager, quotaRootResolver, maxQuotaManager, quotaManager, messageIdManager, index, eventBus, blobManager);
+            return new InMemoryIntegrationResources(manager, storeRightManager, messageIdFactory, currentQuotaCalculator, currentQuotaManager, quotaRootResolver, maxQuotaManager, quotaManager, messageIdManager, index, eventBus, attachmentManager);
         }
 
         private PreDeletionHooks createHooks(MailboxManagerPreInstanciationStage preInstanciationStage) {
@@ -429,9 +427,9 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
     private final StoreMessageIdManager storeMessageIdManager;
     private final MessageSearchIndex searchIndex;
     private final EventBus eventBus;
-    private final StoreBlobManager blobManager;
+    private final AttachmentManager attachmentManager;
 
-    InMemoryIntegrationResources(InMemoryMailboxManager mailboxManager, StoreRightManager storeRightManager, MessageId.Factory messageIdFactory, CurrentQuotaCalculator currentQuotaCalculator, InMemoryCurrentQuotaManager currentQuotaManager, DefaultUserQuotaRootResolver defaultUserQuotaRootResolver, InMemoryPerUserMaxQuotaManager maxQuotaManager, QuotaManager quotaManager, StoreMessageIdManager storeMessageIdManager, MessageSearchIndex searchIndex, EventBus eventBus, StoreBlobManager blobManager) {
+    InMemoryIntegrationResources(InMemoryMailboxManager mailboxManager, StoreRightManager storeRightManager, MessageId.Factory messageIdFactory, CurrentQuotaCalculator currentQuotaCalculator, InMemoryCurrentQuotaManager currentQuotaManager, DefaultUserQuotaRootResolver defaultUserQuotaRootResolver, InMemoryPerUserMaxQuotaManager maxQuotaManager, QuotaManager quotaManager, StoreMessageIdManager storeMessageIdManager, MessageSearchIndex searchIndex, EventBus eventBus, AttachmentManager attachmentManager) {
         this.mailboxManager = mailboxManager;
         this.storeRightManager = storeRightManager;
         this.messageIdFactory = messageIdFactory;
@@ -443,7 +441,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         this.storeMessageIdManager = storeMessageIdManager;
         this.searchIndex = searchIndex;
         this.eventBus = eventBus;
-        this.blobManager = blobManager;
+        this.attachmentManager = attachmentManager;
     }
 
     public DefaultUserQuotaRootResolver getDefaultUserQuotaRootResolver() {
@@ -495,7 +493,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         return eventBus;
     }
 
-    public StoreBlobManager getBlobManager() {
-        return blobManager;
+    public AttachmentManager getAttachmentManager() {
+        return attachmentManager;
     }
 }
