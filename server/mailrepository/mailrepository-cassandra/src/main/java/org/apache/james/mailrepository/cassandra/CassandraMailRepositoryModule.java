@@ -20,13 +20,11 @@
 package org.apache.james.mailrepository.cassandra;
 
 import static com.datastax.driver.core.DataType.bigint;
-import static com.datastax.driver.core.DataType.blob;
 import static com.datastax.driver.core.DataType.counter;
 import static com.datastax.driver.core.DataType.list;
 import static com.datastax.driver.core.DataType.map;
 import static com.datastax.driver.core.DataType.text;
 import static com.datastax.driver.core.DataType.timestamp;
-import static com.datastax.driver.core.schemabuilder.SchemaBuilder.frozen;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 
@@ -40,6 +38,7 @@ public interface CassandraMailRepositoryModule {
         .statement(statement -> statement
             .addColumn(MailRepositoryTable.HEADER_NAME, text())
             .addColumn(MailRepositoryTable.HEADER_VALUE, text()))
+
         .table(MailRepositoryTable.COUNT_TABLE)
         .comment("Projection maintaining per mail repository mail counter")
         .statement(statement -> statement
@@ -50,24 +49,7 @@ public interface CassandraMailRepositoryModule {
         .statement(statement -> statement
             .addPartitionKey(MailRepositoryTable.REPOSITORY_NAME, text())
             .addClusteringColumn(MailRepositoryTable.MAIL_KEY, text()))
-        .table(MailRepositoryTable.CONTENT_TABLE_NAME)
-        .comment("Stores the mails for a given repository. " +
-            "Content is stored with other blobs")
-        .statement(statement -> statement
-            .addPartitionKey(MailRepositoryTable.REPOSITORY_NAME, text())
-            .addPartitionKey(MailRepositoryTable.MAIL_KEY, text())
-            .addColumn(MailRepositoryTable.MESSAGE_SIZE, bigint())
-            .addColumn(MailRepositoryTable.STATE, text())
-            .addColumn(MailRepositoryTable.HEADER_BLOB_ID, text())
-            .addColumn(MailRepositoryTable.BODY_BLOB_ID, text())
-            .addColumn(MailRepositoryTable.ATTRIBUTES, map(text(), blob()))
-            .addColumn(MailRepositoryTable.ERROR_MESSAGE, text())
-            .addColumn(MailRepositoryTable.SENDER, text())
-            .addColumn(MailRepositoryTable.RECIPIENTS, list(text()))
-            .addColumn(MailRepositoryTable.REMOTE_HOST, text())
-            .addColumn(MailRepositoryTable.REMOTE_ADDR, text())
-            .addColumn(MailRepositoryTable.LAST_UPDATED, timestamp())
-            .addUDTMapColumn(MailRepositoryTable.PER_RECIPIENT_SPECIFIC_HEADERS, text(), frozen(MailRepositoryTable.HEADER_TYPE)))
+
         .table(MailRepositoryTableV2.CONTENT_TABLE_NAME)
         .comment("Stores the mails for a given repository. " +
             "Content is stored with other blobs. " +

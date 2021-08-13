@@ -63,7 +63,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
 
     @BeforeEach
     void setup(CassandraCluster cassandra) {
-        CassandraMailRepositoryMailDaoAPI mailDAO = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
+        CassandraMailRepositoryMailDaoV2 mailDAO = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
         keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf());
         countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
         BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
@@ -233,7 +233,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
                     .isInstanceOf(RuntimeException.class);
 
             ResultSet resultSet = cassandra.getConf().execute(select()
-                    .from(MailRepositoryTable.CONTENT_TABLE_NAME));
+                    .from(MailRepositoryTableV2.CONTENT_TABLE_NAME));
             assertThat(resultSet.all()).hasSize(1);
         }
     }
