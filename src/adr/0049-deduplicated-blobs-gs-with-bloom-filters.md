@@ -8,7 +8,7 @@ Accepted (lazy consensus).
 
 Not yet implemented.
 
-Proposes a simple to implement alternative to  [39. Distributed blob garbage collector](0039-distributed-blob-garbage-collector.md)
+Proposes a simpl waye to implement an alternative to  [39. Distributed blob garbage collector](0039-distributed-blob-garbage-collector.md)
 
 ## Context
 
@@ -64,9 +64,9 @@ Regarding the garbage collection generation duration tradeoff:
  - The longer, the longer it will take to effectively delete blobs
  - However, the longer, the more efficient deduplication will be (deduplication is of course scoped to a single 
    generation).
- - Generation duration do not impact the overall process speed.
+ - Generation duration does not impact the overall process speed.
  
-Please note that this design do not require additional responsibilities for blobStore user and is thus fully transparent 
+Please note that this design does not require additional responsibilities for blobStore user and is thus fully transparent 
 to them.
  
 ## Alternatives
@@ -76,7 +76,7 @@ to them.
 [39. Distributed blob garbage collector](0039-distributed-blob-garbage-collector.md) proposes an alternative that could 
 be implemented in the future and attempts to reduce the duration of each iteration.
 
-However, it presents the following flows:
+However, it presents the following flaws:
  - Generation switch is synchronous
  - Needs to keep track of deletions
  - Needs to keep track of references
@@ -97,11 +97,11 @@ The two algorithms are not mutually exclusive and could very well coexist if nee
 
 ### Implementation of the Bloom Filter approach with Apache Spark
 
-On other way to be solving potential scaling issues would be to run the Bloom Filter algorithm on a SPark cluster.
+An other way to be solving potential scaling issues would be to run the Bloom Filter algorithm on a Spark cluster.
 Apache Spark would then take care of scheduling the job in a distributed fashion, allowing to scale the count of
 worker nodes.
 
-Requiring minimal applicative knowledge, this would be a very candidate for such a tooling.
+Requiring minimal applicative knowledge, this would be a very good candidate for such a tooling.
 
 ## References
 
