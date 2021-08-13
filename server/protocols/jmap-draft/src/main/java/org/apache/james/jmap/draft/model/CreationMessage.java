@@ -433,8 +433,14 @@ public class CreationMessage {
         }
 
         public EmailUserAndDomain getEmailUserAndDomain() {
-            String[] splitAddress = email.get().split("@", 2);
-            return new EmailUserAndDomain(Optional.ofNullable(splitAddress[0]), Optional.ofNullable(splitAddress[1]));
+            int atIndex = email.get().indexOf('@');
+            if (atIndex < 0 || atIndex == email.get().length() - 1) {
+                return new EmailUserAndDomain(Optional.of(email.get()), Optional.empty());
+            }
+            String user = email.get().substring(0, atIndex);
+            String domain = email.get().substring(atIndex + 1);
+
+            return new EmailUserAndDomain(Optional.of(user), Optional.of(domain));
         }
 
         @Override

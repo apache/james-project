@@ -70,7 +70,7 @@ case class EventSourceOptionsFactory @Inject() (typeStateFactory: TypeStateFacto
     queryParam(request, "types") match {
       case None => Left(new IllegalArgumentException("types parameter is compulsory"))
       case Some(List("*")) => Right(typeStateFactory.all.toSet)
-      case Some(list) => list.flatMap(_.split(","))
+      case Some(list) => list.flatMap(_.split(','))
         .map(string => typeStateFactory.parse(string))
         .sequence.map(_.toSet)
     }

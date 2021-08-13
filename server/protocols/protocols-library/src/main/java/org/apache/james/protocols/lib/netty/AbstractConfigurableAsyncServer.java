@@ -40,6 +40,7 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.protocols.api.Encryption;
@@ -165,10 +166,10 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             return;
         }
 
-        String[] listen = config.getString("bind", "0.0.0.0:" + getDefaultPort()).split(",");
+        String[] listen = StringUtils.split(config.getString("bind", "0.0.0.0:" + getDefaultPort()), ',');
         List<InetSocketAddress> bindAddresses = new ArrayList<>();
         for (String aListen : listen) {
-            String[] bind = aListen.split(":");
+            String[] bind = StringUtils.split(aListen, ':');
 
             InetSocketAddress address;
             String ip = bind[0].trim();
