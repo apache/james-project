@@ -79,6 +79,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraMailRepositoryMailDaoV2 implements CassandraMailRepositoryMailDaoAPI {
@@ -87,6 +88,7 @@ public class CassandraMailRepositoryMailDaoV2 implements CassandraMailRepository
     private final PreparedStatement insertMail;
     private final PreparedStatement deleteMail;
     private final PreparedStatement selectMail;
+    private final PreparedStatement litBlobs;
     private final BlobId.Factory blobIdFactory;
     private final TupleType userHeaderNameHeaderValueTriple;
 
@@ -98,6 +100,7 @@ public class CassandraMailRepositoryMailDaoV2 implements CassandraMailRepository
         this.insertMail = prepareInsert(session);
         this.deleteMail = prepareDelete(session);
         this.selectMail = prepareSelect(session);
+        this.litBlobs = prepareListBlobs(session);
         this.blobIdFactory = blobIdFactory;
         this.userHeaderNameHeaderValueTriple = session.getCluster().getMetadata().newTupleType(text(), text(), text());
     }
@@ -107,6 +110,12 @@ public class CassandraMailRepositoryMailDaoV2 implements CassandraMailRepository
             .from(CONTENT_TABLE_NAME)
             .where(eq(REPOSITORY_NAME, bindMarker(REPOSITORY_NAME)))
             .and(eq(MAIL_KEY, bindMarker(MAIL_KEY))));
+    }
+
+    private PreparedStatement prepareListBlobs(Session session) {
+        return session.prepare(
+            select(HEADER_BLOB_ID, BODY_BLOB_ID)
+                .from(CONTENT_TABLE_NAME));
     }
 
     private PreparedStatement prepareInsert(Session session) {
@@ -256,6 +265,14 @@ public class CassandraMailRepositoryMailDaoV2 implements CassandraMailRepository
         } catch (AddressException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    Flux<BlobId> listBlobs() {
+        return executor.executeRows(litBlobs.bind())
+            .flatMapIterable(row -> ImmutableList.of(
+                blobIdFactory.from(row.getString(HEADER_BLOB_ID)),
+                blobIdFactory.from(row.getString(BODY_BLOB_ID))
+            ));
     }
 
 }
