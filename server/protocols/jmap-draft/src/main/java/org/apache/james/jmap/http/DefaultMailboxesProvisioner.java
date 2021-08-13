@@ -75,12 +75,8 @@ public class DefaultMailboxesProvisioner {
     }
 
     private Mono<Boolean> mailboxDoesntExist(MailboxPath mailboxPath, MailboxSession session) {
-        try {
-            return Mono.from(mailboxManager.mailboxExists(mailboxPath, session))
-                .map(negate());
-        } catch (MailboxException e) {
-            throw new RuntimeException(e);
-        }
+        return Mono.from(mailboxManager.mailboxExists(mailboxPath, session))
+            .map(negate());
     }
 
     private Function<String, MailboxPath> toMailboxPath(MailboxSession session) {

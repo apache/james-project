@@ -80,7 +80,7 @@ public class UserMailboxesService {
         }
     }
 
-    public void deleteMailboxes(Username username) throws MailboxException, UsersRepositoryException {
+    public void deleteMailboxes(Username username) throws UsersRepositoryException {
         usernamePreconditions(username);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         listUserMailboxes(mailboxSession)
@@ -88,7 +88,7 @@ public class UserMailboxesService {
             .forEach(Throwing.consumer(mailboxPath -> deleteMailbox(mailboxSession, mailboxPath)));
     }
 
-    public List<MailboxResponse> listMailboxes(Username username) throws MailboxException, UsersRepositoryException {
+    public List<MailboxResponse> listMailboxes(Username username) throws UsersRepositoryException {
         usernamePreconditions(username);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         return listUserMailboxes(mailboxSession)
@@ -105,7 +105,7 @@ public class UserMailboxesService {
             .block();
     }
 
-    public Mono<Result> clearMailboxContent(Username username, MailboxName mailboxName, ClearMailboxContentTask.Context context) throws UsersRepositoryException, MailboxException {
+    public Mono<Result> clearMailboxContent(Username username, MailboxName mailboxName, ClearMailboxContentTask.Context context) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         MessageManager messageManager = mailboxManager.getMailbox(MailboxPath.forUser(username, mailboxName.asString()), mailboxSession);
 
@@ -158,7 +158,7 @@ public class UserMailboxesService {
             .getUnseen();
     }
 
-    private Stream<MailboxPath> listChildren(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
+    private Stream<MailboxPath> listChildren(MailboxPath mailboxPath, MailboxSession mailboxSession) {
         return listUserMailboxes(mailboxSession)
             .map(MailboxMetaData::getPath)
             .filter(path -> path.getHierarchyLevels(mailboxSession.getPathDelimiter()).contains(mailboxPath));
@@ -184,7 +184,7 @@ public class UserMailboxesService {
             "Mailbox does not exist. " + mailboxPath.asString());
     }
 
-    private Stream<MailboxMetaData> listUserMailboxes(MailboxSession mailboxSession) throws MailboxException {
+    private Stream<MailboxMetaData> listUserMailboxes(MailboxSession mailboxSession) {
         return mailboxManager.search(
             MailboxQuery.privateMailboxesBuilder(mailboxSession).build(),
             Minimal, mailboxSession)

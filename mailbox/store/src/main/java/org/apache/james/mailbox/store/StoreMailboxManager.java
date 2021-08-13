@@ -803,7 +803,7 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public Mono<Boolean> mailboxExists(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+    public Mono<Boolean> mailboxExists(MailboxPath mailboxPath, MailboxSession session) {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
 
         return mapper.pathExists(mailboxPath);
