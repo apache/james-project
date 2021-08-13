@@ -19,6 +19,7 @@
 
 package org.apache.james.mailrepository.cassandra;
 
+import static org.apache.james.mailrepository.cassandra.CassandraMailRepositoryKeysDAOTest.KEY_2;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
@@ -60,7 +61,6 @@ class CassandraMailRepositoryMailDAOTest {
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MODULE);
-
 
     abstract class TestSuite {
 
@@ -190,10 +190,12 @@ class CassandraMailRepositoryMailDAOTest {
     class V2 extends TestSuite {
 
         private CassandraMailRepositoryMailDaoV2 testee;
+        private MailRepositoryBlobReferenceSource blobReferenceSource;
 
         @BeforeEach
         void setUp(CassandraCluster cassandra) {
             testee = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
+            blobReferenceSource = new MailRepositoryBlobReferenceSource(testee);
         }
 
         @Override
@@ -253,6 +255,53 @@ class CassandraMailRepositoryMailDAOTest {
                 softly.assertThat(partialMail.getMaybeSender().asOptional()).contains(MailAddressFixture.SENDER);
                 softly.assertThat(partialMail.getRecipients()).containsOnly(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2);
             });
+        }
+
+        @Test
+        void blobReferencesShouldBeEmptyByDefault() {
+            assertThat(blobReferenceSource.listReferencedBlobs().collectList().block())
+                .isEmpty();
+        }
+
+        @Test
+        void blobReferencesShouldAllAddedValues() throws Exception {
+            BlobId blobIdBody = BLOB_ID_FACTORY.from("blobHeader");
+            BlobId blobIdHeader = BLOB_ID_FACTORY.from("blobBody");
+            String state = "state";
+            AttributeName attributeName = AttributeName.of("att1");
+            List<AttributeValue<?>> attributeValue = ImmutableList.of(AttributeValue.of("value1"), AttributeValue.of("value2"));
+            Attribute attribute = new Attribute(attributeName, AttributeValue.of(attributeValue));
+            List<Attribute> attributes = ImmutableList.of(attribute);
+
+            testee.store(URL,
+                FakeMail.builder()
+                    .name(KEY_1.asString())
+                    .sender(MailAddressFixture.SENDER)
+                    .recipients(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2)
+                    .state(state)
+                    .attributes(attributes)
+                    .build(),
+                blobIdHeader,
+                blobIdBody)
+                .block();
+
+            BlobId blobIdBody2 = BLOB_ID_FACTORY.from("blobHeader2");
+            BlobId blobIdHeader2 = BLOB_ID_FACTORY.from("blobBody2");
+
+            testee.store(URL,
+                FakeMail.builder()
+                    .name(KEY_2.asString())
+                    .sender(MailAddressFixture.SENDER)
+                    .recipients(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2)
+                    .state(state)
+                    .attributes(attributes)
+                    .build(),
+                blobIdHeader2,
+                blobIdBody2)
+                .block();
+
+            assertThat(blobReferenceSource.listReferencedBlobs().collectList().block())
+                .containsOnly(blobIdBody, blobIdBody2, blobIdHeader, blobIdHeader2);
         }
     }
 
