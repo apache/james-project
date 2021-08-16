@@ -19,11 +19,10 @@
 
 package org.apache.james.events;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.events.tables.CassandraEventDeadLettersTable.EVENT;
 import static org.apache.james.events.tables.CassandraEventDeadLettersTable.GROUP;
 import static org.apache.james.events.tables.CassandraEventDeadLettersTable.INSERTION_ID;
@@ -33,8 +32,8 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -49,7 +48,7 @@ public class CassandraEventDeadLettersDAO {
     private final PreparedStatement containEventsStatement;
 
     @Inject
-    CassandraEventDeadLettersDAO(Session session, EventSerializer eventSerializer) {
+    CassandraEventDeadLettersDAO(CqlSession session, EventSerializer eventSerializer) {
         this.executor = new CassandraAsyncExecutor(session);
         this.eventSerializer = eventSerializer;
         this.insertStatement = prepareInsertStatement(session);
@@ -59,63 +58,67 @@ public class CassandraEventDeadLettersDAO {
         this.containEventsStatement = prepareContainEventStatement(session);
     }
 
-    private PreparedStatement prepareInsertStatement(Session session) {
+    private PreparedStatement prepareInsertStatement(CqlSession session) {
         return session.prepare(insertInto(TABLE_NAME)
             .value(GROUP, bindMarker(GROUP))
             .value(INSERTION_ID, bindMarker(INSERTION_ID))
-            .value(EVENT, bindMarker(EVENT)));
+            .value(EVENT, bindMarker(EVENT))
+            .build());
     }
 
-    private PreparedStatement prepareDeleteStatement(Session session) {
-        return session.prepare(delete()
-            .from(TABLE_NAME)
-            .where(eq(GROUP, bindMarker(GROUP)))
-            .and(eq(INSERTION_ID, bindMarker(INSERTION_ID))));
+    private PreparedStatement prepareDeleteStatement(CqlSession session) {
+        return session.prepare(deleteFrom(TABLE_NAME)
+            .whereColumn(GROUP).isEqualTo(bindMarker(GROUP))
+            .whereColumn(INSERTION_ID).isEqualTo(bindMarker(INSERTION_ID))
+            .build());
     }
 
-    private PreparedStatement prepareSelectEventStatement(Session session) {
-        return session.prepare(select(EVENT)
-            .from(TABLE_NAME)
-            .where(eq(GROUP, bindMarker(GROUP)))
-            .and(eq(INSERTION_ID, bindMarker(INSERTION_ID))));
+    private PreparedStatement prepareSelectEventStatement(CqlSession session) {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .column(EVENT)
+            .whereColumn(GROUP).isEqualTo(bindMarker(GROUP))
+            .whereColumn(INSERTION_ID).isEqualTo(bindMarker(INSERTION_ID))
+            .build());
     }
 
-    private PreparedStatement prepareSelectInsertionIdsWithGroupStatement(Session session) {
-        return session.prepare(select(INSERTION_ID)
-            .from(TABLE_NAME)
-            .where(eq(GROUP, bindMarker(GROUP))));
+    private PreparedStatement prepareSelectInsertionIdsWithGroupStatement(CqlSession session) {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .column(INSERTION_ID)
+            .whereColumn(GROUP).isEqualTo(bindMarker(GROUP))
+            .build());
     }
 
-    private PreparedStatement prepareContainEventStatement(Session session) {
-        return session.prepare(select(EVENT)
-            .from(TABLE_NAME)
-            .limit(1));
+    private PreparedStatement prepareContainEventStatement(CqlSession session) {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .column(EVENT)
+            .limit(1)
+            .build());
     }
 
     Mono<Void> store(Group group, Event failedEvent, EventDeadLetters.InsertionId insertionId) {
         return executor.executeVoid(insertStatement.bind()
                 .setString(GROUP, group.asString())
-                .setUUID(INSERTION_ID, insertionId.getId())
+                .setUuid(INSERTION_ID, insertionId.getId())
                 .setString(EVENT, eventSerializer.toJson(failedEvent)));
     }
 
     Mono<Void> removeEvent(Group group, EventDeadLetters.InsertionId failedInsertionId) {
         return executor.executeVoid(deleteStatement.bind()
                 .setString(GROUP, group.asString())
-                .setUUID(INSERTION_ID, failedInsertionId.getId()));
+                .setUuid(INSERTION_ID, failedInsertionId.getId()));
     }
 
     Mono<Event> retrieveFailedEvent(Group group, EventDeadLetters.InsertionId insertionId) {
         return executor.executeSingleRow(selectEventStatement.bind()
                 .setString(GROUP, group.asString())
-                .setUUID(INSERTION_ID, insertionId.getId()))
+                .setUuid(INSERTION_ID, insertionId.getId()))
             .map(row -> deserializeEvent(row.getString(EVENT)));
     }
 
     Flux<EventDeadLetters.InsertionId> retrieveInsertionIdsWithGroup(Group group) {
         return executor.executeRows(selectEventIdsWithGroupStatement.bind()
                 .setString(GROUP, group.asString()))
-            .map(row -> EventDeadLetters.InsertionId.of(row.getUUID(INSERTION_ID)));
+            .map(row -> EventDeadLetters.InsertionId.of(row.getUuid(INSERTION_ID)));
     }
 
     Mono<Boolean> containEvents() {

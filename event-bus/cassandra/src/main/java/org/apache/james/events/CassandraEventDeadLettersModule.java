@@ -19,28 +19,28 @@
 
 package org.apache.james.events;
 
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
+
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.events.tables.CassandraEventDeadLettersGroupTable;
 import org.apache.james.events.tables.CassandraEventDeadLettersTable;
 
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.core.type.DataTypes;
 
 public interface CassandraEventDeadLettersModule {
     CassandraModule MODULE = CassandraModule.builder()
         .table(CassandraEventDeadLettersTable.TABLE_NAME)
         .comment("Holds event dead letter")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraEventDeadLettersTable.GROUP, DataType.text())
-            .addClusteringColumn(CassandraEventDeadLettersTable.INSERTION_ID, DataType.uuid())
-            .addColumn(CassandraEventDeadLettersTable.EVENT, DataType.text()))
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraEventDeadLettersTable.GROUP, DataTypes.TEXT)
+            .withClusteringColumn(CassandraEventDeadLettersTable.INSERTION_ID, DataTypes.UUID)
+            .withColumn(CassandraEventDeadLettersTable.EVENT, DataTypes.TEXT))
         .table(CassandraEventDeadLettersGroupTable.TABLE_NAME)
         .comment("Projection table for retrieving groups for all failed events")
-        .statement(statement -> statement
-            .addPartitionKey(CassandraEventDeadLettersGroupTable.GROUP, DataType.text()))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraEventDeadLettersGroupTable.GROUP, DataTypes.TEXT))
         .build();
 }
