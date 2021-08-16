@@ -53,7 +53,7 @@ class CassandraPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerTest {
 
         maxQuotaManager.quotaDetails(QUOTA_ROOT);
 
-        assertThat(statementRecorder.listExecutedStatements()).hasSize(4);
-        // 1 statement for user limits, 1 for domain limits, 2 for global limits (as count and size don't share the same primary key)
+        assertThat(statementRecorder.listExecutedStatements()).hasSize(3);
+        // 1 statement for user limits, 1 for domain limits, 1 for global limits
     }
 }
