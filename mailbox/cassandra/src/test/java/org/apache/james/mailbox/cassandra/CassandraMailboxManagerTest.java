@@ -60,7 +60,6 @@ import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMessageIdDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentOwnerDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
@@ -520,73 +519,6 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
                 softly.assertThat(attachmentMessageIdDAO(cassandraCluster).getOwnerMessageIds(attachmentId).collectList().block())
                     .contains(cassandraMessageId);
-            });
-        }
-
-        @Test
-        void deleteMailboxShouldNotUnreferenceAttachmentWhenOtherReference(CassandraCluster cassandraCluster) throws Exception {
-            AppendResult appendResult = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
-                .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
-
-            AttachmentId attachmentId = Iterators.toStream(inboxManager.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session))
-                .map(Throwing.function(MessageResult::getLoadedAttachments))
-                .flatMap(Collection::stream)
-                .map(MessageAttachmentMetadata::getAttachmentId)
-                .findFirst()
-                .get();
-
-            new CassandraAttachmentOwnerDAO(cassandraCluster.getConf()).addOwner(attachmentId, Username.of("bob")).block();
-
-            mailboxManager.deleteMailbox(inbox, session);
-
-            SoftAssertions.assertSoftly(softly -> {
-                CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
-                CassandraId mailboxId = (CassandraId) appendResult.getId().getMailboxId();
-
-                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
-                    .blockOptional()).isEmpty();
-
-                softly.assertThat(imapUidDAO(cassandraCluster).retrieve(cassandraMessageId, Optional.of(mailboxId)).collectList().block())
-                    .isEmpty();
-
-                softly.assertThat(messageIdDAO(cassandraCluster).retrieveMessages(mailboxId, MessageRange.all(), Limit.unlimited()).collectList().block())
-                    .isEmpty();
-
-                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId).blockOptional())
-                    .isPresent();
-
-                softly.assertThat(attachmentMessageIdDAO(cassandraCluster).getOwnerMessageIds(attachmentId).collectList().block())
-                    .doesNotContain(cassandraMessageId);
-            });
-        }
-
-        @Test
-        void deleteShouldNotUnreferenceAttachmentWhenOtherReference(CassandraCluster cassandraCluster) throws Exception {
-            AppendResult appendResult = inboxManager.appendMessage(MessageManager.AppendCommand.builder()
-                .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session);
-
-            AttachmentId attachmentId = Iterators.toStream(inboxManager.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session))
-                .map(Throwing.function(MessageResult::getLoadedAttachments))
-                .flatMap(Collection::stream)
-                .map(MessageAttachmentMetadata::getAttachmentId)
-                .findFirst()
-                .get();
-
-            new CassandraAttachmentOwnerDAO(cassandraCluster.getConf()).addOwner(attachmentId, Username.of("bob")).block();
-
-            inboxManager.delete(ImmutableList.of(appendResult.getId().getUid()), session);
-
-            SoftAssertions.assertSoftly(softly -> {
-                CassandraMessageId cassandraMessageId = (CassandraMessageId) appendResult.getId().getMessageId();
-
-                softly.assertThat(messageDAO(cassandraCluster).retrieveMessage(cassandraMessageId, MessageMapper.FetchType.Metadata)
-                    .blockOptional()).isEmpty();
-
-                softly.assertThat(attachmentDAO(cassandraCluster).getAttachment(attachmentId).blockOptional())
-                    .isPresent();
-
-                softly.assertThat(attachmentMessageIdDAO(cassandraCluster).getOwnerMessageIds(attachmentId).collectList().block())
-                    .doesNotContain(cassandraMessageId);
             });
         }
 

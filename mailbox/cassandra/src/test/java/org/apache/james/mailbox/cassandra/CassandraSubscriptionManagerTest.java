@@ -22,7 +22,6 @@ package org.apache.james.mailbox.cassandra;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.SubscriptionManagerContract;
@@ -30,7 +29,6 @@ import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMessageIdDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentOwnerDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
@@ -84,13 +82,11 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
         CassandraDeletedMessageDAO deletedMessageDAO = null;
         CassandraAttachmentDAOV2 attachmentDAOV2 = null;
         CassandraAttachmentMessageIdDAO attachmentMessageIdDAO = null;
-        CassandraAttachmentOwnerDAO ownerDAO = null;
         CassandraACLMapper aclMapper = null;
         CassandraUserMailboxRightsDAO userMailboxRightsDAO = null;
         BlobStore blobStore = null;
         CassandraUidProvider uidProvider = null;
         CassandraModSeqProvider modSeqProvider = null;
-        CassandraSchemaVersionManager versionManager = null;
         RecomputeMailboxCountersService recomputeMailboxCountersService = null;
 
         subscriptionManager = new StoreSubscriptionManager(
@@ -114,10 +110,8 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
                 deletedMessageDAO,
                 blobStore,
                 attachmentMessageIdDAO,
-                ownerDAO,
                 aclMapper,
                 userMailboxRightsDAO,
-                versionManager,
                 recomputeMailboxCountersService,
                 CassandraUtils.WITH_DEFAULT_CONFIGURATION,
                 CassandraConfiguration.DEFAULT_CONFIGURATION));

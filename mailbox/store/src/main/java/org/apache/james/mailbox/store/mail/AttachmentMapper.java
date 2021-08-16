@@ -23,17 +23,14 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
-import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.store.transaction.Mapper;
-import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -46,16 +43,12 @@ public interface AttachmentMapper extends Mapper {
 
     List<AttachmentMetadata> getAttachments(Collection<AttachmentId> attachmentIds);
 
-    Publisher<AttachmentMetadata> storeAttachmentForOwner(ContentType contentType, InputStream attachmentContent, Username owner);
+    List<MessageAttachmentMetadata> storeAttachments(Collection<ParsedAttachment> attachments, MessageId ownerMessageId) throws MailboxException;
 
-    List<MessageAttachmentMetadata> storeAttachmentsForMessage(Collection<ParsedAttachment> attachments, MessageId ownerMessageId) throws MailboxException;
-
-    default Mono<List<MessageAttachmentMetadata>> storeAttachmentsForMessageReactive(Collection<ParsedAttachment> attachments, MessageId ownerMessageId) {
-        return Mono.fromCallable(() -> storeAttachmentsForMessage(attachments, ownerMessageId))
+    default Mono<List<MessageAttachmentMetadata>> storeAttachmentsReactive(Collection<ParsedAttachment> attachments, MessageId ownerMessageId) {
+        return Mono.fromCallable(() -> storeAttachments(attachments, ownerMessageId))
             .subscribeOn(Schedulers.elastic());
     }
 
     Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId) throws MailboxException;
-
-    Collection<Username> getOwners(AttachmentId attachmentId) throws MailboxException;
 }

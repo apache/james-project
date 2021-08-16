@@ -117,7 +117,7 @@ public interface MessageStorer {
         private Mono<List<MessageAttachmentMetadata>> storeAttachments(MessageId messageId, Content messageContent, Optional<Message> maybeMessage, MailboxSession session) throws MailboxException {
             List<ParsedAttachment> attachments = extractAttachments(messageContent, maybeMessage);
             return attachmentMapperFactory.getAttachmentMapper(session)
-                .storeAttachmentsForMessageReactive(attachments, messageId);
+                .storeAttachmentsReactive(attachments, messageId);
         }
 
         private List<ParsedAttachment> extractAttachments(Content contentIn, Optional<Message> maybeMessage) {
