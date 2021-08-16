@@ -50,6 +50,7 @@ Finally, please note that in case of a malformed URL the 400 bad request respons
  - [Administrating mail queues](#Administrating_mail_queues)
  - [Administrating DLP Configuration](#Administrating_DLP_Configuration)
  - [Administrating Sieve quotas](#Administrating_Sieve_quotas)
+ - [Administrating jmap uploads](#Administrating_jmap_uploads)
  - [Deleted Messages Vault](#Deleted_Messages_Vault)
  - [Task management](#Task_management)
  - [Cassandra extra operations](#Cassandra_extra_operations)
@@ -3502,6 +3503,39 @@ curl -XDELETE http://ip:port/sieve/quota/users/user@domain.com
 Response codes:
 
  - 204: Operation succeeded
+
+## Administrating Jmap Uploads
+
+- [Cleaning upload repository](#Cleaning_upload_repository)
+
+
+### Cleaning upload repository
+
+```
+curl -XDELETE http://ip:port/jmap/uploads?scope=expired
+```
+
+Will schedule a task for clearing expired upload entries.
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+Query parameter `scope` is required and have the value `expired`. 
+
+Response codes:
+
+- 201: Success. Corresponding task id is returned.
+- 400: Scope invalid
+
+The scheduled task will have the following type `UploadRepositoryCleanupTask` and
+the following `additionalInformation`:
+
+```
+{
+  "scope": "expired",
+  "timestamp": "2007-12-03T10:15:30Z",
+  "type": "UploadRepositoryCleanupTask"
+}
+```
 
 ## Event Dead Letter
 
