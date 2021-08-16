@@ -34,7 +34,7 @@ public interface CassandraMessageV3Table {
     String TEXTUAL_LINE_COUNT = "textualLineCount";
     String TEXTUAL_LINE_COUNT_LOWERCASE = TEXTUAL_LINE_COUNT.toLowerCase(Locale.US);
     String BODY_CONTENT = "bodyContent";
-    String BODY_CONTENT_LOWERCASE = BODY_START_OCTET.toLowerCase(Locale.US);
+    String BODY_CONTENT_LOWERCASE = BODY_CONTENT.toLowerCase(Locale.US);
     String HEADER_CONTENT = "headerContent";
     String HEADER_CONTENT_LOWERCASE = HEADER_CONTENT.toLowerCase(Locale.US);
     String ATTACHMENTS = "attachments";

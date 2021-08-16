@@ -49,6 +49,7 @@ import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
@@ -65,6 +66,7 @@ class CassandraMessageDAOV3Test {
     private static final int BODY_START = 16;
     private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
     private static final String CONTENT = "Subject: Test7 \n\nBody7\n.\n";
+    private static final String CONTENT_2 = "Subject: Test3 \n\nBody23\n.\n";
     private static final MessageUid messageUid = MessageUid.of(1);
     private static final List<MessageAttachmentMetadata> NO_ATTACHMENT = ImmutableList.of();
 
@@ -81,13 +83,16 @@ class CassandraMessageDAOV3Test {
 
     private SimpleMailboxMessage message;
     private CassandraMessageId messageId;
+    private CassandraMessageId messageId2;
     private ThreadId threadId;
     private ComposedMessageIdWithMetaData messageIdWithMetadata;
+    private MessageBlobReferenceSource blobReferenceSource;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
         messageId = messageIdFactory.generate();
+        messageId2 = messageIdFactory.generate();
         threadId = ThreadId.fromBaseMessageId(messageId);
         BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
             .passthrough();
@@ -105,6 +110,7 @@ class CassandraMessageDAOV3Test {
                 .modSeq(ModSeq.of(1))
                 .threadId(threadId)
                 .build();
+        blobReferenceSource = new MessageBlobReferenceSource(testee);
     }
 
     @Test
@@ -175,6 +181,23 @@ class CassandraMessageDAOV3Test {
 
         assertThat(IOUtils.toString(attachmentRepresentation.getContent().getInputStream(), StandardCharsets.UTF_8))
             .isEqualTo(CONTENT.substring(0, BODY_START));
+    }
+
+    @Test
+    void blobReferencesShouldBeEmptyByDefault() {
+        assertThat(blobReferenceSource.listReferencedBlobs().collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    void blobReferencesShouldReturnAllBlobs() throws Exception {
+        message = createMessage(messageId, threadId,  CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
+        MailboxMessage message2 = createMessage(messageId2, threadId,  CONTENT_2, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
+        testee.save(message).block();
+        testee.save(message2).block();
+
+        assertThat(blobReferenceSource.listReferencedBlobs().collectList().block())
+            .hasSize(4);
     }
 
     private SimpleMailboxMessage createMessage(MessageId messageId, ThreadId threadId, String content, int bodyStart, PropertyBuilder propertyBuilder, Collection<MessageAttachmentMetadata> attachments) {
