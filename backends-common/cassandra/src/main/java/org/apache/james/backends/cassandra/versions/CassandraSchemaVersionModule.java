@@ -19,17 +19,16 @@
 
 package org.apache.james.backends.cassandra.versions;
 
-import static com.datastax.driver.core.DataType.cint;
-import static com.datastax.driver.core.DataType.timeuuid;
-
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable;
+
+import com.datastax.oss.driver.api.core.type.DataTypes;
 
 public interface CassandraSchemaVersionModule {
     CassandraModule MODULE = CassandraModule.table(CassandraSchemaVersionTable.TABLE_NAME)
         .comment("Holds the history of the versions of the schema used.")
-        .statement(statement -> statement
-            .addPartitionKey(CassandraSchemaVersionTable.KEY, timeuuid())
-            .addClusteringColumn(CassandraSchemaVersionTable.VALUE, cint()))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraSchemaVersionTable.KEY, DataTypes.TIMEUUID)
+            .withClusteringColumn(CassandraSchemaVersionTable.VALUE, DataTypes.INT))
         .build();
 }

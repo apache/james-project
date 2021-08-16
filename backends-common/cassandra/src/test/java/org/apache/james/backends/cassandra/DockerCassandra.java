@@ -26,7 +26,6 @@ import java.util.UUID;
 
 import org.apache.james.backends.cassandra.init.ClusterFactory;
 import org.apache.james.backends.cassandra.init.KeyspaceFactory;
-import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 import org.apache.james.util.Host;
@@ -38,8 +37,7 @@ import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.images.builder.dockerfile.DockerfileBuilder;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.EventsCmd;
@@ -68,28 +66,23 @@ public class DockerCassandra {
         }
 
         public void initializeKeyspace(KeyspaceConfiguration configuration) {
-            try (Cluster privilegedCluster = ClusterFactory.create(cassandra.superUserConfigurationBuilder().build(),
-                    CassandraConsistenciesConfiguration.DEFAULT)) {
-                provisionNonPrivilegedUser(privilegedCluster);
+            try (CqlSession privilegedCluster = ClusterFactory.create(cassandra.superUserConfigurationBuilder().build(), configuration)) {
                 KeyspaceFactory.createKeyspace(configuration, privilegedCluster);
+                provisionNonPrivilegedUser(privilegedCluster);
                 grantPermissionToTestingUser(privilegedCluster, configuration.getKeyspace());
             }
         }
 
-        private void provisionNonPrivilegedUser(Cluster privilegedCluster) {
-            try (Session session = privilegedCluster.newSession()) {
-                session.execute("CREATE ROLE IF NOT EXISTS " + CASSANDRA_TESTING_USER + " WITH PASSWORD = '" + CASSANDRA_TESTING_PASSWORD + "' AND LOGIN = true");
-            }
+        private void provisionNonPrivilegedUser(CqlSession privilegedCluster) {
+            privilegedCluster.execute("CREATE ROLE IF NOT EXISTS " + CASSANDRA_TESTING_USER + " WITH PASSWORD = '" + CASSANDRA_TESTING_PASSWORD + "' AND LOGIN = true");
         }
 
-        private void grantPermissionToTestingUser(Cluster privilegedCluster, String keyspace) {
-            try (Session session = privilegedCluster.newSession()) {
-                session.execute("GRANT CREATE ON KEYSPACE " + keyspace + " TO " + CASSANDRA_TESTING_USER);
-                session.execute("GRANT SELECT ON KEYSPACE " + keyspace + " TO " + CASSANDRA_TESTING_USER);
-                session.execute("GRANT MODIFY ON KEYSPACE " + keyspace + " TO " + CASSANDRA_TESTING_USER);
-                // some tests require dropping in setups
-                session.execute("GRANT DROP ON KEYSPACE " + keyspace + " TO " + CASSANDRA_TESTING_USER);
-            }
+        private void grantPermissionToTestingUser(CqlSession privilegedCluster, String keyspace) {
+            privilegedCluster.execute("GRANT CREATE ON KEYSPACE " + keyspace + " TO " + CASSANDRA_TESTING_USER);
+            privilegedCluster.execute("GRANT SELECT ON KEYSPACE " + keyspace + " TO " + CASSANDRA_TESTING_USER);
+            privilegedCluster.execute("GRANT MODIFY ON KEYSPACE " + keyspace + " TO " + CASSANDRA_TESTING_USER);
+            // some tests require dropping in setups
+            privilegedCluster.execute("GRANT DROP ON KEYSPACE " + keyspace + " TO " + CASSANDRA_TESTING_USER);
         }
     }
 

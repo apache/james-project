@@ -43,7 +43,6 @@ public class CassandraConfiguration {
     public static final float DEFAULT_MAX_MAILBOX_COUNTERS_READ_REPAIR_CHANCE = 0.1f;
     public static final float DEFAULT_ONE_HUNDRED_MAILBOX_COUNTERS_READ_REPAIR_CHANCE = 0.01f;
     public static final int DEFAULT_EXPUNGE_BATCH_SIZE = 50;
-    public static final int DEFAULT_UPDATE_FLAGS_BATCH_SIZE = 20;
     public static final int DEFAULT_FLAGS_UPDATE_MESSAGE_MAX_RETRY = 1000;
     public static final int DEFAULT_FLAGS_UPDATE_MESSAGE_ID_MAX_RETRY = 1000;
     public static final int DEFAULT_MODSEQ_MAX_RETRY = 100000;

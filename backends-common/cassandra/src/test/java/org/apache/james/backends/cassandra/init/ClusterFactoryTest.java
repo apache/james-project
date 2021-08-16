@@ -18,24 +18,25 @@
  ****************************************************************/
 package org.apache.james.backends.cassandra.init;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.ConsistencyLevel;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.exceptions.NoHostAvailableException;
+import com.datastax.oss.driver.api.core.AllNodesFailedException;
+import com.datastax.oss.driver.api.core.CqlSession;
 
 class ClusterFactoryTest {
+
+    public static final KeyspaceConfiguration KEYSPACE_CONFIGURATION = KeyspaceConfiguration.builder()
+        .keyspace(DockerCassandra.KEYSPACE)
+        .replicationFactor(1)
+        .disableDurableWrites();
 
     @RegisterExtension
     static CassandraClusterExtension cassandraExtension = new CassandraClusterExtension(CassandraModule.EMPTY_MODULE);
@@ -46,42 +47,26 @@ class ClusterFactoryTest {
     }
 
     @Test
-    void consistencyLevelShouldBeEqualToQuorum(DockerCassandra dockerCassandra) {
-        Cluster cluster = ClusterFactory.create(dockerCassandra.configurationBuilder()
-            .build(), CassandraConsistenciesConfiguration.DEFAULT);
-
-        ConsistencyLevel consistencyLevel = cluster.getConfiguration()
-            .getQueryOptions()
-            .getConsistencyLevel();
-
-        assertThat(consistencyLevel).isEqualTo(ConsistencyLevel.QUORUM);
-    }
-
-    @Test
     void createShouldThrowWhenContactableCluster(DockerCassandra dockerCassandra) {
         dockerCassandra.pause();
 
         assertThatThrownBy(() -> ClusterFactory.create(
             dockerCassandra.configurationBuilder()
-                .build(), CassandraConsistenciesConfiguration.DEFAULT))
-            .isInstanceOf(NoHostAvailableException.class);
+                .build(), KEYSPACE_CONFIGURATION))
+            .isInstanceOf(AllNodesFailedException.class);
     }
 
     @Test
     void createShouldReturnAContactableCluster(DockerCassandra dockerCassandra) {
-        Cluster cluster = ClusterFactory.create(dockerCassandra.configurationBuilder()
-            .build(), CassandraConsistenciesConfiguration.DEFAULT);
+        CqlSession cluster = ClusterFactory.create(dockerCassandra.configurationBuilder()
+            .build(), KeyspaceConfiguration.builder().keyspace(DockerCassandra.KEYSPACE).replicationFactor(1).disableDurableWrites());
 
         assertThatClusterIsContactable(cluster);
     }
 
-    void assertThatClusterIsContactable(Cluster cluster) {
-        try (Session session = cluster.connect("system")) {
-            session.execute(
-                session.prepare(select()
-                    .fcall("NOW")
-                    .from("local"))
-                .bind());
+    void assertThatClusterIsContactable(CqlSession session) {
+        try {
+            session.execute("SELECT dateof(now()) FROM system.local ;");
         } catch (Exception e) {
             throw new AssertionError("expecting cluster can be connected but actually not", e);
         }

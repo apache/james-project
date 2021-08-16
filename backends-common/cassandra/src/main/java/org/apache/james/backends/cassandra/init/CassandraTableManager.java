@@ -19,9 +19,8 @@
 
 package org.apache.james.backends.cassandra.init;
 
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
-
-import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
@@ -30,10 +29,9 @@ import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraTable.InitializationStatus;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 
-import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.PagingIterable;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.metadata.schema.KeyspaceMetadata;
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -41,23 +39,21 @@ import reactor.core.scheduler.Schedulers;
 
 public class CassandraTableManager {
 
-    private final Session session;
+    private final CqlSession session;
     private final CassandraModule module;
 
     @Inject
-    public CassandraTableManager(CassandraModule module, Session session) {
+    public CassandraTableManager(CassandraModule module, CqlSession session) {
         this.session = session;
         this.module = module;
     }
 
-    public InitializationStatus initializeTables() {
-        KeyspaceMetadata keyspaceMetadata = session.getCluster()
-            .getMetadata()
-            .getKeyspace(session.getLoggedKeyspace());
+    public InitializationStatus initializeTables(CassandraTypesProvider typesProvider) {
+        KeyspaceMetadata keyspaceMetadata = session.getMetadata().getKeyspaces().get(session.getKeyspace().get());
 
         return module.moduleTables()
                 .stream()
-                .map(table -> table.initialize(keyspaceMetadata, session))
+                .map(table -> table.initialize(keyspaceMetadata, session, typesProvider))
                 .reduce((left, right) -> left.reduce(right))
                 .orElse(InitializationStatus.ALREADY_DONE);
     }
@@ -73,13 +69,13 @@ public class CassandraTableManager {
     }
 
     private Mono<Void> truncate(CassandraAsyncExecutor executor, String name) {
-        return executor.execute(
-                QueryBuilder.select()
-                        .from(name)
-                        .limit(1)
-                        .setFetchSize(1))
-                .filter(Predicate.not(PagingIterable::isExhausted))
-                .flatMap(ignored -> executor.executeVoid(QueryBuilder.truncate(name)))
-                .onErrorResume(e -> executor.executeVoid(QueryBuilder.truncate(name)));
+        return executor.executeRows(
+            selectFrom(name)
+                .all()
+                .limit(1)
+                .build())
+            .next()
+            .flatMap(ignored -> executor.executeVoid(QueryBuilder.truncate(name).build()))
+            .onErrorResume(e -> executor.executeVoid(QueryBuilder.truncate(name).build()));
     }
 }

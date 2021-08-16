@@ -19,7 +19,6 @@
 
 package org.apache.james.backends.cassandra.init;
 
-import static com.datastax.driver.core.DataType.text;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -30,14 +29,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 
 class CassandraTypeProviderTest {
     private static final String TYPE_NAME = "typename";
     private static final String PROPERTY = "property";
 
     public static final CassandraModule.Impl MODULE = CassandraModule.type(TYPE_NAME)
-        .statement(statement -> statement.addColumn(PROPERTY, text()))
+        .statement(statement -> statement.withField(PROPERTY, DataTypes.TEXT))
         .build();
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MODULE);
@@ -58,19 +58,19 @@ class CassandraTypeProviderTest {
 
     @Test
     void initializeTypesShouldCreateTheTypes() {
-        cassandra.getConf().execute(SchemaBuilder.dropType(TYPE_NAME));
+        cassandra.getConf().execute(SchemaBuilder.dropType(TYPE_NAME).build());
 
         assertThat(new CassandraTypesCreator(MODULE, cassandra.getConf()).initializeTypes())
             .isEqualByComparingTo(CassandraType.InitializationStatus.FULL);
 
-        CassandraTypesProvider cassandraTypesProviderTest = new CassandraTypesProvider(MODULE, cassandra.getConf());
+        CassandraTypesProvider cassandraTypesProviderTest = new CassandraTypesProvider(cassandra.getConf());
         assertThat(cassandraTypesProviderTest.getDefinedUserType(TYPE_NAME))
             .isNotNull();
     }
 
     @Test
     void initializeTypesShouldNotFailIfCalledTwice() {
-        new CassandraTypesProvider(MODULE, cassandra.getConf());
+        new CassandraTypesProvider(cassandra.getConf());
         assertThat(cassandra.getTypesProvider().getDefinedUserType(TYPE_NAME))
             .isNotNull();
     }

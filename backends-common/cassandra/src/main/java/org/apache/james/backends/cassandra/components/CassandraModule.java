@@ -19,15 +19,22 @@
 
 package org.apache.james.backends.cassandra.components;
 
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.createTable;
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.createType;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-import com.datastax.driver.core.schemabuilder.Create;
-import com.datastax.driver.core.schemabuilder.CreateType;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
+
+import com.datastax.oss.driver.api.querybuilder.schema.CreateTable;
+import com.datastax.oss.driver.api.querybuilder.schema.CreateTableStart;
+import com.datastax.oss.driver.api.querybuilder.schema.CreateTableWithOptions;
+import com.datastax.oss.driver.api.querybuilder.schema.CreateType;
+import com.datastax.oss.driver.api.querybuilder.schema.CreateTypeStart;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -110,7 +117,7 @@ public interface CassandraModule {
         private final Builder originalBuilderReference;
         private final String tableName;
         private Optional<String> comment;
-        private Optional<Function<Create.Options, Create.Options>> options;
+        private Optional<Function<CreateTableWithOptions, CreateTableWithOptions>> options;
 
         private TableBuilder(Builder originalBuilderReference, String tableName) {
             this.originalBuilderReference = originalBuilderReference;
@@ -126,23 +133,24 @@ public interface CassandraModule {
             return this;
         }
 
-        public TableBuilder options(Function<Create.Options, Create.Options> options) {
+        public TableBuilder options(Function<CreateTableWithOptions, CreateTableWithOptions> options) {
             this.options = Optional.of(options);
             return this;
         }
 
-        public Builder statement(Function<Create, Create> toCreateStatement) {
+        public Builder statement(Function<CreateTableStart, Function<CassandraTypesProvider, CreateTable>> toCreateStatement) {
             Preconditions.checkState(comment.isPresent(), "`comment` is compulsory");
 
-            Create createStatement = toCreateStatement.apply(
-                SchemaBuilder.createTable(tableName)
+            Function<CassandraTypesProvider, CreateTable> createStatement = toCreateStatement.apply(
+                createTable(tableName)
                     .ifNotExists());
 
+            Function<CassandraTypesProvider, CreateTableWithOptions> finalStatement = options.map(optionTramsformation ->
+               createStatement.andThen(table -> optionTramsformation.apply(table).withComment(comment.get())))
+                .orElseGet(() -> createStatement.andThen(table -> table.withComment(comment.get())));
+
             return originalBuilderReference.addTable(
-                new CassandraTable(tableName,
-                    options.orElse(Function.identity())
-                        .apply(createStatement.withOptions()
-                            .comment(comment.get()))));
+                new CassandraTable(tableName, finalStatement));
         }
     }
 
@@ -155,10 +163,10 @@ public interface CassandraModule {
             this.typeName = typeName;
         }
 
-        public Builder statement(Function<CreateType, CreateType> createStatement) {
+        public Builder statement(Function<CreateTypeStart, CreateType> createStatement) {
             return originalBuilderReference.addType(
                 new CassandraType(typeName, createStatement.apply(
-                    SchemaBuilder.createType(typeName)
+                    createType(typeName)
                         .ifNotExists())));
         }
     }

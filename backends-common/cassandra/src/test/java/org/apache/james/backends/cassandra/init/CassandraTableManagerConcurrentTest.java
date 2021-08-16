@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.DataType;
+import com.datastax.oss.driver.api.core.type.DataTypes;
 
 @Disabled("JAMES-3501 Concurrent start is not supported. Instead start a single server then scale.")
 class CassandraTableManagerConcurrentTest {
@@ -42,9 +42,9 @@ class CassandraTableManagerConcurrentTest {
             CassandraSchemaVersionModule.MODULE,
             CassandraModule.table(TABLE_NAME)
                 .comment("Testing table")
-                .statement(statement -> statement
-                        .addPartitionKey("id", DataType.timeuuid())
-                        .addClusteringColumn("clustering", DataType.bigint()))
+                .statement(statement -> types -> statement
+                        .withPartitionKey("id", DataTypes.TIMEUUID)
+                        .withClusteringColumn("clustering", DataTypes.BIGINT))
                 .build());
 
     @RegisterExtension

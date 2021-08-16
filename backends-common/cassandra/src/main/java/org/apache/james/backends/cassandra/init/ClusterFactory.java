@@ -19,76 +19,48 @@
 
 package org.apache.james.backends.cassandra.init;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import java.net.InetSocketAddress;
 
-import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.QueryOptions;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.SocketOptions;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.CqlSessionBuilder;
 import com.google.common.base.Preconditions;
 
 public class ClusterFactory {
 
-    public static Cluster create(ClusterConfiguration configuration, CassandraConsistenciesConfiguration consistenciesConfiguration) {
+    public static CqlSession create(ClusterConfiguration configuration, KeyspaceConfiguration keyspaceConfiguration) {
         Preconditions.checkState(configuration.getUsername().isPresent() == configuration.getPassword().isPresent(), "If you specify username, you must specify password");
 
-        Cluster.Builder clusterBuilder = Cluster.builder()
-            .withoutJMXReporting();
-        configuration.getHosts().forEach(server -> clusterBuilder
-            .addContactPoint(server.getHostName())
-            .withPort(server.getPort()));
+        CqlSessionBuilder sessionBuilder = CqlSession.builder();
 
-        configuration.getLoadBalancingPolicy().ifPresent(clusterBuilder::withLoadBalancingPolicy);
+        configuration.getHosts().forEach(server -> sessionBuilder
+            .addContactPoint(InetSocketAddress.createUnresolved(server.getHostName(), server.getPort())));
+
 
         configuration.getUsername().ifPresent(username ->
             configuration.getPassword().ifPresent(password ->
-                clusterBuilder.withCredentials(username, password)));
+                sessionBuilder.withAuthCredentials(username, password)));
 
-        clusterBuilder.withQueryOptions(queryOptions(consistenciesConfiguration));
+        sessionBuilder.withLocalDatacenter(configuration.getLocalDC().orElse("datacenter1"));
 
-        SocketOptions socketOptions = new SocketOptions();
-        socketOptions.setReadTimeoutMillis(configuration.getReadTimeoutMillis());
-        socketOptions.setConnectTimeoutMillis(configuration.getConnectTimeoutMillis());
-        clusterBuilder.withSocketOptions(socketOptions);
-        clusterBuilder.withRetryPolicy(new LogConsistencyAllRetryPolicy());
-        configuration.getPoolingOptions().ifPresent(clusterBuilder::withPoolingOptions);
-
-        if (configuration.useSsl()) {
-            clusterBuilder.withSSL();
+        try (CqlSession session = sessionBuilder.build()) {
+            KeyspaceFactory.createKeyspace(keyspaceConfiguration, session);
         }
+        sessionBuilder.withKeyspace(keyspaceConfiguration.getKeyspace());
+        CqlSession session = sessionBuilder.build();
 
-        Cluster cluster = clusterBuilder.build();
         try {
-            configuration.getQueryLoggerConfiguration()
-                .ifPresent(queryLoggerConfiguration -> cluster.register(queryLoggerConfiguration.getQueryLogger()));
-            ensureContactable(cluster);
-            return cluster;
+            ensureContactable(session);
+            return session;
         } catch (Exception e) {
-            cluster.close();
+            session.close();
             throw e;
         }
     }
 
-    private static QueryOptions queryOptions(CassandraConsistenciesConfiguration consistenciesConfiguration) {
-        return new QueryOptions()
-                .setConsistencyLevel(consistenciesConfiguration.getRegular())
-                .setSerialConsistencyLevel(consistenciesConfiguration.getLightweightTransaction());
-    }
-
-    private static void ensureContactable(Cluster cluster) {
-        try (Session session = cluster.connect("system")) {
-            session.execute(checkConnectionStatement(session));
-        }
-    }
-
-    private static BoundStatement checkConnectionStatement(Session session) {
-        return session.prepare(select()
-                .fcall("NOW")
-                .from("local"))
-            .bind();
+    private static void ensureContactable(CqlSession session) {
+        session.execute("SELECT dateof(now()) FROM system.local ;");
     }
 }

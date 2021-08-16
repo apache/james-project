@@ -19,7 +19,7 @@
 
 package org.apache.james.backends.cassandra;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.backends.cassandra.Scenario.Builder.awaitOn;
 import static org.apache.james.backends.cassandra.Scenario.Builder.executeNormally;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
@@ -42,9 +42,10 @@ import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.BoundStatement;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
 
 import reactor.core.scheduler.Schedulers;
 
@@ -70,7 +71,7 @@ class TestingSessionTest {
         cassandra.getConf()
             .registerScenario(executeNormally()
                 .times(1)
-                .whenQueryStartsWith("SELECT value FROM schemaVersion;"));
+                .whenQueryStartsWith("SELECT value FROM schemaversion"));
 
         assertThatCode(() -> dao.getCurrentSchemaVersion().block())
             .doesNotThrowAnyException();
@@ -81,7 +82,7 @@ class TestingSessionTest {
         cassandra.getConf()
             .registerScenario(returnEmpty()
                 .times(1)
-                .whenQueryStartsWith("SELECT value FROM schemaVersion;"));
+                .whenQueryStartsWith("SELECT value FROM schemaversion"));
 
         assertThat(dao.getCurrentSchemaVersion().block())
             .isEmpty();
@@ -95,7 +96,7 @@ class TestingSessionTest {
         dao.getCurrentSchemaVersion().block();
 
         assertThat(statementRecorder.listExecutedStatements(
-                Selector.preparedStatement("SELECT value FROM schemaVersion;")))
+                Selector.preparedStatement("SELECT value FROM schemaversion")))
             .hasSize(1);
     }
 
@@ -110,8 +111,8 @@ class TestingSessionTest {
         assertThat(statementRecorder.listExecutedStatements(Selector.ALL))
             .filteredOn(statement -> statement instanceof BoundStatement)
             .extracting(BoundStatement.class::cast)
-            .extracting(statement -> statement.preparedStatement().getQueryString())
-            .containsExactly("INSERT INTO schemaVersion (key,value) VALUES (:key,:value);", "SELECT value FROM schemaVersion;");
+            .extracting(statement -> statement.getPreparedStatement().getQuery())
+            .containsExactly("INSERT INTO schemaversion (key,value) VALUES (:key,:value)", "SELECT value FROM schemaversion");
     }
 
     @Test
@@ -141,7 +142,7 @@ class TestingSessionTest {
         cassandra.getConf()
             .registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("SELECT value FROM schemaVersion;"));
+                .whenQueryStartsWith("SELECT value FROM schemaversion"));
 
         assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
             .isInstanceOf(InjectedFailureException.class);
@@ -152,10 +153,10 @@ class TestingSessionTest {
         cassandra.getConf()
             .registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("SELECT value FROM schemaVersion;"));
+                .whenQueryStartsWith("SELECT value FROM schemaversion"));
 
         assertThatThrownBy(() -> new CassandraAsyncExecutor(cassandra.getConf())
-                .execute(select(VALUE).from(TABLE_NAME))
+                .executeVoid(selectFrom(TABLE_NAME).column(VALUE).build())
                 .block())
             .isInstanceOf(InjectedFailureException.class);
     }
@@ -176,7 +177,7 @@ class TestingSessionTest {
         cassandra.getConf()
             .registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("SELECT value FROM schemaVersion;"));
+                .whenQueryStartsWith("SELECT value FROM schemaversion"));
 
         try {
             dao.getCurrentSchemaVersion().block();
@@ -193,7 +194,7 @@ class TestingSessionTest {
         cassandra.getConf()
             .registerScenario(fail()
                 .times(2)
-                .whenQueryStartsWith("SELECT value FROM schemaVersion;"));
+                .whenQueryStartsWith("SELECT value FROM schemaversion"));
 
         SoftAssertions.assertSoftly(softly -> {
             assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
@@ -211,10 +212,10 @@ class TestingSessionTest {
             .registerScenario(
                 executeNormally()
                     .times(1)
-                    .whenQueryStartsWith("SELECT value FROM schemaVersion;"),
+                    .whenQueryStartsWith("SELECT value FROM schemaversion"),
                 fail()
                     .times(1)
-                    .whenQueryStartsWith("SELECT value FROM schemaVersion;"));
+                    .whenQueryStartsWith("SELECT value FROM schemaversion"));
 
         SoftAssertions.assertSoftly(softly -> {
             assertThatCode(() -> dao.getCurrentSchemaVersion().block())
@@ -231,7 +232,7 @@ class TestingSessionTest {
         cassandra.getConf()
             .registerScenario(fail()
                 .forever()
-                .whenQueryStartsWith("SELECT value FROM schemaVersion;"));
+                .whenQueryStartsWith("SELECT value FROM schemaversion"));
 
         SoftAssertions.assertSoftly(softly -> {
             assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
@@ -248,7 +249,7 @@ class TestingSessionTest {
         cassandra.getConf()
             .registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("SELECT value FROM schemaVersion;"));
+                .whenQueryStartsWith("SELECT value FROM schemaversion"));
 
         dao.updateVersion(new SchemaVersion(36)).block();
 
@@ -256,6 +257,7 @@ class TestingSessionTest {
             .isInstanceOf(InjectedFailureException.class);
     }
 
+    @Timeout(10)
     @Test
     void statementShouldNotBeAppliedBeforeBarrierIsReleased(CassandraCluster cassandra) throws Exception {
         SchemaVersion originalSchemaVersion = new SchemaVersion(32);
@@ -265,7 +267,7 @@ class TestingSessionTest {
             .registerScenario(awaitOn(barrier)
                 .thenExecuteNormally()
                 .times(1)
-                .whenQueryStartsWith("INSERT INTO schemaVersion"));
+                .whenQueryStartsWith("INSERT INTO schemaversion"));
 
         dao.updateVersion(new SchemaVersion(36)).subscribeOn(Schedulers.elastic()).subscribe();
 
@@ -286,7 +288,7 @@ class TestingSessionTest {
             .registerScenario(awaitOn(barrier)
                 .thenExecuteNormally()
                 .times(1)
-                .whenQueryStartsWith("INSERT INTO schemaVersion"));
+                .whenQueryStartsWith("INSERT INTO schemaversion"));
 
         CompletableFuture<Void> operation = dao.updateVersion(newVersion)
             .subscribeOn(Schedulers.elastic())
@@ -300,6 +302,7 @@ class TestingSessionTest {
     }
 
     @Test
+    @Timeout(10)
     void testShouldBeAbleToAwaitCaller(CassandraCluster cassandra) throws Exception {
         SchemaVersion originalSchemaVersion = new SchemaVersion(32);
         SchemaVersion newVersion = new SchemaVersion(36);
@@ -310,7 +313,7 @@ class TestingSessionTest {
             .registerScenario(awaitOn(barrier)
                 .thenExecuteNormally()
                 .times(1)
-                .whenQueryStartsWith("INSERT INTO schemaVersion"));
+                .whenQueryStartsWith("INSERT INTO schemaversion"));
 
         CompletableFuture<Void> operation = dao.updateVersion(newVersion)
             .subscribeOn(Schedulers.elastic())
@@ -325,6 +328,7 @@ class TestingSessionTest {
     }
 
     @Test
+    @Timeout(10)
     void awaitOnShouldBeAbleToInjectFailure(CassandraCluster cassandra) throws Exception {
         SchemaVersion originalSchemaVersion = new SchemaVersion(32);
         SchemaVersion newVersion = new SchemaVersion(36);
@@ -335,7 +339,7 @@ class TestingSessionTest {
             .registerScenario(awaitOn(barrier)
                 .thenFail()
                 .times(1)
-                .whenQueryStartsWith("INSERT INTO schemaVersion"));
+                .whenQueryStartsWith("INSERT INTO schemaversion"));
 
         CompletableFuture<Void> operation = dao.updateVersion(newVersion)
             .subscribeOn(Schedulers.elastic())

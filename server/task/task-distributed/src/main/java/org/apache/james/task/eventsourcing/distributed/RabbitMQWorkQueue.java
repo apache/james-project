@@ -38,6 +38,7 @@ import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManagerWorker;
 import org.apache.james.task.TaskWithId;
 import org.apache.james.task.WorkQueue;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,7 +147,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
                 receiverProvider::createReceiver,
                 receiver -> receiver.consumeManualAck(QUEUE_NAME, new ConsumeOptions()),
                 Receiver::close)
-            .subscribeOn(Schedulers.boundedElastic())
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
             .concatMap(this::executeTask)
             .subscribe();
     }

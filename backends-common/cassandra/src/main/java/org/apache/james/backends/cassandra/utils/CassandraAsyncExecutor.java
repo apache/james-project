@@ -19,61 +19,54 @@
 
 package org.apache.james.backends.cassandra.utils;
 
-import static org.apache.james.util.ReactorUtils.publishIfPresent;
-
 import java.util.Optional;
-import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.Statement;
+import com.datastax.dse.driver.api.core.cql.reactive.ReactiveResultSet;
+import com.datastax.dse.driver.api.core.cql.reactive.ReactiveRow;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.cql.Statement;
 
-import net.javacrumbs.futureconverter.java8guava.FutureConverter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class CassandraAsyncExecutor {
 
-    private final Session session;
+    private final CqlSession session;
 
     @Inject
-    public CassandraAsyncExecutor(Session session) {
+    public CassandraAsyncExecutor(CqlSession session) {
         this.session = session;
     }
 
-    public Mono<ResultSet> execute(Statement statement) {
-        return Mono.fromFuture(() -> FutureConverter
-                .toCompletableFuture(session.executeAsync(statement)))
-                .publishOn(Schedulers.boundedElastic());
+    private ReactiveResultSet execute(Statement statement) {
+        return session.executeReactive(statement);
     }
 
     public Mono<Boolean> executeReturnApplied(Statement statement) {
-        return execute(statement)
-                .map(ResultSet::wasApplied);
+        return Mono.defer(() -> Mono.from(execute(statement)))
+            .map(ReactiveRow::wasApplied);
     }
 
     public Mono<Void> executeVoid(Statement statement) {
-        return execute(statement)
+        return Mono.defer(() -> Mono.from(execute(statement)))
                 .then();
     }
 
     public Mono<Row> executeSingleRow(Statement statement) {
-        return executeSingleRowOptional(statement)
-                .handle(publishIfPresent());
+        return Mono.defer(() -> Mono.from(execute(statement)));
     }
 
     public Flux<Row> executeRows(Statement statement) {
-        return execute(statement)
-            .flatMapIterable(Function.identity());
+        return Flux.defer(() -> Flux.from(execute(statement)));
     }
 
     public Mono<Optional<Row>> executeSingleRowOptional(Statement statement) {
-        return execute(statement)
-            .map(resultSet -> Optional.ofNullable(resultSet.one()));
+        return executeSingleRow(statement)
+            .map(Optional::ofNullable)
+            .switchIfEmpty(Mono.just(Optional.empty()));
     }
 
     public Mono<Boolean> executeReturnExists(Statement statement) {

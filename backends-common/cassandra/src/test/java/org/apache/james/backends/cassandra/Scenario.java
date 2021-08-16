@@ -23,13 +23,25 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.RegularStatement;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.Statement;
+import org.jetbrains.annotations.NotNull;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+
+import com.datastax.dse.driver.api.core.cql.reactive.ReactiveResultSet;
+import com.datastax.dse.driver.api.core.cql.reactive.ReactiveRow;
+import com.datastax.dse.driver.api.core.cql.reactive.ReactiveSession;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
+import com.datastax.oss.driver.api.core.cql.ColumnDefinitions;
+import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
+import com.datastax.oss.driver.api.core.cql.Statement;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class Scenario {
     public static class InjectedFailureException extends RuntimeException {
@@ -40,7 +52,48 @@ public class Scenario {
 
     @FunctionalInterface
     interface Behavior {
-        Behavior THROW = (session, statement) -> {
+        Behavior THROW = (session, statement) -> new FailingReactiveResultSet(session.executeReactive(statement));
+
+        Behavior EXECUTE_NORMALLY = ReactiveSession::executeReactive;
+
+        // Hack. We rely on version key unicity (because UUID) to create an empty ResultSet
+        Behavior RETURN_EMPTY = (session, statement) -> session.executeReactive(
+            "SELECT value FROM schemaVersion WHERE key=49128560-bb80-11ea-bad6-e3b96c9cd431;");
+
+        static Behavior awaitOn(Barrier barrier, Behavior behavior) {
+            return (session, statement) -> new AwaitingReactiveResultSet(behavior.execute(session, statement), barrier);
+        }
+
+        ReactiveResultSet execute(CqlSession session, Statement statement);
+    }
+
+    static class FailingReactiveResultSet implements ReactiveResultSet {
+        private final ReactiveResultSet delegate;
+
+        FailingReactiveResultSet(ReactiveResultSet delegate) {
+            this.delegate = delegate;
+        }
+
+        @NotNull
+        @Override
+        public Publisher<? extends ColumnDefinitions> getColumnDefinitions() {
+            return delegate.getColumnDefinitions();
+        }
+
+        @NotNull
+        @Override
+        public Publisher<? extends ExecutionInfo> getExecutionInfos() {
+            return delegate.getExecutionInfos();
+        }
+
+        @NotNull
+        @Override
+        public Publisher<Boolean> wasApplied() {
+            return delegate.wasApplied();
+        }
+
+        @Override
+        public void subscribe(Subscriber<? super ReactiveRow> s) {
             //JAMES-3289 add a delay in the throwing behavior to avoid the reactor bug defined in https://github.com/reactor/reactor-core/issues/1941
             //which cause flacky tests.
             //once this bug is solved this delay could be removed.
@@ -49,23 +102,59 @@ public class Scenario {
             } catch (InterruptedException e) {
                 //DO NOTHING
             }
-            throw new InjectedFailureException();
-        };
+            s.onSubscribe(new Subscription() {
+                @Override
+                public void request(long n) {
+                    s.onError(new InjectedFailureException());
+                }
 
-        Behavior EXECUTE_NORMALLY = Session::executeAsync;
+                @Override
+                public void cancel() {
 
-        // Hack. We rely on version key unicity (because UUID) to create an empty ResultSet
-        Behavior RETURN_EMPTY = (session, statement) -> session.executeAsync(
-            "SELECT value FROM schemaVersion WHERE key=49128560-bb80-11ea-bad6-e3b96c9cd431;");
+                }
+            });
+        }
+    }
 
-        static Behavior awaitOn(Barrier barrier, Behavior behavior) {
-            return (session, statement) -> {
-                barrier.call();
-                return behavior.execute(session, statement);
-            };
+    static class AwaitingReactiveResultSet implements ReactiveResultSet {
+        private final ReactiveResultSet delegate;
+        private final Barrier barrier;
+
+        AwaitingReactiveResultSet(ReactiveResultSet delegate, Barrier barrier) {
+            this.delegate = delegate;
+            this.barrier = barrier;
         }
 
-        ResultSetFuture execute(Session session, Statement statement);
+        @NotNull
+        @Override
+        public Publisher<? extends ColumnDefinitions> getColumnDefinitions() {
+            return delegate.getColumnDefinitions();
+        }
+
+        @NotNull
+        @Override
+        public Publisher<? extends ExecutionInfo> getExecutionInfos() {
+            return delegate.getExecutionInfos();
+        }
+
+        @NotNull
+        @Override
+        public Publisher<Boolean> wasApplied() {
+            return delegate.wasApplied();
+        }
+
+        @Override
+        public void subscribe(Subscriber<? super ReactiveRow> s) {
+            // Might be called from the Cassandra driver event loop.
+            // If synchronisation is attempted on request B and code looks like A.then(B)
+            // Then the event loop will be blocked.
+            // Switch the blocking synchronization to another thread to not starve the driver.
+            Mono.fromRunnable(() -> {
+                barrier.call();
+                delegate.subscribe(s);
+            }).subscribeOn(Schedulers.elastic())
+                .subscribe();
+        }
     }
 
     @FunctionalInterface
@@ -81,13 +170,13 @@ public class Scenario {
             public boolean test(Statement statement) {
                 if (statement instanceof BoundStatement) {
                     BoundStatement boundStatement = (BoundStatement) statement;
-                    return boundStatement.preparedStatement()
-                        .getQueryString()
+                    return boundStatement.getPreparedStatement()
+                        .getQuery()
                         .startsWith(queryStringPrefix);
                 }
-                if (statement instanceof RegularStatement) {
-                    RegularStatement regularStatement = (RegularStatement) statement;
-                    return regularStatement.getQueryString()
+                if (statement instanceof SimpleStatement) {
+                    SimpleStatement regularStatement = (SimpleStatement) statement;
+                    return regularStatement.getQuery()
                         .startsWith(queryStringPrefix);
                 }
                 return false;

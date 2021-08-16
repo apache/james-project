@@ -30,10 +30,6 @@
     <artifactId>apache-james-backends-cassandra</artifactId>
     <name>Apache James :: Backends Common :: Cassandra</name>
 
-    <properties>
-        <cassandra.driver.version>3.11.2</cassandra.driver.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -62,22 +58,14 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.datastax.cassandra</groupId>
-            <artifactId>cassandra-driver-core</artifactId>
-            <version>${cassandra.driver.version}</version>
-            <classifier>shaded</classifier>
-            <!-- Because the shaded JAR uses the original POM, you still need to
-                exclude this dependency explicitly: -->
-            <exclusions>
-                <exclusion>
-                    <groupId>io.netty</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.github.jnr</groupId>
-                    <artifactId>jnr-posix</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>com.datastax.oss</groupId>
+            <artifactId>java-driver-core</artifactId>
+            <version>4.14.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.datastax.oss</groupId>
+            <artifactId>java-driver-query-builder</artifactId>
+            <version>4.14.1</version>
         </dependency>
         <dependency>
             <groupId>com.github.jnr</groupId>
