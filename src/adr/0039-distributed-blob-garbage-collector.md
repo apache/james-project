@@ -8,6 +8,8 @@ Proposed, not implemented yet.
 
 Work had been started on this topic.
 
+An alternative is proposed in [Deduplicated blobs GC with bloom filters](0049-deduplicated-blobs-gs-with-bloom-filters.md)
+
 ## Context
 
 The body, headers, attachments of the mails are stored as blobs in a blob store.
