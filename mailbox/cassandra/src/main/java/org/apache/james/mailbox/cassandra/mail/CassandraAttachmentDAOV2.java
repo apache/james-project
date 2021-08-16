@@ -49,6 +49,7 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.common.base.Preconditions;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraAttachmentDAOV2 {
@@ -129,6 +130,7 @@ public class CassandraAttachmentDAOV2 {
     private final PreparedStatement insertStatement;
     private final PreparedStatement deleteStatement;
     private final PreparedStatement selectStatement;
+    private final PreparedStatement listBlobs;
     private final ConsistencyLevel consistencyLevel;
 
     @Inject
@@ -141,6 +143,12 @@ public class CassandraAttachmentDAOV2 {
         this.selectStatement = prepareSelect(session);
         this.insertStatement = prepareInsert(session);
         this.deleteStatement = prepareDelete(session);
+        this.listBlobs = prepareSelectBlobs(session);
+    }
+
+    private PreparedStatement prepareSelectBlobs(Session session) {
+        return session.prepare(select(BLOB_ID)
+            .from(TABLE_NAME));
     }
 
     private PreparedStatement prepareDelete(Session session) {
@@ -188,5 +196,10 @@ public class CassandraAttachmentDAOV2 {
         return cassandraAsyncExecutor.executeVoid(
             deleteStatement.bind()
                 .setUUID(ID_AS_UUID, attachmentId.asUUID()));
+    }
+
+    public Flux<BlobId> listBlobs() {
+        return cassandraAsyncExecutor.executeRows(listBlobs.bind())
+            .map(row -> blobIdFactory.from(row.getString(BLOB_ID)));
     }
 }
