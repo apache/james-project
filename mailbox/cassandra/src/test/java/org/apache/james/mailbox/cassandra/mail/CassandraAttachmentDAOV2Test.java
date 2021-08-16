@@ -27,6 +27,7 @@ import java.util.Optional;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachment;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
@@ -38,12 +39,14 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraAttachmentDAOV2Test {
     private static final AttachmentId ATTACHMENT_ID = AttachmentId.from("id1");
+    private static final AttachmentId ATTACHMENT_ID_2 = AttachmentId.from("id2");
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraAttachmentModule.MODULE);
 
     private CassandraAttachmentDAOV2 testee;
+    private AttachmentBlobReferenceSource blobReferenceSource;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
@@ -51,6 +54,7 @@ class CassandraAttachmentDAOV2Test {
             BLOB_ID_FACTORY,
             cassandra.getConf(),
             cassandraCluster.getCassandraConsistenciesConfiguration());
+        blobReferenceSource = new AttachmentBlobReferenceSource(testee);
     }
 
     @Test
@@ -98,5 +102,59 @@ class CassandraAttachmentDAOV2Test {
         Optional<DAOAttachment> actual = testee.getAttachment(ATTACHMENT_ID).blockOptional();
 
         assertThat(actual).isEmpty();
+    }
+
+    @Test
+    void blobReferencesShouldBeEmptyByDefault() {
+        assertThat(blobReferenceSource.listReferencedBlobs().collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    void blobReferencesShouldReturnAllValues() {
+        AttachmentMetadata attachment1 = AttachmentMetadata.builder()
+            .attachmentId(ATTACHMENT_ID)
+            .type("application/json")
+            .size(36)
+            .build();
+        BlobId blobId1 = BLOB_ID_FACTORY.from("blobId");
+        DAOAttachment daoAttachment1 = CassandraAttachmentDAOV2.from(attachment1, blobId1);
+        testee.storeAttachment(daoAttachment1).block();
+
+        AttachmentMetadata attachment2 = AttachmentMetadata.builder()
+            .attachmentId(ATTACHMENT_ID_2)
+            .type("application/json")
+            .size(36)
+            .build();
+        BlobId blobId2 = BLOB_ID_FACTORY.from("blobId");
+        DAOAttachment daoAttachment2 = CassandraAttachmentDAOV2.from(attachment2, blobId2);
+        testee.storeAttachment(daoAttachment2).block();
+
+        assertThat(blobReferenceSource.listReferencedBlobs().collectList().block())
+            .containsOnly(blobId1, blobId2);
+    }
+
+    @Test
+    void blobReferencesShouldReturnDuplicates() {
+        AttachmentMetadata attachment1 = AttachmentMetadata.builder()
+            .attachmentId(ATTACHMENT_ID)
+            .type("application/json")
+            .size(36)
+            .build();
+        BlobId blobId = BLOB_ID_FACTORY.from("blobId");
+        DAOAttachment daoAttachment1 = CassandraAttachmentDAOV2.from(attachment1, blobId);
+        testee.storeAttachment(daoAttachment1).block();
+
+        AttachmentMetadata attachment2 = AttachmentMetadata.builder()
+            .attachmentId(ATTACHMENT_ID_2)
+            .type("application/json")
+            .size(36)
+            .build();
+        DAOAttachment daoAttachment2 = CassandraAttachmentDAOV2.from(attachment2, blobId);
+        testee.storeAttachment(daoAttachment2).block();
+
+        assertThat(blobReferenceSource.listReferencedBlobs().collectList().block())
+            .hasSize(2)
+            .containsOnly(blobId);
     }
 }
