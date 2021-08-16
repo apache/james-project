@@ -30,12 +30,14 @@ import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.ATTACHMENTS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.BODY_CONTENT;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.BODY_CONTENT_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.BODY_OCTECTS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.BODY_START_OCTET;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.BODY_START_OCTET_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.FULL_CONTENT_OCTETS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.FULL_CONTENT_OCTETS_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.HEADER_CONTENT;
+import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.HEADER_CONTENT_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.INTERNAL_DATE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.INTERNAL_DATE_LOWERCASE;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Properties.CONTENT_DESCRIPTION;
@@ -97,6 +99,7 @@ import com.google.common.io.ByteSource;
 import com.google.common.primitives.Bytes;
 import com.google.common.reflect.TypeToken;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
@@ -116,6 +119,7 @@ public class CassandraMessageDAOV3 {
     private final PreparedStatement insert;
     private final PreparedStatement delete;
     private final PreparedStatement select;
+    private final PreparedStatement listBlobs;
     private final Cid.CidParser cidParser;
     private final ConsistencyLevel consistencyLevel;
 
@@ -132,6 +136,7 @@ public class CassandraMessageDAOV3 {
         this.insert = prepareInsert(session);
         this.delete = prepareDelete(session);
         this.select = prepareSelect(session);
+        this.listBlobs = prepareSelectBlobs(session);
         this.cidParser = Cid.parser().relaxed();
     }
 
@@ -139,6 +144,11 @@ public class CassandraMessageDAOV3 {
         return session.prepare(select()
             .from(TABLE_NAME)
             .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
+    }
+
+    private PreparedStatement prepareSelectBlobs(Session session) {
+        return session.prepare(select(HEADER_CONTENT, BODY_CONTENT)
+            .from(TABLE_NAME));
     }
 
     private PreparedStatement prepareInsert(Session session) {
@@ -407,5 +417,12 @@ public class CassandraMessageDAOV3 {
 
     private BlobId retrieveBlobId(String field, Row row) {
         return blobIdFactory.from(row.getString(field));
+    }
+
+    Flux<BlobId> listBlobs() {
+        return cassandraAsyncExecutor.executeRows(listBlobs.bind())
+            .flatMapIterable(row -> ImmutableList.of(
+                blobIdFactory.from(row.getString(HEADER_CONTENT_LOWERCASE)),
+                blobIdFactory.from(row.getString(BODY_CONTENT_LOWERCASE))));
     }
 }
