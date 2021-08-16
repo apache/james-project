@@ -43,7 +43,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
@@ -205,7 +205,7 @@ class CassandraMigrationServiceTest {
         private SchemaVersion currentVersion;
 
         public InMemorySchemaDAO(SchemaVersion currentVersion) {
-            super(mock(Session.class));
+            super(mock(CqlSession.class));
             this.currentVersion = currentVersion;
         }
 

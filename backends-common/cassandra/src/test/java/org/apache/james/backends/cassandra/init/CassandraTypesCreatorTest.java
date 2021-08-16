@@ -19,7 +19,6 @@
 
 package org.apache.james.backends.cassandra.init;
 
-import static com.datastax.driver.core.DataType.text;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -31,7 +30,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 
 class CassandraTypesCreatorTest {
     private static final String TYPE_NAME_1 = "typename1";
@@ -42,10 +42,10 @@ class CassandraTypesCreatorTest {
     public static final CassandraModule MODULE = CassandraModule.aggregateModules(
             CassandraSchemaVersionModule.MODULE,
             CassandraModule.type(TYPE_NAME_1)
-                .statement(statement -> statement.addColumn(PROPERTY_1, text()))
+                .statement(statement -> statement.withField(PROPERTY_1, DataTypes.TEXT))
                 .build(),
             CassandraModule.type(TYPE_NAME_2)
-                .statement(statement -> statement.addColumn(PROPERTY_2, text()))
+                .statement(statement -> statement.withField(PROPERTY_2, DataTypes.TEXT))
                 .build());
 
     @RegisterExtension
@@ -69,13 +69,13 @@ class CassandraTypesCreatorTest {
 
     @Test
     void initializeTypesShouldCreateTheAllTypes() {
-        cassandra.getConf().execute(SchemaBuilder.dropType(TYPE_NAME_1));
-        cassandra.getConf().execute(SchemaBuilder.dropType(TYPE_NAME_2));
+        cassandra.getConf().execute(SchemaBuilder.dropType(TYPE_NAME_1).build());
+        cassandra.getConf().execute(SchemaBuilder.dropType(TYPE_NAME_2).build());
 
         assertThat(new CassandraTypesCreator(MODULE, cassandra.getConf()).initializeTypes())
                 .isEqualByComparingTo(CassandraType.InitializationStatus.FULL);
 
-        CassandraTypesProvider cassandraTypesProviderTest = new CassandraTypesProvider(MODULE, cassandra.getConf());
+        CassandraTypesProvider cassandraTypesProviderTest = new CassandraTypesProvider(cassandra.getConf());
         assertThat(cassandraTypesProviderTest.getDefinedUserType(TYPE_NAME_1))
                 .isNotNull();
         assertThat(cassandraTypesProviderTest.getDefinedUserType(TYPE_NAME_2))
@@ -84,12 +84,12 @@ class CassandraTypesCreatorTest {
 
     @Test
     void initializeTypesShouldCreateTheMissingType() {
-        cassandra.getConf().execute(SchemaBuilder.dropType(TYPE_NAME_1));
+        cassandra.getConf().execute(SchemaBuilder.dropType(TYPE_NAME_1).build());
 
         assertThat(new CassandraTypesCreator(MODULE, cassandra.getConf()).initializeTypes())
                 .isEqualByComparingTo(CassandraType.InitializationStatus.PARTIAL);
 
-        CassandraTypesProvider cassandraTypesProviderTest = new CassandraTypesProvider(MODULE, cassandra.getConf());
+        CassandraTypesProvider cassandraTypesProviderTest = new CassandraTypesProvider(cassandra.getConf());
         assertThat(cassandraTypesProviderTest.getDefinedUserType(TYPE_NAME_1))
                 .isNotNull();
     }

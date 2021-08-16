@@ -67,15 +67,6 @@ class CassandraClusterTest {
     }
 
     @Test
-    void closingAnAlreadyClosedConnectionShouldNotCloseANewOne() {
-        connection.close();
-        try (CassandraCluster cnx2 = createCluster()) {
-            connection.close();
-            assertThatThrownBy(this::createCluster).isInstanceOf(IllegalStateException.class);
-        }
-    }
-
-    @Test
     void creatingTwoClustersShouldProvideFirstCreationStacktrace() {
         assertThatThrownBy(this::createCluster).hasStackTraceContaining("methodToDetectInStackTrace");
     }

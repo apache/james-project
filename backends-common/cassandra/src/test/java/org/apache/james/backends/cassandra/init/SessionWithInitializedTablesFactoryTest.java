@@ -19,7 +19,6 @@
 
 package org.apache.james.backends.cassandra.init;
 
-import static com.datastax.driver.core.DataType.text;
 import static org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.MAX_VERSION;
 import static org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.MIN_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,7 +28,6 @@ import java.util.function.Supplier;
 import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.DockerCassandraExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
@@ -42,13 +40,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 
 @ExtendWith(DockerCassandraExtension.class)
 class SessionWithInitializedTablesFactoryTest {
+
+    public static final KeyspaceConfiguration KEYSPACE_CONFIGURATION = KeyspaceConfiguration.builder()
+        .keyspace("abcd")
+        .replicationFactor(1)
+        .disableDurableWrites();
+
     private static final String TABLE_NAME = "tablename";
     private static final String TYPE_NAME = "typename";
     private static final String PROPERTY = "property";
@@ -57,15 +60,15 @@ class SessionWithInitializedTablesFactoryTest {
             CassandraSchemaVersionModule.MODULE,
             CassandraModule.table(TABLE_NAME)
                     .comment("Testing table")
-                    .statement(statement -> statement
-                            .addPartitionKey("id", DataType.timeuuid())
-                            .addClusteringColumn("clustering", DataType.bigint()))
+                    .statement(statement -> types -> statement
+                            .withPartitionKey("id", DataTypes.TIMEUUID)
+                            .withClusteringColumn("clustering", DataTypes.BIGINT))
                     .build(),
             CassandraModule.type(TYPE_NAME)
-                    .statement(statement -> statement.addColumn(PROPERTY, text()))
+                    .statement(statement -> statement.withField(PROPERTY, DataTypes.TEXT))
                     .build());
 
-    private Supplier<Session> testee;
+    private Supplier<CqlSession> testee;
 
     @BeforeEach
     void setUp(DockerCassandraExtension.DockerCassandra cassandraServer) {
@@ -91,7 +94,7 @@ class SessionWithInitializedTablesFactoryTest {
 
     @Test
     void createSessionShouldKeepTheSetSchemaVersionWhenTypesAndTablesHaveNotChanged() {
-        Session session = testee.get();
+        CqlSession session = testee.get();
         assertThat(versionManager(session).computeVersion().block())
                 .isEqualTo(MAX_VERSION);
 
@@ -106,7 +109,7 @@ class SessionWithInitializedTablesFactoryTest {
 
     @Test
     void createSessionShouldKeepTheSetSchemaVersionWhenTypesAndTablesHavePartiallyChanged() {
-        Session session = testee.get();
+        CqlSession session = testee.get();
         assertThat(versionManager(session).computeVersion().block())
                 .isEqualTo(MAX_VERSION);
 
@@ -114,36 +117,33 @@ class SessionWithInitializedTablesFactoryTest {
         versionManagerDAO(session).updateVersion(MIN_VERSION);
         assertThat(versionManager(session).computeVersion().block())
                 .isEqualTo(MIN_VERSION);
-        session.execute(SchemaBuilder.dropTable(TABLE_NAME));
-        session.execute(SchemaBuilder.dropType(TYPE_NAME));
+        session.execute(SchemaBuilder.dropTable(TABLE_NAME).build());
+        session.execute(SchemaBuilder.dropType(TYPE_NAME).build());
 
         assertThat(versionManager(testee.get()).computeVersion().block())
                 .isEqualTo(MIN_VERSION);
     }
 
-    private static Supplier<Session> createSession(DockerCassandraExtension.DockerCassandra cassandraServer) {
+    private static Supplier<CqlSession> createSession(DockerCassandraExtension.DockerCassandra cassandraServer) {
         ClusterConfiguration clusterConfiguration = DockerCassandra.configurationBuilder(cassandraServer.getHost())
             .build();
-        Cluster cluster = ClusterFactory.create(clusterConfiguration, CassandraConsistenciesConfiguration.DEFAULT);
         KeyspaceConfiguration keyspaceConfiguration = DockerCassandra.mainKeyspaceConfiguration();
+        CqlSession cluster = ClusterFactory.create(clusterConfiguration, keyspaceConfiguration);
         KeyspaceFactory.createKeyspace(keyspaceConfiguration, cluster);
-        return () -> new SessionWithInitializedTablesFactory(
-                keyspaceConfiguration,
-                cluster,
-                MODULE)
-            .get();
+
+        return () -> new SessionWithInitializedTablesFactory( cluster, MODULE).get();
     }
 
-    private static void cleanCassandra(Session session) {
-        MODULE.moduleTables().forEach(table -> session.execute(SchemaBuilder.dropTable(table.getName())));
-        MODULE.moduleTypes().forEach(type -> session.execute(SchemaBuilder.dropType(type.getName())));
+    private static void cleanCassandra(CqlSession session) {
+        MODULE.moduleTables().forEach(table -> session.execute(SchemaBuilder.dropTable(table.getName()).build()));
+        MODULE.moduleTypes().forEach(type -> session.execute(SchemaBuilder.dropType(type.getName()).build()));
     }
 
-    private CassandraSchemaVersionManager versionManager(Session session) {
+    private CassandraSchemaVersionManager versionManager(CqlSession session) {
         return new CassandraSchemaVersionManager(versionManagerDAO(session));
     }
 
-    private CassandraSchemaVersionDAO versionManagerDAO(Session session) {
+    private CassandraSchemaVersionDAO versionManagerDAO(CqlSession session) {
         return new CassandraSchemaVersionDAO(session);
     }
 }

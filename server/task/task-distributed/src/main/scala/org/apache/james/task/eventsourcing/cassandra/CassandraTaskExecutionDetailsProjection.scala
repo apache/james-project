@@ -22,6 +22,7 @@ package org.apache.james.task.eventsourcing.cassandra
 import javax.inject.Inject
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection
 import org.apache.james.task.{TaskExecutionDetails, TaskId}
+import org.reactivestreams.Publisher
 
 import scala.compat.java8.OptionConverters._
 import scala.jdk.CollectionConverters._
@@ -37,4 +38,11 @@ class CassandraTaskExecutionDetailsProjection @Inject()(cassandraTaskExecutionDe
 
   override def update(details: TaskExecutionDetails): Unit =
     cassandraTaskExecutionDetailsProjectionDAO.saveDetails(details).block()
+
+  override def loadReactive(taskId: TaskId): Publisher[TaskExecutionDetails] =
+    cassandraTaskExecutionDetailsProjectionDAO.readDetails(taskId)
+
+  override def listReactive(): Publisher[TaskExecutionDetails] = cassandraTaskExecutionDetailsProjectionDAO.listDetails()
+
+  override def updateReactive(details: TaskExecutionDetails): Publisher[Void] = cassandraTaskExecutionDetailsProjectionDAO.saveDetails(details)
 }

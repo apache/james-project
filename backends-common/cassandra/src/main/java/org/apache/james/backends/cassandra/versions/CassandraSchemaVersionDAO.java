@@ -19,10 +19,10 @@
 
 package org.apache.james.backends.cassandra.versions;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.truncate;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.truncate;
 import static org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable.KEY;
 import static org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable.TABLE_NAME;
 import static org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable.VALUE;
@@ -34,9 +34,9 @@ import javax.inject.Inject;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable;
 
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Mono;
@@ -47,23 +47,25 @@ public class CassandraSchemaVersionDAO {
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
 
     @Inject
-    public CassandraSchemaVersionDAO(Session session) {
+    public CassandraSchemaVersionDAO(CqlSession session) {
         cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         readVersionStatement = prepareReadVersionStatement(session);
         writeVersionStatement = prepareWriteVersionStatement(session);
     }
 
-    private PreparedStatement prepareReadVersionStatement(Session session) {
+    private PreparedStatement prepareReadVersionStatement(CqlSession session) {
         return session.prepare(
-            select(VALUE)
-                .from(TABLE_NAME));
+            selectFrom(TABLE_NAME)
+                .column(VALUE)
+                .build());
     }
 
-    private PreparedStatement prepareWriteVersionStatement(Session session) {
+    private PreparedStatement prepareWriteVersionStatement(CqlSession session) {
         return session.prepare(
             insertInto(CassandraSchemaVersionTable.TABLE_NAME)
                 .value(KEY, bindMarker(KEY))
-                .value(VALUE, bindMarker(VALUE)));
+                .value(VALUE, bindMarker(VALUE))
+                .build());
     }
 
     public Mono<Optional<SchemaVersion>> getCurrentSchemaVersion() {
@@ -78,13 +80,13 @@ public class CassandraSchemaVersionDAO {
     public Mono<Void> updateVersion(SchemaVersion newVersion) {
         return cassandraAsyncExecutor.executeVoid(
             writeVersionStatement.bind()
-                .setUUID(KEY, UUIDs.timeBased())
+                .setUuid(KEY, Uuids.timeBased())
                 .setInt(VALUE, newVersion.getValue()));
     }
 
     @VisibleForTesting
     public Mono<Void> truncateVersion() {
-        return cassandraAsyncExecutor.executeVoid(truncate(TABLE_NAME));
+        return cassandraAsyncExecutor.executeVoid(truncate(TABLE_NAME).build());
     }
 }
 

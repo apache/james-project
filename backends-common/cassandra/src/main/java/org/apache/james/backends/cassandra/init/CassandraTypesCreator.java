@@ -23,27 +23,25 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.backends.cassandra.components.CassandraType.InitializationStatus;
 
-import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.metadata.schema.KeyspaceMetadata;
 import com.google.common.collect.ImmutableList;
 
 public class CassandraTypesCreator {
     private final ImmutableList<CassandraType> types;
-    private final Session session;
+    private final CqlSession session;
 
-    public CassandraTypesCreator(CassandraModule module, Session session) {
+    public CassandraTypesCreator(CassandraModule module, CqlSession session) {
         this.types = ImmutableList.copyOf(module.moduleTypes());
         this.session = session;
     }
 
     public InitializationStatus initializeTypes() {
-        KeyspaceMetadata keyspaceMetadata = session.getCluster()
-                .getMetadata()
-                .getKeyspace(session.getLoggedKeyspace());
+        KeyspaceMetadata keyspaceMetadata = session.getMetadata().getKeyspaces().get(session.getKeyspace().get());
 
         return types.stream()
                 .map(type -> type.initialize(keyspaceMetadata, session))
-                .reduce((left, right) -> left.reduce(right))
+                .reduce(InitializationStatus::reduce)
                 .orElse(InitializationStatus.ALREADY_DONE);
     }
 }

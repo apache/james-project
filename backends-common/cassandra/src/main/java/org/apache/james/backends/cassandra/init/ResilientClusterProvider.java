@@ -30,12 +30,12 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.datastax.driver.core.Cluster;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
@@ -44,27 +44,27 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
 
 @Singleton
-public class ResilientClusterProvider implements Provider<Cluster> {
+public class ResilientClusterProvider implements Provider<CqlSession> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ResilientClusterProvider.class);
 
-    private final Cluster cluster;
+    private final CqlSession cluster;
 
     @VisibleForTesting
     @Inject
-    ResilientClusterProvider(ClusterConfiguration configuration, CassandraConsistenciesConfiguration consistenciesConfiguration) {
+    ResilientClusterProvider(ClusterConfiguration configuration, KeyspaceConfiguration keyspaceConfiguration) {
         Duration waitDelay = Duration.ofMillis(configuration.getMinDelay());
-        cluster = Mono.fromCallable(getClusterRetryCallable(configuration, consistenciesConfiguration))
+        cluster = Mono.fromCallable(getClusterRetryCallable(configuration, keyspaceConfiguration))
             .doOnError(e -> LOGGER.warn("Error establishing Cassandra connection. Next retry scheduled in {} ms", waitDelay, e))
             .retryWhen(Retry.backoff(configuration.getMaxRetry(), waitDelay).scheduler(Schedulers.boundedElastic()))
             .block();
     }
 
-    private Callable<Cluster> getClusterRetryCallable(ClusterConfiguration configuration, CassandraConsistenciesConfiguration consistenciesConfiguration) {
+    private Callable<CqlSession> getClusterRetryCallable(ClusterConfiguration configuration, KeyspaceConfiguration keyspaceConfiguration) {
         LOGGER.info("Trying to connect to Cassandra service at {} (list {})", LocalDateTime.now(),
             ImmutableList.copyOf(configuration.getHosts()).toString());
 
         return () -> {
-            Cluster cluster = ClusterFactory.create(configuration, consistenciesConfiguration);
+            CqlSession cluster = ClusterFactory.create(configuration, keyspaceConfiguration);
             try {
                 keyspaceExist(cluster, "any"); // plays a sample query to ensure we can contact the cluster
                 return cluster;
@@ -76,7 +76,7 @@ public class ResilientClusterProvider implements Provider<Cluster> {
     }
 
     @Override
-    public Cluster get() {
+    public CqlSession get() {
         return cluster;
     }
 

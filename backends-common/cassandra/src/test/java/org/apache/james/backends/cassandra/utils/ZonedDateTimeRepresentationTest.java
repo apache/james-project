@@ -35,7 +35,7 @@ class ZonedDateTimeRepresentationTest {
     void zonedDateTimeRepresentationShouldBeReversible() {
         ZonedDateTimeRepresentation originalValue = ZonedDateTimeRepresentation.fromZonedDateTime(ZONED_DATE_TIME_VN);
 
-        ZonedDateTimeRepresentation generatedValue = ZonedDateTimeRepresentation.fromDate(originalValue.getDate(), originalValue.getSerializedZoneId());
+        ZonedDateTimeRepresentation generatedValue = ZonedDateTimeRepresentation.fromDate(originalValue.getDate().toInstant(), originalValue.getSerializedZoneId());
 
         assertThat(originalValue.getZonedDateTime()).isEqualTo(generatedValue.getZonedDateTime());
     }

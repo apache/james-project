@@ -20,7 +20,7 @@
 package org.apache.james.backends.cassandra.versions.table;
 
 public interface CassandraSchemaVersionTable {
-    String TABLE_NAME = "schemaVersion";
+    String TABLE_NAME = "schemaversion";
 
     String KEY = "key";
     String VALUE = "value";

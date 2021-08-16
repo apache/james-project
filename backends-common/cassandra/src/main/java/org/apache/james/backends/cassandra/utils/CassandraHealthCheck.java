@@ -25,8 +25,8 @@ import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
 
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.SimpleStatement;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 
 import reactor.core.publisher.Mono;
 
@@ -42,7 +42,7 @@ public class CassandraHealthCheck implements HealthCheck {
     private final CassandraAsyncExecutor queryExecutor;
 
     @Inject
-    public CassandraHealthCheck(Session session) {
+    public CassandraHealthCheck(CqlSession session) {
         this.queryExecutor = new CassandraAsyncExecutor(session);
     }
 
@@ -55,8 +55,8 @@ public class CassandraHealthCheck implements HealthCheck {
     public Mono<Result> check() {
         // execute a simple query to check if cassandra is responding
         // idea from: https://stackoverflow.com/questions/10246287
-        return queryExecutor.execute(new SimpleStatement(SAMPLE_QUERY))
-            .map(resultSet -> Result.healthy(COMPONENT_NAME))
+        return Mono.from(queryExecutor.executeSingleRow(SimpleStatement.newInstance(SAMPLE_QUERY)))
+            .map(row -> Result.healthy(COMPONENT_NAME))
             .onErrorResume(e -> Mono.just(Result.unhealthy(COMPONENT_NAME, "Error checking Cassandra backend", e)));
     }
 }

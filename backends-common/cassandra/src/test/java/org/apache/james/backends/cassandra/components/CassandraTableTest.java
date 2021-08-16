@@ -27,62 +27,74 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.james.backends.cassandra.components.CassandraTable.InitializationStatus;
+import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
-import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.Statement;
-import com.datastax.driver.core.TableMetadata;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.config.DriverConfig;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
+import com.datastax.oss.driver.api.core.context.DriverContext;
+import com.datastax.oss.driver.api.core.metadata.schema.KeyspaceMetadata;
+import com.datastax.oss.driver.api.core.metadata.schema.TableMetadata;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.querybuilder.schema.CreateTable;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class CassandraTableTest {
     private static final String NAME = "tableName";
-    private static final Statement STATEMENT = SchemaBuilder.createTable(NAME);
-    private static final CassandraTable TABLE = new CassandraTable(NAME, STATEMENT);
+    private static final CreateTable STATEMENT = SchemaBuilder.createTable(NAME).withPartitionKey("a", DataTypes.TEXT);
+    private static final CassandraTable TABLE = new CassandraTable(NAME, any -> STATEMENT);
 
     @Test
     void shouldRespectBeanContract() {
         EqualsVerifier.forClass(CassandraTable.class)
             .withPrefabValues(
-                Statement.class,
-                QueryBuilder.select("foo").from("foo"),
-                QueryBuilder.select("bar").from("bar"))
+                CreateTable.class,
+                SchemaBuilder.createTable("foo").withPartitionKey("a", DataTypes.TEXT),
+                SchemaBuilder.createTable("bar").withPartitionKey("b", DataTypes.TEXT))
             .verify();
     }
 
     @Test
     void initializeShouldExecuteCreateStatementAndReturnFullWhenTableDoesNotExist() {
         KeyspaceMetadata keyspace = mock(KeyspaceMetadata.class);
-        when(keyspace.getTable(NAME)).thenReturn(null);
-        Session session = mock(Session.class);
+        when(keyspace.getTable(NAME)).thenReturn(Optional.empty());
+        CqlSession session = mock(CqlSession.class);
+        DriverContext context = mock(DriverContext.class);
+        DriverConfig config = mock(DriverConfig.class);
+        when(session.getContext()).thenReturn(context);
+        when(context.getConfig()).thenReturn(config);
+        when(config.getProfiles()).thenReturn(ImmutableMap.of());
+        when(config.getDefaultProfile()).thenReturn(mock(DriverExecutionProfile.class));
 
-        assertThat(TABLE.initialize(keyspace, session))
+        assertThat(TABLE.initialize(keyspace, session, new CassandraTypesProvider(session)))
                 .isEqualByComparingTo(FULL);
 
         verify(keyspace).getTable(NAME);
-        verify(session).execute(STATEMENT);
+        verify(session).execute(STATEMENT.build());
     }
 
     @Test
     void initializeShouldExecuteReturnAlreadyDoneWhenTableExists() {
         KeyspaceMetadata keyspace = mock(KeyspaceMetadata.class);
-        when(keyspace.getTable(NAME)).thenReturn(mock(TableMetadata.class));
-        Session session = mock(Session.class);
+        when(keyspace.getTable(NAME)).thenReturn(Optional.of(mock(TableMetadata.class)));
+        CqlSession session = mock(CqlSession.class);
 
-        assertThat(TABLE.initialize(keyspace, session))
+        assertThat(TABLE.initialize(keyspace, session, new CassandraTypesProvider(session)))
                 .isEqualByComparingTo(ALREADY_DONE);
 
         verify(keyspace).getTable(NAME);
-        verify(session, never()).execute(STATEMENT);
+        verify(session, never()).execute(STATEMENT.build());
     }
 
     @ParameterizedTest

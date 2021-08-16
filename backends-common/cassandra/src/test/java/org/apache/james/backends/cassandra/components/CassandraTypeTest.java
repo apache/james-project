@@ -34,51 +34,65 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
-import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.UserType;
-import com.datastax.driver.core.schemabuilder.CreateType;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.config.DriverConfig;
+import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
+import com.datastax.oss.driver.api.core.context.DriverContext;
+import com.datastax.oss.driver.api.core.metadata.schema.KeyspaceMetadata;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+import com.datastax.oss.driver.api.core.type.UserDefinedType;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.querybuilder.schema.CreateType;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class CassandraTypeTest {
     private static final String NAME = "typeName";
-    private static final CreateType STATEMENT = SchemaBuilder.createType(NAME);
+    private static final CreateType STATEMENT = SchemaBuilder.createType(NAME)
+        .withField("a", DataTypes.TEXT);
     private static final CassandraType TYPE = new CassandraType(NAME, STATEMENT);
 
     @Test
     void shouldRespectBeanContract() {
         EqualsVerifier.forClass(CassandraType.class)
-                .withPrefabValues(CreateType.class, SchemaBuilder.createType("name1"), SchemaBuilder.createType("name2"))
+                .withPrefabValues(CreateType.class, SchemaBuilder.createType("name1")
+                    .withField("a", DataTypes.TEXT),
+                    SchemaBuilder.createType("name2")
+                        .withField("b", DataTypes.TEXT))
                 .verify();
     }
 
     @Test
     void initializeShouldExecuteCreateStatementAndReturnFullWhenTypeDoesNotExist() {
         KeyspaceMetadata keyspace = mock(KeyspaceMetadata.class);
-        when(keyspace.getUserType(NAME)).thenReturn(null);
-        Session session = mock(Session.class);
+        when(keyspace.getUserDefinedTypes()).thenReturn(ImmutableMap.of());
+        CqlSession session = mock(CqlSession.class);
+        DriverContext context = mock(DriverContext.class);
+        DriverConfig config = mock(DriverConfig.class);
+        when(session.getContext()).thenReturn(context);
+        when(context.getConfig()).thenReturn(config);
+        when(config.getProfiles()).thenReturn(ImmutableMap.of());
+        when(config.getDefaultProfile()).thenReturn(mock(DriverExecutionProfile.class));
 
         assertThat(TYPE.initialize(keyspace, session))
                 .isEqualByComparingTo(FULL);
 
-        verify(keyspace).getUserType(NAME);
-        verify(session).execute(STATEMENT);
+        verify(session).execute(STATEMENT.build());
     }
 
     @Test
     void initializeShouldReturnAlreadyDoneWhenTypeExists() {
         KeyspaceMetadata keyspace = mock(KeyspaceMetadata.class);
-        when(keyspace.getUserType(NAME)).thenReturn(mock(UserType.class));
-        Session session = mock(Session.class);
+        when(keyspace.getUserDefinedTypes()).thenReturn(ImmutableMap.of(CqlIdentifier.fromCql(NAME), mock(UserDefinedType.class)));
+        CqlSession session = mock(CqlSession.class);
 
         assertThat(TYPE.initialize(keyspace, session))
                 .isEqualByComparingTo(ALREADY_DONE);
 
-        verify(keyspace).getUserType(NAME);
-        verify(session, never()).execute(STATEMENT);
+        verify(session, never()).execute(STATEMENT.build());
     }
 
     @ParameterizedTest

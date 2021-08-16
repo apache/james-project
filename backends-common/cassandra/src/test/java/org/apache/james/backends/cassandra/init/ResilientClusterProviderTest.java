@@ -25,8 +25,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.Duration;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -34,12 +35,17 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 class ResilientClusterProviderTest {
+    public static final KeyspaceConfiguration KEYSPACE_CONFIGURATION = KeyspaceConfiguration.builder()
+        .keyspace(DockerCassandra.KEYSPACE)
+        .replicationFactor(1)
+        .disableDurableWrites();
+
     @RegisterExtension
     static CassandraClusterExtension cassandraExtension = new CassandraClusterExtension(CassandraModule.EMPTY_MODULE);
 
     @Test
     void getShouldNotThrowWhenHealthyCassandra() {
-        assertThatCode(() -> new ResilientClusterProvider(cassandraExtension.clusterConfiguration().build(), CassandraConsistenciesConfiguration.DEFAULT)
+        assertThatCode(() -> new ResilientClusterProvider(cassandraExtension.clusterConfiguration().build(), KEYSPACE_CONFIGURATION)
                 .get())
             .doesNotThrowAnyException();
     }
@@ -51,7 +57,7 @@ class ResilientClusterProviderTest {
             assertThatThrownBy(() -> new ResilientClusterProvider(cassandraExtension.clusterConfiguration()
                     .maxRetry(1)
                     .minDelay(1)
-                    .build(), CassandraConsistenciesConfiguration.DEFAULT)
+                    .build(), KEYSPACE_CONFIGURATION)
                 .get())
                 .isInstanceOf(Exception.class);
         } finally {
@@ -70,7 +76,7 @@ class ResilientClusterProviderTest {
                 .subscribe();
 
             assertThatCode(() -> new ResilientClusterProvider(cassandraExtension.clusterConfiguration().build(),
-                    CassandraConsistenciesConfiguration.DEFAULT)
+                KEYSPACE_CONFIGURATION)
                 .get())
                 .doesNotThrowAnyException();
         } finally {

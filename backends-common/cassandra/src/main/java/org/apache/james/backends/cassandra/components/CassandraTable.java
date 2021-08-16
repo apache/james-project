@@ -20,10 +20,14 @@
 package org.apache.james.backends.cassandra.components;
 
 import java.util.Objects;
+import java.util.function.Function;
 
-import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.Statement;
+import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
+import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
+
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.metadata.schema.KeyspaceMetadata;
+import com.datastax.oss.driver.api.querybuilder.schema.CreateTableWithOptions;
 import com.google.common.base.MoreObjects;
 
 public class CassandraTable {
@@ -41,10 +45,10 @@ public class CassandraTable {
         }
     }
 
-    private final Statement createStatement;
+    private final Function<CassandraTypesProvider, CreateTableWithOptions> createStatement;
     private final String name;
 
-    public CassandraTable(String name, Statement createStatement) {
+    public CassandraTable(String name, Function<CassandraTypesProvider, CreateTableWithOptions> createStatement) {
         this.createStatement = createStatement;
         this.name = name;
     }
@@ -53,12 +57,14 @@ public class CassandraTable {
         return name;
     }
 
-    public InitializationStatus initialize(KeyspaceMetadata keyspaceMetadata, Session session) {
-        if (keyspaceMetadata.getTable(name) != null) {
+    public InitializationStatus initialize(KeyspaceMetadata keyspaceMetadata, CqlSession session, CassandraTypesProvider typesProvider) {
+        if (keyspaceMetadata.getTable(name).isPresent()) {
             return InitializationStatus.ALREADY_DONE;
         }
 
-        session.execute(createStatement);
+        session.execute(createStatement.apply(typesProvider).build()
+            .setExecutionProfile(JamesExecutionProfiles.getTableCreationProfile(session)));
+
         return InitializationStatus.FULL;
     }
 

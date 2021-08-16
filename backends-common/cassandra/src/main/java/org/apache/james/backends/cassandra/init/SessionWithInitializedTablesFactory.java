@@ -19,8 +19,6 @@
 
 package org.apache.james.backends.cassandra.init;
 
-import java.util.stream.Stream;
-
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -29,58 +27,57 @@ import javax.inject.Singleton;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
-import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
 
 @Singleton
-public class SessionWithInitializedTablesFactory implements Provider<Session> {
+public class SessionWithInitializedTablesFactory implements Provider<CqlSession> {
     private final CassandraModule module;
-    private final Session session;
+    private final CqlSession session;
 
     @Inject
-    public SessionWithInitializedTablesFactory(KeyspaceConfiguration keyspaceConfiguration,
-                                               Cluster cluster,
+    public SessionWithInitializedTablesFactory(CqlSession cluster,
                                                CassandraModule module) {
         this.module = module;
-        this.session = createSession(cluster, keyspaceConfiguration.getKeyspace());
+        this.session = createSession(cluster);
     }
 
-    private Session createSession(Cluster cluster, String keyspace) {
-        Session session = cluster.connect(keyspace);
+    private CqlSession createSession(CqlSession cluster) {
         try {
-            if (allOperationsAreFullyPerformed(session, module)) {
-                new CassandraSchemaVersionDAO(session)
+            if (allOperationsAreFullyPerformed(cluster, module)) {
+                new CassandraSchemaVersionDAO(cluster)
                     .updateVersion(CassandraSchemaVersionManager.MAX_VERSION)
                     .block();
             }
-            return session;
+            return cluster;
         } catch (Exception e) {
-            session.close();
+            cluster.close();
             throw e;
         }
     }
 
-    private boolean allOperationsAreFullyPerformed(Session session, CassandraModule module) {
-        Stream<Boolean> operations = Stream.of(createTypes(session, module), createTables(session, module));
-        return operations.allMatch(updated -> updated);
+    private boolean allOperationsAreFullyPerformed(CqlSession session, CassandraModule module) {
+        boolean types = createTypes(session, module);
+
+        boolean tables = createTables(session, module);
+        return types && tables;
     }
 
-    private boolean createTypes(Session session, CassandraModule module) {
+    private boolean createTypes(CqlSession session, CassandraModule module) {
         return new CassandraTypesCreator(module, session)
                 .initializeTypes() == CassandraType.InitializationStatus.FULL;
     }
 
-    private boolean createTables(Session session, CassandraModule module) {
+    private boolean createTables(CqlSession session, CassandraModule module) {
+        CassandraTypesProvider cassandraTypesProvider = new CassandraTypesProvider(session);
         return new CassandraTableManager(module, session)
-            .initializeTables() == CassandraTable.InitializationStatus.FULL;
+            .initializeTables(cassandraTypesProvider) == CassandraTable.InitializationStatus.FULL;
     }
 
     @Override
-    public Session get() {
+    public CqlSession get() {
         return session;
     }
 

@@ -19,17 +19,15 @@
 
 package org.apache.james.backends.cassandra.init;
 
-import static com.datastax.driver.core.DataType.text;
-import static com.datastax.driver.core.DataType.timestamp;
-
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.ZonedDateTimeRepresentation;
 
-import com.datastax.driver.core.UDTValue;
-import com.datastax.driver.core.UserType;
+import com.datastax.oss.driver.api.core.data.UdtValue;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+import com.datastax.oss.driver.api.core.type.UserDefinedType;
 
 public interface CassandraZonedDateTimeModule {
     String ZONED_DATE_TIME = "zonedDateTime";
@@ -38,28 +36,28 @@ public interface CassandraZonedDateTimeModule {
 
     CassandraModule MODULE = CassandraModule.type(ZONED_DATE_TIME)
         .statement(statement -> statement
-            .addColumn(DATE, timestamp())
-            .addColumn(TIME_ZONE, text()))
+            .withField(DATE, DataTypes.TIMESTAMP)
+            .withField(TIME_ZONE, DataTypes.TEXT))
         .build();
 
-    static UDTValue toUDT(UserType zonedDateTimeUserType, ZonedDateTime zonedDateTime) {
+    static UdtValue toUDT(UserDefinedType zonedDateTimeUserType, ZonedDateTime zonedDateTime) {
         ZonedDateTimeRepresentation representation = ZonedDateTimeRepresentation.fromZonedDateTime(zonedDateTime);
         return zonedDateTimeUserType.newValue()
-            .setTimestamp(CassandraZonedDateTimeModule.DATE, representation.getDate())
+            .setInstant(CassandraZonedDateTimeModule.DATE, representation.getDate().toInstant())
             .setString(CassandraZonedDateTimeModule.TIME_ZONE, representation.getSerializedZoneId());
     }
 
-    static Optional<UDTValue> toUDT(UserType zonedDateTimeUserType, Optional<ZonedDateTime> zonedDateTimeOptional) {
+    static Optional<UdtValue> toUDT(UserDefinedType zonedDateTimeUserType, Optional<ZonedDateTime> zonedDateTimeOptional) {
         return zonedDateTimeOptional.map(zonedDateTime -> toUDT(zonedDateTimeUserType, zonedDateTime));
     }
 
-    static Optional<ZonedDateTime> fromUDTOptional(UDTValue value) {
+    static Optional<ZonedDateTime> fromUDTOptional(UdtValue value) {
         return Optional.ofNullable(value).map(CassandraZonedDateTimeModule::fromUDT);
     }
 
-    static ZonedDateTime fromUDT(UDTValue udtValue) {
+    static ZonedDateTime fromUDT(UdtValue udtValue) {
         return ZonedDateTimeRepresentation.fromDate(
-                udtValue.getTimestamp(CassandraZonedDateTimeModule.DATE),
+                udtValue.getInstant(CassandraZonedDateTimeModule.DATE),
                 udtValue.getString(CassandraZonedDateTimeModule.TIME_ZONE))
             .getZonedDateTime();
     }

@@ -19,9 +19,9 @@
 
 package org.apache.james.backends.cassandra.utils;
 
-import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.literal;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.UUID;
@@ -33,8 +33,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 
 import reactor.core.publisher.Flux;
 
@@ -43,14 +43,14 @@ class PaggingTest {
     private static final String TABLE_NAME = "test";
     private static final String ID = "id";
     private static final String CLUSTERING = "clustering";
-    private static final UUID UUID = UUIDs.timeBased();
+    private static final UUID UUID = Uuids.timeBased();
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.table(TABLE_NAME)
         .comment("Testing table")
-        .statement(statement -> statement
-            .addPartitionKey(ID, DataType.timeuuid())
-            .addClusteringColumn(CLUSTERING, DataType.bigint()))
+        .statement(statement -> types -> statement
+            .withPartitionKey(ID, DataTypes.TIMEUUID)
+            .withClusteringColumn(CLUSTERING,  DataTypes.BIGINT))
         .build());
 
     private CassandraAsyncExecutor executor;
@@ -68,17 +68,20 @@ class PaggingTest {
         Flux.range(0, size)
             .flatMap(i -> executor
                 .executeVoid(insertInto(TABLE_NAME)
-                    .value(ID, UUID)
-                    .value(CLUSTERING, i)))
+                    .value(ID, literal(UUID))
+                    .value(CLUSTERING, literal(i))
+                    .build()))
             .blockLast();
 
         assertThat(
-            executor.execute(select()
-                    .from(TABLE_NAME)
-                    .where(eq(ID, UUID))
+            executor.executeRows(selectFrom(TABLE_NAME)
+                    .all()
+                    .whereColumn(ID).isEqualTo(literal(UUID))
+                    .build()
                     .setFetchSize(fetchSize))
+                .count()
                 .block())
-            .hasSize(size);
+            .isEqualTo(size);
     }
 
 }
