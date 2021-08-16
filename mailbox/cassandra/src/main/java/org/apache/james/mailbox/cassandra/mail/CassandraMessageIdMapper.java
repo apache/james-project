@@ -37,6 +37,7 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConsisten
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -339,9 +340,19 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     }
 
     private Mono<Pair<Flags, ComposedMessageIdWithMetaData>> updateFlags(ComposedMessageIdWithMetaData oldComposedId, ComposedMessageIdWithMetaData newComposedId) {
-        return imapUidDAO.updateMetadata(newComposedId, oldComposedId.getModSeq())
+        ComposedMessageId composedMessageId = newComposedId.getComposedMessageId();
+        ModSeq previousModseq = oldComposedId.getModSeq();
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .messageId(composedMessageId.getMessageId())
+            .modSeq(newComposedId.getModSeq())
+            .oldFlags(oldComposedId.getFlags())
+            .newFlags(newComposedId.getFlags())
+            .uid(composedMessageId.getUid())
+            .build();
+
+        return imapUidDAO.updateMetadata(composedMessageId, updatedFlags, previousModseq)
             .filter(FunctionalUtils.identityPredicate())
-            .flatMap(any -> messageIdDAO.updateMetadata(newComposedId)
+            .flatMap(any -> messageIdDAO.updateMetadata(composedMessageId, updatedFlags)
                 .thenReturn(Pair.of(oldComposedId.getFlags(), newComposedId)))
             .single();
     }

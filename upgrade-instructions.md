@@ -19,6 +19,27 @@ Change list:
  - [Rework message denormalization](#rework-message-denormalization)
  - [Adding threadId column to message metadata tables](#adding-threadid-column-to-message-metadata-tables)
 
+### Changes to the enqueuedMails DAO
+
+Date 06/08/2021
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3629
+
+Concerned product: Distributed James
+
+In order to avoid uses of non frozen Cassandra collection by the MailQueue component,
+we introduced a new table, enqueuedMailsv4, not suffering from these pitfalls.
+
+Pre existing table, enqueuedMailsV3 is no longer read and can be dropped.
+
+To avoid data loss (only noticeable when browsing the mailqueue email, no email
+in flight in the mailqueue will be lost, they will just be non-browseable) do your
+rolling upgrade with an empty mailqueue. 
+
+To achieve an empty mailqueue, start a James server with SMTP and JMAP ports not exposed:
+they will consume existing mails without creating new ones.
+
+
 ### Adding the threadId to the ElasticSearch index
 
 Date 22/07/2021

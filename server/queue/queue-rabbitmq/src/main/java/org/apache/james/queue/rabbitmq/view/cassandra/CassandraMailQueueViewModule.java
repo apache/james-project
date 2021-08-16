@@ -21,8 +21,8 @@ package org.apache.james.queue.rabbitmq.view.cassandra;
 
 import static com.datastax.driver.core.DataType.blob;
 import static com.datastax.driver.core.DataType.cint;
-import static com.datastax.driver.core.DataType.list;
-import static com.datastax.driver.core.DataType.map;
+import static com.datastax.driver.core.DataType.frozenList;
+import static com.datastax.driver.core.DataType.frozenMap;
 import static com.datastax.driver.core.DataType.text;
 import static com.datastax.driver.core.DataType.timestamp;
 import static com.datastax.driver.core.DataType.uuid;
@@ -37,10 +37,8 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public interface CassandraMailQueueViewModule {
 
-    Double NO_READ_REPAIR = 0.0;
-
     interface EnqueuedMailsTable {
-        String TABLE_NAME = "enqueuedMailsV3";
+        String TABLE_NAME = "enqueuedMailsV4";
 
         String QUEUE_NAME = "queueName";
         String TIME_RANGE_START = "timeRangeStart";
@@ -109,14 +107,14 @@ public interface CassandraMailQueueViewModule {
             .addColumn(EnqueuedMailsTable.STATE, text())
             .addColumn(EnqueuedMailsTable.HEADER_BLOB_ID, text())
             .addColumn(EnqueuedMailsTable.BODY_BLOB_ID, text())
-            .addColumn(EnqueuedMailsTable.ATTRIBUTES, map(text(), blob()))
+            .addColumn(EnqueuedMailsTable.ATTRIBUTES, frozenMap(text(), blob()))
             .addColumn(EnqueuedMailsTable.ERROR_MESSAGE, text())
             .addColumn(EnqueuedMailsTable.SENDER, text())
-            .addColumn(EnqueuedMailsTable.RECIPIENTS, list(text()))
+            .addColumn(EnqueuedMailsTable.RECIPIENTS, frozenList(text()))
             .addColumn(EnqueuedMailsTable.REMOTE_HOST, text())
             .addColumn(EnqueuedMailsTable.REMOTE_ADDR, text())
             .addColumn(EnqueuedMailsTable.LAST_UPDATED, timestamp())
-            .addColumn(EnqueuedMailsTable.PER_RECIPIENT_SPECIFIC_HEADERS, list(TupleType.of(ProtocolVersion.NEWEST_SUPPORTED, CodecRegistry.DEFAULT_INSTANCE, text(), text(), text()))))
+            .addColumn(EnqueuedMailsTable.PER_RECIPIENT_SPECIFIC_HEADERS, frozenList(TupleType.of(ProtocolVersion.NEWEST_SUPPORTED, CodecRegistry.DEFAULT_INSTANCE, text(), text(), text()))))
 
         .table(BrowseStartTable.TABLE_NAME)
         .comment("this table allows to find the starting point of iteration from the table: "

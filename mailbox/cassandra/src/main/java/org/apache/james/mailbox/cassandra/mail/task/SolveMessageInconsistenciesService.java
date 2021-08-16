@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 import javax.inject.Inject;
+import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -39,6 +40,8 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageMetadata;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
+import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.task.Task;
 import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
@@ -116,7 +119,15 @@ public class SolveMessageInconsistenciesService {
 
         @Override
         public Mono<Task.Result> fix(Context context, CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO) {
-            return messageIdDAO.updateMetadata(messageFromImapUid.getComposedMessageId())
+            ComposedMessageIdWithMetaData id = messageFromImapUid.getComposedMessageId();
+            return messageIdDAO.updateMetadata(id.getComposedMessageId(),
+                    UpdatedFlags.builder()
+                        .oldFlags(new Flags())
+                        .newFlags(id.getFlags())
+                        .modSeq(id.getModSeq())
+                        .messageId(id.getComposedMessageId().getMessageId())
+                        .uid(id.getComposedMessageId().getUid())
+                        .build())
                 .doOnSuccess(any -> notifySuccess(context))
                 .thenReturn(Task.Result.COMPLETED)
                 .onErrorResume(error -> {

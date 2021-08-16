@@ -363,7 +363,7 @@ class ConsistencyTasksIntegrationTest {
         TestingSessionProbe testingProbe = server.getProbe(TestingSessionProbe.class);
         testingProbe.getTestingSession().registerScenario(fail()
             .forever()
-            .whenQueryStartsWith("INSERT INTO messageIdTable"));
+            .whenQueryStartsWith("UPDATE messageIdTable"));
 
         smtpMessageSender.connect(LOCALHOST_IP, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessageWithHeaders(ALICE.asString(), BOB.asString(), MESSAGE);
@@ -375,7 +375,7 @@ class ConsistencyTasksIntegrationTest {
         // When we run solveInconsistenciesTask
         testingProbe.getTestingSession().registerScenario(executeNormally()
             .forever()
-            .whenQueryStartsWith("INSERT INTO messageIdTable"));
+            .whenQueryStartsWith("UPDATE messageIdTable"));
 
         String solveInconsistenciesTaskId = with()
             .queryParam("task", "SolveInconsistencies")

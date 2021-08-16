@@ -37,10 +37,10 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
-import org.apache.james.mailbox.cassandra.table.Flag;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.ThreadId;
+import org.apache.james.mailbox.model.UpdatedFlags;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -58,13 +58,11 @@ class CassandraMessageIdToImapUidDAOTest {
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MODULE);
 
-    private CassandraMessageId.Factory messageIdFactory;
-
     private CassandraMessageIdToImapUidDAO testee;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        messageIdFactory = new CassandraMessageId.Factory();
+        CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
         testee = new CassandraMessageIdToImapUidDAO(
             cassandra.getConf(),
             new HashBlobId.Factory(),
@@ -204,7 +202,15 @@ class CassandraMessageIdToImapUidDAOTest {
             .build())
             .block();
 
-        Boolean result = testee.updateMetadata(composedMessageIdWithMetaData, ModSeq.of(1)).block();
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(messageUid)
+            .messageId(messageId)
+            .modSeq(ModSeq.of(2))
+            .oldFlags(new Flags())
+            .newFlags(new Flags(Flags.Flag.ANSWERED))
+            .build();
+
+        Boolean result = testee.updateMetadata(composedMessageIdWithMetaData.getComposedMessageId(), updatedFlags, ModSeq.of(1)).block();
 
         assertThat(result).isTrue();
     }
@@ -230,7 +236,15 @@ class CassandraMessageIdToImapUidDAOTest {
             .build())
             .block();
 
-        Boolean result = testee.updateMetadata(composedMessageIdWithFlags, ModSeq.of(3)).block();
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(messageUid)
+            .messageId(messageId)
+            .modSeq(ModSeq.of(2))
+            .oldFlags(new Flags())
+            .newFlags(new Flags(Flags.Flag.ANSWERED))
+            .build();
+
+        Boolean result = testee.updateMetadata(composedMessageIdWithFlags.getComposedMessageId(), updatedFlags, ModSeq.of(3)).block();
 
         assertThat(result).isFalse();
     }
@@ -258,11 +272,21 @@ class CassandraMessageIdToImapUidDAOTest {
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
-                .flags(new Flags())
+                .flags(new Flags(Flags.Flag.ANSWERED))
                 .modSeq(ModSeq.of(2))
                 .threadId(ThreadId.fromBaseMessageId(messageId))
                 .build();
-        testee.updateMetadata(expectedComposedMessageId, ModSeq.of(1)).block();
+
+
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(messageUid)
+            .messageId(messageId)
+            .modSeq(ModSeq.of(2))
+            .oldFlags(new Flags())
+            .newFlags(expectedComposedMessageId.getFlags())
+            .build();
+
+       testee.updateMetadata(expectedComposedMessageId.getComposedMessageId(), updatedFlags, ModSeq.of(1)).block();
 
         List<CassandraMessageMetadata> messages = testee.retrieve(messageId, Optional.empty()).collectList().block();
         assertThat(messages)
@@ -293,11 +317,19 @@ class CassandraMessageIdToImapUidDAOTest {
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
-                .flags(new Flags(Flag.ANSWERED))
+                .flags(new Flags(Flags.Flag.ANSWERED))
                 .modSeq(ModSeq.of(2))
                 .threadId(ThreadId.fromBaseMessageId(messageId))
                 .build();
-        testee.updateMetadata(expectedComposedMessageId, ModSeq.of(1)).block();
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(messageUid)
+            .messageId(messageId)
+            .modSeq(ModSeq.of(2))
+            .oldFlags(new Flags())
+            .newFlags(new Flags(Flags.Flag.ANSWERED))
+            .build();
+
+        testee.updateMetadata(expectedComposedMessageId.getComposedMessageId(), updatedFlags, ModSeq.of(1)).block();
 
         List<CassandraMessageMetadata> messages = testee.retrieve(messageId, Optional.empty()).collectList().block();
         assertThat(messages)
@@ -328,11 +360,19 @@ class CassandraMessageIdToImapUidDAOTest {
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
-                .flags(new Flags(Flag.DELETED))
+                .flags(new Flags(Flags.Flag.DELETED))
                 .modSeq(ModSeq.of(2))
                 .threadId(ThreadId.fromBaseMessageId(messageId))
                 .build();
-        testee.updateMetadata(expectedComposedMessageId, ModSeq.of(1)).block();
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(messageUid)
+            .messageId(messageId)
+            .modSeq(ModSeq.of(2))
+            .oldFlags(new Flags())
+            .newFlags(expectedComposedMessageId.getFlags())
+            .build();
+
+        testee.updateMetadata(expectedComposedMessageId.getComposedMessageId(), updatedFlags, ModSeq.of(1)).block();
 
         List<CassandraMessageMetadata> messages = testee.retrieve(messageId, Optional.empty()).collectList().block();
         assertThat(messages)
@@ -363,11 +403,19 @@ class CassandraMessageIdToImapUidDAOTest {
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
-                .flags(new Flags(Flag.DRAFT))
+                .flags(new Flags(Flags.Flag.DRAFT))
                 .modSeq(ModSeq.of(2))
                 .threadId(ThreadId.fromBaseMessageId(messageId))
                 .build();
-        testee.updateMetadata(expectedComposedMessageId, ModSeq.of(1)).block();
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(messageUid)
+            .messageId(messageId)
+            .modSeq(ModSeq.of(2))
+            .oldFlags(new Flags())
+            .newFlags(expectedComposedMessageId.getFlags())
+            .build();
+
+        testee.updateMetadata(expectedComposedMessageId.getComposedMessageId(), updatedFlags, ModSeq.of(1)).block();
 
         List<CassandraMessageMetadata> messages = testee.retrieve(messageId, Optional.empty()).collectList().block();
         assertThat(messages)
@@ -398,11 +446,19 @@ class CassandraMessageIdToImapUidDAOTest {
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
-                .flags(new Flags(Flag.FLAGGED))
+                .flags(new Flags(Flags.Flag.FLAGGED))
                 .modSeq(ModSeq.of(2))
                 .threadId(ThreadId.fromBaseMessageId(messageId))
                 .build();
-        testee.updateMetadata(expectedComposedMessageId, ModSeq.of(1)).block();
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(messageUid)
+            .messageId(messageId)
+            .modSeq(ModSeq.of(2))
+            .oldFlags(new Flags())
+            .newFlags(expectedComposedMessageId.getFlags())
+            .build();
+
+        testee.updateMetadata(expectedComposedMessageId.getComposedMessageId(), updatedFlags, ModSeq.of(1)).block();
 
         List<CassandraMessageMetadata> messages = testee.retrieve(messageId, Optional.empty()).collectList().block();
         assertThat(messages)
@@ -433,11 +489,19 @@ class CassandraMessageIdToImapUidDAOTest {
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
-                .flags(new Flags(Flag.RECENT))
+                .flags(new Flags(Flags.Flag.RECENT))
                 .modSeq(ModSeq.of(2))
                 .threadId(ThreadId.fromBaseMessageId(messageId))
                 .build();
-        testee.updateMetadata(expectedComposedMessageId, ModSeq.of(1)).block();
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(messageUid)
+            .messageId(messageId)
+            .modSeq(ModSeq.of(2))
+            .oldFlags(new Flags())
+            .newFlags(expectedComposedMessageId.getFlags())
+            .build();
+
+        testee.updateMetadata(expectedComposedMessageId.getComposedMessageId(), updatedFlags, ModSeq.of(1)).block();
 
         List<CassandraMessageMetadata> messages = testee.retrieve(messageId, Optional.empty()).collectList().block();
         assertThat(messages)
@@ -468,12 +532,19 @@ class CassandraMessageIdToImapUidDAOTest {
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
-                .flags(new Flags(Flag.SEEN))
+                .flags(new Flags(Flags.Flag.SEEN))
                 .modSeq(ModSeq.of(2))
                 .threadId(ThreadId.fromBaseMessageId(messageId))
                 .build();
-        assertThat(testee.updateMetadata(expectedComposedMessageId, ModSeq.of(1)).block())
-            .isTrue();
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(messageUid)
+            .messageId(messageId)
+            .modSeq(ModSeq.of(2))
+            .oldFlags(new Flags())
+            .newFlags(expectedComposedMessageId.getFlags())
+            .build();
+
+        testee.updateMetadata(expectedComposedMessageId.getComposedMessageId(), updatedFlags, ModSeq.of(1)).block();
 
         List<CassandraMessageMetadata> messages = testee.retrieve(messageId, Optional.empty()).collectList().block();
         assertThat(messages)
@@ -504,11 +575,19 @@ class CassandraMessageIdToImapUidDAOTest {
 
         ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(composedMessageId)
-                .flags(new Flags(Flag.USER))
+                .flags(new Flags(Flags.Flag.USER))
                 .modSeq(ModSeq.of(2))
                 .threadId(ThreadId.fromBaseMessageId(messageId))
                 .build();
-        testee.updateMetadata(expectedComposedMessageId, ModSeq.of(1)).block();
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(messageUid)
+            .messageId(messageId)
+            .modSeq(ModSeq.of(2))
+            .oldFlags(new Flags())
+            .newFlags(expectedComposedMessageId.getFlags())
+            .build();
+
+        testee.updateMetadata(expectedComposedMessageId.getComposedMessageId(), updatedFlags, ModSeq.of(1)).block();
 
         List<CassandraMessageMetadata> messages = testee.retrieve(messageId, Optional.empty()).collectList().block();
         assertThat(messages)
@@ -545,7 +624,60 @@ class CassandraMessageIdToImapUidDAOTest {
                 .modSeq(ModSeq.of(2))
                 .threadId(ThreadId.fromBaseMessageId(messageId))
                 .build();
-        testee.updateMetadata(expectedComposedMessageId, ModSeq.of(1)).block();
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(messageUid)
+            .messageId(messageId)
+            .modSeq(ModSeq.of(2))
+            .oldFlags(new Flags())
+            .newFlags(expectedComposedMessageId.getFlags())
+            .build();
+
+        testee.updateMetadata(expectedComposedMessageId.getComposedMessageId(), updatedFlags, ModSeq.of(1)).block();
+
+        List<CassandraMessageMetadata> messages = testee.retrieve(messageId, Optional.empty()).collectList().block();
+        assertThat(messages)
+            .extracting(CassandraMessageMetadata::getComposedMessageId)
+            .containsOnly(expectedComposedMessageId);
+    }
+
+    @Test
+    void updateShouldRemoveUserFlags() {
+        CassandraMessageId messageId = CassandraMessageId.Factory.of(UUIDs.timeBased());
+        CassandraId mailboxId = CassandraId.timeBased();
+        MessageUid messageUid = MessageUid.of(1);
+
+        ComposedMessageId composedMessageId = new ComposedMessageId(mailboxId, messageId, messageUid);
+        Flags flags = new Flags();
+        flags.add("myCustomFlag");
+        testee.insert(CassandraMessageMetadata.builder()
+            .ids(ComposedMessageIdWithMetaData.builder()
+                .composedMessageId(composedMessageId)
+                .flags(flags)
+                .modSeq(ModSeq.of(1))
+                .threadId(ThreadId.fromBaseMessageId(messageId))
+                .build())
+            .internalDate(new Date())
+            .bodyStartOctet(18L)
+            .size(36L)
+            .headerContent(Optional.of(HEADER_BLOB_ID_1))
+            .build())
+            .block();
+
+        ComposedMessageIdWithMetaData expectedComposedMessageId = ComposedMessageIdWithMetaData.builder()
+                .composedMessageId(composedMessageId)
+                .flags(new Flags())
+                .modSeq(ModSeq.of(2))
+                .threadId(ThreadId.fromBaseMessageId(messageId))
+                .build();
+        UpdatedFlags updatedFlags = UpdatedFlags.builder()
+            .uid(messageUid)
+            .messageId(messageId)
+            .modSeq(ModSeq.of(2))
+            .oldFlags(new Flags("myCustomFlag"))
+            .newFlags(expectedComposedMessageId.getFlags())
+            .build();
+
+        testee.updateMetadata(expectedComposedMessageId.getComposedMessageId(), updatedFlags, ModSeq.of(1)).block();
 
         List<CassandraMessageMetadata> messages = testee.retrieve(messageId, Optional.empty()).collectList().block();
         assertThat(messages)
