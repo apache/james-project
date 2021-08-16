@@ -67,6 +67,7 @@ class EnqueuedMailsDaoTest {
             CassandraModule.aggregateModules(CassandraSchemaVersionModule.MODULE, CassandraMailQueueViewModule.MODULE));
 
     private EnqueuedMailsDAO testee;
+    private MailQueueViewBlobReferenceSource blobReferenceSource;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
@@ -74,6 +75,33 @@ class EnqueuedMailsDaoTest {
         testee = new EnqueuedMailsDAO(
             cassandra.getConf(),
             blobFactory);
+        blobReferenceSource = new MailQueueViewBlobReferenceSource(testee);
+    }
+
+    @Test
+    void listReferencedBlobsShouldReturnEmptyByDefault() {
+        assertThat(blobReferenceSource.listReferencedBlobs().collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    void listReferencedBlobsShouldReturnAddedValue() throws Exception {
+        testee.insert(EnqueuedItemWithSlicingContext.builder()
+            .enqueuedItem(EnqueuedItem.builder()
+                .enqueueId(ENQUEUE_ID)
+                .mailQueueName(OUT_GOING_1)
+                .mail(FakeMail.builder()
+                    .name(NAME)
+                    .build())
+                .enqueuedTime(NOW)
+                .mimeMessagePartsId(MIME_MESSAGE_PARTS_ID)
+                .build())
+            .slicingContext(EnqueuedItemWithSlicingContext.SlicingContext.of(BucketId.of(BUCKET_ID_VALUE), NOW))
+            .build())
+            .block();
+
+        assertThat(blobReferenceSource.listReferencedBlobs().collectList().block())
+            .containsOnly(HEADER_BLOB_ID, BODY_BLOB_ID);
     }
 
     @Test

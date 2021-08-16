@@ -68,6 +68,7 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.TupleType;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -75,6 +76,7 @@ import reactor.core.publisher.Mono;
 public class EnqueuedMailsDAO {
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement selectFrom;
+    private final PreparedStatement selectBlobIds;
     private final PreparedStatement insert;
     private final PreparedStatement deleteBucket;
     private final BlobId.Factory blobFactory;
@@ -88,6 +90,7 @@ public class EnqueuedMailsDAO {
         this.selectFrom = prepareSelectFrom(session);
         this.insert = prepareInsert(session);
         this.deleteBucket = prepareDeleteBucket(session);
+        this.selectBlobIds = prepareSelectBlobIds(session);
         this.blobFactory = blobIdFactory;
         this.userHeaderNameHeaderValueTriple = session.getCluster().getMetadata().newTupleType(text(), text(), text());
     }
@@ -98,6 +101,11 @@ public class EnqueuedMailsDAO {
             .where(eq(QUEUE_NAME, bindMarker(QUEUE_NAME)))
             .and(eq(TIME_RANGE_START, bindMarker(TIME_RANGE_START)))
             .and(eq(BUCKET_ID, bindMarker(BUCKET_ID))));
+    }
+
+    private PreparedStatement prepareSelectBlobIds(Session session) {
+        return session.prepare(select(HEADER_BLOB_ID, BODY_BLOB_ID)
+            .from(TABLE_NAME));
     }
 
     private PreparedStatement prepareDeleteBucket(Session session) {
@@ -180,5 +188,12 @@ public class EnqueuedMailsDAO {
                     .setString(QUEUE_NAME, queueName.asString())
                     .setTimestamp(TIME_RANGE_START, Date.from(slice.getStartSliceInstant()))
                     .setInt(BUCKET_ID, bucketId.getValue()));
+    }
+
+    Flux<BlobId> listBlobIds() {
+        return executor.executeRows(selectBlobIds.bind())
+            .flatMapIterable(row -> ImmutableList.of(
+                blobFactory.from(row.getString(HEADER_BLOB_ID)),
+                blobFactory.from(row.getString(BODY_BLOB_ID))));
     }
 }
