@@ -4075,6 +4075,79 @@ trait EmailQueryMethodContract {
   }
 
   @Test
+  def combiningSortPositionAndLimitShouldYieldExpectedResult(server: GuiceJamesServer): Unit = {
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+    val message: Message = buildTestMessage
+    val messageId1: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+        .withInternalDate(Date.from(ZonedDateTime.now().minusDays(2).toInstant))
+        .build(message))
+      .getMessageId
+    val messageId2: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+        .withInternalDate(Date.from(ZonedDateTime.now().minusDays(2).toInstant))
+        .build(message))
+      .getMessageId
+    val messageId3: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.builder()
+        .withInternalDate(Date.from(ZonedDateTime.now().minusDays(2).toInstant))
+        .build(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/query",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "position": 2,
+         |      "limit": 2,
+         |      "filter": {
+         |          "inMailbox": "${mailboxId.serialize()}"
+         |      },
+         |      "sort": [{
+         |          "property":"sentAt",
+         |          "isAscending": false
+         |      }]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response).isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [[
+           |            "Email/query",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "queryState": "${generateQueryState(messageId1)}",
+           |                "position": 2,
+           |                "canCalculateChanges": false,
+           |                "ids": ["${messageId1.serialize()}"]
+           |            },
+           |            "c1"
+           |        ]]
+           |}""".stripMargin)
+    }
+  }
+
+  @Test
   def shouldReturnAnIllegalArgumentExceptionIfThePositionIsNegative(server: GuiceJamesServer): Unit = {
     val message: Message = buildTestMessage
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))

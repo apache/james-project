@@ -109,7 +109,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
     val after: ZonedDateTime = condition.after.get.asUTC
     SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
       .`then`(SFlux.fromPublisher(
-        emailQueryView.listMailboxContentSinceReceivedAt(mailboxId, after, JavaLimit.from(limitToUse.value)))
+        emailQueryView.listMailboxContentSinceReceivedAt(mailboxId, after, JavaLimit.from(limitToUse.value + position.value)))
         .drop(position.value)
         .take(limitToUse.value)
         .collectSeq())
@@ -123,7 +123,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
     val mailboxId: MailboxId = request.filter.get.asInstanceOf[FilterCondition].inMailbox.get
     SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
       .`then`(SFlux.fromPublisher(
-        emailQueryView.listMailboxContent(mailboxId, JavaLimit.from(limitToUse.value)))
+        emailQueryView.listMailboxContent(mailboxId, JavaLimit.from(limitToUse.value + position.value)))
         .drop(position.value)
         .take(limitToUse.value)
         .collectSeq())
