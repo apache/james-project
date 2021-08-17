@@ -33,7 +33,7 @@
     <modules>
         <module>cassandra</module>
         <module>cassandra-rabbitmq-object-storage</module>
-        <module>core</module>
+        <!-- <module>core</module> -->
     </modules>
 
     <dependencyManagement>

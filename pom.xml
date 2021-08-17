@@ -821,7 +821,7 @@
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
-	    <dependency>
+            <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mailbox-quota-search-elasticsearch-v7</artifactId>
                 <version>${project.version}</version>
@@ -2613,6 +2613,11 @@
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
                 <version>3.7.7</version>
+            </dependency>
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>42.2.23</version>
             </dependency>
             <dependency>
                 <groupId>org.scala-lang</groupId>

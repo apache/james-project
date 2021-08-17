@@ -78,12 +78,12 @@
         <module>dns-service/dnsservice-test</module>
 
         <module>mailet/dkim</module>
-        <module>mailet/integration-testing</module>
+        <!-- <module>mailet/integration-testing</module> -->
         <module>mailet/mailetcontainer-api</module>
         <module>mailet/mailetcontainer-impl</module>
         <module>mailet/mailets</module>
         <module>mailet/mock-smtp-server</module>
-        <module>mailet/remote-delivery-integration-testing</module>
+        <!-- <module>mailet/remote-delivery-integration-testing</module> -->
 
         <module>mailrepository/mailrepository-api</module>
         <module>mailrepository/mailrepository-cassandra</module>
@@ -103,7 +103,7 @@
         <module>protocols/protocols-pop3</module>
         <module>protocols/protocols-smtp</module>
         <module>protocols/webadmin</module>
-        <module>protocols/webadmin-integration-test</module>
+        <!-- <module>protocols/webadmin-integration-test</module> -->
 
         <module>queue/queue-activemq</module>
         <module>queue/queue-api</module>

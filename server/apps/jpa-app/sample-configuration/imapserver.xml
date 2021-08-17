@@ -27,7 +27,7 @@ under the License.
         <jmxName>imapserver</jmxName>
         <bind>0.0.0.0:143</bind>
         <connectionBacklog>200</connectionBacklog>
-        <tls socketTLS="false" startTLS="true">
+        <tls socketTLS="false" startTLS="false">
             <!-- To create a new keystore execute:
             keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore
               -->
@@ -45,7 +45,7 @@ under the License.
         <jmxName>imapserver-ssl</jmxName>
         <bind>0.0.0.0:993</bind>
         <connectionBacklog>200</connectionBacklog>
-        <tls socketTLS="true" startTLS="false">
+        <tls socketTLS="false" startTLS="false">
             <!-- To create a new keystore execute:
               keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore
              -->
