@@ -157,6 +157,34 @@ docker exec james_run java -jar /root/james-cli.jar AddUser user@domain.tld secr
                 <p>The command line client can be used for several other purposes like managing quota, setting addresses redirections, etc.</p>
 
                 <header class="major">
+                    <h2><b>Configuring thunderbird</b></h2>
+                </header>
+
+                <p>Given that the domain <b>james.local</b> is created and that user <b>user01@james.local</b> have password <b>1234</b>
+                    (which is the setup of the demo image), we will configure thunderbird (here version 78.11.0).</p>
+
+                <p>First go to the <i>Account setting</i> page and click on <i>Add mail account</i>.</p> <br/>
+
+                <img src="/images/tb1.png"/>
+
+                <p>Then document the IP, and ports, username credentials and account name, through the advanced configuration. Note that
+                    the username should include the domain. We recommend using SSL ports for IMAP and SMTP.</p>
+
+                <img src="/images/tb2.png"/>
+
+                <p>Review your accounting settings, especially be careful to pick the right outgoing server...</p>
+
+                <img src="/images/tb3-5.png">
+
+                <p>If you are relying on self signed certificate, you might be prompted to confirm a security exception. Accept.</p>
+
+                <img src="/images/tb3.png">
+
+                <p>You can then enjoy this Thunderbird account!</p>
+
+                <img src="/images/tb4.png">
+
+                <header class="major">
                     <h2><b>Additional features</b></h2>
                 </header>
 
