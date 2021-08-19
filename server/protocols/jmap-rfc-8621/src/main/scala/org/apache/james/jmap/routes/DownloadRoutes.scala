@@ -235,7 +235,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
   private val accountIdParam: String = "accountId"
   private val blobIdParam: String = "blobId"
   private val nameParam: String = "name"
-  private val contentTypeParam: String = "contentType"
+  private val contentTypeParam: String = "type"
   private val downloadUri = s"/download/{$accountIdParam}/{$blobIdParam}"
 
   override def routes(): stream.Stream[JMAPRoute] = Stream.of(
@@ -275,7 +275,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
       .asJava()
       .`then`
 
-  private def get(request: HttpServerRequest, response: HttpServerResponse, mailboxSession: MailboxSession): SMono[Unit] = {
+  private def get(request: HttpServerRequest, response: HttpServerResponse, mailboxSession: MailboxSession): SMono[Unit] =
     BlobId.of(request.param(blobIdParam))
       .fold(e => SMono.error(e),
         blobResolvers.resolve(_, mailboxSession))
@@ -287,11 +287,10 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
           .getOrElse(blob.contentType),
         blob = blob)
         .`then`())
-  }
 
-  private def getIfOwner(request: HttpServerRequest, response: HttpServerResponse, mailboxSession: MailboxSession): SMono[Unit] = {
+  private def getIfOwner(request: HttpServerRequest, response: HttpServerResponse, mailboxSession: MailboxSession): SMono[Unit] =
     Id.validate(request.param(accountIdParam)) match {
-      case Right(id: Id) => {
+      case Right(id: Id) =>
         val targetAccountId: AccountId = AccountId(id)
         AccountId.from(mailboxSession.getUser).map(accountId => accountId.equals(targetAccountId))
           .fold[SMono[Unit]](
@@ -301,11 +300,8 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
             } else {
               SMono.error(ForbiddenException())
             })
-      }
-
       case Left(throwable: Throwable) => SMono.error(throwable)
     }
-  }
 
   private def downloadBlob(optionalName: Option[String],
                            response: HttpServerResponse,

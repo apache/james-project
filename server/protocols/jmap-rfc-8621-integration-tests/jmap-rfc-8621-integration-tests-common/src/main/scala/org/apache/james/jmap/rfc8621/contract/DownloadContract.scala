@@ -280,7 +280,7 @@ trait DownloadContract {
     `given`
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .queryParam("contentType", "text/plain")
+      .queryParam("type", "text/plain")
     .when
       .get(s"/download/$accountId/${messageId.serialize()}")
     .`then`
@@ -300,7 +300,7 @@ trait DownloadContract {
     `given`
       .basePath("")
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .queryParam("contentType", "text/markdown")
+      .queryParam("type", "text/markdown")
     .when
       .get(s"/download/$accountId/${messageId.serialize()}_3")
     .`then`
