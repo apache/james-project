@@ -238,6 +238,54 @@ class GenerationAwareBlobIdTest {
 
             assertThat(blobId.asString()).isEqualTo(blobIdString);
         }
+
+        @Test
+        void noGenerationShouldNeverBeInActiveGeneration() {
+            GenerationAwareBlobId blobId = new GenerationAwareBlobId(0, 0, delegate.from("abc"));
+
+            assertThat(blobId.inActiveGeneration(GenerationAwareBlobId.Configuration.DEFAULT, NOW)).isFalse();
+        }
+
+        @Test
+        void inActiveGenerationShouldReturnTrueWhenSameDate() {
+            GenerationAwareBlobId blobId = testee.forPayload("abc".getBytes());
+
+            assertThat(blobId.inActiveGeneration(GenerationAwareBlobId.Configuration.DEFAULT, NOW)).isTrue();
+        }
+
+        @Test
+        void inActiveGenerationShouldReturnTrueWhenInTheFuture() {
+            GenerationAwareBlobId blobId = testee.forPayload("abc".getBytes());
+
+            assertThat(blobId.inActiveGeneration(GenerationAwareBlobId.Configuration.DEFAULT, NOW.minus(60, ChronoUnit.DAYS)))
+                .isTrue();
+        }
+
+        @Test
+        void inActiveGenerationShouldReturnTrueForAtLeastOneMoreMonth() {
+            GenerationAwareBlobId blobId = testee.forPayload("abc".getBytes());
+
+            assertThat(blobId.inActiveGeneration(GenerationAwareBlobId.Configuration.DEFAULT, NOW.plus(30, ChronoUnit.DAYS)))
+                .isTrue();
+        }
+
+        @Test
+        void inActiveGenerationShouldReturnFalseAfterTwoMonth() {
+            GenerationAwareBlobId blobId = testee.forPayload("abc".getBytes());
+
+            assertThat(blobId.inActiveGeneration(GenerationAwareBlobId.Configuration.DEFAULT, NOW.plus(60, ChronoUnit.DAYS)))
+                .isFalse();
+        }
+
+
+        @Test
+        void inActiveGenerationShouldReturnFalseWhenDistinctFamily() {
+            GenerationAwareBlobId blobId = new GenerationAwareBlobId(628L, 2, delegate.forPayload("abcd".getBytes()));
+
+            assertThat(blobId.inActiveGeneration(GenerationAwareBlobId.Configuration.DEFAULT, NOW.plus(60, ChronoUnit.DAYS)))
+                .isFalse();
+        }
+
     }
 
     @Nested
