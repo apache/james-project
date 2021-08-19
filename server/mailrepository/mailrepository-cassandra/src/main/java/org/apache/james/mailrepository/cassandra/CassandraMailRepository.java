@@ -36,7 +36,7 @@ import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
-import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryMailDaoAPI.MailDTO;
+import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryMailDaoV2.MailDTO;
 import org.apache.mailet.Mail;
 
 import reactor.core.publisher.Flux;
@@ -46,12 +46,14 @@ public class CassandraMailRepository implements MailRepository {
     private final MailRepositoryUrl url;
     private final CassandraMailRepositoryKeysDAO keysDAO;
     private final CassandraMailRepositoryCountDAO countDAO;
-    private final CassandraMailRepositoryMailDaoAPI mailDAO;
+    private final CassandraMailRepositoryMailDaoV2 mailDAO;
     private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
 
     @Inject
-    CassandraMailRepository(MailRepositoryUrl url, CassandraMailRepositoryKeysDAO keysDAO,
-                            CassandraMailRepositoryCountDAO countDAO, CassandraMailRepositoryMailDaoAPI mailDAO,
+    CassandraMailRepository(MailRepositoryUrl url,
+                            CassandraMailRepositoryKeysDAO keysDAO,
+                            CassandraMailRepositoryCountDAO countDAO,
+                            CassandraMailRepositoryMailDaoV2 mailDAO,
                             MimeMessageStore.Factory mimeMessageStoreFactory) {
         this.url = url;
         this.keysDAO = keysDAO;

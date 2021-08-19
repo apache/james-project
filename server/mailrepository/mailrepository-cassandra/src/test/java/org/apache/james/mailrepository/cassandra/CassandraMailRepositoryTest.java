@@ -61,16 +61,14 @@ class CassandraMailRepositoryTest {
     class PassThroughTest implements MailRepositoryContract {
         @BeforeEach
         void setup(CassandraCluster cassandra) {
-            CassandraMailRepositoryMailDAO v1 = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
             CassandraMailRepositoryMailDaoV2 v2 = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
-            CassandraMailRepositoryMailDaoAPI mailDAO = new MergingCassandraMailRepositoryMailDao(v1, v2);
             CassandraMailRepositoryKeysDAO keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf());
             CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
             BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
                 .passthrough();
 
             cassandraMailRepository = new CassandraMailRepository(URL,
-                keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore));
+                keysDAO, countDAO, v2, MimeMessageStore.factory(blobStore));
         }
 
         @Override
@@ -101,16 +99,14 @@ class CassandraMailRepositoryTest {
     class DeDuplicationTest implements MailRepositoryContract {
         @BeforeEach
         void setup(CassandraCluster cassandra) {
-            CassandraMailRepositoryMailDAO v1 = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
             CassandraMailRepositoryMailDaoV2 v2 = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
-            CassandraMailRepositoryMailDaoAPI mailDAO = new MergingCassandraMailRepositoryMailDao(v1, v2);
             CassandraMailRepositoryKeysDAO keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf());
             CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
             BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
                 .deduplication();
 
             cassandraMailRepository = new CassandraMailRepository(URL,
-                keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore));
+                keysDAO, countDAO, v2, MimeMessageStore.factory(blobStore));
         }
 
         @Override

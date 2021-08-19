@@ -48,6 +48,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -82,7 +83,48 @@ import com.google.common.collect.ImmutableMap;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class CassandraMailRepositoryMailDaoV2 implements CassandraMailRepositoryMailDaoAPI {
+public class CassandraMailRepositoryMailDaoV2 {
+
+    public  static class MailDTO {
+        private final MailImpl.Builder mailBuilder;
+        private final BlobId headerBlobId;
+        private final BlobId bodyBlobId;
+
+        public MailDTO(MailImpl.Builder mailBuilder, BlobId headerBlobId, BlobId bodyBlobId) {
+            this.mailBuilder = mailBuilder;
+            this.headerBlobId = headerBlobId;
+            this.bodyBlobId = bodyBlobId;
+        }
+
+        public MailImpl.Builder getMailBuilder() {
+            return mailBuilder;
+        }
+
+        public BlobId getHeaderBlobId() {
+            return headerBlobId;
+        }
+
+        public BlobId getBodyBlobId() {
+            return bodyBlobId;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof MailDTO) {
+                MailDTO mailDTO = (MailDTO) o;
+
+                return Objects.equals(this.mailBuilder.build(), mailDTO.mailBuilder.build())
+                    && Objects.equals(this.headerBlobId, mailDTO.headerBlobId)
+                    && Objects.equals(this.bodyBlobId, mailDTO.bodyBlobId);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(mailBuilder.build(), headerBlobId, bodyBlobId);
+        }
+    }
 
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement insertMail;
@@ -171,7 +213,6 @@ public class CassandraMailRepositoryMailDaoV2 implements CassandraMailRepository
             .flatMap(executor::executeVoid);
     }
 
-    @Override
     public Mono<Void> remove(MailRepositoryUrl url, MailKey key) {
         return executor.executeVoid(deleteMail.bind()
             .setString(REPOSITORY_NAME, url.asString())
