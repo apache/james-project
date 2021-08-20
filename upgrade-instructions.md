@@ -19,6 +19,8 @@ Change list:
  - [Rework message denormalization](#rework-message-denormalization)
  - [Adding threadId column to message metadata tables](#adding-threadid-column-to-message-metadata-tables)
  - [Removal of old tables for Cassandra mailRepository](#removal-of-old-tables-for-cassandra-mailrepository)
+ - [Adding messageId metadata to the Cassandra attachments](#adding-messageid-metadata-to-the-cassandra-attachments)
+ - [Changes to the enqueuedMails DAO](#changes-to-the-enqueuedmails-dao)
  - [Restructure maximum quotas definition](#restructure-maximum-quotas-definition)
  
 ### Restructure maximum quotas definition
@@ -99,6 +101,31 @@ curl -XPATCH http://ip:port/mailRepositories/var%2Fmail%2Faddress-error%2F/mails
 ```
 
  - Once the processing is finished you can clean up your configuration.
+
+### Adding messageId metadata to the Cassandra attachments
+
+Date 09/08/2021
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3544
+
+Concerned product: Distributed James, Cassandra James server
+
+In order to simplify the query flow, and reduce the amount on primary key reads when working with attachments when using
+JMAP, we did add the messageId property to the `attachmentV2` table.
+
+You need to perform the corresponding schema changes prior an attempt for a rolling upgrade:
+
+```
+cqlsh:apache_james> ALTER TABLE attachmentV2 ADD message_id timeuuid ;
+```
+
+Newly stored attachment will then store their corresponding messageId alongside `attachmentV2` and will no longer need
+to read `messageIdTable`.
+
+We furthermore propose a migration task for adding `message_id` field to `attachmentV2` and thus 
+ensure you leverage the benefits of this change:
+
+See how to [upgrade to the latest schema version](https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-webadmin.md#upgrading-to-the-latest-version) (V12).
 
 ### Adding the threadId to the ElasticSearch index
 

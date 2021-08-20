@@ -31,6 +31,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentMessag
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageId;
@@ -49,6 +50,7 @@ public class CassandraAttachmentMessageIdDAO {
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insertStatement;
     private final PreparedStatement selectStatement;
+    private final PreparedStatement listStatement;
     private final PreparedStatement deleteStatement;
     private final MessageId.Factory messageIdFactory;
 
@@ -60,6 +62,7 @@ public class CassandraAttachmentMessageIdDAO {
         this.selectStatement = prepareSelect(session);
         this.insertStatement = prepareInsert(session);
         this.deleteStatement = prepareDelete(session);
+        this.listStatement = prepareList(session);
     }
 
     private PreparedStatement prepareInsert(Session session) {
@@ -82,6 +85,11 @@ public class CassandraAttachmentMessageIdDAO {
         return session.prepare(select(FIELDS)
             .from(TABLE_NAME)
             .where(eq(ATTACHMENT_ID_AS_UUID, bindMarker(ATTACHMENT_ID_AS_UUID))));
+    }
+
+    private PreparedStatement prepareList(Session session) {
+        return session.prepare(select(FIELDS)
+            .from(TABLE_NAME));
     }
 
     public Flux<MessageId> getOwnerMessageIds(AttachmentId attachmentId) {
@@ -109,5 +117,12 @@ public class CassandraAttachmentMessageIdDAO {
             deleteStatement.bind()
                 .setUUID(ATTACHMENT_ID_AS_UUID, attachmentId.asUUID())
                 .setString(MESSAGE_ID, ownerMessageId.serialize()));
+    }
+
+    public Flux<Pair<AttachmentId, MessageId>> listAll() {
+        return cassandraAsyncExecutor.executeRows(listStatement.bind())
+            .map(row -> Pair.of(
+                AttachmentId.from(row.getString(ATTACHMENT_ID)),
+                messageIdFactory.fromString(row.getString(MESSAGE_ID))));
     }
 }

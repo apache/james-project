@@ -24,7 +24,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -38,7 +37,6 @@ import javax.mail.Flags.Flag;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Username;
-import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.GetMessagesRequest;
 import org.apache.james.jmap.draft.model.GetMessagesResponse;
 import org.apache.james.jmap.draft.model.MessageProperties.MessageProperty;
@@ -63,7 +61,6 @@ import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
@@ -112,7 +109,6 @@ public class GetMessagesMethodTest {
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
         BlobManager blobManager = mock(BlobManager.class);
-        when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.of("fake"));
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
         mailboxManager = resources.getMailboxManager();
 

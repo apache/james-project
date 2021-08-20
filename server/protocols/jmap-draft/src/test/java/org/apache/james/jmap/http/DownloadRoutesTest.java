@@ -29,6 +29,7 @@ import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.api.SimpleTokenFactory;
 import org.apache.james.jmap.draft.exceptions.InternalErrorException;
 import org.apache.james.jmap.draft.methods.BlobManager;
+import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.utils.DownloadPath;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -44,7 +45,7 @@ public class DownloadRoutesTest {
     public void downloadShouldFailWhenUnknownErrorOnAttachmentManager() throws Exception {
         MailboxSession mailboxSession = MailboxSessionUtil.create(Username.of("User"));
         BlobManager mockedBlobManager = mock(BlobManager.class);
-        when(mockedBlobManager.retrieve(any(), eq(mailboxSession)))
+        when(mockedBlobManager.retrieve(any(BlobId.class), eq(mailboxSession)))
             .thenThrow(new MailboxException());
         Authenticator mockedAuthFilter = mock(Authenticator.class);
         SimpleTokenFactory nullSimpleTokenFactory = null;

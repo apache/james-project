@@ -19,14 +19,31 @@
 package org.apache.james.jmap.draft.model;
 
 import java.util.Objects;
+import java.util.Optional;
 
+import org.apache.james.jmap.api.model.UploadId;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.MessageId;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 public class BlobId {
+    public static final String UPLOAD_PREFIX = "upload-";
+
+    public static BlobId of(UploadId uploadId) {
+        return BlobId.of(UPLOAD_PREFIX + uploadId.asString());
+    }
+
+    public static BlobId of(MessageId messageId) {
+        return BlobId.of(messageId.serialize());
+    }
+
+    public static BlobId of(AttachmentId attachmentId) {
+        return BlobId.of(attachmentId.getId());
+    }
+
     public static BlobId of(String rawValue) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(rawValue), "'rawValue' is mandatory");
         return new BlobId(rawValue);
@@ -45,6 +62,14 @@ public class BlobId {
 
     public AttachmentId asAttachmentId() {
         return AttachmentId.from(rawValue);
+    }
+
+    public Optional<UploadId> asUploadId() {
+        if (rawValue.startsWith(UPLOAD_PREFIX)) {
+            UploadId uploadId = UploadId.from(rawValue.substring(UPLOAD_PREFIX.length()));
+            return Optional.of(uploadId);
+        }
+        return Optional.empty();
     }
     
     @Override

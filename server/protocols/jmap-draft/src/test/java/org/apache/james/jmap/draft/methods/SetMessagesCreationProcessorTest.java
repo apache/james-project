@@ -30,6 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.UnknownHostException;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -42,7 +43,6 @@ import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.draft.exceptions.MailboxNotOwnedException;
-import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.draft.model.CreationMessageId;
@@ -69,7 +69,6 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxId.Factory;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
@@ -148,7 +147,7 @@ public class SetMessagesCreationProcessorTest {
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
         BlobManager blobManager = mock(BlobManager.class);
-        when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.of("fake"));
+        when(blobManager.retrieve(any(Collection.class), any())).thenReturn(Flux.empty());
         MessageIdManager messageIdManager = mock(MessageIdManager.class);
         recipientRewriteTable = new MemoryRecipientRewriteTable();
 
@@ -167,19 +166,19 @@ public class SetMessagesCreationProcessorTest {
         mockedMailSpool = mock(MailSpool.class);
         when(mockedMailSpool.send(any(), any())).thenReturn(Mono.empty());
         mockedAttachmentManager = mock(AttachmentManager.class);
+        when(mockedAttachmentManager.getAttachments(any(), any())).thenReturn(ImmutableList.of());
         mockedMailboxManager = mock(MailboxManager.class);
         mockedMailboxIdFactory = mock(Factory.class);
         MessageIdManager mockMessageIdManager = mock(MessageIdManager.class);
         
         fakeSystemMailboxesProvider = new TestSystemMailboxesProvider(() -> optionalOutbox, () -> optionalDrafts);
         session = MailboxSessionUtil.create(USER);
-        MIMEMessageConverter mimeMessageConverter = new MIMEMessageConverter(mock(BlobManager.class));
+        MIMEMessageConverter mimeMessageConverter = new MIMEMessageConverter();
         messageAppender = new MessageAppender(mockedMailboxManager, mockMessageIdManager, mimeMessageConverter, blobManager, JMAPConfiguration.builder().enable().build());
         messageSender = new MessageSender(mockedMailSpool);
         referenceUpdater = new ReferenceUpdater(mockMessageIdManager, mockedMailboxManager);
         sut = new SetMessagesCreationProcessor(messageFullViewFactory,
             fakeSystemMailboxesProvider,
-            new AttachmentChecker(mock(BlobManager.class)),
             new RecordingMetricFactory(),
             mockedMailboxManager,
             mockedMailboxIdFactory,
@@ -273,7 +272,7 @@ public class SetMessagesCreationProcessorTest {
     @Test
     public void processShouldReturnNonEmptyCreatedWhenRequestHasNonEmptyCreate() throws MailboxException {
         // Given
-        sut = new SetMessagesCreationProcessor(messageFullViewFactory, fakeSystemMailboxesProvider, new AttachmentChecker(mock(BlobManager.class)), new RecordingMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory, messageAppender, messageSender, referenceUpdater, canSendFrom);
+        sut = new SetMessagesCreationProcessor(messageFullViewFactory, fakeSystemMailboxesProvider, new RecordingMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory, messageAppender, messageSender, referenceUpdater, canSendFrom);
 
         // When
         SetMessagesResponse result = sut.process(createMessageInOutbox, session);
@@ -289,7 +288,7 @@ public class SetMessagesCreationProcessorTest {
         // Given
         TestSystemMailboxesProvider doNotProvideOutbox = new TestSystemMailboxesProvider(Optional::empty, () -> optionalDrafts);
         SetMessagesCreationProcessor sut = new SetMessagesCreationProcessor(messageFullViewFactory, doNotProvideOutbox,
-            new AttachmentChecker(mock(BlobManager.class)), new RecordingMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory,
+            new RecordingMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory,
             messageAppender,
             messageSender,
             referenceUpdater,

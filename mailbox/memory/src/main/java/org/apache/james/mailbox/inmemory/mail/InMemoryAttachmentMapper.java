@@ -93,12 +93,13 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
             byte[] bytes = IOUtils.toByteArray(parsedAttachment.getContent().openStream());
             attachmentsById.put(attachmentId, AttachmentMetadata.builder()
                 .attachmentId(attachmentId)
+                .messageId(ownerMessageId)
                 .type(parsedAttachment.getContentType())
                 .size(bytes.length)
                 .build());
             attachmentsRawContentById.put(attachmentId, bytes);
             messageIdsByAttachmentId.put(attachmentId, ownerMessageId);
-            return parsedAttachment.asMessageAttachment(attachmentId, bytes.length);
+            return parsedAttachment.asMessageAttachment(attachmentId, bytes.length, ownerMessageId);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

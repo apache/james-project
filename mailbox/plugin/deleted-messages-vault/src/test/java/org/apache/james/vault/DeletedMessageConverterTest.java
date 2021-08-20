@@ -74,6 +74,7 @@ class DeletedMessageConverterTest {
     private static final Collection<MessageAttachmentMetadata> ATTACHMENTS = ImmutableList.of(MessageAttachmentMetadata.builder()
         .attachment(AttachmentMetadata.builder()
             .attachmentId(AttachmentId.from("1"))
+            .messageId(DeletedMessageFixture.MESSAGE_ID)
             .type("type")
             .size(48)
             .build())

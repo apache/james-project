@@ -116,6 +116,24 @@ public class Attachment {
         }
     }
 
+    public static class WithBlob {
+        private final Attachment attachment;
+        private final Blob blob;
+
+        public WithBlob(Attachment attachment, Blob blob) {
+            this.attachment = attachment;
+            this.blob = blob;
+        }
+
+        public Attachment getAttachment() {
+            return attachment;
+        }
+
+        public Blob getBlob() {
+            return blob;
+        }
+    }
+
     private final BlobId blobId;
     private final ContentType type;
     private final Optional<String> name;

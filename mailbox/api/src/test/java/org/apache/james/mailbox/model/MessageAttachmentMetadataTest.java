@@ -48,6 +48,7 @@ class MessageAttachmentMetadataTest {
             .attachmentId(AttachmentId.from("1"))
             .size(36)
             .type("type")
+            .messageId(TestMessageId.of(23))
             .build();
         MessageAttachmentMetadata expectedMessageAttachment = new MessageAttachmentMetadata(attachment, Optional.empty(), Optional.empty(), false);
 
@@ -64,6 +65,7 @@ class MessageAttachmentMetadataTest {
             .attachmentId(AttachmentId.from("1"))
             .size(36)
             .type("type")
+            .messageId(TestMessageId.of(23))
             .build();
 
         MessageAttachmentMetadata messageAttachment = MessageAttachmentMetadata.builder()
@@ -80,6 +82,7 @@ class MessageAttachmentMetadataTest {
             .attachmentId(AttachmentId.from("1"))
             .size(36)
             .type("type")
+            .messageId(TestMessageId.of(23))
             .build();
         MessageAttachmentMetadata expectedMessageAttachment = new MessageAttachmentMetadata(attachment, Optional.of("name"), Optional.of(Cid.from("cid")), true);
 
@@ -99,6 +102,7 @@ class MessageAttachmentMetadataTest {
             .attachmentId(AttachmentId.from("1"))
             .size(36)
             .type("type")
+            .messageId(TestMessageId.of(23))
             .build();
 
         MessageAttachmentMetadata messageAttachment = MessageAttachmentMetadata.builder()
@@ -117,6 +121,7 @@ class MessageAttachmentMetadataTest {
             .attachmentId(AttachmentId.from("1"))
             .size(36)
             .type("type")
+            .messageId(TestMessageId.of(23))
             .build();
 
         MessageAttachmentMetadata messageAttachment = MessageAttachmentMetadata.builder()
@@ -135,6 +140,7 @@ class MessageAttachmentMetadataTest {
             .attachmentId(AttachmentId.from("1"))
             .size(36)
             .type("type")
+            .messageId(TestMessageId.of(23))
             .build();
 
         MessageAttachmentMetadata messageAttachment = MessageAttachmentMetadata.builder()

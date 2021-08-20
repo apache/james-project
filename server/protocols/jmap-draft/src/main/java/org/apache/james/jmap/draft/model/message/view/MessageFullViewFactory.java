@@ -112,7 +112,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
     private MessageFullView instanciateMessageFullView(MetaDataWithContent message, Message mimeMessage, Optional<String> htmlBody, Optional<String> textBody, MessageFastViewPrecomputedProperties messageProjection) {
         return MessageFullView.builder()
                 .id(message.getMessageId())
-                .blobId(blobManager.toBlobId(message.getMessageId()))
+                .blobId(BlobId.of(message.getMessageId()))
                 .threadId(message.getMessageId().serialize())
                 .mailboxIds(message.getMailboxIds())
                 .inReplyToMessageId(Helpers.getHeaderValue(mimeMessage, "in-reply-to"))
@@ -215,7 +215,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
 
     private Attachment fromMailboxAttachment(MessageAttachmentMetadata attachment) {
         return Attachment.builder()
-                    .blobId(BlobId.of(attachment.getAttachmentId().getId()))
+                    .blobId(BlobId.of(attachment.getAttachmentId()))
                     .type(attachment.getAttachment().getType())
                     .size(attachment.getAttachment().getSize())
                     .name(attachment.getName())

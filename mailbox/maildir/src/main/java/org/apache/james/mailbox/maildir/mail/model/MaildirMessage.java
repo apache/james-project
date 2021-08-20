@@ -276,7 +276,7 @@ public class MaildirMessage implements Message {
             return new MessageParser().retrieveAttachments(fullContent)
                 .stream()
                 .map(Throwing.<ParsedAttachment, MessageAttachmentMetadata>function(
-                    attachmentMetadata -> attachmentMetadata.asMessageAttachment(generateFixedAttachmentId(counter.incrementAndGet())))
+                    attachmentMetadata -> attachmentMetadata.asMessageAttachment(generateFixedAttachmentId(counter.incrementAndGet()), getMessageId()))
                     .sneakyThrow())
                 .collect(ImmutableList.toImmutableList());
         } catch (IOException e) {

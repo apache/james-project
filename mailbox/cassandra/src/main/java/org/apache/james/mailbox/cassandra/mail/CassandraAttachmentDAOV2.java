@@ -27,20 +27,24 @@ import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Tabl
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.FIELDS;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.ID_AS_UUID;
+import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.MESSAGE_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.SIZE;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.TYPE;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.ContentType;
+import org.apache.james.mailbox.model.MessageId;
 
 import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
@@ -54,12 +58,14 @@ import reactor.core.publisher.Mono;
 
 public class CassandraAttachmentDAOV2 {
     public static class DAOAttachment {
+        private final MessageId messageId;
         private final AttachmentId attachmentId;
         private final BlobId blobId;
         private final ContentType type;
         private final long size;
 
-        DAOAttachment(AttachmentId attachmentId, BlobId blobId, ContentType type, long size) {
+        DAOAttachment(MessageId messageId, AttachmentId attachmentId, BlobId blobId, ContentType type, long size) {
+            this.messageId = messageId;
             this.attachmentId = attachmentId;
             this.blobId = blobId;
             this.type = type;
@@ -82,11 +88,16 @@ public class CassandraAttachmentDAOV2 {
             return size;
         }
 
+        public MessageId getMessageId() {
+            return messageId;
+        }
+
         public AttachmentMetadata toAttachment() {
             return AttachmentMetadata.builder()
                 .attachmentId(attachmentId)
                 .type(type)
                 .size(size)
+                .messageId(messageId)
                 .build();
         }
 
@@ -98,6 +109,7 @@ public class CassandraAttachmentDAOV2 {
                 return Objects.equals(this.size, that.size)
                     && Objects.equals(this.attachmentId, that.attachmentId)
                     && Objects.equals(this.blobId, that.blobId)
+                    && Objects.equals(this.messageId, that.messageId)
                     && Objects.equals(this.type, that.type);
             }
             return false;
@@ -105,29 +117,36 @@ public class CassandraAttachmentDAOV2 {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(attachmentId, blobId, type, size);
+            return Objects.hash(attachmentId, blobId, type, size, messageId);
         }
     }
 
     public static DAOAttachment from(AttachmentMetadata attachment, BlobId blobId) {
         return new DAOAttachment(
+            attachment.getMessageId(),
             attachment.getAttachmentId(),
             blobId,
             attachment.getType(),
             attachment.getSize());
     }
 
-    private static DAOAttachment fromRow(Row row, BlobId.Factory blobIfFactory) {
-        return new DAOAttachment(
-            AttachmentId.from(row.getString(ID)),
-            blobIfFactory.from(row.getString(BLOB_ID)),
-            ContentType.of(row.getString(TYPE)),
-            row.getLong(SIZE));
+    private static Mono<DAOAttachment> fromRow(Row row, BlobId.Factory blobIfFactory, Mono<CassandraMessageId> fallback) {
+        return Optional.ofNullable(row.getUUID(MESSAGE_ID))
+            .map(CassandraMessageId.Factory::of)
+            .map(Mono::just)
+            .orElse(fallback)
+            .map(messageIdAsUUid -> new DAOAttachment(
+                messageIdAsUUid,
+                AttachmentId.from(row.getString(ID)),
+                blobIfFactory.from(row.getString(BLOB_ID)),
+                ContentType.of(row.getString(TYPE)),
+                row.getLong(SIZE)));
     }
 
     private final BlobId.Factory blobIdFactory;
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insertStatement;
+    private final PreparedStatement insertMessageIdStatement;
     private final PreparedStatement deleteStatement;
     private final PreparedStatement selectStatement;
     private final PreparedStatement listBlobs;
@@ -144,6 +163,7 @@ public class CassandraAttachmentDAOV2 {
         this.insertStatement = prepareInsert(session);
         this.deleteStatement = prepareDelete(session);
         this.listBlobs = prepareSelectBlobs(session);
+        this.insertMessageIdStatement = prepareInsertMessageId(session);
     }
 
     private PreparedStatement prepareSelectBlobs(Session session) {
@@ -164,7 +184,15 @@ public class CassandraAttachmentDAOV2 {
                 .value(ID, bindMarker(ID))
                 .value(BLOB_ID, bindMarker(BLOB_ID))
                 .value(TYPE, bindMarker(TYPE))
+                .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
                 .value(SIZE, bindMarker(SIZE)));
+    }
+
+    private PreparedStatement prepareInsertMessageId(Session session) {
+        return session.prepare(
+            insertInto(TABLE_NAME)
+                .value(ID_AS_UUID, bindMarker(ID_AS_UUID))
+                .value(MESSAGE_ID, bindMarker(MESSAGE_ID)));
     }
 
     private PreparedStatement prepareSelect(Session session) {
@@ -173,23 +201,33 @@ public class CassandraAttachmentDAOV2 {
             .where(eq(ID_AS_UUID, bindMarker(ID_AS_UUID))));
     }
 
-    public Mono<DAOAttachment> getAttachment(AttachmentId attachmentId) {
+    public Mono<DAOAttachment> getAttachment(AttachmentId attachmentId, Mono<CassandraMessageId> fallback) {
         Preconditions.checkArgument(attachmentId != null);
         return cassandraAsyncExecutor.executeSingleRow(
             selectStatement.bind()
                 .setUUID(ID_AS_UUID, attachmentId.asUUID())
                 .setConsistencyLevel(consistencyLevel))
-            .map(row -> CassandraAttachmentDAOV2.fromRow(row, blobIdFactory));
+            .flatMap(row -> CassandraAttachmentDAOV2.fromRow(row, blobIdFactory, fallback));
     }
 
     public Mono<Void> storeAttachment(DAOAttachment attachment) {
+        CassandraMessageId messageId = (CassandraMessageId) attachment.getMessageId();
         return cassandraAsyncExecutor.executeVoid(
             insertStatement.bind()
                 .setUUID(ID_AS_UUID, attachment.getAttachmentId().asUUID())
                 .setString(ID, attachment.getAttachmentId().getId())
                 .setLong(SIZE, attachment.getSize())
+                .setUUID(MESSAGE_ID, messageId.get())
                 .setString(TYPE, attachment.getType().asString())
                 .setString(BLOB_ID, attachment.getBlobId().asString()));
+    }
+
+    public Mono<Void> insertMessageId(AttachmentId attachmentId, MessageId messageId) {
+        CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId;
+        return cassandraAsyncExecutor.executeVoid(
+            insertMessageIdStatement.bind()
+                .setUUID(ID_AS_UUID, attachmentId.asUUID())
+                .setUUID(MESSAGE_ID, cassandraMessageId.get()));
     }
 
     public Mono<Void> delete(AttachmentId attachmentId) {

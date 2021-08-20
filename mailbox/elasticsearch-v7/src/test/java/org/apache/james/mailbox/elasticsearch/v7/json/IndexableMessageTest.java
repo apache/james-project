@@ -82,8 +82,9 @@ class IndexableMessageTest {
             .thenReturn(mailboxId);
         when(mailboxMessage.getModSeq())
             .thenReturn(ModSeq.first());
+        InMemoryMessageId messageId = InMemoryMessageId.of(42);
         when(mailboxMessage.getMessageId())
-            .thenReturn(InMemoryMessageId.of(42));
+            .thenReturn(messageId);
         when(mailboxMessage.getFullContent())
             .thenReturn(ClassLoader.getSystemResourceAsStream("eml/mailWithHeaders.eml"));
         when(mailboxMessage.createFlags())
@@ -93,6 +94,7 @@ class IndexableMessageTest {
         when(mailboxMessage.getAttachments())
             .thenReturn(ImmutableList.of(MessageAttachmentMetadata.builder()
                 .attachment(AttachmentMetadata.builder()
+                    .messageId(messageId)
                     .attachmentId(AttachmentId.from("1"))
                     .type("text/plain")
                     .size(36)

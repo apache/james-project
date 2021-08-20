@@ -114,11 +114,12 @@ public class ParsedAttachment {
         return isInline;
     }
 
-    public MessageAttachmentMetadata asMessageAttachment(AttachmentId attachmentId, long size) {
+    public MessageAttachmentMetadata asMessageAttachment(AttachmentId attachmentId, long size, MessageId messageId) {
         return MessageAttachmentMetadata.builder()
             .attachment(AttachmentMetadata.builder()
                 .attachmentId(attachmentId)
                 .type(contentType)
+                .messageId(messageId)
                 .size(size)
                 .build())
             .name(name)
@@ -127,12 +128,13 @@ public class ParsedAttachment {
             .build();
     }
 
-    public MessageAttachmentMetadata asMessageAttachment(AttachmentId attachmentId) throws IOException {
+    public MessageAttachmentMetadata asMessageAttachment(AttachmentId attachmentId, MessageId messageId) throws IOException {
         return MessageAttachmentMetadata.builder()
             .attachment(AttachmentMetadata.builder()
                 .attachmentId(attachmentId)
                 .type(contentType)
                 .size(content.size())
+                .messageId(messageId)
                 .build())
             .name(name)
             .cid(cid)

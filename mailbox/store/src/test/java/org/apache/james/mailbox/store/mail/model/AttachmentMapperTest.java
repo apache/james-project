@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.james.core.Username;
@@ -171,47 +170,5 @@ public abstract class AttachmentMapperTest {
 
         assertThat(attachmentMapper.getAttachments(ImmutableList.of(stored1.getAttachmentId(), stored2.getAttachmentId())))
             .contains(stored1, stored2);
-    }
-
-    @Test
-    void getOwnerMessageIdsShouldReturnEmptyWhenNone() throws Exception {
-        Collection<MessageId> messageIds = attachmentMapper.getRelatedMessageIds(UNKNOWN_ATTACHMENT_ID);
-
-        assertThat(messageIds).isEmpty();
-    }
-
-    @Test
-    void getRelatedMessageIdsShouldReturnMessageIdWhenStoredWithMessageId() throws Exception {
-        MessageId messageId = generateMessageId();
-        AttachmentId attachmentId = attachmentMapper.storeAttachments(ImmutableList.of(ParsedAttachment.builder()
-            .contentType("content")
-            .content(ByteSource.empty())
-            .noName()
-            .noCid()
-            .inline(false)), messageId)
-            .get(0).getAttachmentId();
-
-        assertThat(attachmentMapper.getRelatedMessageIds(attachmentId)).containsOnly(messageId);
-    }
-
-    @Test
-    void getRelatedMessageIdsShouldReturnOnlyMatchingMessageId() throws Exception {
-        MessageId messageId1 = generateMessageId();
-        AttachmentId attachmentId1 = attachmentMapper.storeAttachments(ImmutableList.of(ParsedAttachment.builder()
-            .contentType("content")
-            .content(ByteSource.wrap("".getBytes(StandardCharsets.UTF_8)))
-            .noName()
-            .noCid()
-            .inline(false)), messageId1)
-            .get(0).getAttachmentId();
-        attachmentMapper.storeAttachments(ImmutableList.of(ParsedAttachment.builder()
-            .contentType("content")
-            .content(ByteSource.wrap("".getBytes(StandardCharsets.UTF_8)))
-            .noName()
-            .noCid()
-            .inline(false)), generateMessageId())
-            .get(0).getAttachmentId();
-
-        assertThat(attachmentMapper.getRelatedMessageIds(attachmentId1)).containsOnly(messageId1);
     }
 }

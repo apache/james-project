@@ -39,7 +39,6 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
-import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessageId;
 import org.apache.james.jmap.draft.model.MessageProperties;
@@ -155,7 +154,6 @@ public class SetMessagesUpdateProcessorTest {
     @Before
     public void setUp() throws MailboxException, DomainListException, UnknownHostException, ConfigurationException {
         BlobManager blobManager = mock(BlobManager.class);
-        when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.of("fake"));
         MessageIdManager messageIdManager = mock(MessageIdManager.class);
         recipientRewriteTable = new MemoryRecipientRewriteTable();
 

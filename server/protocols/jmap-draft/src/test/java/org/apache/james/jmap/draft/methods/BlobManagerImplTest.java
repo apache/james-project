@@ -23,6 +23,7 @@ import static org.apache.james.jmap.draft.methods.BlobManagerImpl.MESSAGE_RFC822
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -44,6 +45,7 @@ import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.ByteContent;
@@ -59,6 +61,8 @@ import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Flux;
 
 class BlobManagerImplTest {
     static final String ID = "abc";
@@ -88,6 +92,7 @@ class BlobManagerImplTest {
     void retrieveShouldReturnBlobWhenAttachment() throws Exception {
         when(attachmentManager.getAttachment(ATTACHMENT_ID, session))
             .thenReturn(AttachmentMetadata.builder()
+                .messageId(InMemoryMessageId.of(45))
                 .attachmentId(ATTACHMENT_ID)
                 .size(BYTES.length)
                 .type(CONTENT_TYPE)
@@ -125,8 +130,8 @@ class BlobManagerImplTest {
         MessageResult messageResult = mock(MessageResult.class);
         Content content = new ByteContent(BYTES);
         when(messageResult.getFullContent()).thenReturn(content);
-        when(messageIdManager.getMessage(MESSAGE_ID, FetchGroup.FULL_CONTENT, session))
-            .thenReturn(ImmutableList.of(messageResult));
+        when(messageIdManager.getMessagesReactive(any(), eq(FetchGroup.FULL_CONTENT), eq(session)))
+            .thenReturn(Flux.just(messageResult));
 
         Blob blob = blobManager.retrieve(BLOB_ID_MESSAGE, session);
 
@@ -218,8 +223,8 @@ class BlobManagerImplTest {
         Content content = mock(Content.class);
         when(content.getInputStream()).thenThrow(new IOException());
         when(messageResult.getFullContent()).thenReturn(content);
-        when(messageIdManager.getMessage(MESSAGE_ID, FetchGroup.FULL_CONTENT, session))
-            .thenReturn(ImmutableList.of(messageResult));
+        when(messageIdManager.getMessagesReactive(any(), eq(FetchGroup.FULL_CONTENT), eq(session)))
+            .thenReturn(Flux.just(messageResult));
 
         Blob blob = blobManager.retrieve(BLOB_ID_MESSAGE, session);
         assertThatThrownBy(blob::getStream)
@@ -235,18 +240,12 @@ class BlobManagerImplTest {
         Content content = mock(Content.class);
         when(content.getInputStream()).thenThrow(new RuntimeException());
         when(messageResult.getFullContent()).thenReturn(content);
-        when(messageIdManager.getMessage(MESSAGE_ID, FetchGroup.FULL_CONTENT, session))
-            .thenReturn(ImmutableList.of(messageResult));
+        when(messageIdManager.getMessagesReactive(any(), eq(FetchGroup.FULL_CONTENT), eq(session)))
+            .thenReturn(Flux.just(messageResult));
 
         Blob blob = blobManager.retrieve(BLOB_ID_MESSAGE, session);
         assertThatThrownBy(blob::getStream)
             .isInstanceOf(RuntimeException.class);
-    }
-
-    @Test
-    void toBlobIdShouldReturnBlobIdCorrespondingToAMessageId() {
-        assertThat(blobManager.toBlobId(MESSAGE_ID))
-            .isEqualTo(BlobId.of("125"));
     }
 
 }

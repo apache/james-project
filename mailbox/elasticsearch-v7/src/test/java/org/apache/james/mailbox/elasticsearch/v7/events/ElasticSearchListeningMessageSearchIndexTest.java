@@ -136,6 +136,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
 
     static final MessageAttachmentMetadata MESSAGE_ATTACHMENT = MessageAttachmentMetadata.builder()
         .attachment(AttachmentMetadata.builder()
+            .messageId(MESSAGE_ID_3)
             .attachmentId(AttachmentId.from("1"))
             .type("type")
             .size(523)

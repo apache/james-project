@@ -22,6 +22,7 @@ package org.apache.james.mailbox.cassandra.mail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -99,5 +100,43 @@ class CassandraAttachmentMessageIdDAOTest {
 
         assertThatCode(() -> testee.delete(attachmentId, messageId1).block())
             .doesNotThrowAnyException();
+    }
+
+    @Test
+    void listAllShouldReturnEmptyWhenNone() {
+        assertThat(testee.listAll().collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    void listAllShouldReturnAddedValues() {
+        CassandraMessageId messageId1 = new CassandraMessageId.Factory().generate();
+        CassandraMessageId messageId2 = new CassandraMessageId.Factory().generate();
+        AttachmentId attachmentId1 = AttachmentId.random();
+        AttachmentId attachmentId2 = AttachmentId.random();
+
+        testee.storeAttachmentForMessageId(attachmentId1, messageId1).block();
+        testee.storeAttachmentForMessageId(attachmentId2, messageId2).block();
+
+        assertThat(testee.listAll().collectList().block())
+            .containsOnly(
+                Pair.of(attachmentId1, messageId1),
+                Pair.of(attachmentId2, messageId2));
+    }
+
+    @Test
+    void listAllShouldNotReturnDeletedValues() {
+        CassandraMessageId messageId1 = new CassandraMessageId.Factory().generate();
+        CassandraMessageId messageId2 = new CassandraMessageId.Factory().generate();
+        AttachmentId attachmentId1 = AttachmentId.random();
+        AttachmentId attachmentId2 = AttachmentId.random();
+
+        testee.storeAttachmentForMessageId(attachmentId1, messageId1).block();
+        testee.storeAttachmentForMessageId(attachmentId2, messageId2).block();
+
+        testee.delete(attachmentId1, messageId1).block();
+
+        assertThat(testee.listAll().collectList().block())
+            .containsOnly(Pair.of(attachmentId2, messageId2));
     }
 }

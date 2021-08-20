@@ -184,6 +184,7 @@ class SimpleMailboxMessageTest {
         MessageAttachmentMetadata messageAttachment = MessageAttachmentMetadata.builder()
             .attachment(AttachmentMetadata.builder()
                 .attachmentId(AttachmentId.from("1"))
+                .messageId(MESSAGE_ID)
                 .type("type")
                 .size(485)
                 .build())

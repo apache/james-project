@@ -25,8 +25,9 @@ public interface CassandraAttachmentV2Table {
     String ID_AS_UUID = "idAsUUID";
     String ID = "id";
     String BLOB_ID = "blobId";
+    String MESSAGE_ID = "message_id";
     String TYPE = "type";
     String SIZE = "size";
-    String[] FIELDS = { ID, BLOB_ID, TYPE, SIZE };
+    String[] FIELDS = { ID, BLOB_ID, MESSAGE_ID, TYPE, SIZE };
 
 }

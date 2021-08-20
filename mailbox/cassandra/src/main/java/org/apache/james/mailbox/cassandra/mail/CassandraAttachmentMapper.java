@@ -30,6 +30,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachment;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -83,10 +84,16 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
 
     @Override
     public InputStream loadAttachmentContent(AttachmentId attachmentId) throws AttachmentNotFoundException, IOException {
-        return attachmentDAOV2.getAttachment(attachmentId)
+        return attachmentDAOV2.getAttachment(attachmentId, messageIdFallback(attachmentId))
             .map(daoAttachment -> blobStore.read(blobStore.getDefaultBucketName(), daoAttachment.getBlobId(), LOW_COST))
             .blockOptional()
             .orElseThrow(() -> new AttachmentNotFoundException(attachmentId.toString()));
+    }
+
+    private Mono<CassandraMessageId> messageIdFallback(AttachmentId attachmentId) {
+        return attachmentMessageIdDAO.getOwnerMessageIds(attachmentId)
+            .map(CassandraMessageId.class::cast)
+            .next();
     }
 
     public Mono<AttachmentMetadata> getAttachmentsAsMono(AttachmentId attachmentId) {
@@ -95,7 +102,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     private Mono<AttachmentMetadata> getAttachmentInternal(AttachmentId id) {
-        return attachmentDAOV2.getAttachment(id)
+        return attachmentDAOV2.getAttachment(id, messageIdFallback(id))
             .map(DAOAttachment::toAttachment);
     }
 
@@ -125,17 +132,16 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
             ByteSource content = parsedAttachment.getContent();
             long size = content.size();
             return Mono.from(blobStore.save(blobStore.getDefaultBucketName(), content, LOW_COST))
-                .map(blobId -> new DAOAttachment(attachmentId, blobId, parsedAttachment.getContentType(), size))
-                .flatMap(daoAttachment -> storeAttachmentWithIndex(daoAttachment, ownerMessageId))
-                .then(Mono.defer(() -> Mono.just(parsedAttachment.asMessageAttachment(attachmentId, size))));
+                .map(blobId -> new DAOAttachment(ownerMessageId, attachmentId, blobId, parsedAttachment.getContentType(), size))
+                .flatMap(this::storeAttachmentWithIndex)
+                .thenReturn(parsedAttachment.asMessageAttachment(attachmentId, size, ownerMessageId));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private Mono<Void> storeAttachmentWithIndex(DAOAttachment daoAttachment, MessageId ownerMessageId) {
-        return attachmentDAOV2.storeAttachment(daoAttachment)
-                .then(attachmentMessageIdDAO.storeAttachmentForMessageId(daoAttachment.getAttachmentId(), ownerMessageId));
+    private Mono<Void> storeAttachmentWithIndex(DAOAttachment daoAttachment) {
+        return attachmentDAOV2.storeAttachment(daoAttachment);
     }
 
     private void logNotFound(AttachmentId attachmentId) {

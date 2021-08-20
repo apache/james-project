@@ -34,13 +34,10 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import org.apache.james.jmap.draft.model.BlobId;
+import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.draft.model.message.view.MessageViewFactory;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.EncoderUtil;
 import org.apache.james.mime4j.codec.EncoderUtil.Usage;
@@ -85,7 +82,6 @@ public class MIMEMessageConverter {
     private static final String ALTERNATIVE_SUB_TYPE = "alternative";
     private static final String MIXED_SUB_TYPE = "mixed";
     private static final String RELATED_SUB_TYPE = "related";
-    private static final String FIELD_PARAMETERS_SEPARATOR = ";";
     private static final String QUOTED_PRINTABLE = "quoted-printable";
     private static final String BASE64 = "base64";
     private static final String IN_REPLY_TO_HEADER = "In-Reply-To";
@@ -108,16 +104,14 @@ public class MIMEMessageConverter {
     private static final LenientFieldParser FIELD_PARSER = new LenientFieldParser();
 
     private final BasicBodyFactory bodyFactory;
-    private final BlobManager blobManager;
 
     @Inject
-    public MIMEMessageConverter(BlobManager blobManager) {
-        this.blobManager = blobManager;
+    public MIMEMessageConverter() {
         this.bodyFactory = new BasicBodyFactory();
     }
 
-    public byte[] convert(ValueWithId.CreationMessageEntry creationMessageEntry, ImmutableList<MessageAttachmentMetadata> messageAttachments, MailboxSession session) {
-        return asBytes(convertToMime(creationMessageEntry, messageAttachments, session));
+    public byte[] convert(ValueWithId.CreationMessageEntry creationMessageEntry, ImmutableList<Attachment.WithBlob> messageAttachments) {
+        return asBytes(convertToMime(creationMessageEntry, messageAttachments));
     }
 
     public byte[] asBytes(Message message) {
@@ -128,7 +122,7 @@ public class MIMEMessageConverter {
         }
     }
 
-    @VisibleForTesting Message convertToMime(ValueWithId.CreationMessageEntry creationMessageEntry, ImmutableList<MessageAttachmentMetadata> messageAttachments, MailboxSession session) {
+    @VisibleForTesting Message convertToMime(ValueWithId.CreationMessageEntry creationMessageEntry, ImmutableList<Attachment.WithBlob> messageAttachments) {
         if (creationMessageEntry == null || creationMessageEntry.getValue() == null) {
             throw new IllegalArgumentException("creationMessageEntry is either null or has null message");
         }
@@ -136,7 +130,7 @@ public class MIMEMessageConverter {
         Message.Builder messageBuilder = Message.Builder.of()
             .use(FIELD_PARSER);
         if (isMultipart(creationMessageEntry.getValue(), messageAttachments)) {
-            messageBuilder.setBody(createMultipart(creationMessageEntry.getValue(), messageAttachments, session));
+            messageBuilder.setBody(createMultipart(creationMessageEntry.getValue(), messageAttachments));
         } else {
             messageBuilder.setBody(createTextBody(creationMessageEntry.getValue()))
                 .setContentTransferEncoding(QUOTED_PRINTABLE);
@@ -145,7 +139,7 @@ public class MIMEMessageConverter {
         return messageBuilder.build();
     }
 
-    private void buildMimeHeaders(Message.Builder messageBuilder, CreationMessage newMessage, ImmutableList<MessageAttachmentMetadata> messageAttachments) {
+    private void buildMimeHeaders(Message.Builder messageBuilder, CreationMessage newMessage, ImmutableList<Attachment.WithBlob> messageAttachments) {
         Optional<Mailbox> fromAddress = newMessage.getFrom().filter(DraftEmailer::hasValidEmail).map(this::convertEmailToMimeHeader);
         fromAddress.ifPresent(messageBuilder::setFrom);
         fromAddress.ifPresent(messageBuilder::setSender);
@@ -199,12 +193,12 @@ public class MIMEMessageConverter {
         messageBuilder.addField(parser.parse(rawField, DecodeMonitor.SILENT));
     }
 
-    private boolean isMultipart(CreationMessage newMessage, ImmutableList<MessageAttachmentMetadata> messageAttachments) {
+    private boolean isMultipart(CreationMessage newMessage, ImmutableList<Attachment.WithBlob> messageAttachments) {
         return (newMessage.getTextBody().isPresent() && newMessage.getHtmlBody().isPresent())
                 || hasAttachment(messageAttachments);
     }
 
-    private boolean hasAttachment(ImmutableList<MessageAttachmentMetadata> messageAttachments) {
+    private boolean hasAttachment(ImmutableList<Attachment.WithBlob> messageAttachments) {
         return !messageAttachments.isEmpty();
     }
 
@@ -215,10 +209,10 @@ public class MIMEMessageConverter {
         return bodyFactory.textBody(body, StandardCharsets.UTF_8);
     }
 
-    private Multipart createMultipart(CreationMessage newMessage, ImmutableList<MessageAttachmentMetadata> messageAttachments, MailboxSession session) {
+    private Multipart createMultipart(CreationMessage newMessage, ImmutableList<Attachment.WithBlob> messageAttachments) {
         try {
             if (hasAttachment(messageAttachments)) {
-                return createMultipartWithAttachments(newMessage, messageAttachments, session);
+                return createMultipartWithAttachments(newMessage, messageAttachments);
             } else {
                 return createMultipartAlternativeBody(newMessage);
             }
@@ -228,39 +222,39 @@ public class MIMEMessageConverter {
         }
     }
 
-    private Multipart createMultipartWithAttachments(CreationMessage newMessage, ImmutableList<MessageAttachmentMetadata> messageAttachments, MailboxSession session) throws IOException {
+    private Multipart createMultipartWithAttachments(CreationMessage newMessage, ImmutableList<Attachment.WithBlob> messageAttachments) throws IOException {
         MultipartBuilder mixedMultipartBuilder = MultipartBuilder.create(MIXED_SUB_TYPE);
-        List<MessageAttachmentMetadata> inlineAttachments = messageAttachments.stream()
-            .filter(MessageAttachmentMetadata::isInline)
+        List<Attachment.WithBlob> inlineAttachments = messageAttachments.stream()
+            .filter(attachment -> attachment.getAttachment().isIsInline())
             .collect(ImmutableList.toImmutableList());
-        List<MessageAttachmentMetadata> besideAttachments = messageAttachments.stream()
-            .filter(Predicate.not(MessageAttachmentMetadata::isInline))
+        List<Attachment.WithBlob> besideAttachments = messageAttachments.stream()
+            .filter(Predicate.not(attachment -> attachment.getAttachment().isIsInline()))
             .collect(ImmutableList.toImmutableList());
 
         if (inlineAttachments.size() > 0) {
-            mixedMultipartBuilder.addBodyPart(relatedInnerMessage(newMessage, inlineAttachments, session));
+            mixedMultipartBuilder.addBodyPart(relatedInnerMessage(newMessage, inlineAttachments));
         } else {
             addBody(newMessage, mixedMultipartBuilder);
         }
 
-        addAttachments(besideAttachments, mixedMultipartBuilder, session);
+        addAttachments(besideAttachments, mixedMultipartBuilder);
 
         return mixedMultipartBuilder.build();
     }
 
-    private Message relatedInnerMessage(CreationMessage newMessage, List<MessageAttachmentMetadata> inlines, MailboxSession session) throws IOException {
+    private Message relatedInnerMessage(CreationMessage newMessage, List<Attachment.WithBlob> inlines) throws IOException {
         MultipartBuilder relatedMultipart = MultipartBuilder.create(RELATED_SUB_TYPE);
         addBody(newMessage, relatedMultipart);
 
         return Message.Builder.of()
-            .setBody(addAttachments(inlines, relatedMultipart, session)
+            .setBody(addAttachments(inlines, relatedMultipart)
                 .build())
             .build();
     }
 
-    private MultipartBuilder addAttachments(List<MessageAttachmentMetadata> messageAttachments,
-                                            MultipartBuilder multipartBuilder, MailboxSession session) {
-        messageAttachments.forEach(addAttachment(multipartBuilder, session));
+    private MultipartBuilder addAttachments(List<Attachment.WithBlob> messageAttachments,
+                                            MultipartBuilder multipartBuilder) {
+        messageAttachments.forEach(addAttachment(multipartBuilder));
 
         return multipartBuilder;
     }
@@ -302,44 +296,44 @@ public class MIMEMessageConverter {
         }
     }
 
-    private Consumer<MessageAttachmentMetadata> addAttachment(MultipartBuilder builder, MailboxSession session) {
+    private Consumer<Attachment.WithBlob> addAttachment(MultipartBuilder builder) {
         return att -> { 
             try {
-                builder.addBodyPart(attachmentBodyPart(att, session));
-            } catch (IOException | MailboxException e) {
+                builder.addBodyPart(attachmentBodyPart(att));
+            } catch (IOException e) {
                 LOGGER.error("Error while creating attachment", e);
                 throw new RuntimeException(e);
             }
         };
     }
 
-    private BodyPart attachmentBodyPart(MessageAttachmentMetadata att, MailboxSession session) throws IOException, MailboxException {
-        try (InputStream attachmentStream = blobManager.retrieve(BlobId.of(att.getAttachmentId().getId()), session).getStream()) {
+    private BodyPart attachmentBodyPart(Attachment.WithBlob att) throws IOException {
+        try (InputStream attachmentStream = att.getBlob().getStream()) {
             BodyPartBuilder builder = BodyPartBuilder.create()
                 .use(bodyFactory)
                 .setBody(new BasicBodyFactory().binaryBody(ByteStreams.toByteArray(attachmentStream)))
-                .setField(contentTypeField(att))
-                .setField(contentDispositionField(att.isInline()))
+                .setField(contentTypeField(att.getAttachment()))
+                .setField(contentDispositionField(att.getAttachment().isIsInline()))
                 .setContentTransferEncoding(BASE64);
             contentId(builder, att);
             return builder.build();
         }
     }
 
-    private void contentId(BodyPartBuilder builder, MessageAttachmentMetadata att) {
-        if (att.getCid().isPresent()) {
-            builder.setField(ContentIdFieldImpl.PARSER.parse(new RawField("Content-ID", att.getCid().get().getValue()), DecodeMonitor.SILENT));
+    private void contentId(BodyPartBuilder builder, Attachment.WithBlob att) {
+        if (att.getAttachment().getCid().isPresent()) {
+            builder.setField(ContentIdFieldImpl.PARSER.parse(new RawField("Content-ID", att.getAttachment().getCid().get()), DecodeMonitor.SILENT));
         }
     }
 
     @VisibleForTesting
-    ContentTypeField contentTypeField(MessageAttachmentMetadata att) {
-        ContentTypeField typeAsField =  att.getAttachment().getType().asMime4J();
-        if (att.getName().isPresent()) {
+    ContentTypeField contentTypeField(Attachment attachment) {
+        final ContentTypeField typeAsField = attachment.getType().asMime4J();
+        if (attachment.getName().isPresent()) {
             return Fields.contentType(typeAsField.getMimeType(),
                 ImmutableMap.<String, String>builder()
                     .putAll(parametersWithoutName(typeAsField))
-                    .put("name", encode(att.getName().get()))
+                    .put("name", encode(attachment.getName().get()))
                     .build());
         }
         return typeAsField;

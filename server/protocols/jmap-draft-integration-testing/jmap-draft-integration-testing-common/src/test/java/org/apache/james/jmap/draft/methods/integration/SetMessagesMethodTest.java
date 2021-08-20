@@ -106,6 +106,7 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.probe.ACLProbe;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.mailbox.probe.QuotaProbe;
+import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.util.EventCollector;
 import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -4417,6 +4418,7 @@ public abstract class SetMessagesMethodTest {
             .jsonPath();
 
         return AttachmentMetadata.builder()
+            .messageId(new DefaultMessageId())
             .attachmentId(AttachmentId.from(json.getString("blobId")))
             .size(json.getLong("size"))
             .type(json.getString("type"))
@@ -4435,6 +4437,7 @@ public abstract class SetMessagesMethodTest {
             .jsonPath();
 
         return AttachmentMetadata.builder()
+            .messageId(new DefaultMessageId())
             .attachmentId(AttachmentId.from(json.getString("blobId")))
             .size(json.getLong("size"))
             .type(json.getString("type"))

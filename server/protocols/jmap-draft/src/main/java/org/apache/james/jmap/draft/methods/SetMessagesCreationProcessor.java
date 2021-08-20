@@ -80,7 +80,6 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     private static final Logger LOG = LoggerFactory.getLogger(SetMailboxesCreationProcessor.class);
     private final MessageFullViewFactory messageFullViewFactory;
     private final SystemMailboxesProvider systemMailboxesProvider;
-    private final AttachmentChecker attachmentChecker;
     private final MetricFactory metricFactory;
     private final MailboxManager mailboxManager;
     private final MailboxId.Factory mailboxIdFactory;
@@ -93,7 +92,6 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     @Inject
     SetMessagesCreationProcessor(MessageFullViewFactory messageFullViewFactory,
                                  SystemMailboxesProvider systemMailboxesProvider,
-                                 AttachmentChecker attachmentChecker,
                                  MetricFactory metricFactory,
                                  MailboxManager mailboxManager,
                                  MailboxId.Factory mailboxIdFactory,
@@ -103,7 +101,6 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                                  CanSendFrom canSendFrom) {
         this.messageFullViewFactory = messageFullViewFactory;
         this.systemMailboxesProvider = systemMailboxesProvider;
-        this.attachmentChecker = attachmentChecker;
         this.metricFactory = metricFactory;
         this.mailboxManager = mailboxManager;
         this.mailboxIdFactory = mailboxIdFactory;
@@ -249,23 +246,16 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     }
 
     private Mono<Builder> sendMailViaOutbox(CreationMessageEntry entry, MailboxSession session) {
-        return validateArguments(entry, session)
-            .then(handleOutboxMessages(entry, session)
-                .map(created -> SetMessagesResponse.builder().created(created.getCreationId(), created.getValue())));
+        if (!entry.getValue().isValid()) {
+            return Mono.error(new MailboxInvalidMessageCreationException());
+        }
+        return handleOutboxMessages(entry, session)
+                .map(created -> SetMessagesResponse.builder().created(created.getCreationId(), created.getValue()));
     }
 
     private Mono<Builder> saveDraft(CreationMessageEntry entry, MailboxSession session) {
-        return attachmentChecker.assertAttachmentsExist(entry, session)
-            .then(handleDraftMessages(entry, session)
-                .map(created -> SetMessagesResponse.builder().created(created.getCreationId(), created.getValue())));
-    }
-
-    private Mono<Void> validateArguments(CreationMessageEntry entry, MailboxSession session) {
-        CreationMessage message = entry.getValue();
-        if (!message.isValid()) {
-            return Mono.error(new MailboxInvalidMessageCreationException());
-        }
-        return attachmentChecker.assertAttachmentsExist(entry, session);
+        return handleDraftMessages(entry, session)
+                .map(created -> SetMessagesResponse.builder().created(created.getCreationId(), created.getValue()));
     }
 
     @VisibleForTesting Mono<Void> assertIsUserOwnerOfMailboxes(List<MailboxId> mailboxIds, MailboxSession session) {

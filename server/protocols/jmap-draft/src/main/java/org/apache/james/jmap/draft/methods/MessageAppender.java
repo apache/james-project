@@ -21,17 +21,21 @@ package org.apache.james.jmap.draft.methods;
 
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.jmap.JMAPConfiguration;
+import org.apache.james.jmap.draft.exceptions.AttachmentsNotFoundException;
 import org.apache.james.jmap.draft.exceptions.SizeExceededException;
 import org.apache.james.jmap.draft.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.Blob;
+import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.Keywords;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory.MetaDataWithContent;
@@ -41,20 +45,19 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.AppendResult;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.AttachmentId;
-import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.ByteContent;
-import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mime4j.dom.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -91,8 +94,8 @@ public class MessageAppender {
     public Mono<MetaDataWithContent> appendMessageInMailboxes(CreationMessageEntry createdEntry, List<MailboxId> targetMailboxes, MailboxSession session) {
         return Mono.fromCallable(() -> {
                 Preconditions.checkArgument(!targetMailboxes.isEmpty());
-                ImmutableList<MessageAttachmentMetadata> messageAttachments = getMessageAttachments(session, createdEntry.getValue().getAttachments());
-                Message message = mimeMessageConverter.convertToMime(createdEntry, messageAttachments, session);
+                ImmutableList<Attachment.WithBlob> attachmentsWithBlobs = getMessageAttachments(session, createdEntry.getValue().getAttachments());
+                Message message = mimeMessageConverter.convertToMime(createdEntry, attachmentsWithBlobs);
 
                 byte[] messageContent = mimeMessageConverter.asBytes(message);
 
@@ -169,30 +172,26 @@ public class MessageAppender {
         return message.getKeywords().asFlags();
     }
 
-    private ImmutableList<MessageAttachmentMetadata> getMessageAttachments(MailboxSession session, ImmutableList<Attachment> attachments) {
-        return attachments
+    private ImmutableList<Attachment.WithBlob> getMessageAttachments(MailboxSession session, ImmutableList<Attachment> attachments) {
+        ImmutableMap<BlobId, Blob> blobs = Flux.from(blobManager.retrieve(attachments.stream()
+                .map(Attachment::getBlobId)
+                .collect(ImmutableList.toImmutableList()),
+            session))
+            .collect(ImmutableMap.toImmutableMap(Blob::getBlobId, Function.identity()))
+            .block();
+
+        ImmutableList<Attachment.WithBlob> result = attachments
             .stream()
-            .flatMap(attachment -> {
-                try {
-                    Blob blob = blobManager.retrieve(attachment.getBlobId(), session);
-                    return Stream.of(MessageAttachmentMetadata.builder()
-                        .attachment(AttachmentMetadata.builder()
-                            .attachmentId(AttachmentId.from(blob.getBlobId().getRawValue()))
-                            .size(blob.getSize())
-                            .type(attachment.getType())
-                            .build())
-                        .cid(attachment.getCid().map(Cid::from))
-                        .isInline(attachment.isIsInline())
-                        .name(attachment.getName())
-                        .build());
-                } catch (MailboxException e) {
-                    LOGGER.warn(String.format("Attachment %s not found", attachment.getBlobId()));
-                    return Stream.empty();
-                } catch (IllegalStateException e) {
-                    LOGGER.error(String.format("Attachment %s is not well-formed", attachment.getBlobId()), e);
-                    return Stream.empty();
-                }
-            })
+            .flatMap(attachment -> Optional.ofNullable(blobs.get(attachment.getBlobId()))
+                .map(blob -> new Attachment.WithBlob(attachment, blob))
+                .stream())
             .collect(ImmutableList.toImmutableList());
+
+        if (result.size() != attachments.size()) {
+            Sets.SetView<BlobId> notFound = Sets.difference(attachments.stream().map(Attachment::getBlobId).collect(Collectors.toSet()),
+                result.stream().map(att -> att.getAttachment().getBlobId()).collect(Collectors.toSet()));
+            throw new AttachmentsNotFoundException(ImmutableList.copyOf(notFound));
+        }
+        return result;
     }
 }
