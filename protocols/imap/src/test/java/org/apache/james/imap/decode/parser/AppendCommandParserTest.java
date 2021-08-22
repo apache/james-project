@@ -70,6 +70,28 @@ class AppendCommandParserTest {
     }
 
     @Test
+    void fuzzedDateParsingShouldNotCrash() {
+        String base64Input = "byAiMDAtbk92LTUxMDExbjYwMC8wMDAuMCI=";
+        byte[] bytes = Base64.getDecoder().decode(base64Input);
+
+        assertThatThrownBy(() -> new AppendCommandParser(new UnpooledStatusResponseFactory(), CLOCK)
+            .decode(new ImapRequestStreamLineReader(new ByteArrayInputStream(bytes),
+                new ByteArrayOutputStream()), new Tag("AEA"), new FakeImapSession()))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void fuzzedDateParsing2ShouldNotCrash() {
+        String base64Input = "byAiMDAtbk92LTUxMDExbjYwMC8wMDAuMCI=";
+        byte[] bytes = Base64.getDecoder().decode(base64Input);
+
+        assertThatThrownBy(() -> new AppendCommandParser(new UnpooledStatusResponseFactory(), CLOCK)
+            .decode(new ImapRequestStreamLineReader(new ByteArrayInputStream(bytes),
+                new ByteArrayOutputStream()), new Tag("AEA"), new FakeImapSession()))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
     void parseDateTimeShouldNotConsumeNonDateLiteral() throws Exception {
         ImapRequestStreamLineReader request = toRequest("any\n");
 
