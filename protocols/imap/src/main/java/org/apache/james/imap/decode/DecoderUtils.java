@@ -155,7 +155,7 @@ public final class DecoderUtils {
         boolean result;
         if (chars == null) {
             result = false;
-        } else if (chars.length() < 20) {
+        } else if (chars.length() < 26) {
             // Be liberal in what you accept
             result = false;
         } else {
