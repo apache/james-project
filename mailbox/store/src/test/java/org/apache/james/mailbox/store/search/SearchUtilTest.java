@@ -47,6 +47,18 @@ class SearchUtilTest {
     }
 
     @Test
+    void fwdShouldNotCrash() {
+        String subject = "fwd";
+        assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("fwd");
+    }
+
+    @Test
+    void fwShouldNotCrash() {
+        String subject = "[fw:]]";
+        assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("]");
+    }
+
+    @Test
     void getBaseSubjectShouldNotFailWhenEmpty() {
         String subject = "";
         assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("");

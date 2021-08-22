@@ -328,7 +328,7 @@ public class SearchUtil {
             return subject;
         }
         String subj = subject;
-        while (subj.charAt(0) == OPEN_SQUARE_BRACKED) {
+        while (!subj.isEmpty() && subj.charAt(0) == OPEN_SQUARE_BRACKED) {
             int length = subj.length();
             subj = removeBlob(subject);
             int i = 0;
@@ -337,7 +337,7 @@ public class SearchUtil {
             } else {
                 return subject;
             }
-            while (subj.charAt(i) == WS) {
+            while (i < subj.length() && subj.charAt(i) == WS) {
                 i++;
             }
             subj = subj.substring(i);
@@ -382,7 +382,7 @@ public class SearchUtil {
             } else {
                 return subject;
             }
-            while (subj.charAt(subString) == WS) {
+            while (subString < subj.length() && subj.charAt(subString) == WS) {
                 subString++;
             }
 
@@ -392,7 +392,7 @@ public class SearchUtil {
              * = 1; } else { subString = 0; }
              */
 
-            if (subj.charAt(subString) == COLON) {
+            if (subString < subj.length() && subj.charAt(subString) == COLON) {
                 subString++;
             } else {
                 return subject;
