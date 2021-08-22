@@ -21,7 +21,13 @@ package org.apache.james.mailbox.model.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 import org.junit.jupiter.api.Test;
+
+import com.google.re2j.Pattern;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -34,7 +40,23 @@ class PrefixedRegexTest {
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(PrefixedRegex.class)
             .withIgnoredFields("pattern")
+            .withPrefabValues(Pattern.class, Pattern.compile("a"), Pattern.compile("b"))
             .verify();
+    }
+
+    @Test
+    void slowRegexShouldNotBeConstructedByFuzzing() throws Exception {
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+        try {
+            executorService.submit(() -> {
+                PrefixedRegex prefixedRegex = new PrefixedRegex("", "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%a", PATH_DELIMITER);
+
+                prefixedRegex.isExpressionMatch("aa%%%%%%%%%%%%%%%%");
+            }).get(30, TimeUnit.SECONDS);
+        } finally {
+            executorService.shutdownNow();
+        }
     }
 
     @Test
