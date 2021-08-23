@@ -40,6 +40,7 @@ import org.junit.rules.ExternalResource;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 
 public class TestIMAPClient extends ExternalResource implements Closeable, AfterEachCallback {
 
@@ -83,6 +84,20 @@ public class TestIMAPClient extends ExternalResource implements Closeable, After
     public TestIMAPClient login(String user, String password) throws IOException {
         imapClient.login(user, password);
         return this;
+    }
+
+    public TestIMAPClient rawLogin(String user, String password) throws IOException {
+        imapClient.sendCommand("LOGIN " + user + " " + password);
+
+        if (imapClient.getReplyString().contains("NO LOGIN failed.")) {
+            throw new IOException("Login failed");
+        }
+        return this;
+    }
+
+    public List<String> list() throws IOException {
+        imapClient.list("", "*");
+        return ImmutableList.copyOf(imapClient.getReplyStrings());
     }
 
     public TestIMAPClient login(Username user, String password) throws IOException {
