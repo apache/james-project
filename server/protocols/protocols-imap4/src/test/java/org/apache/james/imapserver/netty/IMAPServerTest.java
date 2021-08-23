@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.IOException;
 import java.util.Properties;
 
 import javax.mail.Folder;
@@ -42,6 +43,7 @@ import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.FakeAuthenticator;
@@ -62,6 +64,7 @@ class IMAPServerTest {
     private static final String _129K_MESSAGE = "header: value\r\n" + "012345678\r\n".repeat(13107);
     private static final String _65K_MESSAGE = "header: value\r\n" + "012345678\r\n".repeat(6553);
     private static final Username USER = Username.of("user@domain.org");
+    private static final Username USER2 = Username.of("bobo@domain.org");
     private static final String USER_PASS = "pass";
     public static final String SMALL_MESSAGE = "header: value\r\n\r\nBODY";
     private InMemoryIntegrationResources memoryIntegrationResources;
@@ -72,6 +75,7 @@ class IMAPServerTest {
     private IMAPServer createImapServer(String configurationFile) throws Exception {
         FakeAuthenticator authenticator = new FakeAuthenticator();
         authenticator.addUser(USER, USER_PASS);
+        authenticator.addUser(USER2, USER_PASS);
 
         memoryIntegrationResources = InMemoryIntegrationResources.builder()
             .authenticator(authenticator)
@@ -143,6 +147,25 @@ class IMAPServerTest {
             assertThat(testIMAPClient.select("INBOX")
                     .readFirstMessage())
                 .contains("\r\n" + _65K_MESSAGE + ")\r\n");
+        }
+
+        @Test
+        void loginFixationShouldBeRejected() throws Exception {
+            InMemoryMailboxManager mailboxManager = memoryIntegrationResources.getMailboxManager();
+            mailboxManager.createMailbox(
+                MailboxPath.forUser(USER, "pwnd"),
+                mailboxManager.createSystemSession(USER));
+            mailboxManager.createMailbox(
+                MailboxPath.forUser(USER2, "notvuln"),
+                mailboxManager.createSystemSession(USER2));
+
+            testIMAPClient.connect("127.0.0.1", port)
+                // Injected by a man in the middle attacker
+                .rawLogin(USER.asString(), USER_PASS);
+
+            assertThatThrownBy(() -> testIMAPClient.rawLogin(USER2.asString(), USER_PASS))
+                .isInstanceOf(IOException.class)
+                .hasMessage("Login failed");
         }
 
         @Test
