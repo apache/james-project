@@ -39,6 +39,7 @@ under the License.
         <idleTimeInterval>120</idleTimeInterval>
         <idleTimeIntervalUnit>SECONDS</idleTimeIntervalUnit>
         <enableIdle>true</enableIdle>
+        <plainAuthDisallowed>true</plainAuthDisallowed>
     </imapserver>
     <imapserver enabled="true">
         <jmxName>imapserver-ssl</jmxName>

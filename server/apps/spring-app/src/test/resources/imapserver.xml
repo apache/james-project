@@ -67,7 +67,8 @@
          
        <!-- Set the maximum simultaneous incoming connections per IP for this service -->
        <connectionLimitPerIP>0</connectionLimitPerIP>
-         
+
+        <plainAuthDisallowed>false</plainAuthDisallowed>
     </imapserver>
 
 </imapservers>

@@ -109,7 +109,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             .map(Math::toIntExact)
             .orElse(DEFAULT_LITERAL_SIZE_LIMIT);
 
-        plainAuthDisallowed = configuration.getBoolean("plainAuthDisallowed", false);
+        plainAuthDisallowed = configuration.getBoolean("plainAuthDisallowed", true);
         timeout = configuration.getInt("timeout", DEFAULT_TIMEOUT);
         if (timeout < DEFAULT_TIMEOUT) {
             throw new ConfigurationException("Minimum timeout of 30 minutes required. See rfc2060 5.4 for details");
