@@ -12,8 +12,8 @@ This file should be edited everytime the table structure is modified.
 
 ## Approach regarding denormalization
 
-The Cassandra mailbox is heavily relies on denormalization. The same data is stored several time, in distinct tables,
-to satisfy the various read access patterns. Of course, the various table can become inconsistent between them.
+The Cassandra mailbox is heavily relying on denormalization. The same data is stored several times, in distinct tables,
+to satisfy the various read access patterns. Of course, the various tables can become inconsistent between them.
 
 We have been developing several approaches in order to diagnose, mitigate and solve such issues. They are described in
 the following documents:
