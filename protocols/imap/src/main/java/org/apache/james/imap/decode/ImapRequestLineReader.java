@@ -429,8 +429,15 @@ public abstract class ImapRequestLineReader {
             commandContinuationRequest();
         }
 
-        int size = Integer.parseInt(digits.toString());
-        return ImmutablePair.of(size, read(size, extraCRLF));
+        try {
+            int size = Integer.parseInt(digits.toString());
+            if (size < 0) {
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expected a valid positive number as literal size");
+            }
+            return ImmutablePair.of(size, read(size, extraCRLF));
+        } catch (NumberFormatException e) {
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Expected a valid positive number as literal size");
+        }
     }
 
     private String decode(Charset charset, ByteBuffer buffer) throws DecodingException {
