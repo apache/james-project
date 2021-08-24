@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import javax.inject.Inject;
+
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobReferenceSource;
 
@@ -27,6 +29,7 @@ import reactor.core.publisher.Flux;
 public class AttachmentBlobReferenceSource implements BlobReferenceSource {
     private final CassandraAttachmentDAOV2 attachmentDAOV2;
 
+    @Inject
     public AttachmentBlobReferenceSource(CassandraAttachmentDAOV2 attachmentDAOV2) {
         this.attachmentDAOV2 = attachmentDAOV2;
     }

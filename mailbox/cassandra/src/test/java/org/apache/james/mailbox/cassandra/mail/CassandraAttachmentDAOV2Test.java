@@ -27,7 +27,6 @@ import java.util.Optional;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachment;
