@@ -8,7 +8,11 @@ Accepted (lazy consensus).
 
 Not yet implemented.
 
-Proposes a simpl waye to implement an alternative to  [39. Distributed blob garbage collector](0039-distributed-blob-garbage-collector.md)
+Proposes a simple way to implement an alternative to  [39. Distributed blob garbage collector](0039-distributed-blob-garbage-collector.md)
+
+### Changes
+
+2021-08-25: Edited to mention Cuckoo filters (Alternative).
 
 ## Context
 
@@ -94,6 +98,11 @@ As such we believe that a simpler approach that could be implemented timely yiel
 This alternative can be implemented later, once the limits of the bloom filter approach are better known.
 
 The two algorithms are not mutually exclusive and could very well coexist if need be in the same codebase.
+
+### Alternative to bloom filters
+
+[Cuckoo](https://bdupras.github.io/filter-tutorial/) filters is a probability data structure that tends to have a better
+space efficiency for low false-positive rates and might be proposed as an alternative for bloom filters.
 
 ### Implementation of the Bloom Filter approach with Apache Spark
 
