@@ -48,6 +48,7 @@ Finally, please note that in case of a malformed URL the 400 bad request respons
  - [User Mappings](#User_Mappings)
  - [Administrating mail repositories](#Administrating_mail_repositories)
  - [Administrating mail queues](#Administrating_mail_queues)
+ - [Sending email over webAdmin](#Sending_email_over_webAdmin)
  - [Administrating DLP Configuration](#Administrating_DLP_Configuration)
  - [Administrating Sieve quotas](#Administrating_Sieve_quotas)
  - [Administrating jmap uploads](#Administrating_jmap_uploads)
@@ -3253,6 +3254,18 @@ Response codes:
      "taskId": "a650a66a-5984-431e-bdad-f1baad885856"
  }
  ```
+
+## Sending email over webAdmin
+
+```
+curl -XPOST /mail-transfer-service
+
+{MIME message}
+```
+
+Will send the following email to the recipients specified in the MIME message.
+
+The `{MIME message}` payload must match `message/rfc822` format.
 
 ## Administrating DLP Configuration
 

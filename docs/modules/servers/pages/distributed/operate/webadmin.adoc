@@ -3472,6 +3472,18 @@ Response codes:
 The response body contains the id of the republishing task.
 `{      "taskId": "a650a66a-5984-431e-bdad-f1baad885856"  }`
 
+== Sending email over webAdmin
+
+....
+curl -XPOST /mail-transfer-service
+
+{MIME message}
+....
+
+Will send the following email to the recipients specified in the MIME message.
+
+The `{MIME message}` payload must match `message/rfc822` format.
+
 == Event Dead Letter
 
 The EventBus allows to register `group listeners' that are called in a
