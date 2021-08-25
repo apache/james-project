@@ -25,8 +25,10 @@ import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.eventsourcing.eventstore.cassandra.EventNestedTypes;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;
+import org.apache.james.mailbox.NoACLMapper;
 import org.apache.james.mailbox.RandomModSeqProvider;
 import org.apache.james.mailbox.RandomUidProvider;
+import org.apache.james.mailbox.cassandra.mail.ACLMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
@@ -185,6 +187,7 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
                 .chooseModules(configuration.getUsersRepositoryImplementation()))
             .overrideWith(new DistributedPop3Module())
             .overrideWith(binder -> binder.bind(ThreadIdGuessingAlgorithm.class).to(NaiveThreadIdGuessingAlgorithm.class))
+            .overrideWith(binder -> binder.bind(ACLMapper.class).to(NoACLMapper.class))
             .overrideWith(binder -> {
                 binder.bind(RandomUidProvider.class).in(Scopes.SINGLETON);
                 binder.bind(UidProvider.class).to(RandomUidProvider.class);
