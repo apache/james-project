@@ -261,13 +261,18 @@ public class BloomFilterGCAlgorithm {
 
     public Mono<Result> gc(int expectedBlobCount, double associatedProbability, BucketName bucketName, Context context) {
         return populatedBloomFilter(expectedBlobCount, associatedProbability, context)
-            .flatMap(bloomFilter -> gc(bloomFilter, bucketName, context));
+            .flatMap(bloomFilter -> gc(bloomFilter, bucketName, context))
+            .onErrorResume(error -> {
+                LOGGER.error("Error when running blob deduplicate garbage collection", error);
+                return Mono.just(Result.PARTIAL);
+            });
     }
 
     private Mono<Result> gc(BloomFilter<CharSequence> bloomFilter, BucketName bucketName, Context context) {
         return Flux.from(blobStoreDAO.listBlobs(bucketName))
             .doOnNext(blobId -> context.incrementBlobCount())
             .flatMap(blobId -> gcBlob(bloomFilter, blobId, bucketName, context))
+            .switchIfEmpty(Mono.just(Result.COMPLETED))
             .reduce(Task::combine);
     }
 
