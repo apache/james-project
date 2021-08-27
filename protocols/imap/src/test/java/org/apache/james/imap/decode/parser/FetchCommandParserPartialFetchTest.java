@@ -26,6 +26,7 @@ import static org.mockito.Mockito.mock;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.BodyFetchElement;
@@ -50,6 +51,18 @@ class FetchCommandParserPartialFetchTest  {
     public void setUp() throws Exception {
         parser = new FetchCommandParser(mock(StatusResponseFactory.class));
         session = new FakeImapSession();
+    }
+
+    @Test
+    void fuzzedInputShouldNotThrowStringOutOfBoundException() {
+        String base64Input = "JFtIRWFkRVIuZklFbGRTIF0AIA==";
+
+        byte[] bytes = Base64.getDecoder().decode(base64Input);
+
+        assertThatThrownBy(() -> parser
+            .decode(new ImapRequestStreamLineReader(new ByteArrayInputStream(bytes),
+                new ByteArrayOutputStream()), new Tag("AEA"), new FakeImapSession()))
+            .isInstanceOf(DecodingException.class);
     }
 
     @Test

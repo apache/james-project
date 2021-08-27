@@ -507,6 +507,10 @@ public abstract class ImapRequestLineReader {
         while (!nextWord.endsWith(")")) {
             DecoderUtils.setFlag(nextWord, flags);
             nextWord = consumeWord(validator);
+            if (nextWord.isEmpty()) {
+                // Throw to avoid an infinite loop...
+                throw new DecodingException(HumanReadableText.FAILED, "Empty word encountered");
+            }
         }
         // Got the closing ")", may be attached to a word.
         if (nextWord.length() > 1) {

@@ -253,6 +253,9 @@ public class FetchPartPathDecoder {
     }
 
     private void mustBeOpenParen(CharSequence sectionSpecification, int position) throws DecodingException {
+        if (position >= sectionSpecification.length()) {
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");
+        }
         char next = sectionSpecification.charAt(position);
         if (!(next == '(')) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");

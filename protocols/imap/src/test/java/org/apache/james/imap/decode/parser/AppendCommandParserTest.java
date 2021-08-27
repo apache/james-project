@@ -20,6 +20,7 @@
 package org.apache.james.imap.decode.parser;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
@@ -28,9 +29,14 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Base64;
 
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
+import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
+import org.apache.james.imap.encode.FakeImapSession;
+import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -46,10 +52,43 @@ class AppendCommandParserTest {
     }
 
     @Test
+    void fuzzingInputShouldNotLoopInfinitely() {
+        String base64Input = "NHpzICgyWnoyWl8JEVt/XyAAMz0lLCwsLCwsLGUsLCwoKCgoKCgoKCgoKCgoKCgoKCgqKioqLDQgKClFMWQoKFstLQQtCX9zIChAKCg6fw==";
+        byte[] bytes = Base64.getDecoder().decode(base64Input);
+
+        assertThatThrownBy(() -> new AppendCommandParser(new UnpooledStatusResponseFactory(), CLOCK)
+            .decode(new ImapRequestStreamLineReader(new ByteArrayInputStream(bytes),
+                new ByteArrayOutputStream()), new Tag("AEA"), new FakeImapSession()))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
     void parseDateTimeShouldReturnNowWhenNotADate() throws Exception {
         ImapRequestStreamLineReader request = toRequest("any\n");
 
         assertThat(testee.parseDateTime(request).toInstant(ZoneOffset.UTC)).isEqualTo(DATE);
+    }
+
+    @Test
+    void fuzzedDateParsingShouldNotCrash() {
+        String base64Input = "byAiMDAtbk92LTUxMDExbjYwMC8wMDAuMCI=";
+        byte[] bytes = Base64.getDecoder().decode(base64Input);
+
+        assertThatThrownBy(() -> new AppendCommandParser(new UnpooledStatusResponseFactory(), CLOCK)
+            .decode(new ImapRequestStreamLineReader(new ByteArrayInputStream(bytes),
+                new ByteArrayOutputStream()), new Tag("AEA"), new FakeImapSession()))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void fuzzedDateParsing2ShouldNotCrash() {
+        String base64Input = "byAiMDAtbk92LTUxMDExbjYwMC8wMDAuMCI=";
+        byte[] bytes = Base64.getDecoder().decode(base64Input);
+
+        assertThatThrownBy(() -> new AppendCommandParser(new UnpooledStatusResponseFactory(), CLOCK)
+            .decode(new ImapRequestStreamLineReader(new ByteArrayInputStream(bytes),
+                new ByteArrayOutputStream()), new Tag("AEA"), new FakeImapSession()))
+            .isInstanceOf(DecodingException.class);
     }
 
     @Test
