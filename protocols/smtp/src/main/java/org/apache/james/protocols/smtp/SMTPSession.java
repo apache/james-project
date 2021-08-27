@@ -57,12 +57,6 @@ public interface SMTPSession extends ProtocolSession {
      * @return the relaying status
      */
     boolean isRelayingAllowed();
-
-    boolean needsCommandInjectionDetection();
-
-    void startDetectingCommadInjection();
-
-    void stopDetectingCommandInjection();
     
     /**
      * Set if reallying is allowed

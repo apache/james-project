@@ -16,22 +16,22 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.protocols.smtp;
+package org.apache.james.protocols.netty;
 
-import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelPipeline;
 
 public class AllButStartTlsLineChannelHandlerFactory implements ChannelHandlerFactory {
-
+    private final String pattern;
     private int maxFrameLength;
 
-    public AllButStartTlsLineChannelHandlerFactory(int maxFrameLength) {
+    public AllButStartTlsLineChannelHandlerFactory(String pattern, int maxFrameLength) {
+        this.pattern = pattern;
         this.maxFrameLength = maxFrameLength;
     }
 
     @Override
     public ChannelHandler create(ChannelPipeline pipeline) {
-        return new AllButStartTlsLineBasedChannelHandler(pipeline, maxFrameLength, false);
+        return new AllButStartTlsLineBasedChannelHandler(pipeline, maxFrameLength, false, pattern);
     }
 }

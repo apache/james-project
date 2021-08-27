@@ -16,22 +16,14 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.imapserver.netty;
 
-import org.apache.james.protocols.netty.ChannelHandlerFactory;
-import org.jboss.netty.channel.ChannelHandler;
-import org.jboss.netty.channel.ChannelPipeline;
+package org.apache.james.protocols.api;
 
-public class SwitchableLineBasedFrameDecoderFactory implements ChannelHandlerFactory {
+// https://nostarttls.secvuln.info/
+public interface CommandDetectionSession {
+    boolean needsCommandInjectionDetection();
 
-    private int maxLineLength;
+    void startDetectingCommandInjection();
 
-    public SwitchableLineBasedFrameDecoderFactory(int maxLineLength) {
-        this.maxLineLength = maxLineLength;
-    }
-
-    @Override
-    public ChannelHandler create(ChannelPipeline pipeline) {
-        return new SwitchableLineBasedFrameDecoder(pipeline, maxLineLength, false);
-    }
+    void stopDetectingCommandInjection();
 }

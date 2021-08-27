@@ -43,7 +43,7 @@ public class BaseFakeSMTPSession implements SMTPSession {
     }
 
     @Override
-    public void startDetectingCommadInjection() {
+    public void startDetectingCommandInjection() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 

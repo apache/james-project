@@ -64,6 +64,8 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
         final Flags flags = request.getFlags();
         final MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
 
+        session.stopDetectingCommandInjection();
+
         try {
             final MailboxManager mailboxManager = getMailboxManager();
             final MessageManager mailbox = mailboxManager.getMailbox(mailboxPath, session.getMailboxSession());

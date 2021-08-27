@@ -86,6 +86,7 @@ public class PassCmdHandler extends AbstractPassCmdHandler  {
         MailboxSession mSession = null;
         try {
             mSession = manager.login(session.getUsername(), password);
+            session.stopDetectingCommandInjection();
             manager.startProcessingRequest(mSession);
             MailboxPath inbox = MailboxPath.inbox(mSession);
             

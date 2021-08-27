@@ -96,6 +96,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         } else {
             doAuth(authenticationAttempt, session, request, responder, HumanReadableText.AUTHENTICATION_FAILED);
         }
+        session.stopDetectingCommandInjection();
     }
 
     private AuthenticationAttempt parseDelegationAttempt(String initialClientResponse) {

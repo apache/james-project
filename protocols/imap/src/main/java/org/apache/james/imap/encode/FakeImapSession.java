@@ -41,6 +41,21 @@ public class FakeImapSession implements ImapSession {
     }
 
     @Override
+    public boolean needsCommandInjectionDetection() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void startDetectingCommandInjection() {
+
+    }
+
+    @Override
+    public void stopDetectingCommandInjection() {
+
+    }
+
+    @Override
     public SessionId sessionId() {
         return sessionId;
     }
