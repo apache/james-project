@@ -733,6 +733,24 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("additionalInformation.scope", is("expired"));
     }
 
+    @Test
+    void blobGCTaskShouldComplete() throws Exception {
+        String taskId = given()
+            .queryParam("scope", "unreferenced")
+            .delete("blobs")
+            .jsonPath()
+            .getString("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+            .when()
+            .get(taskId + "/await")
+            .then()
+            .body("status", is(TaskManager.Status.COMPLETED.getValue()))
+            .body("taskId", is(taskId))
+            .body("type", is("BlobGCTask"));
+    }
+
     private MailboxAdded createMailboxAdded() {
         String uuid = "6e0dd59d-660e-4d9b-b22f-0354479f47b4";
         return EventFactory.mailboxAdded()

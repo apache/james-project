@@ -34,6 +34,8 @@ import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.blobstore.BlobStoreCacheModulesChooser;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.blobstore.BlobStoreModulesChooser;
+import org.apache.james.modules.blobstore.BlobStrategyModule;
+import org.apache.james.modules.blobstore.server.BlobRoutesModules;
 import org.apache.james.modules.data.CassandraDLPConfigurationStoreModule;
 import org.apache.james.modules.data.CassandraDomainListModule;
 import org.apache.james.modules.data.CassandraJmapModule;
@@ -43,7 +45,6 @@ import org.apache.james.modules.data.CassandraUsersRepositoryModule;
 import org.apache.james.modules.event.JMAPEventBusModule;
 import org.apache.james.modules.event.RabbitMQEventBusModule;
 import org.apache.james.modules.eventstore.CassandraEventStoreModule;
-import org.apache.james.modules.mailbox.BlobStoreAPIModule;
 import org.apache.james.modules.mailbox.CassandraDeletedMessageVaultModule;
 import org.apache.james.modules.mailbox.CassandraMailboxModule;
 import org.apache.james.modules.mailbox.CassandraQuotaMailingModule;
@@ -92,6 +93,7 @@ import com.google.inject.util.Modules;
 
 public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
     public static final Module WEBADMIN = Modules.combine(
+        new BlobRoutesModules(),
         new CassandraRoutesModule(),
         new DataRoutesModules(),
         new DeletedMessageVaultRoutesModule(),
@@ -127,7 +129,7 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
         new CassandraQuotaMailingModule());
 
     private static final Module BLOB_MODULE = Modules.combine(
-        new BlobStoreAPIModule(),
+        new BlobStrategyModule(),
         new BlobExportMechanismModule());
 
     private static final Module CASSANDRA_EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE = binder ->
