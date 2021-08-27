@@ -22,15 +22,28 @@ Change list:
  - [Adding messageId metadata to the Cassandra attachments](#adding-messageid-metadata-to-the-cassandra-attachments)
  - [Changes to the enqueuedMails DAO](#changes-to-the-enqueuedmails-dao)
  - [Restructure maximum quotas definition](#restructure-maximum-quotas-definition)
- 
+
+### Change defaults for JPA UsersRepository hash function
+
+Date 27/08/2021
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3637
+
+We changed the default algorithm to hash user password with JPA
+with SHA-512 instead of insecure SHA-1 / MD5.
+
+As such, upgrades might result in inability for users to login, unless you
+explicitly configure the unsecure algorithm you were using.
+
+Changing the user password will upgrade them to the newly introduced hashing standards.
+
 ### Restructure maximum quotas definition
 
 Date 06/08/2021
 
 JIRA: https://issues.apache.org/jira/browse/JAMES-3630
 
-Concerned product: Distributed James and
-Concerned product: Distributed James Cassandra James server
+Concerned product: Distributed James and Cassandra James server
 
 We restructured maximum global quota in order to store them in a single Cassandra row. This enables to retrieve this 
 data on a single primary key read, which is important for performance when receiving many emails over SMTP.
