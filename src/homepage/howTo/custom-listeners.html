@@ -217,7 +217,7 @@ $ exit
                     We can see its flags by using the following IMAP command on your local host.
                 </p>
                 <pre><code>
-$ telnet localhost 143
+$ openssl s_client -connect localhost:993
 
 # Login by user2
 A1 LOGIN user2@james.local password2

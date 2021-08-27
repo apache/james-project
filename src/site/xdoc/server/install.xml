@@ -224,7 +224,107 @@ quit
 Connection closed by foreign host.
 </source>
 
-    <p>Try now to retrieve that mail using POP3 (port 110) or IMAP (port 143).</p>
+    <p>Try now to retrieve that mail using POP3 (port 110) or IMAP (port 993 with OpenSSL).</p>
+
+      <source>
+$ openssl s_client -connect 127.0.0.1:993
+
+CONNECTED(00000003)
+Can't use SSL_get_servername
+depth=0 C = FR, ST = Unknown, L = Puteaux, O = James, OU = Linagora, CN = Benoit Tellier
+verify error:num=18:self signed certificate
+verify return:1
+depth=0 C = FR, ST = Unknown, L = Puteaux, O = James, OU = Linagora, CN = Benoit Tellier
+verify error:num=10:certificate has expired
+notAfter=Nov 24 07:32:55 2015 GMT
+verify return:1
+depth=0 C = FR, ST = Unknown, L = Puteaux, O = James, OU = Linagora, CN = Benoit Tellier
+notAfter=Nov 24 07:32:55 2015 GMT
+verify return:1
+---
+Certificate chain
+0 s:C = FR, ST = Unknown, L = Puteaux, O = James, OU = Linagora, CN = Benoit Tellier
+i:C = FR, ST = Unknown, L = Puteaux, O = James, OU = Linagora, CN = Benoit Tellier
+---
+Server certificate
+-----BEGIN CERTIFICATE-----
+MIIDeTCCAmGgAwIBAgIEXaLC/zANBgkqhkiG9w0BAQsFADBtMQswCQYDVQQGEwJG
+UjEQMA4GA1UECBMHVW5rbm93bjEQMA4GA1UEBxMHUHV0ZWF1eDEOMAwGA1UEChMF
+SmFtZXMxETAPBgNVBAsTCExpbmFnb3JhMRcwFQYDVQQDEw5CZW5vaXQgVGVsbGll
+cjAeFw0xNTA4MjYwNzMyNTVaFw0xNTExMjQwNzMyNTVaMG0xCzAJBgNVBAYTAkZS
+MRAwDgYDVQQIEwdVbmtub3duMRAwDgYDVQQHEwdQdXRlYXV4MQ4wDAYDVQQKEwVK
+YW1lczERMA8GA1UECxMITGluYWdvcmExFzAVBgNVBAMTDkJlbm9pdCBUZWxsaWVy
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhW0GWSgkK44XQpwLn8KX
+q9kJ3zgDYllEX7W8p+3sBYMAP0JC+lzh42mX/8XHti0vkmv/vjk0paAsB9s5uYhv
+/W94sdqjexi3L213+OD5Kcy+2tTgXN1ucF65d/dDeqGHAyBs1rm6LgyRwQ5ye8Cl
+OtXbSkz5qujmnFDDzrDIgzefxFsTHHIBTsdyttq2Atqzgdg2LHaFbIntwr6lfl9v
+puXr8p+CY6PfehX8mdmaJ7J/gfAll3zzdgeNUoAW0eDvcsphJ06elsDahieo0n/o
+XVhy+TGWtAQRDZQDjeK2BX/vVSPAlGOW7hVTv7WycAolzKlXZyiJMnwTWJl6YoUP
+vQIDAQABoyEwHzAdBgNVHQ4EFgQU7tDLswRlOJqoX4aVgrXRQbmOYbIwDQYJKoZI
+hvcNAQELBQADggEBAGmzK2i2H5D6xITyN1iNQhXbABQ/3rz9K5dEvy0ZLgYOUqyw
+1WD43Do/A3eZuEZbuuYAlbvDEUNgS7rJ5HCrwIKFbPHWmfRX2j59UX+R8fI6G9wB
+qqcRYWpert347rGT/7MFLHk55LL6Tf//fwoWu6GWRj3wTvosVuunUiiC6zTS4MN9
+moJp+IF03Q6JOPWu7/tfaKfXQHxG/hK492oV2vBG2r29UUJW6YO1S0DK+/cU0cCu
++jqbY1ZOIAk906onRUFoPGuypOm3vmbE6mo5o49rNtp+VmZagZ7GsjJ4KWJB1c6d
+SFNIFlH2VlS8Lywr2tesClWO5tqtMswRsoA9GeU=
+-----END CERTIFICATE-----
+subject=C = FR, ST = Unknown, L = Puteaux, O = James, OU = Linagora, CN = Benoit Tellier
+
+issuer=C = FR, ST = Unknown, L = Puteaux, O = James, OU = Linagora, CN = Benoit Tellier
+
+---
+No client certificate CA names sent
+Peer signing digest: SHA256
+Peer signature type: RSA-PSS
+Server Temp Key: X25519, 253 bits
+---
+SSL handshake has read 1425 bytes and written 363 bytes
+Verification error: certificate has expired
+---
+New, TLSv1.3, Cipher is TLS_AES_256_GCM_SHA384
+Server public key is 2048 bit
+Secure Renegotiation IS NOT supported
+Compression: NONE
+Expansion: NONE
+No ALPN negotiated
+Early data was not sent
+Verify return code: 10 (certificate has expired)
+---
+---
+Post-Handshake New Session Ticket arrived:
+SSL-Session:
+Protocol  : TLSv1.3
+Cipher    : TLS_AES_256_GCM_SHA384
+Session-ID: 92D136BF8C9E3E09C4FF7946A2AFDC8ED6E395A1729532D3544E58F688B787F9
+Session-ID-ctx:
+Resumption PSK: C4E09FF3045720EE910AEA5300D87FDE2200A56F218AC3F75748BE794F73F32790FC8DD35CA70869FBD075727779BA73
+PSK identity: None
+PSK identity hint: None
+SRP username: None
+TLS session ticket lifetime hint: 86400 (seconds)
+TLS session ticket:
+0000 - 03 d2 89 8a 32 48 28 a2-99 24 99 47 b2 05 e8 99   ....2H(..$.G....
+0010 - 6b 9b a9 0b 59 95 dd 2c-fb ba 46 b9 94 ad 36 63   k...Y..,..F...6c
+
+Start Time: 1630033038
+Timeout   : 7200 (sec)
+Verify return code: 10 (certificate has expired)
+Extended master secret: no
+Max Early Data: 0
+---
+read R BLOCK
+
+* OK JAMES IMAP4rev1 Server 2e73ecd482f4 is ready.
+
+a login bob@domain.com 1234
+a OK LOGIN completed.
+
+1 logout
+* BYE IMAP4rev1 Server logging out
+1 OK LOGOUT completed.
+
+closed
+      </source>
     
     <p>Trace out James actions in ./logs/james-server.log.</p>
     
