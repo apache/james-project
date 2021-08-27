@@ -1,0 +1,6 @@
+{
+  "associatedProbability": 0.8,
+  "bucketName": "default",
+  "expectedBlobCount": 99,
+  "type": "BlobGCTask"
+}

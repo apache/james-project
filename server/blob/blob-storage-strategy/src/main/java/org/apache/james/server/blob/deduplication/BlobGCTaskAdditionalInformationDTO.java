@@ -39,7 +39,8 @@ public class BlobGCTaskAdditionalInformationDTO implements AdditionalInformation
                     dto.gcedBlobCount,
                     dto.errorCount,
                     dto.bloomFilterExpectedBlobCount,
-                    dto.bloomFilterAssociatedProbability
+                    dto.bloomFilterAssociatedProbability,
+                    dto.timestamp
                 ))
             .toDTOConverter((domain, type) ->
                 new BlobGCTaskAdditionalInformationDTO(
