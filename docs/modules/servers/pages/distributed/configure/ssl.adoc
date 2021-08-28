@@ -23,6 +23,7 @@ You need to add a block in the corresponding configuration file (smtpserver.xml,
 ....
 <tls socketTLS="false" startTLS="false">
   <keystore>file://conf/keystore</keystore>
+  <keystoreType>PKCS12</keystoreType>
   <secret>yoursecret</secret>
   <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
 </tls>
@@ -62,8 +63,8 @@ To use TLS/SSL inside James you will need a certificate keystore.
 
 (Adapted from the Tomcat 4.1 documentation)
 
-James currently operates only on JKS format keystores. This is Java's standard "Java KeyStore" format, and is the format
-created by the keytool command-line utility. This tool is included in the JDK.
+James currently operates only on JKS or PKCS12 format keystores. This is Java's standard "Java KeyStore" format, and is
+the format created by the keytool command-line utility. This tool is included in the JDK.
 
 To import an existing certificate into a JKS keystore, please read the documentation (in your JDK documentation package)
 about keytool.
@@ -72,7 +73,7 @@ To create a new keystore from scratch, containing a single self-signed Certifica
 command line:
 
 ....
-keytool -genkey -alias james -keyalg RSA -keystore your_keystore_filename
+keytool -genkey -alias james -keyalg RSA -storetype PKCS12 -keystore your_keystore_filename
 ....
 
 (The RSA algorithm should be preferred as a secure algorithm, and this also ensures general compatibility with other

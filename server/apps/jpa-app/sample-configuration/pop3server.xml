@@ -27,9 +27,10 @@
         <connectionBacklog>200</connectionBacklog>
         <tls socketTLS="false" startTLS="false">
             <!-- To create a new keystore execute:
-                  keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore
+              keytool -genkey -alias james -keyalg RSA -storetype PKCS12 -keystore /path/to/james/conf/keystore
              -->
             <keystore>file://conf/keystore</keystore>
+            <keystoreType>PKCS12</keystoreType>
             <secret>james72laBalle</secret>
             <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
         </tls>

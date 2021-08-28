@@ -103,6 +103,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     private String helloName;
 
     private String keystore;
+    private String keystoreType;
 
     private String secret;
 
@@ -246,6 +247,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         if (useStartTLS || useSSL) {
             enabledCipherSuites = config.getStringArray("tls.supportedCipherSuites.cipherSuite");
             keystore = config.getString("tls.keystore", null);
+            keystoreType = config.getString("tls.keystoreType", "JKS");
             if (keystore == null) {
                 throw new ConfigurationException("keystore needs to get configured");
             }
@@ -391,7 +393,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         if (useStartTLS || useSSL) {
             FileInputStream fis = null;
             try {
-                KeyStore ks = KeyStore.getInstance("JKS");
+                KeyStore ks = KeyStore.getInstance(keystoreType);
                 fis = new FileInputStream(fileSystem.getFile(keystore));
                 ks.load(fis, secret.toCharArray());
 
