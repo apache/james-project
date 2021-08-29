@@ -2,7 +2,7 @@
 #
 # VERSION	1.0
 
-FROM apache/james:jpa-3.6.0
+FROM apache/james:jpa-latest
 
 # Install git
 RUN apt-get update
@@ -15,7 +15,6 @@ RUN cp /root/wait-for-it/wait-for-it.sh /usr/bin/wait-for-it.sh
 
 COPY startup.sh /root
 COPY initialdata.sh /root
-COPY james-cli /usr/local/bin/
 
 RUN chmod +x /root/startup.sh
 RUN chmod +x /root/initialdata.sh
