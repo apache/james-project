@@ -101,6 +101,7 @@ public class TestJMAPServerModule extends AbstractModule {
         return JMAPDraftConfiguration.builder()
                 .enable()
                 .keystore("keystore")
+                .keystoreType("JKS")
                 .secret("james72laBalle")
                 .jwtPublicKeyPem(Optional.of(PUBLIC_PEM_KEY));
     }

@@ -32,6 +32,7 @@ public class JMAPDraftConfiguration {
 
     public static class Builder {
         private String keystore;
+        private Optional<String> keystoreType = Optional.empty();
         private String secret;
         private Optional<Boolean> enabled = Optional.empty();
         private Optional<String> jwtPublicKeyPem = Optional.empty();
@@ -42,6 +43,11 @@ public class JMAPDraftConfiguration {
 
         public Builder keystore(String keystore) {
             this.keystore = keystore;
+            return this;
+        }
+
+        public Builder keystoreType(String keystoreType) {
+            this.keystoreType = Optional.ofNullable(keystoreType);
             return this;
         }
 
@@ -73,20 +79,23 @@ public class JMAPDraftConfiguration {
             Preconditions.checkState(enabled.isPresent(), "You should specify if JMAP server should be started");
             Preconditions.checkState(!enabled.get() || !Strings.isNullOrEmpty(keystore), "'keystore' is mandatory");
             Preconditions.checkState(!enabled.get() || !Strings.isNullOrEmpty(secret), "'secret' is mandatory");
-            return new JMAPDraftConfiguration(enabled.get(), keystore, secret, jwtPublicKeyPem);
+
+            return new JMAPDraftConfiguration(enabled.get(), keystore, keystoreType.orElse("JKS"), secret, jwtPublicKeyPem);
         }
 
     }
 
     private final boolean enabled;
     private final String keystore;
+    private final String keystoreType;
     private final String secret;
     private final Optional<String> jwtPublicKeyPem;
 
     @VisibleForTesting
-    JMAPDraftConfiguration(boolean enabled, String keystore, String secret, Optional<String> jwtPublicKeyPem) {
+    JMAPDraftConfiguration(boolean enabled, String keystore, String keystoreType, String secret, Optional<String> jwtPublicKeyPem) {
         this.enabled = enabled;
         this.keystore = keystore;
+        this.keystoreType = keystoreType;
         this.secret = secret;
         this.jwtPublicKeyPem = jwtPublicKeyPem;
     }
@@ -97,6 +106,10 @@ public class JMAPDraftConfiguration {
 
     public String getKeystore() {
         return keystore;
+    }
+
+    public String getKeystoreType() {
+        return keystoreType;
     }
 
     public String getSecret() {
