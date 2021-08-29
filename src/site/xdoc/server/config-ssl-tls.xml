@@ -53,8 +53,27 @@
   &lt;provider&gt;org.bouncycastle.jce.provider.BouncyCastleProvider&lt;/provider&gt;
 &lt;/tls&gt;
 </source>
-         
-      <p>Each of these block has an optional boolean configuration element <b>socketTLS</b> and <b>startTLS</b> which is used to toggle 
+
+        <p>Alternatively TLS keys can be supplied via PEM files:</p>
+
+        <source>
+&lt;tls socketTLS="false" startTLS="false"&gt;
+    &lt;privateKey&gt;file://conf/private.key&lt;/privateKey&gt;
+    &lt;certificates&gt;file://conf/certs.self-signed.csr&lt;/certificates&gt;
+&lt;/tls&gt;
+</source>
+
+      <p>An optional secret might be specified for the private key:</p>
+
+        <source>
+&lt;tls socketTLS="false" startTLS="false"&gt;
+    &lt;privateKey&gt;file://conf/private.key&lt;/privateKey&gt;
+    &lt;certificates&gt;file://conf/certs.self-signed.csr&lt;/certificates&gt;
+    &lt;secret&gt;yoursecret&lt;/secret&gt;
+&lt;/tls&gt;
+</source>
+
+      <p>Each of these block has an optional boolean configuration element <b>socketTLS</b> and <b>startTLS</b> which is used to toggle
          use of SSL or TLS for the service.</p>
          
       <p>With socketTLS (SSL/TLS in Thunderbird), all the communication is encrypted.</p>
@@ -92,9 +111,37 @@
 
     </subsection>
 
+    <subsection name="Creating your own PEM keys">
+        <p>The following commands can be used to create self signed PEM keys:</p>
+
+        <source>
+# Generating your private key
+openssl genrsa -des3 -out private.key 2048
+
+# Creating your certificates
+openssl req -new -key private.key -out certs.csr
+
+# Signing the certificate yourself
+openssl x509 -req -days 365 -in certs.csr -signkey private.key -out certs.self-signed.csr
+
+# Removing the password from the private key
+# Not necessary if you supply the secret in the configuration
+openssl rsa -in private.key -out private.nopass.key
+</source>
+
+        <p>You may then supply this TLS configuration:</p>
+
+        <source>
+&lt;tls socketTLS="false" startTLS="false"&gt;
+    &lt;privateKey&gt;file://conf/private.key&lt;/privateKey&gt;
+    &lt;certificates&gt;file://conf/certs.self-signed.csr&lt;/certificates&gt;
+&lt;/tls&gt;
+</source>
+    </subsection>
+
     <subsection name="Certificate Keystores">
-    
-      <p>To use TLS/SSL inside James you will need a certificate keystore.</p>
+
+      <p>This section gives more indication for users relying on keystores.</p>
       <p></p>
       
       <p><b>Creating your own Certificate Keystore</b></p>

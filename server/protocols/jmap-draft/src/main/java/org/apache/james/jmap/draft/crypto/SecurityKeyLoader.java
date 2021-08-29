@@ -19,13 +19,13 @@
 
 package org.apache.james.jmap.draft.crypto;
 
-import java.io.InputStream;
 import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -35,6 +35,9 @@ import org.apache.james.jmap.draft.JMAPDraftConfiguration;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+
+import nl.altindag.ssl.util.KeyStoreUtils;
+import nl.altindag.ssl.util.PemUtils;
 
 public class SecurityKeyLoader {
     private static final String ALIAS = "james";
@@ -52,15 +55,22 @@ public class SecurityKeyLoader {
     public AsymmetricKeys load() throws Exception {
         Preconditions.checkState(jmapDraftConfiguration.isEnabled(), "JMAP is not enabled");
 
-        KeyStore keystore = KeyStore.getInstance(jmapDraftConfiguration.getKeystoreType());
-        char[] secret;
-        try (InputStream fis = fileSystem.getResource(jmapDraftConfiguration.getKeystore())) {
-            secret = jmapDraftConfiguration.getSecret().toCharArray();
-            keystore.load(fis, secret);
+        if (jmapDraftConfiguration.getKeystore().isPresent()) {
+            return loadFromKeystore();
         }
+        return loadFromPEM();
+    }
+
+    private AsymmetricKeys loadFromKeystore() throws Exception {
+        Preconditions.checkState(jmapDraftConfiguration.getKeystore().isPresent());
+        Preconditions.checkState(jmapDraftConfiguration.getSecret().isPresent());
+
+        char[] secret = jmapDraftConfiguration.getSecret().get().toCharArray();
+        KeyStore keystore = KeyStoreUtils.loadKeyStore(fileSystem.getResource(jmapDraftConfiguration.getKeystore().get()), secret);
+
         Certificate aliasCertificate = Optional
-                .ofNullable(keystore.getCertificate(ALIAS))
-                .orElseThrow(() -> new KeyStoreException("Alias '" + ALIAS + "' keystore can't be found"));
+            .ofNullable(keystore.getCertificate(ALIAS))
+            .orElseThrow(() -> new KeyStoreException("Alias '" + ALIAS + "' keystore can't be found"));
 
         PublicKey publicKey = aliasCertificate.getPublicKey();
         Key key = keystore.getKey(ALIAS, secret);
@@ -68,5 +78,21 @@ public class SecurityKeyLoader {
             throw new KeyStoreException("Provided key is not a PrivateKey");
         }
         return new AsymmetricKeys((PrivateKey) key, publicKey);
+    }
+
+    private AsymmetricKeys loadFromPEM() throws Exception {
+        Preconditions.checkState(jmapDraftConfiguration.getCertificates().isPresent());
+        Preconditions.checkState(jmapDraftConfiguration.getPrivateKey().isPresent());
+
+        X509Certificate certificate = PemUtils.loadCertificate(
+            fileSystem.getResource(jmapDraftConfiguration.getCertificates().get()))
+            .get(0);
+        PrivateKey privateKey = PemUtils.loadPrivateKey(
+            fileSystem.getResource(jmapDraftConfiguration.getPrivateKey().get()),
+            jmapDraftConfiguration.getSecret()
+                .map(String::toCharArray)
+                .orElse(null));
+
+        return new AsymmetricKeys(privateKey, certificate.getPublicKey());
     }
 }

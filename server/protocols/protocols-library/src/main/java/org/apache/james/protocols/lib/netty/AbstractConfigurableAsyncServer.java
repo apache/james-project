@@ -23,9 +23,9 @@ import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executor;
 
 import javax.annotation.PostConstruct;
@@ -33,8 +33,8 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
-import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.X509ExtendedKeyManager;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
@@ -56,6 +56,9 @@ import org.jboss.netty.handler.execution.ExecutionHandler;
 import org.jboss.netty.util.HashedWheelTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import nl.altindag.ssl.SSLFactory;
+import nl.altindag.ssl.util.PemUtils;
 
 /**
  * Abstract base class for Servers for all James Servers
@@ -104,6 +107,8 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
 
     private String keystore;
     private String keystoreType;
+    private String privateKey;
+    private String certificates;
 
     private String secret;
 
@@ -247,11 +252,13 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         if (useStartTLS || useSSL) {
             enabledCipherSuites = config.getStringArray("tls.supportedCipherSuites.cipherSuite");
             keystore = config.getString("tls.keystore", null);
+            privateKey = config.getString("tls.privateKey", null);
+            certificates = config.getString("tls.certificates", null);
             keystoreType = config.getString("tls.keystoreType", "JKS");
-            if (keystore == null) {
-                throw new ConfigurationException("keystore needs to get configured");
+            if (keystore == null && (privateKey == null || certificates == null)) {
+                throw new ConfigurationException("keystore or (privateKey and certificates) needs to get configured");
             }
-            secret = config.getString("tls.secret", "");
+            secret = config.getString("tls.secret", null);
             x509Algorithm = config.getString("tls.algorithm", defaultX509algorithm);
         }
 
@@ -392,18 +399,30 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     protected void buildSSLContext() throws Exception {
         if (useStartTLS || useSSL) {
             FileInputStream fis = null;
+            SSLFactory.Builder sslFactoryBuilder = SSLFactory.builder()
+                .withSslContextAlgorithm("TLS");
             try {
-                KeyStore ks = KeyStore.getInstance(keystoreType);
-                fis = new FileInputStream(fileSystem.getFile(keystore));
-                ks.load(fis, secret.toCharArray());
+                if (keystore != null) {
+                    char[] passwordAsCharArray = Optional.ofNullable(secret)
+                        .orElse("")
+                        .toCharArray();
+                    sslFactoryBuilder.withIdentityMaterial(
+                        fileSystem.getFile(keystore).toPath(),
+                        passwordAsCharArray,
+                        passwordAsCharArray,
+                        keystoreType);
+                } else {
+                    X509ExtendedKeyManager keyManager = PemUtils.loadIdentityMaterial(
+                        fileSystem.getResource(certificates),
+                        fileSystem.getResource(privateKey),
+                        Optional.ofNullable(secret)
+                            .map(String::toCharArray)
+                            .orElse(null));
 
-                // Set up key manager factory to use our key store
-                KeyManagerFactory kmf = KeyManagerFactory.getInstance(x509Algorithm);
-                kmf.init(ks, secret.toCharArray());
+                    sslFactoryBuilder.withIdentityMaterial(keyManager);
+                }
+                SSLContext context = sslFactoryBuilder.build().getSslContext();
 
-                // Initialize the SSLContext to work with our key managers.
-                SSLContext context = SSLContext.getInstance("TLS");
-                context.init(kmf.getKeyManagers(), null, null);
                 if (useStartTLS) {
                     encryption = Encryption.createStartTls(context, enabledCipherSuites);
                 } else {
