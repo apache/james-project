@@ -49,6 +49,7 @@ public class StartTlsCmdHandler implements CommandHandler<SMTPSession>, EhloExte
     private static final Response TLS_ALREADY_ACTIVE = new SMTPResponse("500", DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_CMD) + " TLS already active RFC2487 5.2").immutable();
     private static final Response READY_FOR_STARTTLS = new SMTPStartTlsResponse("220", DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.UNDEFINED_STATUS) + " Ready to start TLS").immutable();
     private static final Response SYNTAX_ERROR = new SMTPResponse("501 " + DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG) + " Syntax error (no parameters allowed) with STARTTLS command").immutable();
+    private static final Response ALREADY_AUTH_ERROR = new SMTPResponse("501 " + DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG) + " Syntax error (invalid command in this state) Already authenticated...").immutable();
     private static final Response NOT_SUPPORTED = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_COMMAND_UNRECOGNIZED, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_CMD) + " Command " + COMMAND_NAME + " unrecognized.").immutable();
 
     @Override
@@ -67,6 +68,11 @@ public class StartTlsCmdHandler implements CommandHandler<SMTPSession>, EhloExte
             if (session.isTLSStarted()) {
                 return TLS_ALREADY_ACTIVE;
             } else {
+                if (session.getUsername() != null) {
+                    // Prevents session fixation as described in https://www.usenix.org/system/files/sec21-poddebniak.pdf
+                    // Session 6.2
+                    return ALREADY_AUTH_ERROR;
+                }
                 String parameters = request.getArgument();
                 if ((parameters == null) || (parameters.length() == 0)) {
                     return READY_FOR_STARTTLS;

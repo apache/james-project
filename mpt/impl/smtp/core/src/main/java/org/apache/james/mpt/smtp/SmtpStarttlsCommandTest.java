@@ -49,6 +49,13 @@ public abstract class SmtpStarttlsCommandTest {
     }
 
     @Test
+    void startTlsShouldBeRejectedWhenAlreadyAuthenticated() throws Exception {
+        // Avoids session fixation attacks as described in https://www.usenix.org/system/files/sec21-poddebniak.pdf
+        // section 6.2
+        scriptedTest.run("starttls_session_fixation");
+    }
+
+    @Test
     void starttlsShouldBeRejectedWhenFollowedByCommand() throws Exception {
         scriptedTest.run("starttls_with_injection");
     }

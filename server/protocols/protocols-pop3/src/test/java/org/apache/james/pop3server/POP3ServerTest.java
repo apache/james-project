@@ -19,21 +19,26 @@
 package org.apache.james.pop3server;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
 import java.io.Reader;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.net.pop3.POP3Client;
 import org.apache.commons.net.pop3.POP3MessageInfo;
 import org.apache.commons.net.pop3.POP3Reply;
+import org.apache.commons.net.pop3.POP3SClient;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -49,14 +54,19 @@ import org.apache.james.pop3server.mailbox.MailboxAdapterFactory;
 import org.apache.james.pop3server.netty.POP3Server;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.lib.POP3BeforeSMTPHelper;
+import org.apache.james.protocols.lib.mock.ConfigLoader;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
+import org.apache.james.server.core.configuration.Configuration;
+import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.memory.MemoryUsersRepository;
+import org.apache.james.util.ClassLoaderUtils;
 import org.jboss.netty.util.HashedWheelTimer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.google.inject.name.Names;
@@ -64,10 +74,10 @@ import com.google.inject.name.Names;
 public class POP3ServerTest {
     private static final DomainList NO_DOMAIN_LIST = null;
 
-    private POP3TestConfiguration pop3Configuration;
+    private XMLConfiguration pop3Configuration;
     protected final MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
     private POP3Client pop3Client = null;
-    protected MockFileSystem fileSystem;
+    protected FileSystemImpl fileSystem;
     protected MockProtocolHandlerLoader protocolHandlerChain;
     protected StoreMailboxManager mailboxManager;
     private final byte[] content = ("Return-path: return@test.com\r\n"
@@ -82,7 +92,7 @@ public class POP3ServerTest {
         hashedWheelTimer = new HashedWheelTimer();
         setUpServiceManager();
         setUpPOP3Server();
-        pop3Configuration = new POP3TestConfiguration();
+        pop3Configuration = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("pop3server.xml"));
     }
 
     @AfterEach
@@ -100,6 +110,53 @@ public class POP3ServerTest {
         protocolHandlerChain.dispose();
         pop3Server.destroy();
         hashedWheelTimer.stop();
+    }
+
+    @Nested
+    class StartTlsSanitizing {
+        @Test
+        void connectionAreClosedWhenSTLSFollowedByACommand() throws Exception{
+            finishSetUp(pop3Configuration);
+
+            pop3Client = new POP3SClient();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+            pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+            pop3Client.sendCommand("STLS\r\nCAPA\r\n");
+
+            assertThatThrownBy(() -> pop3Client.sendCommand("quit"))
+                .isInstanceOf(IOException.class);
+        }
+
+        @Test
+        void startTLSShouldFailWhenAuthenticated() throws Exception{
+            // Avoids session fixation attacks as described in https://www.usenix.org/system/files/sec21-poddebniak.pdf
+            // section 6.2
+            finishSetUp(pop3Configuration);
+
+            pop3Client = new POP3SClient();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+            pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+            usersRepository.addUser(Username.of("known"), "test");
+            pop3Client.login("known", "test");
+
+            int replyCode = pop3Client.sendCommand("STLS\r\n");
+            assertThat(replyCode).isEqualTo(POP3Reply.ERROR);
+        }
+
+        @Test
+        void connectionAreClosedWhenSTLSFollowedByText() throws Exception{
+            finishSetUp(pop3Configuration);
+
+            pop3Client = new POP3SClient();
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+            pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+            pop3Client.sendCommand("STLS unexpected\r\n");
+
+            assertThatThrownBy(() -> pop3Client.sendCommand("quit"))
+                .isInstanceOf(IOException.class);
+        }
     }
 
     @Test
@@ -700,8 +757,8 @@ public class POP3ServerTest {
         return new POP3Server();
     }
 
-    protected void initPOP3Server(POP3TestConfiguration testConfiguration) throws Exception {
-        pop3Server.configure(testConfiguration);
+    protected void initPOP3Server(XMLConfiguration configuration) throws Exception {
+        pop3Server.configure(configuration);
         pop3Server.init();
     }
 
@@ -712,12 +769,11 @@ public class POP3ServerTest {
         pop3Server.setProtocolHandlerLoader(protocolHandlerChain);
     }
 
-    protected void finishSetUp(POP3TestConfiguration testConfiguration) throws Exception {
-        testConfiguration.init();
-        initPOP3Server(testConfiguration);
+    protected void finishSetUp(XMLConfiguration pop3Configuration) throws Exception {
+        initPOP3Server(pop3Configuration);
     }
 
-    protected void setUpServiceManager() throws Exception {
+    protected void setUpServiceManager() {
         mailboxManager = InMemoryIntegrationResources.builder()
             .authenticator((userid, passwd) -> {
                 try {
@@ -736,7 +792,11 @@ public class POP3ServerTest {
             .storeQuotaManager()
             .build()
             .getMailboxManager();
-        fileSystem = new MockFileSystem();
+        Configuration configuration = Configuration.builder()
+            .workingDirectory("../")
+            .configurationFromClasspath()
+            .build();
+        fileSystem = new FileSystemImpl(configuration.directories());
 
         protocolHandlerChain = MockProtocolHandlerLoader.builder()
             .put(binder -> binder.bind(UsersRepository.class).toInstance(usersRepository))

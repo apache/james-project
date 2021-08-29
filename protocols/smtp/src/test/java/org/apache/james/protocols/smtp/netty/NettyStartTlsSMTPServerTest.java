@@ -32,8 +32,6 @@ import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import com.sun.mail.smtp.SMTPTransport;
-
 import org.apache.commons.net.smtp.SMTPReply;
 import org.apache.commons.net.smtp.SMTPSClient;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
@@ -47,8 +45,8 @@ import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
+import org.apache.james.protocols.netty.AllButStartTlsLineChannelHandlerFactory;
 import org.apache.james.protocols.netty.NettyServer;
-import org.apache.james.protocols.smtp.AllButStartTlsLineChannelHandlerFactory;
 import org.apache.james.protocols.smtp.SMTPConfigurationImpl;
 import org.apache.james.protocols.smtp.SMTPProtocol;
 import org.apache.james.protocols.smtp.SMTPProtocolHandlerChain;
@@ -58,6 +56,8 @@ import org.jboss.netty.util.HashedWheelTimer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import com.sun.mail.smtp.SMTPTransport;
 
 public class NettyStartTlsSMTPServerTest {
 
@@ -88,7 +88,7 @@ public class NettyStartTlsSMTPServerTest {
         NettyServer server = new NettyServer.Factory(hashedWheelTimer)
                 .protocol(protocol)
                 .secure(enc)
-                .frameHandlerFactory(new AllButStartTlsLineChannelHandlerFactory(AbstractChannelPipelineFactory.MAX_LINE_LENGTH))
+                .frameHandlerFactory(new AllButStartTlsLineChannelHandlerFactory("starttls", AbstractChannelPipelineFactory.MAX_LINE_LENGTH))
                 .build();
         server.setListenAddresses(new InetSocketAddress(LOCALHOST_IP, RANDOM_PORT));
         return server;

@@ -16,20 +16,22 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.protocols.netty;
 
-package org.apache.james.pop3server;
+import org.jboss.netty.channel.ChannelHandler;
+import org.jboss.netty.channel.ChannelPipeline;
 
-import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
-import org.apache.james.pop3server.core.CoreCmdHandlerLoader;
+public class AllButStartTlsLineChannelHandlerFactory implements ChannelHandlerFactory {
+    private final String pattern;
+    private int maxFrameLength;
 
-public class POP3TestConfiguration extends BaseHierarchicalConfiguration {
-
-    public void init() {
-        addProperty("[@enabled]", true);
-        addProperty("bind", "127.0.0.1:0");
-        addProperty("helloName", "myMailServer");
-        addProperty("connectiontimeout", "360000");
-        addProperty("handlerchain.[@coreHandlersPackage]", CoreCmdHandlerLoader.class.getName());
+    public AllButStartTlsLineChannelHandlerFactory(String pattern, int maxFrameLength) {
+        this.pattern = pattern;
+        this.maxFrameLength = maxFrameLength;
     }
 
+    @Override
+    public ChannelHandler create(ChannelPipeline pipeline) {
+        return new AllButStartTlsLineBasedChannelHandler(pipeline, maxFrameLength, false, pattern);
+    }
 }

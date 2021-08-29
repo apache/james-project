@@ -16,22 +16,14 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.protocols.smtp;
 
-import org.apache.james.protocols.netty.ChannelHandlerFactory;
-import org.jboss.netty.channel.ChannelHandler;
-import org.jboss.netty.channel.ChannelPipeline;
+package org.apache.james.protocols.api;
 
-public class AllButStartTlsLineChannelHandlerFactory implements ChannelHandlerFactory {
+// https://nostarttls.secvuln.info/
+public interface CommandDetectionSession {
+    boolean needsCommandInjectionDetection();
 
-    private int maxFrameLength;
+    void startDetectingCommandInjection();
 
-    public AllButStartTlsLineChannelHandlerFactory(int maxFrameLength) {
-        this.maxFrameLength = maxFrameLength;
-    }
-
-    @Override
-    public ChannelHandler create(ChannelPipeline pipeline) {
-        return new AllButStartTlsLineBasedChannelHandler(pipeline, maxFrameLength, false);
-    }
+    void stopDetectingCommandInjection();
 }
