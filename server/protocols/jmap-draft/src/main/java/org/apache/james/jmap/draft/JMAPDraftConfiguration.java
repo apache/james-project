@@ -73,7 +73,6 @@ public class JMAPDraftConfiguration {
             Preconditions.checkState(enabled.isPresent(), "You should specify if JMAP server should be started");
             Preconditions.checkState(!enabled.get() || !Strings.isNullOrEmpty(keystore), "'keystore' is mandatory");
             Preconditions.checkState(!enabled.get() || !Strings.isNullOrEmpty(secret), "'secret' is mandatory");
-            Preconditions.checkState(!enabled.get() || jwtPublicKeyPem.isPresent(), "'publicKey' is mandatory");
             return new JMAPDraftConfiguration(enabled.get(), keystore, secret, jwtPublicKeyPem);
         }
 

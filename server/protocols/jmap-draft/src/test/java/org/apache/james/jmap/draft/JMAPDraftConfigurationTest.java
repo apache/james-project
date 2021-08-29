@@ -20,6 +20,7 @@
 package org.apache.james.jmap.draft;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
@@ -85,14 +86,15 @@ public class JMAPDraftConfigurationTest {
     }
 
     @Test
-    public void buildShouldThrowWhenJwtPublicKeyPemIsEmpty() {
-        assertThatThrownBy(() -> JMAPDraftConfiguration.builder()
-            .enable()
-            .keystore("keystore")
-            .secret("secret")
-            .jwtPublicKeyPem(Optional.empty())
-            .build())
-            .isInstanceOf(IllegalStateException.class);
+    public void buildShouldNotThrowWhenJwtPublicKeyPemIsEmpty() {
+        assertThatCode(
+            () -> JMAPDraftConfiguration.builder()
+                .enable()
+                .keystore("keystore")
+                .secret("secret")
+                .jwtPublicKeyPem(Optional.empty())
+                .build())
+            .doesNotThrowAnyException();
     }
 
     @Test
