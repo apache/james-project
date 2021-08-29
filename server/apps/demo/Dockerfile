@@ -6,7 +6,7 @@ FROM apache/james:jpa-latest
 
 # Install git
 RUN apt-get update
-RUN apt-get install -y git
+RUN apt-get install -y git openssl
 
 WORKDIR /root
 
@@ -15,6 +15,9 @@ RUN cp /root/wait-for-it/wait-for-it.sh /usr/bin/wait-for-it.sh
 
 COPY startup.sh /root
 COPY initialdata.sh /root
+COPY imapserver.xml /root/conf
+COPY smtpserver.xml /root/conf
+COPY pop3server.xml /root/conf
 
 RUN chmod +x /root/startup.sh
 RUN chmod +x /root/initialdata.sh
