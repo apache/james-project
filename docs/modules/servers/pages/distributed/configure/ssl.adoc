@@ -21,7 +21,7 @@ for TLS 1.0 which, as a result, is sometimes referred to as SSL 3.1.
 You need to add a block in the corresponding configuration file (smtpserver.xml, pop3server.xml, imapserver.xml,..)
 
 ....
-<tls socketTLS="false" startTLS="false">
+<tls socketTLS="false" startTLS="true">
   <keystore>file://conf/keystore</keystore>
   <keystoreType>PKCS12</keystoreType>
   <secret>yoursecret</secret>
@@ -53,6 +53,17 @@ It is also recommended to change the port number on which the service will liste
 * SMTP - port 25, Secure SMTP - port 465
 
 You will now need to create your certificate store and place it in the james/conf/ folder with the name you defined in the keystore tag.
+
+Please note `JKS` keystore format is also supported (default value if no keystore type is specified):
+
+....
+<tls socketTLS="false" startTLS="true">
+  <keystore>file://conf/keystore</keystore>
+  <keystoreType>JKS</keystoreType>
+  <secret>yoursecret</secret>
+  <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+</tls>
+....
 
 == Certificate Keystores
 

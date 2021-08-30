@@ -79,7 +79,17 @@
       </ul>
 
       <p>You will now need to create your certificate store and place it in the james/conf/ folder with the name you defined in the keystore tag.</p>
-      
+
+        <p>Please note <code>JKS</code> keystore format is also supported (default value if no keystore type is specified):</p>
+        <source>
+&lt;tls socketTLS="false" startTLS="false"&gt;
+    &lt;keystore&gt;file://conf/keystore&lt;/keystore&gt;
+    &lt;keystoreType&gt;JKS&lt;/keystoreType&gt;
+    &lt;secret&gt;yoursecret&lt;/secret&gt;
+    &lt;provider&gt;org.bouncycastle.jce.provider.BouncyCastleProvider&lt;/provider&gt;
+&lt;/tls&gt;
+</source>
+
     </subsection>
 
     <subsection name="Certificate Keystores">
