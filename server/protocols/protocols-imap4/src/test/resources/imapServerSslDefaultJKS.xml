@@ -1,0 +1,10 @@
+
+<imapserver enabled="true">
+    <jmxName>imapserver</jmxName>
+    <bind>0.0.0.0:0</bind>
+    <tls socketTLS="false" startTLS="true">
+        <keystore>keystore.jks</keystore>
+        <secret>123456</secret>
+        <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+    </tls>
+</imapserver>
