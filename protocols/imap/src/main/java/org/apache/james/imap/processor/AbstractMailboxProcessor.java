@@ -568,7 +568,6 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
                 
             }
             searchQuery.andCriteria(SearchQuery.uid(nRanges));
-            searchQuery.andCriteria(SearchQuery.modSeqGreaterThan(changedSince));
             try (Stream<MessageUid> uids = Flux.from(mailbox.search(searchQuery.build(), session)).toStream()) {
                 uids.forEach(vanishedUids::remove);
             }
