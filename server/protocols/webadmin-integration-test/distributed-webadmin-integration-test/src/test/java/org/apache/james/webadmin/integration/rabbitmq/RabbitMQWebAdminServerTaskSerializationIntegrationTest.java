@@ -32,7 +32,6 @@ import static org.hamcrest.collection.IsMapWithSize.anEmptyMap;
 
 import java.io.ByteArrayInputStream;
 import java.util.Date;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.mail.Flags;
@@ -88,8 +87,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import com.github.fge.lambdas.Throwing;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -734,7 +731,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    void blobGCTaskShouldComplete() throws Exception {
+    void blobGCTaskShouldComplete() {
         String taskId = given()
             .queryParam("scope", "unreferenced")
             .delete("blobs")
@@ -743,12 +740,18 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
 
         with()
             .basePath(TasksRoutes.BASE)
-            .when()
+        .when()
             .get(taskId + "/await")
-            .then()
+        .then()
             .body("status", is(TaskManager.Status.COMPLETED.getValue()))
             .body("taskId", is(taskId))
-            .body("type", is("BlobGCTask"));
+            .body("type", is("BlobGCTask"))
+            .body("additionalInformation.referenceSourceCount", is(0))
+            .body("additionalInformation.blobCount", is(0))
+            .body("additionalInformation.gcedBlobCount", is(0))
+            .body("additionalInformation.errorCount", is(0))
+            .body("additionalInformation.bloomFilterExpectedBlobCount", is(1000000))
+            .body("additionalInformation.bloomFilterAssociatedProbability", is(0.8F));
     }
 
     private MailboxAdded createMailboxAdded() {

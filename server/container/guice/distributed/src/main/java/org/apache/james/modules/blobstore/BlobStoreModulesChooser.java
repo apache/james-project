@@ -35,6 +35,7 @@ import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.modules.blobstore.validation.EventsourcingStorageStrategy;
 import org.apache.james.modules.blobstore.validation.StorageStrategyModule;
+import org.apache.james.modules.mailbox.BlobStoreAPIModule;
 import org.apache.james.modules.mailbox.CassandraBlobStoreDependenciesModule;
 import org.apache.james.modules.mailbox.CassandraBucketModule;
 import org.apache.james.modules.objectstorage.DefaultBucketModule;
@@ -128,7 +129,7 @@ public class BlobStoreModulesChooser {
         return ImmutableList.<Module>builder()
             .add(chooseEncryptionModule(choosingConfiguration.getCryptoConfig()))
             .add(chooseBlobStoreDAOModule(choosingConfiguration.getImplementation()))
-            .add(chooseStoragePolicyModule(choosingConfiguration.storageStrategy()))
+            .addAll(chooseStoragePolicyModule(choosingConfiguration.storageStrategy()))
             .add(new StoragePolicyConfigurationSanityEnforcementModule(choosingConfiguration))
             .build();
     }
@@ -149,16 +150,18 @@ public class BlobStoreModulesChooser {
         return encryptionModule.orElse(new NoEncryptionModule());
     }
 
-    private static Module chooseStoragePolicyModule(StorageStrategy storageStrategy) {
+    private static List<Module> chooseStoragePolicyModule(StorageStrategy storageStrategy) {
         switch (storageStrategy) {
             case DEDUPLICATION:
-                return binder -> binder.bind(BlobStore.class)
+                Module deduplicationBlobModule = binder -> binder.bind(BlobStore.class)
                     .annotatedWith(Names.named(CachedBlobStore.BACKEND))
                     .to(DeDuplicationBlobStore.class);
+                return ImmutableList.of(new BlobDeduplicationGCModule(), deduplicationBlobModule);
             case PASSTHROUGH:
-                return binder -> binder.bind(BlobStore.class)
+                Module passThroughBlobModule = binder -> binder.bind(BlobStore.class)
                     .annotatedWith(Names.named(CachedBlobStore.BACKEND))
                     .to(PassThroughBlobStore.class);
+                return ImmutableList.of(new BlobStoreAPIModule(), passThroughBlobModule);
             default:
                 throw new RuntimeException("Unknown storage strategy " + storageStrategy.name());
         }

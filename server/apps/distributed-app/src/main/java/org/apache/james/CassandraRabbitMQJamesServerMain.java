@@ -34,8 +34,6 @@ import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.blobstore.BlobStoreCacheModulesChooser;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.blobstore.BlobStoreModulesChooser;
-import org.apache.james.modules.blobstore.BlobStrategyModule;
-import org.apache.james.modules.blobstore.server.BlobRoutesModules;
 import org.apache.james.modules.data.CassandraDLPConfigurationStoreModule;
 import org.apache.james.modules.data.CassandraDomainListModule;
 import org.apache.james.modules.data.CassandraJmapModule;
@@ -93,7 +91,6 @@ import com.google.inject.util.Modules;
 
 public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
     public static final Module WEBADMIN = Modules.combine(
-        new BlobRoutesModules(),
         new CassandraRoutesModule(),
         new DataRoutesModules(),
         new DeletedMessageVaultRoutesModule(),
@@ -129,7 +126,6 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
         new CassandraQuotaMailingModule());
 
     private static final Module BLOB_MODULE = Modules.combine(
-        new BlobStrategyModule(),
         new BlobExportMechanismModule());
 
     private static final Module CASSANDRA_EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE = binder ->

@@ -28,10 +28,7 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
-import org.apache.james.mailbox.cassandra.mail.AttachmentBlobReferenceSource;
-import org.apache.james.mailbox.cassandra.mail.MessageBlobReferenceSource;
-import org.apache.james.mailrepository.cassandra.MailRepositoryBlobReferenceSource;
-import org.apache.james.queue.rabbitmq.view.cassandra.MailQueueViewBlobReferenceSource;
+import org.apache.james.modules.blobstore.server.BlobRoutesModules;
 import org.apache.james.server.blob.deduplication.BlobGCTaskAdditionalInformationDTO;
 import org.apache.james.server.blob.deduplication.BlobGCTaskDTO;
 import org.apache.james.server.blob.deduplication.GenerationAwareBlobId;
@@ -47,29 +44,21 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
-import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.name.Named;
 
-public class BlobStrategyModule extends AbstractModule {
+public class BlobDeduplicationGCModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        Multibinder<BlobReferenceSource> multiBinder = Multibinder.newSetBinder(binder(),
-            BlobReferenceSource.class);
-
-        multiBinder.addBinding().to(AttachmentBlobReferenceSource.class);
-        multiBinder.addBinding().to(MailQueueViewBlobReferenceSource.class);
-        multiBinder.addBinding().to(MailRepositoryBlobReferenceSource.class);
-        multiBinder.addBinding().to(MessageBlobReferenceSource.class);
-
         bind(HashBlobId.Factory.class).in(Scopes.SINGLETON);
         bind(BlobId.Factory.class).to(GenerationAwareBlobId.Factory.class);
 
         bind(MetricableBlobStore.class).in(Scopes.SINGLETON);
         bind(BlobStore.class).to(MetricableBlobStore.class);
-    }
 
+        install(new BlobRoutesModules());
+    }
 
     @Singleton
     @Provides
@@ -99,7 +88,7 @@ public class BlobStrategyModule extends AbstractModule {
 
     @Named(DTOModuleInjections.WEBADMIN_DTO)
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminBlobGCAdditionalInformation() {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> webAdminBlobGCAdditionalInformation() {
         return BlobGCTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 }

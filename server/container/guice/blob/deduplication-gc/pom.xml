@@ -28,7 +28,7 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>blob-strategy-guice</artifactId>
+    <artifactId>blob-deduplication-gc-guice</artifactId>
     <packaging>jar</packaging>
 
     <name>Apache James :: Server :: Blob Storage Strategy - guice injection</name>
@@ -48,11 +48,7 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-mailrepository-cassandra</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-queue-rabbitmq</artifactId>
+            <artifactId>james-server-guice-webadmin-data</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

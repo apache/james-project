@@ -32,6 +32,7 @@ import org.apache.james.backends.rabbitmq.RabbitMQHealthCheck;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
+import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
@@ -54,6 +55,7 @@ import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewStar
 import org.apache.james.queue.rabbitmq.view.cassandra.ContentStartDAO;
 import org.apache.james.queue.rabbitmq.view.cassandra.DeletedMailsDAO;
 import org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDAO;
+import org.apache.james.queue.rabbitmq.view.cassandra.MailQueueViewBlobReferenceSource;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfigurationModule;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.EventsourcingConfigurationManagement;
@@ -103,6 +105,9 @@ public class RabbitMQModule extends AbstractModule {
 
         Multibinder<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlerMultibinder = Multibinder.newSetBinder(binder(), SimpleConnectionPool.ReconnectionHandler.class);
         reconnectionHandlerMultibinder.addBinding().to(SpoolerReconnectionHandler.class);
+
+        Multibinder.newSetBinder(binder(), BlobReferenceSource.class)
+            .addBinding().to(MailQueueViewBlobReferenceSource.class);
     }
 
     @Provides
