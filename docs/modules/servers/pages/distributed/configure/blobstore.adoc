@@ -41,13 +41,13 @@ Deduplication requires a garbage collector mechanism to effectively drop blobs. 
 based on bloom filters can be used and triggered using the WebAdmin REST API. See
 xref:distributed/operate/webadmin.adoc#_running_blob_garbage_collection[Running blob garbage collection].
 
-In order to avoid concurrency issues upon garbage collection, we slice th blobs in generation, the two more recent
-generation are not garbage collected.
+In order to avoid concurrency issues upon garbage collection, we slice the blobs in generation, the two more recent
+generations are not garbage collected.
 
 *deduplication.gc.generation.duration*: Allow controlling the duration of one generation. Longer implies better deduplication
-but deleted blobs will live longer. Duration, defaults on 30 days, the default unit is days.
+but deleted blobs will live longer. Duration, defaults on 30 days, the default unit is in days.
 
-*deduplication.gc.generation.family*: Every time the duration is changes, this integer counter must be incremented to avoid
+*deduplication.gc.generation.family*: Every time the duration is changed, this integer counter must be incremented to avoid
 conflicts. Defaults to 1.
 
 === Encryption choice

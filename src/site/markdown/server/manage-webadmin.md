@@ -3520,7 +3520,7 @@ Response codes:
 
 ## Running blob garbage collection
 
-When deduplication is enabled one need to explicitly run a garbage collection in order to delete no longer referenced
+When deduplication is enabled one needs to explicitly run a garbage collection in order to delete no longer referenced
 blobs.
 
 To do so:
@@ -3537,7 +3537,7 @@ Additional parameters include Bloom filter tuning parameters:
 same false-positives.
  - **expectedBlobCount**: Expected count of blobs used to size the bloom filters.
 
-The created task have the following additional information:
+The created task has the following additional information:
 
 ```json
 {
@@ -3554,7 +3554,7 @@ Where:
  - **bloomFilterExpectedBlobCount** correspond to the supplied **expectedBlobCount** query parameter.
  - **bloomFilterAssociatedProbability** correspond to the supplied **associatedProbability** query parameter.
  - **referenceSourceCount** is the count of distinct blob references encountered while populating the bloom filter.
- - **blobCount** is the count of blob tried against the bloom filter. This value can be used to better size the bloom
+ - **blobCount** is the count of blobs tried against the bloom filter. This value can be used to better size the bloom
 filter in later runs.
  - **gcedBlobCount** is the count of blobs that were garbage collected.
 
