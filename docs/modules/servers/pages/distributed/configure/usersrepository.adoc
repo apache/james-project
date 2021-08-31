@@ -23,6 +23,11 @@ after a domain delimiter('@'). E.g. 'myuser@james.org'
 A user is always considered as lower cased, so 'myUser' and 'myuser' are the same user, and can be used as well as
 recipient local part than as login for different protocols.
 
+Please note that when virtualhosting is enabled, user might authenticate with local parts only in IMAP, POP3 and SMTP,
+if there is no other ambiguous local parts. The supplied localPart will then be translated to the fully qualified email
+address (with a domain). When several users have the same local parts (but different domain), this implicit local part
+resolution fails, and thus these users cannot authenticate with localpart only, they need to supply a domain.
+
 == Configuration
 
 .usersrepository.xml content
@@ -48,7 +53,28 @@ to get some examples and hints.
 
 Example:
 
+....xml
+<repository name="LocalUsers"
+    class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository"
+    ldapHost="ldap://myldapserver:389"
+    principal="uid=ldapUser,ou=system"
+    credentials="password"
+    userBase="ou=People,o=myorg.com,ou=system"
+    userIdAttribute="uid"
+    userObjectClass="person" />
 ....
-<repository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldap://myldapserver:389"
-    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid"/>;
+
+This shows how to configure `virtual hosting` for the LDAP repository:
+
+....xml
+<repository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository"
+    ldapHost="ldap://myldapserver:389"
+    principal="uid=ldapUser,ou=system"
+    credentials="password"
+    userBase="ou=People,o=myorg.com,ou=system"
+    userIdAttribute="mail"
+    localPartAttribute="uid"
+    userObjectClass="person" >
+        <enableVirtualHosting>true</enableVirtualHosting>
+</usersrepository>
 ....
