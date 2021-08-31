@@ -46,6 +46,7 @@ public class LdapRepositoryConfiguration {
         private Optional<String> credentials;
         private Optional<String> userBase;
         private Optional<String> userIdAttribute;
+        private Optional<String> localPartAttribute;
         private Optional<String> userObjectClass;
         private Optional<Integer> poolSize;
 
@@ -57,10 +58,16 @@ public class LdapRepositoryConfiguration {
             userIdAttribute = Optional.empty();
             userObjectClass = Optional.empty();
             poolSize = Optional.empty();
+            localPartAttribute = Optional.empty();
         }
 
         public Builder ldapHost(String ldapHost) {
             this.ldapHost = Optional.of(ldapHost);
+            return this;
+        }
+
+        public Builder localPartAttribute(String localPartAttribute) {
+            this.localPartAttribute = Optional.of(localPartAttribute);
             return this;
         }
 
@@ -108,6 +115,7 @@ public class LdapRepositoryConfiguration {
                 credentials.get(),
                 userBase.get(),
                 userIdAttribute.get(),
+                localPartAttribute.orElse(userIdAttribute.get()),
                 userObjectClass.get(),
                 NO_CONNECTION_TIMEOUT,
                 NO_READ_TIME_OUT,
@@ -129,6 +137,8 @@ public class LdapRepositoryConfiguration {
         String credentials = configuration.getString("[@credentials]", "");
         String userBase = configuration.getString("[@userBase]");
         String userIdAttribute = configuration.getString("[@userIdAttribute]");
+        String localPartAttribute = Optional.ofNullable(configuration.getString("[@localPartAttribute]", null))
+            .orElse(userIdAttribute);
         String userObjectClass = configuration.getString("[@userObjectClass]");
         // Default is to use connection pooling
         int connectionTimeout = configuration.getInt("[@connectionTimeout]", NO_CONNECTION_TIMEOUT);
@@ -156,6 +166,7 @@ public class LdapRepositoryConfiguration {
             credentials,
             userBase,
             userIdAttribute,
+            localPartAttribute,
             userObjectClass,
             connectionTimeout,
             readTimeout,
@@ -203,6 +214,7 @@ public class LdapRepositoryConfiguration {
      * attribute.
      */
     private final String userIdAttribute;
+    private final String localPartAttribute;
 
     /**
      * The value of this field is taken from the configuration attribute
@@ -242,7 +254,7 @@ public class LdapRepositoryConfiguration {
     private final Optional<Username> administratorId;
 
     private LdapRepositoryConfiguration(String ldapHost, String principal, String credentials, String userBase, String userIdAttribute,
-                                        String userObjectClass, int connectionTimeout, int readTimeout,
+                                        String localPartAttribute, String userObjectClass, int connectionTimeout, int readTimeout,
                                         boolean supportsVirtualHosting, int poolSize, ReadOnlyLDAPGroupRestriction restriction, String filter,
                                         Optional<String> administratorId) throws ConfigurationException {
         this.ldapHost = ldapHost;
@@ -250,6 +262,7 @@ public class LdapRepositoryConfiguration {
         this.credentials = credentials;
         this.userBase = userBase;
         this.userIdAttribute = userIdAttribute;
+        this.localPartAttribute = localPartAttribute;
         this.userObjectClass = userObjectClass;
         this.connectionTimeout = connectionTimeout;
         this.readTimeout = readTimeout;
@@ -292,6 +305,10 @@ public class LdapRepositoryConfiguration {
 
     public String getUserIdAttribute() {
         return userIdAttribute;
+    }
+
+    public String getLocalPartAttribute() {
+        return localPartAttribute;
     }
 
     public String getUserObjectClass() {
@@ -339,6 +356,7 @@ public class LdapRepositoryConfiguration {
                 && Objects.equals(this.credentials, that.credentials)
                 && Objects.equals(this.userBase, that.userBase)
                 && Objects.equals(this.userIdAttribute, that.userIdAttribute)
+                && Objects.equals(this.localPartAttribute, that.localPartAttribute)
                 && Objects.equals(this.userObjectClass, that.userObjectClass)
                 && Objects.equals(this.restriction, that.restriction)
                 && Objects.equals(this.filter, that.filter)
@@ -350,7 +368,7 @@ public class LdapRepositoryConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(ldapHost, principal, credentials, userBase, userIdAttribute, userObjectClass,
+        return Objects.hash(ldapHost, principal, credentials, userBase, userIdAttribute, localPartAttribute, userObjectClass,
             connectionTimeout, readTimeout, supportsVirtualHosting, restriction, filter, administratorId, poolSize);
     }
 }

@@ -174,6 +174,18 @@ class ReadOnlyUsersLDAPRepositoryTest {
         }
 
         @Test
+        void getUserByNameShouldResolveEmails() throws Exception {
+            assertThat(usersRepository.getUserByName(JAMES_USER_MAIL).getUserName())
+                .isEqualTo(JAMES_USER_MAIL);
+        }
+
+        @Test
+        void getUserByNameShouldResolveLocalParts() throws Exception {
+            assertThat(usersRepository.getUserByName(JAMES_USER).getUserName())
+                .isEqualTo(JAMES_USER_MAIL);
+        }
+
+        @Test
         void listShouldReturnExistingUsers() throws Exception {
             assertThat(ImmutableList.copyOf(usersRepository.list())).containsOnly(JAMES_USER_MAIL);
         }
@@ -405,6 +417,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
     static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfigurationWithVirtualHosting(LdapGenericContainer ldapContainer, Optional<Username> administrator) {
         PropertyListConfiguration configuration = baseConfiguration(ldapContainer);
         configuration.addProperty("[@userIdAttribute]", "mail");
+        configuration.addProperty("[@localPartAttribute]", "uid");
         configuration.addProperty("supportsVirtualHosting", true);
         administrator.ifPresent(username -> configuration.addProperty("[@administratorId]", username.asString()));
         return configuration;

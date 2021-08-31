@@ -127,9 +127,9 @@ public class ReadOnlyLDAPUser implements User, Serializable {
      *         and <code>False</code> otherwise.
      */
     @Override
-    public boolean verifyPassword(String password) {
+    public boolean verifyPassword(CharSequence password) {
         try {
-            BindResult bindResult = connectionPool.bindAndRevertAuthentication(userDN.toString(), password);
+            BindResult bindResult = connectionPool.bindAndRevertAuthentication(userDN.toString(), String.valueOf(password));
             return bindResult.getResultCode() == ResultCode.SUCCESS;
         } catch (Exception e) {
             if (e instanceof LDAPBindException) {

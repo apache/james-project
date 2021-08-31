@@ -40,11 +40,13 @@ import org.apache.james.core.Username;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
+import org.apache.james.user.lib.LocalPart;
 import org.apache.james.user.lib.UsersDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.unboundid.ldap.sdk.Attribute;
 import com.unboundid.ldap.sdk.DN;
@@ -131,6 +133,13 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
 
     private Filter createFilter(String username) {
         Filter specificUserFilter = Filter.createEqualityFilter(ldapConfiguration.getUserIdAttribute(), username);
+        return userExtraFilter
+            .map(extraFilter -> Filter.createANDFilter(objectClassFilter, specificUserFilter, extraFilter))
+            .orElseGet(() -> Filter.createANDFilter(objectClassFilter, specificUserFilter));
+    }
+
+    private Filter createLocalPartFilter(String localPart) {
+        Filter specificUserFilter = Filter.createEqualityFilter(ldapConfiguration.getLocalPartAttribute(), localPart);
         return userExtraFilter
             .map(extraFilter -> Filter.createANDFilter(objectClassFilter, specificUserFilter, extraFilter))
             .orElseGet(() -> Filter.createANDFilter(objectClassFilter, specificUserFilter));
@@ -237,11 +246,37 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         }
 
         if (!ldapConfiguration.getRestriction().isActivated()
-            || userInGroupsMembershipList(result.getParsedDN(), ldapConfiguration.getRestriction().getGroupMembershipLists(ldapConnectionPool))) {
+            || applyGroupMembership(result)) {
 
-            return new ReadOnlyLDAPUser(name, result.getParsedDN(), ldapConnectionPool);
+            return asUser(name, result);
         }
         return null;
+    }
+
+    private ReadOnlyLDAPUser asUser(Username name, SearchResultEntry result) throws LDAPException {
+        return new ReadOnlyLDAPUser(name, result.getParsedDN(), ldapConnectionPool);
+    }
+
+    private List<ReadOnlyLDAPUser> searchByLocalPart(LocalPart localPart) throws LDAPException {
+        SearchResult searchResult = ldapConnectionPool.search(ldapConfiguration.getUserBase(),
+            SearchScope.SUB,
+            createLocalPartFilter(localPart.asString()),
+            ldapConfiguration.getLocalPartAttribute(), ldapConfiguration.getUserIdAttribute());
+
+        List<SearchResultEntry> results = searchResult.getSearchEntries();
+
+        return results.stream()
+            .filter(Throwing.<SearchResultEntry>predicate(result -> !ldapConfiguration.getRestriction().isActivated()
+                || applyGroupMembership(result))
+                .sneakyThrow())
+            .map(Throwing.<SearchResultEntry, ReadOnlyLDAPUser>function(
+                result -> asUser(Username.of(result.getAttribute(ldapConfiguration.getUserIdAttribute()).getValue()), result))
+                .sneakyThrow())
+            .collect(ImmutableList.toImmutableList());
+    }
+
+    private boolean applyGroupMembership(SearchResultEntry result) throws LDAPException {
+        return userInGroupsMembershipList(result.getParsedDN(), ldapConfiguration.getRestriction().getGroupMembershipLists(ldapConnectionPool));
     }
 
     private Optional<ReadOnlyLDAPUser> buildUser(DN userDN) throws LDAPException {
@@ -283,6 +318,18 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
             return Optional.ofNullable(searchAndBuildUser(name));
         } catch (Exception e) {
             throw new UsersRepositoryException("Unable check user existence from ldap", e);
+        }
+    }
+
+    @Override
+    public List<Username> retrieveUserFromLocalPart(LocalPart localPart) {
+        try {
+            return searchByLocalPart(localPart)
+                .stream()
+                .map(ReadOnlyLDAPUser::getUserName)
+                .collect(ImmutableList.toImmutableList());
+        } catch (Exception e) {
+            return ImmutableList.of();
         }
     }
 
