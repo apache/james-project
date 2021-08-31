@@ -43,6 +43,7 @@ import com.google.common.hash.Hashing;
 @Table(name = "JAMES_USER")
 @NamedQueries({ 
     @NamedQuery(name = "findUserByName", query = "SELECT user FROM JamesUser user WHERE user.name=:name"),
+    @NamedQuery(name = "findUserByLocalPart", query = "SELECT user FROM JamesUser user WHERE user.name LIKE :name"),
     @NamedQuery(name = "deleteUserByName", query = "DELETE FROM JamesUser user WHERE user.name=:name"),
     @NamedQuery(name = "containsUser", query = "SELECT COUNT(user) FROM JamesUser user WHERE user.name=:name"), 
     @NamedQuery(name = "countUsers", query = "SELECT COUNT(user) FROM JamesUser user"), 
@@ -57,11 +58,11 @@ public class JPAUser implements User {
      * @return not null
      */
     @VisibleForTesting
-    static String hashPassword(String password, String alg) {
+    static String hashPassword(CharSequence password, String alg) {
         return chooseHashFunction(alg).apply(password);
     }
 
-    interface PasswordHashFunction extends Function<String, String> {}
+    interface PasswordHashFunction extends Function<CharSequence, String> {}
 
     private static PasswordHashFunction chooseHashFunction(String nullableAlgorithm) {
         String algorithm = Optional.ofNullable(nullableAlgorithm).orElse("MD5");
@@ -133,7 +134,7 @@ public class JPAUser implements User {
     }
 
     @Override
-    public boolean verifyPassword(String pass) {
+    public boolean verifyPassword(CharSequence pass) {
         final boolean result;
         if (pass == null) {
             result = password == null;
