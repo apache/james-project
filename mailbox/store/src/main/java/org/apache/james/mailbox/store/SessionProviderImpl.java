@@ -69,7 +69,7 @@ public class SessionProviderImpl implements SessionProvider {
 
     @Override
     public MailboxSession loginAsOtherUser(Username adminUserid, String passwd, Username otherUserId) throws MailboxException {
-        if (! validLogin(adminUserid, passwd).map(adminUserid::equals).orElse(false)) {
+        if (!validLogin(adminUserid, passwd).map(adminUserid::equals).orElse(false)) {
             throw new BadCredentialsException();
         }
         Authorizator.AuthorizationState authorizationState = authorizator.canLoginAsOtherUser(adminUserid, otherUserId);
