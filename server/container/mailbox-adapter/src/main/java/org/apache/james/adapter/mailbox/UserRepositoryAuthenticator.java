@@ -46,7 +46,10 @@ public class UserRepositoryAuthenticator implements Authenticator {
     @Override
     public Optional<Username> isAuthentic(Username userid, CharSequence passwd) throws MailboxException {
         try {
-            final User user = repos.getUserByName(userid);
+            User user = repos.getUserByName(userid);
+            if (user == null) {
+                return Optional.empty();
+            }
             if (user.verifyPassword(passwd)) {
                 return Optional.of(user.getUserName());
             }

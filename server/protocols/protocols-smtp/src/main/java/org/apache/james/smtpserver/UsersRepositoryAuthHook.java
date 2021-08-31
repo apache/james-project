@@ -49,6 +49,10 @@ public class UsersRepositoryAuthHook implements AuthHook {
         try {
             User user = users.getUserByName(username);
 
+            if (user == null) {
+                return HookResult.DECLINED;
+            }
+
             if (user.verifyPassword(password)) {
                 session.setUsername(user.getUserName());
                 session.setRelayingAllowed(true);

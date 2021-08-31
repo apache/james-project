@@ -111,7 +111,7 @@ public class UserRepositoryAuthenticatorTest {
             }
         });
 
-        assertThat(testee.isAuthentic(USER, BAD_PASSWORD)).contains(USER_WITH_DOMAIN);
+        assertThat(testee.isAuthentic(USER, BAD_PASSWORD)).isEmpty();
     }
 
     @Test
@@ -123,7 +123,7 @@ public class UserRepositoryAuthenticatorTest {
 
     @Test
     void isAuthenticShouldFailOnUserRepositoryFailure() throws Exception {
-        when(usersRepository.test(USER, PASSWORD)).thenThrow(new UsersRepositoryException(""));
+        when(usersRepository.getUserByName(USER)).thenThrow(new UsersRepositoryException(""));
 
         assertThatThrownBy(() -> testee.isAuthentic(USER, PASSWORD))
             .isInstanceOf(MailboxException.class);
