@@ -109,11 +109,11 @@ public class JPAUsersDAO implements UsersDAO, Configurable {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
         try {
-            List<JPAUser> results = entityManager
+            return entityManager
                 .createNamedQuery("findUserByLocalPart", JPAUser.class)
                 .setParameter("name", localPart.asString() + "@%")
-                .getResultList();
-            return results.stream()
+                .getResultList()
+                .stream()
                 .map(JPAUser::getUserName)
                 .collect(ImmutableList.toImmutableList());
         } catch (NoResultException e) {
