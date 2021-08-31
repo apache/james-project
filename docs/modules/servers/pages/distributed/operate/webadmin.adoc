@@ -2306,6 +2306,45 @@ the following `additionalInformation`:
 }
 ....
 
+== Running blob garbage collection
+
+When deduplication is enabled one need to explicitly run a garbage collection in order to delete no longer referenced
+blobs.
+
+To do so:
+
+....
+curl -XDELETE http:ip:port/blobs?scope=unreferenced
+....
+
+link:#_endpoints_returning_a_task[More details about endpoints returning a task].
+
+Additional parameters include Bloom filter tuning parameters:
+
+ - *associatedProbability*: Allow to define the targeted false positive rate. Note that subsequent runs do not have the
+same false-positives.
+ - *expectedBlobCount*: Expected count of blobs used to size the bloom filters.
+
+The created task have the following additional information:
+
+....
+{
+  "referenceSourceCount": 3456,
+  "blobCount": 5678,
+  "gcedBlobCount": 1234,
+  "bloomFilterExpectedBlobCount": 10000,
+  "bloomFilterAssociatedProbability": 0.01
+}
+....
+
+Where:
+
+ - *bloomFilterExpectedBlobCount* correspond to the supplied *expectedBlobCount* query parameter.
+ - *bloomFilterAssociatedProbability* correspond to the supplied *associatedProbability* query parameter.
+ - *referenceSourceCount* is the count of distinct blob references encountered while populating the bloom filter.
+ - *blobCount* is the count of blob tried against the bloom filter. This value can be used to better size the bloom
+filter in later runs.
+ - *gcedBlobCount* is the count of blobs that were garbage collected.
 
 == Administrating Recipient rewriting
 

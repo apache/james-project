@@ -35,11 +35,20 @@ If you choose to enable deduplication, the mails with the same content will be s
 WARNING: Once this feature is enabled, there is no turning back as turning it off will lead to the deletion of all
 the mails sharing the same content once one is deleted.
 
-This feature also requires a garbage collector mechanism to effectively drop blobs, which is not implemented yet.
-
-Consequently, all the requested deletions will not be performed, meaning that blobstore will only grow.
-
 NOTE: If you are upgrading from James 3.5 or older, the deduplication was enabled.
+
+Deduplication requires a garbage collector mechanism to effectively drop blobs. A first implementation
+based on bloom filters can be used and triggered using the WebAdmin REST API. See
+xref:distributed/operate/webadmin.adoc#_running_blob_garbage_collection[Running blob garbage collection].
+
+In order to avoid concurrency issues upon garbage collection, we slice th blobs in generation, the two more recent
+generation are not garbage collected.
+
+*deduplication.gc.generation.duration*: Allow controlling the duration of one generation. Longer implies better deduplication
+but deleted blobs will live longer. Duration, defaults on 30 days, the default unit is days.
+
+*deduplication.gc.generation.family*: Every time the duration is changes, this integer counter must be incremented to avoid
+conflicts. Defaults to 1.
 
 === Encryption choice
 

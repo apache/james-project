@@ -277,11 +277,11 @@ Supported backends include S3 compatible ObjectStorage (link:https://wiki.openst
 
 Encryption can be configured on top of ObjectStorage.
 
-Blobs are currently deduplicated in order to reduce storage space. This means that two blobs with
+Blobs can currently be deduplicated in order to reduce storage space. This means that two blobs with
 the same content will be stored one once.
 
-The downside is that deletion is more complicated, and a garbage collection needs to be run. This is a work
-in progress. See link:https://issues.apache.org/jira/browse/JAMES-3150[JAMES-3150].
+The downside is that deletion is more complicated, and a garbage collection needs to be run. A first implementation
+based on bloom filters can be used and triggered using the WebAdmin REST API.
 
 === Task Manager
 
