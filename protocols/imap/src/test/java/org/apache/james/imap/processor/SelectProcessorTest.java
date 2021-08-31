@@ -128,7 +128,7 @@ class SelectProcessorTest {
     }
 
     @Test
-    void vanishedResponsesShouldBeSentWheDeletes() throws Exception {
+    void vanishedResponsesShouldBeSentWhenDeletes() throws Exception {
         FakeImapSession session = new FakeImapSession();
         session.authenticated();
         session.setMailboxSession(mailboxSession);
