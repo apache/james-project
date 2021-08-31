@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.user.api.UsersRepository;
@@ -36,7 +37,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class CassandraUsersRepositoryTest {
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraUsersRepositoryModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(CassandraUsersRepositoryModule.MODULE,
+        LocalPartLookupModule.MODULE));
 
     @Nested
     class WhenEnableVirtualHosting implements UsersRepositoryContract.WithVirtualHostingContract {
@@ -89,7 +91,8 @@ class CassandraUsersRepositoryTest {
     }
 
     private static UsersRepositoryImpl<CassandraUsersDAO> getUsersRepository(DomainList domainList, boolean enableVirtualHosting, Optional<Username> administrator) throws Exception {
-        CassandraUsersDAO usersDAO = new CassandraUsersDAO(new Algorithm.DefaultFactory(), cassandraCluster.getCassandraCluster().getConf());
+        CassandraLocalPartLookupRepository localPartLookupRepository = new CassandraLocalPartLookupRepository(cassandraCluster.getCassandraCluster().getConf());
+        CassandraUsersDAO usersDAO = new CassandraUsersDAO(new Algorithm.DefaultFactory(), localPartLookupRepository, cassandraCluster.getCassandraCluster().getConf());
         BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("enableVirtualHosting", String.valueOf(enableVirtualHosting));
         administrator.ifPresent(username -> configuration.addProperty("administratorId", username.asString()));

@@ -45,8 +45,10 @@ import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.sieve.cassandra.CassandraSieveRepositoryModule;
 import org.apache.james.task.Task;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.cassandra.CassandraLocalPartLookupRepository;
 import org.apache.james.user.cassandra.CassandraUsersDAO;
 import org.apache.james.user.cassandra.CassandraUsersRepositoryModule;
+import org.apache.james.user.cassandra.LocalPartLookupModule;
 import org.apache.james.user.lib.UsersRepositoryImpl;
 import org.apache.james.user.lib.model.Algorithm;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,6 +65,7 @@ public class CassandraRecomputeCurrentQuotasServiceTest implements RecomputeCurr
         MailboxAggregateModule.MODULE_WITH_QUOTA,
         CassandraDomainListModule.MODULE,
         CassandraSieveRepositoryModule.MODULE,
+        LocalPartLookupModule.MODULE,
         CassandraUsersRepositoryModule.MODULE));
 
     UsersRepositoryImpl usersRepository;
@@ -77,7 +80,8 @@ public class CassandraRecomputeCurrentQuotasServiceTest implements RecomputeCurr
         CassandraCluster cassandra = cassandraCluster.getCassandraCluster();
         CassandraMailboxSessionMapperFactory mapperFactory = CassandraTestSystemFixture.createMapperFactory(cassandra);
 
-        CassandraUsersDAO usersDAO = new CassandraUsersDAO(new Algorithm.DefaultFactory(), cassandra.getConf());
+        CassandraUsersDAO usersDAO = new CassandraUsersDAO(new Algorithm.DefaultFactory(),
+            new CassandraLocalPartLookupRepository(cassandra.getConf()), cassandra.getConf());
         usersRepository = new UsersRepositoryImpl(NO_DOMAIN_LIST, usersDAO);
         usersRepository.setEnableVirtualHosting(false);
 

@@ -49,6 +49,7 @@ public class CassandraUsersRepositoryModule extends AbstractModule {
         bind(UsersRepository.class).to(new TypeLiteral<UsersRepositoryImpl<CassandraUsersDAO>>() {});
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(org.apache.james.user.cassandra.CassandraUsersRepositoryModule.MODULE);
+        cassandraDataDefinitions.addBinding().toInstance(org.apache.james.user.cassandra.LocalPartLookupModule.MODULE);
     }
 
     @ProvidesIntoSet

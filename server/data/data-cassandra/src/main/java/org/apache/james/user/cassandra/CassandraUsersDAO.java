@@ -33,6 +33,7 @@ import static org.apache.james.user.cassandra.tables.CassandraUserTable.REALNAME
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.TABLE_NAME;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -42,6 +43,7 @@ import org.apache.james.core.Username;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
+import org.apache.james.user.lib.LocalPart;
 import org.apache.james.user.lib.UsersDAO;
 import org.apache.james.user.lib.model.Algorithm;
 import org.apache.james.user.lib.model.DefaultUser;
@@ -51,10 +53,13 @@ import com.datastax.driver.core.Session;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 
+import reactor.core.publisher.Mono;
+
 public class CassandraUsersDAO implements UsersDAO {
     private static final String DEFAULT_ALGO_VALUE = "SHA-512";
 
     private final Algorithm.Factory algorithmFactory;
+    private final CassandraLocalPartLookupRepository localPartLookupRepository;
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement getUserStatement;
     private final PreparedStatement updateUserStatement;
@@ -64,8 +69,9 @@ public class CassandraUsersDAO implements UsersDAO {
     private final PreparedStatement insertStatement;
 
     @Inject
-    public CassandraUsersDAO(Algorithm.Factory algorithmFactory, Session session) {
+    public CassandraUsersDAO(Algorithm.Factory algorithmFactory, CassandraLocalPartLookupRepository localPartLookupRepository, Session session) {
         this.algorithmFactory = algorithmFactory;
+        this.localPartLookupRepository = localPartLookupRepository;
         this.executor = new CassandraAsyncExecutor(session);
         this.getUserStatement = prepareGetUserStatement(session);
         this.updateUserStatement = prepareUpdateUserStatement(session);
@@ -143,6 +149,12 @@ public class CassandraUsersDAO implements UsersDAO {
         boolean executed = executor.executeReturnApplied(
             removeUserStatement.bind()
                 .setString(NAME, name.asString()))
+            .flatMap(success -> {
+                if (success) {
+                    return localPartLookupRepository.delete(name).thenReturn(success);
+                }
+                return Mono.just(success);
+            })
             .block();
 
         if (!executed) {
@@ -181,6 +193,12 @@ public class CassandraUsersDAO implements UsersDAO {
                 .setString(REALNAME, user.getUserName().asString())
                 .setString(PASSWORD, user.getHashedPassword())
                 .setString(ALGORITHM, user.getHashAlgorithm().asString()))
+            .flatMap(success -> {
+                if (success) {
+                    return localPartLookupRepository.store(username).thenReturn(success);
+                }
+                return Mono.just(success);
+            })
             .block();
 
         if (!executed) {
@@ -191,5 +209,12 @@ public class CassandraUsersDAO implements UsersDAO {
     @Override
     public boolean getDefaultVirtualHostingValue() {
         return true;
+    }
+
+    @Override
+    public List<Username> retrieveUserFromLocalPart(LocalPart localPart) {
+        return localPartLookupRepository.retrieve(localPart)
+            .collectList()
+            .block();
     }
 }
