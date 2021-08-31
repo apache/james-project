@@ -22,11 +22,10 @@ package org.apache.james;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class MemoryJamesServerTest implements JamesServerContract {
+class MemoryJamesServerTest implements JamesServerContract, LocalPartResolutionContract {
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<>(JamesServerBuilder.defaultConfigurationProvider())
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }
