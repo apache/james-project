@@ -27,6 +27,7 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.user.api.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,8 +47,10 @@ public class UsersRepositoryAuthHook implements AuthHook {
     @Override
     public HookResult doAuth(SMTPSession session, Username username, String password) {
         try {
-            if (users.test(username, password)) {
-                session.setUsername(username);
+            User user = users.getUserByName(username);
+
+            if (user.verifyPassword(password)) {
+                session.setUsername(user.getUserName());
                 session.setRelayingAllowed(true);
                 return HookResult.builder()
                     .hookReturnCode(HookReturnCode.ok())

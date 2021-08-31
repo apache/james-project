@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox;
 
+import java.util.Optional;
+
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 
@@ -35,5 +37,5 @@ public interface Authenticator {
      * @return true when the user is authentic,
      * false otherwise
      */
-    boolean isAuthentic(Username userid, CharSequence passwd) throws MailboxException;
+    Optional<Username> isAuthentic(Username userid, CharSequence passwd) throws MailboxException;
 }

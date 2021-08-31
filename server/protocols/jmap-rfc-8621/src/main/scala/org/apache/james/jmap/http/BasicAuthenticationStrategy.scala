@@ -128,5 +128,6 @@ class BasicAuthenticationStrategy @Inject()(val usersRepository: UsersRepository
     (maybeT, sink) => maybeT.foreach(t => sink.next(t))
 
   private def isValid(userCredential: UserCredential): Boolean =
-    usersRepository.test(userCredential.username, userCredential.password)
+    usersRepository.getUserByName(userCredential.username)
+      .verifyPassword(userCredential.password)
 }

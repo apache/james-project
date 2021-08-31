@@ -28,6 +28,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.user.api.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -35,6 +36,7 @@ public class UserRepositoryAuthenticatorTest {
 
     public static final String PASSWORD = "password";
     public static final Username USER = Username.of("user");
+    public static final Username USER_WITH_DOMAIN = Username.of("user@domain.com");
     public static final String BAD_PASSWORD = "badPassword";
     public static final Username BAD_USER = Username.of("badUser");
     private UsersRepository usersRepository;
@@ -48,23 +50,75 @@ public class UserRepositoryAuthenticatorTest {
 
     @Test
     void isAuthenticShouldReturnTrueWhenGoodLoginPassword() throws Exception {
-        when(usersRepository.test(USER, PASSWORD)).thenReturn(true);
+        when(usersRepository.getUserByName(USER)).thenReturn(new User() {
+            @Override
+            public Username getUserName() {
+                return USER;
+            }
 
-        assertThat(testee.isAuthentic(USER, PASSWORD)).isTrue();
+            @Override
+            public boolean verifyPassword(CharSequence pass) {
+                return true;
+            }
+
+            @Override
+            public boolean setPassword(String newPass) {
+                throw new RuntimeException();
+            }
+        });
+
+        assertThat(testee.isAuthentic(USER, PASSWORD)).contains(USER);
+    }
+
+    @Test
+    void isAuthenticShouldReturnTranslatedUser() throws Exception {
+        when(usersRepository.getUserByName(USER)).thenReturn(new User() {
+            @Override
+            public Username getUserName() {
+                return USER_WITH_DOMAIN;
+            }
+
+            @Override
+            public boolean verifyPassword(CharSequence pass) {
+                return true;
+            }
+
+            @Override
+            public boolean setPassword(String newPass) {
+                throw new RuntimeException();
+            }
+        });
+
+        assertThat(testee.isAuthentic(USER, BAD_PASSWORD)).contains(USER_WITH_DOMAIN);
     }
 
     @Test
     void isAuthenticShouldReturnFalseWhenWrongPassword() throws Exception {
-        when(usersRepository.test(USER, BAD_PASSWORD)).thenReturn(false);
+        when(usersRepository.getUserByName(USER)).thenReturn(new User() {
+            @Override
+            public Username getUserName() {
+                return USER;
+            }
 
-        assertThat(testee.isAuthentic(USER, BAD_PASSWORD)).isFalse();
+            @Override
+            public boolean verifyPassword(CharSequence pass) {
+                return false;
+            }
+
+            @Override
+            public boolean setPassword(String newPass) {
+                throw new RuntimeException();
+            }
+        });
+
+        assertThat(testee.isAuthentic(USER, BAD_PASSWORD)).contains(USER_WITH_DOMAIN);
     }
 
     @Test
     void isAuthenticShouldReturnFalseWhenBadUser() throws Exception {
-        when(usersRepository.test(USER, BAD_PASSWORD)).thenReturn(false);
+        when(usersRepository.getUserByName(USER)).thenReturn(null);
 
-        assertThat(testee.isAuthentic(BAD_USER, BAD_PASSWORD)).isFalse();
+        assertThat(testee.isAuthentic(BAD_USER, BAD_PASSWORD)).isEmpty();
     }
 
     @Test

@@ -64,6 +64,7 @@ import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.user.api.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -278,7 +279,9 @@ public class AuthenticationRoutes implements JMAPRoutes {
     private Mono<Boolean> authenticate(AccessTokenRequest request, Username username) {
         return Mono.fromCallable(() -> {
             try {
-                return usersRepository.test(username, request.getPassword());
+                User user = usersRepository.getUserByName(username);
+
+                return user.verifyPassword(request.getPassword());
             } catch (UsersRepositoryException e) {
                 LOGGER.error("Error while trying to validate authentication for user '{}'", username, e);
                 return false;

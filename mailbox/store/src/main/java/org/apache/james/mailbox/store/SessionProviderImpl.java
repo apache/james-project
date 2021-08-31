@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -34,6 +35,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.NotAdminException;
 import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.model.MailboxConstants;
+
+import com.github.fge.lambdas.Throwing;
 
 public class SessionProviderImpl implements SessionProvider {
     private final MailboxSessionIdGenerator idGenerator;
@@ -59,16 +62,14 @@ public class SessionProviderImpl implements SessionProvider {
 
     @Override
     public MailboxSession login(Username userid, String passwd) throws MailboxException {
-        if (isValidLogin(userid, passwd)) {
-            return createSession(userid, MailboxSession.SessionType.User);
-        } else {
-            throw new BadCredentialsException();
-        }
+        return validLogin(userid, passwd)
+            .map(Throwing.function(username -> createSession(username, MailboxSession.SessionType.User)))
+            .orElseThrow(BadCredentialsException::new);
     }
 
     @Override
     public MailboxSession loginAsOtherUser(Username adminUserid, String passwd, Username otherUserId) throws MailboxException {
-        if (! isValidLogin(adminUserid, passwd)) {
+        if (! validLogin(adminUserid, passwd).map(adminUserid::equals).orElse(false)) {
             throw new BadCredentialsException();
         }
         Authorizator.AuthorizationState authorizationState = authorizator.canLoginAsOtherUser(adminUserid, otherUserId);
@@ -110,7 +111,7 @@ public class SessionProviderImpl implements SessionProvider {
      * @param passwd the password
      * @return success true if login success false otherwise
      */
-    private boolean isValidLogin(Username userid, String passwd) throws MailboxException {
+    private Optional<Username> validLogin(Username userid, String passwd) throws MailboxException {
         return authenticator.isAuthentic(userid, passwd);
     }
 }
