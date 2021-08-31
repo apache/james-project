@@ -22,14 +22,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.InetSocketAddress;
-import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.net.pop3.POP3Client;
@@ -777,10 +776,13 @@ public class POP3ServerTest {
         mailboxManager = InMemoryIntegrationResources.builder()
             .authenticator((userid, passwd) -> {
                 try {
-                    return usersRepository.test(userid, passwd.toString());
+                    if (usersRepository.test(userid, passwd.toString())) {
+                        return Optional.of(userid);
+                    }
+                    return Optional.empty();
                 } catch (UsersRepositoryException e) {
                     e.printStackTrace();
-                    return false;
+                    return Optional.empty();
                 }
             })
             .fakeAuthorizator()

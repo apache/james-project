@@ -40,7 +40,7 @@ public interface User {
      *            the password to test
      * @return whether the password being tested is valid
      */
-    boolean verifyPassword(String pass);
+    boolean verifyPassword(CharSequence pass);
 
     /**
      * Sets new password from String. No checks made on guessability of

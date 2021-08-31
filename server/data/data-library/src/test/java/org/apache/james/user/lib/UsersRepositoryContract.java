@@ -552,6 +552,41 @@ public interface UsersRepositoryContract {
         }
 
         @Test
+        default void getUserByNameShouldAppendDomainWhenNoneAmbiguous(TestSystem testSystem) throws Exception {
+            testSystem.domainList.addDomain(Domain.of("Domain.OrG"));
+            String username = "myuser";
+            String password = "password";
+            testee().addUser(Username.of(username + "@Domain.OrG"), password);
+
+            User actual = testee().getUserByName(Username.of(username));
+
+            assertThat(actual.getUserName()).isEqualTo(Username.of(username + "@Domain.OrG"));
+        }
+
+        @Test
+        default void getUserByNameShouldReturnNullWhenAmbiguousLocalPart(TestSystem testSystem) throws Exception {
+            testSystem.domainList.addDomain(Domain.of("Domain.OrG"));
+            testSystem.domainList.addDomain(Domain.of("other.com"));
+            String username = "myuser";
+            String password = "password";
+            testee().addUser(Username.of(username + "@Domain.OrG"), password);
+            testee().addUser(Username.of(username + "@other.com"), password);
+
+            User actual = testee().getUserByName(Username.of(username));
+
+            assertThat(actual).isNull();
+        }
+
+        @Test
+        default void getUserByNameShouldReturnNullWhenUnusedLocalPart() throws Exception {
+            String username = "myuser";
+
+            User actual = testee().getUserByName(Username.of(username));
+
+            assertThat(actual).isNull();
+        }
+
+        @Test
         default void addUserShouldThrowWhenUserDoesNotBelongToDomainList(TestSystem testSystem) {
             assertThatThrownBy(() -> testee().addUser(testSystem.userWithUnknownDomain, "password"))
                 .isInstanceOf(InvalidUsernameException.class)

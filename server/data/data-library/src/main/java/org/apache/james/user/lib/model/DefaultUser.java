@@ -74,7 +74,7 @@ public class DefaultUser implements User, Serializable {
     }
 
     @Override
-    public boolean verifyPassword(String pass) {
+    public boolean verifyPassword(CharSequence pass) {
         try {
             String hashGuess = DigestUtil.digestString(pass, algorithm);
             return hashedPassword.equals(hashGuess);

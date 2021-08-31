@@ -20,6 +20,7 @@
 package org.apache.james.user.lib;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -41,6 +42,7 @@ import org.apache.james.user.api.model.User;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.collect.ImmutableList;
 
 public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository, Configurable {
     public static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(UsersRepositoryImpl.class);
@@ -118,6 +120,19 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
 
     @Override
     public User getUserByName(Username name) throws UsersRepositoryException {
+        if (supportVirtualHosting() && !name.hasDomainPart()) {
+            List<Username> candidates = usersDAO.retrieveUserFromLocalPart(LocalPart.of(name.getLocalPart()));
+
+            if (candidates.size() > 1) {
+                LOGGER.info("Ambiguous localPart used {}, candidates were {}", name.getLocalPart(), ImmutableList.copyOf(candidates));
+                return null;
+            }
+            if (candidates.size() == 0) {
+                LOGGER.info("LocalPart used {} do not correspond to any stored user", name.getLocalPart());
+                return null;
+            }
+            return usersDAO.getUserByName(candidates.get(0)).orElse(null);
+        }
         return usersDAO.getUserByName(name).orElse(null);
     }
 
