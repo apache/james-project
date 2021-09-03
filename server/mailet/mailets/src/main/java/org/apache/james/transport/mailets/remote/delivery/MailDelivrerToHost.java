@@ -60,16 +60,24 @@ public class MailDelivrerToHost {
 
     private final RemoteDeliveryConfiguration configuration;
     private final Converter7Bit converter7Bit;
-    private final Session session;
+    private final Session smtpSession;
+    private final Session smtpsSession;
 
     public MailDelivrerToHost(RemoteDeliveryConfiguration remoteDeliveryConfiguration, MailetContext mailetContext) {
         this.configuration = remoteDeliveryConfiguration;
         this.converter7Bit = new Converter7Bit(mailetContext);
-        this.session = Session.getInstance(configuration.createFinalJavaxProperties());
+        if (configuration.isSSLEnable()) {
+            this.smtpSession = Session.getInstance(configuration.createFinalJavaxPropertiesNoSSL());
+            this.smtpsSession = Session.getInstance(configuration.createFinalJavaxProperties());
+        } else {
+            this.smtpSession = Session.getInstance(configuration.createFinalJavaxProperties());
+            this.smtpsSession = this.smtpSession;
+        }
     }
 
     public ExecutionResult tryDeliveryToHost(Mail mail, Collection<InternetAddress> addr, HostAddress outgoingMailServer) throws MessagingException {
-        Properties props = getPropertiesForMail(mail);
+        Session session = selectSession(outgoingMailServer);
+        Properties props = getPropertiesForMail(mail, session);
         LOGGER.debug("Attempting delivery of {} to host {} at {} from {}",
             mail.getName(), outgoingMailServer.getHostName(), outgoingMailServer.getHost(), props.get("mail.smtp.from"));
 
@@ -95,6 +103,15 @@ public class MailDelivrerToHost {
             closeTransport(mail, outgoingMailServer, transport);
         }
         return ExecutionResult.success();
+    }
+
+    private Session selectSession(HostAddress host) {
+        System.out.println("___________ " + host.getProtocol());
+        if (host.getProtocol().equalsIgnoreCase("smtps")) {
+            return smtpsSession;
+        } else {
+            return smtpSession;
+        }
     }
 
     private void sendDSNAwareEmail(Mail mail, SMTPTransport transport, Collection<InternetAddress> addresses) {
@@ -164,7 +181,7 @@ public class MailDelivrerToHost {
         }
     }
 
-    private Properties getPropertiesForMail(Mail mail) {
+    private Properties getPropertiesForMail(Mail mail, Session session) {
         Properties props = session.getProperties();
         props.put("mail.smtp.from", mail.getMaybeSender().asString());
         return props;

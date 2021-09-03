@@ -231,7 +231,7 @@ class MailDelivrerTest {
     void deliverShouldReturnTemporaryFailureOnTemporaryResolutionException() throws Exception {
         Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
-        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenThrow(new TemporaryResolutionException());
+        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG, false)).thenThrow(new TemporaryResolutionException());
 
         ExecutionResult executionResult = testee.deliver(mail);
 
@@ -243,7 +243,7 @@ class MailDelivrerTest {
         Mail mail = FakeMail.builder().name("name").recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES).build();
 
         UnmodifiableIterator<HostAddress> empty = ImmutableList.<HostAddress>of().iterator();
-        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(empty);
+        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG, false)).thenReturn(empty);
 
         ExecutionResult executionResult = testee.deliver(mail);
 
@@ -256,7 +256,7 @@ class MailDelivrerTest {
         DeliveryRetriesHelper.incrementRetries(mail);
 
         UnmodifiableIterator<HostAddress> empty = ImmutableList.<HostAddress>of().iterator();
-        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(empty);
+        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG, false)).thenReturn(empty);
 
         ExecutionResult executionResult = testee.deliver(mail);
 
@@ -271,7 +271,7 @@ class MailDelivrerTest {
         DeliveryRetriesHelper.incrementRetries(mail);
 
         UnmodifiableIterator<HostAddress> empty = ImmutableList.<HostAddress>of().iterator();
-        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(empty);
+        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG, false)).thenReturn(empty);
 
         ExecutionResult executionResult = testee.deliver(mail);
 
@@ -288,7 +288,7 @@ class MailDelivrerTest {
         DeliveryRetriesHelper.incrementRetries(mail);
 
         UnmodifiableIterator<HostAddress> empty = ImmutableList.<HostAddress>of().iterator();
-        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(empty);
+        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG, false)).thenReturn(empty);
 
         ExecutionResult executionResult = testee.deliver(mail);
 
@@ -302,7 +302,7 @@ class MailDelivrerTest {
         UnmodifiableIterator<HostAddress> dnsEntries = ImmutableList.of(
             HOST_ADDRESS_1,
             HOST_ADDRESS_2).iterator();
-        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(dnsEntries);
+        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG, false)).thenReturn(dnsEntries);
         when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class)))
             .thenReturn(ExecutionResult.success());
         ExecutionResult executionResult = testee.deliver(mail);
@@ -318,7 +318,7 @@ class MailDelivrerTest {
         UnmodifiableIterator<HostAddress> dnsEntries = ImmutableList.of(
             HOST_ADDRESS_1,
             HOST_ADDRESS_2).iterator();
-        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(dnsEntries);
+        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG, false)).thenReturn(dnsEntries);
         when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class)))
             .thenThrow(new MessagingException("500 : Horrible way to manage Server Return code"));
         ExecutionResult executionResult = testee.deliver(mail);
@@ -334,7 +334,7 @@ class MailDelivrerTest {
         UnmodifiableIterator<HostAddress> dnsEntries = ImmutableList.of(
             HOST_ADDRESS_1,
             HOST_ADDRESS_2).iterator();
-        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(dnsEntries);
+        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG, false)).thenReturn(dnsEntries);
         when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class)))
             .thenThrow(new MessagingException("400 : Horrible way to manage Server Return code"));
         ExecutionResult executionResult = testee.deliver(mail);
@@ -350,7 +350,7 @@ class MailDelivrerTest {
         UnmodifiableIterator<HostAddress> dnsEntries = ImmutableList.of(
             HOST_ADDRESS_1,
             HOST_ADDRESS_2).iterator();
-        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(dnsEntries);
+        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG, false)).thenReturn(dnsEntries);
         when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), eq(HOST_ADDRESS_1)))
             .thenThrow(new MessagingException("400 : Horrible way to manage Server Return code", new IOException()));
         when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), eq(HOST_ADDRESS_2)))
@@ -368,7 +368,7 @@ class MailDelivrerTest {
         UnmodifiableIterator<HostAddress> dnsEntries = ImmutableList.of(
             HOST_ADDRESS_1,
             HOST_ADDRESS_2).iterator();
-        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(dnsEntries);
+        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG, false)).thenReturn(dnsEntries);
         when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class)))
             .thenThrow(new SMTPSenderFailedException(new InternetAddress(MailAddressFixture.ANY_AT_JAMES.toString()), "command", 505, "Big failure"));
         ExecutionResult executionResult = testee.deliver(mail);
@@ -384,7 +384,7 @@ class MailDelivrerTest {
         UnmodifiableIterator<HostAddress> dnsEntries = ImmutableList.of(
             HOST_ADDRESS_1,
             HOST_ADDRESS_2).iterator();
-        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(dnsEntries);
+        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG, false)).thenReturn(dnsEntries);
         when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class)))
             .thenThrow(new SendFailedException());
         ExecutionResult executionResult = testee.deliver(mail);
@@ -408,7 +408,7 @@ class MailDelivrerTest {
         UnmodifiableIterator<HostAddress> dnsEntries = ImmutableList.of(
             HOST_ADDRESS_1,
             HOST_ADDRESS_2).iterator();
-        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(dnsEntries);
+        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG, false)).thenReturn(dnsEntries);
         when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class)))
             .thenThrow(sfe);
         ExecutionResult executionResult = testee.deliver(mail);
@@ -432,7 +432,7 @@ class MailDelivrerTest {
         UnmodifiableIterator<HostAddress> dnsEntries = ImmutableList.of(
             HOST_ADDRESS_1,
             HOST_ADDRESS_2).iterator();
-        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(dnsEntries);
+        when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG, false)).thenReturn(dnsEntries);
         when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), eq(HOST_ADDRESS_1)))
             .thenThrow(sfe);
         when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), eq(HOST_ADDRESS_2)))
