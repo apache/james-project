@@ -144,7 +144,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         }
         
         permanentFlags(responder, metaData, selected);
-        highestModSeq(responder, metaData, selected);
+        highestModSeq(responder, metaData);
         uidNext(responder, metaData);
         
         if (request.getCondstore()) {
@@ -326,7 +326,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
     }
 
 
-    private void highestModSeq(Responder responder, MailboxMetaData metaData, SelectedMailbox selected) {
+    private void highestModSeq(Responder responder, MailboxMetaData metaData) {
         final StatusResponse untaggedOk;
         if (metaData.isModSeqPermanent()) {
             final ModSeq highestModSeq = metaData.getHighestModSeq();
