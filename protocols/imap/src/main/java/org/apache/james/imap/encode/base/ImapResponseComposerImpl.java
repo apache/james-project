@@ -228,7 +228,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
                 buffer.write(BYTE_BACK_SLASH);
             }
             // 7-bit ASCII only
-            if (character > 128) {
+            if (character >= 128) {
                 buffer.write(BYTE_QUESTION);
             } else {
                 buffer.write((byte) character);
