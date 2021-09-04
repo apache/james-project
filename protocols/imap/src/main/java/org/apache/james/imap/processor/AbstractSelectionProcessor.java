@@ -181,125 +181,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                 }
                 
                 if (uidSet != null) {
-                    // RFC5162 3.1. QRESYNC Parameter to SELECT/EXAMINE
-                    //
-                    // Message sequence match data:
-                    //
-                    //      A client MAY provide a parenthesized list of a message sequence set
-                    //      and the corresponding UID sets.  Both MUST be provided in ascending
-                    //      order.  The server uses this data to restrict the range for which it
-                    //      provides expunged message information.
-                    //
-                    //
-                    //      Conceptually, the client provides a small sample of sequence numbers
-                    //      for which it knows the corresponding UIDs.  The server then compares
-                    //      each sequence number and UID pair the client provides with the
-                    //      current state of the mailbox.  If a pair matches, then the client
-                    //      knows of any expunges up to, and including, the message, and thus
-                    //      will not include that range in the VANISHED response, even if the
-                    //      "mod-sequence-value" provided by the client is too old for the server
-                    //      to have data of when those messages were expunged.
-                    //
-                    //      Thus, if the Nth message number in the first set in the list is 4,
-                    //      and the Nth UID in the second set in the list is 8, and the mailbox's
-                    //      fourth message has UID 8, then no UIDs equal to or less than 8 are
-                    //      present in the VANISHED response.  If the (N+1)th message number is
-                    //      12, and the (N+1)th UID is 24, and the (N+1)th message in the mailbox
-                    //      has UID 25, then the lowest UID included in the VANISHED response
-                    //      would be 9.
-                    if (knownSequences != null && knownUids != null) {
-                        
-                        // Add all uids which are contained in the knownuidsset to a List so we can later access them via the index
-                        List<MessageUid> knownUidsList = new ArrayList<>();
-                        for (UidRange range : knownUids) {
-                            for (MessageUid uid : range) {
-                                knownUidsList.add(uid);
-                            }
-                        }
-                        
-                        // loop over the known sequences and check the UID for MSN X again the known UID X 
-                        MessageUid firstUid = MessageUid.MIN_VALUE;
-                        int index = 0;
-                        for (IdRange knownSequence : knownSequences) {
-                            boolean done = false;
-                            for (Long msn : knownSequence) {
-
-                                // Check if we have uids left to check against
-                                if (knownUidsList.size() > index++) {
-                                    int msnAsInt = msn.intValue();
-                                    MessageUid knownUid = knownUidsList.get(index);
-
-                                    // Check if the uid mathc if not we are done here
-                                    done = selected.uid(msnAsInt)
-                                        .filter(selectedUid -> selectedUid.equals(knownUid))
-                                        .isPresent();
-                                    if (done) {
-                                        break;
-                                    } else {
-                                        firstUid = knownUid;
-                                    }
-
-                                } else {
-                                    done = true;
-                                    break;
-                                }
-                            }
-
-                            // We found the first uid to start with 
-                            if (done) {
-                                firstUid = firstUid.next();
-
-                                // Ok now its time to filter out the IdRanges which we are not interested in
-                                List<UidRange> filteredUidSet = new ArrayList<>();
-                                for (UidRange r : uidSet) {
-                                    if (r.getLowVal().compareTo(firstUid) < 0) {
-                                        if (r.getHighVal().compareTo(firstUid) > 0) {
-                                            filteredUidSet.add(new UidRange(firstUid, r.getHighVal()));
-                                        }
-                                    } else {
-                                        filteredUidSet.add(r);
-                                    }
-                                }
-                                uidSet = filteredUidSet.toArray(UidRange[]::new);
-
-                                break;
-                            }
-                        }
-                        
-                    }
-                    
-                    List<MessageRange> ranges = new ArrayList<>();
-                    for (UidRange range : uidSet) {
-                        MessageRange messageSet = range.toMessageRange();
-                        if (messageSet != null) {
-                            MessageRange normalizedMessageSet = normalizeMessageRange(session.getSelected(), messageSet);
-                            ranges.add(normalizedMessageSet);
-                        }
-                    }
-                    
-                    // TODO: Reconsider if we can do something to make the handling better. Maybe at least cache the triplets for the expunged
-                    //       while have the server running. This could maybe allow us to not return every expunged message all the time
-                    //  
-                    //      As we don't store the <<MSN, UID>, <MODSEQ>> in a permanent way its the best to just ignore it here.
-                    //
-                    //      From RFC5162 4.1. Server Implementations That Don't Store Extra State
-                    //
-                    //
-                    //          Strictly speaking, a server implementation that doesn't remember mod-
-                    //          sequences associated with expunged messages can be considered
-                    //          compliant with this specification.  Such implementations return all
-                    //          expunged messages specified in the UID set of the UID FETCH
-                    //          (VANISHED) command every time, without paying attention to the
-                    //          specified CHANGEDSINCE mod-sequence.  Such implementations are
-                    //          discouraged, as they can end up returning VANISHED responses that are
-                    //          bigger than the result of a UID SEARCH command for the same UID set.
-                    //
-                    //          Clients that use the message sequence match data can reduce the scope
-                    //          of this VANISHED response substantially in the typical case where
-                    //          expunges have not happened, or happen only toward the end of the
-                    //          mailbox.
-                    //
-                    respondVanished(selected, ranges, modSeq, metaData, responder);
+                    respondVanished(session, responder, modSeq, knownSequences, knownUids, metaData, selected, mailboxSession, mailbox, uidSet);
                 }
                 taggedOk(responder, request, metaData, HumanReadableText.SELECT);
             } else {
@@ -315,6 +197,127 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         SearchResUtil.resetSavedSequenceSet(session);
     }
 
+    private void respondVanished(ImapSession session, Responder responder, Long modSeq, IdRange[] knownSequences, UidRange[] knownUids, MailboxMetaData metaData, SelectedMailbox selected, MailboxSession mailboxSession, MessageManager mailbox, UidRange[] uidSet) throws MailboxException {
+        // RFC5162 3.1. QRESYNC Parameter to SELECT/EXAMINE
+        //
+        // Message sequence match data:
+        //
+        //      A client MAY provide a parenthesized list of a message sequence set
+        //      and the corresponding UID sets.  Both MUST be provided in ascending
+        //      order.  The server uses this data to restrict the range for which it
+        //      provides expunged message information.
+        //
+        //
+        //      Conceptually, the client provides a small sample of sequence numbers
+        //      for which it knows the corresponding UIDs.  The server then compares
+        //      each sequence number and UID pair the client provides with the
+        //      current state of the mailbox.  If a pair matches, then the client
+        //      knows of any expunges up to, and including, the message, and thus
+        //      will not include that range in the VANISHED response, even if the
+        //      "mod-sequence-value" provided by the client is too old for the server
+        //      to have data of when those messages were expunged.
+        //
+        //      Thus, if the Nth message number in the first set in the list is 4,
+        //      and the Nth UID in the second set in the list is 8, and the mailbox's
+        //      fourth message has UID 8, then no UIDs equal to or less than 8 are
+        //      present in the VANISHED response.  If the (N+1)th message number is
+        //      12, and the (N+1)th UID is 24, and the (N+1)th message in the mailbox
+        //      has UID 25, then the lowest UID included in the VANISHED response
+        //      would be 9.
+        if (knownSequences != null && knownUids != null) {
+
+            // Add all uids which are contained in the knownuidsset to a List so we can later access them via the index
+            List<MessageUid> knownUidsList = new ArrayList<>();
+            for (UidRange range : knownUids) {
+                for (MessageUid uid : range) {
+                    knownUidsList.add(uid);
+                }
+            }
+
+            // loop over the known sequences and check the UID for MSN X again the known UID X
+            MessageUid firstUid = MessageUid.MIN_VALUE;
+            int index = 0;
+            for (IdRange knownSequence : knownSequences) {
+                boolean done = false;
+                for (Long msn : knownSequence) {
+
+                    // Check if we have uids left to check against
+                    if (knownUidsList.size() > index++) {
+                        int msnAsInt = msn.intValue();
+                        MessageUid knownUid = knownUidsList.get(index);
+
+                        // Check if the uid mathc if not we are done here
+                        done = selected.uid(msnAsInt)
+                            .filter(selectedUid -> selectedUid.equals(knownUid))
+                            .isPresent();
+                        if (done) {
+                            break;
+                        } else {
+                            firstUid = knownUid;
+                        }
+
+                    } else {
+                        done = true;
+                        break;
+                    }
+                }
+
+                // We found the first uid to start with
+                if (done) {
+                    firstUid = firstUid.next();
+
+                    // Ok now its time to filter out the IdRanges which we are not interested in
+                    List<UidRange> filteredUidSet = new ArrayList<>();
+                    for (UidRange r : uidSet) {
+                        if (r.getLowVal().compareTo(firstUid) < 0) {
+                            if (r.getHighVal().compareTo(firstUid) > 0) {
+                                filteredUidSet.add(new UidRange(firstUid, r.getHighVal()));
+                            }
+                        } else {
+                            filteredUidSet.add(r);
+                        }
+                    }
+                    uidSet = filteredUidSet.toArray(UidRange[]::new);
+
+                    break;
+                }
+            }
+
+        }
+
+        List<MessageRange> ranges = new ArrayList<>();
+        for (UidRange range : uidSet) {
+            MessageRange messageSet = range.toMessageRange();
+            if (messageSet != null) {
+                MessageRange normalizedMessageSet = normalizeMessageRange(session.getSelected(), messageSet);
+                ranges.add(normalizedMessageSet);
+            }
+        }
+
+        // TODO: Reconsider if we can do something to make the handling better. Maybe at least cache the triplets for the expunged
+        //       while have the server running. This could maybe allow us to not return every expunged message all the time
+        //
+        //      As we don't store the <<MSN, UID>, <MODSEQ>> in a permanent way its the best to just ignore it here.
+        //
+        //      From RFC5162 4.1. Server Implementations That Don't Store Extra State
+        //
+        //
+        //          Strictly speaking, a server implementation that doesn't remember mod-
+        //          sequences associated with expunged messages can be considered
+        //          compliant with this specification.  Such implementations return all
+        //          expunged messages specified in the UID set of the UID FETCH
+        //          (VANISHED) command every time, without paying attention to the
+        //          specified CHANGEDSINCE mod-sequence.  Such implementations are
+        //          discouraged, as they can end up returning VANISHED responses that are
+        //          bigger than the result of a UID SEARCH command for the same UID set.
+        //
+        //          Clients that use the message sequence match data can reduce the scope
+        //          of this VANISHED response substantially in the typical case where
+        //          expunges have not happened, or happen only toward the end of the
+        //          mailbox.
+        //
+        respondVanished(selected, ranges, modSeq, metaData, responder);
+    }
 
 
     private void highestModSeq(Responder responder, MailboxMetaData metaData, SelectedMailbox selected) {

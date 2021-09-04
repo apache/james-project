@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 
+import org.apache.james.events.EventBus;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -44,9 +45,10 @@ public class AbstractSelectionProcessorTest {
     public void setUp() {
         ImapProcessor nextProcessor = null;
         MailboxManager mailboxManager = null;
+        EventBus eventBus = null;
         StatusResponseFactory statusResponseFactory = null;
         MetricFactory metricFactory = null;
-        testee = new SelectProcessor(nextProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        testee = new SelectProcessor(nextProcessor, mailboxManager, eventBus, statusResponseFactory, metricFactory);
     }
 
     @Ignore("JAMES-2278 Processing fails with an index out of bound")
