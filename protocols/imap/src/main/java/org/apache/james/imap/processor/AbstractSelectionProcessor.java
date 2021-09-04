@@ -287,7 +287,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                     int msnAsInt = msn.intValue();
                     MessageUid knownUid = knownUidsList.get(index);
 
-                    // Check if the uid mathc if not we are done here
+                    // Check if the uid match if not we are done here
                     done = selected.uid(msnAsInt)
                         .filter(selectedUid -> selectedUid.equals(knownUid))
                         .isPresent();
