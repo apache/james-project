@@ -60,6 +60,7 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequest> extends AbstractMailboxProcessor<R> implements PermitEnableCapabilityProcessor {
@@ -264,7 +265,8 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         respondVanished(selected, ranges, modSeq, metaData, responder);
     }
 
-    private UidRange[] recomputeUidSet(IdRange[] knownSequences, UidRange[] knownUids, SelectedMailbox selected, UidRange[] uidSet) {
+    @VisibleForTesting
+    UidRange[] recomputeUidSet(IdRange[] knownSequences, UidRange[] knownUids, SelectedMailbox selected, UidRange[] uidSet) {
         // Add all uids which are contained in the knownuidsset to a List so we can later access them via the index
         List<MessageUid> knownUidsList = new ArrayList<>();
         for (UidRange range : knownUids) {
@@ -281,7 +283,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
             for (Long msn : knownSequence) {
 
                 // Check if we have uids left to check against
-                if (knownUidsList.size() > index++) {
+                if (knownUidsList.size() > index) {
                     int msnAsInt = msn.intValue();
                     MessageUid knownUid = knownUidsList.get(index);
 
@@ -294,7 +296,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                     } else {
                         firstUid = knownUid;
                     }
-
+                    index += 1;
                 } else {
                     done = true;
                     break;
