@@ -226,62 +226,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         //      would be 9.
         if (knownSequences != null && knownUids != null) {
 
-            // Add all uids which are contained in the knownuidsset to a List so we can later access them via the index
-            List<MessageUid> knownUidsList = new ArrayList<>();
-            for (UidRange range : knownUids) {
-                for (MessageUid uid : range) {
-                    knownUidsList.add(uid);
-                }
-            }
-
-            // loop over the known sequences and check the UID for MSN X again the known UID X
-            MessageUid firstUid = MessageUid.MIN_VALUE;
-            int index = 0;
-            for (IdRange knownSequence : knownSequences) {
-                boolean done = false;
-                for (Long msn : knownSequence) {
-
-                    // Check if we have uids left to check against
-                    if (knownUidsList.size() > index++) {
-                        int msnAsInt = msn.intValue();
-                        MessageUid knownUid = knownUidsList.get(index);
-
-                        // Check if the uid mathc if not we are done here
-                        done = selected.uid(msnAsInt)
-                            .filter(selectedUid -> selectedUid.equals(knownUid))
-                            .isPresent();
-                        if (done) {
-                            break;
-                        } else {
-                            firstUid = knownUid;
-                        }
-
-                    } else {
-                        done = true;
-                        break;
-                    }
-                }
-
-                // We found the first uid to start with
-                if (done) {
-                    firstUid = firstUid.next();
-
-                    // Ok now its time to filter out the IdRanges which we are not interested in
-                    List<UidRange> filteredUidSet = new ArrayList<>();
-                    for (UidRange r : uidSet) {
-                        if (r.getLowVal().compareTo(firstUid) < 0) {
-                            if (r.getHighVal().compareTo(firstUid) > 0) {
-                                filteredUidSet.add(new UidRange(firstUid, r.getHighVal()));
-                            }
-                        } else {
-                            filteredUidSet.add(r);
-                        }
-                    }
-                    uidSet = filteredUidSet.toArray(UidRange[]::new);
-
-                    break;
-                }
-            }
+            uidSet = recomputeUidSet(knownSequences, knownUids, selected, uidSet);
 
         }
 
@@ -317,6 +262,66 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         //          mailbox.
         //
         respondVanished(selected, ranges, modSeq, metaData, responder);
+    }
+
+    private UidRange[] recomputeUidSet(IdRange[] knownSequences, UidRange[] knownUids, SelectedMailbox selected, UidRange[] uidSet) {
+        // Add all uids which are contained in the knownuidsset to a List so we can later access them via the index
+        List<MessageUid> knownUidsList = new ArrayList<>();
+        for (UidRange range : knownUids) {
+            for (MessageUid uid : range) {
+                knownUidsList.add(uid);
+            }
+        }
+
+        // loop over the known sequences and check the UID for MSN X again the known UID X
+        MessageUid firstUid = MessageUid.MIN_VALUE;
+        int index = 0;
+        for (IdRange knownSequence : knownSequences) {
+            boolean done = false;
+            for (Long msn : knownSequence) {
+
+                // Check if we have uids left to check against
+                if (knownUidsList.size() > index++) {
+                    int msnAsInt = msn.intValue();
+                    MessageUid knownUid = knownUidsList.get(index);
+
+                    // Check if the uid mathc if not we are done here
+                    done = selected.uid(msnAsInt)
+                        .filter(selectedUid -> selectedUid.equals(knownUid))
+                        .isPresent();
+                    if (done) {
+                        break;
+                    } else {
+                        firstUid = knownUid;
+                    }
+
+                } else {
+                    done = true;
+                    break;
+                }
+            }
+
+            // We found the first uid to start with
+            if (done) {
+                firstUid = firstUid.next();
+
+                // Ok now its time to filter out the IdRanges which we are not interested in
+                List<UidRange> filteredUidSet = new ArrayList<>();
+                for (UidRange r : uidSet) {
+                    if (r.getLowVal().compareTo(firstUid) < 0) {
+                        if (r.getHighVal().compareTo(firstUid) > 0) {
+                            filteredUidSet.add(new UidRange(firstUid, r.getHighVal()));
+                        }
+                    } else {
+                        filteredUidSet.add(r);
+                    }
+                }
+                uidSet = filteredUidSet.toArray(UidRange[]::new);
+
+                break;
+            }
+        }
+        return uidSet;
     }
 
 
