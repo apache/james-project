@@ -52,7 +52,6 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
-import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UidValidity;
@@ -98,7 +97,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         } 
     }
 
-    private void respond(ImapSession session, MailboxPath fullMailboxPath, AbstractMailboxSelectionRequest request, Responder responder) throws MailboxException, MessageRangeException {
+    private void respond(ImapSession session, MailboxPath fullMailboxPath, AbstractMailboxSelectionRequest request, Responder responder) throws MailboxException {
 
         ClientSpecifiedUidValidity lastKnownUidValidity = request.getLastKnownUidValidity();
         Long modSeq = request.getKnownModSeq();
@@ -338,7 +337,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         responder.respond(untaggedOk);        
     }
 
-    private void uidNext(Responder responder, MailboxMetaData metaData) throws MailboxException {
+    private void uidNext(Responder responder, MailboxMetaData metaData) {
         final MessageUid uid = metaData.getUidNext();
         final StatusResponse untaggedOk = statusResponseFactory.untaggedOk(HumanReadableText.UIDNEXT, ResponseCode.uidNext(uid));
         responder.respond(untaggedOk);
@@ -374,7 +373,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
 
     }
 
-    private void uidValidity(Responder responder, MailboxMetaData metaData) throws MailboxException {
+    private void uidValidity(Responder responder, MailboxMetaData metaData) {
         final UidValidity uidValidity = metaData.getUidValidity();
         final StatusResponse untaggedOk = statusResponseFactory.untaggedOk(HumanReadableText.UID_VALIDITY, ResponseCode.uidValidity(uidValidity));
         responder.respond(untaggedOk);
@@ -386,7 +385,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
         responder.respond(recentResponse);
     }
 
-    private void exists(Responder responder, MailboxMetaData metaData) throws MailboxException {
+    private void exists(Responder responder, MailboxMetaData metaData) {
         final long messageCount = metaData.getMessageCount();
         final ExistsResponse existsResponse = new ExistsResponse(messageCount);
         responder.respond(existsResponse);
@@ -423,7 +422,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
     }
 
 
-    private void addRecent(MailboxMetaData metaData, SelectedMailbox sessionMailbox) throws MailboxException {
+    private void addRecent(MailboxMetaData metaData, SelectedMailbox sessionMailbox) {
         final List<MessageUid> recentUids = metaData.getRecent();
         for (MessageUid uid : recentUids) {
             sessionMailbox.addRecent(uid);
