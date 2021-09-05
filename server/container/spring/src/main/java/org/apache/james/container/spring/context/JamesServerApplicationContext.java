@@ -18,6 +18,9 @@
  ****************************************************************/
 package org.apache.james.container.spring.context;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.apache.james.container.spring.resource.DefaultJamesResourceLoader;
 import org.apache.james.container.spring.resource.JamesResourceLoader;
 import org.apache.james.server.core.JamesServerResourceLoader;
@@ -38,6 +41,11 @@ public class JamesServerApplicationContext extends ClassPathXmlApplicationContex
 
     public JamesServerApplicationContext(String[] configs) {
         super(configs);
+    }
+
+    @Override
+    public void validate(File file) throws IOException {
+        resourceLoader.validate(file);
     }
 
     /**

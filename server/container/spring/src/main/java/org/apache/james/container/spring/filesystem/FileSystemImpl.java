@@ -61,4 +61,11 @@ public class FileSystemImpl implements FileSystem, ApplicationContextAware {
         this.resourceLoader = (JamesResourceLoader) context;
     }
 
+    @Override
+    public File getFileWithinBaseDir(String fileURL) throws IOException {
+        File file = getFile(fileURL);
+        resourceLoader.validate(file);
+        return file;
+    }
+
 }

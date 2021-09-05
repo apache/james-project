@@ -54,4 +54,11 @@ public class FileSystemImpl implements FileSystem {
             throw new FileNotFoundException(e.getMessage());
         }
     }
+
+    @Override
+    public File getFileWithinBaseDir(String fileURL) throws FileNotFoundException, IOException {
+        final File file = getFile(fileURL);
+        resourceLoader.validate(file);
+        return file;
+    }
 }

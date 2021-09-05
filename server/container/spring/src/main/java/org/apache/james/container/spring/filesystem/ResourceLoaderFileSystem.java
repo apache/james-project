@@ -23,6 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.james.container.spring.resource.JamesResourceLoader;
 import org.apache.james.filesystem.api.FileSystem;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.io.ResourceLoader;
@@ -51,6 +52,18 @@ public class ResourceLoaderFileSystem implements FileSystem, ResourceLoaderAware
             return loader.getResource(".").getFile();
         } catch (IOException e) {
             throw new FileNotFoundException("Could not access base directory");
+        }
+    }
+
+
+    @Override
+    public File getFileWithinBaseDir(String fileURL) throws IOException {
+        File file = getFile(fileURL);
+        if (loader instanceof JamesResourceLoader) {
+            ((JamesResourceLoader) loader).validate(file);
+            return file;
+        } else {
+            return FileSystem.super.getFileWithinBaseDir(fileURL);
         }
     }
 
