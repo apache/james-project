@@ -18,18 +18,30 @@
  ****************************************************************/
 package org.apache.james.mailbox.maildir;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
+
+import java.io.File;
 import java.util.Optional;
+import java.util.UUID;
+
+import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.events.EventBus;
 import org.apache.james.junit.TemporaryFolderExtension;
 import org.apache.james.mailbox.MailboxManagerTest;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.SubscriptionManager;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import reactor.core.publisher.Flux;
 
 class DomainUserMaildirMailboxManagerTest extends MailboxManagerTest<StoreMailboxManager> {
 
@@ -41,6 +53,48 @@ class DomainUserMaildirMailboxManagerTest extends MailboxManagerTest<StoreMailbo
 
     @Nested
     class BasicFeaturesTests extends MailboxManagerTest<StoreMailboxManager>.BasicFeaturesTests {
+        @Disabled("MAILBOX-406 mailbox creation fails")
+        @Test
+        void namingAMailboxJamesUidValidityFails() throws Exception {
+            MailboxSession session1 = mailboxManager.get().createSystemSession(USER_1);
+
+            mailboxManager.get().createMailbox(MailboxPath.forUser(session1.getUser(), "tmp"), session1);
+            mailboxManager.get().getMailbox(MailboxPath.forUser(session1.getUser(), "tmp"), session1)
+                .appendMessage(MessageManager.AppendCommand.from(new SharedByteArrayInputStream("PWND".getBytes())), session1);
+
+            assertThatCode(() -> mailboxManager.get().createMailbox(MailboxPath.forUser(session1.getUser(), "tmp/james-uidvalidity"), session1))
+                .doesNotThrowAnyException();
+        }
+
+        @Disabled("MAILBOX-406 mailbox creation fails")
+        @Test
+        void namingAMailboxJamesUidListFails() throws Exception {
+            MailboxSession session1 = mailboxManager.get().createSystemSession(USER_1);
+
+            mailboxManager.get().createMailbox(MailboxPath.forUser(session1.getUser(), "tmp"), session1);
+            mailboxManager.get().getMailbox(MailboxPath.forUser(session1.getUser(), "tmp"), session1)
+                .appendMessage(MessageManager.AppendCommand.from(new SharedByteArrayInputStream("PWND".getBytes())), session1);
+
+            assertThatCode(() -> mailboxManager.get().createMailbox(MailboxPath.forUser(session1.getUser(), "tmp/james-uidlist"), session1))
+                .doesNotThrowAnyException();
+        }
+
+        @Disabled("MAILBOX-406 listing emails fails")
+        @Test
+        void namingAMailboxJamesUidAclMakesReadingOtherMailboxFailing() throws Exception {
+            MailboxSession session1 = mailboxManager.get().createSystemSession(USER_1);
+
+            mailboxManager.get().createMailbox(MailboxPath.forUser(session1.getUser(), "tmp"), session1);
+            mailboxManager.get().getMailbox(MailboxPath.forUser(session1.getUser(), "tmp"), session1)
+                .appendMessage(MessageManager.AppendCommand.from(new SharedByteArrayInputStream("PWND".getBytes())), session1);
+
+            mailboxManager.get().createMailbox(MailboxPath.forUser(session1.getUser(), "tmp/james-acl"), session1);
+
+            assertThatCode(() -> Flux.from(mailboxManager.get().getMailbox(MailboxPath.forUser(session1.getUser(), "tmp"), session1)
+                    .listMessagesMetadata(MessageRange.all(), session1)).blockLast())
+                .doesNotThrowAnyException();
+        }
+
         @Disabled("MAILBOX-389 Mailbox rename fails with Maildir")
         @Test
         protected void renameMailboxShouldChangeTheMailboxPathOfAMailbox() {
@@ -114,7 +168,7 @@ class DomainUserMaildirMailboxManagerTest extends MailboxManagerTest<StoreMailbo
 
     private StoreMailboxManager createMailboxManager() {
         try {
-            return MaildirMailboxManagerProvider.createMailboxManager("/%fulluser", temporaryFolder.getTemporaryFolder().getTempDir());
+            return MaildirMailboxManagerProvider.createMailboxManager("/%fulluser", new File(System.getProperty("java.io.tmpdir") + "/" + UUID.randomUUID()));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
