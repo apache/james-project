@@ -377,6 +377,9 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     protected File getScriptFile(Username username, ScriptName name) throws ScriptNotFoundException, StorageException {
+        if (name.getValue().contains("/")) {
+            throw new StorageException(new IllegalArgumentException("Script name should not contain '/' as it can allow path traversal"));
+        }
         File file = new File(getUserDirectory(username), name.getValue());
         enforceRoot(file);
         if (!file.exists()) {
