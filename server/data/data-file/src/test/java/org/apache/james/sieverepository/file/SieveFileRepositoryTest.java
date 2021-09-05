@@ -12,6 +12,7 @@ import java.io.InputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.core.Username;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.StorageException;
@@ -72,6 +73,15 @@ class SieveFileRepositoryTest implements SieveRepositoryContract {
     void putScriptShouldThrowOnCraftedScriptName() {
         assertThatThrownBy(() ->  sieveRepository().putScript(Username.of("test"),
                 new ScriptName("../../../../home/interview1/script"), SCRIPT_CONTENT))
+            .isInstanceOf(StorageException.class);
+    }
+
+    @Test
+    void getScriptShouldNotAllowToReadScriptsOfOtherUsers() throws Exception {
+        sieveRepository().putScript(Username.of("other"), new ScriptName("script"), new ScriptContent("PWND!!!"));
+
+        assertThatThrownBy(() ->  sieveRepository().getScript(Username.of("test"),
+                new ScriptName("../other/script")))
             .isInstanceOf(StorageException.class);
     }
 }
