@@ -46,6 +46,11 @@ class DomainUserMaildirMailboxManagerTest extends MailboxManagerTest<StoreMailbo
         protected void renameMailboxShouldChangeTheMailboxPathOfAMailbox() {
         }
 
+        @Disabled("MAILBOX-407 Returns a NPE")
+        @Test
+        protected void listShouldReturnEmptyListWhenNoMailboxes() {
+        }
+
         @Disabled("MAILBOX-389 Mailbox rename fails with Maildir")
         @Test
         protected void renameMailboxByIdShouldChangeTheMailboxPathOfAMailbox() {
