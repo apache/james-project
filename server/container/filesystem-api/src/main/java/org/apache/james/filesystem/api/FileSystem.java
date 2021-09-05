@@ -82,6 +82,17 @@ public interface FileSystem {
     File getFile(String fileURL) throws FileNotFoundException;
 
     /**
+     * Similar to getFile but enforces the file to be within baseDir
+     */
+    default File getFileWithinBaseDir(String fileURL) throws FileNotFoundException, IOException {
+        File file = getFile(fileURL);
+        if (file.getCanonicalPath().startsWith(getBasedir().getCanonicalPath())) {
+            return file;
+        }
+        throw new IOException(fileURL + " jail break outside of " + getBasedir().getCanonicalPath());
+    }
+
+    /**
      * Return the base folder used by the application
      */
     File getBasedir() throws FileNotFoundException;

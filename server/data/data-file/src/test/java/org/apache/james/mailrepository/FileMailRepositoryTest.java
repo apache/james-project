@@ -19,6 +19,10 @@
 
 package org.apache.james.mailrepository;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.io.IOException;
+
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.mailrepository.api.MailRepository;
@@ -27,6 +31,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 public class FileMailRepositoryTest {
 
@@ -71,6 +76,48 @@ public class FileMailRepositoryTest {
             configuration.addProperty("[@FIFO]", "false");
             configuration.addProperty("[@CACHEKEYS]", "true");
             return configuration;
+        }
+    }
+
+    @Nested
+    @DisplayName("Default configuration")
+    public class AccessTest {
+        private FileMailRepository mailRepository;
+        private MockFileSystem filesystem;
+
+        @BeforeEach
+        void init() throws Exception {
+            filesystem = new MockFileSystem();
+            mailRepository = new FileMailRepository();
+            mailRepository.setFileSystem(filesystem);
+        }
+
+        protected BaseHierarchicalConfiguration getConfiguration() {
+            BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
+            configuration.addProperty("[@destinationURL]", "file://../../trying/a/location/of/james/root");
+            return withConfigurationOptions(configuration);
+        }
+
+        protected BaseHierarchicalConfiguration withConfigurationOptions(BaseHierarchicalConfiguration configuration) {
+            configuration.addProperty("[@FIFO]", "false");
+            configuration.addProperty("[@CACHEKEYS]", "true");
+            return configuration;
+        }
+
+        @AfterEach
+        void tearDown() {
+            filesystem.clear();
+        }
+
+        @Test
+        void repositoriesOutsideOfJamesRootShouldBeRejected() {
+            assertThatThrownBy(() -> {
+                mailRepository.configure(getConfiguration());
+                mailRepository.init();
+            }).isInstanceOf(org.apache.commons.configuration2.ex.ConfigurationException.class)
+                .hasCauseInstanceOf(IOException.class)
+                .<Throwable>extracting(Throwable::getCause)
+                .satisfies(e -> e.getMessage().startsWith("file://../../trying/a/location/of/james/root jail break outside of "));
         }
     }
 
