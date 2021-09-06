@@ -32,7 +32,7 @@ S: A002 OK \[READ-WRITE\] SELECT completed\.
 
 C: A003 APPEND #private.imapuser.test {310}
 # Use command continuation request
-S: \+
+S: \+ Ok
 C: Date: Mon, 7 Feb 1994 21:52:25 -0800 (PST)
 C: From: Fred Foobar <foobar@Blurdybloop.COM>
 C: Subject: afternoon meeting 2

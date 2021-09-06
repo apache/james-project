@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.imapserver.netty;
 
-import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -26,7 +25,7 @@ import org.jboss.netty.channel.Channel;
 
 public abstract class AbstractNettyImapRequestLineReader extends ImapRequestLineReader {
     private final Channel channel;
-    private final ChannelBuffer cRequest = ChannelBuffers.wrappedBuffer("+\r\n".getBytes());
+    private final ChannelBuffer cRequest = ChannelBuffers.wrappedBuffer("+ Ok\r\n".getBytes());
     private final boolean retry;
 
     public AbstractNettyImapRequestLineReader(Channel channel, boolean retry) {
@@ -36,7 +35,7 @@ public abstract class AbstractNettyImapRequestLineReader extends ImapRequestLine
     }
 
     @Override
-    protected void commandContinuationRequest() throws DecodingException {
+    protected void commandContinuationRequest() {
         // only write the request out if this is not a retry to process the
         // request..
 

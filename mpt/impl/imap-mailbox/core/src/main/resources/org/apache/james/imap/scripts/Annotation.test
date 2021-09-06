@@ -34,7 +34,7 @@ C: a3 SETMETADATA INBOX (/private/comment NIL)
 S: a3 OK SETMETADATA completed.
 
 C: a4 SETMETADATA INBOX (/private/comment {33}
-S: \+
+S: \+ Ok
 C: My new comment across
 C: two lines. )
 S: a4 OK SETMETADATA completed.

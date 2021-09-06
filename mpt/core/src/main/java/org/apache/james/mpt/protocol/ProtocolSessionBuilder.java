@@ -43,7 +43,7 @@ public class ProtocolSessionBuilder {
 
     public static final String WAIT = "WAIT";
 
-    public static final String SERVER_CONTINUATION_TAG = "S: \\+";
+    public static final String SERVER_CONTINUATION_TAG = "S: \\+ Ok";
 
     public static final String CLIENT_TAG = "C:";
 
@@ -184,7 +184,7 @@ public class ProtocolSessionBuilder {
         while ((line = reader.readLine()) != null) {
             line = substituteVariables(line);
             String location = scriptName + ":" + lineNumber;
-            if (SERVER_CONTINUATION_TAG.equals(line)) {
+            if (line.startsWith("\\+")) {
                 session.cont(sessionNumber);
             } else if (line.startsWith(CLIENT_TAG)) {
                 String clientMsg = "";

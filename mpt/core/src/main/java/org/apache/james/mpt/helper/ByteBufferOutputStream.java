@@ -47,7 +47,7 @@ public class ByteBufferOutputStream extends OutputStream {
     @Override
     public void write(int b) throws IOException {
         buffer.put((byte) b);
-        if (b == '\n' && matchPlus && matchCR && matchLF) {
+        if (matchPlus &&  matchLF) {
             matchPlus = false;
             matchCR = false;
             matchLF = false;
@@ -59,8 +59,6 @@ public class ByteBufferOutputStream extends OutputStream {
         } else if (b == '+' && matchLF) {
             matchPlus = true;
             matchCR = false;
-        } else if (b == '\r' && matchPlus && matchLF) {
-            matchCR = true;
         } else {
             matchPlus = false;
             matchCR = false;

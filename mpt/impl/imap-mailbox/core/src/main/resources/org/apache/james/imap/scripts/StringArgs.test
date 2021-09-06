@@ -53,7 +53,7 @@ S: a001 OK STATUS completed.
 
 # non-synchronized literal
 C: a001 STATUS {11}
-S: \+
+S: \+ Ok
 C: atomMailbox (MESSAGES)
 S: \* STATUS \"atomMailbox\" \(MESSAGES \d+\)
 S: a001 OK STATUS completed.
