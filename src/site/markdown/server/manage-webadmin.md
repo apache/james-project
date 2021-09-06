@@ -3526,7 +3526,7 @@ blobs.
 To do so:
 
 ```
-curl -XDELETE http:ip:port/blobs?scope=unreferenced
+curl -XDELETE http://ip:port/blobs?scope=unreferenced
 ```
 
 [More details about endpoints returning a task](#Endpoints_returning_a_task).
