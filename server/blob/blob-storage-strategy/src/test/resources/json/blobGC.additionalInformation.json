@@ -1,0 +1,10 @@
+{
+  "type": "BlobGCTask",
+  "timestamp": "2007-12-03T10:15:30Z",
+  "referenceSourceCount": 1,
+  "blobCount": 2,
+  "gcedBlobCount": 3,
+  "errorCount": 4,
+  "bloomFilterExpectedBlobCount": 5,
+  "bloomFilterAssociatedProbability": 0.8
+}

@@ -50,7 +50,8 @@ public class BlobGCTask implements Task {
                 snapshot.getGcedBlobCount(),
                 snapshot.getErrorCount(),
                 snapshot.getBloomFilterExpectedBlobCount(),
-                snapshot.getBloomFilterAssociatedProbability());
+                snapshot.getBloomFilterAssociatedProbability(),
+                Clock.systemUTC().instant());
         }
 
         private final Instant timestamp;
@@ -66,14 +67,15 @@ public class BlobGCTask implements Task {
                               long gcedBlobCount,
                               long errorCount,
                               long bloomFilterExpectedBlobCount,
-                              double bloomFilterAssociatedProbability) {
+                              double bloomFilterAssociatedProbability,
+                              Instant timestamp) {
             this.referenceSourceCount = referenceSourceCount;
             this.blobCount = blobCount;
             this.gcedBlobCount = gcedBlobCount;
             this.errorCount = errorCount;
             this.bloomFilterExpectedBlobCount = bloomFilterExpectedBlobCount;
             this.bloomFilterAssociatedProbability = bloomFilterAssociatedProbability;
-            this.timestamp = Clock.systemUTC().instant();
+            this.timestamp = timestamp;
         }
 
         @Override
@@ -221,5 +223,21 @@ public class BlobGCTask implements Task {
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
         return Optional.of(AdditionalInformation.from(context));
+    }
+
+    public Clock getClock() {
+        return clock;
+    }
+
+    public BucketName getBucketName() {
+        return bucketName;
+    }
+
+    public int getExpectedBlobCount() {
+        return expectedBlobCount;
+    }
+
+    public double getAssociatedProbability() {
+        return associatedProbability;
     }
 }
