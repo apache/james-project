@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
@@ -535,7 +534,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
     /**
      * Send VANISHED responses if needed. 
      */
-    protected void respondVanished(MailboxSession session, MessageManager mailbox, List<MessageRange> ranges, long changedSince, MailboxMetaData metaData, Responder responder) throws MailboxException {
+    protected void respondVanished(SelectedMailbox selectedMailbox, List<MessageRange> ranges, long changedSince, MailboxMetaData metaData, Responder responder) throws MailboxException {
         // RFC5162 4.2. Server Implementations Storing Minimal State
         //  
         //      A server that stores the HIGHESTMODSEQ value at the time of the last
@@ -561,16 +560,17 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
                 MessageUid from = nr.getLowValue();
                 MessageUid to = nr.getHighValue();
                 while (from.compareTo(to) <= 0) {
-                    vanishedUids.add(from);
+                    MessageUid copy = from;
+                    selectedMailbox.msn(from).fold(
+                        () -> vanishedUids.add(copy),
+                        msn -> {
+                            // ignore still there
+                            return true;
+                        });
                     from = from.next();
                 }
                 nRanges[i] = nr;
-                
-            }
-            searchQuery.andCriteria(SearchQuery.uid(nRanges));
-            searchQuery.andCriteria(SearchQuery.modSeqGreaterThan(changedSince));
-            try (Stream<MessageUid> uids = Flux.from(mailbox.search(searchQuery.build(), session)).toStream()) {
-                uids.forEach(vanishedUids::remove);
+
             }
             UidRange[] vanishedIdRanges = uidRanges(MessageRange.toRanges(vanishedUids));
             responder.respond(new VanishedResponse(vanishedIdRanges, true));
