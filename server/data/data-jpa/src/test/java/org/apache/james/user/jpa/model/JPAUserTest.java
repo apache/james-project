@@ -28,7 +28,7 @@ class JPAUserTest {
     @Test
     void hashPasswordShouldBeNoopWhenNone() {
         //I doubt the expected result was the author intent
-        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, "NONE")).isEqualTo("password");
+        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, "NONE")).isEqualTo("baeMiqu7");
     }
 
     @Test

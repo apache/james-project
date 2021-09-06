@@ -67,9 +67,9 @@ public class JPAUser implements User {
         String algorithm = Optional.ofNullable(nullableAlgorithm).orElse("MD5");
         switch (algorithm) {
             case "NONE":
-                return (password) -> "password";
+                return password -> password;
             default:
-                return (password) -> chooseHashing(algorithm).hashString(password, StandardCharsets.UTF_8).toString();
+                return password -> chooseHashing(algorithm).hashString(password, StandardCharsets.UTF_8).toString();
         }
     }
 
