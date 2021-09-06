@@ -106,7 +106,6 @@ public class MailDelivrerToHost {
     }
 
     private Session selectSession(HostAddress host) {
-        System.out.println("___________ " + host.getProtocol());
         if (host.getProtocol().equalsIgnoreCase("smtps")) {
             return smtpsSession;
         } else {
