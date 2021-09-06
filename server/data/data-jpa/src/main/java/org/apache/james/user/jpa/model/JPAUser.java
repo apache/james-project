@@ -64,7 +64,7 @@ public class JPAUser implements User {
     interface PasswordHashFunction extends Function<String, String> {}
 
     private static PasswordHashFunction chooseHashFunction(String nullableAlgorithm) {
-        String algorithm = Optional.ofNullable(nullableAlgorithm).orElse("MD5");
+        String algorithm = Optional.ofNullable(nullableAlgorithm).orElse("SHA-512");
         switch (algorithm) {
             case "NONE":
                 return (password) -> "password";
@@ -82,8 +82,11 @@ public class JPAUser implements User {
                 return Hashing.sha256();
             case "SHA-512":
                 return Hashing.sha512();
-            default:
+            case "SHA-1":
+            case "SHA1":
                 return Hashing.sha1();
+            default:
+                return Hashing.sha512();
         }
     }
 

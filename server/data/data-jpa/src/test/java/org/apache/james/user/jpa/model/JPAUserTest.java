@@ -52,12 +52,12 @@ class JPAUserTest {
     }
 
     @Test
-    void hashPasswordShouldSha1WhenRandomString() {
-        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, "random")).isEqualTo("05dbbaa7b4bcae245f14d19ae58ef1b80adf3363");
+    void hashPasswordShouldSha512WhenRandomString() {
+        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, "random")).isEqualTo("f9cc82d1c04bb2ce0494a51f7a21d07ac60b6f79a8a55397f454603acac29d8589fdfd694d5c01ba01a346c76b090abca9ad855b5b0c92c6062ad6d93cdc0d03");
     }
 
     @Test
     void hashPasswordShouldMD5WhenNull() {
-        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, null)).isEqualTo("702000e50c9fd3755b8fc20ecb07d1ac");
+        Assertions.assertThat(JPAUser.hashPassword(RANDOM_PASSWORD, null)).isEqualTo("f9cc82d1c04bb2ce0494a51f7a21d07ac60b6f79a8a55397f454603acac29d8589fdfd694d5c01ba01a346c76b090abca9ad855b5b0c92c6062ad6d93cdc0d03");
     }
 }
