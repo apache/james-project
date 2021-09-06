@@ -51,6 +51,7 @@ Finally, please note that in case of a malformed URL the 400 bad request respons
  - [Sending email over webAdmin](#Sending_email_over_webAdmin)
  - [Administrating DLP Configuration](#Administrating_DLP_Configuration)
  - [Administrating Sieve quotas](#Administrating_Sieve_quotas)
+ - [Running blob garbage collection](#Running_blob_garbage_collection)
  - [Administrating jmap uploads](#Administrating_jmap_uploads)
  - [Deleted Messages Vault](#Deleted_Messages_Vault)
  - [Task management](#Task_management)
@@ -3516,6 +3517,46 @@ curl -XDELETE http://ip:port/sieve/quota/users/user@domain.com
 Response codes:
 
  - 204: Operation succeeded
+
+## Running blob garbage collection
+
+When deduplication is enabled one needs to explicitly run a garbage collection in order to delete no longer referenced
+blobs.
+
+To do so:
+
+```
+curl -XDELETE http:ip:port/blobs?scope=unreferenced
+```
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+Additional parameters include Bloom filter tuning parameters:
+
+ - **associatedProbability**: Allow to define the targeted false positive rate. Note that subsequent runs do not have the
+same false-positives.
+ - **expectedBlobCount**: Expected count of blobs used to size the bloom filters.
+
+The created task has the following additional information:
+
+```json
+{
+  "referenceSourceCount": 3456,
+  "blobCount": 5678,
+  "gcedBlobCount": 1234,
+  "bloomFilterExpectedBlobCount": 10000,
+  "bloomFilterAssociatedProbability": 0.01
+}
+```
+
+Where:
+
+ - **bloomFilterExpectedBlobCount** correspond to the supplied **expectedBlobCount** query parameter.
+ - **bloomFilterAssociatedProbability** correspond to the supplied **associatedProbability** query parameter.
+ - **referenceSourceCount** is the count of distinct blob references encountered while populating the bloom filter.
+ - **blobCount** is the count of blobs tried against the bloom filter. This value can be used to better size the bloom
+filter in later runs.
+ - **gcedBlobCount** is the count of blobs that were garbage collected.
 
 ## Administrating Jmap Uploads
 
