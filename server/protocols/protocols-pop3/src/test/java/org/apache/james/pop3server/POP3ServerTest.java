@@ -346,7 +346,6 @@ public class POP3ServerTest {
         
     }
 
-    @Disabled("PROTOCOL-106 CRLFTerminatedInputStream does not do what it is supposed to. Missing CR if last char is Outlook hangs forever DL messages")
     @Test
     void retrShouldNotHangForeverOnMalformedMessageEndingWithLF() throws Exception {
         // GIVEN a user with one malformed message in its INBOX
@@ -372,7 +371,7 @@ public class POP3ServerTest {
         POP3MessageInfo[] entries = pop3Client.listMessages();
         Reader r = pop3Client.retrieveMessage(entries[0].number);
 
-        // This times out
+        // This no longer times out
         Executors.newSingleThreadExecutor()
             .submit(() -> {
                 try {

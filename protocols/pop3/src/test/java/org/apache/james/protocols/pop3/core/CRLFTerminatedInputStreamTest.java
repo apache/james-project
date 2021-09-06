@@ -42,6 +42,14 @@ class CRLFTerminatedInputStreamTest extends AbstractInputStreamTest {
     }
 
     @Test
+    void testLFPresent() throws IOException {
+        String data = "Subject: test\r\n\r\ndata\n";
+        String expected = "Subject: test\r\n\r\ndata\n\r\n";
+        checkRead(new CRLFTerminatedInputStream(new ByteArrayInputStream(data.getBytes())), expected);
+        checkReadViaArray(new CRLFTerminatedInputStream(new ByteArrayInputStream(data.getBytes())), expected);
+    }
+
+    @Test
     void testNonPresent() throws IOException {
         String data = "Subject: test\r\n\r\ndata";
         String expected = data + "\r\n";

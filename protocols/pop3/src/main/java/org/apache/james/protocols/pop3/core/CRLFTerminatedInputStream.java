@@ -31,6 +31,7 @@ import java.io.InputStream;
  */
 public class CRLFTerminatedInputStream extends FilterInputStream {
 
+    private int previousLast;
     private int last;
     private byte[] extraData;
     private int pos = 0;
@@ -56,6 +57,11 @@ public class CRLFTerminatedInputStream extends FilterInputStream {
                 // Make sure we respect the offset. Otherwise it could let the RETRCmdHandler
                 // hang forever. See JAMES-1222
                 last = b[off + r - 1];
+                if (off + r - 2 >= 0) {
+                    previousLast = b[off + r - 2];
+                } else {
+                    previousLast = -1;
+                }
                 return r;
             }
         } else {
@@ -96,6 +102,7 @@ public class CRLFTerminatedInputStream extends FilterInputStream {
                 calculateExtraData();
                 return readNext();
             } else {
+                previousLast = last;
                 last = i;
             }
             return i;
@@ -107,7 +114,13 @@ public class CRLFTerminatedInputStream extends FilterInputStream {
 
     private void calculateExtraData() {
         if (last == '\n') {
-            extraData = null;
+            if (previousLast == '\r') {
+                extraData = null;
+            } else {
+                extraData = new byte[2];
+                extraData[0] = '\r';
+                extraData[1] = '\n';
+            }
         } else if (last == '\r') {
             extraData = new byte[1];
             extraData[0] = '\n';
