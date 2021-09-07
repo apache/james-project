@@ -32,8 +32,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.apache.james.server.blob.deduplication.BloomFilterGCAlgorithm.Context;
-import org.apache.james.server.blob.deduplication.BloomFilterGCAlgorithm.Context.Snapshot;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStore;
@@ -41,6 +39,8 @@ import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectNotFoundException;
+import org.apache.james.server.blob.deduplication.BloomFilterGCAlgorithm.Context;
+import org.apache.james.server.blob.deduplication.BloomFilterGCAlgorithm.Context.Snapshot;
 import org.apache.james.task.Task;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.awaitility.Awaitility;
@@ -59,7 +59,7 @@ public interface BloomFilterGCAlgorithmContract {
     BucketName DEFAULT_BUCKET = BucketName.of("default");
     GenerationAwareBlobId.Configuration GENERATION_AWARE_BLOB_ID_CONFIGURATION = GenerationAwareBlobId.Configuration.DEFAULT;
     int EXPECTED_BLOB_COUNT = 100;
-    double ASSOCIATED_PROBABILITY = 0.8;
+    double ASSOCIATED_PROBABILITY = 0.01;
 
     ConditionFactory CALMLY_AWAIT = Awaitility
         .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
@@ -109,7 +109,7 @@ public interface BloomFilterGCAlgorithmContract {
                 .gcedBlobCount(1)
                 .errorCount(0)
                 .bloomFilterExpectedBlobCount(100)
-                .bloomFilterAssociatedProbability(0.8)
+                .bloomFilterAssociatedProbability(ASSOCIATED_PROBABILITY)
                 .build());
         assertThatThrownBy(() -> blobStore.read(DEFAULT_BUCKET, blobId))
             .isInstanceOf(ObjectNotFoundException.class);
@@ -133,7 +133,7 @@ public interface BloomFilterGCAlgorithmContract {
                 .gcedBlobCount(0)
                 .errorCount(0)
                 .bloomFilterExpectedBlobCount(100)
-                .bloomFilterAssociatedProbability(0.8)
+                .bloomFilterAssociatedProbability(ASSOCIATED_PROBABILITY)
                 .build());
         assertThat(blobStore.read(DEFAULT_BUCKET, blobId))
             .isNotNull();
@@ -158,7 +158,7 @@ public interface BloomFilterGCAlgorithmContract {
                 .gcedBlobCount(0)
                 .errorCount(0)
                 .bloomFilterExpectedBlobCount(100)
-                .bloomFilterAssociatedProbability(0.8)
+                .bloomFilterAssociatedProbability(ASSOCIATED_PROBABILITY)
                 .build());
         assertThat(blobStore.read(DEFAULT_BUCKET, blobId))
             .isNotNull();
@@ -252,7 +252,7 @@ public interface BloomFilterGCAlgorithmContract {
                 .gcedBlobCount(0)
                 .errorCount(1)
                 .bloomFilterExpectedBlobCount(100)
-                .bloomFilterAssociatedProbability(0.8)
+                .bloomFilterAssociatedProbability(ASSOCIATED_PROBABILITY)
                 .build());
     }
 }
