@@ -89,7 +89,7 @@ public interface FileSystem {
         if (file.getCanonicalPath().startsWith(getBasedir().getCanonicalPath())) {
             return file;
         }
-        throw new IOException(fileURL + " jail break outside of " + getBasedir().getCanonicalPath());
+        throw new IOException(fileURL + " -> " + file.getCanonicalPath() + " jail break outside of " + getBasedir().getCanonicalPath());
     }
 
     /**

@@ -19,6 +19,7 @@
 package org.apache.james.server.core.filesystem;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -31,6 +32,16 @@ public class ResourceFactory {
 
     public ResourceFactory(JamesDirectoriesProvider directoryProvider) {
         this.directoryProvider = directoryProvider;
+    }
+
+    public void validate(File file) throws IOException {
+        String canonicalPath = file.getCanonicalPath();
+        if (!canonicalPath.startsWith(directoryProvider.getAbsoluteDirectory())
+            && !canonicalPath.startsWith(directoryProvider.getRootDirectory())
+            && !canonicalPath.startsWith(directoryProvider.getVarDirectory())) {
+
+            throw new IOException(canonicalPath + " jail break outside of " + directoryProvider.getRootDirectory());
+        }
     }
     
     public Resource getResource(String fileURL) {

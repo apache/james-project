@@ -18,6 +18,9 @@
  ****************************************************************/
 package org.apache.james.container.spring.resource;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.springframework.core.io.ResourceLoader;
 
@@ -26,5 +29,8 @@ import org.springframework.core.io.ResourceLoader;
  * important Directories, which are in use by JAMES.
  */
 public interface JamesResourceLoader extends ResourceLoader, JamesDirectoriesProvider {
+    default void validate(File file) throws IOException {
+
+    }
 
 }

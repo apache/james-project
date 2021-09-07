@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.container.spring.context.web;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
 
 import org.apache.james.container.spring.resource.DefaultJamesResourceLoader;
@@ -77,6 +79,11 @@ public class JamesServerWebApplicationContext extends XmlWebApplicationContext i
     private String absoluteDirectory;
     private String varDirectory;
     private String confDirectory;
+
+    @Override
+    public void validate(File file) throws IOException {
+        resourceLoader.validate(file);
+    }
 
     @Override
     public Resource getResource(String fileURL) {
