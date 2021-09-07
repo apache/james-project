@@ -18,13 +18,22 @@
  ****************************************************************/
 package org.apache.james.blob.objectstorage.aws;
 
+import static org.apache.james.blob.api.BlobStoreDAOFixture.ELEVEN_KILOBYTES;
+import static org.apache.james.blob.api.BlobStoreDAOFixture.TEST_BUCKET_NAME;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
 import org.apache.james.blob.api.TestBlobId;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import com.google.common.io.ByteSource;
+
+import reactor.core.publisher.Flux;
 
 @ExtendWith(DockerAwsS3Extension.class)
 public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
@@ -59,5 +68,18 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
     @Override
     public BlobStoreDAO testee() {
         return testee;
+    }
+
+    @Test
+    void listingManyBlobsShouldSucceedWhenExceedingPageSize() {
+        BlobStoreDAO store = testee();
+
+        final int count = 1500;
+        Flux.range(0, count)
+            .flatMap(i -> store.save(TEST_BUCKET_NAME, new TestBlobId("test-blob-id-" + i), ByteSource.wrap(ELEVEN_KILOBYTES)))
+            .blockLast();
+
+        assertThat(Flux.from(testee().listBlobs(TEST_BUCKET_NAME)).count().block())
+            .isEqualTo(count);
     }
 }

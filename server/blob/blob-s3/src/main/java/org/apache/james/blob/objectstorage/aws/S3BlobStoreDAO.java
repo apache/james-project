@@ -69,7 +69,7 @@ import software.amazon.awssdk.services.s3.model.BucketAlreadyOwnedByYouException
 import software.amazon.awssdk.services.s3.model.DeleteObjectsResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
-import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
@@ -282,14 +282,12 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
     }
 
     private Mono<BucketName> emptyBucket(BucketName bucketName) {
-        return Mono.fromFuture(() -> client.listObjects(builder -> builder.bucket(bucketName.asString())))
+        return Flux.from(client.listObjectsV2Paginator(builder -> builder.bucket(bucketName.asString())))
             .flatMap(response -> Flux.fromIterable(response.contents())
                 .window(EMPTY_BUCKET_BATCH_SIZE)
                 .flatMap(this::buildListForBatch, DEFAULT_CONCURRENCY)
                 .flatMap(identifiers -> deleteObjects(bucketName, identifiers), DEFAULT_CONCURRENCY)
                 .then(Mono.just(response)))
-            .flux()
-            .takeUntil(list -> !list.isTruncated())
             .then(Mono.just(bucketName));
     }
 
@@ -324,12 +322,11 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     @Override
     public Publisher<BlobId> listBlobs(BucketName bucketName) {
-        return Mono.fromFuture(() -> client.listObjects(builder -> builder.bucket(bucketName.asString())))
-            .flux()
-            .takeUntil(list -> !list.isTruncated())
-            .flatMapIterable(ListObjectsResponse::contents)
+        return Flux.from(client.listObjectsV2Paginator(builder -> builder.bucket(bucketName.asString())))
+            .flatMapIterable(ListObjectsV2Response::contents)
             .map(S3Object::key)
             .map(blobIdFactory::from)
+            .onErrorResume(e -> e.getCause() instanceof NoSuchBucketException, e -> Flux.empty())
             .onErrorResume(NoSuchBucketException.class, e -> Flux.empty());
     }
 }
