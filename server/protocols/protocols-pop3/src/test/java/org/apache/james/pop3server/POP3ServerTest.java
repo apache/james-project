@@ -22,11 +22,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.InetSocketAddress;
-import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -61,7 +59,6 @@ import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.memory.MemoryUsersRepository;
-import org.apache.james.util.ClassLoaderUtils;
 import org.jboss.netty.util.HashedWheelTimer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -92,7 +89,7 @@ public class POP3ServerTest {
         hashedWheelTimer = new HashedWheelTimer();
         setUpServiceManager();
         setUpPOP3Server();
-        pop3Configuration = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("pop3server.xml"));
+        pop3Configuration = ConfigLoader.getConfig(fileSystem.getResource("classpath://pop3server.xml"));
     }
 
     @AfterEach
