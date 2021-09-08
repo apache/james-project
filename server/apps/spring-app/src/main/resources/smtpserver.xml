@@ -49,15 +49,16 @@
            To use this you need to copy sunjce_provider.jar to /path/james/lib directory.
       -->
      <tls socketTLS="false" startTLS="false">
-       <!-- To create a new keystore execute:
-        keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore
-         -->
-       <keystore>file://conf/keystore</keystore>
-       <secret>yoursecret</secret>
-       <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
-       <!-- The algorithm is optional and only needs to be specified when using something other
-        than the Sun JCE provider - You could use IbmX509 with IBM Java runtime. -->
-       <algorithm>SunX509</algorithm>
+         <!-- To create a new keystore execute:
+           keytool -genkey -alias james -keyalg RSA -storetype PKCS12 -keystore /path/to/james/conf/keystore
+          -->
+         <keystore>file://conf/keystore</keystore>
+         <keystoreType>PKCS12</keystoreType>
+         <secret>yoursecret</secret>
+         <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+         <!-- The algorithm is optional and only needs to be specified when using something other
+          than the Sun JCE provider - You could use IbmX509 with IBM Java runtime. -->
+         <algorithm>SunX509</algorithm>
      </tls>
       
         <!-- This is the name used by the server to identify itself in the SMTP -->

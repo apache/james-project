@@ -102,7 +102,7 @@ public class JMAPDraftConfigurationTest {
         String keystore = null;
         String secret = null;
         Optional<String> jwtPublicKeyPem = Optional.empty();
-        JMAPDraftConfiguration expectedJMAPDraftConfiguration = new JMAPDraftConfiguration(DISABLED, keystore, secret, jwtPublicKeyPem);
+        JMAPDraftConfiguration expectedJMAPDraftConfiguration = new JMAPDraftConfiguration(DISABLED, keystore, "JKS", secret, jwtPublicKeyPem);
 
         JMAPDraftConfiguration jmapDraftConfiguration = JMAPDraftConfiguration.builder()
             .disable()

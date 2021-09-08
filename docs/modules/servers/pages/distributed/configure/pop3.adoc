@@ -33,7 +33,7 @@ port 110 is the well-known/IANA registered port for Standard POP3
 | tls
 | Set to true to support STARTTLS or SSL for the Socket.
 To create a new keystore execute:
-`keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore`
+`keytool -genkey -alias james -keyalg RSA -storetype PKCS12 -keystore /path/to/james/conf/keystore`
 Please note that each POP3 server exposed on different port can specify its own keystore, independently from any other
 TLS based protocols. Read xref:distributed/configure/ssl.adoc[SSL configuration page] for more information.
 

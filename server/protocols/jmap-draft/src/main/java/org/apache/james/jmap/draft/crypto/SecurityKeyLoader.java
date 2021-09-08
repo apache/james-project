@@ -37,9 +37,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class SecurityKeyLoader {
-
     private static final String ALIAS = "james";
-    private static final String JKS = "JKS";
 
     private final FileSystem fileSystem;
     private final JMAPDraftConfiguration jmapDraftConfiguration;
@@ -54,7 +52,7 @@ public class SecurityKeyLoader {
     public AsymmetricKeys load() throws Exception {
         Preconditions.checkState(jmapDraftConfiguration.isEnabled(), "JMAP is not enabled");
 
-        KeyStore keystore = KeyStore.getInstance(JKS);
+        KeyStore keystore = KeyStore.getInstance(jmapDraftConfiguration.getKeystoreType());
         char[] secret;
         try (InputStream fis = fileSystem.getResource(jmapDraftConfiguration.getKeystore())) {
             secret = jmapDraftConfiguration.getSecret().toCharArray();

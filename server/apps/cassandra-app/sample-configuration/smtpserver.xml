@@ -27,7 +27,11 @@
         <bind>0.0.0.0:25</bind>
         <connectionBacklog>200</connectionBacklog>
         <tls socketTLS="false" startTLS="false">
+            <!-- To create a new keystore execute:
+              keytool -genkey -alias james -keyalg RSA -storetype PKCS12 -keystore /path/to/james/conf/keystore
+             -->
             <keystore>file://conf/keystore</keystore>
+            <keystoreType>PKCS12</keystoreType>
             <secret>james72laBalle</secret>
             <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
             <algorithm>SunX509</algorithm>
@@ -51,7 +55,11 @@
         <bind>0.0.0.0:465</bind>
         <connectionBacklog>200</connectionBacklog>
         <tls socketTLS="true" startTLS="false">
+            <!-- To create a new keystore execute:
+              keytool -genkey -alias james -keyalg RSA -storetype PKCS12 -keystore /path/to/james/conf/keystore
+             -->
             <keystore>file://conf/keystore</keystore>
+            <keystoreType>PKCS12</keystoreType>
             <secret>james72laBalle</secret>
             <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
             <algorithm>SunX509</algorithm>
@@ -79,7 +87,11 @@
         <bind>0.0.0.0:587</bind>
         <connectionBacklog>200</connectionBacklog>
         <tls socketTLS="false" startTLS="true">
+            <!-- To create a new keystore execute:
+              keytool -genkey -alias james -keyalg RSA -storetype PKCS12 -keystore /path/to/james/conf/keystore
+             -->
             <keystore>file://conf/keystore</keystore>
+            <keystoreType>PKCS12</keystoreType>
             <secret>james72laBalle</secret>
             <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
             <algorithm>SunX509</algorithm>

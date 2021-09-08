@@ -23,8 +23,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.IOException;
 import java.io.EOFException;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Properties;
 
 import javax.mail.Folder;
@@ -38,6 +39,7 @@ import javax.mail.search.RecipientStringTerm;
 import javax.mail.search.SearchTerm;
 import javax.mail.search.SubjectTerm;
 
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.net.imap.IMAPReply;
 import org.apache.commons.net.imap.IMAPSClient;
 import org.apache.james.core.Username;
@@ -239,6 +241,64 @@ class IMAPServerTest {
             int imapCode = imapClient.sendCommand("STARTTLS\r\n");
 
             assertThat(imapCode).isEqualTo(IMAPReply.NO);
+        }
+    }
+    
+    @Nested
+    class Ssl {
+        IMAPServer imapServer;
+
+        @AfterEach
+        void tearDown() {
+            if (imapServer != null) {
+                imapServer.destroy();
+            }
+        }
+
+        @Test
+        void initShouldAcceptJKSFormat() {
+            assertThatCode(() -> imapServer = createImapServer("imapServerSslJKS.xml"))
+                .doesNotThrowAnyException();
+        }
+
+        @Test
+        void initShouldAcceptPKCS12Format() {
+            assertThatCode(() -> imapServer = createImapServer("imapServerSslPKCS12.xml"))
+                .doesNotThrowAnyException();
+        }
+
+        @Test
+        void initShouldAcceptJKSByDefault() {
+            assertThatCode(() -> imapServer = createImapServer("imapServerSslDefaultJKS.xml"))
+                .doesNotThrowAnyException();
+        }
+
+        @Test
+        void initShouldThrowWhenSslEnabledWithoutKeys() {
+            assertThatThrownBy(() -> createImapServer("imapServerSslNoKeys.xml"))
+                .isInstanceOf(ConfigurationException.class)
+                .hasMessage("keystore needs to get configured");
+        }
+
+        @Test
+        void initShouldThrowWhenJKSWithBadPassword() {
+            assertThatThrownBy(() -> createImapServer("imapServerSslJKSBadPassword.xml"))
+                .isInstanceOf(IOException.class)
+                .hasMessage("keystore password was incorrect");
+        }
+
+        @Test
+        void initShouldThrowWhenJKSWenNotFound() {
+            assertThatThrownBy(() -> createImapServer("imapServerSslJKSNotFound.xml"))
+                .isInstanceOf(FileNotFoundException.class)
+                .hasMessage("class path resource [keystore.notfound.jks] cannot be resolved to URL because it does not exist");
+        }
+
+        @Test
+        void initShouldThrowWhenPKCS12WithBadPassword() {
+            assertThatThrownBy(() -> createImapServer("imapServerSslPKCS12WrongPassword.xml"))
+                .isInstanceOf(IOException.class)
+                .hasMessage("keystore password was incorrect");
         }
     }
 

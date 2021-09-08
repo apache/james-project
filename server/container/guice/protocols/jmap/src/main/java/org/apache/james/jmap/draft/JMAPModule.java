@@ -199,6 +199,7 @@ public class JMAPModule extends AbstractModule {
             return JMAPDraftConfiguration.builder()
                 .enabled(configuration.getBoolean("enabled", true))
                 .keystore(configuration.getString("tls.keystoreURL"))
+                .keystoreType(configuration.getString("tls.keystoreType", null))
                 .secret(configuration.getString("tls.secret"))
                 .jwtPublicKeyPem(loadPublicKey(fileSystem, Optional.ofNullable(configuration.getString("jwt.publickeypem.url"))))
                 .build();
