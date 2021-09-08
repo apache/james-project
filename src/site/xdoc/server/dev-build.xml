@@ -43,12 +43,12 @@
 
     <ol>
       <li>Download the source distribution - the source is available from the
-          <a href="http://james.apache.org/download.cgi">James release mirrors</a>.
+          <a href="https://james.apache.org/download.cgi">James release mirrors</a>.
           Simply choose the version of James you'd like to download, and pick the source
           distribution appropriate for your platform.</li>
       <li>Get the source code using GIT - this method gives you access to the cutting edge code
           base.  Instructions on how to use GIT to get the James source code
-          can be found <a href="http://www.apache.org/dev/git.html">here</a>.
+          can be found <a href="https://www.apache.org/dev/git.html">here</a>.
           Apache James Server repository is <a href="http://git-wip-us.apache.org/repos/asf/james-project.git">http://git-wip-us.apache.org/repos/asf/james-project.git</a>.</li>
       <li>For information, you can download all Apache James sources (server, mailbox, imap, mailet...) if you check out <a href="http://git-wip-us.apache.org/repos/asf/james-project.git">http://git-wip-us.apache.org/repos/asf/james-project.git</a>.
          Watch out!: you will get a release, but what we call a "master", that is on constant development and debugging.</li>
@@ -90,7 +90,7 @@
     </ul>
     </p>
     <p>For example, invoke <code>mvn package</code> to get a zip/tar of James distribution.</p>
-    <p>Spring product is output in the <code>server/app/target</code>
+    <p>Spring product is output in the <code>server/apps/spring/target</code>
       subdirectory of the James source directory.
       This directory will be deleted if you run build with the clean argument.</p>
     <p><strong>Warning!</strong> Any changes you've made in the 'dist' directory
