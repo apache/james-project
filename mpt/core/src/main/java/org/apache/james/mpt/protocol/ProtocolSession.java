@@ -483,8 +483,8 @@ public class ProtocolSession implements ProtocolInteractor {
             continuationExpected = true;
             continued = false;
             String testLine = session.readLine();
-            if (!"+".equals(testLine) || !continued) {
-                final String message = "Expected continuation";
+            if (!testLine.startsWith("+") || !continued) {
+                final String message = String.format("Expected continuation, got '%s'", testLine);
                 handleFailure(continueAfterFailure, message);
             }
             continuationExpected = false;

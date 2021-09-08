@@ -21,7 +21,7 @@ S: \* CAPABILITY .* ANNOTATION .*
 S: a0 OK CAPABILITY completed.
 
 C: a1 SETMETADATA INBOX (/private/comment {169}
-S: \+
+S: \+ Ok
 C: Content-Type: image/jpeg
 C: Content-Transfer-Encoding: base64
 C: R0lGODlhMQL1APAAAAAAAAAAACH5BAEAAAEALAAAAAAxAvUAAAL-jI-py-0PF5gUxIuz3rz7D4biSJbmiabqqlZuxcbyTNf2jef6zkfvT-kJ)

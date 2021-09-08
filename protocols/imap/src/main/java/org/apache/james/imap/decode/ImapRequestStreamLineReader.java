@@ -96,7 +96,7 @@ public class ImapRequestStreamLineReader extends ImapRequestLineReader implement
     @Override
     protected void commandContinuationRequest() throws DecodingException {
         try {
-            output.write('+');
+            output.write("+ Ok".getBytes());
             output.write('\r');
             output.write('\n');
             output.flush();
