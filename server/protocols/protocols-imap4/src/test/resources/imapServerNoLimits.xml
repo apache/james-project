@@ -9,4 +9,5 @@
     <idleTimeIntervalUnit>SECONDS</idleTimeIntervalUnit>
     <enableIdle>true</enableIdle>
     <inMemorySizeLimit>65536</inMemorySizeLimit> <!-- 64 KB -->
+    <plainAuthDisallowed>false</plainAuthDisallowed>
 </imapserver>

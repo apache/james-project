@@ -44,7 +44,7 @@
   
   <section name="User Credential Security">
 
-    <p>Apache James Server supports different user storage (<a href="config-users.html">read more</a>) - LDAP support is partial (work in progress).</p>
+    <p>Apache James Server supports different user storage (<a href="config-users.html">read more</a>).</p>
 
   </section>
 

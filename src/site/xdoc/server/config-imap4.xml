@@ -83,6 +83,8 @@
         <dt><strong>handler.handlerchain</strong></dt>
         <dd>This loads the core CommandHandlers. Only remove this if you really 
              know what you are doing</dd>
+        <dt><strong>plainAuthDisallowed</strong></dt>
+        <dd>Whether to enable Authentication PLAIN if the connection is not encrypted via SSL or STARTTLS. Defaults to true.</dd>
       </dl>
 
 </section>

@@ -112,12 +112,12 @@ IMAP is related to...
 == Try It!
 
 You can connect manually to James using the IMAP protocol by opening a
-telnet session.
+openssl session.
 
 Requirements:
 
  * Run the long demo (without stopping)
- * Telnet
+ * openssl s_client
 
 Approximate duration: 5 minutes
 
@@ -127,7 +127,7 @@ Note: extra lines are inserted below to help show you what you need to type.
 
 [source,telnet]
 ----
-$ telnet 127.0.0.1 143
+$ openssl s_client -connect 127.0.0.1:993
 Trying 127.0.0.1...
 Connected to localhost.
 Escape character is '^]'.

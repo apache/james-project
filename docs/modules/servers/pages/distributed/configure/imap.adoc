@@ -44,7 +44,7 @@ Defaults to 10MB. Must be a positive integer, optionally with a unit: B, K, M, G
 Defaults to 0 (unlimited). Must be a positive integer, optionally with a unit: B, K, M, G.
 
 | plainAuthDisallowed
-| Whether or not to enable Authentication PLAIN if the connection is not encrypted via SSL or STARTTLS
+| Whether to enable Authentication PLAIN if the connection is not encrypted via SSL or STARTTLS. Defaults to `true`.
 
 | timeout
 | Default to 30 minutes. After this time, inactive channels that have not performed read, write, or both operation for a while
