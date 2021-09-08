@@ -66,6 +66,15 @@ public class HasMailAttributeWithValueRegexTest extends AbstractHasMailAttribute
     }
 
     @Test
+    public void getMatcherConfigShouldNotReturnNull() throws MessagingException {
+        init();
+        setRegex(".*");
+        setupAll();
+
+        assertThat(matcher.getMatcherConfig()).isNotNull();
+    }
+
+    @Test
     void testHeaderIsNotMatched() throws MessagingException {
         setRegex("\\d");
         setupAll();

@@ -73,6 +73,7 @@ public class HasMailAttributeWithValueRegex extends GenericMatcher {
         } else {
             throw new MessagingException("malformed condition for HasMailAttributeWithValueRegex. must be of the form: attr,regex");
         }
+        super.init(conf);
     }
 
     /**
