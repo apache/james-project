@@ -41,7 +41,7 @@ layout: howTo
                 </p>
 
                 <p>
-                  Once the signature is verified with the public key by the recipient server, the message passes DKIM and is considered authentic.
+                  Once the signature is verified with the public key by the recipient server, the message passes the DKIM check and is considered authentic.
                 </p>
 
                 <p>
@@ -75,7 +75,7 @@ layout: howTo
                   You can use tools such as <code>openssl</code> or <code>ssh-keygen</code> to generate RSA keys.
                 </p>
                 <p>
-                 Please note that 1024 bit DKIM is still the standard. If you want to feel safer with 2048-bit RSA, check with DNS provider and see what length of DKIM key is supported because they need to match.
+                 Please note that 1024 bit DKIM is still the standard. If you want to feel safer with 2048-bit RSA, check with your DNS provider and see what length of DKIM key is supported because they need to match.
                 </p>
                 <p>Generate a 1024 bit RSA Key:</p>
 
@@ -129,7 +129,7 @@ Text: v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNAD[...Your Public Key...]
 
 <h1><b>Configure DKIMSign mailet</b></h1>
 
-<p>Lastly, you need to add a maillet to the <code>mailletcontainer.xml</code> in the /conf file of Apache James.</p>
+<p>Lastly, you need to add a maillet to the <code>mailetcontainer.xml</code> in the /conf file of Apache James.</p>
 
 
 
