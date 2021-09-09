@@ -80,15 +80,10 @@ layout: howTo
                 <p>Generate a 1024 bit RSA Key:</p>
 
        
-                <pre><code>$ openssl genrsa -out private.pem 1024
-Generating RSA private key, 1024 bit long modulus (2 primes)
-............................................................
-                </pre></code>
+                <code>$ openssl genrsa -out private.pem 1024                </code>
 
-                <p>Export the RSA Public Key to a File:</p>
-                <pre><code>$ openssl rsa -in private.pem -outform PEM -pubout -out public.pem
-writing RSA key
-                </pre></code>
+                <p>Export the RSA Public Key to a file:</p>
+                <code>$ openssl rsa -in private.pem -outform PEM -pubout -out public.pem</code>
                 <p>Both generated files are base64-encoded encryption keys in plain text format:</p>
 
        
