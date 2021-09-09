@@ -22,14 +22,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.InetSocketAddress;
-import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.net.pop3.POP3Client;
@@ -342,6 +344,117 @@ public class POP3ServerTest {
         pop3Client.sendCommand("rset");
         assertThat(pop3Client.getState()).isEqualTo(1);
         
+    }
+
+    @Test
+    void retrShouldNotHangForeverOnMalformedMessageEndingWithLF() throws Exception {
+        // GIVEN a user with one malformed message in its INBOX
+        Username username = Username.of("foo2");
+        usersRepository.addUser(username, "bar2");
+        MailboxPath mailboxPath = MailboxPath.inbox(username);
+        MailboxSession session = mailboxManager.login(username, "bar2");
+        mailboxManager.createMailbox(mailboxPath, session);
+        byte[] content = ("Return-path: return@test.com\r\n"
+            + "Content-Transfer-Encoding: plain\r\n"
+            + "Subject: test\r\n\r\n"
+            + "Body Text POP3ServerTest.setupTestMails\n").getBytes();
+        mailboxManager.getMailbox(mailboxPath, session)
+            .appendMessage(MessageManager.AppendCommand.from(
+                new SharedByteArrayInputStream(content)), session);
+
+        // THEN retrieving it in POP3 times out
+        finishSetUp(pop3Configuration);
+        pop3Client = new POP3Client();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+        pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        pop3Client.login("foo2", "bar2");
+        POP3MessageInfo[] entries = pop3Client.listMessages();
+        Reader r = pop3Client.retrieveMessage(entries[0].number);
+
+        // This no longer times out
+        Executors.newSingleThreadExecutor()
+            .submit(() -> {
+                try {
+                    r.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            })
+            .get(5, TimeUnit.SECONDS);
+    }
+
+    @Test
+    void retrShouldNotHangForeverOnMalformedMessageEndingWithoutLineBreak() throws Exception {
+        // GIVEN a user with one malformed message in its INBOX
+        Username username = Username.of("foo2");
+        usersRepository.addUser(username, "bar2");
+        MailboxPath mailboxPath = MailboxPath.inbox(username);
+        MailboxSession session = mailboxManager.login(username, "bar2");
+        mailboxManager.createMailbox(mailboxPath, session);
+        byte[] content = ("Return-path: return@test.com\r\n"
+            + "Content-Transfer-Encoding: plain\r\n"
+            + "Subject: test\r\n\r\n"
+            + "Body Text POP3ServerTest.setupTestMails").getBytes();
+        mailboxManager.getMailbox(mailboxPath, session)
+            .appendMessage(MessageManager.AppendCommand.from(
+                new SharedByteArrayInputStream(content)), session);
+
+        // THEN retrieving it in POP3 times out
+        finishSetUp(pop3Configuration);
+        pop3Client = new POP3Client();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+        pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        pop3Client.login("foo2", "bar2");
+        POP3MessageInfo[] entries = pop3Client.listMessages();
+        Reader r = pop3Client.retrieveMessage(entries[0].number);
+
+        // This do not time out
+        Executors.newSingleThreadExecutor()
+            .submit(() -> {
+                try {
+                    r.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            })
+            .get(5, TimeUnit.SECONDS);
+    }
+
+    @Test
+    void retrShouldNotHangForeverOnMalformedMessageEndingWithCR() throws Exception {
+        // GIVEN a user with one malformed message in its INBOX
+        Username username = Username.of("foo2");
+        usersRepository.addUser(username, "bar2");
+        MailboxPath mailboxPath = MailboxPath.inbox(username);
+        MailboxSession session = mailboxManager.login(username, "bar2");
+        mailboxManager.createMailbox(mailboxPath, session);
+        byte[] content = ("Return-path: return@test.com\r\n"
+            + "Content-Transfer-Encoding: plain\r\n"
+            + "Subject: test\r\n\r\n"
+            + "Body Text POP3ServerTest.setupTestMails\r").getBytes();
+        mailboxManager.getMailbox(mailboxPath, session)
+            .appendMessage(MessageManager.AppendCommand.from(
+                new SharedByteArrayInputStream(content)), session);
+
+        // THEN retrieving it in POP3 times out
+        finishSetUp(pop3Configuration);
+        pop3Client = new POP3Client();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(pop3Server).retrieveBindedAddress();
+        pop3Client.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+        pop3Client.login("foo2", "bar2");
+        POP3MessageInfo[] entries = pop3Client.listMessages();
+        Reader r = pop3Client.retrieveMessage(entries[0].number);
+
+        // This do not time out
+        Executors.newSingleThreadExecutor()
+            .submit(() -> {
+                try {
+                    r.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            })
+            .get(5, TimeUnit.SECONDS);
     }
 
     @Test
