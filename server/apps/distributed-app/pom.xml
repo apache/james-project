@@ -396,7 +396,7 @@
                 <artifactId>jib-maven-plugin</artifactId>
                 <configuration>
                     <from>
-                        <image>adoptopenjdk:11-jdk-hotspot</image>
+                        <image>eclipse-temurin:11-jre-focal</image>
                     </from>
                     <to>
                         <image>apache/james</image>
