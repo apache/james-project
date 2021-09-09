@@ -44,21 +44,22 @@ import com.google.common.collect.Maps;
 @SuppressWarnings("deprecation")
 public class MXHostAddressIterator implements Iterator<HostAddress> {
     private static final Logger LOGGER = LoggerFactory.getLogger(MXHostAddressIterator.class);
+    public static final boolean SMTP_ONLY = false;
 
     private final Iterator<HostAddress> addresses;
 
     public MXHostAddressIterator(Iterator<String> hosts, DNSService dns, boolean useSingleIP) {
-        this(hosts, 25, dns, useSingleIP);
+        this(hosts, dns, useSingleIP, SMTP_ONLY);
     }
 
-    public MXHostAddressIterator(Iterator<String> hosts, int defaultPort, DNSService dns, boolean useSingleIP) {
+    public MXHostAddressIterator(Iterator<String> hosts, DNSService dns, boolean useSingleIP, boolean smtps) {
         checkNotNull(hosts, "Hosts is null");
         checkNotNull(dns, "Dns is null");
         final List<HostAddress> hAddresses = Lists.newArrayList();
 
         while (hosts.hasNext()) {
             String nextHostname = hosts.next();
-            Map.Entry<String, String> hostAndPort = extractHostAndPort(nextHostname, defaultPort);
+            Map.Entry<String, String> hostAndPort = extractHostAndPort(nextHostname, 25);
 
             try {
                 final Collection<InetAddress> addrs;
@@ -68,8 +69,12 @@ public class MXHostAddressIterator implements Iterator<HostAddress> {
                     addrs = dns.getAllByName(hostAndPort.getKey());
                 }
                 for (InetAddress addr : addrs) {
+                    if (smtps) {
+                        hAddresses.add(new HostAddress(hostAndPort.getKey(),
+                            "smtps://" + addr.getHostAddress() + ":465"));
+                    }
                     hAddresses.add(new HostAddress(hostAndPort.getKey(),
-                        "smtp://" + addr.getHostAddress() + ":" + hostAndPort.getValue()));
+                        "smtp://" + addr.getHostAddress() + ":25"));
                 }
             } catch (UnknownHostException uhe) {
                 // this should never happen, since we just got

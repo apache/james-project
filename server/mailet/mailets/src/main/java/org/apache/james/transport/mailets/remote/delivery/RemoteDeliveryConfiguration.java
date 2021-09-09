@@ -211,6 +211,12 @@ public class RemoteDeliveryConfiguration {
     }
 
     public Properties createFinalJavaxProperties() {
+        Properties props = createFinalJavaxPropertiesNoSSL();
+        props.put("mail.smtp.ssl.enable", String.valueOf(isSSLEnable));
+        return props;
+    }
+
+    public Properties createFinalJavaxPropertiesNoSSL() {
         Properties props = new Properties();
         props.put("mail.debug", "false");
         // Reactivated: javamail 1.3.2 should no more have problems with "250 OK" messages
@@ -221,7 +227,6 @@ public class RemoteDeliveryConfiguration {
         props.put("mail.smtp.sendpartial", String.valueOf(sendPartial));
         props.put("mail.smtp.localhost", heloNameProvider.getHeloName());
         props.put("mail.smtp.starttls.enable", String.valueOf(startTLS));
-        props.put("mail.smtp.ssl.enable", String.valueOf(isSSLEnable));
         if (isBindUsed()) {
             // undocumented JavaMail 1.2 feature, smtp transport will use
             // our socket factory, which will also set the local address

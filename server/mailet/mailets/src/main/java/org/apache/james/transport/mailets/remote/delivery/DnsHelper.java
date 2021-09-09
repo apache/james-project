@@ -38,11 +38,11 @@ public class DnsHelper {
         this.configuration = configuration;
     }
 
-    public Iterator<HostAddress> retrieveHostAddressIterator(String host) throws TemporaryResolutionException {
+    public Iterator<HostAddress> retrieveHostAddressIterator(String host, boolean smtps) throws TemporaryResolutionException {
         if (configuration.getGatewayServer().isEmpty()) {
-            return new MXHostAddressIterator(dnsServer.findMXRecords(host).iterator(), dnsServer, USE_SEVERAL_IP);
+            return new MXHostAddressIterator(dnsServer.findMXRecords(host).iterator(), dnsServer, USE_SEVERAL_IP, smtps);
         } else {
-            return new MXHostAddressIterator(configuration.getGatewayServer().iterator(), dnsServer, USE_SEVERAL_IP);
+            return new MXHostAddressIterator(configuration.getGatewayServer().iterator(), dnsServer, USE_SEVERAL_IP, smtps);
         }
     }
 

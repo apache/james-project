@@ -42,6 +42,7 @@
         <module>apps/cli</module>
         <module>apps/cli-integration-tests</module>
         <module>apps/distributed-app</module>
+        <module>apps/distributed-pop3-app</module>
         <module>apps/jpa-app</module>
         <module>apps/jpa-smtp-app</module>
         <module>apps/memory-app</module>
@@ -101,6 +102,7 @@
         <module>protocols/protocols-lmtp</module>
         <module>protocols/protocols-managesieve</module>
         <module>protocols/protocols-pop3</module>
+        <module>protocols/protocols-pop3-distributed</module>
         <module>protocols/protocols-smtp</module>
         <module>protocols/webadmin</module>
         <module>protocols/webadmin-integration-test</module>
