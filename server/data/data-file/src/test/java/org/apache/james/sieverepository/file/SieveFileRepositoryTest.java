@@ -2,17 +2,24 @@
 
 package org.apache.james.sieverepository.file;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.james.core.Username;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.sieverepository.api.ScriptContent;
+import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.SieveRepository;
+import org.apache.james.sieverepository.api.exception.StorageException;
 import org.apache.james.sieverepository.lib.SieveRepositoryContract;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class SieveFileRepositoryTest implements SieveRepositoryContract {
 
@@ -54,5 +61,27 @@ class SieveFileRepositoryTest implements SieveRepositoryContract {
     @Override
     public SieveRepository sieveRepository() {
         return sieveRepository;
+    }
+
+    @Test
+    void putScriptShouldThrowOnCraftedUsername() {
+        assertThatThrownBy(() -> sieveRepository().putScript(Username.of("../../home/interview1/test"), SCRIPT_NAME, SCRIPT_CONTENT))
+            .isInstanceOf(StorageException.class);
+    }
+
+    @Test
+    void putScriptShouldThrowOnCraftedScriptName() {
+        assertThatThrownBy(() ->  sieveRepository().putScript(Username.of("test"),
+                new ScriptName("../../../../home/interview1/script"), SCRIPT_CONTENT))
+            .isInstanceOf(StorageException.class);
+    }
+
+    @Test
+    void getScriptShouldNotAllowToReadScriptsOfOtherUsers() throws Exception {
+        sieveRepository().putScript(Username.of("other"), new ScriptName("script"), new ScriptContent("PWND!!!"));
+
+        assertThatThrownBy(() ->  sieveRepository().getScript(Username.of("test"),
+                new ScriptName("../other/script")))
+            .isInstanceOf(StorageException.class);
     }
 }

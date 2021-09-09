@@ -76,6 +76,7 @@ public class SieveFileRepository implements SieveRepository {
     public static final String SIEVE_EXTENSION = ".sieve";
 
     private final FileSystem fileSystem;
+    private final File root;
     private final Object lock = new Object();
 
     /**
@@ -140,7 +141,7 @@ public class SieveFileRepository implements SieveRepository {
     @Inject
     public SieveFileRepository(FileSystem fileSystem) throws IOException {
         this.fileSystem = fileSystem;
-        File root = fileSystem.getFile(SIEVE_ROOT);
+        this.root = fileSystem.getFile(SIEVE_ROOT);
         FileUtils.forceMkdir(root);
     }
 
@@ -228,6 +229,7 @@ public class SieveFileRepository implements SieveRepository {
     public void putScript(Username username, ScriptName name, ScriptContent content) throws StorageException, QuotaExceededException {
         synchronized (lock) {
             File file = new File(getUserDirectory(username), name.getValue());
+            enforceRoot(file);
             haveSpace(username, name, content.length());
             toFile(file, content.getValue());
         }
@@ -239,6 +241,7 @@ public class SieveFileRepository implements SieveRepository {
         synchronized (lock) {
             File oldFile = getScriptFile(username, oldName);
             File newFile = new File(getUserDirectory(username), newName.getValue());
+            enforceRoot(newFile);
             if (newFile.exists()) {
                 throw new DuplicateException("User: " + username.asString() + "Script: " + newName);
             }
@@ -312,8 +315,20 @@ public class SieveFileRepository implements SieveRepository {
         return file;
     }
 
+    private void enforceRoot(File file) throws StorageException {
+        try {
+            if (!file.getCanonicalPath().startsWith(root.getCanonicalPath())) {
+                throw new StorageException(new IllegalStateException("Path traversal attempted"));
+            }
+        } catch (IOException e) {
+            throw new StorageException(e);
+        }
+    }
+
     protected File getUserDirectoryFile(Username username) throws StorageException {
-        return new File(getSieveRootDirectory(), username.asString() + '/');
+        final File userFile = new File(getSieveRootDirectory(), username.asString() + '/');
+        enforceRoot(userFile);
+        return userFile;
     }
 
     protected File getActiveFile(Username username) throws ScriptNotFoundException, StorageException {
@@ -324,7 +339,9 @@ public class SieveFileRepository implements SieveRepository {
         } catch (FileNotFoundException ex) {
             throw new ScriptNotFoundException("There is no active script for user " + username.asString());
         }
-        return new File(dir, content);
+        File scriptFile = new File(dir, content);
+        enforceRoot(scriptFile);
+        return scriptFile;
     }
 
     protected boolean isActiveFile(Username username, File file) throws StorageException {
@@ -340,6 +357,8 @@ public class SieveFileRepository implements SieveRepository {
         File sieveBaseDirectory = personalScriptDirectory.getParentFile();
         File activeScriptPersistenceFile = new File(personalScriptDirectory, FILE_NAME_ACTIVE);
         File activeScriptCopy = new File(sieveBaseDirectory, userName.asString() + SIEVE_EXTENSION);
+        enforceRoot(activeScriptPersistenceFile);
+        enforceRoot(activeScriptCopy);
         if (isActive) {
             toFile(activeScriptPersistenceFile, scriptToBeActivated.getName());
             try {
@@ -358,7 +377,11 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     protected File getScriptFile(Username username, ScriptName name) throws ScriptNotFoundException, StorageException {
+        if (name.getValue().contains("/")) {
+            throw new StorageException(new IllegalArgumentException("Script name should not contain '/' as it can allow path traversal"));
+        }
         File file = new File(getUserDirectory(username), name.getValue());
+        enforceRoot(file);
         if (!file.exists()) {
             throw new ScriptNotFoundException("User: " + username + "Script: " + name);
         }
