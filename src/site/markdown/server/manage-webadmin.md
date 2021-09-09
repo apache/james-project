@@ -2042,7 +2042,7 @@ Response codes:
 ### Upgrading to a specific version
 
 ```
-curl -XPOST http://ip:port/cassandra/version/upgrade -d '3'
+curl -XPOST -H "Content-Type: application/json http://ip:port/cassandra/version/upgrade -d '3'
 ```
 
 Will schedule the run of the migrations you need to reach schema version 3.
