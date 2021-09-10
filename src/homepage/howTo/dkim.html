@@ -25,71 +25,66 @@ layout: howTo
 
     <!-- Introduction -->
     <section id="intro" class="main special">
-        <div class="">
-            <div class="content align-left">
-                <header class="major">
-                    <h1><b>What is a DKIM Record?</b></h1>
-                </header>
+      <div class="">
+        <div class="content align-left">
+            <header class="major">
+                <h1><b>What is a DKIM Record?</b></h1>
+            </header>
 
-                <p>
-                  DKIM (DomainKeys Identified Mail) is an email security standard designed to make sure messages aren’t altered in transit between the sending and recipient servers.                   
-                </p>
+            <p>
+              DKIM (DomainKeys Identified Mail) is an email security standard designed to make sure messages aren’t altered in transit between the sending and recipient servers.                   
+            </p>
 
-                <p>
-                  It uses public-key cryptography to sign email with a private key as it leaves a sending server. 
-                  Recipient servers then use a public key published to a domain’s DNS to verify the source of the message, and that the body of the message hasn’t changed during transit. 
-                </p>
+            <p>
+              It uses public-key cryptography to sign email with a private key as it leaves a sending server. 
+              Recipient servers then use a public key published to a domain’s DNS to verify the source of the message, and that the body of the message hasn’t changed during transit. 
+            </p>
 
-                <p>
-                  Once the signature is verified with the public key by the recipient server, the message passes the DKIM check and is considered authentic.
-                </p>
+            <p>
+              Once the signature is verified with the public key by the recipient server, the message passes the DKIM check and is considered authentic.
+            </p>
 
-                <p>
-                  The process of setting up DKIM can be split into the following steps:
-                </p>
+            <p>
+              The process of setting up DKIM can be split into the following steps:
+            </p>
 
-                <ul>
-                    <li>Choose a DKIM selector.</li>
-                    <li>Generate a public-private key pair.</li>
-                    <li>Publish the selector and public key by creating a DKIM TXT record.</li>
-                    <li>Attach the token to each outgoing email.</li>
-                </ul>
+            <ul>
+                <li>Choose a DKIM selector.</li>
+                <li>Generate a public-private key pair.</li>
+                <li>Publish the selector and public key by creating a DKIM TXT record.</li>
+                <li>Attach the token to each outgoing email.</li>
+            </ul>
 
-                <p>
-                  Before we begin, you might wonder what is a DKIM selector?
-                </p>
-                <p>
-                  In short, a selector is specified as an attribute for a DKIM signature and is recorded in the DKIM-Signature header field. 
-                  A selector can be anything you want, such as a word, number, or a string of letters and numbers.
-              </p>
-              <p>
-                For example, if you choose <code>james3</code> for your selector, the DKIM record name would become <code>james3._domainkey</code>
-              </p>
+            <p>
+              Before we begin, you might wonder what is a DKIM selector?
+            </p>
+            <p>
+              In short, a selector is specified as an attribute for a DKIM signature and is recorded in the DKIM-Signature header field. 
+              A selector can be anything you want, such as a word, number, or a string of letters and numbers.
+          </p>
+          <p>
+            For example, if you choose <code>james3</code> for your selector, the DKIM record name would become <code>james3._domainkey</code>
+          </p>
 
 
-                <header class="major">
-                    <h1><b>Generate RSA Key Pair for DKIM</b></h1>
-                </header>
+            <header class="major">
+                <h1><b>Generate RSA Key Pair for DKIM</b></h1>
+            </header>
 
-                <p>
-                  You can use tools such as <code>openssl</code> or <code>ssh-keygen</code> to generate RSA keys.
-                </p>
-                <p>
-                 Please note that 1024 bit DKIM is still the standard. If you want to feel safer with 2048-bit RSA, check with your DNS provider and see what length of DKIM key is supported because they need to match.
-                </p>
-                <p>Generate a 1024 bit RSA Key:</p>
+            <p>
+              You can use tools such as <code>openssl</code> or <code>ssh-keygen</code> to generate RSA keys.
+            </p>
+            <p>
+             Please note that 1024 bit DKIM is still the standard. If you want to feel safer with 2048-bit RSA, check with your DNS provider and see what length of DKIM key is supported because they need to match.
+            </p>
+            <p>Generate a 1024 bit RSA Key:</p>    
+            <code>$ openssl genrsa -out private.pem 1024</code>
 
-       
-                <code>$ openssl genrsa -out private.pem 1024                </code>
+            <p>Export the RSA Public Key to a file:</p>
+            <code>$ openssl rsa -in private.pem -outform PEM -pubout -out public.pem</code>
+            <p>Both generated files are base64-encoded encryption keys in plain text format:</p>
 
-                <p>Export the RSA Public Key to a file:</p>
-                <code>$ openssl rsa -in private.pem -outform PEM -pubout -out public.pem</code>
-                <p>Both generated files are base64-encoded encryption keys in plain text format:</p>
-
-       
-              
-                <pre><code>
------BEGIN RSA PRIVATE KEY-----
+            <pre><code>-----BEGIN RSA PRIVATE KEY-----
 MIICXQIBAAKBgQCxMwUfjQbppE2EK4T2IDuiLRvZ4opSwJwxani/5Ii5VbqMQRfo
 edUMuczK5qKJuIupTnh9AhJfaAsGUSruCVlGYXq6bqfak3XGHGu4s0rAXRM6Y3us
 gy8RyxfWQqtYbEZPIwkLGPbPeIh2t8s3mL9fD9+tpO5H1Kc+9MBTMm7qnQIDAQAB
@@ -103,26 +98,24 @@ RWcVSaf5AkEAyPx63vEKS38QPYyiesuJqqrnTeVlnPInedEmJmI6Rz5cWISosvNz
 OQ75ijHc31uCL0RnCzzB7GaSf+tPV+yDDukSYzEWWRAk0Vs0Px+r0UxVw5A8bqZs
 dnPas6C2O1zHT2Yy3r0dAkBECZDJaFhADFPSex8UrUrIidJaz8NLdyDiuwXKjc/c
 AmlLQXKntU4M5EIE6jz0Gf1ivw06pvTDOCDWlDxJRvf8
------END RSA PRIVATE KEY-----
-                </code></pre>
-                <pre><code>
+-----END RSA PRIVATE KEY-----</code></pre>
+            <pre><code>
 -----BEGIN PUBLIC KEY-----
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCxMwUfjQbppE2EK4T2IDuiLRvZ
 4opSwJwxani/5Ii5VbqMQRfoedUMuczK5qKJuIupTnh9AhJfaAsGUSruCVlGYXq6
 bqfak3XGHGu4s0rAXRM6Y3usgy8RyxfWQqtYbEZPIwkLGPbPeIh2t8s3mL9fD9+t
 pO5H1Kc+9MBTMm7qnQIDAQAB
 -----END PUBLIC KEY-----
-               </code></pre>
+           </code></pre>
 
-               <p>Beside above steps, online tools such as <a href="https://www.sparkpost.com/resources/tools/dkim-wizard/">DKIM Wizard</a> can help you easily create a public and private key pair to be used for DomainKeys and DKIM signing. </p>
+           <p>Beside above steps, online tools such as <a href="https://www.sparkpost.com/resources/tools/dkim-wizard/">DKIM Wizard</a> can help you easily create a public and private key pair to be used for DomainKeys and DKIM signing. </p>
 
-               
-               <header class="major">
-                <h1><b>Create DKIM TXT record</b></h1>
-                <p>Log in your Domain Control Panel and create a TXT Record:</p>
-            </header>
-            <pre><code>
-Record Type: TXT Record
+           
+           <header class="major">
+            <h1><b>Create DKIM TXT record</b></h1>
+            <p>Log in your Domain Control Panel and create a TXT Record:</p>
+        </header>
+        <pre><code>Record Type: TXT Record
 Host Name: james3._domainkey
 Text: v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNAD[...Your Public Key...]
 </code></pre>
@@ -134,40 +127,48 @@ Text: v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNAD[...Your Public Key...]
 
 
 <pre><code>[...]
-
 &lt;processors>
-  &lt;processor state="relay" enableJmx="true">
-    [...]
-    &lt;mailet match="All" class="org.apache.james.jdkim.mailets.DKIMSign"&gt;
-    &lt;signatureTemplate>v=1; s=james3; d=domain.example.com ; h=from : reply-to : subject : date : to : cc : resent-date : resent-from : resent-sender : resent-to : resent-cc : in-reply-to : references : list-id : list-help : list-unsubscribe : list-subscribe : list-post : list-owner : list-archive; a=rsa-sha256; bh=; b=;&lt;/signatureTemplate&gt;
-    &lt;privateKey>
+&lt;processor state="relay" enableJmx="true">
+[...]
+&lt;mailet match="All" class="org.apache.james.jdkim.mailets.DKIMSign"&gt;
+&lt;signatureTemplate>v=1; s=james3; d=domain.example.com ; h=from : reply-to : subject : date : to : cc : resent-date : resent-from : resent-sender : resent-to : resent-cc : in-reply-to : references : list-id : list-help : list-unsubscribe : list-subscribe : list-post : list-owner : list-archive; a=rsa-sha256; bh=; b=;&lt;/signatureTemplate&gt;
+&lt;privateKey>
 -----BEGIN RSA PRIVATE KEY-----
 [Your Private Key]
 -----END RSA PRIVATE KEY-----
-    &lt;/privateKey&gt;
-    &lt;mailet&gt;
-  &lt;/processor&gt;
+&lt;/privateKey&gt;
+&lt;mailet&gt;
+&lt;/processor&gt;
 &lt;/processor&gt;
 [...]</code></pre>
-</div>
 
 <h1><b>Verifying DKIM Record</b></h1>
 <p>To query the DKIM key, you will have to know the DKIM selector:</p>
 
-<pre><code>
-$ dig txt james3._domainkey.domain.example.com
-
+<pre><code>$ dig txt james3._domainkey.domain.example.com
 ; <<>> DiG 9.16.1-Ubuntu <<>> txt james3._domainkey.domain.example.com
 ;; global options: +cmd
 ;; Got answer:
 ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 39673
 ;; flags: qr rd ad; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
 ;; WARNING: recursion requested but not available
-  
+
 ;; QUESTION SECTION:
 ;james3._domainkey.domain.example.com IN TXT
-  
+
 ;; ANSWER SECTION:
 james3._domainkey.domain.example.com. 0 IN TXT "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNAD[...Your Public Key...]"
 [...]</code></pre>
 </div>
+
+
+
+</div>
+<footer class="major">
+<ul class="actions align-center">
+    <li><a href="index.html" class="button">go back to other how-tos</a></li>
+</ul>
+</footer>
+</section>
+</div>
+
