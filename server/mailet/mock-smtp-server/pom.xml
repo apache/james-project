@@ -124,7 +124,7 @@
                 <version>2.7.0</version>
                 <configuration>
                     <from>
-                        <image>adoptopenjdk:11-jre-hotspot</image>
+                        <image>eclipse-temurin:11-jre-focal</image>
                     </from>
                     <to>
                         <image>linagora/mock-smtp-server</image>
