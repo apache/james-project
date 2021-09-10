@@ -37,7 +37,7 @@ layout: howTo
                 </p>
 
                 <ul>
-                    <li>DNS creation and MX record</li>
+                    <li>DNS resolution and essential DNS records for mail delivery</li>
                     <li>Server components description</li>
                     <li>Generation of a custom keystore</li>
                     <li>Starting James</li>
@@ -51,6 +51,15 @@ layout: howTo
 
                 <header class="major">
                     <h2><b>DNS resolution</b></h2>
+                </header>
+
+                <p>
+                    For a public facing mail server to send and receive mail properly, 
+                    it is necessary to configure your public DNS records so that other mailservers can find and send mail to your users, 
+                    and for other mailservers to trust and receive your mail.
+                </p>
+                <header class="major">
+                    <h2><b>MX Record</b></h2>
                 </header>
 
                 <p>
@@ -69,8 +78,23 @@ layout: howTo
                     <li>...and can establish a connection to <code>mx.company.com</code> to send an email to Alice</li>
                 </ol>
 
-                <p>All is needed is a MX entry in domain name resolution pointing to the future IP of your James server.</p>
+                <p>All you need is to create a MX Record in your Domain Control Panel and point it to the IP of your James server.</p>
 
+                <header class="major">
+                    <h2><b>PTR Record</b></h2>
+                </header>
+
+                <p>
+                    So you want to send an email to friends in another domain. 
+                    Their mailserver will not trust mail coming from your server unless they can do a reverse DNS lookup.
+                </p>
+
+                <p>That is what PTR Record do - A reverse lookup which maps the mailserver IP address to domain name.</p>
+                <p>PTR Record can only be created by your ISP - So don't hesitate to ask them to create a PTR record for you.</p>
+                
+                <p>
+                    Also for Security and Spam Protection, please check our other documents <a href="spf.html">SPF Record</a> and  <a href="dkim.html">DKIM Record</a>.
+                </p>
                 <header class="major">
                     <h2><b>JAMES architecture</b></h2>
                 </header>
