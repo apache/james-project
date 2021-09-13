@@ -60,7 +60,7 @@ public class DefaultTimeMetric implements TimeMetric {
     @Override
     public ExecutionResult stopAndPublish() {
         long elapsed = stopwatch.elapsed(TimeUnit.MILLISECONDS);
-        DefaultMetricFactory.LOGGER.info("Time spent in {}: {} ms.", name, elapsed);
+        DefaultMetricFactory.LOGGER.debug("Time spent in {}: {} ms.", name, elapsed);
         return new DefaultExecutionResult(Duration.ofNanos(elapsed));
     }
 

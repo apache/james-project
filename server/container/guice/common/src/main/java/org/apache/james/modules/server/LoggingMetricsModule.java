@@ -19,6 +19,8 @@
 
 package org.apache.james.modules.server;
 
+import static com.codahale.metrics.Slf4jReporter.LoggingLevel.DEBUG;
+
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PreDestroy;
@@ -66,6 +68,7 @@ public class LoggingMetricsModule extends AbstractModule {
         StartableSlf4jReporter(MetricRegistry registry) {
             this.reporter = Slf4jReporter.forRegistry(registry)
                 .outputTo(LOGGER)
+                .withLoggingLevel(DEBUG)
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
                 .build();
