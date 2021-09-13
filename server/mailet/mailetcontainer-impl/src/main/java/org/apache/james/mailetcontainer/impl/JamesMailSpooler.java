@@ -40,6 +40,7 @@ import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.queue.api.MailQueue;
@@ -75,7 +76,7 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
         private final MailQueue queue;
         private final Configuration configuration;
 
-        private Runner(MetricFactory metricFactory, MailProcessor mailProcessor,
+        private Runner(MetricFactory metricFactory, GaugeRegistry gaugeRegistry, MailProcessor mailProcessor,
                        MailRepository errorRepository, MailQueue queue, Configuration configuration) {
             this.metricFactory = metricFactory;
             this.mailProcessor = mailProcessor;
@@ -84,6 +85,9 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
             this.configuration = configuration;
 
             this.disposable = run(queue);
+
+            gaugeRegistry.register(SPOOL_PROCESSING + ".inFlight",
+                processingActive::get);
         }
 
         private reactor.core.Disposable run(MailQueue queue) {
@@ -246,6 +250,7 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
      * process.
      */
     private final MetricFactory metricFactory;
+    private final GaugeRegistry gaugeRegistry;
     private final MailProcessor mailProcessor;
     private final MailRepositoryStore mailRepositoryStore;
     private final MailQueueFactory<?> queueFactory;
@@ -255,8 +260,9 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
     private MailQueue queue;
 
     @Inject
-    public JamesMailSpooler(MetricFactory metricFactory, MailProcessor mailProcessor, MailRepositoryStore mailRepositoryStore, MailQueueFactory<?> queueFactory) {
+    public JamesMailSpooler(MetricFactory metricFactory, GaugeRegistry gaugeRegistry, MailProcessor mailProcessor, MailRepositoryStore mailRepositoryStore, MailQueueFactory<?> queueFactory) {
         this.metricFactory = metricFactory;
+        this.gaugeRegistry = gaugeRegistry;
         this.mailProcessor = mailProcessor;
         this.mailRepositoryStore = mailRepositoryStore;
         this.queueFactory = queueFactory;
@@ -264,7 +270,7 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
 
     public void restart() {
         Optional<Runner> previous = runner;
-        runner = Optional.of(new Runner(metricFactory, mailProcessor, errorRepository(), queue, configuration));
+        runner = Optional.of(new Runner(metricFactory, gaugeRegistry, mailProcessor, errorRepository(), queue, configuration));
         previous.ifPresent(Runner::dispose);
     }
 
@@ -286,7 +292,7 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
             LOGGER.info("init...");
             LOGGER.info("Concurrency level is {}", configuration.getConcurrencyLevel());
             queue = queueFactory.createQueue(MailQueueFactory.SPOOL, MailQueueFactory.prefetchCount(configuration.getConcurrencyLevel()));
-            runner = Optional.of(new Runner(metricFactory,
+            runner = Optional.of(new Runner(metricFactory, gaugeRegistry,
                 mailProcessor, errorRepository(), queue, configuration));
             LOGGER.info("Spooler started");
         } else {
