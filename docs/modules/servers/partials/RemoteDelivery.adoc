@@ -38,7 +38,8 @@ be delivered to for DSN bounce processing. Default is to send a traditional mess
 * *startTLS* (optional) - a Boolean (true/false) indicating whether the STARTTLS command (if supported by the server)
 to switch the connection to a TLS-protected connection before issuing any login commands. Default is false.
 * *sslEnable* (optional) - a Boolean (true/false) indicating whether to use SSL to connect and use the SSL port unless
-explicitly overridden. Default is false.
+explicitly overridden. Default is false. Setting up to true will result in delivery attempts in SMTPS on port 465 with a fallback
+to SMTP on port 25. The trust-store if needed can be customized by *-Djavax.net.ssl.trustStore=/root/conf/keystore*.
 * *gateway* (optional) - a String containing a comma separated list of patterns defining the gateway servers to be used to
 deliver mail regardless of the recipient address. If multiple gateway servers are defined, each will be tried in definition order
 until delivery is successful. If none are successful, the mail is bounced. The pattern is *host[:port]* where:

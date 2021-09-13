@@ -86,7 +86,8 @@ import com.google.common.collect.HashMultimap;
  * <li><b>startTLS</b> (optional) - a Boolean (true/false) indicating whether the STARTTLS command (if supported by the server)
  * to switch the connection to a TLS-protected connection before issuing any login commands. Default is false.</li>
  * <li><b>sslEnable</b> (optional) - a Boolean (true/false) indicating whether to use SSL to connect and use the SSL port unless
- * explicitly overridden. Default is false.</li>
+ * explicitly overridden. Default is false. The trust-store if needed can be customized by
+ * <strong>-Djavax.net.ssl.trustStore=/root/conf/keystore</strong>.</li>
  * <li><b>gateway</b> (optional) - a String containing a comma separated list of patterns defining the gateway servers to be used to
  * deliver mail regardless of the recipient address. If multiple gateway servers are defined, each will be tried in definition order
  * until delivery is successful. If none are successful, the mail is bounced. The pattern is <code>host[:port]</code> where:

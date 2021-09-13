@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.mailet.HostAddress;
@@ -59,7 +60,8 @@ public class MXHostAddressIterator implements Iterator<HostAddress> {
 
         while (hosts.hasNext()) {
             String nextHostname = hosts.next();
-            Map.Entry<String, String> hostAndPort = extractHostAndPort(nextHostname, 25);
+
+            Map.Entry<String, Optional<String>> hostAndPort = extractHostAndPort(nextHostname);
 
             try {
                 final Collection<InetAddress> addrs;
@@ -71,10 +73,10 @@ public class MXHostAddressIterator implements Iterator<HostAddress> {
                 for (InetAddress addr : addrs) {
                     if (smtps) {
                         hAddresses.add(new HostAddress(hostAndPort.getKey(),
-                            "smtps://" + addr.getHostAddress() + ":465"));
+                            "smtps://" + addr.getHostAddress() + ":" + hostAndPort.getValue().orElse("465")));
                     }
                     hAddresses.add(new HostAddress(hostAndPort.getKey(),
-                        "smtp://" + addr.getHostAddress() + ":25"));
+                        "smtp://" + addr.getHostAddress() + ":" + hostAndPort.getValue().orElse("25")));
                 }
             } catch (UnknownHostException uhe) {
                 // this should never happen, since we just got
@@ -87,17 +89,17 @@ public class MXHostAddressIterator implements Iterator<HostAddress> {
         addresses = hAddresses.iterator();
     }
 
-    private static ImmutableMap.Entry<String, String> extractHostAndPort(String nextHostname, int defaultPort) {
+    private static ImmutableMap.Entry<String, Optional<String>> extractHostAndPort(String nextHostname) {
         final String hostname;
-        final String port;
+        final Optional<String> port;
 
         int idx = nextHostname.indexOf(':');
         if (idx > 0) {
-            port = nextHostname.substring(idx + 1);
+            port = Optional.of(nextHostname.substring(idx + 1));
             hostname = nextHostname.substring(0, idx);
         } else {
             hostname = nextHostname;
-            port = Integer.toString(defaultPort);
+            port = Optional.empty();
         }
         return Maps.immutableEntry(hostname, port);
     }
