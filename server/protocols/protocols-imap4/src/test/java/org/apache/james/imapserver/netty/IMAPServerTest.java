@@ -67,6 +67,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import nl.altindag.ssl.exception.GenericKeyStoreException;
+import nl.altindag.ssl.exception.PrivateKeyParseException;
+
 class IMAPServerTest {
     private static final String _129K_MESSAGE = "header: value\r\n" + "012345678\r\n".repeat(13107);
     private static final String _65K_MESSAGE = "header: value\r\n" + "012345678\r\n".repeat(6553);
@@ -268,6 +271,18 @@ class IMAPServerTest {
         }
 
         @Test
+        void initShouldAcceptPEMKeysWithPassword() {
+            assertThatCode(() -> imapServer = createImapServer("imapServerSslPEM.xml"))
+                .doesNotThrowAnyException();
+        }
+
+        @Test
+        void initShouldAcceptPEMKeysWithoutPassword() {
+            assertThatCode(() -> imapServer = createImapServer("imapServerSslPEMNoPass.xml"))
+                .doesNotThrowAnyException();
+        }
+
+        @Test
         void initShouldAcceptJKSByDefault() {
             assertThatCode(() -> imapServer = createImapServer("imapServerSslDefaultJKS.xml"))
                 .doesNotThrowAnyException();
@@ -277,14 +292,33 @@ class IMAPServerTest {
         void initShouldThrowWhenSslEnabledWithoutKeys() {
             assertThatThrownBy(() -> createImapServer("imapServerSslNoKeys.xml"))
                 .isInstanceOf(ConfigurationException.class)
-                .hasMessage("keystore needs to get configured");
+                .hasMessageContaining("keystore or (privateKey and certificates) needs to get configured");
         }
 
         @Test
         void initShouldThrowWhenJKSWithBadPassword() {
             assertThatThrownBy(() -> createImapServer("imapServerSslJKSBadPassword.xml"))
-                .isInstanceOf(IOException.class)
-                .hasMessage("keystore password was incorrect");
+                .isInstanceOf(GenericKeyStoreException.class)
+                .hasMessageContaining("keystore password was incorrect");
+        }
+
+        @Test
+        void initShouldThrowWhenPEMWithBadPassword() {
+            assertThatThrownBy(() -> createImapServer("imapServerSslPEMBadPass.xml"))
+                .isInstanceOf(PrivateKeyParseException.class);
+        }
+
+        @Test
+        void initShouldThrowWhenPEMWithMissingPassword() {
+            assertThatThrownBy(() -> createImapServer("imapServerSslPEMMissingPass.xml"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("A password is mandatory with an encrypted key");
+        }
+
+        @Test
+        void initShouldNotThrowWhenPEMWithExtraPassword() {
+            assertThatCode(() -> imapServer = createImapServer("imapServerSslPEMExtraPass.xml"))
+                .doesNotThrowAnyException();
         }
 
         @Test
@@ -297,8 +331,15 @@ class IMAPServerTest {
         @Test
         void initShouldThrowWhenPKCS12WithBadPassword() {
             assertThatThrownBy(() -> createImapServer("imapServerSslPKCS12WrongPassword.xml"))
-                .isInstanceOf(IOException.class)
-                .hasMessage("keystore password was incorrect");
+                .isInstanceOf(GenericKeyStoreException.class)
+                .hasMessageContaining("keystore password was incorrect");
+        }
+
+        @Test
+        void initShouldThrowWhenPKCS12WithMissingPassword() {
+            assertThatThrownBy(() -> createImapServer("imapServerSslPKCS12MissingPassword.xml"))
+                .isInstanceOf(GenericKeyStoreException.class)
+                .hasMessageContaining("keystore password was incorrect");
         }
     }
 

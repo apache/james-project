@@ -198,6 +198,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>io.github.hakky54</groupId>
+            <artifactId>sslcontext-kickstart-for-pem</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt</artifactId>
         </dependency>

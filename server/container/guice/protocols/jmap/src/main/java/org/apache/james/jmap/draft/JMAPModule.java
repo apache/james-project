@@ -198,9 +198,11 @@ public class JMAPModule extends AbstractModule {
             Configuration configuration = propertiesProvider.getConfiguration("jmap");
             return JMAPDraftConfiguration.builder()
                 .enabled(configuration.getBoolean("enabled", true))
-                .keystore(configuration.getString("tls.keystoreURL"))
+                .keystore(configuration.getString("tls.keystoreURL", null))
+                .privateKey(configuration.getString("tls.privateKey", null))
+                .certificates(configuration.getString("tls.certificates", null))
                 .keystoreType(configuration.getString("tls.keystoreType", null))
-                .secret(configuration.getString("tls.secret"))
+                .secret(configuration.getString("tls.secret", null))
                 .jwtPublicKeyPem(loadPublicKey(fileSystem, Optional.ofNullable(configuration.getString("jwt.publickeypem.url"))))
                 .build();
         } catch (FileNotFoundException e) {

@@ -22,7 +22,6 @@ import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 
 public class JMAPDraftConfiguration {
 
@@ -31,9 +30,11 @@ public class JMAPDraftConfiguration {
     }
 
     public static class Builder {
-        private String keystore;
+        private Optional<String> keystore = Optional.empty();
         private Optional<String> keystoreType = Optional.empty();
-        private String secret;
+        private Optional<String> privateKey = Optional.empty();
+        private Optional<String> certificates = Optional.empty();
+        private Optional<String> secret = Optional.empty();
         private Optional<Boolean> enabled = Optional.empty();
         private Optional<String> jwtPublicKeyPem = Optional.empty();
 
@@ -42,7 +43,18 @@ public class JMAPDraftConfiguration {
         }
 
         public Builder keystore(String keystore) {
-            this.keystore = keystore;
+            this.keystore = Optional.ofNullable(keystore)
+                .filter(s -> !s.isEmpty());
+            return this;
+        }
+
+        public Builder privateKey(String privateKey) {
+            this.privateKey = Optional.ofNullable(privateKey);
+            return this;
+        }
+
+        public Builder certificates(String certificates) {
+            this.certificates = Optional.ofNullable(certificates);
             return this;
         }
 
@@ -65,7 +77,8 @@ public class JMAPDraftConfiguration {
         }
 
         public Builder secret(String secret) {
-            this.secret = secret;
+            this.secret = Optional.ofNullable(secret)
+                .filter(s -> !s.isEmpty());
             return this;
         }
 
@@ -77,24 +90,32 @@ public class JMAPDraftConfiguration {
 
         public JMAPDraftConfiguration build() {
             Preconditions.checkState(enabled.isPresent(), "You should specify if JMAP server should be started");
-            Preconditions.checkState(!enabled.get() || !Strings.isNullOrEmpty(keystore), "'keystore' is mandatory");
-            Preconditions.checkState(!enabled.get() || !Strings.isNullOrEmpty(secret), "'secret' is mandatory");
 
-            return new JMAPDraftConfiguration(enabled.get(), keystore, keystoreType.orElse("JKS"), secret, jwtPublicKeyPem);
+            Preconditions.checkState(!enabled.get() || cryptoParametersAreSpecified(),
+                "('keystore' && 'secret') or (privateKey && certificates) is mandatory");
+            return new JMAPDraftConfiguration(enabled.get(), keystore, privateKey, certificates, keystoreType.orElse("JKS"), secret, jwtPublicKeyPem);
         }
 
+        private boolean cryptoParametersAreSpecified() {
+            return (keystore.isPresent() && secret.isPresent())
+                || (privateKey.isPresent() && certificates.isPresent());
+        }
     }
 
     private final boolean enabled;
-    private final String keystore;
+    private final Optional<String> keystore;
+    private final Optional<String> privateKey;
+    private final Optional<String> certificates;
     private final String keystoreType;
-    private final String secret;
+    private final Optional<String> secret;
     private final Optional<String> jwtPublicKeyPem;
 
     @VisibleForTesting
-    JMAPDraftConfiguration(boolean enabled, String keystore, String keystoreType, String secret, Optional<String> jwtPublicKeyPem) {
+    JMAPDraftConfiguration(boolean enabled, Optional<String> keystore, Optional<String> privateKey, Optional<String> certificates, String keystoreType, Optional<String> secret, Optional<String> jwtPublicKeyPem) {
         this.enabled = enabled;
         this.keystore = keystore;
+        this.privateKey = privateKey;
+        this.certificates = certificates;
         this.keystoreType = keystoreType;
         this.secret = secret;
         this.jwtPublicKeyPem = jwtPublicKeyPem;
@@ -104,7 +125,7 @@ public class JMAPDraftConfiguration {
         return enabled;
     }
 
-    public String getKeystore() {
+    public Optional<String> getKeystore() {
         return keystore;
     }
 
@@ -112,7 +133,15 @@ public class JMAPDraftConfiguration {
         return keystoreType;
     }
 
-    public String getSecret() {
+    public Optional<String> getPrivateKey() {
+        return privateKey;
+    }
+
+    public Optional<String> getCertificates() {
+        return certificates;
+    }
+
+    public Optional<String> getSecret() {
         return secret;
     }
 

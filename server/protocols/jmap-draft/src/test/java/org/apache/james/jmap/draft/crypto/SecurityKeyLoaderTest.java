@@ -33,6 +33,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import nl.altindag.ssl.exception.GenericKeyStoreException;
+
 class SecurityKeyLoaderTest {
 
     @Test
@@ -85,8 +87,8 @@ class SecurityKeyLoaderTest {
             jmapDraftConfiguration);
 
         assertThatThrownBy(loader::load)
-            .isInstanceOf(IOException.class)
-            .hasMessage("Keystore was tampered with, or password was incorrect");
+            .isInstanceOf(GenericKeyStoreException.class)
+            .hasMessageContaining("Keystore was tampered with, or password was incorrect");
     }
 
     @Test

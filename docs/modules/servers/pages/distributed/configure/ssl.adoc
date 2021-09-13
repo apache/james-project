@@ -29,6 +29,25 @@ You need to add a block in the corresponding configuration file (smtpserver.xml,
 </tls>
 ....
 
+Alternatively TLS keys can be supplied via PEM files:
+
+....
+<tls socketTLS="true" startTLS="false">
+  <privateKey>file://conf/private.key</privateKey>
+  <certificates>file://conf/certs.self-signed.csr</certificates>
+</tls>
+....
+
+An optional secret might be specified for the private key:
+
+....
+<tls socketTLS="true" startTLS="false">
+  <privateKey>file://conf/private.key</privateKey>
+  <certificates>file://conf/certs.self-signed.csr</certificates>
+  <secret>yoursecret</secret>
+</tls>
+....
+
 Each of these block has an optional boolean configuration element <b>socketTLS</b> and <b>startTLS</b> which is used to toggle
 use of SSL or TLS for the service.
 
@@ -65,10 +84,37 @@ Please note `JKS` keystore format is also supported (default value if no keystor
 </tls>
 ....
 
+== Creating your own PEM keys
+
+The following commands can be used to create self signed PEM keys:
+
+....
+# Generating your private key
+openssl genrsa -des3 -out private.key 2048
+
+# Creating your certificates
+openssl req -new -key private.key -out certs.csr
+
+# Signing the certificate yourself
+openssl x509 -req -days 365 -in certs.csr -signkey private.key -out certs.self-signed.csr
+
+# Removing the password from the private key
+# Not necessary if you supply the secret in the configuration
+openssl rsa -in private.key -out private.nopass.key
+....
+
+You may then supply this TLS configuration:
+
+....
+<tls socketTLS="true" startTLS="false">
+  <privateKey>file://conf/private.nopass.key</privateKey>
+  <certificates>file://conf/certs.self-signed.csr</certificates>
+</tls>
+....
+
 == Certificate Keystores
 
-To use TLS/SSL inside James you will need a certificate keystore.
-
+This section gives more indication for users relying on keystores.
 
 === Creating your own Certificate Keystore
 

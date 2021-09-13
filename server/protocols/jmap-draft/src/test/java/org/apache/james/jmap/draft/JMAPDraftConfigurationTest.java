@@ -39,7 +39,7 @@ public class JMAPDraftConfigurationTest {
                 .keystore(null)
                 .build())
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("'keystore' is mandatory");
+            .hasMessage("('keystore' && 'secret') or (privateKey && certificates) is mandatory");
     }
 
     @Test
@@ -49,7 +49,7 @@ public class JMAPDraftConfigurationTest {
                 .keystore("")
                 .build())
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("'keystore' is mandatory");
+            .hasMessage("('keystore' && 'secret') or (privateKey && certificates) is mandatory");
     }
 
     @Test
@@ -60,7 +60,7 @@ public class JMAPDraftConfigurationTest {
                 .secret(null)
                 .build())
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("'secret' is mandatory");
+            .hasMessage("('keystore' && 'secret') or (privateKey && certificates) is mandatory");
     }
 
     @Test
@@ -71,7 +71,7 @@ public class JMAPDraftConfigurationTest {
                 .secret("")
                 .build())
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("'secret' is mandatory");
+            .hasMessage("('keystore' && 'secret') or (privateKey && certificates) is mandatory");
     }
 
     @Test
@@ -99,10 +99,14 @@ public class JMAPDraftConfigurationTest {
 
     @Test
     public void buildShouldWorkWhenDisabled() {
-        String keystore = null;
-        String secret = null;
         Optional<String> jwtPublicKeyPem = Optional.empty();
-        JMAPDraftConfiguration expectedJMAPDraftConfiguration = new JMAPDraftConfiguration(DISABLED, keystore, "JKS", secret, jwtPublicKeyPem);
+        Optional<String> privateKey = Optional.empty();
+        Optional<String> certificates = Optional.empty();
+        Optional<String> keystore = Optional.empty();
+        Optional<String> secret = Optional.empty();
+
+        JMAPDraftConfiguration expectedJMAPDraftConfiguration = new JMAPDraftConfiguration(DISABLED, keystore,
+            privateKey, certificates, "JKS", secret, jwtPublicKeyPem);
 
         JMAPDraftConfiguration jmapDraftConfiguration = JMAPDraftConfiguration.builder()
             .disable()

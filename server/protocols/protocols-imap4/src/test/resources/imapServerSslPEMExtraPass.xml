@@ -1,0 +1,10 @@
+
+<imapserver enabled="true">
+    <jmxName>imapserver</jmxName>
+    <bind>0.0.0.0:0</bind>
+    <tls socketTLS="false" startTLS="true">
+        <privateKey>private.nopass.key</privateKey>
+        <certificates>certs.self-signed.csr</certificates>
+        <secret>123456</secret>
+    </tls>
+</imapserver>
