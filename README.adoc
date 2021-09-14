@@ -3,7 +3,7 @@ Apache James Project
 
 link:https://gitter.im/apache/james-project[image:https://badges.gitter.im/apache/james-project.svg[Join the chat at link:https://gitter.im/apache/james-project]]
 
-image::james-logo.png[James logo]
+image::james-logo.png[link="https://james.apache.org"]
 
 == What is James?
 
