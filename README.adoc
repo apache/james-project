@@ -120,30 +120,7 @@ This feature is available for three configurations :
 
 See https://james.apache.org/server/manage-cli.html[Manage James via the Command Line] for more info.
 
-=== How to add a domain ?
-
-    # Add DOMAIN to 127.0.0.1 in your host /etc/hosts
-    $ docker exec james_run java james-cli -h 127.0.0.1 -p 9999 adddomain DOMAIN
-
-DOMAIN: is the domain you want to add.
-
-Note: Using docker, one can add an environment variable holding the domain to be created. This
-domain will be created upon James start:
-
-    $ --environment DOMAIN=domain.tld
-
-=== How to add a user ?
-
-    $ docker exec james_run java james-cli -h 127.0.0.1 -p 9999 adduser USER_MAIL_ADDRESS PASSWORD
-
-Where :
-
-* USER_MAIL_ADDRESS: is the mail address that will be used by this user.
-* PASSWORD: is the password that will be used by this user.
-
-You can then just add DOMAIN to your /etc/hosts and you can connect to your james account with for instance Thunderbird.
-
-=== How to manage SIEVE scripts ?
+== How to manage SIEVE scripts ?
 
 Each user can manage his SIEVE scripts through the manage SIEVE mailet.
 
@@ -157,19 +134,6 @@ To activate a script for a user, you need the following combination :
  * PUTSCRIPT scriptname
  * SETACTIVE scriptname
 
-=== How to retrieve users and password from my previous container
-
-Some james data (those non related to mailbox, eg : mail queue, domains, users, rrt, SIEVE scripts, mail repositories ) are not yet supported by our Cassandra implementation.
-
-To keep these data when you run a new container, you can mount the following volume :
-
- -v /root/james-server-app-3.0.0-beta6-SNAPSHOT/var:WORKDIR/destination/var
-
-Where :
-
-* WORKDIR: is the absolute path to your james-parent workdir.
-
-Beware : you will have concurrency issues if multiple containers are running on this single volume.
 
 == Develop on James
 

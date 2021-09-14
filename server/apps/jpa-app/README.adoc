@@ -79,6 +79,14 @@ The [CLI](https://james.apache.org/server/manage-cli.html) can easily be used:
 docker exec CONTAINER-ID james-cli ListDomains
 ----
 
+Note that you can create a domain via an environment variable. This domain will be created upon James start:
+
+[source]
+----
+--environment DOMAIN=domain.tld
+----
+
+
 === Using alternative JDBC drivers
 
 In `james-database.properties`, one can specify any JDBC driver on the class path.
