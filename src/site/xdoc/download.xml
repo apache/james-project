@@ -75,35 +75,7 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
  
     <p>(*) James maven repositories can be found on 
     <a href="https://repo1.maven.org/maven2/org/apache/james/">https://repo1.maven.org/maven2/org/apache/james/</a>.</p>
-  
-    <subsection name="Mirror">
-    
-      <p>[if-any logo]
-      <a href="[link]"><img align="right" src="[logo]" border="0" /></a>[end]
-      The currently selected mirror is <b>[preferred]</b>.  If you encounter a
-      problem with this mirror, please select another mirror.  If all
-      mirrors are failing, there are <i>backup</i> mirrors (at the end of
-      the mirrors list) that should be available.</p>
-      
-      <form action="[location]" method="get" id="SelectMirror">
-      Other mirrors: <select name="Preferred">
-      [if-any http]
-        [for http]<option value="[http]">[http]</option>[end]
-      [end]  
-      [if-any ftp]
-        [for ftp]<option value="[ftp]">[ftp]</option>[end]
-      [end]
-      [if-any backup]
-        [for backup]<option value="[backup]">[backup] (backup)</option>[end]
-      [end]
-      </select>
-      <input type="submit" value="Change" />     
-      </form>
-      
-      <p>You may also consult the <a href="https://www.apache.org/mirrors/">complete
-      list of mirrors</a>.</p>
-      
-      </subsection>
+
       <subsection name="Verify the integrity of the files">
       
       <p>It is essential that you verify the integrity of the downloaded
