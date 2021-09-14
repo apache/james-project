@@ -93,7 +93,7 @@ Useful options includes:
 
 == How to run James in Docker
 
-This feature is available for three configurations :
+We maintain docker distribution for our Guice based applications :
 
  * link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/README.adoc[Guice + Cassandra + RabbitMQ + S3 + ElasticSearch (distributed)]
  * link:https://github.com/apache/james-project/blob/master/server/apps/cassandra-app/README.adoc[Guice + Cassandra + ElasticSearch]
