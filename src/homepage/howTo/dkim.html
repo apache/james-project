@@ -129,17 +129,16 @@ Text: v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNAD[...Your Public Key...]
 
 <pre><code>[...]
 &lt;processors>
-&lt;processor state="relay" enableJmx="true">
-[...]
-&lt;mailet match="All" class="org.apache.james.jdkim.mailets.DKIMSign"&gt;
-&lt;signatureTemplate>v=1; s=james3; d=domain.example.com ; h=from : reply-to : subject : date : to : cc : resent-date : resent-from : resent-sender : resent-to : resent-cc : in-reply-to : references : list-id : list-help : list-unsubscribe : list-subscribe : list-post : list-owner : list-archive; a=rsa-sha256; bh=; b=;&lt;/signatureTemplate&gt;
-&lt;privateKey>
------BEGIN RSA PRIVATE KEY-----
-[Your Private Key]
------END RSA PRIVATE KEY-----
-&lt;/privateKey&gt;
-&lt;mailet&gt;
-&lt;/processor&gt;
+  &lt;processor state="relay" enableJmx="true">
+    &lt;mailet match="All" class="org.apache.james.jdkim.mailets.DKIMSign"&gt;
+      &lt;signatureTemplate>v=1; s=james3; d=domain.example.com ; h=from : reply-to : subject : date : to : cc : resent-date : resent-from : resent-sender : resent-to : resent-cc : in-reply-to : references : list-id : list-help : list-unsubscribe : list-subscribe : list-post : list-owner : list-archive; a=rsa-sha256; bh=; b=;&lt;/signatureTemplate&gt;
+      &lt;privateKey>
+      -----BEGIN RSA PRIVATE KEY-----
+      [Your Private Key]
+      -----END RSA PRIVATE KEY-----
+      &lt;/privateKey&gt;
+    &lt;mailet&gt;
+  &lt;/processor&gt;
 &lt;/processor&gt;
 [...]</code></pre>
 
