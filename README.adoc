@@ -19,7 +19,7 @@ It has a modular architecture based on a rich set of *modern* and *efficient* co
 Create your *own personal solution* for emails treatment by assembling the components you need thanks to the Inversion
 of Control mail platform offered and  go further customizing filtering and routing rules using *James Mailet Container*.
 
-Supported protocols are: IMAP, SMTP, JMAP, POP3 and more...
+Supported protocols are: IMAP, SMTP, link:https://jmap.io[JMAP], POP3 and more...
 
 Read more on https://james.apache.org/[our website].
 
