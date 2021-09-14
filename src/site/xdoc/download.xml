@@ -70,7 +70,6 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
       <li><a href='#Apache_Crypto_Mailets'>Apache James Crypto Mailets</a></li>
       <li><a href='#Apache_James_Protocols'>Apache James Protocols</a></li>
       <li><a href='#Apache_MPT'>Apache James MPT</a></li>
-      <li><a href='#Apache_HUPA'>Apache James Hupa</a></li>
       <li>Apache MailetDoc Plugin for Maven is available from the standard Maven repositories (*)</li>
     </ul>
  
