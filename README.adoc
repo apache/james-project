@@ -54,8 +54,6 @@ There is many other ways one can help us: packaging, communication, etc ...
  ** link:#how-to-check-the-merge-of-a-commit[How to check the merge of a commit]
  * link:#know-more-about-james-design[Know more about James design]
  * link:#articles-for-james-community[Articles for James community]
- ** link:#how-to-build-and-publish-the-website[How to build and publish the website]
- ** link:#how-to-release-via-maven-release-plugin[How to release via maven release plugin]
 
 == How to try James
 
