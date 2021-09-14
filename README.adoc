@@ -50,8 +50,6 @@ There is many other ways one can help us: packaging, communication, etc ...
  * link:#using_the_cli[Using the CLI]
  * link:#how-to-manage-sieve-scripts-[How to manage SIEVE scripts?]
  * link:#develop-on-james[Develop on James]
- ** link:#how-to-run-deployment-tests[How to run deployment Tests]
- ** link:#how-to-check-the-merge-of-a-commit[How to check the merge of a commit]
  * link:#know-more-about-james-design[Know more about James design]
  * link:#articles-for-james-community[Articles for James community]
 
