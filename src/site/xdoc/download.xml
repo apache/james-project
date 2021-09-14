@@ -50,8 +50,8 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
   <section name="Downloading">
   
     <p>Use the links below to download the product from one of
-       our mirrors.  You <strong>must</strong>&#160;<a href="#Verify_the_integrity_of_the_files">verify the
-       integrity</a> of the downloaded files using signatures downloaded from
+       our mirrors.  You <strong>must</strong>&#160;<a href="https://www.apache.org/info/verification.html">verify the
+       integrity</a> of the downloaded files using signatures <a href="https://downloads.apache.org/james/KEYS">KEYS</a> downloaded from
        our main distribution directory.</p>
     
     <p>Only current recommended releases are available on the main
@@ -75,36 +75,6 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
  
     <p>(*) James maven repositories can be found on 
     <a href="https://repo1.maven.org/maven2/org/apache/james/">https://repo1.maven.org/maven2/org/apache/james/</a>.</p>
-
-      <subsection name="Verify the integrity of the files">
-      
-      <p>It is essential that you verify the integrity of the downloaded
-      files using the PGP or SHA-1 signatures.</p>
-      
-      <p>The PGP signatures can be verified using PGP or GPG.  First
-      download the <a href="https://downloads.apache.org/james/KEYS">KEYS</a>
-      as well as the <code>asc</code> signature file for the particular
-      distribution.  Make sure you get these files from the <a
-      href="https://downloads.apache.org/james/">main distribution
-      directory</a>, rather than from a mirror. Then verify the signatures
-      using</p>
-      
-      <p><code>
-      % pgpk -a KEYS<br />
-      % pgpv james-<i>version</i>.tar.gz.asc<br />
-      </code>
-      <em>or</em><br />
-      <code>
-      % pgp -ka KEYS<br />
-      % pgp james-<i>version</i>.tar.gz.asc<br />
-      </code>
-      <em>or</em><br />
-      <code>
-      % gpg --import KEYS<br />
-      % gpg --verify james-<i>version</i>.tar.gz.asc james-<i>version</i>.tar.gz
-      </code></p>
-    
-    </subsection>
 
   </section>
 
