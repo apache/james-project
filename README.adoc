@@ -8,6 +8,7 @@ image:https://img.shields.io/badge/Documentation-green.svg[link="https://james.a
 image:https://img.shields.io/badge/Downloads-yellow.svg[link="https://james.apache.org/download.cgi"]
 image:https://img.shields.io/badge/Images-docker-blue.svg[link="https://hub.docker.com/r/apache/james"]
 image:https://img.shields.io/badge/Licensed%20with-ApacheV2-orange.svg[link="https://www.apache.org/licenses/"]
+image:https://img.shields.io/badge/Latests-news-red.svg[link="https://james.apache.org/index.html#posts"]
 
 image::james-logo.png[link="https://james.apache.org"]
 
