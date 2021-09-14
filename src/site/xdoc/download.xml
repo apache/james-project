@@ -54,11 +54,6 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
        integrity</a> of the downloaded files using signatures <a href="https://downloads.apache.org/james/KEYS">KEYS</a> downloaded from
        our main distribution directory.</p>
     
-    <p>Only current recommended releases are available on the main
-       distribution site and its mirrors.  Older releases are available from
-       the <a href="https://downloads.apache.org/james/">archive download
-       site.</a></p>
-    
     <ul>
       <li><a href='#Apache_James_Server'>Apache James Server</a></li>
       <li><a href='#Apache_Mime4J'>Apache James Mime4j</a></li>
@@ -116,7 +111,7 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
 
     <subsection name="Earlier Releases">
 
-      <p>Are now <a href='https://downloads.apache.org/james/server'>archived</a></p>
+      <p>Are now <a href='https://archive.apache.org/dist/james/server/'>archived (discouraged)</a></p>
 
     </subsection>
 
