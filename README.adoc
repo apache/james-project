@@ -27,6 +27,17 @@ The link:https://james.staged.apache.org/james-project/3.7.0/servers/distributed
 
 Read more on https://james.apache.org/[our website].
 
+== How to...
+
+ * link:#how-to-contribute[How to  contribute?]
+ * link:#how-to-try-james[How to try James]
+ * link:#how-to-check-the-compilation[How to check the compilation]
+ * link:#how-to-run-james-in-docker[How to run James in Docker]
+ * link:#using_the_cli[Using the CLI]
+ * link:#develop-on-james[Develop on James]
+ * link:#know-more-about-james-design[Know more about James design]
+ * link:#articles-for-james-community[Articles for James community]
+
 == How to contribute?
 
 James is a project that lives from the contributions of its community! Anyone can contribute!
@@ -44,16 +55,6 @@ https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolut
 https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20feature%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC[~feature] labels on JIRA.
 
 There is many other ways one can help us: packaging, communication, etc ...
-
-== How to...
-
- * link:#how-to-try-james[How to try James]
- * link:#how-to-check-the-compilation[How to check the compilation]
- * link:#how-to-run-james-in-docker[How to run James in Docker]
- * link:#using_the_cli[Using the CLI]
- * link:#develop-on-james[Develop on James]
- * link:#know-more-about-james-design[Know more about James design]
- * link:#articles-for-james-community[Articles for James community]
 
 == How to try James
 
