@@ -57,30 +57,24 @@ There is many other ways one can help us: packaging, communication, etc ...
 
 == How to try James
 
-Requirements: docker & docker-compose installed.
+Requirements: `docker` installed.
 
-When you try James this way, you will use the most current state of James.
-It will be configured to run with Cassandra & ElasticSearch.
-All those three components will be started with a single command.
+Here you will try James server v 3.6.0 thanks to a docker image. This James image has a default configuration using JPA
+(hsqldb) and Lucene. It also includes a default domain named james.local and three default users: user01@james.local,
+user02@james.local, user03@james.local, with their default password being 1234.
 
-You can retrieve the docker-compose file :
+Note: this James server will respond to IMAPS port 993 and SMTPS port 465.
 
-    $ wget https://raw.githubusercontent.com/apache/james-project/master/server/apps/distributed-app/docker-compose.yml
+Pull and run the James image with the following single command :
 
-Then, you just have to start the services:
+    $ docker run -p "465:465" -p "993:993" apache/james:demo-3.6.0
 
-    $ docker-compose up
+Then, connect this image with for instance, Thunderbird.
+link:https://james.apache.org/howTo/imap-server.html[This tutorial] covers more in depth user and domain creation, as well as thunderbird setup.
 
-Wait a few seconds in order to have all those services start up. You will see the following log when James is available:
-james           | Started : true
+Instructions that do not imply `docker` are also available link:https://james.apache.org/server/install.html[here].
 
-A default domain, james.local, has been created. You can see this by running:
-
-    $ docker exec james james-cli listdomains
-
-James will respond to IMAP port 143 and SMTP port 25.
-You have to create users before playing with james. You may also want to create other domains.
-Follow the 'Useful commands' section for more information about James CLI.
+Instructions for the distributed server can be found link:docs/modules/servers/pages/distributed/run-docker.adoc[here].
 
 == How to check the compilation
 
