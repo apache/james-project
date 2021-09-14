@@ -48,7 +48,6 @@ There is many other ways one can help us: packaging, communication, etc ...
  * link:#how-to-check-the-compilation[How to check the compilation]
  * link:#how-to-run-james-in-docker[How to run James in Docker]
  * link:#using_the_cli[Using the CLI]
- * link:#how-to-manage-sieve-scripts-[How to manage SIEVE scripts?]
  * link:#develop-on-james[Develop on James]
  * link:#know-more-about-james-design[Know more about James design]
  * link:#articles-for-james-community[Articles for James community]
@@ -103,21 +102,6 @@ We maintain docker distribution for our Guice based applications :
 == Using the CLI
 
 See https://james.apache.org/server/manage-cli.html[Manage James via the Command Line] for more info.
-
-== How to manage SIEVE scripts ?
-
-Each user can manage his SIEVE scripts through the manage SIEVE mailet.
-
-To use the manage SIEVE mailet :
-
- * You need to create the user sievemanager@DOMAIN ( if you don't, the SMTP server will check the domain, recognize it, and look for an absent local user, and will generate an error ).
- * You can send Manage Sieve commands by mail to sievemanager@DOMAIN. Your subject must contain the command. Scripts needs to be added as attachments and need the ".sieve" extension.
-
-To activate a script for a user, you need the following combination :
-
- * PUTSCRIPT scriptname
- * SETACTIVE scriptname
-
 
 == Develop on James
 

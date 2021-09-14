@@ -126,6 +126,8 @@ include::partial$HeadersToHTTP.adoc[]
 
 include::partial$OnlyText.adoc[]
 
+include::partial$ManageSieveMailet.adoc[]
+
 include::partial$RecoverAttachment.adoc[]
 
 include::partial$SerialiseToHTTP.adoc[]
