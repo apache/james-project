@@ -12,8 +12,6 @@ image:https://img.shields.io/badge/Latests-news-red.svg[link="https://james.apac
 
 image::james-logo.png[link="https://james.apache.org"]
 
-== What is James?
-
 *James* stands for *Java Apache Mail Enterprise Server!*
 
 It has a modular architecture based on a rich set of *modern* and *efficient* components which provides at the end
