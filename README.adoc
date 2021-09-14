@@ -90,11 +90,7 @@ Follow the 'Useful commands' section for more information about James CLI.
 
 == How to check the compilation
 
-In order to have a standard compilation environment, we introduce Dockerfiles, using java-11.
-
-=== Maven
-
-We require maven version 3.6.0 minimum to build the project.
+We require link:https://maven.apache.org[maven] version 3.6.0 minimum to build the project.
 
 Simply run `mvn clean install` within this directory to compile the project.
 
