@@ -1,7 +1,10 @@
 Apache James Project
 ====================
 
-link:https://gitter.im/apache/james-project[image:https://badges.gitter.im/apache/james-project.svg[Join the chat at link:https://gitter.im/apache/james-project]] image:https://img.shields.io/badge/Tested%20by-Apache%20Jenkins%20CI-blue.svg[link="https://ci-builds.apache.org/job/james/job/ApacheJames/"]
+link:https://gitter.im/apache/james-project[image:https://badges.gitter.im/apache/james-project.svg[Join the chat at link:https://gitter.im/apache/james-project]]
+image:https://img.shields.io/badge/Tested%20by-Apache%20Jenkins%20CI-blue.svg[link="https://ci-builds.apache.org/job/james/job/ApacheJames/"]
+image:https://img.shields.io/badge/Documentation-green.svg[link="https://james.apache.org/documentation.html"]
+image:https://img.shields.io/badge/Downloads-yellow.svg[link="https://james.apache.org/download.cgi"]
 
 image::james-logo.png[link="https://james.apache.org"]
 
