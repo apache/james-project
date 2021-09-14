@@ -28,7 +28,7 @@ Read more on https://james.apache.org/[our website].
 
 James is a project that lives from the contributions of its community! Anyone can contribute!
 
-Read the https://james.apache.org/contribute.html[contributing guidelines].
+Read https://james.apache.org/index.html#third[how to contribute].
 
 We more than welcome *articles* and *blog posts* about James. Contact us by https://james.apache.org/mail.html[email]
 or on https://gitter.im/apache/james-project[Gitter] to share your experiences.
