@@ -140,6 +140,8 @@ To activate a script for a user, you need the following combination :
 James requires at least JDK 11 and Maven 3.6.0 to build.
 Some parts of James are written in Scala so one might need to enable Scala plugin in IDE.
 
+We maintain link:examples/README.md[code examples] to help you write your own extensions and wire your own servers.
+
 === How to run deployment Tests
 
 We wrote some MPT (James' Mail Protocols Tests subproject) deployment tests to validate a James
