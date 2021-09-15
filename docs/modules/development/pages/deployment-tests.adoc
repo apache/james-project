@@ -7,7 +7,7 @@ deployment.
 It uses the External-James module, that uses environment variables to locate a remote
 IMAP server and run integration tests against it.
 
-For that, the target James Server needs to be configured with a domain domain and a user imapuser
+For that, the target James Server needs to be configured with a domain `domain` and a user `imapuser`
 with password password. Read above documentation to see how you can do this.
 
 You have to run MPT tests inside docker. As you need to use maven, the simplest option is to
