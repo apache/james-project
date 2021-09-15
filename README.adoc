@@ -22,7 +22,7 @@ of Control mail platform offered and  go further customizing filtering and routi
 
 Supported protocols are: IMAP, SMTP, link:https://jmap.io[JMAP], POP3 and more...
 
-The link:https://james.staged.apache.org/james-project/3.7.0/servers/distributed.html[*Distributed server*] focuses on delivering a easy-to-operate scalable mail server based on modern technologies
+The link:https://james.staged.apache.org/james-project/3.7.0/servers/distributed.html[*Distributed server*] focuses on delivering an easy-to-operate scalable mail server based on modern technologies
 (Cassandra, S3, ElasticSearch and RabbitMQ).
 
 Read more on https://james.apache.org/[our website].
