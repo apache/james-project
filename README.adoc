@@ -3,7 +3,7 @@ Apache James Project
 
 image:https://img.shields.io/badge/Join%20us-Mailing%20lists-purple.svg[link="https://james.apache.org/mail.html"]
 link:https://gitter.im/apache/james-project[image:https://badges.gitter.im/apache/james-project.svg[Join the chat at link:https://gitter.im/apache/james-project]]
-image:https://img.shields.io/badge/CI-Jenkins%40Apache-blue.svg[link="https://ci-builds.apache.org/job/james/job/ApacheJames/"]
+image:https://img.shields.io/badge/CI-Jenkins-blue.svg[link="https://ci-builds.apache.org/job/james/job/ApacheJames/"]
 image:https://img.shields.io/badge/Documentation-green.svg[link="https://james.apache.org/documentation.html"]
 image:https://img.shields.io/badge/Downloads-3.6.0-yellow.svg[link="https://james.apache.org/download.cgi"]
 image:https://img.shields.io/badge/Images-docker-blue.svg[link="https://hub.docker.com/r/apache/james"]
