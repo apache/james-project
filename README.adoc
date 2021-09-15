@@ -27,19 +27,11 @@ The link:https://james.staged.apache.org/james-project/3.7.0/servers/distributed
 
 Read more on https://james.apache.org/[our website].
 
-== How to...
-
- * link:#how-to-contribute[How to  contribute?]
- * link:#how-to-try-james[How to try James]
- * link:#how-to-check-the-compilation[How to check the compilation]
- * link:#how-to-run-james-in-docker[How to run James in Docker]
- * link:#using_the_cli[Using the CLI]
- * link:#develop-on-james[Develop on James]
- * link:#know-more-about-james-design[Know more about James design]
- * link:#articles-for-james-community[Articles for James community]
-
 == How to contribute?
 
+.Read more...
+[%collapsible]
+====
 James is a project that lives from the contributions of its community! Anyone can contribute!
 
 Read https://james.apache.org/index.html#third[how to contribute].
@@ -55,9 +47,13 @@ https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolut
 https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20feature%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC[~feature] labels on JIRA.
 
 There is many other ways one can help us: packaging, communication, etc ...
+====
 
 == How to try James
 
+.Read more...
+[%collapsible]
+====
 Requirements: `docker` installed.
 
 Here you will try James server v 3.6.0 thanks to a docker image. This James image has a default configuration using JPA
@@ -76,9 +72,13 @@ link:https://james.apache.org/howTo/imap-server.html[This tutorial] covers more 
 Instructions that do not imply `docker` are also available link:https://james.apache.org/server/install.html[here].
 
 Instructions for the distributed server can be found link:docs/modules/servers/pages/distributed/run-docker.adoc[here].
+====
 
 == How to check the compilation
 
+.Read more...
+[%collapsible]
+====
 We require link:https://maven.apache.org[maven] version 3.6.0 minimum to build the project.
 
 Simply run `mvn clean install` within this directory to compile the project.
@@ -87,15 +87,20 @@ Useful options includes:
 
  - `-DskipTests` to skip the long to execute resource consuming test suite that requires a docker daemon.
  - `-T 4` to parallelize the build on several CPUs.
+====
 
 == How to run James in Docker
 
+.Read more...
+[%collapsible]
+====
 We maintain docker distribution for our Guice based applications :
 
  * link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/README.adoc[Guice + Cassandra + RabbitMQ + S3 + ElasticSearch (distributed)]
  * link:https://github.com/apache/james-project/blob/master/server/apps/cassandra-app/README.adoc[Guice + Cassandra + ElasticSearch]
  * link:https://github.com/apache/james-project/blob/master/server/apps/jpa-app/README.adoc[Guice + JPA + Lucene]
  * link:https://github.com/apache/james-project/blob/master/server/apps/memory-app/README.md[Guice + Memory (testing)]
+====
 
 == Using the CLI
 
