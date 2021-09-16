@@ -79,6 +79,7 @@ public class CassandraTableManager {
                         .limit(1)
                         .setFetchSize(1))
                 .filter(Predicate.not(PagingIterable::isExhausted))
-                .flatMap(ignored -> executor.executeVoid(QueryBuilder.truncate(name)));
+                .flatMap(ignored -> executor.executeVoid(QueryBuilder.truncate(name)))
+                .onErrorResume(e -> executor.executeVoid(QueryBuilder.truncate(name)));
     }
 }
