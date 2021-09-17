@@ -56,18 +56,18 @@ There is many other ways one can help us: packaging, communication, etc ...
 ====
 Requirements: `docker` installed.
 
-Here you will try James server v 3.6.0 thanks to a docker image. This James image has a default configuration using JPA
+Here you will try James server version 3.6.0 thanks to a docker image. This James image has a default configuration using JPA
 (hsqldb) and Lucene. It also includes a default domain named james.local and three default users: user01@james.local,
 user02@james.local, user03@james.local, with their default password being 1234.
 
 Note: this James server will respond to IMAPS port 993 and SMTPS port 465.
 
-Pull and run the James image with the following single command :
+Pull and run the James image with the following single command:
 
     $ docker run -p "465:465" -p "993:993" apache/james:demo-3.6.0
 
 Then, connect this image with for instance, Thunderbird.
-link:https://james.apache.org/howTo/imap-server.html[This tutorial] covers more in depth user and domain creation, as well as thunderbird setup.
+link:https://james.apache.org/howTo/imap-server.html[This tutorial] covers more in depth user and domain creation, as well as Thunderbird setup.
 
 Instructions that do not imply `docker` are also available link:https://james.apache.org/server/install.html[here].
 
