@@ -15,7 +15,7 @@ And for Guice distributions:
 java -jar /root/james-cli.jar -h 127.0.0.1 -p 9999 COMMAND
 ```
 
-Guice in docker embed a script helper:
+Guice in docker embeds a script helper:
 
 ```
 docker exec -ti james james-cli COMMAND
