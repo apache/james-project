@@ -81,6 +81,7 @@ import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.WebAdminMailOverWebModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
+import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.modules.webadmin.CassandraRoutesModule;
 import org.apache.james.modules.webadmin.InconsistencySolvingRoutesModule;
 
@@ -95,6 +96,7 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
     public static final Module WEBADMIN = Modules.combine(
         new CassandraRoutesModule(),
         new DataRoutesModules(),
+        new DeletedMessageVaultRoutesModule(),
         new InconsistencyQuotasSolvingRoutesModule(),
         new InconsistencySolvingRoutesModule(),
         new MailboxesExportRoutesModule(),
