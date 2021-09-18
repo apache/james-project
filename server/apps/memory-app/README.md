@@ -50,3 +50,9 @@ The [CLI](https://james.apache.org/server/manage-cli.html) can easily be used:
 ```
 docker exec CONTAINER-ID james-cli ListDomains
 ```
+
+Note that you can create a domain via an environment variable. This domain will be created upon James start:
+
+```
+--environment DOMAIN=domain.tld
+```

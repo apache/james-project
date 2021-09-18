@@ -1,0 +1,30 @@
+= How to run deployment Tests
+:navtitle: Deployment tests
+
+We wrote some MPT (James' Mail Protocols Tests subproject) deployment tests to validate a James
+deployment.
+
+It uses the External-James module, that uses environment variables to locate a remote
+IMAP server and run integration tests against it.
+
+For that, the target James Server needs to be configured with a domain `domain` and a user `imapuser`
+with password `password`. Read above documentation to see how you can do this.
+
+You have to run MPT tests inside docker. As you need to use maven, the simplest option is to
+use james/parent image, and override the entry point ( as git and maven are already configured
+there ) :
+
+    $ export JAMES_ADDRESS=127.0.0.1
+    $ export JAMES_IMAP_PORT=143
+    $ export JAMES_SMTP_PORT=25
+
+    $ mvn -T 1C -DskipTests -pl org.apache.james:apache-james-mpt-external-james -am install
+    $ mvn -T 1C -pl org.apache.james:apache-james-mpt-external-james test -Pintegration-tests
+
+Where :
+
+* JAMES_IP: IP address or DNS entry for your James server
+* JAMES_IMAP_PORT: Port allocated to James' IMAP port (should be 143).
+* JAMES_SMTP_PORT: Port allocated to James' SMTP port (should be 25).
+
+

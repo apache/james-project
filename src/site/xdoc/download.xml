@@ -25,39 +25,12 @@
   </properties>
   
 <body>
-  <section name='Cryptography'>
-  
-    <div class="ui-widget">
-      <div class="ui-priority-secondary ui-corner-all apache-james-crypto-notice">
-      <p> <span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
-Some distributions include cryptographic software. The country in which you currently reside may have restrictions on the import, possession, use, 
-and/or re-export to another country, of encryption software. BEFORE using any encryption software, please check your country's laws, 
-regulations and policies concerning the import, possession, or use, and re-export of encryption software, to see if this is permitted. 
-See <a href='http://www.wassenaar.org/'>http://www.wassenaar.org</a> for more information.
-</p><p>
-The U.S. Government Department of Commerce, Bureau of Industry and Security (BIS), 
-has classified this software as Export Commodity Control Number (ECCN) 5D002.C.1, which includes information security software using or performing cryptographic 
-functions with asymmetric algorithms. The form and manner of this Apache Software Foundation distribution makes it eligible for export 
-under the License Exception ENC Technology Software Unrestricted (TSU) exception (see the BIS Export Administration Regulations, Section 740.13) 
-for both object code and source code.
-</p><p>
-More specific details are included below. Export control information for the <a href='https://www.apache.org' rel='tag'>Apache Software Foundation</a>
-is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
-</p>
-      </div>
-    </div>
-  </section>
   <section name="Downloading">
   
     <p>Use the links below to download the product from one of
-       our mirrors.  You <strong>must</strong>&#160;<a href="#Verify_the_integrity_of_the_files">verify the
-       integrity</a> of the downloaded files using signatures downloaded from
+       our mirrors.  You <strong>must</strong>&#160;<a href="https://www.apache.org/info/verification.html">verify the
+       integrity</a> of the downloaded files using signatures <a href="https://downloads.apache.org/james/KEYS">KEYS</a> downloaded from
        our main distribution directory.</p>
-    
-    <p>Only current recommended releases are available on the main
-       distribution site and its mirrors.  Older releases are available from
-       the <a href="https://downloads.apache.org/james/">archive download
-       site.</a></p>
     
     <ul>
       <li><a href='#Apache_James_Server'>Apache James Server</a></li>
@@ -70,92 +43,17 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
       <li><a href='#Apache_Crypto_Mailets'>Apache James Crypto Mailets</a></li>
       <li><a href='#Apache_James_Protocols'>Apache James Protocols</a></li>
       <li><a href='#Apache_MPT'>Apache James MPT</a></li>
-      <li><a href='#Apache_HUPA'>Apache James Hupa</a></li>
       <li>Apache MailetDoc Plugin for Maven is available from the standard Maven repositories (*)</li>
     </ul>
  
     <p>(*) James maven repositories can be found on 
     <a href="https://repo1.maven.org/maven2/org/apache/james/">https://repo1.maven.org/maven2/org/apache/james/</a>.</p>
-  
-    <subsection name="Mirror">
-    
-      <p>[if-any logo]
-      <a href="[link]"><img align="right" src="[logo]" border="0" /></a>[end]
-      The currently selected mirror is <b>[preferred]</b>.  If you encounter a
-      problem with this mirror, please select another mirror.  If all
-      mirrors are failing, there are <i>backup</i> mirrors (at the end of
-      the mirrors list) that should be available.</p>
-      
-      <form action="[location]" method="get" id="SelectMirror">
-      Other mirrors: <select name="Preferred">
-      [if-any http]
-        [for http]<option value="[http]">[http]</option>[end]
-      [end]  
-      [if-any ftp]
-        [for ftp]<option value="[ftp]">[ftp]</option>[end]
-      [end]
-      [if-any backup]
-        [for backup]<option value="[backup]">[backup] (backup)</option>[end]
-      [end]
-      </select>
-      <input type="submit" value="Change" />     
-      </form>
-      
-      <p>You may also consult the <a href="https://www.apache.org/mirrors/">complete
-      list of mirrors</a>.</p>
-      
-      </subsection>
-      <subsection name="Verify the integrity of the files">
-      
-      <p>It is essential that you verify the integrity of the downloaded
-      files using the PGP or SHA-1 signatures.</p>
-      
-      <p>The PGP signatures can be verified using PGP or GPG.  First
-      download the <a href="https://downloads.apache.org/james/KEYS">KEYS</a>
-      as well as the <code>asc</code> signature file for the particular
-      distribution.  Make sure you get these files from the <a
-      href="https://downloads.apache.org/james/">main distribution
-      directory</a>, rather than from a mirror. Then verify the signatures
-      using</p>
-      
-      <p><code>
-      % pgpk -a KEYS<br />
-      % pgpv james-<i>version</i>.tar.gz.asc<br />
-      </code>
-      <em>or</em><br />
-      <code>
-      % pgp -ka KEYS<br />
-      % pgp james-<i>version</i>.tar.gz.asc<br />
-      </code>
-      <em>or</em><br />
-      <code>
-      % gpg --import KEYS<br />
-      % gpg --verify james-<i>version</i>.tar.gz.asc james-<i>version</i>.tar.gz
-      </code></p>
-    
-    </subsection>
 
   </section>
 
   <section name='Apache James Server'>
 
     <subsection name="Apache James 3.6.0 is the stable version">
-
-      <div class="ui-widget">
-        <div class="ui-priority-secondary ui-corner-all apache-james-crypto-notice">
-          <p>
-            <span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
-            Apache James Server 3 uses third party cryptography software
-            including
-          </p>
-          <ul>
-            <li><code>bcmail</code> and <code>bcprov</code> libraries by "The Legion of the Bouncy
-              Castle" <a href='http://www.bouncycastle.org'>http://www.bouncycastle.org</a>,</li>
-            <li><code>jasypt</code> library by "Jasypt.org" <a href='http://www.jasypt.org/'>http://www.jasypt.org/</a></li>
-            <li>and the <a href='http://www.java.com/'>Java Runtime Environment</a>.</li>
-          </ul>
-        </div>
-      </div>
 
       <ul>
         <li>Source code (ZIP Format):
@@ -175,7 +73,7 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
 
     <subsection name="Earlier Releases">
 
-      <p>Are now <a href='https://downloads.apache.org/james/server'>archived</a></p>
+      <p>Are now <a href='https://archive.apache.org/dist/james/server/'>archived (discouraged)</a></p>
 
     </subsection>
 
@@ -450,20 +348,6 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
   <section name="Apache Crypto Mailets">
   
     <p>Apache Crypto Mailets 3.6.0 is the latest stable version.</p>
-    
-  <div class="ui-widget">
-    <div class="ui-priority-secondary ui-corner-all apache-james-crypto-notice">
-      <p>
-        <span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
-        Apache Crypto Mailets 1 uses third party cryptography software
-        including
-      </p>
-      <ul>
-        <li><code>bcmail</code> by "The Legion of the Bouncy
-          Castle" <a href='http://www.bouncycastle.org'>http://www.bouncycastle.org</a>.</li>
-      </ul>
-    </div>
-  </div>
 
     <p>Sources:
       <a href="https://www.apache.org/dyn/closer.lua/james/mailets/3.6.0/apache-mailet-crypto-3.6.0-sources.jar">(Jar)</a>
