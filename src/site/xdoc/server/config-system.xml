@@ -41,7 +41,7 @@
 
                 <p>In James distribution, the spring files are located under conf/context folder and splitted into a main
                     file (james-server-context.xml) which imports 3 other files (1 per mailbox type): james-mailbox-jpa-context.xml,
-                    james-mailbox-maildir-context.xml, james-mailbox-memory-context.xml.</p>
+                    james-mailbox-memory-context.xml.</p>
 
                 <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/container/spring/src/main/resources/META-INF/org/apache/james/spring-server.xml">spring-server.xml</a> in GIT to
                     get some examples and hints.</p>

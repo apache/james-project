@@ -31,9 +31,6 @@
     <import resource="classpath:META-INF/spring/mailbox-jpa.xml"/>
 
     <import resource="classpath:META-INF/spring/mailbox-index-lucene.xml" />
-<!--    <import resource="classpath:META-INF/spring/mailbox-elasticsearch.xml"/> -->
-
-    <import resource="classpath:META-INF/spring/mailbox-maildir.xml"/>
     <import resource="classpath:META-INF/spring/mailbox-memory.xml"/>
 
     <!-- 

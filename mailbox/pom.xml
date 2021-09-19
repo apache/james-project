@@ -44,7 +44,6 @@
 
         <module>jpa</module>
         <module>lucene</module>
-        <module>maildir</module>
         <module>memory</module>
 
         <module>plugin/deleted-messages-vault</module>

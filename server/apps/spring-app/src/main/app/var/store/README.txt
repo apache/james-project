@@ -19,10 +19,3 @@ $JAMES_ROOT/var/store
           
           The activemq component is configured to use this folder
           for queues (and topics if any) processing.
-     
-     * maildir
-     
-         You can configure James to use MailDir as storage for the user
-         mailboxes. Use var/store/maildir folder to contain the user's
-         mails.
-

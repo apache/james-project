@@ -39,7 +39,6 @@ mail
 +-spam
 
 store
-+-maildir
 +-derby
 +-jackrabbit
 +-activemq
@@ -86,14 +85,6 @@ activemq
           
           <p>The <a href="dev-activemq.html">activemq component</a> is configured to use this folder
              for queue (and topics if any) processing.</p>
-     
-<source>
-maildir
-</source>     
-         
-         <p>You can configure James to use MailDir as storage for the user
-            mailboxes. Use var/store/maildir folder to contain the user's
-            mails.</p>
 
     </subsection>
 
