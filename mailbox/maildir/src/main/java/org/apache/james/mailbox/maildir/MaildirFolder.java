@@ -104,6 +104,17 @@ public class MaildirFolder {
         this.lastUid = Optional.empty();
     }
 
+    public MaildirFolder validateWithinFolder(File maildirRoot) {
+        try {
+            if (!rootFolder.getCanonicalPath().startsWith(maildirRoot.getCanonicalPath())) {
+                throw new RuntimeException(rootFolder.getCanonicalPath() + " jail breaks out of " + maildirRoot.getCanonicalPath());
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return this;
+    }
+
     private MaildirMessageName newMaildirMessageName(MaildirFolder folder, String fullName) {
         MaildirMessageName mdn = new MaildirMessageName(folder, fullName);
         mdn.setMessageNameStrictParse(isMessageNameStrictParse());
