@@ -49,6 +49,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
@@ -104,10 +105,10 @@ public class MaildirFolder {
         this.lastUid = Optional.empty();
     }
 
-    public MaildirFolder validateWithinFolder(File maildirRoot) {
+    public MaildirFolder validateWithinFolder(File maildirRoot) throws MailboxNotFoundException {
         try {
             if (!rootFolder.getCanonicalPath().startsWith(maildirRoot.getCanonicalPath())) {
-                throw new RuntimeException(rootFolder.getCanonicalPath() + " jail breaks out of " + maildirRoot.getCanonicalPath());
+                throw new MailboxNotFoundException(rootFolder.getCanonicalPath() + " jail breaks out of " + maildirRoot.getCanonicalPath());
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
