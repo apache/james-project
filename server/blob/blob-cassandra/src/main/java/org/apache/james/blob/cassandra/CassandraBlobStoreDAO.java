@@ -23,6 +23,7 @@ import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -177,6 +178,13 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
             return bucketDAO.deletePosition(bucketName, blobId)
                 .then(bucketDAO.deleteParts(bucketName, blobId));
         }
+    }
+
+    @Override
+    public Publisher<Void> delete(BucketName bucketName, Collection<BlobId> blobIds) {
+        return Flux.fromIterable(blobIds)
+            .flatMap(id -> delete(bucketName, id), DEFAULT_CONCURRENCY)
+            .then();
     }
 
     @Override

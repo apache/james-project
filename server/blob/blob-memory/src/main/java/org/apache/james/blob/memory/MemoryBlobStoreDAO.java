@@ -22,6 +22,7 @@ package org.apache.james.blob.memory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
@@ -103,6 +104,13 @@ public class MemoryBlobStoreDAO implements BlobStoreDAO {
                 blobs.remove(bucketName, blobId);
             }
         });
+    }
+
+    @Override
+    public Publisher<Void> delete(BucketName bucketName, Collection<BlobId> blobIds) {
+        return Flux.fromIterable(blobIds)
+            .flatMap(id -> delete(bucketName, id))
+            .then();
     }
 
     @Override

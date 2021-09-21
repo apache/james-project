@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.GeneralSecurityException;
+import java.util.Collection;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
@@ -125,6 +126,11 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
     @Override
     public Publisher<Void> delete(BucketName bucketName, BlobId blobId) {
         return underlying.delete(bucketName, blobId);
+    }
+
+    @Override
+    public Publisher<Void> delete(BucketName bucketName, Collection<BlobId> blobIds) {
+        return underlying.delete(bucketName, blobIds);
     }
 
     @Override
