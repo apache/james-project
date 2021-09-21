@@ -5,7 +5,7 @@ date:   2021-09-21  00:00:30 +0200
 categories: james update
 ---
 
-The Apache James team is proud that one of our committers, Juhan Aasaru, presents a James
+The Apache James team is proud to announce that one of our committers, Juhan Aasaru, presents a James
 talk at [ApacheCON @home 2021][apacheCON]
 
 Here is the [talk description][desc]:
