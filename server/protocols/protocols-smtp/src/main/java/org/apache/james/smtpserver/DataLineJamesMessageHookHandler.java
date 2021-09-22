@@ -78,42 +78,44 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
         MimeMessageInputStreamSource mmiss = session.getAttachment(SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE, State.Transaction)
             .orElseThrow(() -> new RuntimeException("'" + SMTPConstants.DATA_MIMEMESSAGE_STREAMSOURCE.asString() + "' has not been filled."));
 
-        try (Closeable closeable = SMTPMDCContextFactory.forSession(session).build()) {
+        try {
             OutputStream out = mmiss.getWritableOutputStream();
 
             // 46 is "."
             // Stream terminated
             if (line.length == 3 && line[0] == 46) {
-                out.flush();
-                out.close();
+                try (Closeable closeable = SMTPMDCContextFactory.forSession(session).build()) {
+                    out.flush();
+                    out.close();
 
-                List<MailAddress> recipientCollection = session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction).orElse(ImmutableList.of());
-                MaybeSender sender = session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender());
+                    List<MailAddress> recipientCollection = session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction).orElse(ImmutableList.of());
+                    MaybeSender sender = session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender());
 
-                MailImpl mail = MailImpl.builder()
-                    .name(MailImpl.getId())
-                    .sender(sender)
-                    .addRecipients(recipientCollection)
-                    .build();
+                    MailImpl mail = MailImpl.builder()
+                        .name(MailImpl.getId())
+                        .sender(sender)
+                        .addRecipients(recipientCollection)
+                        .build();
 
-                // store mail in the session so we can be sure it get disposed later
-                session.setAttachment(SMTPConstants.MAIL, mail, State.Transaction);
+                    // store mail in the session so we can be sure it get disposed later
+                    session.setAttachment(SMTPConstants.MAIL, mail, State.Transaction);
 
-                try {
-                    mail.setMessageContent(mmiss);
+                    try {
+                        mail.setMessageContent(mmiss);
 
-                    Response response = processExtensions(session, mail);
+                        Response response = processExtensions(session, mail);
 
-                    session.popLineHandler();
-                    return response;
+                        session.popLineHandler();
+                        return response;
 
-                } catch (MessagingException e) {
-                    // TODO probably return a temporary problem
-                    LOGGER.info("Unexpected error handling DATA stream", e);
-                    return new SMTPResponse(SMTPRetCode.LOCAL_ERROR, "Unexpected error handling DATA stream.");
-                } finally {
-                    LifecycleUtil.dispose(mmiss);
-                    LifecycleUtil.dispose(mail);
+                    } catch (MessagingException e) {
+                        // TODO probably return a temporary problem
+                        LOGGER.info("Unexpected error handling DATA stream", e);
+                        return new SMTPResponse(SMTPRetCode.LOCAL_ERROR, "Unexpected error handling DATA stream.");
+                    } finally {
+                        LifecycleUtil.dispose(mmiss);
+                        LifecycleUtil.dispose(mail);
+                    }
                 }
 
                 // DotStuffing.
