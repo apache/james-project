@@ -83,8 +83,10 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
      *
      * @return The MaildirFolder
      */
-    public MaildirFolder createMaildirFolder(Mailbox mailbox) {
-        MaildirFolder mf = new MaildirFolder(getFolderName(mailbox), mailbox.generateAssociatedPath(), locker);
+    public MaildirFolder createMaildirFolder(Mailbox mailbox) throws MailboxNotFoundException {
+        MaildirFolder mf = new MaildirFolder(getFolderName(mailbox), mailbox.generateAssociatedPath(), locker)
+            .validateWithinFolder(getMaildirRoot())
+            .validateWithinFolder(new File(userRoot(mailbox.getUser())));
         mf.setMessageNameStrictParse(isMessageNameStrictParse());
         return mf;
     }
@@ -110,14 +112,25 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
      * @throws MailboxNotFoundException If the mailbox folder doesn't exist
      * @throws MailboxException If the mailbox folder can't be read
      */
-    public Mailbox loadMailbox(MailboxSession session, MailboxPath mailboxPath)
-    throws MailboxNotFoundException, MailboxException {
-        MaildirFolder folder = new MaildirFolder(getFolderName(mailboxPath), mailboxPath, locker);
+    public Mailbox loadMailbox(MailboxSession session, MailboxPath mailboxPath) throws MailboxNotFoundException, MailboxException {
+        MaildirFolder folder = new MaildirFolder(getFolderName(mailboxPath), mailboxPath, locker)
+            .validateWithinFolder(getMaildirRoot())
+            .validateWithinFolder(new File(userRoot(session.getUser())));
         folder.setMessageNameStrictParse(isMessageNameStrictParse());
         if (!folder.exists()) {
             throw new MailboxNotFoundException(mailboxPath);
         }
         return loadMailbox(session, folder.getRootFile(), mailboxPath);
+    }
+
+    public Mailbox loadMailboxNoUserCheck(MailboxSession session, MailboxPath mailboxPath) throws MailboxNotFoundException, MailboxException {
+        MaildirFolder folder = new MaildirFolder(getFolderName(mailboxPath), mailboxPath, locker)
+            .validateWithinFolder(getMaildirRoot());
+        folder.setMessageNameStrictParse(isMessageNameStrictParse());
+        if (!folder.exists()) {
+            throw new MailboxNotFoundException(mailboxPath);
+        }
+        return loadMailboxNoChecks(session, folder.getRootFile(), mailboxPath);
     }
 
     /**
@@ -128,7 +141,22 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
      * @throws MailboxException If the mailbox folder doesn't exist or can't be read
      */
     private Mailbox loadMailbox(MailboxSession session, File mailboxFile, MailboxPath mailboxPath) throws MailboxException {
-        MaildirFolder folder = new MaildirFolder(mailboxFile.getAbsolutePath(), mailboxPath, locker);
+        MaildirFolder folder = new MaildirFolder(mailboxFile.getAbsolutePath(), mailboxPath, locker)
+            .validateWithinFolder(getMaildirRoot())
+            .validateWithinFolder(new File(userRoot(session.getUser())));
+        folder.setMessageNameStrictParse(isMessageNameStrictParse());
+        try {
+            Mailbox loadedMailbox = new Mailbox(mailboxPath, folder.getUidValidity(), folder.readMailboxId());
+            loadedMailbox.setACL(folder.getACL());
+            return loadedMailbox;
+        } catch (IOException e) {
+            throw new MailboxException("Unable to load Mailbox " + mailboxPath, e);
+        }
+    }
+
+    private Mailbox loadMailboxNoChecks(MailboxSession session, File mailboxFile, MailboxPath mailboxPath) throws MailboxException {
+        MaildirFolder folder = new MaildirFolder(mailboxFile.getAbsolutePath(), mailboxPath, locker)
+            .validateWithinFolder(getMaildirRoot());
         folder.setMessageNameStrictParse(isMessageNameStrictParse());
         try {
             Mailbox loadedMailbox = new Mailbox(mailboxPath, folder.getUidValidity(), folder.readMailboxId());

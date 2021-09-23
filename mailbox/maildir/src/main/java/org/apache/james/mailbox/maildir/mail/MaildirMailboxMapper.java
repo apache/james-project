@@ -290,7 +290,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
             MailboxPath inboxMailboxPath = MailboxPath.forUser(Username.of(userName), MailboxConstants.INBOX);
 
             try {
-                mailboxList.add(maildirStore.loadMailbox(session, inboxMailboxPath));
+                mailboxList.add(maildirStore.loadMailboxNoUserCheck(session, inboxMailboxPath));
             } catch (MailboxException e) {
                 //do nothing, we should still be able to list the mailboxes even if INBOX does not exist
             }
@@ -301,7 +301,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
             for (File mailbox: mailboxes) {
                 MailboxPath mailboxPath = MailboxPath.forUser(Username.of(userName),
                     mailbox.getName().substring(1));
-                mailboxList.add(maildirStore.loadMailbox(session, mailboxPath));
+                mailboxList.add(maildirStore.loadMailboxNoUserCheck(session, mailboxPath));
             }
         }
 
