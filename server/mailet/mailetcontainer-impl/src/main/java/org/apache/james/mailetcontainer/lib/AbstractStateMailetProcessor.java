@@ -20,10 +20,10 @@ package org.apache.james.mailetcontainer.lib;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -66,7 +66,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
     private MailetContext mailetContext;
     private MatcherLoader matcherLoader;
     private MailProcessor rootMailProcessor;
-    private final List<MailetProcessorListener> listeners = Collections.synchronizedList(new ArrayList<>());
+    private final Collection<MailetProcessorListener> listeners = new ConcurrentLinkedDeque<>();
     private JMXStateMailetProcessorListener jmxListener;
     private boolean enableJmx = true;
     private HierarchicalConfiguration<ImmutableNode> config;
@@ -178,7 +178,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
     }
 
     public List<MailetProcessorListener> getListeners() {
-        return listeners;
+        return ImmutableList.copyOf(listeners);
     }
 
     /**

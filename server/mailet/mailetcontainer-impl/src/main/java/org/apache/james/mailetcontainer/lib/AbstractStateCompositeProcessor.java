@@ -18,12 +18,12 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.lib;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractStateCompositeProcessor implements MailProcessor, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractStateCompositeProcessor.class);
 
-    private final List<CompositeProcessorListener> listeners = Collections.synchronizedList(new ArrayList<>());
+    private final Collection<CompositeProcessorListener> listeners = new ConcurrentLinkedDeque<>();
     private final Map<String, MailProcessor> processors = new HashMap<>();
     protected HierarchicalConfiguration<ImmutableNode> config;
 
