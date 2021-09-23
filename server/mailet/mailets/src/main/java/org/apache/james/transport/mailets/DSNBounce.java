@@ -320,10 +320,10 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
                 originalMail.getMaybeSender(), recipients, newMailBuilder.getName(), getRemoteHost(), getRemoteAddr(), originalMail.getState(), originalMail.getLastUpdated(), originalMail.getErrorMessage());
         }
 
-        MimeMessage bounceMessage = new MimeMessageWrapper(createBounceMessage(originalMail));
+        MimeMessageWrapper bounceMessage = new MimeMessageWrapper(createBounceMessage(originalMail));
         try {
-            newMailBuilder.mimeMessage(bounceMessage);
             MailImpl newMail = newMailBuilder.build();
+            newMail.setMessageNoCopy(bounceMessage);
 
             // Set additional headers
             MailModifier mailModifier = MailModifier.builder()
