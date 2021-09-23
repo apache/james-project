@@ -23,10 +23,12 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Durations.TEN_SECONDS;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -48,6 +50,7 @@ import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -231,7 +234,7 @@ public interface BloomFilterGCAlgorithmContract {
         BlobStoreDAO blobStoreDAO = mock(BlobStoreDAO.class);
         BlobId blobId = GENERATION_AWARE_BLOB_ID_FACTORY.randomId();
         when(blobStoreDAO.listBlobs(DEFAULT_BUCKET)).thenReturn(Flux.just(blobId));
-        when(blobStoreDAO.delete(DEFAULT_BUCKET, blobId)).thenThrow(new RuntimeException("test"));
+        when(blobStoreDAO.delete(ArgumentMatchers.eq(DEFAULT_BUCKET), any(Collection.class))).thenReturn(Mono.error(new RuntimeException("test")));
 
         CLOCK.setInstant(NOW.plusMonths(2).toInstant());
 

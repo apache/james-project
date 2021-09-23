@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.time.Duration;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -262,6 +263,16 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .then()
             .onErrorResume(NoSuchBucketException.class, e -> Mono.empty())
             .publishOn(Schedulers.parallel());
+    }
+
+    @Override
+    public Publisher<Void> delete(BucketName bucketName, Collection<BlobId> blobIds) {
+        return deleteObjects(bucketName,
+            blobIds.stream()
+                .map(BlobId::asString)
+                .map(id -> ObjectIdentifier.builder().key(id).build())
+                .collect(ImmutableList.toImmutableList()))
+            .then();
     }
 
     @Override

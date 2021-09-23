@@ -21,6 +21,7 @@ package org.apache.james.blob.api;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 
 import org.reactivestreams.Publisher;
 
@@ -87,6 +88,8 @@ public interface BlobStoreDAO {
      *  otherwise an IOObjectStoreException in its error channel
      */
     Publisher<Void> delete(BucketName bucketName, BlobId blobId);
+
+    Publisher<Void> delete(BucketName bucketName, Collection<BlobId> blobIds);
 
     /**
      * Remove a bucket based on its BucketName

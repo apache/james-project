@@ -40,7 +40,10 @@ import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 
@@ -98,6 +101,23 @@ public interface DeleteBlobStoreDAOContract {
         InputStream read = store.read(TEST_BUCKET_NAME, OTHER_TEST_BLOB_ID);
 
         assertThat(read).hasSameContentAs(new ByteArrayInputStream(ELEVEN_KILOBYTES));
+    }
+
+    @Test
+    default void deleteSeveralShouldDeleteAll() {
+        BlobStoreDAO store = testee();
+
+        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, OTHER_TEST_BLOB_ID, ELEVEN_KILOBYTES)).block();
+
+        Mono.from(store.delete(TEST_BUCKET_NAME, ImmutableList.of(TEST_BLOB_ID, OTHER_TEST_BLOB_ID))).block();
+
+        SoftAssertions.assertSoftly(soft -> {
+            soft.assertThatThrownBy(() -> store.read(TEST_BUCKET_NAME, TEST_BLOB_ID).read())
+                .isInstanceOf(ObjectStoreException.class);
+            soft.assertThatThrownBy(() -> store.read(TEST_BUCKET_NAME, OTHER_TEST_BLOB_ID).read())
+                .isInstanceOf(ObjectStoreException.class);
+        });
     }
 
     @Test

@@ -19,15 +19,17 @@
 
 package org.apache.james.server.blob.deduplication;
 
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
@@ -48,6 +50,7 @@ public class BloomFilterGCAlgorithm {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BloomFilterGCAlgorithm.class);
     private static final Funnel<CharSequence> BLOOM_FILTER_FUNNEL = Funnels.stringFunnel(StandardCharsets.US_ASCII);
+    private static final int DELETION_BATCH_SIZE = 1000;
 
     public static class Context {
 
@@ -217,8 +220,8 @@ public class BloomFilterGCAlgorithm {
             referenceSourceCount.incrementAndGet();
         }
 
-        public void incrementGCedBlobCount() {
-            gcedBlobCount.incrementAndGet();
+        public void incrementGCedBlobCount(int count) {
+            gcedBlobCount.addAndGet(count);
         }
 
         public void incrementErrorCount() {
@@ -271,9 +274,26 @@ public class BloomFilterGCAlgorithm {
     private Mono<Result> gc(BloomFilter<CharSequence> bloomFilter, BucketName bucketName, Context context) {
         return Flux.from(blobStoreDAO.listBlobs(bucketName))
             .doOnNext(blobId -> context.incrementBlobCount())
-            .flatMap(blobId -> gcBlob(bloomFilter, blobId, bucketName, context))
-            .switchIfEmpty(Mono.just(Result.COMPLETED))
-            .reduce(Task::combine);
+            .flatMap(blobId -> Mono.fromCallable(() -> generationAwareBlobIdFactory.from(blobId.asString())))
+            .filter(blobId -> !blobId.inActiveGeneration(generationAwareBlobIdConfiguration, now))
+            .filter(blobId -> !bloomFilter.mightContain(salt + blobId.asString()))
+            .window(DELETION_BATCH_SIZE)
+            .flatMap(blobIdFlux -> handlePagedDeletion(bucketName, context, blobIdFlux), DEFAULT_CONCURRENCY)
+            .reduce(Task::combine)
+            .switchIfEmpty(Mono.just(Result.COMPLETED));
+    }
+
+    private Mono<Result> handlePagedDeletion(BucketName bucketName, Context context, Flux<GenerationAwareBlobId> blobIdFlux) {
+        return blobIdFlux.collectList()
+            .flatMap(orphanBlobIds -> Mono.from(blobStoreDAO.delete(bucketName, (Collection) orphanBlobIds))
+                .then(Mono.fromCallable(() -> {
+                    context.incrementGCedBlobCount(orphanBlobIds.size());
+                    return Result.COMPLETED;
+                })).onErrorResume(error -> {
+                    LOGGER.error("Error when gc orphan blob", error);
+                    context.incrementErrorCount();
+                    return Mono.just(Result.PARTIAL);
+                }));
     }
 
     private Mono<BloomFilter<CharSequence>> populatedBloomFilter(int expectedBlobCount, double associatedProbability, Context context) {
@@ -287,23 +307,5 @@ public class BloomFilterGCAlgorithm {
                     .map(ref -> bloomFilter.put(salt + ref.asString()))
                     .then()
                     .thenReturn(bloomFilter));
-    }
-
-    private Mono<Result> gcBlob(BloomFilter<CharSequence> bloomFilter, BlobId blobId, BucketName bucketName, Context context) {
-        return Mono.fromCallable(() -> generationAwareBlobIdFactory.from(blobId.asString()))
-            .filter(awareBlobId -> !awareBlobId.inActiveGeneration(generationAwareBlobIdConfiguration, now))
-            .filter(expiredAwareBlobId -> !bloomFilter.mightContain(salt + blobId.asString()))
-            .flatMap(orphanBlobId ->
-                Mono.from(blobStoreDAO.delete(bucketName, orphanBlobId))
-                    .then(Mono.fromCallable(() -> {
-                        context.incrementGCedBlobCount();
-                        return Result.COMPLETED;
-                    })))
-            .onErrorResume(error -> {
-                LOGGER.error("Error when gc orphan blob ", error);
-                context.incrementErrorCount();
-                return Mono.just(Result.PARTIAL);
-            })
-            .switchIfEmpty(Mono.just(Result.COMPLETED));
     }
 }
