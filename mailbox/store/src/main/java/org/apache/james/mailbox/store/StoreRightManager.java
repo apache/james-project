@@ -34,7 +34,6 @@ import org.apache.james.core.Username;
 import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.RightManager;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.DifferentDomainException;
@@ -61,21 +60,16 @@ import com.google.common.collect.ImmutableMap;
 import reactor.core.publisher.Mono;
 
 public class StoreRightManager implements RightManager {
-    public static final boolean GROUP_FOLDER = true;
-
     private final EventBus eventBus;
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final MailboxACLResolver aclResolver;
-    private final GroupMembershipResolver groupMembershipResolver;
 
     @Inject
     public StoreRightManager(MailboxSessionMapperFactory mailboxSessionMapperFactory,
                              MailboxACLResolver aclResolver,
-                             GroupMembershipResolver groupMembershipResolver,
                              EventBus eventBus) {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.aclResolver = aclResolver;
-        this.groupMembershipResolver = groupMembershipResolver;
         this.eventBus = eventBus;
     }
 
@@ -123,10 +117,8 @@ public class StoreRightManager implements RightManager {
             .map(Throwing.function(value ->
                 aclResolver.resolveRights(
                     username,
-                    groupMembershipResolver,
                     mailbox.getACL(),
-                    mailbox.getUser().asString(),
-                    !GROUP_FOLDER))
+                    mailbox.getUser().asString()))
                 .sneakyThrow())
             .orElse(MailboxACL.NO_RIGHTS);
     }
@@ -138,9 +130,7 @@ public class StoreRightManager implements RightManager {
             .orElseThrow(() -> new MailboxNotFoundException(mailboxPath));
 
         return aclResolver.listRights(key,
-            groupMembershipResolver,
-            mailbox.getUser().asString(),
-            !GROUP_FOLDER);
+            mailbox.getUser().asString());
     }
 
     @Override
@@ -291,9 +281,7 @@ public class StoreRightManager implements RightManager {
      *         there are any).
      */
     public MailboxACL getResolvedMailboxACL(Mailbox mailbox, MailboxSession mailboxSession) throws UnsupportedRightException {
-        MailboxACL acl = aclResolver.applyGlobalACL(
-            mailbox.getACL(),
-            !GROUP_FOLDER);
+        MailboxACL acl = aclResolver.applyGlobalACL(mailbox.getACL());
 
         return filteredForSession(mailbox, acl, mailboxSession);
     }

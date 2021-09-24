@@ -34,9 +34,7 @@ import org.apache.james.core.Username;
 import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.DifferentDomainException;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -66,7 +64,6 @@ class StoreRightManagerTest {
     StoreRightManager storeRightManager;
     MailboxSession aliceSession;
     MailboxACLResolver mailboxAclResolver;
-    GroupMembershipResolver groupMembershipResolver;
     MailboxMapper mockedMailboxMapper;
 
     @BeforeEach
@@ -75,12 +72,11 @@ class StoreRightManagerTest {
         MailboxSessionMapperFactory mockedMapperFactory = mock(MailboxSessionMapperFactory.class);
         mockedMailboxMapper = mock(MailboxMapper.class);
         mailboxAclResolver = new UnionMailboxACLResolver();
-        groupMembershipResolver = new SimpleGroupMembershipResolver();
         EventBus eventBus = mock(EventBus.class);
         when(mockedMapperFactory.getMailboxMapper(aliceSession))
             .thenReturn(mockedMailboxMapper);
 
-        storeRightManager = new StoreRightManager(mockedMapperFactory, mailboxAclResolver, groupMembershipResolver, eventBus);
+        storeRightManager = new StoreRightManager(mockedMapperFactory, mailboxAclResolver, eventBus);
     }
 
     @Test

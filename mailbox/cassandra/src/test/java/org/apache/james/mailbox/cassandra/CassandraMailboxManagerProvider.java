@@ -28,9 +28,7 @@ import org.apache.james.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.Authorizator;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManager;
@@ -100,10 +98,9 @@ public class CassandraMailboxManagerProvider {
                                                                  MessageId.Factory messageIdFactory,
                                                                  ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm) {
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
-        GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
-        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, groupMembershipResolver, eventBus);
+        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, eventBus);
 
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;
