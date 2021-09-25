@@ -95,7 +95,7 @@ public class MailImpl implements Disposable, Mail {
      */
     public static MailImpl duplicate(Mail mail) throws MessagingException {
         return duplicateWithoutMessage(mail)
-            .mimeMessage(new MimeMessageWrapper(mail.getMessage()))
+            .mimeMessage(mail.getMessage())
             .build();
     }
 
