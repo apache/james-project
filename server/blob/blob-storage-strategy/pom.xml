@@ -48,7 +48,7 @@
             <groupId>${james.groupId}</groupId>
             <artifactId>james-json</artifactId>
             <type>test-jar</type>
-            <scope>json</scope>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
