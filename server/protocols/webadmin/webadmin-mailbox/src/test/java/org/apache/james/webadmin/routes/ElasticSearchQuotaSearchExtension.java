@@ -78,8 +78,8 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
 
             ElasticSearchQuotaMailboxListener listener = new ElasticSearchQuotaMailboxListener(
                 new ElasticSearchIndexer(client, QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),
-                new QuotaRatioToElasticSearchJson(),
-                new UserRoutingKeyFactory());
+                new QuotaRatioToElasticSearchJson(resources.getQuotaRootResolver()),
+                new UserRoutingKeyFactory(), resources.getQuotaRootResolver());
 
             resources.getMailboxManager().getEventBus().register(listener);
 

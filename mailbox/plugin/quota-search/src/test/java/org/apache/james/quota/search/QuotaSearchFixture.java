@@ -31,6 +31,6 @@ public interface QuotaSearchFixture {
         String BOB = "bob@domain";
         Username BOB_USERNAME = Username.of(BOB);
         Instant NOW = Instant.now();
-        QuotaRoot QUOTAROOT = QuotaRoot.quotaRoot("any", Optional.empty());
+        QuotaRoot QUOTAROOT = QuotaRoot.quotaRoot("#private&any", Optional.empty());
     }
 }

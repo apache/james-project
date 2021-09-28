@@ -29,6 +29,7 @@ import org.apache.james.events.Event;
 import org.apache.james.events.EventListener;
 import org.apache.james.events.Group;
 import org.apache.james.mailbox.events.MailboxEvents.QuotaUsageUpdatedEvent;
+import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.quota.search.elasticsearch.v7.QuotaRatioElasticSearchConstants;
 import org.apache.james.quota.search.elasticsearch.v7.json.QuotaRatioToElasticSearchJson;
 import org.reactivestreams.Publisher;
@@ -45,14 +46,16 @@ public class ElasticSearchQuotaMailboxListener implements EventListener.Reactive
     private final ElasticSearchIndexer indexer;
     private final QuotaRatioToElasticSearchJson quotaRatioToElasticSearchJson;
     private final RoutingKey.Factory<Username> routingKeyFactory;
+    private final QuotaRootResolver quotaRootResolver;
 
     @Inject
     public ElasticSearchQuotaMailboxListener(@Named(QuotaRatioElasticSearchConstants.InjectionNames.QUOTA_RATIO) ElasticSearchIndexer indexer,
                                              QuotaRatioToElasticSearchJson quotaRatioToElasticSearchJson,
-                                             RoutingKey.Factory<Username> routingKeyFactory) {
+                                             RoutingKey.Factory<Username> routingKeyFactory, QuotaRootResolver quotaRootResolver) {
         this.indexer = indexer;
         this.quotaRatioToElasticSearchJson = quotaRatioToElasticSearchJson;
         this.routingKeyFactory = routingKeyFactory;
+        this.quotaRootResolver = quotaRootResolver;
     }
 
     @Override
@@ -71,7 +74,7 @@ public class ElasticSearchQuotaMailboxListener implements EventListener.Reactive
     }
 
     private Mono<Void> handleEvent(QuotaUsageUpdatedEvent event) {
-        Username user = event.getUsername();
+        Username user = quotaRootResolver.associatedUsername(event.getQuotaRoot());
         DocumentId id = toDocumentId(user);
         RoutingKey routingKey = routingKeyFactory.from(user);
 

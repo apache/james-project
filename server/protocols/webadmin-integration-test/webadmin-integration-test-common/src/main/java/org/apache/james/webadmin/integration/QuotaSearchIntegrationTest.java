@@ -58,6 +58,8 @@ public abstract class QuotaSearchIntegrationTest {
     private RequestSpecification webAdminApi;
     private Port jmapPort;
 
+    protected abstract void awaitSearchUpToDate() throws Exception;
+
     @BeforeEach
     void setUp(GuiceJamesServer jmapServer) throws Exception {
         DataProbe dataProbe = jmapServer.getProbe(DataProbeImpl.class);
@@ -111,6 +113,7 @@ public abstract class QuotaSearchIntegrationTest {
                 .accept("application/json; jmapVersion=rfc-8621")
                 .body(requestBody)
                 .post("/jmap"));
+        awaitSearchUpToDate();
 
         // THEN we expect CEDRIC to be reported with a 95% quota ration by quota search
         webAdminApi

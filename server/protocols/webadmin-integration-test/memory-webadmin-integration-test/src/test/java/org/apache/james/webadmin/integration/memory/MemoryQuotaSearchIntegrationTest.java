@@ -13,4 +13,9 @@ public class MemoryQuotaSearchIntegrationTest extends QuotaSearchIntegrationTest
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule()))
         .build();
+
+    @Override
+    protected void awaitSearchUpToDate() {
+
+    }
 }

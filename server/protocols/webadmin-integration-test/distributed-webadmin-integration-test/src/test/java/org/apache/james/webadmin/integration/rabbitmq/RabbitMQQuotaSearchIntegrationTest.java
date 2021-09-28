@@ -23,7 +23,6 @@ import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesConfiguration;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.DockerElasticSearchExtension;
-import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
@@ -32,11 +31,10 @@ import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.webadmin.integration.QuotaSearchIntegrationTest;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RabbitMQQuotaSearchIntegrationTest extends QuotaSearchIntegrationTest {
+    public static final DockerElasticSearchExtension ELASTIC_SEARCH_EXTENSION = new DockerElasticSearchExtension();
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
         CassandraRabbitMQJamesConfiguration.builder()
@@ -49,7 +47,7 @@ class RabbitMQQuotaSearchIntegrationTest extends QuotaSearchIntegrationTest {
                     .noCryptoConfig())
             .searchConfiguration(SearchConfiguration.elasticSearch())
             .build())
-        .extension(new DockerElasticSearchExtension())
+        .extension(ELASTIC_SEARCH_EXTENSION)
         .extension(new CassandraExtension())
         .extension(new AwsS3BlobStoreExtension())
         .extension(new RabbitMQExtension())
@@ -57,10 +55,9 @@ class RabbitMQQuotaSearchIntegrationTest extends QuotaSearchIntegrationTest {
             .overrideWith(new TestJMAPServerModule()))
         .build();
 
-    @Disabled("JAMES-3655 Quota is incremented for BOB instead of CEDRIC")
-    @Test
     @Override
-    public void quotaSearchShouldPlayWellWithDelegation(GuiceJamesServer server) throws Exception {
-        super.quotaSearchShouldPlayWellWithDelegation(server);
+    protected void awaitSearchUpToDate() throws Exception {
+        Thread.sleep(1000);
+        ELASTIC_SEARCH_EXTENSION.await();
     }
 }

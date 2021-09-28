@@ -33,6 +33,7 @@ import org.apache.james.backends.es.v7.ElasticSearchIndexer;
 import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
 import org.apache.james.events.EventListener;
 import org.apache.james.lifecycle.api.Startable;
+import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.quota.search.QuotaSearcher;
 import org.apache.james.quota.search.elasticsearch.v7.ElasticSearchQuotaConfiguration;
 import org.apache.james.quota.search.elasticsearch.v7.ElasticSearchQuotaSearcher;
@@ -108,12 +109,13 @@ public class ElasticSearchQuotaSearcherModule extends AbstractModule {
     @Provides
     @Singleton
     public ElasticSearchQuotaMailboxListener provideListener(ReactorElasticSearchClient client,
-                                                             ElasticSearchQuotaConfiguration configuration) {
+                                                             ElasticSearchQuotaConfiguration configuration,
+                                                             QuotaRootResolver quotaRootResolver) {
         return new ElasticSearchQuotaMailboxListener(
             new ElasticSearchIndexer(client,
                 configuration.getWriteAliasQuotaRatioName()),
-                new QuotaRatioToElasticSearchJson(),
-            new UserRoutingKeyFactory());
+                new QuotaRatioToElasticSearchJson(quotaRootResolver),
+            new UserRoutingKeyFactory(), quotaRootResolver);
     }
 
     @ProvidesIntoSet

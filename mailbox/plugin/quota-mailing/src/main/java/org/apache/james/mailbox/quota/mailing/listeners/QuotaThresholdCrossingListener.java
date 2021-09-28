@@ -23,7 +23,6 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
-import org.apache.james.core.Username;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventListener;
 import org.apache.james.events.Group;
@@ -34,6 +33,7 @@ import org.apache.james.eventsourcing.Subscriber;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.events.MailboxEvents.QuotaUsageUpdatedEvent;
+import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.james.mailbox.quota.mailing.commands.DetectThresholdCrossing;
 import org.apache.james.mailbox.quota.mailing.commands.DetectThresholdCrossingHandler;
@@ -54,17 +54,20 @@ public class QuotaThresholdCrossingListener implements EventListener.ReactiveGro
     private static final Group GROUP = new QuotaThresholdCrossingListenerGroup();
 
     private final EventSourcingSystem eventSourcingSystem;
+    private final QuotaRootResolver quotaRootResolver;
 
     @Inject
     public QuotaThresholdCrossingListener(MailetContext mailetContext, UsersRepository usersRepository,
                                           FileSystem fileSystem, EventStore eventStore,
-                                          HierarchicalConfiguration<ImmutableNode> config) {
-        this(mailetContext, usersRepository, fileSystem, eventStore, QuotaMailingListenerConfiguration.from(config));
+                                          HierarchicalConfiguration<ImmutableNode> config, QuotaRootResolver quotaRootResolver) {
+        this(mailetContext, usersRepository, fileSystem, eventStore, QuotaMailingListenerConfiguration.from(config), quotaRootResolver);
     }
 
     public QuotaThresholdCrossingListener(MailetContext mailetContext, UsersRepository usersRepository,
                                           FileSystem fileSystem, EventStore eventStore,
-                                          QuotaMailingListenerConfiguration config) {
+                                          QuotaMailingListenerConfiguration config,
+                                          QuotaRootResolver quotaRootResolver) {
+        this.quotaRootResolver = quotaRootResolver;
         ImmutableSet<CommandHandler<? extends Command>> handlers = ImmutableSet.of(new DetectThresholdCrossingHandler(eventStore, config));
         ImmutableSet<Subscriber> subscribers = ImmutableSet.of(new QuotaThresholdMailer(mailetContext, usersRepository, fileSystem, config));
         eventSourcingSystem = EventSourcingSystem.fromJava(handlers, subscribers, eventStore);
@@ -83,14 +86,14 @@ public class QuotaThresholdCrossingListener implements EventListener.ReactiveGro
     @Override
     public Publisher<Void> reactiveEvent(Event event) {
         if (event instanceof QuotaUsageUpdatedEvent) {
-            return handleEvent(event.getUsername(), (QuotaUsageUpdatedEvent) event);
+            return handleEvent((QuotaUsageUpdatedEvent) event);
         }
         return Mono.empty();
     }
 
-    private Mono<Void> handleEvent(Username username, QuotaUsageUpdatedEvent event) {
+    private Mono<Void> handleEvent(QuotaUsageUpdatedEvent event) {
         return Mono.from(eventSourcingSystem.dispatch(
-                new DetectThresholdCrossing(username, event.getCountQuota(), event.getSizeQuota(), event.getInstant())))
+                new DetectThresholdCrossing(quotaRootResolver.associatedUsername(event.getQuotaRoot()), event.getCountQuota(), event.getSizeQuota(), event.getInstant())))
             .then();
     }
 }
