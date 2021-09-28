@@ -37,6 +37,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -276,13 +277,16 @@ public class RecipientRewriteTableProcessor {
 
     private void forwardToRemoteAddress(Mail mail, MailAddress recipient, Collection<MailAddress> remoteRecipients) {
         if (!remoteRecipients.isEmpty()) {
+            Mail duplicate = null;
             try {
-                Mail duplicate = mail.duplicate();
+                duplicate = mail.duplicate();
                 duplicate.setRecipients(ImmutableList.copyOf(remoteRecipients));
                 mailetContext.sendMail(duplicate);
                 LOGGER.info("Mail for {} forwarded to {}", recipient, remoteRecipients);
             } catch (MessagingException ex) {
                 LOGGER.warn("Error forwarding mail to {}", remoteRecipients);
+            } finally {
+                LifecycleUtil.dispose(duplicate);
             }
         }
     }

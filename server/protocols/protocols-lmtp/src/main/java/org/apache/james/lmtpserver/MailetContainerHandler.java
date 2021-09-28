@@ -26,6 +26,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.lmtp.LMTPMultiResponse;
@@ -138,8 +139,9 @@ public class MailetContainerHandler extends DataLineJamesMessageHookHandler {
     }
 
     private SMTPResponse executeFor(Mail mail, MailAddress recipient) {
+        Mail newMail = null;
         try {
-            Mail newMail = mail.duplicate();
+            newMail = mail.duplicate();
             newMail.setRecipients(ImmutableList.of(recipient));
 
             mailProcessor.service(newMail);
@@ -151,6 +153,8 @@ public class MailetContainerHandler extends DataLineJamesMessageHookHandler {
                 .build());
         } catch (Exception e) {
             return new SMTPResponse(SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.UNDEFINED_STATUS) + " Temporary error deliver message <" + recipient.asString() + ">");
+        } finally {
+            LifecycleUtil.dispose(newMail);
         }
     }
 }
