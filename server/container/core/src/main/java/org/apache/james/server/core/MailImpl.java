@@ -94,18 +94,22 @@ public class MailImpl implements Disposable, Mail {
      * @throws MessagingException when the message is not clonable
      */
     public static MailImpl duplicate(Mail mail) throws MessagingException {
+        return duplicateWithoutMessage(mail)
+            .mimeMessage(mail.getMessage())
+            .build();
+    }
+
+    public static MailImpl.Builder duplicateWithoutMessage(Mail mail) throws MessagingException {
         return MailImpl.builder()
             .name(deriveNewName(mail.getName()))
             .sender(mail.getMaybeSender())
             .addRecipients(mail.getRecipients())
-            .mimeMessage(new MimeMessageWrapper(mail.getMessage()))
             .remoteHost(mail.getRemoteHost())
             .remoteAddr(mail.getRemoteAddr())
             .lastUpdated(mail.getLastUpdated())
             .errorMessage(mail.getErrorMessage())
             .addAttributes(duplicateAttributes(mail))
-            .addAllHeadersForRecipients(mail.getPerRecipientSpecificHeaders())
-            .build();
+            .addAllHeadersForRecipients(mail.getPerRecipientSpecificHeaders());
     }
 
     private static ImmutableList<Attribute> duplicateAttributes(Mail mail) {
@@ -162,6 +166,10 @@ public class MailImpl implements Disposable, Mail {
             remoteAddr = Optional.empty();
             remoteHost = Optional.empty();
             perRecipientHeaders = new PerRecipientHeaders();
+        }
+
+        public String getName() {
+            return name;
         }
 
         public Builder mimeMessage(MimeMessage mimeMessage) {

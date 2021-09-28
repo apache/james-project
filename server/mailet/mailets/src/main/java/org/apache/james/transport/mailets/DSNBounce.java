@@ -48,7 +48,9 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.javax.MimeMultipartReport;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.server.core.MailImpl;
+import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.MailModifier;
 import org.apache.james.transport.mailets.redirect.NotifyMailetInitParameters;
@@ -305,25 +307,30 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     }
 
     private void trySendBounce(Mail originalMail) throws MessagingException {
-        MailImpl newMail = MailImpl.duplicate(originalMail);
+        MailImpl.Builder newMailBuilder = MailImpl.duplicateWithoutMessage(originalMail);
+
+        newMailBuilder.remoteHost(getRemoteHost());
+        newMailBuilder.remoteAddr(getRemoteAddr());
+        List<MailAddress> recipients = getSenderAsList(originalMail);
+        newMailBuilder.addRecipients(recipients);
+        newMailBuilder.sender(originalMail.getMaybeSender());
+
+        if (getInitParameters().isDebug()) {
+            LOGGER.debug("New mail - sender: {}, recipients: {}, name: {}, remoteHost: {}, remoteAddr: {}, state: {}, lastUpdated: {}, errorMessage: {}",
+                originalMail.getMaybeSender(), recipients, newMailBuilder.getName(), getRemoteHost(), getRemoteAddr(), originalMail.getState(), originalMail.getLastUpdated(), originalMail.getErrorMessage());
+        }
+
+        MimeMessageWrapper bounceMessage = new MimeMessageWrapper(createBounceMessage(originalMail));
         try {
-            newMail.setRemoteHost(getRemoteHost());
-            newMail.setRemoteAddr(getRemoteAddr());
-            newMail.setRecipients(getSenderAsList(originalMail));
-       
-            if (getInitParameters().isDebug()) {
-                LOGGER.debug("New mail - sender: {}, recipients: {}, name: {}, remoteHost: {}, remoteAddr: {}, state: {}, lastUpdated: {}, errorMessage: {}",
-                        newMail.getMaybeSender(), newMail.getRecipients(), newMail.getName(), newMail.getRemoteHost(), newMail.getRemoteAddr(), newMail.getState(), newMail.getLastUpdated(), newMail.getErrorMessage());
-            }
-       
-            newMail.setMessage(createBounceMessage(originalMail));
-       
+            MailImpl newMail = newMailBuilder.build();
+            newMail.setMessageNoCopy(bounceMessage);
+
             // Set additional headers
             MailModifier mailModifier = MailModifier.builder()
-                    .mailet(this)
-                    .mail(newMail)
-                    .dns(dns)
-                    .build();
+                .mailet(this)
+                .mail(newMail)
+                .dns(dns)
+                .build();
             mailModifier.setRecipients(getRecipients(originalMail));
             mailModifier.setTo(getTo(originalMail));
             mailModifier.setSubjectPrefix(originalMail);
@@ -331,13 +338,13 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
             mailModifier.setReversePath(getReversePath(originalMail));
             mailModifier.setIsReply(getInitParameters().isReply(), originalMail);
             mailModifier.setSender(getSender(originalMail));
-       
+
             newMail.getMessage().setHeader(RFC2822Headers.DATE, getDateHeader(originalMail));
-       
+
             newMail.getMessage().saveChanges();
             getMailetContext().sendMail(newMail);
         } finally {
-            newMail.dispose();
+            LifecycleUtil.dispose(bounceMessage);
         }
     }
 
