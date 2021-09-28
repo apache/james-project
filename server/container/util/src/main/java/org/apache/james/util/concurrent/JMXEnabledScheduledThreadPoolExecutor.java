@@ -19,10 +19,10 @@
 package org.apache.james.util.concurrent;
 
 import java.lang.management.ManagementFactory;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -35,10 +35,9 @@ import javax.management.ObjectName;
 public class JMXEnabledScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor implements JMXEnabledScheduledThreadPoolExecutorMBean {
 
     private final String jmxPath;
-    private final List<Runnable> inProgress = Collections.synchronizedList(new ArrayList<>());
     private final ThreadLocal<Long> startTime = new ThreadLocal<>();
-    private long totalTime;
-    private int totalTasks;
+    private final AtomicLong totalTime = new AtomicLong(0);
+    private final AtomicInteger totalTasks = new AtomicInteger(0);
     private MBeanServer mbeanServer;
     private String mbeanName;
 
@@ -59,18 +58,14 @@ public class JMXEnabledScheduledThreadPoolExecutor extends ScheduledThreadPoolEx
     @Override
     protected void beforeExecute(Thread t, Runnable r) {
         super.beforeExecute(t, r);
-        inProgress.add(r);
         startTime.set(System.currentTimeMillis());
     }
 
     @Override
     protected void afterExecute(Runnable r, Throwable t) {
         long time = System.currentTimeMillis() - startTime.get();
-        synchronized (this) {
-            totalTime += time;
-            ++totalTasks;
-        }
-        inProgress.remove(r);
+        totalTasks.incrementAndGet();
+        totalTime.addAndGet(time);
         super.afterExecute(r, t);
     }
 
@@ -121,12 +116,12 @@ public class JMXEnabledScheduledThreadPoolExecutor extends ScheduledThreadPoolEx
 
     @Override
     public synchronized int getTotalTasks() {
-        return totalTasks;
+        return totalTasks.get();
     }
 
     @Override
     public synchronized double getAverageTaskTime() {
-        return (totalTasks == 0) ? 0 : totalTime / totalTasks;
+        return (totalTasks.get() == 0) ? 0 : totalTime.get() / totalTasks.get();
     }
 
     @Override
