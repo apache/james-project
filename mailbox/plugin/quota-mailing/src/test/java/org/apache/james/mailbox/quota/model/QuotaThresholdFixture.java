@@ -47,7 +47,7 @@ public interface QuotaThresholdFixture {
         String BOB = "bob@domain";
         Username BOB_USERNAME = Username.of(BOB);
         Instant NOW = Instant.now();
-        QuotaRoot QUOTAROOT = QuotaRoot.quotaRoot("any", Optional.empty());
+        QuotaRoot QUOTAROOT = QuotaRoot.quotaRoot("#private&bob@domain", Optional.empty());
         Instant ONE_HOUR_AGO = NOW.minus(Duration.ofHours(1));
         Instant TWO_HOURS_AGO = NOW.minus(Duration.ofHours(2));
         Instant THREE_HOURS_AGO = NOW.minus(Duration.ofHours(3));

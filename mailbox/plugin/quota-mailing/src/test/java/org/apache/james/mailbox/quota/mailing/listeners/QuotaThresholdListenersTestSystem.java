@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.quota.mailing.listeners;
 
+import static org.mockito.Mockito.mock;
+
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventBus;
@@ -29,8 +31,11 @@ import org.apache.james.events.RegistrationKey;
 import org.apache.james.events.delivery.InVmEventDelivery;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
+import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
@@ -51,7 +56,8 @@ class QuotaThresholdListenersTestSystem {
         FileSystem fileSystem = new FileSystemImpl(new JamesServerResourceLoader("."));
 
         QuotaThresholdCrossingListener thresholdCrossingListener =
-            new QuotaThresholdCrossingListener(mailetContext, MemoryUsersRepository.withVirtualHosting(NO_DOMAIN_LIST), fileSystem, eventStore, configuration);
+            new QuotaThresholdCrossingListener(mailetContext, MemoryUsersRepository.withVirtualHosting(NO_DOMAIN_LIST), fileSystem, eventStore, configuration,
+                new DefaultUserQuotaRootResolver(mock(SessionProvider.class), mock(MailboxSessionMapperFactory.class)));
 
         eventBus.register(thresholdCrossingListener);
     }

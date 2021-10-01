@@ -84,6 +84,13 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
     }
 
     @Override
+    public Username associatedUsername(QuotaRoot quotaRoot) {
+        Preconditions.checkArgument(quotaRoot.getValue().startsWith(MailboxConstants.USER_NAMESPACE + SEPARATOR));
+
+        return Username.of(quotaRoot.getValue().substring(MailboxConstants.USER_NAMESPACE.length() + 1));
+    }
+
+    @Override
     public QuotaRoot getQuotaRoot(MailboxPath mailboxPath) {
         Preconditions.checkArgument(!mailboxPath.getNamespace().contains(SEPARATOR), "Namespace should not contain %s", SEPARATOR);
         return Optional.ofNullable(mailboxPath.getUser())

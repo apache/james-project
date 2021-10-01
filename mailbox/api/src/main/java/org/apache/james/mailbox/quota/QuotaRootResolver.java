@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.quota;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
@@ -48,4 +49,6 @@ public interface QuotaRootResolver extends QuotaRootDeserializer {
     Publisher<QuotaRoot> getQuotaRootReactive(MailboxId mailboxId);
 
     Publisher<Mailbox> retrieveAssociatedMailboxes(QuotaRoot quotaRoot, MailboxSession mailboxSession);
+
+    Username associatedUsername(QuotaRoot quotaRoot);
 }

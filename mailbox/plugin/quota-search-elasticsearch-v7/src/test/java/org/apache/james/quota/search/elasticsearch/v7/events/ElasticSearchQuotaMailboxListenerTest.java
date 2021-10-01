@@ -24,6 +24,7 @@ import static org.apache.james.quota.search.QuotaSearchFixture.TestConstants.NOW
 import static org.apache.james.quota.search.QuotaSearchFixture.TestConstants.QUOTAROOT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
+import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 
@@ -33,9 +34,12 @@ import org.apache.james.backends.es.v7.ElasticSearchIndexer;
 import org.apache.james.backends.es.v7.ReactorElasticSearchClient;
 import org.apache.james.events.Event;
 import org.apache.james.events.Group;
+import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.quota.QuotaFixture.Counts;
 import org.apache.james.mailbox.quota.QuotaFixture.Sizes;
+import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.event.EventFactory;
+import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.quota.search.elasticsearch.v7.QuotaRatioElasticSearchConstants;
 import org.apache.james.quota.search.elasticsearch.v7.QuotaSearchIndexCreationUtil;
 import org.apache.james.quota.search.elasticsearch.v7.UserRoutingKeyFactory;
@@ -65,6 +69,7 @@ class ElasticSearchQuotaMailboxListenerTest {
 
     ElasticSearchQuotaMailboxListener quotaMailboxListener;
     ReactorElasticSearchClient client;
+    private DefaultUserQuotaRootResolver quotaRootResolver;
 
     @BeforeEach
     void setUp() throws IOException {
@@ -74,11 +79,12 @@ class ElasticSearchQuotaMailboxListenerTest {
             .addHost(elasticSearch.getDockerElasticSearch().getHttpHost())
             .build());
 
+        quotaRootResolver = new DefaultUserQuotaRootResolver(mock(SessionProvider.class), mock(MailboxSessionMapperFactory.class));
         quotaMailboxListener = new ElasticSearchQuotaMailboxListener(
             new ElasticSearchIndexer(client,
                 QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),
-            new QuotaRatioToElasticSearchJson(),
-            new UserRoutingKeyFactory());
+            new QuotaRatioToElasticSearchJson(quotaRootResolver),
+            new UserRoutingKeyFactory(), quotaRootResolver);
     }
 
     @AfterEach

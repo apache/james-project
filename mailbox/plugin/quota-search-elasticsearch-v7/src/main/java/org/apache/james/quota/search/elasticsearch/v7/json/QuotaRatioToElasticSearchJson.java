@@ -24,24 +24,26 @@ import javax.inject.Inject;
 import org.apache.james.core.Domain;
 import org.apache.james.mailbox.events.MailboxEvents.QuotaUsageUpdatedEvent;
 import org.apache.james.mailbox.model.QuotaRatio;
+import org.apache.james.mailbox.quota.QuotaRootResolver;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 public class QuotaRatioToElasticSearchJson {
-
+    private final QuotaRootResolver quotaRootResolver;
     private final ObjectMapper mapper;
 
     @Inject
-    public QuotaRatioToElasticSearchJson() {
+    public QuotaRatioToElasticSearchJson(QuotaRootResolver quotaRootResolver) {
+        this.quotaRootResolver = quotaRootResolver;
         this.mapper = new ObjectMapper();
         this.mapper.registerModule(new Jdk8Module());
     }
 
     public String convertToJson(QuotaUsageUpdatedEvent event) throws JsonProcessingException {
         return mapper.writeValueAsString(QuotaRatioAsJson.builder()
-                .user(event.getUsername().asString())
+                .user(quotaRootResolver.associatedUsername(event.getQuotaRoot()).asString())
                 .domain(event.getQuotaRoot().getDomain().map(Domain::asString))
                 .quotaRatio(QuotaRatio.from(event.getSizeQuota(), event.getCountQuota()))
                 .build());
