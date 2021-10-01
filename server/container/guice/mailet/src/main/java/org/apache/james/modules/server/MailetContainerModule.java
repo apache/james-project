@@ -34,6 +34,7 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailetcontainer.AutomaticallySentMailDetectorImpl;
+import org.apache.james.mailetcontainer.api.LocalResources;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.api.MailetLoader;
 import org.apache.james.mailetcontainer.api.MatcherLoader;
@@ -41,6 +42,7 @@ import org.apache.james.mailetcontainer.api.jmx.MailSpoolerMBean;
 import org.apache.james.mailetcontainer.impl.CompositeProcessorImpl;
 import org.apache.james.mailetcontainer.impl.JamesMailSpooler;
 import org.apache.james.mailetcontainer.impl.JamesMailetContext;
+import org.apache.james.mailetcontainer.impl.LocalResourcesImpl;
 import org.apache.james.mailetcontainer.impl.MailetProcessorImpl;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
@@ -96,6 +98,9 @@ public class MailetContainerModule extends AbstractModule {
 
         bind(JamesMailetContext.class).in(Scopes.SINGLETON);
         bind(MailetContext.class).to(JamesMailetContext.class);
+
+        bind(LocalResourcesImpl.class).in(Scopes.SINGLETON);
+        bind(LocalResources.class).to(LocalResourcesImpl.class);
 
         bind(AutomaticallySentMailDetectorImpl.class).in(Scopes.SINGLETON);
         bind(AutomaticallySentMailDetector.class).to(AutomaticallySentMailDetectorImpl.class);
