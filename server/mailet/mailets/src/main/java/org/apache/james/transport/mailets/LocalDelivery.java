@@ -27,7 +27,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.transport.mailets.delivery.MailDispatcher;
-import org.apache.james.transport.mailets.delivery.MailboxAppender;
+import org.apache.james.transport.mailets.delivery.MailboxAppenderImpl;
 import org.apache.james.transport.mailets.delivery.SimpleMailStore;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
@@ -71,7 +71,7 @@ public class LocalDelivery extends GenericMailet {
     public void init() throws MessagingException {
         mailDispatcher = MailDispatcher.builder()
             .mailStore(SimpleMailStore.builder()
-                .mailboxAppender(new MailboxAppender(mailboxManager))
+                .mailboxAppender(new MailboxAppenderImpl(mailboxManager))
                 .usersRepository(usersRepository)
                 .folder(MailboxConstants.INBOX)
                 .metric(metricFactory.generate(LOCAL_DELIVERED_MAILS_METRIC_NAME))

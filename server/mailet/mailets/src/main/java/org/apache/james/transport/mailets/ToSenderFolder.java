@@ -25,7 +25,7 @@ import javax.mail.MessagingException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.transport.mailets.delivery.MailboxAppender;
+import org.apache.james.transport.mailets.delivery.MailboxAppenderImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Experimental;
@@ -58,7 +58,7 @@ public class ToSenderFolder extends GenericMailet {
     private final MailboxManager mailboxManager;
     private String folder;
     private boolean consume;
-    private MailboxAppender mailboxAppender;
+    private MailboxAppenderImpl mailboxAppender;
 
     @Inject
     public ToSenderFolder(UsersRepository usersRepository, @Named("mailboxmanager") MailboxManager mailboxManager) {
@@ -102,7 +102,7 @@ public class ToSenderFolder extends GenericMailet {
     public void init() throws MessagingException {
         folder = getInitParameter("folder", "Sent");
         consume = getInitParameter("consume", false);
-        mailboxAppender = new MailboxAppender(mailboxManager);
+        mailboxAppender = new MailboxAppenderImpl(mailboxManager);
     }
 
     @Override
