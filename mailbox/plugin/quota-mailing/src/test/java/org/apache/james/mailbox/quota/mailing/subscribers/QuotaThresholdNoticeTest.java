@@ -186,6 +186,64 @@ class QuotaThresholdNoticeTest {
     }
 
     @Test
+    void generateReportShouldGenerateAHumanReadableMessageWhenNoCountQuota() throws Exception {
+        QuotaThresholdChange sizeThresholdChange = new QuotaThresholdChange(_80, NOW);
+        QuotaThresholdChange countThresholdChange = new QuotaThresholdChange(_80, NOW);
+
+        assertThat(QuotaThresholdNotice.builder()
+            .withConfiguration(DEFAULT_CONFIGURATION)
+            .sizeQuota(Sizes._82_PERCENT)
+            .countQuota(Quota.<QuotaCountLimit, QuotaCountUsage>builder()
+                .used(QuotaCountUsage.count(92))
+                .computedLimit(QuotaCountLimit.unlimited())
+                .build())
+            .sizeThreshold(HistoryEvolution.higherThresholdReached(sizeThresholdChange, NotAlreadyReachedDuringGracePeriod))
+            .countThreshold(HistoryEvolution.higherThresholdReached(countThresholdChange, NotAlreadyReachedDuringGracePeriod))
+            .build()
+            .get()
+            .generateReport(fileSystem))
+            .isEqualTo("You receive this email because you recently exceeded a threshold related to the quotas of your email account.\n" +
+                "\n" +
+                "You currently occupy more than 80 % of the total size allocated to you.\n" +
+                "You currently occupy 82 bytes on a total of 100 bytes allocated to you.\n" +
+                "\n" +
+                "You currently occupy more than 80 % of the total message count allocated to you.\n" +
+                "You currently have 92 messages.\n" +
+                "\n" +
+                "You need to be aware that actions leading to exceeded quotas will be denied. This will result in a degraded service.\n" +
+                "To mitigate this issue you might reach your administrator in order to increase your configured quota. You might also delete some non important emails.");
+    }
+
+    @Test
+    void generateReportShouldGenerateAHumanReadableMessageWhenNoSizeQuota() throws Exception {
+        QuotaThresholdChange sizeThresholdChange = new QuotaThresholdChange(_80, NOW);
+        QuotaThresholdChange countThresholdChange = new QuotaThresholdChange(_80, NOW);
+
+        assertThat(QuotaThresholdNotice.builder()
+            .withConfiguration(DEFAULT_CONFIGURATION)
+            .countQuota(Counts._92_PERCENT)
+            .sizeQuota(Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+                .used(QuotaSizeUsage.size(82))
+                .computedLimit(QuotaSizeLimit.unlimited())
+                .build())
+            .sizeThreshold(HistoryEvolution.higherThresholdReached(sizeThresholdChange, NotAlreadyReachedDuringGracePeriod))
+            .countThreshold(HistoryEvolution.higherThresholdReached(countThresholdChange, NotAlreadyReachedDuringGracePeriod))
+            .build()
+            .get()
+            .generateReport(fileSystem))
+            .isEqualTo("You receive this email because you recently exceeded a threshold related to the quotas of your email account.\n" +
+                "\n" +
+                "You currently occupy more than 80 % of the total size allocated to you.\n" +
+                "You currently occupy 82 bytes.\n" +
+                "\n" +
+                "You currently occupy more than 80 % of the total message count allocated to you.\n" +
+                "You currently have 92 messages on a total of 100 allowed for you.\n" +
+                "\n" +
+                "You need to be aware that actions leading to exceeded quotas will be denied. This will result in a degraded service.\n" +
+                "To mitigate this issue you might reach your administrator in order to increase your configured quota. You might also delete some non important emails.");
+    }
+
+    @Test
     void generateReportShouldOmitCountPartWhenNone() throws Exception {
         QuotaThresholdChange sizeThresholdChange = new QuotaThresholdChange(_80, NOW);
 

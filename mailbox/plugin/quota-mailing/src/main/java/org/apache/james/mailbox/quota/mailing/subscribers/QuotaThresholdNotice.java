@@ -199,7 +199,7 @@ public class QuotaThresholdNotice {
         scopes.put("usedCount", countQuota.getUsed().asLong());
         scopes.put("hasCountLimit", countQuota.getLimit().isLimited());
         if (countQuota.getLimit().isLimited()) {
-            scopes.put("limitCount", sizeQuota.getLimit().asLong());
+            scopes.put("limitCount", countQuota.getLimit().asLong());
         }
 
         return scopes;
