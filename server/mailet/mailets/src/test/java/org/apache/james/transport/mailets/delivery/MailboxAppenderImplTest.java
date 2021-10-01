@@ -41,13 +41,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
-public class MailboxAppenderTest {
+public class MailboxAppenderImplTest {
 
     public static final Username USER = Username.of("user");
     public static final String FOLDER = "folder";
     public static final String EMPTY_FOLDER = "";
 
-    private MailboxAppender testee;
+    private MailboxAppenderImpl testee;
     private MailboxManager mailboxManager;
     private MimeMessage mimeMessage;
     private MailboxSession session;
@@ -61,7 +61,7 @@ public class MailboxAppenderTest {
             .build();
 
         mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
-        testee = new MailboxAppender(mailboxManager);
+        testee = new MailboxAppenderImpl(mailboxManager);
 
         session = mailboxManager.createSystemSession(USER);
     }

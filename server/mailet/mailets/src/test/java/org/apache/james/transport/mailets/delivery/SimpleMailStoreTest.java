@@ -41,13 +41,13 @@ import org.junit.jupiter.api.Test;
 class SimpleMailStoreTest {
     public static final String FOLDER = "FOLDER";
     private SimpleMailStore testee;
-    private MailboxAppender mailboxAppender;
+    private MailboxAppenderImpl mailboxAppender;
     private UsersRepository usersRepository;
     private MimeMessage mimeMessage;
 
     @BeforeEach
     void setUp() throws Exception {
-        mailboxAppender = mock(MailboxAppender.class);
+        mailboxAppender = mock(MailboxAppenderImpl.class);
         usersRepository = mock(UsersRepository.class);
         testee = SimpleMailStore.builder()
             .usersRepository(usersRepository)
