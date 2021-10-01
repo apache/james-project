@@ -58,6 +58,7 @@ public class SwitchableLineBasedFrameDecoder extends AllButStartTlsLineBasedChan
         this.framingEnabled = false;
         if (this.cumulation != null && this.cumulation.readable()) {
             final ChannelBuffer spareBytes = this.cumulation.readBytes(this.cumulation.readableBytes());
+            this.cumulation = null;
             Channels.fireMessageReceived(ctx, spareBytes);
         }
     }
