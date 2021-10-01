@@ -57,7 +57,7 @@ public class RecipientRewriteTableUserEntityValidator implements UserEntityValid
             .map(mapping -> new ValidationFailure("'" + username.asString() + "' already have associated mappings: " + mapping.asString()));
     }
 
-    public Stream<Mapping> filterIgnored(Mappings mappings, Set<EntityType> ignoredTypes) {
+    private Stream<Mapping> filterIgnored(Mappings mappings, Set<EntityType> ignoredTypes) {
         final ImmutableSet<Mapping.Type> types = ignoredTypes.stream()
             .flatMap(type -> Optional.ofNullable(TYPE_CORRESPONDENCE.get(type)).stream())
             .collect(ImmutableSet.toImmutableSet());
