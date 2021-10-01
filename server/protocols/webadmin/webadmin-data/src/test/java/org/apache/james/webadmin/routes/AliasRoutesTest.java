@@ -50,6 +50,9 @@ import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.dto.MappingSourceModule;
+import org.apache.james.webadmin.service.DefaultUserEntityValidator;
+import org.apache.james.webadmin.service.RecipientRewriteTableUserEntityValidator;
+import org.apache.james.webadmin.service.UserEntityValidator;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
@@ -59,7 +62,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import io.restassured.RestAssured;
-import io.restassured.filter.log.LogDetail;
 import io.restassured.http.ContentType;
 
 class AliasRoutesTest {
@@ -122,7 +124,12 @@ class AliasRoutesTest {
             usersRepository.addUser(Username.of(BOB_WITH_SLASH), BOB_WITH_SLASH_PASSWORD);
             usersRepository.addUser(Username.of(ALICE), ALICE_PASSWORD);
 
-            createServer(new AliasRoutes(memoryRecipientRewriteTable, usersRepository, domainList, new JsonTransformer(module)),
+
+            UserEntityValidator validator = UserEntityValidator.aggregate(
+                new DefaultUserEntityValidator(usersRepository),
+                new RecipientRewriteTableUserEntityValidator(memoryRecipientRewriteTable));
+
+            createServer(new AliasRoutes(memoryRecipientRewriteTable, usersRepository, validator, domainList, new JsonTransformer(module)),
                 new AddressMappingRoutes(memoryRecipientRewriteTable));
         }
 
@@ -176,6 +183,26 @@ class AliasRoutesTest {
                 .containsEntry("statusCode", HttpStatus.CONFLICT_409)
                 .containsEntry("type", "WrongState")
                 .containsEntry("message", "Creation of redirection of alice-alias@b.com to alias:alice@b.com would lead to a loop, operation not performed");
+        }
+
+        @Test
+        void putShouldDetectConflictsWithGroups() throws Exception {
+            memoryRecipientRewriteTable.addGroupMapping(MappingSource.fromUser(Username.of(ALICE_ALIAS)), BOB);
+
+            Map<String, Object> errors = when()
+                    .put(ALICE + SEPARATOR + "sources" + SEPARATOR + ALICE_ALIAS)
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "'alice-alias@b.com' already have associated mappings: group:bob@b.com");
         }
 
         @Test
@@ -248,7 +275,7 @@ class AliasRoutesTest {
             assertThat(errors)
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "The alias source exists as an user already");
+                .containsEntry("message", "'alice@b.com' user already exist");
         }
 
         @Test
@@ -446,7 +473,7 @@ class AliasRoutesTest {
             domainList = mock(DomainList.class);
             memoryRecipientRewriteTable.setDomainList(domainList);
             Mockito.when(domainList.containsDomain(any())).thenReturn(true);
-            createServer(new AliasRoutes(memoryRecipientRewriteTable, userRepository, domainList, new JsonTransformer()),
+            createServer(new AliasRoutes(memoryRecipientRewriteTable, userRepository, UserEntityValidator.NOOP, domainList, new JsonTransformer()),
                 new AddressMappingRoutes(memoryRecipientRewriteTable));
         }
 

@@ -20,10 +20,12 @@
 package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.Constants.SEPARATOR;
+import static org.apache.james.webadmin.service.UserEntityValidator.EntityType.ALIAS;
 import static spark.Spark.halt;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -46,10 +48,11 @@ import org.apache.james.rrt.api.SourceDomainIsNotInDomainListException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.AliasSourcesResponse;
+import org.apache.james.webadmin.service.UserEntityValidator;
+import org.apache.james.webadmin.service.UserEntityValidator.ValidationFailure;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
@@ -86,14 +89,16 @@ public class AliasRoutes implements Routes {
     private static final String ADDRESS_TYPE = "alias";
 
     private final UsersRepository usersRepository;
+    private final UserEntityValidator userEntityValidator;
     private final DomainList domainList;
     private final JsonTransformer jsonTransformer;
     private final RecipientRewriteTable recipientRewriteTable;
 
     @Inject
     @VisibleForTesting
-    AliasRoutes(RecipientRewriteTable recipientRewriteTable, UsersRepository usersRepository, DomainList domainList, JsonTransformer jsonTransformer) {
+    AliasRoutes(RecipientRewriteTable recipientRewriteTable, UsersRepository usersRepository, UserEntityValidator userEntityValidator, DomainList domainList, JsonTransformer jsonTransformer) {
         this.usersRepository = usersRepository;
+        this.userEntityValidator = userEntityValidator;
         this.domainList = domainList;
         this.jsonTransformer = jsonTransformer;
         this.recipientRewriteTable = recipientRewriteTable;
@@ -149,7 +154,7 @@ public class AliasRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
             message = "Internal server error - Something went bad on the server side.")
     })
-    public HaltException addAlias(Request request, Response response) throws UsersRepositoryException, RecipientRewriteTableException, DomainListException {
+    public HaltException addAlias(Request request, Response response) throws Exception {
         MailAddress aliasSourceAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_SOURCE_ADDRESS), ADDRESS_TYPE);
         ensureUserDoesNotExist(aliasSourceAddress);
         MailAddress destinationAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_DESTINATION_ADDRESS), ADDRESS_TYPE);
@@ -189,14 +194,14 @@ public class AliasRoutes implements Routes {
         }
     }
 
-    private void ensureUserDoesNotExist(MailAddress mailAddress) throws UsersRepositoryException {
+    private void ensureUserDoesNotExist(MailAddress mailAddress) throws Exception {
         Username username = usersRepository.getUsername(mailAddress);
-
-        if (usersRepository.contains(username)) {
+        Optional<ValidationFailure> validationFailure = userEntityValidator.canCreate(username, ImmutableSet.of(ALIAS));
+        if (validationFailure.isPresent()) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message("The alias source exists as an user already")
+                .message(validationFailure.get().errorMessage())
                 .haltError();
         }
     }

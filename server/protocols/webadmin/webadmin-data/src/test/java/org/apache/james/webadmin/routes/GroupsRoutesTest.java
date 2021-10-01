@@ -52,6 +52,9 @@ import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.dto.MappingSourceModule;
+import org.apache.james.webadmin.service.DefaultUserEntityValidator;
+import org.apache.james.webadmin.service.RecipientRewriteTableUserEntityValidator;
+import org.apache.james.webadmin.service.UserEntityValidator;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
@@ -61,7 +64,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import io.restassured.RestAssured;
-import io.restassured.filter.log.LogDetail;
 import io.restassured.http.ContentType;
 
 class GroupsRoutesTest {
@@ -114,7 +116,10 @@ class GroupsRoutesTest {
             memoryRecipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
             usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
             MappingSourceModule mappingSourceModule = new MappingSourceModule();
-            createServer(new GroupsRoutes(memoryRecipientRewriteTable, usersRepository, new JsonTransformer(mappingSourceModule)),
+            UserEntityValidator validator = UserEntityValidator.aggregate(
+                new DefaultUserEntityValidator(usersRepository),
+                new RecipientRewriteTableUserEntityValidator(memoryRecipientRewriteTable));
+            createServer(new GroupsRoutes(memoryRecipientRewriteTable, usersRepository, validator, new JsonTransformer(mappingSourceModule)),
                 new AddressMappingRoutes(memoryRecipientRewriteTable));
         }
 
@@ -320,6 +325,26 @@ class GroupsRoutesTest {
         }
 
         @Test
+        void putShouldNotConflictWithAlias() throws Exception {
+            memoryRecipientRewriteTable.addAliasMapping(MappingSource.fromUser(Username.of(GROUP1)), USER_A);
+
+            Map<String, Object> errors = when()
+                .put(GROUP1 + SEPARATOR + USER_A)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.CONFLICT_409)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.CONFLICT_409)
+                .containsEntry("type", "WrongState")
+                .containsEntry("message", "'group1@b.com' already have associated mappings: alias:a@b.com");
+        }
+
+        @Test
         void putUserInGroupWithEncodedSlashShouldCreateGroup() {
             when()
                 .put(GROUP_WITH_ENCODED_SLASH + SEPARATOR + USER_A);
@@ -395,8 +420,8 @@ class GroupsRoutesTest {
 
             assertThat(errors)
                 .containsEntry("statusCode", HttpStatus.CONFLICT_409)
-                .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "Requested group address is already used for another purpose");
+                .containsEntry("type", "WrongState")
+                .containsEntry("message", "'a@b.com' user already exist");
         }
 
         @Test
@@ -473,7 +498,7 @@ class GroupsRoutesTest {
             domainList = mock(DomainList.class);
             memoryRecipientRewriteTable.setDomainList(domainList);
             Mockito.when(domainList.containsDomain(any())).thenReturn(true);
-            createServer(new GroupsRoutes(memoryRecipientRewriteTable, userRepository, new JsonTransformer()),
+            createServer(new GroupsRoutes(memoryRecipientRewriteTable, userRepository, UserEntityValidator.NOOP, new JsonTransformer()),
                 new AddressMappingRoutes(memoryRecipientRewriteTable));
         }
 
