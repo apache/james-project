@@ -47,7 +47,7 @@ class CustomNamespaceModule extends AbstractModule {
     bind(classOf[NamespaceFactory]).to(classOf[CustomNamespaceFactory])
 }
 
-class CustomNamespaceFactory @Inject() extends NamespaceFactory {
+class CustomNamespaceFactory extends NamespaceFactory {
 
   def from(mailboxPath: MailboxPath, mailboxSession: MailboxSession): MailboxNamespace = mailboxPath match {
     case PERSONAL_NAMESPACE_MAILBOX_PATH => PersonalNamespace()
