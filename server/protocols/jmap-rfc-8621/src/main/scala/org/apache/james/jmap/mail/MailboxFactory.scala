@@ -75,7 +75,8 @@ case class Subscriptions(subscribedNames: Set[String]) {
   def isSubscribed(metaData: MailboxMetaData): IsSubscribed = isSubscribed(metaData.getPath.getName)
 }
 
-class MailboxFactory @Inject() (mailboxManager: MailboxManager) {
+class MailboxFactory @Inject() (mailboxManager: MailboxManager,
+                                namespaceFactory: NamespaceFactory) {
 
   private def getRole(mailboxPath: MailboxPath, mailboxSession: MailboxSession): Option[Role] = Role.from(mailboxPath.getName)
     .filter(_ => mailboxPath.belongsTo(mailboxSession)).toScala
@@ -84,10 +85,8 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager) {
 
   private def getRights(resolveMailboxACL: JavaMailboxACL): Rights = Rights.fromACL(MailboxACL.fromJava(resolveMailboxACL))
 
-  private def getNamespace(mailboxPath: MailboxPath, mailboxSession: MailboxSession): MailboxNamespace = mailboxPath.belongsTo(mailboxSession) match {
-    case true => PersonalNamespace()
-    case false => DelegatedNamespace(mailboxPath.getUser)
-  }
+  private def getNamespace(mailboxPath: MailboxPath, mailboxSession: MailboxSession): MailboxNamespace =
+    namespaceFactory.from(mailboxPath, mailboxSession)
 
   private def getParentPath(mailboxPath: MailboxPath, mailboxSession: MailboxSession): Option[MailboxPath] = mailboxPath
     .getHierarchyLevels(mailboxSession.getPathDelimiter)
