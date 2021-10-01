@@ -44,6 +44,7 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
+import org.apache.james.mailetcontainer.api.LocalResources;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -89,7 +90,7 @@ class JamesMailetContextTest {
         spoolMailQueue = mock(MailQueue.class);
         when(mailQueueFactory.createQueue(MailQueueFactory.SPOOL)).thenReturn(spoolMailQueue);
         DNSService dnsService = null;
-        LocalResources localResources = new LocalResources(usersRepository, domainList, recipientRewriteTable);
+        LocalResources localResources = new LocalResourcesImpl(usersRepository, domainList, recipientRewriteTable);
         testee = new JamesMailetContext(dnsService, domainList, localResources, mailQueueFactory);
         testee.configure(new BaseHierarchicalConfiguration());
         mailAddress = new MailAddress(USERMAIL.asString());

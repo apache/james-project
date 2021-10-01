@@ -33,6 +33,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.mailetcontainer.api.LocalResources;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
@@ -45,22 +46,23 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 
-class LocalResources {
+public class LocalResourcesImpl implements LocalResources {
     private static final EnumSet<Mapping.Type> ALIAS_TYPES = EnumSet.of(Mapping.Type.Alias, Mapping.Type.DomainAlias);
-    public static final Logger LOGGER = LoggerFactory.getLogger(LocalResources.class);
+    public static final Logger LOGGER = LoggerFactory.getLogger(LocalResourcesImpl.class);
 
     private final UsersRepository localUsers;
     private final DomainList domains;
     private final RecipientRewriteTable recipientRewriteTable;
 
     @Inject
-    LocalResources(UsersRepository localUsers, DomainList domains, RecipientRewriteTable recipientRewriteTable) {
+    LocalResourcesImpl(UsersRepository localUsers, DomainList domains, RecipientRewriteTable recipientRewriteTable) {
         this.localUsers = localUsers;
         this.domains = domains;
         this.recipientRewriteTable = recipientRewriteTable;
     }
 
-    boolean isLocalServer(Domain domain) {
+    @Override
+    public boolean isLocalServer(Domain domain) {
         try {
             return domains.containsDomain(domain);
         } catch (DomainListException e) {
@@ -68,7 +70,8 @@ class LocalResources {
         }
     }
 
-    boolean isLocalUser(String name) {
+    @Override
+    public boolean isLocalUser(String name) {
         if (name == null) {
             return false;
         }
@@ -82,7 +85,8 @@ class LocalResources {
         }
     }
 
-    boolean isLocalEmail(MailAddress mailAddress) {
+    @Override
+    public boolean isLocalEmail(MailAddress mailAddress) {
         if (mailAddress != null) {
             if (!isLocalServer(mailAddress.getDomain())) {
                 return false;
@@ -103,7 +107,8 @@ class LocalResources {
         }
     }
 
-    Collection<MailAddress> localEmails(Collection<MailAddress> mailAddresses) {
+    @Override
+    public Collection<MailAddress> localEmails(Collection<MailAddress> mailAddresses) {
         return addressByDomains(mailAddresses)
             .flatMap(this::hasLocalDomain)
             .filter(this::belongsToALocalUser)
