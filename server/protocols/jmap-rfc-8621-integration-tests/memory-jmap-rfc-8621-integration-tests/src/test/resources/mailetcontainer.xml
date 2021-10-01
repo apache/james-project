@@ -61,11 +61,15 @@
             <mailet match="All" class="RecipientRewriteTable">
                 <errorProcessor>error</errorProcessor>
             </mailet>
-            <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet"/>
+            <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet">
+                <onMailetException>ignore</onMailetException>
+            </mailet>
             <mailet match="mdn-matcher" class="org.apache.james.jmap.mailet.ExtractMDNOriginalJMAPMessageId" >
                 <onMailetException>ignore</onMailetException>
             </mailet>
-            <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.filter.JMAPFiltering"/>
+            <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.filter.JMAPFiltering">
+                <onMailetException>ignore</onMailetException>
+            </mailet>
             <mailet match="RecipientIsLocal" class="LocalDelivery"/>
 
             <mailet match="relay-allowed" class="RemoteDelivery">

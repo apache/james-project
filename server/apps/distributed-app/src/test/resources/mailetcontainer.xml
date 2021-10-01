@@ -94,8 +94,12 @@
 
 
         <processor state="local-delivery" enableJmx="true">
-            <mailet match="All" class="org.apache.james.jmap.mailet.VacationMailet"/>
-            <mailet match="All" class="org.apache.james.jmap.mailet.filter.JMAPFiltering"/>
+            <mailet match="All" class="org.apache.james.jmap.mailet.VacationMailet">
+                <onMailetException>ignore</onMailetException>
+            </mailet>
+            <mailet match="All" class="org.apache.james.jmap.mailet.filter.JMAPFiltering">
+                <onMailetException>ignore</onMailetException>
+            </mailet>
             <mailet match="All" class="LocalDelivery"/>
         </processor>
 
