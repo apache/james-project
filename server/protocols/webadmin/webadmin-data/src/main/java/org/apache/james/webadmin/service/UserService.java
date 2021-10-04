@@ -26,24 +26,20 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
-import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.webadmin.dto.UserResponse;
-import org.apache.james.webadmin.service.UserEntityValidator.ValidationFailure;
 
 import com.google.common.collect.ImmutableList;
 
 public class UserService {
     private final UsersRepository usersRepository;
-    private final UserEntityValidator userEntityValidator;
 
     @Inject
-    public UserService(UsersRepository usersRepository, UserEntityValidator userEntityValidator) {
+    public UserService(UsersRepository usersRepository) {
         this.usersRepository = usersRepository;
-        this.userEntityValidator = userEntityValidator;
     }
 
     public List<UserResponse> getUsers() throws UsersRepositoryException {
@@ -62,10 +58,6 @@ public class UserService {
     public void upsertUser(Username username, char[] password) throws Exception {
         User user = usersRepository.getUserByName(username);
         if (user == null) {
-            Optional<ValidationFailure> validationFailure = userEntityValidator.canCreate(username);
-            if (validationFailure.isPresent()) {
-                throw new AlreadyExistInUsersRepositoryException(validationFailure.get().errorMessage());
-            }
             usersRepository.addUser(username, new String(password));
         } else {
             user.setPassword(new String(password));
@@ -78,10 +70,6 @@ public class UserService {
     }
 
     public void insertUser(Username username, char[] password) throws Exception {
-        Optional<ValidationFailure> validationFailure = userEntityValidator.canCreate(username);
-        if (validationFailure.isPresent()) {
-            throw new AlreadyExistInUsersRepositoryException(validationFailure.get().errorMessage());
-        }
         usersRepository.addUser(username, new String(password));
     }
 

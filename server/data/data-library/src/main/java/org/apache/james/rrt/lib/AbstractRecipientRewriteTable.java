@@ -18,6 +18,9 @@
  ****************************************************************/
 package org.apache.james.rrt.lib;
 
+import static org.apache.james.UserEntityValidator.EntityType.ALIAS;
+import static org.apache.james.UserEntityValidator.EntityType.GROUP;
+
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
@@ -32,6 +35,8 @@ import javax.mail.internet.AddressException;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.RecipientRewriteTableUserEntityValidator;
+import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
@@ -41,27 +46,43 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.rrt.api.InvalidRegexException;
 import org.apache.james.rrt.api.LoopDetectedException;
 import org.apache.james.rrt.api.MappingAlreadyExistsException;
+import org.apache.james.rrt.api.MappingConflictException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.api.SameSourceAndDestinationException;
 import org.apache.james.rrt.api.SourceDomainIsNotInDomainListException;
 import org.apache.james.rrt.lib.Mapping.Type;
+import org.apache.james.user.api.UsersRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 
 public abstract class AbstractRecipientRewriteTable implements RecipientRewriteTable, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRecipientRewriteTable.class);
 
     private RecipientRewriteTableConfiguration configuration;
+    private UserEntityValidator userEntityValidator;
+    private UsersRepository usersRepository;
     private DomainList domainList;
 
     public void setConfiguration(RecipientRewriteTableConfiguration configuration) {
         Preconditions.checkState(this.configuration == null, "A configuration cannot be set twice");
         this.configuration = configuration;
+        this.userEntityValidator = new RecipientRewriteTableUserEntityValidator(this);
+    }
+
+    @Inject
+    public void setUsersRepository(UsersRepository usersRepository) {
+        this.usersRepository = usersRepository;
+    }
+
+    @Inject
+    public void setUserEntityValidator(UserEntityValidator userEntityValidator) {
+        this.userEntityValidator = userEntityValidator;
     }
 
     @Inject
@@ -301,12 +322,30 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
             .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
         checkHasValidAddress(mapping);
+        source.asMailAddress()
+            .ifPresent(Throwing.consumer(this::ensureGroupNotShadowingAnotherAddress).sneakyThrow());
         checkDuplicateMapping(source, mapping);
         checkDomainMappingSourceIsManaged(source);
 
         LOGGER.info("Add group mapping => {} for source: {}", mapping.asString(), source.asString());
         assertNoLoop(source, mapping);
         addMapping(source, mapping);
+    }
+
+    private void ensureGroupNotShadowingAnotherAddress(MailAddress groupAddress) throws Exception {
+        ensureNoConflict(GROUP, groupAddress);
+    }
+
+    private void ensureAliasNotShadowingAnotherAddress(MailAddress groupAddress) throws Exception {
+        ensureNoConflict(ALIAS, groupAddress);
+    }
+
+    private void ensureNoConflict(UserEntityValidator.EntityType entity, MailAddress groupAddress) throws Exception {
+        Username username = usersRepository.getUsername(groupAddress);
+        Optional<UserEntityValidator.ValidationFailure> validationFailure = userEntityValidator.canCreate(username, ImmutableSet.of(entity));
+        if (validationFailure.isPresent()) {
+            throw new MappingConflictException(validationFailure.get().errorMessage());
+        }
     }
 
     @Override
@@ -325,6 +364,8 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
         checkHasValidAddress(mapping);
         checkDuplicateMapping(source, mapping);
+        source.asMailAddress()
+            .ifPresent(Throwing.consumer(this::ensureAliasNotShadowingAnotherAddress).sneakyThrow());
         checkNotSameSourceAndDestination(source, address);
         checkDomainMappingSourceIsManaged(source);
 

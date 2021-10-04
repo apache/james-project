@@ -18,10 +18,15 @@
  ****************************************************************/
 package org.apache.james.rrt.file;
 
+import static org.mockito.Mockito.mock;
+
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.convert.DisabledListDelimiterHandler;
+import org.apache.james.UserEntityValidator;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RecipientRewriteTableContract;
+import org.apache.james.user.memory.MemoryUsersRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -47,6 +52,8 @@ class XMLRecipientRewriteTableTest implements RecipientRewriteTableContract {
     @Override
     public void createRecipientRewriteTable() {
         recipientRewriteTable = new XMLRecipientRewriteTable();
+        recipientRewriteTable.setUserEntityValidator(UserEntityValidator.NOOP);
+        recipientRewriteTable.setUsersRepository(MemoryUsersRepository.withVirtualHosting(mock(DomainList.class)));
     }
 
     @Override

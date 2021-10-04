@@ -35,6 +35,9 @@ import static org.mockito.Mockito.spy;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.james.DefaultUserEntityValidator;
+import org.apache.james.RecipientRewriteTableUserEntityValidator;
+import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
@@ -50,9 +53,6 @@ import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.dto.MappingSourceModule;
-import org.apache.james.webadmin.service.DefaultUserEntityValidator;
-import org.apache.james.webadmin.service.RecipientRewriteTableUserEntityValidator;
-import org.apache.james.webadmin.service.UserEntityValidator;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
@@ -124,12 +124,13 @@ class AliasRoutesTest {
             usersRepository.addUser(Username.of(BOB_WITH_SLASH), BOB_WITH_SLASH_PASSWORD);
             usersRepository.addUser(Username.of(ALICE), ALICE_PASSWORD);
 
-
             UserEntityValidator validator = UserEntityValidator.aggregate(
                 new DefaultUserEntityValidator(usersRepository),
                 new RecipientRewriteTableUserEntityValidator(memoryRecipientRewriteTable));
+            memoryRecipientRewriteTable.setUserEntityValidator(validator);
+            memoryRecipientRewriteTable.setUsersRepository(usersRepository);
 
-            createServer(new AliasRoutes(memoryRecipientRewriteTable, usersRepository, validator, domainList, new JsonTransformer(module)),
+            createServer(new AliasRoutes(memoryRecipientRewriteTable, domainList, new JsonTransformer(module)),
                 new AddressMappingRoutes(memoryRecipientRewriteTable));
         }
 
@@ -457,7 +458,6 @@ class AliasRoutesTest {
             memoryRecipientRewriteTable.addDomainAliasMapping(MappingSource.fromDomain(ALIAS_DOMAIN), DOMAIN);
             memoryRecipientRewriteTable.addDomainMapping(MappingSource.fromDomain(DOMAIN_MAPPING), DOMAIN);
         }
-
     }
 
     @Nested
@@ -472,8 +472,10 @@ class AliasRoutesTest {
             UsersRepository userRepository = mock(UsersRepository.class);
             domainList = mock(DomainList.class);
             memoryRecipientRewriteTable.setDomainList(domainList);
+            memoryRecipientRewriteTable.setUsersRepository(userRepository);
+            memoryRecipientRewriteTable.setUserEntityValidator(UserEntityValidator.NOOP);
             Mockito.when(domainList.containsDomain(any())).thenReturn(true);
-            createServer(new AliasRoutes(memoryRecipientRewriteTable, userRepository, UserEntityValidator.NOOP, domainList, new JsonTransformer()),
+            createServer(new AliasRoutes(memoryRecipientRewriteTable, domainList, new JsonTransformer()),
                 new AddressMappingRoutes(memoryRecipientRewriteTable));
         }
 

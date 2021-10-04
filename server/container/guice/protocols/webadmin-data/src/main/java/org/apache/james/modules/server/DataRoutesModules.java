@@ -21,6 +21,10 @@ package org.apache.james.modules.server;
 
 import java.util.Set;
 
+import org.apache.james.AggregateUserEntityValidator;
+import org.apache.james.DefaultUserEntityValidator;
+import org.apache.james.RecipientRewriteTableUserEntityValidator;
+import org.apache.james.UserEntityValidator;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.MappingSourceModule;
 import org.apache.james.webadmin.mdc.RequestLogger;
@@ -34,10 +38,6 @@ import org.apache.james.webadmin.routes.MappingRoutes;
 import org.apache.james.webadmin.routes.RegexMappingRoutes;
 import org.apache.james.webadmin.routes.UserCreationRequestLogger;
 import org.apache.james.webadmin.routes.UserRoutes;
-import org.apache.james.webadmin.service.AggregateUserEntityValidator;
-import org.apache.james.webadmin.service.DefaultUserEntityValidator;
-import org.apache.james.webadmin.service.RecipientRewriteTableUserEntityValidator;
-import org.apache.james.webadmin.service.UserEntityValidator;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
 
 import com.google.inject.AbstractModule;

@@ -21,6 +21,7 @@ package org.apache.james.modules.data;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.UserEntityValidator;
 import org.apache.james.dlp.api.DLPConfigurationStore;
 import org.apache.james.dlp.eventsourcing.EventSourcingDLPConfigurationStore;
 import org.apache.james.domainlist.api.DomainList;
@@ -88,8 +89,10 @@ public class MemoryDataModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public MemoryUsersRepository providesUsersRepository(DomainList domainList) {
-        return MemoryUsersRepository.withVirtualHosting(domainList);
+    public MemoryUsersRepository providesUsersRepository(DomainList domainList, UserEntityValidator validator) {
+        MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
+        usersRepository.setValidator(validator);
+        return usersRepository;
     }
 
     @Provides

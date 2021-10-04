@@ -36,6 +36,9 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.james.DefaultUserEntityValidator;
+import org.apache.james.RecipientRewriteTableUserEntityValidator;
+import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainListException;
@@ -55,9 +58,6 @@ import org.apache.james.user.api.model.User;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.service.DefaultUserEntityValidator;
-import org.apache.james.webadmin.service.RecipientRewriteTableUserEntityValidator;
-import org.apache.james.webadmin.service.UserEntityValidator;
 import org.apache.james.webadmin.service.UserService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -117,11 +117,17 @@ class UserRoutesTest {
             this.recipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
             this.aliasReverseResolver = new AliasReverseResolverImpl(recipientRewriteTable);
             this.canSendFrom = new CanSendFromImpl(recipientRewriteTable, aliasReverseResolver);
+            UserEntityValidator validator = UserEntityValidator.aggregate(
+                new DefaultUserEntityValidator(this.usersRepository),
+                new RecipientRewriteTableUserEntityValidator(recipientRewriteTable));
+            this.usersRepository.setValidator(validator);
+            recipientRewriteTable.setUsersRepository(usersRepository);
+            recipientRewriteTable.setUserEntityValidator(validator);
         }
 
         @Override
         public void beforeEach(ExtensionContext extensionContext) {
-            webAdminServer = startServer(usersRepository, recipientRewriteTable);
+            webAdminServer = startServer(usersRepository);
         }
 
         @Override
@@ -148,11 +154,8 @@ class UserRoutesTest {
             throw new RuntimeException("Unknown parameter type: " + parameterType);
         }
 
-        private WebAdminServer startServer(UsersRepository usersRepository, RecipientRewriteTable recipientRewriteTable) {
-            UserEntityValidator validator = UserEntityValidator.aggregate(
-                new DefaultUserEntityValidator(usersRepository),
-                new RecipientRewriteTableUserEntityValidator(recipientRewriteTable));
-            WebAdminServer server = WebAdminUtils.createWebAdminServer(new UserRoutes(new UserService(usersRepository, validator), canSendFrom, new JsonTransformer()))
+        private WebAdminServer startServer(UsersRepository usersRepository) {
+            WebAdminServer server = WebAdminUtils.createWebAdminServer(new UserRoutes(new UserService(usersRepository), canSendFrom, new JsonTransformer()))
                 .start();
 
             RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(server)
@@ -415,7 +418,9 @@ class UserRoutesTest {
 
             @Test
             default void putShouldFailOnRepositoryExceptionOnGetUserByName(UsersRepository usersRepository) throws Exception {
-                when(usersRepository.contains(USERNAME_WITH_DOMAIN)).thenThrow(new UsersRepositoryException("message"));
+                doThrow(new UsersRepositoryException("message"))
+                    .when(usersRepository)
+                    .contains(any(Username.class));
 
                 given()
                     .body("{\"password\":\"password\"}")
@@ -475,7 +480,9 @@ class UserRoutesTest {
 
             @Test
             default void putShouldFailOnUnknownExceptionOnGetUserByName(UsersRepository usersRepository) throws Exception {
-                when(usersRepository.contains(USERNAME_WITH_DOMAIN)).thenThrow(new RuntimeException());
+                doThrow(new RuntimeException())
+                    .when(usersRepository)
+                    .contains(any(Username.class));
 
                 given()
                     .body("{\"password\":\"password\"}")

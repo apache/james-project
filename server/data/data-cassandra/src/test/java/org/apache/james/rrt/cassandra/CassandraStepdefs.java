@@ -25,6 +25,10 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RecipientRewriteTableFixture;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
+import org.apache.james.user.cassandra.CassandraUsersDAO;
+import org.apache.james.user.cassandra.CassandraUsersRepositoryModule;
+import org.apache.james.user.lib.UsersRepositoryImpl;
+import org.apache.james.user.lib.model.Algorithm;
 import org.junit.Rule;
 
 import com.github.fge.lambdas.Throwing;
@@ -48,7 +52,7 @@ public class CassandraStepdefs {
     @Before
     public void setup() {
         cassandra = CassandraCluster.create(
-            CassandraModule.aggregateModules(CassandraRRTModule.MODULE, CassandraSchemaVersionModule.MODULE),
+            CassandraModule.aggregateModules(CassandraRRTModule.MODULE, CassandraUsersRepositoryModule.MODULE, CassandraSchemaVersionModule.MODULE),
             cassandraServer.getHost());
         mainStepdefs.setUp(Throwing.supplier(this::getRecipientRewriteTable).sneakyThrow());
     }
@@ -62,6 +66,8 @@ public class CassandraStepdefs {
         CassandraRecipientRewriteTable rrt = new CassandraRecipientRewriteTable(
             new CassandraRecipientRewriteTableDAO(cassandra.getConf()),
             new CassandraMappingsSourcesDAO(cassandra.getConf()));
+        rrt.setUsersRepository(new UsersRepositoryImpl<>(RecipientRewriteTableFixture.domainListForCucumberTests(),
+            new CassandraUsersDAO(new Algorithm.DefaultFactory(), cassandra.getConf())));
         rrt.setDomainList(RecipientRewriteTableFixture.domainListForCucumberTests());
         return rrt;
     }

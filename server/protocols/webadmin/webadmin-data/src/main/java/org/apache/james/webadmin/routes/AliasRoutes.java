@@ -20,12 +20,10 @@
 package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.Constants.SEPARATOR;
-import static org.apache.james.webadmin.service.UserEntityValidator.EntityType.ALIAS;
 import static spark.Spark.halt;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -41,18 +39,16 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.api.LoopDetectedException;
 import org.apache.james.rrt.api.MappingAlreadyExistsException;
+import org.apache.james.rrt.api.MappingConflictException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.api.SameSourceAndDestinationException;
 import org.apache.james.rrt.api.SourceDomainIsNotInDomainListException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
-import org.apache.james.user.api.UsersRepository;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.AliasSourcesResponse;
-import org.apache.james.webadmin.service.UserEntityValidator;
-import org.apache.james.webadmin.service.UserEntityValidator.ValidationFailure;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
@@ -88,17 +84,13 @@ public class AliasRoutes implements Routes {
         "Mail addresses not matching this criteria will be rejected.";
     private static final String ADDRESS_TYPE = "alias";
 
-    private final UsersRepository usersRepository;
-    private final UserEntityValidator userEntityValidator;
     private final DomainList domainList;
     private final JsonTransformer jsonTransformer;
     private final RecipientRewriteTable recipientRewriteTable;
 
     @Inject
     @VisibleForTesting
-    AliasRoutes(RecipientRewriteTable recipientRewriteTable, UsersRepository usersRepository, UserEntityValidator userEntityValidator, DomainList domainList, JsonTransformer jsonTransformer) {
-        this.usersRepository = usersRepository;
-        this.userEntityValidator = userEntityValidator;
+    AliasRoutes(RecipientRewriteTable recipientRewriteTable, DomainList domainList, JsonTransformer jsonTransformer) {
         this.domainList = domainList;
         this.jsonTransformer = jsonTransformer;
         this.recipientRewriteTable = recipientRewriteTable;
@@ -156,7 +148,6 @@ public class AliasRoutes implements Routes {
     })
     public HaltException addAlias(Request request, Response response) throws Exception {
         MailAddress aliasSourceAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_SOURCE_ADDRESS), ADDRESS_TYPE);
-        ensureUserDoesNotExist(aliasSourceAddress);
         MailAddress destinationAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_DESTINATION_ADDRESS), ADDRESS_TYPE);
         ensureDomainIsSupported(destinationAddress.getDomain());
         MappingSource source = MappingSource.fromUser(Username.fromMailAddress(aliasSourceAddress));
@@ -175,7 +166,7 @@ public class AliasRoutes implements Routes {
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .message(e.getMessage())
                 .haltError();
-        } catch (LoopDetectedException e) {
+        } catch (LoopDetectedException | MappingConflictException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.CONFLICT_409)
                 .type(ErrorResponder.ErrorType.WRONG_STATE)
@@ -190,18 +181,6 @@ public class AliasRoutes implements Routes {
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .message("Domain in the destination is not managed by the DomainList")
-                .haltError();
-        }
-    }
-
-    private void ensureUserDoesNotExist(MailAddress mailAddress) throws Exception {
-        Username username = usersRepository.getUsername(mailAddress);
-        Optional<ValidationFailure> validationFailure = userEntityValidator.canCreate(username, ImmutableSet.of(ALIAS));
-        if (validationFailure.isPresent()) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.CONFLICT_409)
-                .type(ErrorResponder.ErrorType.WRONG_STATE)
-                .message(validationFailure.get().errorMessage())
                 .haltError();
         }
     }

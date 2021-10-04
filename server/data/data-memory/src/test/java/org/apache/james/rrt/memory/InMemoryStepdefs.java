@@ -19,9 +19,12 @@
 
 package org.apache.james.rrt.memory;
 
+import org.apache.james.UserEntityValidator;
+import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RecipientRewriteTableFixture;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
+import org.apache.james.user.memory.MemoryUsersRepository;
 
 import com.github.fge.lambdas.Throwing;
 
@@ -42,7 +45,10 @@ public class InMemoryStepdefs {
 
     private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         MemoryRecipientRewriteTable rrt = new MemoryRecipientRewriteTable();
-        rrt.setDomainList(RecipientRewriteTableFixture.domainListForCucumberTests());
+        SimpleDomainList domainList = RecipientRewriteTableFixture.domainListForCucumberTests();
+        rrt.setDomainList(domainList);
+        rrt.setUsersRepository(MemoryUsersRepository.withVirtualHosting(domainList));
+        rrt.setUserEntityValidator(UserEntityValidator.NOOP);
         return rrt;
     }
 }
