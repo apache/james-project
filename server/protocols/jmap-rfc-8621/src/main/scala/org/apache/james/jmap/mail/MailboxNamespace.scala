@@ -29,7 +29,7 @@ trait NamespaceFactory {
   def from(mailboxPath: MailboxPath, mailboxSession: MailboxSession): MailboxNamespace
 }
 
-class DefaultNamespaceFactory @Inject()() extends NamespaceFactory {
+class DefaultNamespaceFactory extends NamespaceFactory {
 
   def from(mailboxPath: MailboxPath, mailboxSession: MailboxSession): MailboxNamespace =
     mailboxPath.belongsTo(mailboxSession) match {
