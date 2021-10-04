@@ -24,6 +24,7 @@ import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.Mockito.mock;
 
+import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
@@ -34,6 +35,7 @@ import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
+import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -43,7 +45,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import io.restassured.RestAssured;
-import io.restassured.filter.log.LogDetail;
 import io.restassured.http.ContentType;
 import net.javacrumbs.jsonunit.core.Option;
 
@@ -76,6 +77,9 @@ class MappingRoutesTest {
 
         recipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
         recipientRewriteTable.setDomainList(domainList);
+        MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
+        recipientRewriteTable.setUserEntityValidator(UserEntityValidator.NOOP);
+        recipientRewriteTable.setUsersRepository(usersRepository);
 
         webAdminServer = WebAdminUtils.createWebAdminServer(new MappingRoutes(jsonTransformer, recipientRewriteTable))
             .start();
