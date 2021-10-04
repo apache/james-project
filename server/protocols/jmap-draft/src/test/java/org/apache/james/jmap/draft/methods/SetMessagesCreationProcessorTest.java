@@ -35,6 +35,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
@@ -81,6 +82,7 @@ import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
+import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.mailet.Mail;
@@ -156,6 +158,8 @@ public class SetMessagesCreationProcessorTest {
         domainList.configure(DomainListConfiguration.DEFAULT);
         domainList.addDomain(Domain.of("example.com"));
         domainList.addDomain(Domain.of("other.org"));
+        recipientRewriteTable.setUsersRepository(MemoryUsersRepository.withVirtualHosting(domainList));
+        recipientRewriteTable.setUserEntityValidator(UserEntityValidator.NOOP);
         recipientRewriteTable.setDomainList(domainList);
         recipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
         AliasReverseResolver aliasReverseResolver = new AliasReverseResolverImpl(recipientRewriteTable);
