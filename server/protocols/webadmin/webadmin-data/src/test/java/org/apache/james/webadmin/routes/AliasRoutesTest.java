@@ -193,15 +193,15 @@ class AliasRoutesTest {
                     .put(ALICE + SEPARATOR + "sources" + SEPARATOR + ALICE_ALIAS)
                 .then()
                     .contentType(ContentType.JSON)
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .statusCode(HttpStatus.CONFLICT_409)
                     .extract()
                     .body()
                     .jsonPath()
                     .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
-                .containsEntry("type", "InvalidArgument")
+                .containsEntry("statusCode", HttpStatus.CONFLICT_409)
+                .containsEntry("type", "WrongState")
                 .containsEntry("message", "'alice-alias@b.com' already have associated mappings: group:bob@b.com");
         }
 
@@ -265,7 +265,7 @@ class AliasRoutesTest {
             Map<String, Object> errors = when()
                 .put(BOB + SEPARATOR + "sources" + SEPARATOR + ALICE)
             .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .statusCode(HttpStatus.CONFLICT_409)
                 .contentType(ContentType.JSON)
                 .extract()
                 .body()
@@ -273,8 +273,8 @@ class AliasRoutesTest {
                 .getMap(".");
 
             assertThat(errors)
-                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
-                .containsEntry("type", "InvalidArgument")
+                .containsEntry("statusCode", HttpStatus.CONFLICT_409)
+                .containsEntry("type", "WrongState")
                 .containsEntry("message", "'alice@b.com' user already exist");
         }
 

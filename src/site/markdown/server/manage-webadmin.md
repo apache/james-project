@@ -2365,9 +2365,9 @@ Response codes:
 
  - 204: OK
  - 400: Alias structure or member is not valid
- - 400: The alias source exists as an user already
  - 400: Source and destination can't be the same!
  - 400: Domain in the destination or source is not managed by the DomainList
+ - 409: The alias source exists as an user already
  - 409: The creation of the alias would lead to a loop and thus cannot be performed
 
 ### Removing an alias of an user

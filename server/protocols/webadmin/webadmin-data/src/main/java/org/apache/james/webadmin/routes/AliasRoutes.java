@@ -148,7 +148,7 @@ public class AliasRoutes implements Routes {
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK"),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = ALIAS_DESTINATION_ADDRESS + " or alias structure format is not valid"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The alias source exists as an user already"),
+        @ApiResponse(code = HttpStatus.CONFLICT_409, message = "The alias source exists as an user already"),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Source and destination can't be the same!"),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Domain in the destination or source is not managed by the DomainList"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
@@ -199,8 +199,8 @@ public class AliasRoutes implements Routes {
         Optional<ValidationFailure> validationFailure = userEntityValidator.canCreate(username, ImmutableSet.of(ALIAS));
         if (validationFailure.isPresent()) {
             throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .statusCode(HttpStatus.CONFLICT_409)
+                .type(ErrorResponder.ErrorType.WRONG_STATE)
                 .message(validationFailure.get().errorMessage())
                 .haltError();
         }
