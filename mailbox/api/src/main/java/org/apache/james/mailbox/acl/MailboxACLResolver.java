@@ -49,7 +49,7 @@ public interface MailboxACLResolver {
      * An implementation [...] MAY force rights to always or never be granted to
      * particular identifiers.
      */
-    MailboxACL applyGlobalACL(MailboxACL resourceACL, boolean resourceOwnerIsGroup) throws UnsupportedRightException;
+    MailboxACL applyGlobalACL(MailboxACL resourceACL) throws UnsupportedRightException;
 
     /**
      * Computes a result suitable for the LISTRIGHTS IMAP command. The result is
@@ -62,15 +62,12 @@ public interface MailboxACLResolver {
      * @param resourceOwner
      *            the owner of the mailbox named in the LISTRIGHTS command. User
      *            name or group name.
-     * @param resourceOwnerIsGroup
-     *            true if the {@code resourceOwner} is a group of users, false
-     *            otherwise.
      * @return an array of {@link MailboxACL.Rfc4314Rights}. The first element is the
      *         set of implicit (global) rights which does not need to be set
      *         explicitly for the given identifier. Further elements are groups
      *         of rights which can be set for the given identifier and resource.
      */
-    List<MailboxACL.Rfc4314Rights> listRights(MailboxACL.EntryKey key, GroupMembershipResolver groupMembershipResolver, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException;
+    List<MailboxACL.Rfc4314Rights> listRights(MailboxACL.EntryKey key, String resourceOwner) throws UnsupportedRightException;
 
     /**
      * Computes the rights which apply to the given user and resource. Global
@@ -80,20 +77,14 @@ public interface MailboxACLResolver {
      *            the user for whom the rights are computed, possibly
      *            <code>null</code> when there is no authenticated user in the
      *            given context.
-     * @param groupMembershipResolver
-     *            this resolver is used when checking whether any group rights
-     *            contained in resourceACL are applicable for the requestUser.
      * @param resourceACL
      *            the ACL defining the access right for the resource in
      *            question.
      * @param resourceOwner
      *            this user name is used as a replacement for the "owner" place
      *            holder in the resourceACL.
-     * @param resourceOwnerIsGroup
-     *            true if the resourceOwner is a group of users, false
-     *            otherwise.
      * @return the rights applicable for the given user and resource.
      */
-    MailboxACL.Rfc4314Rights resolveRights(Username requestUser, GroupMembershipResolver groupMembershipResolver, MailboxACL resourceACL, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException;
+    MailboxACL.Rfc4314Rights resolveRights(Username requestUser, MailboxACL resourceACL, String resourceOwner) throws UnsupportedRightException;
 
 }

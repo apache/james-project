@@ -33,9 +33,7 @@ import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.maildir.MaildirMailboxSessionMapperFactory;
 import org.apache.james.mailbox.maildir.MaildirStore;
@@ -77,11 +75,10 @@ public class MaildirHostSystem extends JamesImapHostSystem {
         StoreSubscriptionManager sm = new StoreSubscriptionManager(mailboxSessionMapperFactory);
         
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
-        GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
 
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
-        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, aclResolver, groupMembershipResolver, eventBus);
+        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, aclResolver, eventBus);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
         SessionProviderImpl sessionProvider = new SessionProviderImpl(authenticator, authorizator);
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mailboxSessionMapperFactory);

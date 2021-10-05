@@ -32,9 +32,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.SubscriptionManager;
-import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.jpa.JPAAttachmentContentLoader;
@@ -87,7 +85,6 @@ public class JPAMailboxModule extends AbstractModule {
         bind(UserRepositoryAuthenticator.class).in(Scopes.SINGLETON);
         bind(UserRepositoryAuthorizator.class).in(Scopes.SINGLETON);
         bind(JPAId.Factory.class).in(Scopes.SINGLETON);
-        bind(SimpleGroupMembershipResolver.class).in(Scopes.SINGLETON);
         bind(UnionMailboxACLResolver.class).in(Scopes.SINGLETON);
         bind(DefaultMessageId.Factory.class).in(Scopes.SINGLETON);
         bind(NaiveThreadIdGuessingAlgorithm.class).in(Scopes.SINGLETON);
@@ -111,7 +108,6 @@ public class JPAMailboxModule extends AbstractModule {
         bind(SessionProvider.class).to(SessionProviderImpl.class);
         bind(Authorizator.class).to(UserRepositoryAuthorizator.class);
         bind(MailboxId.Factory.class).to(JPAId.Factory.class);
-        bind(GroupMembershipResolver.class).to(SimpleGroupMembershipResolver.class);
         bind(MailboxACLResolver.class).to(UnionMailboxACLResolver.class);
         bind(AttachmentContentLoader.class).to(JPAAttachmentContentLoader.class);
 

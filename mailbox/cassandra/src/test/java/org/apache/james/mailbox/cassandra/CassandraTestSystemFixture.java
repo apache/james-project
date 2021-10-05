@@ -30,7 +30,6 @@ import org.apache.james.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.Authorizator;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManager;
@@ -68,7 +67,7 @@ public class CassandraTestSystemFixture {
 
     public static CassandraMailboxManager createMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory) {
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
-        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), eventBus);
+        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), eventBus);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mapperFactory, storeRightManager);
 
         SessionProviderImpl sessionProvider = new SessionProviderImpl(mock(Authenticator.class), mock(Authorizator.class));

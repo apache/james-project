@@ -34,7 +34,6 @@ import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -100,8 +99,7 @@ class StoreMailboxManagerTest {
 
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
 
-        StoreRightManager storeRightManager = new StoreRightManager(mockedMapperFactory, new UnionMailboxACLResolver(),
-                                                                    new SimpleGroupMembershipResolver(), eventBus);
+        StoreRightManager storeRightManager = new StoreRightManager(mockedMapperFactory, new UnionMailboxACLResolver(), eventBus);
 
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mockedMapperFactory, storeRightManager);
         SessionProviderImpl sessionProvider = new SessionProviderImpl(authenticator, FakeAuthorizator.forUserAndAdmin(ADMIN, CURRENT_USER));

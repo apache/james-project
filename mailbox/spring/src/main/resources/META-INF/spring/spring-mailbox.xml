@@ -45,10 +45,6 @@
       Mailbox ACL Resolver
      -->
     <bean id="aclResolver" class="org.apache.james.mailbox.acl.UnionMailboxACLResolver"/>
-    <!-- 
-      Group Membership Resolver
-     -->
-    <bean id="groupMembershipResolver" class="org.apache.james.mailbox.acl.SimpleGroupMembershipResolver"/>
     <!--
       Attachments
      -->
@@ -62,8 +58,7 @@
     <bean id="storeRightManager" class="org.apache.james.mailbox.store.StoreRightManager" >
         <constructor-arg index="0" ref="messageMapperFactory" />
         <constructor-arg index="1" ref="aclResolver" />
-        <constructor-arg index="2" ref="groupMembershipResolver" />
-        <constructor-arg index="3" ref="event-bus" />
+        <constructor-arg index="2" ref="event-bus" />
     </bean>
 
     <bean id="sessionProvider" class="org.apache.james.mailbox.store.SessionProviderImpl" >

@@ -45,7 +45,7 @@ import com.google.common.collect.ImmutableList;
  * applicable identifiers. Inspired by RFC 4314 Section 2.
  * 
  * In
- * {@link UnionMailboxACLResolver#resolveRights(String, org.apache.james.mailbox.MailboxACLResolver.GroupMembershipResolver, MailboxACL, String, boolean)}
+ * {@link UnionMailboxACLResolver#resolveRights(Username, MailboxACL, String)}
  * all applicable negative and non-negative rights are union-ed separately and
  * the result is computed afterwards with
  * <code>nonNegativeUnion.except(negativeUnion)</code>.
@@ -57,8 +57,6 @@ import com.google.common.collect.ImmutableList;
  * 
  */
 public class UnionMailboxACLResolver implements MailboxACLResolver {
-    public static final MailboxACL DEFAULT_GLOBAL_GROUP_ACL = MailboxACL.OWNER_FULL_EXCEPT_ADMINISTRATION_ACL;
-
     /**
      * Nothing else than full rights for the owner.
      */
@@ -67,26 +65,23 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
     private static final int POSITIVE_INDEX = 0;
     private static final int NEGATIVE_INDEX = 1;
 
-    private final MailboxACL groupGlobalACL;
     /**
      * Stores global ACL which is merged with ACL of every mailbox when
      * computing
-     * {@link #rightsOf(String, org.apache.james.mailbox.MailboxACLResolver.GroupMembershipResolver, Mailbox)}
+     * {@link #rightsOf(String, Mailbox)}
      * and
-     * {@link #hasRight(String, Mailbox, Right, org.apache.james.mailbox.MailboxACLResolver.GroupMembershipResolver)}
+     * {@link #hasRight(String, Mailbox, Right)}
      * .
      */
     private final MailboxACL userGlobalACL;
 
     /**
      * Creates a new instance of UnionMailboxACLResolver with
-     * {@link #DEFAULT_GLOBAL_USER_ACL} as {@link #userGlobalACL} and
-     * {@link #DEFAULT_GLOBAL_USER_ACL} as {@link #groupGlobalACL}.
+     * {@link #DEFAULT_GLOBAL_USER_ACL} as {@link #userGlobalACL}
      */
     public UnionMailboxACLResolver() {
         super();
         this.userGlobalACL = DEFAULT_GLOBAL_USER_ACL;
-        this.groupGlobalACL = DEFAULT_GLOBAL_GROUP_ACL;
     }
 
     /**
@@ -107,7 +102,6 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
             throw new NullPointerException("Missing groupGlobalACL.");
         }
         this.userGlobalACL = userGlobalACL;
-        this.groupGlobalACL = groupGlobalACL;
     }
 
     /**
@@ -117,22 +111,22 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
      * There are two use cases for which this method was designed and tested:
      * 
      * (1) Calls from
-     * {@link #hasRight(String, GroupMembershipResolver, Right, MailboxACL, String, boolean)}
+     * {@link #hasRight(String, Right, MailboxACL, String)}
      * and
-     * {@link #resolveRights(String, GroupMembershipResolver, MailboxACL, String, boolean)}
+     * {@link #resolveRights(Username, MailboxACL, String)}
      * in which the {@code queryKey} is a {@link NameType#user}.
      * 
      * (2) Calls from
-     * {@link #listRights(EntryKey, GroupMembershipResolver, String, boolean)}
+     * {@link #listRights(EntryKey, String)}
      * where {@code queryKey} can be anything including {@link NameType#user},
      * {@link NameType#group} and all {@link NameType#special} identifiers.
      * 
      * Clearly the set of cases which this method has to handle in (1) is a
      * proper subset of the cases handled in (2). See the javadoc on
-     * {@link #listRights(EntryKey, GroupMembershipResolver, String, boolean)}
+     * {@link #listRights(EntryKey, String)}
      * for more details.
      */
-    protected static boolean applies(EntryKey aclKey, EntryKey queryKey, GroupMembershipResolver groupMembershipResolver, String resourceOwner, boolean resourceOwnerIsGroup) {
+    protected static boolean applies(EntryKey aclKey, EntryKey queryKey, String resourceOwner) {
         final String aclKeyName = aclKey.getName();
         final NameType aclKeyNameType = aclKey.getNameType();
         if (SpecialName.anybody.name().equals(aclKeyName)) {
@@ -146,18 +140,16 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
                 switch (aclKeyNameType) {
                 case special:
                     if (SpecialName.authenticated.name().equals(aclKeyName)) {
-                        /* non null query user is viewed as authenticated */
+                        /* non-null query user is viewed as authenticated */
                         return true;
                     } else if (SpecialName.owner.name().equals(aclKeyName)) {
-                        return (!resourceOwnerIsGroup && queryUserOrGroupName.equals(resourceOwner)) || (resourceOwnerIsGroup && groupMembershipResolver.isMember(Username.of(queryUserOrGroupName), resourceOwner));
+                        return queryUserOrGroupName.equals(resourceOwner);
                     } else {
                         /* should not happen unless the parent if is changed */
                         throw new IllegalStateException("Unexpected " + SpecialName.class.getName() + "." + aclKeyName);
                     }
                 case user:
                     return aclKeyName.equals(queryUserOrGroupName);
-                case group:
-                    return groupMembershipResolver.isMember(Username.of(queryUserOrGroupName), aclKeyName);
                 default:
                     throw new IllegalStateException("Unexpected " + NameType.class.getName() + "." + aclKeyNameType);
                 }
@@ -171,7 +163,7 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
                          */
                         return true;
                     } else if (SpecialName.owner.name().equals(aclKeyName)) {
-                        return resourceOwnerIsGroup && queryUserOrGroupName.equals(resourceOwner);
+                        return false;
                     } else {
                         /* should not happen unless the parent if is changed */
                         throw new IllegalStateException("Unexpected " + SpecialName.class.getName() + "." + aclKeyName);
@@ -220,8 +212,8 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
     }
 
     @Override
-    public MailboxACL applyGlobalACL(MailboxACL resourceACL, boolean resourceOwnerIsGroup) throws UnsupportedRightException {
-        return resourceOwnerIsGroup ? resourceACL.union(groupGlobalACL) : resourceACL.union(userGlobalACL);
+    public MailboxACL applyGlobalACL(MailboxACL resourceACL) throws UnsupportedRightException {
+        return resourceACL.union(userGlobalACL);
     }
 
     /**
@@ -270,11 +262,10 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
      * authenticated.
      */
     @Override
-    public List<Rfc4314Rights> listRights(EntryKey queryKey, GroupMembershipResolver groupMembershipResolver, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException {
+    public List<Rfc4314Rights> listRights(EntryKey queryKey, String resourceOwner) throws UnsupportedRightException {
         Rfc4314Rights[] positiveNegativePair = { MailboxACL.NO_RIGHTS, MailboxACL.NO_RIGHTS };
 
-        MailboxACL userACL = resourceOwnerIsGroup ? groupGlobalACL : userGlobalACL;
-        resolveRights(queryKey, groupMembershipResolver, userACL.getEntries(), resourceOwner, resourceOwnerIsGroup, positiveNegativePair);
+        resolveRights(queryKey, userGlobalACL.getEntries(), resourceOwner, positiveNegativePair);
 
         if (queryKey.isNegative()) {
             return toListRights(positiveNegativePair[NEGATIVE_INDEX]);
@@ -295,14 +286,13 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
     }
 
     @Override
-    public Rfc4314Rights resolveRights(Username requestUser, GroupMembershipResolver groupMembershipResolver, MailboxACL resourceACL, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException {
+    public Rfc4314Rights resolveRights(Username requestUser, MailboxACL resourceACL, String resourceOwner) throws UnsupportedRightException {
         Rfc4314Rights[] positiveNegativePair = { MailboxACL.NO_RIGHTS, MailboxACL.NO_RIGHTS };
         final EntryKey queryKey = requestUser == null ? null : EntryKey.createUserEntryKey(requestUser);
-        MailboxACL userACL = resourceOwnerIsGroup ? groupGlobalACL : userGlobalACL;
-        resolveRights(queryKey, groupMembershipResolver, userACL.getEntries(), resourceOwner, resourceOwnerIsGroup, positiveNegativePair);
+        resolveRights(queryKey, userGlobalACL.getEntries(), resourceOwner, positiveNegativePair);
 
         if (resourceACL != null) {
-            resolveRights(queryKey, groupMembershipResolver, resourceACL.getEntries(), resourceOwner, resourceOwnerIsGroup, positiveNegativePair);
+            resolveRights(queryKey, resourceACL.getEntries(), resourceOwner, positiveNegativePair);
         }
 
         return positiveNegativePair[POSITIVE_INDEX].except(positiveNegativePair[NEGATIVE_INDEX]);
@@ -311,12 +301,12 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
     /**
      * What needs to be done for both global ACL and the given mailboxe's ACL.
      */
-    private void resolveRights(EntryKey queryKey, GroupMembershipResolver groupMembershipResolver, Map<EntryKey, Rfc4314Rights> entries, String resourceOwner, boolean resourceOwnerIsGroup, Rfc4314Rights[] positiveNegativePair)
+    private void resolveRights(EntryKey queryKey, Map<EntryKey, Rfc4314Rights> entries, String resourceOwner, Rfc4314Rights[] positiveNegativePair)
             throws UnsupportedRightException {
         if (entries != null) {
             for (Entry<EntryKey, Rfc4314Rights> entry : entries.entrySet()) {
                 final EntryKey key = entry.getKey();
-                if (applies(key, queryKey, groupMembershipResolver, resourceOwner, resourceOwnerIsGroup)) {
+                if (applies(key, queryKey, resourceOwner)) {
                     if (key.isNegative()) {
                         positiveNegativePair[NEGATIVE_INDEX] = positiveNegativePair[NEGATIVE_INDEX].union(entry.getValue());
                     } else {
