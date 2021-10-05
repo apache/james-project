@@ -66,18 +66,6 @@ case class MailboxRights(mayReadItems: MayReadItems,
                          mayDelete: MayDelete,
                          maySubmit: MaySubmit)
 
-object MailboxNamespace {
-  def delegated(owner: Username) = DelegatedNamespace(owner)
-
-  def personal = PersonalNamespace
-}
-
-sealed trait MailboxNamespace
-
-case class PersonalNamespace() extends MailboxNamespace
-
-case class DelegatedNamespace(owner: Username) extends MailboxNamespace
-
 object SortOrder {
   val defaultSortOrder: SortOrder = SortOrder(1000L)
 

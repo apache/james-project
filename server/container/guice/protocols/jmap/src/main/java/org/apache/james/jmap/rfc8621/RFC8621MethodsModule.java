@@ -43,6 +43,8 @@ import org.apache.james.jmap.http.Authenticator;
 import org.apache.james.jmap.http.BasicAuthenticationStrategy;
 import org.apache.james.jmap.http.rfc8621.InjectionKeys;
 import org.apache.james.jmap.jwt.JWTAuthenticationStrategy;
+import org.apache.james.jmap.mail.DefaultNamespaceFactory;
+import org.apache.james.jmap.mail.NamespaceFactory;
 import org.apache.james.jmap.method.CoreEchoMethod;
 import org.apache.james.jmap.method.EmailChangesMethod;
 import org.apache.james.jmap.method.EmailGetMethod;
@@ -95,6 +97,7 @@ public class RFC8621MethodsModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(NamespaceFactory.class).to(DefaultNamespaceFactory.class);
         bind(ZoneIdProvider.class).to(SystemZoneIdProvider.class);
 
         bind(EmailSubmissionSetMethod.class).in(Scopes.SINGLETON);
