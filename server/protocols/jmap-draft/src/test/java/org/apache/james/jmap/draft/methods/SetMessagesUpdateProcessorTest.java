@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.draft.methods;
 
+import static org.apache.james.user.memory.MemoryUsersRepository.withVirtualHosting;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -33,6 +34,7 @@ import java.util.function.Supplier;
 import javax.mail.internet.AddressException;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
@@ -162,6 +164,8 @@ public class SetMessagesUpdateProcessorTest {
         domainList.configure(DomainListConfiguration.DEFAULT);
         domainList.addDomain(Domain.of("example.com"));
         domainList.addDomain(Domain.of("other.org"));
+        recipientRewriteTable.setUsersRepository(withVirtualHosting(domainList));
+        recipientRewriteTable.setUserEntityValidator(UserEntityValidator.NOOP);
         recipientRewriteTable.setDomainList(domainList);
         recipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
         AliasReverseResolver aliasReverseResolver = new AliasReverseResolverImpl(recipientRewriteTable);

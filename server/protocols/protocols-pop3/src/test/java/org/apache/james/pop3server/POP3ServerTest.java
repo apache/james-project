@@ -918,6 +918,7 @@ public class POP3ServerTest {
             .put(binder -> binder.bind(MetricFactory.class).toInstance(new RecordingMetricFactory()))
             .put(binder -> binder.bind(UserEntityValidator.class).toInstance(UserEntityValidator.NOOP))
             .put(binder -> binder.bind(MailboxAdapterFactory.class).to(DefaultMailboxAdapterFactory.class))
+            .put(binder -> binder.bind(UserEntityValidator.class).toInstance(UserEntityValidator.NOOP))
             .build();
     }
 

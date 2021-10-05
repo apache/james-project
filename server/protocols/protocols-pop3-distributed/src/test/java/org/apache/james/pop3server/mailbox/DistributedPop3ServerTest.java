@@ -19,6 +19,7 @@
 
 package org.apache.james.pop3server.mailbox;
 
+import org.apache.james.UserEntityValidator;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageIdManager;
@@ -74,6 +75,7 @@ public class DistributedPop3ServerTest extends POP3ServerTest {
             .put(binder -> binder.bind(MessageId.Factory.class).toInstance(memoryIntegrationResources.getMessageIdFactory()))
             .put(binder -> binder.bind(MetricFactory.class).to(RecordingMetricFactory.class))
             .put(binder -> binder.bind(Pop3MetadataStore.class).toInstance(metadataStore))
+            .put(binder -> binder.bind(UserEntityValidator.class).toInstance(UserEntityValidator.NOOP))
             .build();
     }
 }
